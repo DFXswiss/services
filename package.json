@@ -27,7 +27,7 @@
     "build:dev": "env-cmd -f .env.dev react-scripts build",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --no-fix",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "react-scripts test --watchAll=false",
+    "test": "react-scripts test --watchAll=false --passWithNoTests",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
