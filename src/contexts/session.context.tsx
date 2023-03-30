@@ -1,11 +1,9 @@
-import { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Blockchain } from '../api/definitions/blockchain';
 import { ApiError } from '../api/definitions/error';
 import { useApiSession } from '../api/hooks/api-session.hook';
-import { useWalletContext } from './wallet.context';
 
 export interface SessionInterface {
-  isMetaMaskInstalled: boolean;
   address?: string;
   blockchain?: Blockchain;
   isLoggedIn: boolean;
@@ -24,10 +22,16 @@ export function useSessionContext(): SessionInterface {
 
 export function SessionContextProvider(props: PropsWithChildren): JSX.Element {
   const { isLoggedIn, getSignMessage, createSession, deleteSession } = useApiSession();
-  const { isInstalled, isConnected, address, blockchain, connect, signMessage } = useWalletContext();
   const [needsSignUp, setNeedsSignUp] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [signature, setSignature] = useState<string>();
+
+  // TODO: (Krysh) add from api
+  let address: string | undefined;
+  let blockchain: Blockchain | undefined;
+  async function signMessage(message: string, address: string): Promise<string> {
+    return '';
+  }
 
   const firstRender = useRef(true);
   useEffect(() => {
@@ -43,9 +47,9 @@ export function SessionContextProvider(props: PropsWithChildren): JSX.Element {
   }, [address]);
 
   async function login(): Promise<void> {
-    if (!isConnected) {
-      await connect();
-    }
+    // if (!isConnected) {
+    //   await connect();
+    // }
     if (!address) return; // TODO (Krysh) add real error handling
     createApiSession(address);
   }
@@ -79,17 +83,19 @@ export function SessionContextProvider(props: PropsWithChildren): JSX.Element {
     await deleteSession();
   }
 
-  const context = {
-    isMetaMaskInstalled: isInstalled,
-    address,
-    blockchain,
-    isLoggedIn,
-    needsSignUp,
-    isProcessing,
-    login,
-    signUp,
-    logout,
-  };
+  const context = useMemo(
+    () => ({
+      address,
+      blockchain,
+      isLoggedIn,
+      needsSignUp,
+      isProcessing,
+      login,
+      signUp,
+      logout,
+    }),
+    [address, blockchain, isLoggedIn, needsSignUp, isProcessing, login, signUp, logout],
+  );
 
   return <SessionContext.Provider value={context}>{props.children}</SessionContext.Provider>;
 }

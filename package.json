@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "classnames": "^2.3.2",
+    "copy-to-clipboard": "^3.3.3",
     "env-cmd": "^10.1.0",
     "i18n-js": "^4.2.3",
     "ibantools": "^4.2.1",
@@ -13,6 +14,7 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.40.0",
     "react-icons": "^4.7.1",
+    "react-qr-code": "^2.0.11",
     "react-scripts": "5.0.1",
     "spinners-react": "^1.0.7",
     "tw-elements": "^1.0.0-alpha12",
