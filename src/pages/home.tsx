@@ -1,8 +1,8 @@
 import { useLanguageContext } from '../contexts/language.context';
 import { StyledLink } from '../stories/StyledLink';
-import { Navigation } from './navigation';
+import { Navigation } from '../components/navigation';
 
-export function Main(): JSX.Element {
+export function Home(): JSX.Element {
   const { translate } = useLanguageContext();
   return (
     <>

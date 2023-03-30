@@ -1,10 +1,13 @@
-import { Main } from './components/main';
+import { Home } from './pages/home';
 import { AssetContextProvider } from './api/contexts/asset.context';
 import { AuthContextProvider } from './api/contexts/auth.context';
 import { UserContextProvider } from './api/contexts/user.context';
 import { SessionContextProvider } from './contexts/session.context';
 import { BuyContextProvider } from './api/contexts/buy.context';
 import { LanguageContextProvider } from './contexts/language.context';
+import { setupLanguages } from './translations';
+
+setupLanguages();
 
 function App() {
   return (
@@ -14,7 +17,7 @@ function App() {
           <AssetContextProvider>
             <BuyContextProvider>
               <LanguageContextProvider>
-                <Main />
+                <Home />
               </LanguageContextProvider>
             </BuyContextProvider>
           </AssetContextProvider>
