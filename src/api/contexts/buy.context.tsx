@@ -1,4 +1,4 @@
-import { createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
+import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 import { Fiat } from '../definitions/fiat';
 import { useFiat } from '../hooks/fiat.hook';
 import { useAuthContext } from './auth.context';
@@ -65,14 +65,17 @@ export function BuyContextProvider(props: PropsWithChildren): JSX.Element {
     return accounts;
   }
 
-  const context: BuyInterface = {
-    currencies,
-    bankAccounts,
-    isAccountLoading,
-    createAccount: addNewAccount,
-    updateAccount: updateExistingAccount,
-    receiveFor,
-  };
+  const context: BuyInterface = useMemo(
+    () => ({
+      currencies,
+      bankAccounts,
+      isAccountLoading,
+      createAccount: addNewAccount,
+      updateAccount: updateExistingAccount,
+      receiveFor,
+    }),
+    [currencies, bankAccounts, isAccountLoading, addNewAccount, updateExistingAccount, receiveFor],
+  );
 
   return <BuyContext.Provider value={context}>{props.children}</BuyContext.Provider>;
 }

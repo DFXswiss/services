@@ -4,6 +4,7 @@ import { AuthContextProvider } from './api/contexts/auth.context';
 import { UserContextProvider } from './api/contexts/user.context';
 import { SessionContextProvider } from './contexts/session.context';
 import { BuyContextProvider } from './api/contexts/buy.context';
+import { LanguageContextProvider } from './contexts/language.context';
 
 function App() {
   return (
@@ -12,7 +13,9 @@ function App() {
         <SessionContextProvider>
           <AssetContextProvider>
             <BuyContextProvider>
-              <Main />
+              <LanguageContextProvider>
+                <Main />
+              </LanguageContextProvider>
             </BuyContextProvider>
           </AssetContextProvider>
         </SessionContextProvider>
