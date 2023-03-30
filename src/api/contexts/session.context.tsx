@@ -1,7 +1,7 @@
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Blockchain } from '../api/definitions/blockchain';
-import { ApiError } from '../api/definitions/error';
-import { useApiSession } from '../api/hooks/api-session.hook';
+import { Blockchain } from '../definitions/blockchain';
+import { ApiError } from '../definitions/error';
+import { useApiSession } from '../hooks/api-session.hook';
 
 export interface SessionInterface {
   address?: string;
