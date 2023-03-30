@@ -29,7 +29,7 @@ export function SessionContextProvider(props: PropsWithChildren): JSX.Element {
   // TODO: (Krysh) add from api
   let address: string | undefined;
   let blockchain: Blockchain | undefined;
-  async function signMessage(message: string, address: string): Promise<string> {
+  async function signMessage(_message: string, _address: string): Promise<string> {
     return '';
   }
 
