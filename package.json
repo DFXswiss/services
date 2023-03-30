@@ -17,6 +17,7 @@
     "react-i18next": "^12.2.0",
     "react-icons": "^4.7.1",
     "react-qr-code": "^2.0.11",
+    "react-router-dom": "^6.10.0",
     "react-scripts": "5.0.1",
     "spinners-react": "^1.0.7",
     "tw-elements": "^1.0.0-alpha12",
