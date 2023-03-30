@@ -1,0 +1,24 @@
+{
+  "editor.formatOnSave": true,
+  "git.ignoreLimitWarning": true,
+  "cSpell.words": [
+    "testid",
+    "iban",
+    "IBAN",
+    "ibans",
+    "ibantools",
+    "onlineid",
+    "videoid",
+    "noreferrer",
+    "OLKILUL",
+    "Bahnhofstrasse",
+    "SEPA"
+  ],
+  "files.exclude": {
+    "node_modules": true
+  },
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#072440",
+    "titleBar.activeForeground": "#FFF"
+  }
+}

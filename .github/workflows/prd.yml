@@ -1,0 +1,64 @@
+name: PRD CI/CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '16.x'
+  AZURE_ACCOUNT_NAME: 'stdfxsrvprd'
+  AZURE_CDN_PROFILE: 'cdnp-dfx-srv-prd'
+  AZURE_CDN_ENDPOINT: 'cdne-dfx-srv-prd'
+  AZURE_RESOURCE_GROUP: 'rg-dfx-srv-prd'
+
+jobs:
+  build:
+    name: Build and deploy to DEV
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.PRD_CREDENTIALS }}
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install packages
+        run: |
+          npm ci
+
+      - name: Build code
+        run: |
+          npm run build
+
+      - name: Run tests
+        run: |
+          npm run test
+
+      - name: Run linter
+        run: |
+          npm run lint
+
+      - name: Deploy to Azure Storage (PRD)
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob upload-batch --account-name ${{ env.AZURE_ACCOUNT_NAME }} -d '$web' -s ./build --overwrite
+
+      - name: Purge CDN endpoint (PRD)
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az cdn endpoint purge --content-paths  "/*" --profile-name ${{ env.AZURE_CDN_PROFILE }} --name ${{ env.AZURE_CDN_ENDPOINT }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
+
+      - name: Logout
+        run: |
+          az logout
+        if: always()
