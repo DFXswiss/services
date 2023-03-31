@@ -6,6 +6,7 @@ import { setupLanguages } from './translations';
 import { ErrorScreen } from './screens/error.screen';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyScreen } from './screens/buy.screen';
+import { BuyPaymentScreen } from './screens/buy/payment.screen';
 
 setupLanguages();
 
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
   {
     path: '/buy',
     element: <BuyScreen />,
+  },
+  {
+    path: '/buy/payment',
+    element: <BuyPaymentScreen />,
   },
   {
     path: '/bank-accounts',

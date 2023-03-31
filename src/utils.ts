@@ -40,4 +40,8 @@ export class Utils {
   static formatIban(iban?: string): string | null {
     return IbanTools.friendlyFormatIBAN(iban);
   }
+
+  static isJwt(jwt?: string): boolean {
+    return jwt ? /^[A-Za-z0-9_-]{2,}(?:\.[A-Za-z0-9_-]{2,}){2}$/.test(jwt) : false;
+  }
 }

@@ -28,8 +28,13 @@ export function AuthContextProvider(props: PropsWithChildren): JSX.Element {
 
   function isExpired(): boolean {
     if (!tokenWithFallback) return true;
-    const jwt = jwtDecode<Jwt>(tokenWithFallback);
-    return jwt?.exp != null && Date.now() > new Date(jwt?.exp * 1000).getTime();
+    try {
+      const jwt = jwtDecode<Jwt>(tokenWithFallback);
+      return jwt?.exp != null && Date.now() > new Date(jwt?.exp * 1000).getTime();
+    } catch {
+      authenticationToken.remove();
+      return true;
+    }
   }
 
   function setAuthenticationToken(token?: string) {
