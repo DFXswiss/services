@@ -1,4 +1,5 @@
 import { IconContext, IconType } from 'react-icons';
+import { FaCircle, FaRegCircle } from 'react-icons/fa';
 import {
   MdContentCopy,
   MdArrowBackIos,
@@ -20,6 +21,7 @@ import {
   MdHelpOutline,
   MdCheck,
 } from 'react-icons/md';
+import { VscArrowSwap } from 'react-icons/vsc';
 import { ReactElement, useContext } from 'react';
 
 interface DfxIconProps {
@@ -52,6 +54,9 @@ export enum IconVariant {
   BANK = 'BANK',
   SEPA_INSTANT = 'SEPA_INSTANT',
   PROCESS_DONE = 'PROCESS_DONE',
+  SWAP = 'SWAP',
+  CIRCLE = 'CIRCLE',
+  CIRCLE_OUTLINE = 'CIRCLE_OUTLINE',
 }
 
 export const VARIANT_MAPS: Record<IconVariant, ReactElement<IconType>> = {
@@ -78,6 +83,9 @@ export const VARIANT_MAPS: Record<IconVariant, ReactElement<IconType>> = {
   [IconVariant.PROCESS_DONE]: <DfxProcessDoneIcon />,
   [IconVariant.EDIT]: <MdEdit />,
   [IconVariant.HELP]: <MdHelpOutline />,
+  [IconVariant.SWAP]: <VscArrowSwap />,
+  [IconVariant.CIRCLE]: <FaCircle />,
+  [IconVariant.CIRCLE_OUTLINE]: <FaRegCircle />,
 };
 
 export enum IconSizes {

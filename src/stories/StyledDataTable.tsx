@@ -7,6 +7,7 @@ export interface StyledDataTableProps extends PropsWithChildren {
   showBorder?: boolean;
   alignContent?: AlignContent;
   narrow?: boolean;
+  minWidth?: boolean;
 }
 
 export enum AlignContent {
@@ -20,6 +21,7 @@ const contextProps = {
   showBorder: true,
   alignContent: AlignContent.LEFT,
   narrow: false,
+  minWidth: true,
 };
 export const ThemeContext = createContext(contextProps);
 
@@ -31,6 +33,7 @@ export default function StyledDataTable({
   children,
   alignContent = AlignContent.LEFT,
   narrow = false,
+  minWidth = true,
 }: StyledDataTableProps) {
   let headingClasses = 'text-lg font-bold mb-2.5';
   let labelClasses = 'font-semibold text-sm mb-1.5 ml-3.5';
@@ -41,8 +44,8 @@ export default function StyledDataTable({
   }
   showBorder ? (headingClasses += ' ml-3.5') : (headingClasses += ' ');
   return (
-    <ThemeContext.Provider value={{ darkTheme, showBorder, alignContent, narrow }}>
-      <div className="mb-2.5">
+    <ThemeContext.Provider value={{ darkTheme, showBorder, alignContent, narrow, minWidth }}>
+      <div className={`mb-2.5 ${minWidth ? '' : 'w-full'}`}>
         {heading !== undefined && <h3 className={headingClasses}>{heading}</h3>}
         {label !== undefined && showBorder && <p className={labelClasses}>{label}</p>}
         <div>{children}</div>

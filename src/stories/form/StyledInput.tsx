@@ -11,6 +11,7 @@ interface StyledInputProps extends ControlProps {
   forceErrorMessage?: string;
   hideLabel?: boolean;
   darkTheme?: boolean;
+  full?: boolean;
 }
 
 const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
@@ -29,6 +30,7 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
       forceErrorMessage,
       hideLabel = false,
       darkTheme = false,
+      full,
       ...props
     }: StyledInputProps,
     ref,
@@ -46,7 +48,7 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
       <Controller
         control={control}
         render={({ field: { onChange, onBlur, value } }) => (
-          <StyledVerticalStack gap={1}>
+          <StyledVerticalStack gap={1} full={full}>
             <label hidden={hideLabel} className={'text-base font-semibold pl-3 ' + [textColor].join(' ')}>
               {label}
             </label>

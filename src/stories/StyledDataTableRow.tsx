@@ -53,7 +53,7 @@ export default function StyledDataTableRow({
     <div className={wrapperClasses}>
       <div className="flex">
         {label !== undefined && (
-          <div className="flex-none w-48">
+          <div className={`flex-none ${theme.minWidth ? 'w-48' : ''}`}>
             <p className={labelClasses}>{label}</p>
           </div>
         )}

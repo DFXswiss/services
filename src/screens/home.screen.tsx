@@ -1,12 +1,11 @@
 import { Layout } from '../components/layout';
+import { ServiceButton, ServiceButtonType } from '../components/service-button';
 import { useLanguageContext } from '../contexts/language.context';
 import { useSessionHelper } from '../hooks/session-helper.hook';
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useLanguageContext();
-  const navigate = useNavigate();
   const { updateIfAvailable } = useSessionHelper();
 
   useEffect(() => {
@@ -19,11 +18,10 @@ export function HomeScreen(): JSX.Element {
       <p className="text-dfxGray-700">
         {translate('screens/main', 'Buy and Sell cryptocurrencies with bank transfers.')}
       </p>
-        <div className="flex flex-col gap-8 py-8">
-          <button className="text-black" type="button" onClick={() => navigate('/buy')}>
-            Buy
-          </button>
-        </div>
+      <div className="flex flex-col gap-8 py-8">
+        <ServiceButton type={ServiceButtonType.BUY} />
+        <ServiceButton type={ServiceButtonType.SELL} />
+        <ServiceButton type={ServiceButtonType.CONVERT} />
       </div>
     </Layout>
   );

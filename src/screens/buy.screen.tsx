@@ -7,8 +7,6 @@ import { Asset } from '../api/definitions/asset';
 import { Blockchain } from '../api/definitions/blockchain';
 import { Fiat } from '../api/definitions/fiat';
 import { useFiat } from '../api/hooks/fiat.hook';
-import { Navigation } from '../components/navigation';
-import { NavigationBack } from '../components/navigation-back';
 import { useLanguageContext } from '../contexts/language.context';
 import { AssetIconVariant } from '../stories/DfxAssetIcon';
 import Form from '../stories/form/Form';
@@ -16,6 +14,8 @@ import StyledDropdown from '../stories/form/StyledDropdown';
 import StyledButton, { StyledButtonWidths } from '../stories/StyledButton';
 import { Utils } from '../utils';
 import Validations from '../validations';
+import { Layout } from '../components/layout';
+import StyledVerticalStack from '../stories/layout-helpers/StyledVerticalStack';
 
 interface FormData {
   currency: Fiat;
@@ -58,23 +58,11 @@ export function BuyScreen(): JSX.Element {
   });
 
   return (
-    <>
-      <Navigation />
-      <NavigationBack title={translate('screens/buy', 'Buy')} />
-      <div className="flex flex-col w-full items-center text-center px-8 mt-6 gap-8">
-        <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
+    <Layout backTitle={translate('screens/buy', 'Buy')}>
+      <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
+        <StyledVerticalStack gap={8} full>
           {currencies && assets && (
             <>
-              <StyledDropdown<Fiat>
-                name="currency"
-                label={translate('screens/buy', 'Your Currency')}
-                placeholder={translate('screens/buy', 'Please select...')}
-                items={currencies}
-                labelFunc={(item) => item.name}
-                descriptionFunc={(item) => toDescription(item)}
-                full
-              />
-
               <StyledDropdown<Asset>
                 name="asset"
                 label={translate('screens/buy', 'I want to buy')}
@@ -82,6 +70,15 @@ export function BuyScreen(): JSX.Element {
                 items={assets.get(Blockchain.BITCOIN) ?? []}
                 labelFunc={(item) => item.name}
                 assetIconFunc={(item) => item.name as AssetIconVariant}
+                full
+              />
+              <StyledDropdown<Fiat>
+                name="currency"
+                label={translate('screens/buy', 'with currency')}
+                placeholder={translate('screens/buy', 'Please select...')}
+                items={currencies}
+                labelFunc={(item) => item.name}
+                descriptionFunc={(item) => toDescription(item)}
                 full
               />
             </>
@@ -94,8 +91,8 @@ export function BuyScreen(): JSX.Element {
             disabled={!isValid}
             caps={true}
           />
-        </Form>
-      </div>
-    </>
+        </StyledVerticalStack>
+      </Form>
+    </Layout>
   );
 }
