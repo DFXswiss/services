@@ -4,8 +4,8 @@ import menu from '../assets/menu.svg';
 import { useLanguageContext } from '../contexts/language.context';
 
 export function Navigation() {
-  const { changeLanguage } = useLanguageContext();
-  const [isNavigationOpen, setIsNavigationOpen] = useState(false); // initiate isNavOpen state with false
+  const { availableLanguages, changeLanguage } = useLanguageContext();
+  const [isNavigationOpen, setIsNavigationOpen] = useState(false);
 
   return (
     <div className="flex items-center justify-between h-12 px-4 py-5 bg-dfxBlue-800">
@@ -26,7 +26,7 @@ export function Navigation() {
             <div className="h-full w-full">
               <div
                 className="w-full flex flex-row justify-end px-4 py-5 z-10"
-                onClick={() => setIsNavigationOpen(false)} // change isNavOpen state to false to close the menu
+                onClick={() => setIsNavigationOpen(false)}
               >
                 <svg
                   className="h-4 w-4 text-gray-600"
@@ -63,12 +63,11 @@ export function Navigation() {
                 <li className="">
                   <a href="/">Logout</a>
                 </li>
-                <li className="">
-                  <div onClick={() => changeLanguage('en')}>EN</div>
-                </li>
-                <li className="">
-                  <div onClick={() => changeLanguage('de')}>DE</div>
-                </li>
+                {availableLanguages.map((language) => (
+                  <li key={language.symbol} className="">
+                    <div onClick={() => changeLanguage(language.symbol.toLowerCase())}>{language.symbol}</div>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
