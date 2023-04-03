@@ -1,4 +1,4 @@
-import { createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
+import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 import { Country } from '../definitions/country';
 import { User } from '../definitions/user';
 import { useCountry } from '../hooks/country.hook';
@@ -61,7 +61,10 @@ export function UserContextProvider(props: PropsWithChildren): JSX.Element {
     userLinkAction = userLink;
   }
 
-  const context: UserInterface = { user, refLink, countries, isUserLoading, isUserUpdating, changeMail, register };
+  const context: UserInterface = useMemo(
+    () => ({ user, refLink, countries, isUserLoading, isUserUpdating, changeMail, register }),
+    [user, refLink, countries, isUserLoading, isUserUpdating, changeMail, register],
+  );
 
   return <UserContext.Provider value={context}>{props.children}</UserContext.Provider>;
 }

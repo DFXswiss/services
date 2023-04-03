@@ -12,7 +12,14 @@
     "noreferrer",
     "OLKILUL",
     "Bahnhofstrasse",
-    "SEPA"
+    "SEPA",
+    "DEFICHAIN",
+    "defichain",
+    "ARBITRUM",
+    "Arbitrum",
+    "CARDANO",
+    "cardano",
+    "tailwindcss"
   ],
   "files.exclude": {
     "node_modules": true

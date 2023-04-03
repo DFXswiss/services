@@ -1,4 +1,4 @@
-import { createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
+import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 import { Utils } from '../../utils';
 import { Asset } from '../definitions/asset';
 import { Blockchain } from '../definitions/blockchain';
@@ -39,7 +39,7 @@ export function AssetContextProvider(props: PropsWithChildren): JSX.Element {
     );
   }
 
-  const context: AssetInterface = { assets, assetsLoading };
+  const context: AssetInterface = useMemo(() => ({ assets, assetsLoading }), [assets, assetsLoading]);
 
   return <AssetContext.Provider value={context}>{props.children}</AssetContext.Provider>;
 }

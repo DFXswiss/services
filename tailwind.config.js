@@ -24,6 +24,7 @@ module.exports = {
         150: '#E73955',
       },
       dfxGray: {
+        300: '#F3F4F7',
         400: '#EAECF0',
         500: '#D6DBE2',
         600: '#B8C4D8',
@@ -62,6 +63,10 @@ module.exports = {
       lg: '0.9375rem', // 15px
       full: '9999px',
     },
-    extend: {},
+    extend: {
+      height: {
+        container: '90vh',
+      },
+    },
   },
 };
