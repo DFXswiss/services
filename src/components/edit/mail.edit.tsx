@@ -9,6 +9,7 @@ import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stor
 import StyledInfoText from '../../stories/StyledInfoText';
 import { Utils } from '../../utils';
 import Validations from '../../validations';
+import { useLanguageContext } from '../../contexts/language.context';
 
 interface MailEditProps {
   infoText?: string;
@@ -46,6 +47,7 @@ export function MailEdit({
     formState: { isValid, errors },
   } = useForm<FormData>();
   const { changeMail, isUserUpdating } = useUserContext();
+  const { translate } = useLanguageContext();
 
   async function saveUser({ email }: FormData): Promise<void> {
     if (!email || email.length === 0) return onSubmit();
@@ -63,11 +65,10 @@ export function MailEdit({
           <InfoTextElement text={infoText} iconColor={infoTextIconColor} />
         )}
         <StyledInput
-          label="Contact information"
-          placeholder="E-mail address"
+          label={translate('component/mail-edit', 'Contact information')}
+          placeholder={translate('component/mail-edit', 'E-mail address')}
           name="email"
           hideLabel={hideLabels}
-          darkTheme
         />
         {infoText && infoTextPlacement === MailEditInfoTextPlacement.BELOW_INPUT && (
           <InfoTextElement text={infoText} iconColor={infoTextIconColor} />
@@ -75,16 +76,16 @@ export function MailEdit({
         <StyledHorizontalStack gap={4}>
           {showCancelButton && onCancel && (
             <StyledButton
-              label="cancel"
+              label={translate('component/mail-edit', 'cancel')}
               onClick={onCancel}
-              color={StyledButtonColors.PALE_WHITE}
+              color={StyledButtonColors.STURDY_WHITE}
               width={StyledButtonWidths.FULL}
               caps
             />
           )}
           <StyledButton
             disabled={!isValid}
-            label={isOptional ? 'finish' : 'save'}
+            label={isOptional ? translate('component/mail-edit', 'finish') : translate('component/mail-edit', 'save')}
             onClick={handleSubmit(saveUser)}
             isLoading={isUserUpdating}
             width={StyledButtonWidths.FULL}
@@ -97,9 +98,5 @@ export function MailEdit({
 }
 
 function InfoTextElement({ text, iconColor }: { text: string; iconColor: IconColors }): JSX.Element {
-  return (
-    <StyledInfoText darkTheme iconColor={iconColor}>
-      {text}
-    </StyledInfoText>
-  );
+  return <StyledInfoText iconColor={iconColor}>{text}</StyledInfoText>;
 }

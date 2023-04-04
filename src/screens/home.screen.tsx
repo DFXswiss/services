@@ -1,16 +1,9 @@
 import { Layout } from '../components/layout';
 import { ServiceButton, ServiceButtonType } from '../components/service-button';
 import { useLanguageContext } from '../contexts/language.context';
-import { useSessionHelper } from '../hooks/session-helper.hook';
-import { useEffect } from 'react';
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useLanguageContext();
-  const { updateIfAvailable } = useSessionHelper();
-
-  useEffect(() => {
-    updateIfAvailable();
-  }, [updateIfAvailable]);
 
   return (
     <Layout>

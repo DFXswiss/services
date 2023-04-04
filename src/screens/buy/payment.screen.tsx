@@ -14,9 +14,12 @@ import { useKyc } from '../../hooks/kyc.hook';
 import { useBuyContext } from '../../api/contexts/buy.context';
 import { Buy } from '../../api/definitions/buy';
 import { PaymentInformation, PaymentInformationContent } from '../../components/buy/payment-information';
-import StyledButton, { StyledButtonWidths } from '../../stories/StyledButton';
+import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stories/StyledButton';
 import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStack';
 import StyledInfoText from '../../stories/StyledInfoText';
+import DfxIcon, { IconColors, IconSizes, IconVariant } from '../../stories/DfxIcon';
+import { MailEdit } from '../../components/edit/mail.edit';
+import { useUserContext } from '../../api/contexts/user.context';
 
 interface FormData {
   amount: number;
@@ -29,6 +32,7 @@ export function BuyPaymentScreen(): JSX.Element {
   const { isAllowedToBuy, start, limit } = useKyc();
   const { toSymbol } = useFiat();
   const { assetId, currencyId } = useQuery();
+  const { user } = useUserContext();
   const [paymentInfo, setPaymentInfo] = useState<PaymentInformation>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [showsCompletion, setShowsCompletion] = useState(false);
@@ -50,6 +54,8 @@ export function BuyPaymentScreen(): JSX.Element {
   const dataValid = validatedData != null;
   const kycRequired = dataValid && !isAllowedToBuy(Number(validatedData?.amount));
 
+  const showsSimple = user?.mail != null;
+
   useEffect(() => {
     if (!dataValid || !currency || !asset) return;
 
@@ -64,10 +70,19 @@ export function BuyPaymentScreen(): JSX.Element {
       .then(setPaymentInfo);
   }, [validatedData, currency, asset]);
 
+  function getHeader(): string {
+    return showsSimple
+      ? translate('screens/buy/payment', 'Nice! You are all set! Give us a minute to handle your transaction')
+      : translate(
+          'screens/buy/payment',
+          'As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet.',
+        );
+  }
+
   function checkForMinDeposit(buy: Buy, amount: number): Buy | undefined {
     if (buy.minDeposit.amount > amount) {
       setCustomAmountError(
-        translate('screens/buy', 'Entered amount is below minimum deposit of {{amount}} {{asset}}', {
+        translate('screens/buy/payment', 'Entered amount is below minimum deposit of {{amount}} {{asset}}', {
           amount: Utils.formatAmount(buy.minDeposit.amount),
           asset: buy.minDeposit.asset,
         }),
@@ -107,49 +122,97 @@ export function BuyPaymentScreen(): JSX.Element {
     amount: Validations.Required,
   });
 
-  return (
-    <Layout backTitle={translate('screens/buy', 'Buy')} start>
-      <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
-        <StyledInput
-          type={'number'}
-          label={translate('screens/buy', 'Buy Amount')}
-          placeholder="0.00"
-          prefix={currency && toSymbol(currency)}
-          name="amount"
-          forceError={kycRequired || customAmountError != null}
-          forceErrorMessage={customAmountError}
-          full
-        />
-      </Form>
+  function handleDone() {
+    console.log('done');
+  }
 
-      {paymentInfo && dataValid && !kycRequired && (
-        <>
-          <PaymentInformationContent info={paymentInfo} />
-          <StyledButton
-            width={StyledButtonWidths.FULL}
-            label={translate('screens/buy', 'Click once your bank transfer is completed.')}
-            onClick={() => {
-              setShowsCompletion(true);
-            }}
-            caps={false}
-          />
-        </>
-      )}
-      {kycRequired && (
-        <StyledVerticalStack gap={4} marginY={4}>
-          <StyledInfoText invertedIcon>
-            {translate(
-              'screens/buy',
-              'Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.',
-              { limit },
-            )}
-          </StyledInfoText>
-          <StyledButton
-            width={StyledButtonWidths.FULL}
-            label={translate('screens/buy', 'Complete KYC')}
-            onClick={start}
-          />
+  return (
+    <Layout
+      backTitle={showsCompletion ? translate('screens/buy/payment', 'Done!') : translate('screens/buy/payment', 'Buy')}
+      backToApp={showsCompletion}
+      start
+    >
+      {showsCompletion ? (
+        <StyledVerticalStack gap={4}>
+          <div className="mx-auto">
+            <DfxIcon size={IconSizes.XXL} icon={IconVariant.PROCESS_DONE} color={IconColors.BLUE} />
+          </div>
+          <p className="text-base font-bold text-center text-dfxBlue-800">{getHeader()}</p>
+          {showsSimple ? (
+            <>
+              <p className="text-center text-dfxBlue-800">
+                {translate(
+                  'screens/buy/payment',
+                  'As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet. We will inform you about the progress of any purchase or sale via E-mail.',
+                )}
+              </p>
+              <StyledButton
+                label={translate('general/actions', 'close')}
+                onClick={handleDone}
+                color={StyledButtonColors.PALE_WHITE}
+                width={StyledButtonWidths.FULL}
+                caps
+              />
+            </>
+          ) : (
+            <MailEdit
+              onSubmit={handleDone}
+              onCancel={handleDone}
+              infoText={translate(
+                'screens/buy/payment',
+                'Enter your email address if you want to be informed about the progress of any purchase or sale.',
+              )}
+              showCancelButton
+              hideLabels
+              isOptional
+            />
+          )}
         </StyledVerticalStack>
+      ) : (
+        <>
+          <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
+            <StyledInput
+              type={'number'}
+              label={translate('screens/buy/payment', 'Buy Amount')}
+              placeholder="0.00"
+              prefix={currency && toSymbol(currency)}
+              name="amount"
+              forceError={kycRequired || customAmountError != null}
+              forceErrorMessage={customAmountError}
+              full
+            />
+          </Form>
+
+          {paymentInfo && dataValid && !kycRequired && (
+            <>
+              <PaymentInformationContent info={paymentInfo} />
+              <StyledButton
+                width={StyledButtonWidths.FULL}
+                label={translate('screens/buy/payment', 'Click once your bank transfer is completed.')}
+                onClick={() => {
+                  setShowsCompletion(true);
+                }}
+                caps={false}
+              />
+            </>
+          )}
+          {kycRequired && (
+            <StyledVerticalStack gap={4} marginY={4}>
+              <StyledInfoText invertedIcon>
+                {translate(
+                  'screens/buy/payment',
+                  'Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.',
+                  { limit },
+                )}
+              </StyledInfoText>
+              <StyledButton
+                width={StyledButtonWidths.FULL}
+                label={translate('screens/buy/payment', 'Complete KYC')}
+                onClick={start}
+              />
+            </StyledVerticalStack>
+          )}
+        </>
       )}
     </Layout>
   );

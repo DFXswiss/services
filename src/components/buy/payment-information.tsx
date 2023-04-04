@@ -31,16 +31,16 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
   return (
     <>
       <StyledVerticalStack marginY={5} gap={2}>
-        <h2 className="text-dfxBlue-800 text-center">{translate('screens/buy', 'Payment Information')}</h2>
+        <h2 className="text-dfxBlue-800 text-center">{translate('screens/buy/payment', 'Payment Information')}</h2>
         <StyledInfoText iconColor={IconColors.BLUE}>
           {translate(
-            'screens/buy',
+            'screens/buy/payment',
             'Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!',
           )}
         </StyledInfoText>
       </StyledVerticalStack>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-        <StyledDataTableRow label={translate('screens/buy', 'IBAN')}>
+        <StyledDataTableRow label={translate('screens/buy/payment', 'IBAN')}>
           <div>
             <p>{info.iban}</p>
             {info.isSepaInstant && (
@@ -51,14 +51,14 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
           </div>
           <CopyButton onCopy={() => copy(info.iban)} />
         </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/buy', 'BIC')}>
+        <StyledDataTableRow label={translate('screens/buy/payment', 'BIC')}>
           {info.bic}
           <CopyButton onCopy={() => copy(info.bic)} />
         </StyledDataTableRow>
         <StyledDataTableRow
-          label={translate('screens/buy', 'Purpose of payment')}
+          label={translate('screens/buy/payment', 'Purpose of payment')}
           infoText={translate(
-            'screens/buy',
+            'screens/buy/payment',
             'The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders.',
           )}
         >
@@ -67,12 +67,12 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
         </StyledDataTableRow>
       </StyledDataTable>
       <GiroCode info={info} />
-      <StyledDataTable label={translate('screens/buy', 'Recipient')} showBorder minWidth={false}>
+      <StyledDataTable label={translate('screens/buy/payment', 'Recipient')} showBorder minWidth={false}>
         <StyledDataTableRow>{info.recipient}</StyledDataTableRow>
       </StyledDataTable>
       <StyledDataTable alignContent={AlignContent.BETWEEN} showBorder={false} narrow minWidth={false}>
         <StyledDataTableRow discreet>
-          <p>{translate('screens/buy', 'DFX-Fee')}</p>
+          <p>{translate('screens/buy/payment', 'DFX-Fee')}</p>
           <p>{info.fee}</p>
         </StyledDataTableRow>
       </StyledDataTable>
