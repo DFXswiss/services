@@ -20,12 +20,14 @@ import StyledInfoText from '../../stories/StyledInfoText';
 import DfxIcon, { IconColors, IconSizes, IconVariant } from '../../stories/DfxIcon';
 import { MailEdit } from '../../components/edit/mail.edit';
 import { useUserContext } from '../../api/contexts/user.context';
+import { useAppHandlingContext } from '../../contexts/app-handling.context';
 
 interface FormData {
   amount: number;
 }
 
 export function BuyPaymentScreen(): JSX.Element {
+  const { backToApp } = useAppHandlingContext();
   const { currencies, receiveFor } = useBuyContext();
   const { translate } = useLanguageContext();
   const { assets, getAsset } = useAssetContext();
@@ -122,10 +124,6 @@ export function BuyPaymentScreen(): JSX.Element {
     amount: Validations.Required,
   });
 
-  function handleDone() {
-    console.log('done');
-  }
-
   return (
     <Layout
       backTitle={showsCompletion ? translate('screens/buy/payment', 'Done!') : translate('screens/buy/payment', 'Buy')}
@@ -148,7 +146,7 @@ export function BuyPaymentScreen(): JSX.Element {
               </p>
               <StyledButton
                 label={translate('general/actions', 'close')}
-                onClick={handleDone}
+                onClick={backToApp}
                 color={StyledButtonColors.STURDY_WHITE}
                 width={StyledButtonWidths.FULL}
                 caps
@@ -156,8 +154,11 @@ export function BuyPaymentScreen(): JSX.Element {
             </>
           ) : (
             <MailEdit
-              onSubmit={handleDone}
-              onCancel={handleDone}
+              onSubmit={() => {
+                // intentionally empty, email is being updated
+                // and then showsSimple will be true
+              }}
+              onCancel={backToApp}
               infoText={translate(
                 'screens/buy/payment',
                 'Enter your email address if you want to be informed about the progress of any purchase or sale.',
