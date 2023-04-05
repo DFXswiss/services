@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAssetContext } from '../api/contexts/asset.context';
 import { useBuyContext } from '../api/contexts/buy.context';
 import { Asset } from '../api/definitions/asset';
-import { Blockchain } from '../api/definitions/blockchain';
 import { Fiat } from '../api/definitions/fiat';
 import { useFiat } from '../api/hooks/fiat.hook';
 import { useLanguageContext } from '../contexts/language.context';

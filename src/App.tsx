@@ -7,6 +7,7 @@ import { ErrorScreen } from './screens/error.screen';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyScreen } from './screens/buy.screen';
 import { BuyPaymentScreen } from './screens/buy/payment.screen';
+import { AppHandlingContextProvider } from './contexts/app-handling.context';
 
 setupLanguages();
 
@@ -32,11 +33,13 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <DfxContextProvider api={{ signMessage: undefined }} data={{ address: undefined, blockchain: undefined }}>
-      <LanguageContextProvider>
-        <RouterProvider router={router} />
-      </LanguageContextProvider>
-    </DfxContextProvider>
+    <AppHandlingContextProvider>
+      <DfxContextProvider api={{ signMessage: undefined }} data={{ address: undefined, blockchain: undefined }}>
+        <LanguageContextProvider>
+          <RouterProvider router={router} />
+        </LanguageContextProvider>
+      </DfxContextProvider>
+    </AppHandlingContextProvider>
   );
 }
 

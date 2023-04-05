@@ -3,7 +3,7 @@ import i18n from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Language } from '../definitions/language';
 
-export interface LanguageInterface {
+interface LanguageInterface {
   availableLanguages: Language[];
   language: string;
   changeLanguage: (language: string) => void;

@@ -205,7 +205,10 @@ function DfxProcessDoneIcon() {
 
   return (
     <svg width={iconSize} height={iconSize} viewBox="0 0 170 170" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <g clipPath="url(#clip0_885_9990)" filter="url(#filter0_d_885_9990)">
+      <g
+        clipPath={checkMarkColor === 'white' ? 'url(#clip0_885_9990)' : undefined}
+        filter={checkMarkColor === 'white' ? 'url(#filter0_d_885_9990)' : undefined}
+      >
         <path
           opacity="0.18"
           d="M25.9308 118.563C23.2492 114.352 21.02 109.851 19.2969 105.188L29.3985 101.461C30.8523 105.414 32.7369 109.215 35.0092 112.769L25.9308 118.552V118.563Z"

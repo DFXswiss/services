@@ -129,8 +129,8 @@ export function BuyPaymentScreen(): JSX.Element {
   return (
     <Layout
       backTitle={showsCompletion ? translate('screens/buy/payment', 'Done!') : translate('screens/buy/payment', 'Buy')}
-      backToApp={showsCompletion}
-      start
+      isBackToApp={showsCompletion}
+      textStart
     >
       {showsCompletion ? (
         <StyledVerticalStack gap={4}>
@@ -184,7 +184,7 @@ export function BuyPaymentScreen(): JSX.Element {
           </Form>
 
           {paymentInfo && dataValid && !kycRequired && (
-            <>
+            <div className="pb-16">
               <PaymentInformationContent info={paymentInfo} />
               <StyledButton
                 width={StyledButtonWidths.FULL}
@@ -194,7 +194,7 @@ export function BuyPaymentScreen(): JSX.Element {
                 }}
                 caps={false}
               />
-            </>
+            </div>
           )}
           {kycRequired && (
             <StyledVerticalStack gap={4} marginY={4}>
