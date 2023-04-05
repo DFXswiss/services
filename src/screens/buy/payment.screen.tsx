@@ -149,7 +149,7 @@ export function BuyPaymentScreen(): JSX.Element {
               <StyledButton
                 label={translate('general/actions', 'close')}
                 onClick={handleDone}
-                color={StyledButtonColors.PALE_WHITE}
+                color={StyledButtonColors.STURDY_WHITE}
                 width={StyledButtonWidths.FULL}
                 caps
               />

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useAssetContext } from '../api/contexts/asset.context';
@@ -16,6 +16,7 @@ import { Utils } from '../utils';
 import Validations from '../validations';
 import { Layout } from '../components/layout';
 import StyledVerticalStack from '../stories/layout-helpers/StyledVerticalStack';
+import { useSessionContext } from '../api/contexts/session.context';
 
 interface FormData {
   currency: Fiat;
@@ -25,9 +26,11 @@ interface FormData {
 export function BuyScreen(): JSX.Element {
   const { translate } = useLanguageContext();
   const navigate = useNavigate();
+  const { blockchain, availableBlockchains } = useSessionContext();
   const { currencies } = useBuyContext();
   const { assets } = useAssetContext();
   const { toDescription } = useFiat();
+  const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
   const {
     control,
     handleSubmit,
@@ -38,8 +41,12 @@ export function BuyScreen(): JSX.Element {
 
   useEffect(() => {
     if (assets) {
-      const blockchainAssets = assets.get(Blockchain.BITCOIN);
+      const blockchainAssets = availableBlockchains
+        ?.filter((b) => (blockchain ? blockchain === b : true))
+        .map((blockchain) => assets.get(blockchain))
+        .reduce((prev, curr) => prev?.concat(curr ?? []), []);
       blockchainAssets?.length === 1 && setValue('asset', blockchainAssets[0]);
+      setAvailableAssets(blockchainAssets ?? []);
     }
   }, [assets]);
 
@@ -67,9 +74,10 @@ export function BuyScreen(): JSX.Element {
                 name="asset"
                 label={translate('screens/buy', 'I want to buy')}
                 placeholder={translate('screens/buy', 'Please select...')}
-                items={assets.get(Blockchain.BITCOIN) ?? []}
+                items={availableAssets}
                 labelFunc={(item) => item.name}
                 assetIconFunc={(item) => item.name as AssetIconVariant}
+                descriptionFunc={(item) => item.blockchain}
                 full
               />
               <StyledDropdown<Fiat>

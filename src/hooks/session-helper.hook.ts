@@ -8,11 +8,12 @@ interface SessionHelperInterface {
 
 export function useSessionHelper(): SessionHelperInterface {
   const { updateSession } = useApiSession();
-  const { session } = useQuery();
+  const { session, reloadWithoutSession } = useQuery();
 
   function updateIfAvailable() {
     if (session && Utils.isJwt(session)) {
       updateSession(session);
+      reloadWithoutSession();
     }
   }
 

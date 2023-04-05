@@ -121,7 +121,7 @@ const SIZE_MAPS: Record<IconSizes, string> = {
   [IconSizes.MD]: '20px',
   [IconSizes.LG]: '24px',
   [IconSizes.XL]: '32px',
-  [IconSizes.XXL]: '60px',
+  [IconSizes.XXL]: '72px',
 };
 
 export default function DfxIcon({ icon, color = IconColors.RED, size = IconSizes.MD }: DfxIconProps) {

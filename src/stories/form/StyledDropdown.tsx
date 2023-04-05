@@ -88,7 +88,7 @@ export default function StyledDropdown<T>({
                   className="flex flex-col gap-2 justify-between text-left border-x border-dfxGray-400 w-full hover:bg-dfxGray-400/50 last:border-b last:rounded-b px-3.5 py-2.5"
                 >
                   <div className="flex flex-row gap-2 items-center">
-                    {assetIconFunc && <DfxAssetIcon asset={assetIconFunc(value)} />}
+                    {assetIconFunc && <DfxAssetIcon asset={assetIconFunc(item)} />}
                     <div className="flex flex-col gap-1 justify-between text-left">
                       <span className="text-dfxBlue-800 leading-none font-semibold">{labelFunc(item)}</span>
                       {descriptionFunc && (

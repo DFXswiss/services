@@ -32,7 +32,7 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <DfxContextProvider>
+    <DfxContextProvider api={{ signMessage: undefined }} data={{ address: undefined, blockchain: undefined }}>
       <LanguageContextProvider>
         <RouterProvider router={router} />
       </LanguageContextProvider>
