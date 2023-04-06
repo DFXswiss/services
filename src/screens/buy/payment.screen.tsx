@@ -192,6 +192,7 @@ export function BuyPaymentScreen(): JSX.Element {
                 label={translate('screens/buy/payment', 'Click once your bank transfer is completed.')}
                 onClick={() => {
                   setShowsCompletion(true);
+                  window.scrollTo(0, 0);
                 }}
                 caps={false}
               />

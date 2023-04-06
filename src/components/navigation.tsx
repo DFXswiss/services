@@ -12,7 +12,7 @@ export function Navigation() {
       <a href="/">
         <img height={23} width={73.6} src={logo} alt="logo" />
       </a>
-      <nav>
+      <nav hidden>
         <section className="flex">
           <div className="space-y-2" onClick={() => setIsNavigationOpen((prev) => !prev)}>
             <img height={24} width={24} src={menu} alt="logo" />
