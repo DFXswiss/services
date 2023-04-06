@@ -20,7 +20,7 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
 
   async function openAppPage(page: string): Promise<void> {
     const win: Window = window;
-    win.location = `${redirectUri}://${page}`;
+    win.location = `${redirectUri}${page}`;
   }
 
   const context = { setRedirectUri, backToApp };
