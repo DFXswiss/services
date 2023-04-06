@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 interface QueryInterface {
   session?: string;
-  appIdentifier?: string;
+  redirectUri?: string;
   blockchain?: string;
   assetId?: string;
   currencyId?: string;
@@ -14,7 +14,7 @@ export function useQuery(): QueryInterface {
   const navigate = useNavigate();
   const { search, pathname } = useLocation();
 
-  const blockedParams = ['session', 'blockchain', 'app-identifier'];
+  const blockedParams = ['session', 'blockchain', 'redirect-uri'];
 
   const query = useMemo(() => new URLSearchParams(search), [search]);
 
@@ -31,7 +31,7 @@ export function useQuery(): QueryInterface {
 
   return {
     session: getParameter('session'),
-    appIdentifier: getParameter('app-identifier'),
+    redirectUri: getParameter('redirect-uri'),
     blockchain: getParameter('blockchain'),
     assetId: getParameter('assetId'),
     currencyId: getParameter('currencyId'),

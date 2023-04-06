@@ -35,6 +35,8 @@ export default function StyledDropdown<T>({
 
   isOpen ? (buttonClasses += ' rounded-x rounded-t bg-dfxGray-400/50') : (buttonClasses += ' rounded');
 
+  const isDisabled = disabled || items.length <= 1;
+
   return (
     <Controller
       control={control}
@@ -51,7 +53,7 @@ export default function StyledDropdown<T>({
             onClick={() => setIsOpen(!isOpen)}
             className={buttonClasses}
             onBlur={onBlur}
-            disabled={disabled || items.length <= 1}
+            disabled={isDisabled}
             {...props}
           >
             <div className="flex flex-row gap-2 items-center">
@@ -70,7 +72,7 @@ export default function StyledDropdown<T>({
               </div>
             </div>
 
-            {!(disabled || items.length <= 1) && (
+            {!isDisabled && (
               <div className="place-self-center">
                 <DfxIcon icon={isOpen ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE} size={IconSizes.LG} />
               </div>

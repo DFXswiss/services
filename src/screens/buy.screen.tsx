@@ -72,7 +72,7 @@ export function BuyScreen(): JSX.Element {
               <StyledDropdown<Asset>
                 name="asset"
                 label={translate('screens/buy', 'I want to buy')}
-                placeholder={translate('screens/buy', 'Please select...')}
+                placeholder={translate('general/actions', 'Please select...')}
                 items={availableAssets}
                 labelFunc={(item) => item.name}
                 assetIconFunc={(item) => item.name as AssetIconVariant}
@@ -82,7 +82,7 @@ export function BuyScreen(): JSX.Element {
               <StyledDropdown<Fiat>
                 name="currency"
                 label={translate('screens/buy', 'with currency')}
-                placeholder={translate('screens/buy', 'Please select...')}
+                placeholder={translate('general/actions', 'Please select...')}
                 items={currencies}
                 labelFunc={(item) => item.name}
                 descriptionFunc={(item) => toDescription(item)}

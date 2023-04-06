@@ -9,9 +9,9 @@ export function HomeScreen(): JSX.Element {
 
   return (
     <Layout>
-      <h2 className="text-dfxBlue-800">{translate('screens/main', 'DFX services')}</h2>
+      <h2 className="text-dfxBlue-800">{translate('screens/home', 'DFX services')}</h2>
       <p className="text-dfxGray-700">
-        {translate('screens/main', 'Buy and Sell cryptocurrencies with bank transfers.')}
+        {translate('screens/home', 'Buy and Sell cryptocurrencies with bank transfers.')}
       </p>
       {isLoggedIn ? (
         <div className="flex flex-col gap-8 py-8">
@@ -21,7 +21,7 @@ export function HomeScreen(): JSX.Element {
         </div>
       ) : (
         <p className="text-dfxGray-700 py-8">
-          {translate('screens/main', 'Please login via an application to use our services')}
+          {translate('screens/home', 'Please login via an application to use our services')}
         </p>
       )}
     </Layout>

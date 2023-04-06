@@ -1,7 +1,7 @@
 import { PropsWithChildren, createContext, useContext, useState } from 'react';
 
 interface AppHandlingContextInterface {
-  setAppIdentifier: (appIdentifier: string) => void;
+  setRedirectUri: (redirectUri: string) => void;
   backToApp: () => Promise<void>;
 }
 
@@ -12,7 +12,7 @@ export function useAppHandlingContext(): AppHandlingContextInterface {
 }
 
 export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Element {
-  const [appIdentifier, setAppIdentifier] = useState<string>();
+  const [redirectUri, setRedirectUri] = useState<string>();
 
   async function backToApp(): Promise<void> {
     openAppPage('home');
@@ -20,10 +20,10 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
 
   async function openAppPage(page: string): Promise<void> {
     const win: Window = window;
-    win.location = `${appIdentifier}://${page}`;
+    win.location = `${redirectUri}://${page}`;
   }
 
-  const context = { setAppIdentifier, backToApp };
+  const context = { setRedirectUri, backToApp };
 
   return <AppHandlingContext.Provider value={context}>{props.children}</AppHandlingContext.Provider>;
 }

@@ -9,15 +9,15 @@ interface UrlParamHelperInterface {
 
 export function useUrlParamHelper(): UrlParamHelperInterface {
   const { updateSession } = useApiSession();
-  const { setAppIdentifier } = useAppHandlingContext();
-  const { session, appIdentifier, reloadWithoutBlockedParams } = useQuery();
+  const { setRedirectUri } = useAppHandlingContext();
+  const { session, redirectUri, reloadWithoutBlockedParams } = useQuery();
 
   function readParamsAndReload() {
     if (session && Utils.isJwt(session)) {
       updateSession(session);
     }
-    if (appIdentifier) {
-      setAppIdentifier(appIdentifier);
+    if (redirectUri) {
+      setRedirectUri(redirectUri);
     }
     reloadWithoutBlockedParams();
   }
