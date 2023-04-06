@@ -9,9 +9,10 @@ export enum ServiceButtonType {
 
 interface ServiceButtonProps {
   type: ServiceButtonType;
+  url: string;
 }
 
-export function ServiceButton({ type }: ServiceButtonProps): JSX.Element {
+export function ServiceButton({ type, url }: ServiceButtonProps): JSX.Element {
   const navigate = useNavigate();
 
   const iconDefinitions: Record<ServiceButtonType, JSX.Element> = {
@@ -38,25 +39,11 @@ export function ServiceButton({ type }: ServiceButtonProps): JSX.Element {
     ),
   };
 
-  function handleClick() {
-    switch (type) {
-      case ServiceButtonType.BUY:
-        navigate('/buy');
-        break;
-      case ServiceButtonType.SELL:
-        navigate('/sell');
-        break;
-      case ServiceButtonType.CONVERT:
-        navigate('/convert');
-        break;
-    }
-  }
-
   return (
     <button
       className="flex flex-col gap-2 items-center justify-center rounded border border-dfxGray-300 h-20 w-60 shadow-dfx"
       type="button"
-      onClick={handleClick}
+      onClick={() => navigate(url)}
     >
       <p className="text-dfxBlue-800 text-lg font-bold">{type}</p>
       <div className="flex flex-row gap-2">{iconDefinitions[type]}</div>
