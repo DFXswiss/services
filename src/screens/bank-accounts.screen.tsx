@@ -1,7 +1,7 @@
 import { Layout } from '../components/layout';
 import { useLanguageContext } from '../contexts/language.context';
 
-export function BankAccounts(): JSX.Element {
+export function BankAccountsScreen(): JSX.Element {
   const { translate } = useLanguageContext();
   return (
     <Layout>

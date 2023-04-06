@@ -2,10 +2,12 @@ import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useRe
 import { Blockchain } from '../definitions/blockchain';
 import { ApiError } from '../definitions/error';
 import { useApiSession } from '../hooks/api-session.hook';
+import { useAuthContext } from './auth.context';
 
 export interface SessionInterface {
   address?: string;
   blockchain?: Blockchain;
+  availableBlockchains?: Blockchain[];
   isLoggedIn: boolean;
   needsSignUp: boolean;
   isProcessing: boolean;
@@ -20,18 +22,22 @@ export function useSessionContext(): SessionInterface {
   return useContext(SessionContext);
 }
 
-export function SessionContextProvider(props: PropsWithChildren): JSX.Element {
+export interface SessionContextProviderProps extends PropsWithChildren {
+  api: {
+    signMessage?: (message: string, address: string) => Promise<string>;
+  };
+  data: {
+    address?: string;
+    blockchain?: Blockchain;
+  };
+}
+
+export function SessionContextProvider({ api, data, children }: SessionContextProviderProps): JSX.Element {
+  const { session } = useAuthContext();
   const { isLoggedIn, getSignMessage, createSession, deleteSession } = useApiSession();
   const [needsSignUp, setNeedsSignUp] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [signature, setSignature] = useState<string>();
-
-  // TODO: (Krysh) add from api
-  let address: string | undefined;
-  let blockchain: Blockchain | undefined;
-  async function signMessage(_message: string, _address: string): Promise<string> {
-    return '';
-  }
 
   const firstRender = useRef(true);
   useEffect(() => {
@@ -39,25 +45,25 @@ export function SessionContextProvider(props: PropsWithChildren): JSX.Element {
       firstRender.current = false;
       return;
     }
-    if (address) {
-      createApiSession(address);
+    if (data.address) {
+      createApiSession(data.address);
     } else {
       deleteSession();
     }
-  }, [address]);
+  }, [data.address]);
 
   async function login(): Promise<void> {
     // if (!isConnected) {
     //   await connect();
     // }
-    if (!address) return; // TODO (Krysh) add real error handling
-    createApiSession(address);
+    if (!data.address) return; // TODO (Krysh) add real error handling
+    createApiSession(data.address);
   }
 
   async function createApiSession(address: string): Promise<void> {
-    if (isLoggedIn) return;
+    if (isLoggedIn || !api.signMessage) return;
     const message = await getSignMessage(address);
-    const signature = await signMessage(message, address);
+    const signature = await api.signMessage(message, address);
     setIsProcessing(true);
     return createSession(address, signature, false)
       .catch((error: ApiError) => {
@@ -70,9 +76,9 @@ export function SessionContextProvider(props: PropsWithChildren): JSX.Element {
   }
 
   async function signUp(): Promise<void> {
-    if (!address || !signature) return; // TODO (Krysh) add real error handling
+    if (!data.address || !signature) return; // TODO (Krysh) add real error handling
     setIsProcessing(true);
-    return createSession(address, signature, true).finally(() => {
+    return createSession(data.address, signature, true).finally(() => {
       setSignature(undefined);
       setNeedsSignUp(false);
       setIsProcessing(false);
@@ -85,8 +91,9 @@ export function SessionContextProvider(props: PropsWithChildren): JSX.Element {
 
   const context = useMemo(
     () => ({
-      address,
-      blockchain,
+      address: data.address,
+      blockchain: data.blockchain,
+      availableBlockchains: session?.blockchains,
       isLoggedIn,
       needsSignUp,
       isProcessing,
@@ -94,8 +101,8 @@ export function SessionContextProvider(props: PropsWithChildren): JSX.Element {
       signUp,
       logout,
     }),
-    [address, blockchain, isLoggedIn, needsSignUp, isProcessing, login, signUp, logout],
+    [data.address, data.blockchain, session, isLoggedIn, needsSignUp, isProcessing, login, signUp, logout],
   );
 
-  return <SessionContext.Provider value={context}>{props.children}</SessionContext.Provider>;
+  return <SessionContext.Provider value={context}>{children}</SessionContext.Provider>;
 }

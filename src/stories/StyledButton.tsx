@@ -16,6 +16,7 @@ export enum StyledButtonColors {
   RED = 'RED',
   GRAY = 'GRAY',
   PALE_WHITE = 'PALE_WHITE',
+  STURDY_WHITE = 'STURDY_WHITE',
   WHITE = 'WHITE',
 }
 
@@ -56,6 +57,8 @@ const COLOR_MAPS: Record<StyledButtonColors, string> = {
     'bg-dfxGray-400 text-primary-blue hover:bg-dfxGray-500 focus:bg-dfxGray-500 active:bg-dfxGray-600 hover:shadow-lg',
   [StyledButtonColors.PALE_WHITE]:
     'border border-white/20 text-white bg-white/10 hover:bg-white/20 focus:bg-white/20 active:bg-white/30',
+  [StyledButtonColors.STURDY_WHITE]:
+    'border border-dfxGray-600 text-dfxBlue-800 bg-white/10 hover:bg-white/20 focus:bg-white/20 active:bg-white/30',
 };
 
 const WIDTH_MAPS: Record<StyledButtonWidths, string> = {

@@ -9,6 +9,7 @@ import { useAuthContext } from './auth.context';
 interface AssetInterface {
   assets: Map<Blockchain, Asset[]>;
   assetsLoading: boolean;
+  getAsset: (id: number) => Asset | undefined;
 }
 
 const AssetContext = createContext<AssetInterface>(undefined as any);
@@ -39,7 +40,16 @@ export function AssetContextProvider(props: PropsWithChildren): JSX.Element {
     );
   }
 
-  const context: AssetInterface = useMemo(() => ({ assets, assetsLoading }), [assets, assetsLoading]);
+  function getAsset(id: number): Asset | undefined {
+    return Array.from(assets.values())
+      .reduce((prev, curr) => prev.concat(curr), [])
+      .find((asset) => asset.id === id);
+  }
+
+  const context: AssetInterface = useMemo(
+    () => ({ assets, assetsLoading, getAsset }),
+    [assets, assetsLoading, getAsset],
+  );
 
   return <AssetContext.Provider value={context}>{props.children}</AssetContext.Provider>;
 }

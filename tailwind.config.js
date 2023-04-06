@@ -64,8 +64,11 @@ module.exports = {
       full: '9999px',
     },
     extend: {
-      height: {
-        container: '90vh',
+      minHeight: {
+        container: '80vh',
+      },
+      boxShadow: {
+        dfx: '0 3px 20px -10px rgba(0, 0, 0, 0.25)',
       },
     },
   },

@@ -2,14 +2,16 @@ import { PropsWithChildren } from 'react';
 import { AssetContextProvider } from './asset.context';
 import { AuthContextProvider } from './auth.context';
 import { BuyContextProvider } from './buy.context';
-import { SessionContextProvider } from './session.context';
+import { SessionContextProvider, SessionContextProviderProps } from './session.context';
 import { UserContextProvider } from './user.context';
 
-export function DfxContextProvider(props: PropsWithChildren): JSX.Element {
+type DfxContextProviderProps = SessionContextProviderProps & PropsWithChildren;
+
+export function DfxContextProvider(props: DfxContextProviderProps): JSX.Element {
   return (
     <AuthContextProvider>
       <UserContextProvider>
-        <SessionContextProvider>
+        <SessionContextProvider api={props.api} data={props.data}>
           <AssetContextProvider>
             <BuyContextProvider>{props.children}</BuyContextProvider>
           </AssetContextProvider>
