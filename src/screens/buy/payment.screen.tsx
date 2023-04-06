@@ -20,14 +20,14 @@ import StyledInfoText from '../../stories/StyledInfoText';
 import DfxIcon, { IconColors, IconSizes, IconVariant } from '../../stories/DfxIcon';
 import { MailEdit } from '../../components/edit/mail.edit';
 import { useUserContext } from '../../api/contexts/user.context';
-import { useAppHandlingContext } from '../../contexts/app-handling.context';
+import { AppPage, useAppHandlingContext } from '../../contexts/app-handling.context';
 
 interface FormData {
   amount: number;
 }
 
 export function BuyPaymentScreen(): JSX.Element {
-  const { backToApp } = useAppHandlingContext();
+  const { openAppPage } = useAppHandlingContext();
   const { currencies, receiveFor } = useBuyContext();
   const { translate } = useLanguageContext();
   const { assets, getAsset } = useAssetContext();
@@ -127,7 +127,7 @@ export function BuyPaymentScreen(): JSX.Element {
   return (
     <Layout
       backTitle={showsCompletion ? translate('screens/buy/payment', 'Done!') : translate('screens/buy/payment', 'Buy')}
-      isBackToApp={showsCompletion}
+      appPage={AppPage.BUY}
       textStart
     >
       {showsCompletion ? (
@@ -146,7 +146,7 @@ export function BuyPaymentScreen(): JSX.Element {
               </p>
               <StyledButton
                 label={translate('general/actions', 'close')}
-                onClick={backToApp}
+                onClick={() => openAppPage(AppPage.BUY)}
                 color={StyledButtonColors.STURDY_WHITE}
                 width={StyledButtonWidths.FULL}
                 caps
@@ -158,7 +158,7 @@ export function BuyPaymentScreen(): JSX.Element {
                 // intentionally empty, email is being updated
                 // and then showsSimple will be true
               }}
-              onCancel={backToApp}
+              onCancel={() => openAppPage(AppPage.BUY)}
               infoText={translate(
                 'screens/buy/payment',
                 'Enter your email address if you want to be informed about the progress of any purchase or sale.',

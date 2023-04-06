@@ -1,24 +1,24 @@
 import { useNavigate } from 'react-router-dom';
 import DfxIcon, { IconColors, IconVariant, IconSizes } from '../stories/DfxIcon';
-import { useAppHandlingContext } from '../contexts/app-handling.context';
+import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
 
 interface NavigationBackProps {
   title: string;
   home?: boolean;
-  isBackToApp?: boolean;
+  appPage?: AppPage;
 }
 
-export function NavigationBack({ title, home, isBackToApp }: NavigationBackProps): JSX.Element {
-  const { backToApp } = useAppHandlingContext();
+export function NavigationBack({ title, home, appPage }: NavigationBackProps): JSX.Element {
+  const { openAppPage } = useAppHandlingContext();
   const navigate = useNavigate();
 
   return (
     <button
       type="button"
       className="w-full h-12 bg-dfxGray-300 text-dfxBlue-800 font-bold text-lg flex flex-row items-center justify-center"
-      onClick={() => (isBackToApp ? backToApp() : home ? navigate('/') : navigate(-1))}
+      onClick={() => (appPage ? openAppPage(appPage) : home ? navigate('/') : navigate(-1))}
     >
-      {!isBackToApp && (
+      {!appPage && (
         <div className="absolute left-6">
           <DfxIcon icon={IconVariant.BACK} color={IconColors.BLUE} size={IconSizes.LG} />
         </div>
