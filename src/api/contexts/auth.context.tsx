@@ -3,10 +3,11 @@ import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useSt
 import { useStore } from '../../hooks/store.hook';
 import { Jwt } from '../definitions/jwt';
 import { Utils } from '../../utils';
+import { Session } from '../definitions/session';
 
 interface AuthInterface {
   authenticationToken?: string;
-  jwt?: Jwt;
+  session?: Session;
   setAuthenticationToken: (authenticationToken?: string) => void;
   isLoggedIn: boolean;
 }
@@ -24,6 +25,11 @@ export function AuthContextProvider(props: PropsWithChildren): JSX.Element {
 
   const tokenWithFallback = token ?? authenticationToken.get();
   const isLoggedIn = tokenWithFallback != undefined && !isExpired();
+
+  const session = useMemo(
+    () => (jwt ? ({ address: jwt?.address, blockchains: jwt?.blockchains } as Session) : undefined),
+    [jwt],
+  );
 
   useEffect(() => {
     if (!token) setAuthenticationToken(authenticationToken.get());
@@ -55,11 +61,11 @@ export function AuthContextProvider(props: PropsWithChildren): JSX.Element {
   const context: AuthInterface = useMemo(
     () => ({
       authenticationToken: tokenWithFallback,
-      jwt,
+      session,
       setAuthenticationToken,
       isLoggedIn,
     }),
-    [tokenWithFallback, token, jwt, setAuthenticationToken, authenticationToken, isLoggedIn],
+    [tokenWithFallback, token, session, jwt, setAuthenticationToken, authenticationToken, isLoggedIn],
   );
 
   return <AuthContext.Provider value={context}>{props.children}</AuthContext.Provider>;

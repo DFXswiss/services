@@ -33,7 +33,7 @@ export interface SessionContextProviderProps extends PropsWithChildren {
 }
 
 export function SessionContextProvider({ api, data, children }: SessionContextProviderProps): JSX.Element {
-  const { jwt } = useAuthContext();
+  const { session } = useAuthContext();
   const { isLoggedIn, getSignMessage, createSession, deleteSession } = useApiSession();
   const [needsSignUp, setNeedsSignUp] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -93,7 +93,7 @@ export function SessionContextProvider({ api, data, children }: SessionContextPr
     () => ({
       address: data.address,
       blockchain: data.blockchain,
-      availableBlockchains: jwt?.blockchains,
+      availableBlockchains: session?.blockchains,
       isLoggedIn,
       needsSignUp,
       isProcessing,
@@ -101,7 +101,7 @@ export function SessionContextProvider({ api, data, children }: SessionContextPr
       signUp,
       logout,
     }),
-    [data.address, data.blockchain, jwt, isLoggedIn, needsSignUp, isProcessing, login, signUp, logout],
+    [data.address, data.blockchain, session, isLoggedIn, needsSignUp, isProcessing, login, signUp, logout],
   );
 
   return <SessionContext.Provider value={context}>{children}</SessionContext.Provider>;
