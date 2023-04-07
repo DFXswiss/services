@@ -81,7 +81,7 @@ export function BuyScreen(): JSX.Element {
               />
               <StyledDropdown<Fiat>
                 name="currency"
-                label={translate('screens/buy', 'with currency')}
+                label={translate('screens/buy', 'with')}
                 placeholder={translate('general/actions', 'Please select...')}
                 items={currencies}
                 labelFunc={(item) => item.name}

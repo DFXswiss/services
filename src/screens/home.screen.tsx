@@ -16,8 +16,8 @@ export function HomeScreen(): JSX.Element {
       {isLoggedIn ? (
         <div className="flex flex-col gap-8 py-8">
           <ServiceButton type={ServiceButtonType.BUY} url="/buy" />
-          <ServiceButton type={ServiceButtonType.SELL} url="/sell" />
-          <ServiceButton type={ServiceButtonType.CONVERT} url="/convert" />
+          <ServiceButton type={ServiceButtonType.SELL} url="/sell" disabled />
+          {/* <ServiceButton type={ServiceButtonType.CONVERT} url="/convert" /> */}
         </div>
       ) : (
         <p className="text-dfxGray-700 py-8">
