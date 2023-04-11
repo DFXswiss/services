@@ -36,7 +36,7 @@ export function BuyScreen(): JSX.Element {
     setValue,
     getValues,
     formState: { errors, isValid },
-  } = useForm<FormData>({ defaultValues: { currency: getDefaultCurrency(currencies ?? []) } });
+  } = useForm<FormData>();
 
   useEffect(() => {
     if (assets) {
