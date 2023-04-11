@@ -127,7 +127,7 @@ export function BuyPaymentScreen(): JSX.Element {
   return (
     <Layout
       backTitle={showsCompletion ? translate('screens/buy/payment', 'Done!') : translate('screens/buy/payment', 'Buy')}
-      appPage={AppPage.BUY}
+      appPage={showsCompletion ? AppPage.BUY : undefined}
       textStart
     >
       {showsCompletion ? (
