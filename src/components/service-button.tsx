@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import DfxIcon, { IconColors, IconVariant } from '../stories/DfxIcon';
+import { useQuery } from '../hooks/query.hook';
 
 export enum ServiceButtonType {
   BUY = 'Buy',
@@ -14,6 +15,7 @@ interface ServiceButtonProps {
 }
 
 export function ServiceButton({ type, url, disabled }: ServiceButtonProps): JSX.Element {
+  const { buildPath } = useQuery();
   const navigate = useNavigate();
 
   const iconDefinitions: Record<ServiceButtonType, (color: IconColors) => JSX.Element> = {
@@ -44,7 +46,7 @@ export function ServiceButton({ type, url, disabled }: ServiceButtonProps): JSX.
     <button
       className="flex flex-col gap-2 items-center justify-center rounded border border-dfxGray-300 h-20 w-60 shadow-dfx"
       type="button"
-      onClick={() => navigate(url)}
+      onClick={() => navigate(buildPath(url))}
       disabled={disabled}
     >
       <p className={`${disabled ? 'text-dfxGray-500' : 'text-dfxBlue-800'} text-lg font-bold`}>{type}</p>

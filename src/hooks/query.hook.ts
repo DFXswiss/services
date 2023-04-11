@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { To, useLocation, useNavigate } from 'react-router-dom';
 
 interface QueryInterface {
   session?: string;
@@ -8,13 +8,14 @@ interface QueryInterface {
   assetId?: string;
   currencyId?: string;
   reloadWithoutBlockedParams: () => void;
+  buildPath(path: string, additionalParameters?: string): To;
 }
 
 export function useQuery(): QueryInterface {
   const navigate = useNavigate();
   const { search, pathname } = useLocation();
 
-  const blockedParams = ['session', 'blockchain', 'redirect-uri'];
+  const blockedParams = ['session'];
 
   const query = useMemo(() => new URLSearchParams(search), [search]);
 
@@ -36,5 +37,9 @@ export function useQuery(): QueryInterface {
     assetId: getParameter('assetId'),
     currencyId: getParameter('currencyId'),
     reloadWithoutBlockedParams,
+    buildPath: (path: string, additionalParameters?: string) => ({
+      pathname: path,
+      search: `?${query.toString()}${additionalParameters ?? ''}`,
+    }),
   };
 }

@@ -2,14 +2,16 @@ import { useState } from 'react'; // import state
 import logo from '../assets/logo.svg';
 import menu from '../assets/menu.svg';
 import { useLanguageContext } from '../contexts/language.context';
+import { useQuery } from '../hooks/query.hook';
 
 export function Navigation() {
+  const { buildPath } = useQuery();
   const { availableLanguages, changeLanguage } = useLanguageContext();
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
 
   return (
     <div className="flex items-center justify-between h-12 px-4 py-5 bg-dfxBlue-800">
-      <a href="/">
+      <a href={`/${buildPath('').search}`}>
         <img height={23} width={73.6} src={logo} alt="logo" />
       </a>
       <nav hidden>

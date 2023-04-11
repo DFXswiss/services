@@ -16,6 +16,7 @@ import Validations from '../validations';
 import { Layout } from '../components/layout';
 import StyledVerticalStack from '../stories/layout-helpers/StyledVerticalStack';
 import { useSessionContext } from '../api/contexts/session.context';
+import { useQuery } from '../hooks/query.hook';
 
 interface FormData {
   currency: Fiat;
@@ -24,6 +25,7 @@ interface FormData {
 
 export function BuyScreen(): JSX.Element {
   const { translate } = useLanguageContext();
+  const { buildPath } = useQuery();
   const navigate = useNavigate();
   const { blockchain, availableBlockchains } = useSessionContext();
   const { currencies } = useBuyContext();
@@ -64,7 +66,7 @@ export function BuyScreen(): JSX.Element {
 
   function handleNext() {
     const data = getValues();
-    navigate(`/buy/payment?assetId=${data.asset.id}&currencyId=${data.currency.id}`);
+    navigate(buildPath('/buy/payment', `&assetId=${data.asset.id}&currencyId=${data.currency.id}`));
   }
 
   const rules = Utils.createRules({
