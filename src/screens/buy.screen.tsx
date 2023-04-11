@@ -28,7 +28,7 @@ export function BuyScreen(): JSX.Element {
   const { blockchain, availableBlockchains } = useSessionContext();
   const { currencies } = useBuyContext();
   const { assets } = useAssetContext();
-  const { toDescription } = useFiat();
+  const { toDescription, getDefaultCurrency } = useFiat();
   const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
   const {
     control,
@@ -48,6 +48,15 @@ export function BuyScreen(): JSX.Element {
       setAvailableAssets(blockchainAssets ?? []);
     }
   }, [assets]);
+
+  // in case page is directly loaded, we need to wait for getCurrencies to resolve
+  // and then update to default currency
+  useEffect(() => {
+    const defaultValue = getDefaultCurrency(currencies ?? []);
+    if (getValues().currency === undefined && defaultValue) {
+      setValue('currency', defaultValue);
+    }
+  }, [currencies]);
 
   function onSubmit(_data: FormData) {
     // TODO (Krysh): fix broken form validation and onSubmit
