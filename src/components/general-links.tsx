@@ -21,11 +21,6 @@ export function GeneralLinks(): JSX.Element {
       />
       <StyledLink label={translate('navigation/links', 'Privacy policy')} url={process.env.REACT_APP_PPO_URL} dark />
       <StyledLink label={translate('navigation/links', 'Imprint')} url={process.env.REACT_APP_IMP_URL} dark />
-      <StyledLink
-        label={translate('navigation/links', 'Proof of Origins of Funds')}
-        url={process.env.REACT_APP_POF_URL}
-        dark
-      />
     </div>
   );
 }
