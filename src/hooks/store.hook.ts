@@ -4,10 +4,16 @@ export interface StoreInterface {
     set: (token: string) => void;
     remove: () => void;
   };
+  redirectUri: {
+    get: () => string | undefined;
+    set: (uri: string) => void;
+    remove: () => void;
+  };
 }
 
 enum StoreKey {
   AUTH_TOKEN = 'authenticationToken',
+  REDIRECT_URI = 'redirectUri',
 }
 
 export function useStore(): StoreInterface {
@@ -30,6 +36,11 @@ export function useStore(): StoreInterface {
       get: () => get(StoreKey.AUTH_TOKEN),
       set: (value: string) => set(StoreKey.AUTH_TOKEN, value),
       remove: () => remove(StoreKey.AUTH_TOKEN),
+    },
+    redirectUri: {
+      get: () => get(StoreKey.REDIRECT_URI),
+      set: (value: string) => set(StoreKey.REDIRECT_URI, value),
+      remove: () => remove(StoreKey.REDIRECT_URI),
     },
   };
 }
