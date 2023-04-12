@@ -18,7 +18,7 @@ interface MailEditProps {
   showCancelButton?: boolean;
   hideLabels?: boolean;
   isOptional?: boolean;
-  onSubmit: () => void;
+  onSubmit: (email?: string) => void;
   onCancel?: () => void;
 }
 
@@ -50,8 +50,8 @@ export function MailEdit({
   const { translate } = useLanguageContext();
 
   async function saveUser({ email }: FormData): Promise<void> {
-    if (!email || email.length === 0) return onSubmit();
-    return changeMail(email).then(onSubmit);
+    if (!email || email.length === 0) return onSubmit(email);
+    return changeMail(email).then(() => onSubmit(email));
   }
 
   const rules = Utils.createRules({
