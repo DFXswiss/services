@@ -9,7 +9,7 @@ export function useBuy(): BuyInterface {
   const { call } = useApi();
 
   async function receiveFor(info: BuyPaymentInfo): Promise<Buy> {
-    return call<Buy>({ url: BuyUrl.receive, method: 'PUT', data: { ...info, iban: 'DE89 3704 0044 0532 0130 00' } });
+    return call<Buy>({ url: BuyUrl.receive, method: 'PUT', data: info });
   }
 
   return { receiveFor };
