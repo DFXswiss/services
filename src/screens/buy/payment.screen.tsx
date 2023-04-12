@@ -38,7 +38,6 @@ export function BuyPaymentScreen(): JSX.Element {
   const [paymentInfo, setPaymentInfo] = useState<PaymentInformation>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [showsCompletion, setShowsCompletion] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const asset = useMemo(() => getAsset(Number(assetId)), [assetId, assets, getAsset]);
   const currency = useMemo(
@@ -62,7 +61,6 @@ export function BuyPaymentScreen(): JSX.Element {
   useEffect(() => {
     if (!dataValid || !currency || !asset) return;
 
-    setIsLoading(true);
     const amount = Number(validatedData.amount);
     receiveFor({
       currency,
@@ -71,8 +69,7 @@ export function BuyPaymentScreen(): JSX.Element {
     })
       .then((value) => checkForMinDeposit(value, amount))
       .then((value) => toPaymentInformation(value))
-      .then(setPaymentInfo)
-      .finally(() => setIsLoading(false));
+      .then(setPaymentInfo);
   }, [validatedData, currency, asset]);
 
   function getHeader(): string {
