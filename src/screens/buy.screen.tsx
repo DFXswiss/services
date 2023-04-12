@@ -44,17 +44,17 @@ export function BuyScreen(): JSX.Element {
         ?.filter((b) => (blockchain ? blockchain === b : true))
         .map((blockchain) => assets.get(blockchain))
         .reduce((prev, curr) => prev?.concat(curr ?? []), []);
-      blockchainAssets?.length === 1 && setValue('asset', blockchainAssets[0]);
+      blockchainAssets?.length === 1 && setValue('asset', blockchainAssets[0], { shouldValidate: true });
       setAvailableAssets(blockchainAssets ?? []);
     }
   }, [assets]);
 
-  // in case page is directly loaded, we need to wait for getCurrencies to resolve
-  // and then update to default currency
   useEffect(() => {
-    const defaultValue = getDefaultCurrency(currencies ?? []);
-    if (getValues().currency === undefined && defaultValue) {
-      setValue('currency', defaultValue);
+    if (currencies) {
+      const defaultValue = getDefaultCurrency(currencies ?? []);
+      if (getValues().currency === undefined && defaultValue) {
+        setValue('currency', defaultValue, { shouldValidate: true });
+      }
     }
   }, [currencies]);
 
