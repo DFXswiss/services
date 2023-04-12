@@ -154,16 +154,11 @@ export function BuyPaymentScreen(): JSX.Element {
             </>
           ) : (
             <MailEdit
-              onSubmit={() => {
-                // intentionally empty, email is being updated
-                // and then showsSimple will be true
-              }}
-              onCancel={() => openAppPage(AppPage.BUY)}
+              onSubmit={(email) => (!email || email.length === 0) && openAppPage(AppPage.BUY)}
               infoText={translate(
                 'screens/buy/payment',
                 'Enter your email address if you want to be informed about the progress of any purchase or sale.',
               )}
-              showCancelButton
               hideLabels
               isOptional
             />
