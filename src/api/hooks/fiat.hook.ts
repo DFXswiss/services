@@ -5,6 +5,7 @@ export interface FiatInterface {
   getCurrencies: () => Promise<Fiat[]>;
   toDescription: (currency: Fiat) => string;
   toSymbol: (currency: Fiat) => string;
+  getDefaultCurrency: (currencies: Fiat[]) => Fiat | undefined;
 }
 
 export function useFiat(): FiatInterface {
@@ -33,5 +34,6 @@ export function useFiat(): FiatInterface {
     getCurrencies,
     toDescription: (currency: Fiat) => definitions.description[currency.name],
     toSymbol: (currency: Fiat) => definitions.symbol[currency.name],
+    getDefaultCurrency: (currencies: Fiat[]) => currencies.find((f) => f.name === 'EUR'),
   };
 }
