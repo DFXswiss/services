@@ -38,6 +38,7 @@ export function BuyPaymentScreen(): JSX.Element {
   const [paymentInfo, setPaymentInfo] = useState<PaymentInformation>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [showsCompletion, setShowsCompletion] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const asset = useMemo(() => getAsset(Number(assetId)), [assetId, assets, getAsset]);
   const currency = useMemo(
@@ -61,6 +62,7 @@ export function BuyPaymentScreen(): JSX.Element {
   useEffect(() => {
     if (!dataValid || !currency || !asset) return;
 
+    setIsLoading(true);
     const amount = Number(validatedData.amount);
     receiveFor({
       currency,
@@ -69,7 +71,8 @@ export function BuyPaymentScreen(): JSX.Element {
     })
       .then((value) => checkForMinDeposit(value, amount))
       .then((value) => toPaymentInformation(value))
-      .then(setPaymentInfo);
+      .then(setPaymentInfo)
+      .finally(() => setIsLoading(false));
   }, [validatedData, currency, asset]);
 
   function getHeader(): string {
@@ -154,16 +157,11 @@ export function BuyPaymentScreen(): JSX.Element {
             </>
           ) : (
             <MailEdit
-              onSubmit={() => {
-                // intentionally empty, email is being updated
-                // and then showsSimple will be true
-              }}
-              onCancel={() => openAppPage(AppPage.BUY)}
+              onSubmit={(email) => (!email || email.length === 0) && openAppPage(AppPage.BUY)}
               infoText={translate(
                 'screens/buy/payment',
                 'Enter your email address if you want to be informed about the progress of any purchase or sale.',
               )}
-              showCancelButton
               hideLabels
               isOptional
             />
