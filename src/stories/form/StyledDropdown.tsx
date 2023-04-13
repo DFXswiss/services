@@ -31,7 +31,7 @@ export default function StyledDropdown<T>({
 }: StyledDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
 
-  let buttonClasses = 'flex justify-between border border-dfxGray-400 px-4 py-3 shadow-sm w-full';
+  let buttonClasses = 'flex justify-between border border-dfxGray-500 px-4 py-3 shadow-sm w-full';
 
   isOpen ? (buttonClasses += ' rounded-x rounded-t bg-dfxGray-400/50') : (buttonClasses += ' rounded');
 
@@ -60,10 +60,16 @@ export default function StyledDropdown<T>({
               {value && assetIconFunc && <DfxAssetIcon asset={assetIconFunc(value)} />}
               <div className="flex flex-col gap-1 justify-between text-left">
                 {value === undefined ? (
-                  <p className="text-dfxGray-400 drop-shadow-none py-[0.25rem]">{placeholder}</p>
+                  <p className="text-dfxGray-600 drop-shadow-none py-[0.25rem]">{placeholder}</p>
                 ) : (
                   <>
-                    <span className="text-dfxBlue-800 leading-none font-semibold">{labelFunc(value)}</span>
+                    <span
+                      className={`text-dfxBlue-800 leading-none font-semibold ${
+                        !descriptionFunc && !assetIconFunc ? 'py-[0.25rem]' : ''
+                      }`}
+                    >
+                      {labelFunc(value)}
+                    </span>
                     {descriptionFunc && (
                       <span className="text-dfxGray-800 text-xs h-min leading-none">{descriptionFunc(value)}</span>
                     )}
@@ -87,12 +93,18 @@ export default function StyledDropdown<T>({
                     onChange(item);
                     setIsOpen(false);
                   }}
-                  className="flex flex-col gap-2 justify-between text-left border-x border-dfxGray-400 w-full hover:bg-dfxGray-400/50 last:border-b last:rounded-b px-3.5 py-2.5"
+                  className="flex flex-col gap-2 justify-between text-left border-x border-dfxGray-500 w-full hover:bg-dfxGray-400/50 last:border-b last:rounded-b px-3.5 py-2.5"
                 >
                   <div className="flex flex-row gap-2 items-center">
                     {assetIconFunc && <DfxAssetIcon asset={assetIconFunc(item)} />}
                     <div className="flex flex-col gap-1 justify-between text-left">
-                      <span className="text-dfxBlue-800 leading-none font-semibold">{labelFunc(item)}</span>
+                      <span
+                        className={`text-dfxBlue-800 leading-none font-semibold ${
+                          !descriptionFunc && !assetIconFunc ? 'py-[0.25rem]' : ''
+                        }`}
+                      >
+                        {labelFunc(item)}
+                      </span>
                       {descriptionFunc && (
                         <span className="text-dfxGray-800 text-xs h-min leading-none">{descriptionFunc(item)}</span>
                       )}

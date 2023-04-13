@@ -10,7 +10,7 @@ import Validations from '../../validations';
 import Form from '../../stories/form/Form';
 import StyledInput from '../../stories/form/StyledInput';
 import useDebounce from '../../hooks/debounce.hook';
-import { useKyc } from '../../hooks/kyc.hook';
+import { useKycHelper } from '../../hooks/kyc-helper.hook';
 import { useBuyContext } from '../../api/contexts/buy.context';
 import { Buy } from '../../api/definitions/buy';
 import { PaymentInformation, PaymentInformationContent } from '../../components/buy/payment-information';
@@ -31,7 +31,7 @@ export function BuyPaymentScreen(): JSX.Element {
   const { currencies, receiveFor } = useBuyContext();
   const { translate } = useLanguageContext();
   const { assets, getAsset } = useAssetContext();
-  const { isAllowedToBuy, start, limit } = useKyc();
+  const { isAllowedToBuy, start, limit } = useKycHelper();
   const { toSymbol } = useFiat();
   const { assetId, currencyId } = useQuery();
   const { user } = useUserContext();

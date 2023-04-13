@@ -1,3 +1,7 @@
+import { Country } from './country';
+
+export const KycUrl = { setData: 'kyc/data' };
+
 export enum KycStatus {
   NA = 'NA',
   CHATBOT = 'Chatbot',
@@ -13,4 +17,17 @@ export enum KycState {
   FAILED = 'Failed',
   REMINDED = 'Reminded',
   REVIEW = 'Review',
+}
+
+export interface KycData {
+  firstname: string;
+  surname: string;
+  street: string;
+  houseNumber: string;
+  zip: string;
+  location: string;
+  country: Country;
+
+  mail: string;
+  phone: string;
 }

@@ -14,6 +14,7 @@ interface StyledInputProps extends ControlProps {
   darkTheme?: boolean;
   full?: boolean;
   loading?: boolean;
+  small?: boolean;
 }
 
 const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
@@ -34,6 +35,7 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
       darkTheme = false,
       loading = false,
       full = false,
+      small = false,
       ...props
     }: StyledInputProps,
     ref,
@@ -52,7 +54,7 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
         control={control}
         render={({ field: { onChange, onBlur, value } }) => (
           <StyledVerticalStack gap={1} full={full}>
-            <label hidden={hideLabel} className={'text-base font-semibold pl-3 ' + [textColor].join(' ')}>
+            <label hidden={hideLabel} className={'text-start text-base font-semibold pl-3 ' + [textColor].join(' ')}>
               {label}
             </label>
             <div className="relative">
@@ -68,7 +70,7 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
               )}
               <input
                 className={
-                  'text-base font-normal rounded-md p-3 w-full ' +
+                  `text-base font-normal rounded-md p-3 ${small ? 'w-24' : 'w-full'} ` +
                   [textOrErrorColor, backgroundColor, placeholderColor, borderColor, outlineColor, leftMargin].join(' ')
                 }
                 type={type}
@@ -84,7 +86,7 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
               />
             </div>
             {(forceErrorMessage || error) && (
-              <p className="text-sm text-dfxRed-100 pl-3">{forceErrorMessage ?? error?.message}</p>
+              <p className="text-start text-sm text-dfxRed-100 pl-3">{forceErrorMessage ?? error?.message}</p>
             )}
           </StyledVerticalStack>
         )}

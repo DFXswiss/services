@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@types/google-libphonenumber": "^7.4.23",
     "classnames": "^2.3.2",
     "copy-to-clipboard": "^3.3.3",
     "env-cmd": "^10.1.0",
+    "google-libphonenumber": "^3.2.32",
     "i18next": "^22.4.13",
     "i18next-browser-languagedetector": "^7.0.1",
     "ibantools": "^4.2.1",

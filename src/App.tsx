@@ -8,6 +8,8 @@ import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyScreen } from './screens/buy.screen';
 import { BuyPaymentScreen } from './screens/buy/payment.screen';
 import { AppHandlingContextProvider } from './contexts/app-handling.context';
+import { ProfileScreen } from './screens/profile.screen';
+import { SellScreen } from './screens/sell.screen';
 
 setupLanguages();
 
@@ -26,8 +28,16 @@ const router = createBrowserRouter([
     element: <BuyPaymentScreen />,
   },
   {
+    path: '/sell',
+    element: <SellScreen />,
+  },
+  {
     path: '/bank-accounts',
     element: <BankAccountsScreen />,
+  },
+  {
+    path: '/profile',
+    element: <ProfileScreen />,
   },
 ]);
 
