@@ -104,7 +104,7 @@ export function BuyPaymentScreen(): JSX.Element {
       purpose: buy.remittanceInfo,
       isSepaInstant: buy.sepaInstant,
       recipient: `${buy.name}, ${buy.street} ${buy.number}, ${buy.zip} ${buy.city}, ${buy.country}`,
-      estimatedAmount: translate('screens/buy/payment', 'est. ≈ {{estimatedAmount}} {{asset}}', {
+      estimatedAmount: translate('screens/buy/payment', '≈ {{estimatedAmount}} {{asset}}', {
         estimatedAmount: '' + buy.estimatedAmount,
         asset: asset?.name ?? '',
       }),
