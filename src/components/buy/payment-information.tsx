@@ -15,6 +15,7 @@ export interface PaymentInformation {
   bic: string;
   purpose: string;
   recipient: string;
+  estimatedAmount: string;
   fee: string;
   minFee?: string;
   currency?: Fiat;
