@@ -16,6 +16,7 @@ export interface PaymentInformation {
   purpose: string;
   recipient: string;
   fee: string;
+  minFee?: string;
   currency?: Fiat;
   amount?: number;
   giroCode?: string;
@@ -73,7 +74,11 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
       <StyledDataTable alignContent={AlignContent.BETWEEN} showBorder={false} narrow minWidth={false}>
         <StyledDataTableRow discreet>
           <p>{translate('screens/buy/payment', 'DFX-Fee')}</p>
-          <p>{info.fee}</p>
+          <p>
+            {info.minFee
+              ? translate('screens/buy/payment', '{{fee}} (min. {{minFee}})', { fee: info.fee, minFee: info.minFee })
+              : info.fee}
+          </p>
         </StyledDataTableRow>
       </StyledDataTable>
     </>
