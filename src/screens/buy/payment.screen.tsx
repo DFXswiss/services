@@ -104,10 +104,7 @@ export function BuyPaymentScreen(): JSX.Element {
       purpose: buy.remittanceInfo,
       isSepaInstant: buy.sepaInstant,
       recipient: `${buy.name}, ${buy.street} ${buy.number}, ${buy.zip} ${buy.city}, ${buy.country}`,
-      estimatedAmount: translate('screens/buy/payment', '≈ {{estimatedAmount}} {{asset}}', {
-        estimatedAmount: '' + buy.estimatedAmount,
-        asset: asset?.name ?? '',
-      }),
+      estimatedAmount: `${buy.estimatedAmount} ${asset?.name ?? ''}`,
       fee: `${buy.fee} %`,
       minFee: buy.minFee > 0 ? `${buy.minFee}${currency ? toSymbol(currency) : ''}` : undefined,
       currency,
@@ -184,7 +181,11 @@ export function BuyPaymentScreen(): JSX.Element {
             />
           </Form>
           {paymentInfo && (
-            <p className="text-dfxBlue-800 text-start w-full text-xs pl-7 pt-1">{paymentInfo.estimatedAmount}</p>
+            <p className="text-dfxBlue-800 text-start w-full text-xs pl-7 pt-1">
+              {translate('screens/buy/payment', '≈ {{estimatedAmount}}', {
+                estimatedAmount: paymentInfo.estimatedAmount,
+              })}
+            </p>
           )}
           {paymentInfo && dataValid && !kycRequired && (
             <div className="pb-16">
