@@ -43,7 +43,8 @@ export function BuyScreen(): JSX.Element {
       const blockchainAssets = availableBlockchains
         ?.filter((b) => (blockchain ? blockchain === b : true))
         .map((blockchain) => assets.get(blockchain))
-        .reduce((prev, curr) => prev?.concat(curr ?? []), []);
+        .reduce((prev, curr) => prev?.concat(curr ?? []), [])
+        ?.filter((asset) => asset.buyable);
       blockchainAssets?.length === 1 && setValue('asset', blockchainAssets[0], { shouldValidate: true });
       setAvailableAssets(blockchainAssets ?? []);
     }

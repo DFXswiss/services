@@ -9,7 +9,7 @@ import { useAuthContext } from './auth.context';
 interface AssetInterface {
   assets: Map<Blockchain, Asset[]>;
   assetsLoading: boolean;
-  getAsset: (id: number) => Asset | undefined;
+  getAsset: (id: number, filter?: { buyable?: boolean; sellable?: boolean }) => Asset | undefined;
 }
 
 const AssetContext = createContext<AssetInterface>(undefined as any);
@@ -40,9 +40,14 @@ export function AssetContextProvider(props: PropsWithChildren): JSX.Element {
     );
   }
 
-  function getAsset(id: number): Asset | undefined {
+  function getAsset(id: number, filter?: { buyable?: boolean; sellable?: boolean }): Asset | undefined {
     return Array.from(assets.values())
       .reduce((prev, curr) => prev.concat(curr), [])
+      .filter((asset) => {
+        if (!filter) return true;
+        if (filter.buyable) return filter.buyable === asset.buyable;
+        if (filter.sellable) return filter.sellable === asset.sellable;
+      })
       .find((asset) => asset.id === id);
   }
 

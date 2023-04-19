@@ -38,8 +38,9 @@ export function BuyPaymentScreen(): JSX.Element {
   const [paymentInfo, setPaymentInfo] = useState<PaymentInformation>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [showsCompletion, setShowsCompletion] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const asset = useMemo(() => getAsset(Number(assetId)), [assetId, assets, getAsset]);
+  const asset = useMemo(() => getAsset(Number(assetId), { buyable: true }), [assetId, assets, getAsset]);
   const currency = useMemo(
     () => currencies?.find((currency) => currency.id === Number(currencyId)),
     [currencyId, currencies],
@@ -59,9 +60,13 @@ export function BuyPaymentScreen(): JSX.Element {
   const showsSimple = user?.mail != null;
 
   useEffect(() => {
-    if (!dataValid || !currency || !asset) return;
+    if (!dataValid || !currency || !asset) {
+      setPaymentInfo(undefined);
+      return;
+    }
 
     const amount = Number(validatedData.amount);
+    setIsLoading(true);
     receiveFor({
       currency,
       amount,
@@ -69,7 +74,8 @@ export function BuyPaymentScreen(): JSX.Element {
     })
       .then((value) => checkForMinDeposit(value, amount, currency.name))
       .then((value) => toPaymentInformation(value))
-      .then(setPaymentInfo);
+      .then(setPaymentInfo)
+      .finally(() => setIsLoading(false));
   }, [validatedData, currency, asset]);
 
   function getHeader(): string {
@@ -177,6 +183,7 @@ export function BuyPaymentScreen(): JSX.Element {
               name="amount"
               forceError={kycRequired || customAmountError != null}
               forceErrorMessage={customAmountError}
+              loading={isLoading}
               full
             />
           </Form>
