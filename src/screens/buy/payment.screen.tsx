@@ -67,7 +67,7 @@ export function BuyPaymentScreen(): JSX.Element {
       amount,
       asset,
     })
-      .then((value) => checkForMinDeposit(value, amount))
+      .then((value) => checkForMinDeposit(value, amount, currency.name))
       .then((value) => toPaymentInformation(value))
       .then(setPaymentInfo);
   }, [validatedData, currency, asset]);
@@ -81,12 +81,12 @@ export function BuyPaymentScreen(): JSX.Element {
         );
   }
 
-  function checkForMinDeposit(buy: Buy, amount: number): Buy | undefined {
-    if (buy.minDeposit.amount > amount) {
+  function checkForMinDeposit(buy: Buy, amount: number, currency: string): Buy | undefined {
+    if (buy.minVolume > amount) {
       setCustomAmountError(
-        translate('screens/buy/payment', 'Entered amount is below minimum deposit of {{amount}} {{asset}}', {
-          amount: Utils.formatAmount(buy.minDeposit.amount),
-          asset: buy.minDeposit.asset,
+        translate('screens/buy/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+          amount: Utils.formatAmount(buy.minVolume),
+          currency,
         }),
       );
       return undefined;
@@ -104,7 +104,9 @@ export function BuyPaymentScreen(): JSX.Element {
       purpose: buy.remittanceInfo,
       isSepaInstant: buy.sepaInstant,
       recipient: `${buy.name}, ${buy.street} ${buy.number}, ${buy.zip} ${buy.city}, ${buy.country}`,
+      estimatedAmount: `${buy.estimatedAmount} ${asset?.name ?? ''}`,
       fee: `${buy.fee} %`,
+      minFee: buy.minFee > 0 ? `${buy.minFee}${currency ? toSymbol(currency) : ''}` : undefined,
       currency,
       amount: Number(data.amount),
     };
@@ -178,7 +180,13 @@ export function BuyPaymentScreen(): JSX.Element {
               full
             />
           </Form>
-
+          {paymentInfo && (
+            <p className="text-dfxBlue-800 text-start w-full text-xs pl-7 pt-1">
+              {translate('screens/buy/payment', '≈ {{estimatedAmount}}', {
+                estimatedAmount: paymentInfo.estimatedAmount,
+              })}
+            </p>
+          )}
           {paymentInfo && dataValid && !kycRequired && (
             <div className="pb-16">
               <PaymentInformationContent info={paymentInfo} />
