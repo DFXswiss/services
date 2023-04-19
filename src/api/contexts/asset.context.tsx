@@ -43,11 +43,12 @@ export function AssetContextProvider(props: PropsWithChildren): JSX.Element {
   function getAsset(id: number, filter?: { buyable?: boolean; sellable?: boolean }): Asset | undefined {
     return Array.from(assets.values())
       .reduce((prev, curr) => prev.concat(curr), [])
-      .filter((asset) => {
-        if (!filter) return true;
-        if (filter.buyable) return filter.buyable === asset.buyable;
-        if (filter.sellable) return filter.sellable === asset.sellable;
-      })
+      .filter(
+        (asset) =>
+          filter === undefined ||
+          (filter?.buyable !== undefined && filter.buyable === asset.buyable) ||
+          (filter?.sellable !== undefined && filter.sellable === asset.sellable),
+      )
       .find((asset) => asset.id === id);
   }
 
