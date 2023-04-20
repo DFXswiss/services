@@ -2,8 +2,6 @@ import * as IbanTools from 'ibantools';
 import BlockedIbans from './static/blocked-iban.json';
 import { Country } from './api/definitions/country';
 import regex from './regex';
-import { MinDeposit } from './api/definitions/buy';
-import { Utils } from './utils';
 
 class ValidationsClass {
   public get Required() {
@@ -41,23 +39,6 @@ class ValidationsClass {
       }
 
       return IbanTools.validateIBAN(iban).valid ? true : 'Invalid IBAN';
-    });
-  }
-
-  // TODO (Krysh) as soon as buy process form is fixed, we should use this validation for min deposit check
-  public MinDeposit(minDeposit: MinDeposit) {
-    return this.Custom((amount: string) => {
-      if (isNaN(+amount)) {
-        return 'Invalid amount';
-      }
-
-      if (minDeposit.amount > +amount) {
-        return `Entered amount is below minimum deposit of ${Utils.formatAmount(minDeposit.amount)} ${
-          minDeposit.asset
-        }`;
-      }
-
-      return true;
     });
   }
 

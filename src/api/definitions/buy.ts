@@ -3,11 +3,6 @@ import { Fiat } from './fiat';
 
 export const BuyUrl = { receive: 'buy/paymentInfos' };
 
-export interface MinDeposit {
-  amount: number;
-  asset: string;
-}
-
 export interface Buy {
   name: string;
   country: string;
@@ -19,7 +14,9 @@ export interface Buy {
   iban: string;
   bic: string;
   remittanceInfo: string;
-  minDeposit: MinDeposit;
+  minFee: number;
+  minVolume: number;
+  estimatedAmount: number;
   sepaInstant: boolean;
   giroCode?: string;
 }
