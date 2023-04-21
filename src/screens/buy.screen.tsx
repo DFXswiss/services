@@ -60,7 +60,7 @@ export function BuyScreen(): JSX.Element {
   }, [currencies]);
 
   function onSubmit(_data: FormData) {
-    // TODO (Krysh): fix broken form validation and onSubmit
+    // TODO: (Krysh fix broken form validation and onSubmit
   }
 
   function handleNext() {

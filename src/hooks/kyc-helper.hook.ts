@@ -65,7 +65,8 @@ export function useKycHelper(): KycHelperInterface {
     return (user?.tradingLimit.limit ?? 0) >= amount;
   }
 
-  function isAllowedToSell(amount: number, asset: Asset): boolean {
+  function isAllowedToSell(_amount: number, _asset: Asset): boolean {
+    // TODO: (Krysh) add real checks
     return true;
   }
 

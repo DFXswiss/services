@@ -119,7 +119,7 @@ export function BuyPaymentScreen(): JSX.Element {
   }
 
   function onSubmit(_data: FormData) {
-    // TODO (Krysh): fix broken form validation and onSubmit
+    // TODO: (Krysh fix broken form validation and onSubmit
   }
 
   function validateData(data?: DeepPartial<FormData>): FormData | undefined {

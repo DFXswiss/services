@@ -156,12 +156,12 @@ export function SellScreen(): JSX.Element {
   }
 
   function onSubmit(_data: FormData) {
-    // TODO (Krysh): fix broken form validation and onSubmit
+    // TODO: (Krysh fix broken form validation and onSubmit
   }
 
   async function handleNext(): Promise<void> {
     await updateBankAccount();
-    // TODO (Krysh): either receive sell id and add as param or use all possible data like depositAddress and co
+    // TODO: (Krysh either receive sell id and add as param or use all possible data like depositAddress and co
     openAppPage(AppPage.SELL);
   }
 
