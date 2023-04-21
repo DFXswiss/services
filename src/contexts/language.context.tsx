@@ -7,7 +7,7 @@ interface LanguageInterface {
   availableLanguages: Language[];
   language: string;
   changeLanguage: (language: string) => void;
-  translate: (key: string, defaultValue: string, interpolation?: Record<string, string>) => string;
+  translate: (key: string, defaultValue: string, interpolation?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageInterface>(undefined as any);
@@ -35,7 +35,7 @@ export function LanguageContextProvider(props: PropsWithChildren): JSX.Element {
       availableLanguages,
       language,
       changeLanguage,
-      translate: (key: string, defaultValue: string, interpolation?: Record<string, string>) =>
+      translate: (key: string, defaultValue: string, interpolation?: Record<string, string | number>) =>
         t([key, defaultValue].join('.'), defaultValue, interpolation),
     }),
     [availableLanguages, language, changeLanguage],

@@ -9,11 +9,17 @@ export interface StoreInterface {
     set: (uri: string) => void;
     remove: () => void;
   };
+  balances: {
+    get: () => string | undefined;
+    set: (balances: string) => void;
+    remove: () => void;
+  };
 }
 
 enum StoreKey {
   AUTH_TOKEN = 'authenticationToken',
   REDIRECT_URI = 'redirectUri',
+  BALANCES = 'balances',
 }
 
 export function useStore(): StoreInterface {
@@ -41,6 +47,11 @@ export function useStore(): StoreInterface {
       get: () => get(StoreKey.REDIRECT_URI),
       set: (value: string) => set(StoreKey.REDIRECT_URI, value),
       remove: () => remove(StoreKey.REDIRECT_URI),
+    },
+    balances: {
+      get: () => get(StoreKey.BALANCES),
+      set: (value: string) => set(StoreKey.BALANCES, value),
+      remove: () => remove(StoreKey.BALANCES),
     },
   };
 }

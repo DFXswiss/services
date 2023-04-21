@@ -21,6 +21,7 @@ export enum StyledButtonColors {
 }
 
 export interface StyledButtonProps {
+  className?: string;
   label: string;
   onClick: () => void;
   size?: StyledButtonSizes;
@@ -69,6 +70,7 @@ const WIDTH_MAPS: Record<StyledButtonWidths, string> = {
 };
 
 export default function StyledButton({
+  className,
   label,
   onClick,
   size = StyledButtonSizes.BIG,
@@ -80,8 +82,9 @@ export default function StyledButton({
   hidden = false,
   deactivateMargin = false,
 }: StyledButtonProps) {
-  let buttonClasses =
-    'inline-block flex gap-4 justify-center leading-tight shadow-md focus:outline-none focus:ring-0 transition duration-150 ease-in-out ';
+  let buttonClasses = `inline-block flex gap-4 justify-center leading-tight shadow-md focus:outline-none focus:ring-0 transition duration-150 ease-in-out ${
+    className ?? ''
+  } `;
 
   let renderedColor: string;
   let isDisabled = false;

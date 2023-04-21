@@ -1,4 +1,5 @@
 import { useUserContext } from '../api/contexts/user.context';
+import { Asset } from '../api/definitions/asset';
 import { KycStatus } from '../api/definitions/kyc';
 import { Utils } from '../utils';
 
@@ -8,6 +9,7 @@ interface KycHelperInterface {
   isComplete: boolean;
   start: () => Promise<void>;
   isAllowedToBuy: (amount: number) => boolean;
+  isAllowedToSell: (amount: number, asset: Asset) => boolean;
 }
 
 export function useKycHelper(): KycHelperInterface {
@@ -63,5 +65,9 @@ export function useKycHelper(): KycHelperInterface {
     return (user?.tradingLimit.limit ?? 0) >= amount;
   }
 
-  return { start, status: buildKycStatusString(), isComplete, limit, isAllowedToBuy };
+  function isAllowedToSell(amount: number, asset: Asset): boolean {
+    return true;
+  }
+
+  return { start, status: buildKycStatusString(), isComplete, limit, isAllowedToBuy, isAllowedToSell };
 }

@@ -209,19 +209,16 @@ export function BuyPaymentScreen(): JSX.Element {
             </div>
           )}
           {kycRequired && (
+            // TODO: (Krysh) move to own component
             <StyledVerticalStack gap={4} marginY={4}>
               <StyledInfoText invertedIcon>
                 {translate(
-                  'screens/buy/payment',
+                  'kyc',
                   'Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.',
                   { limit },
                 )}
               </StyledInfoText>
-              <StyledButton
-                width={StyledButtonWidths.FULL}
-                label={translate('screens/buy/payment', 'Complete KYC')}
-                onClick={start}
-              />
+              <StyledButton width={StyledButtonWidths.FULL} label={translate('kyc', 'Complete KYC')} onClick={start} />
             </StyledVerticalStack>
           )}
         </>
