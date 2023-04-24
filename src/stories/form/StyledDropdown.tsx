@@ -8,6 +8,7 @@ export interface StyledDropdownProps<T> extends ControlProps {
   labelIcon?: IconVariant;
   placeholder?: string;
   full?: boolean;
+  smallLabel?: boolean;
   items: T[];
   labelFunc: (item: T) => string;
   descriptionFunc?: (item: T) => string;
@@ -24,6 +25,7 @@ export default function StyledDropdown<T>({
   items,
   placeholder,
   full,
+  smallLabel,
   labelFunc,
   descriptionFunc,
   assetIconFunc,
@@ -45,7 +47,13 @@ export default function StyledDropdown<T>({
           <div className="flex ml-3.5 mb-2.5">
             {labelIcon !== undefined && <DfxIcon icon={labelIcon} size={IconSizes.SM} color={IconColors.BLUE} />}
 
-            <label className={`text-dfxBlue-800 text-base font-semibold ${labelIcon ? 'pl-3.5' : ''}`}>{label}</label>
+            <label
+              className={`text-dfxBlue-800 ${smallLabel ? 'text-sm' : 'text-base'} font-semibold ${
+                labelIcon ? 'pl-3.5' : ''
+              }`}
+            >
+              {label}
+            </label>
           </div>
           <button
             id="dropDownButton"

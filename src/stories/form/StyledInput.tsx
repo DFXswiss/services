@@ -15,6 +15,7 @@ interface StyledInputProps extends ControlProps {
   full?: boolean;
   loading?: boolean;
   small?: boolean;
+  smallLabel?: boolean;
 }
 
 const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
@@ -36,6 +37,7 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
       loading = false,
       full = false,
       small = false,
+      smallLabel = false,
       ...props
     }: StyledInputProps,
     ref,
@@ -54,7 +56,12 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
         control={control}
         render={({ field: { onChange, onBlur, value } }) => (
           <StyledVerticalStack gap={1} full={full}>
-            <label hidden={hideLabel} className={'text-start text-base font-semibold pl-3 ' + [textColor].join(' ')}>
+            <label
+              hidden={hideLabel}
+              className={
+                `text-start ${smallLabel ? 'text-sm' : 'text-base'} font-semibold pl-3 ` + [textColor].join(' ')
+              }
+            >
               {label}
             </label>
             <div className="relative">

@@ -2,7 +2,7 @@ import * as IbanTools from 'ibantools';
 import BlockedIbans from './static/blocked-iban.json';
 import { Country } from './api/definitions/country';
 import regex from './regex';
-import libphonenumber from 'google-libphonenumber';
+import { PhoneNumberUtil } from 'google-libphonenumber';
 
 class ValidationsClass {
   public get Required() {
@@ -26,18 +26,15 @@ class ValidationsClass {
   public get Phone() {
     return this.Custom((number: string) => {
       try {
-        const phoneUtil = libphonenumber.PhoneNumberUtil.getInstance();
-        if (number && !number.match(/^\+\d+ .+$/)) {
-          return 'Please fill in area code and number';
-        } else if (
-          (number && !number.match(/^\+[\d ]*$/)) ||
-          (number && !phoneUtil.isValidNumber(phoneUtil.parseAndKeepRawInput(number)))
-        ) {
-          return 'Invalid pattern';
+        if (number) {
+          const util = PhoneNumberUtil.getInstance();
+
+          if (!number.match(/^\+\d{5}/)) return 'Please fill in area code and number';
+          if (!util.isValidNumber(util.parseAndKeepRawInput(number))) return 'Invalid pattern';
         }
 
         return true;
-      } catch (_) {
+      } catch {
         return 'Invalid pattern';
       }
     });
