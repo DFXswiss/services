@@ -13,6 +13,7 @@ interface UserInterface {
   isUserUpdating: boolean;
   changeMail: (mail: string) => Promise<void>;
   register: (userLink: () => void) => void;
+  reloadUser: () => Promise<void>;
 }
 
 const UserContext = createContext<UserInterface>(undefined as any);
@@ -35,11 +36,7 @@ export function UserContextProvider(props: PropsWithChildren): JSX.Element {
 
   useEffect(() => {
     if (isLoggedIn) {
-      setIsUserLoading(true);
-      getUser()
-        .then(setUser)
-        .catch(console.error) // TODO (Krysh) add real error handling
-        .finally(() => setIsUserLoading(false));
+      reloadUser();
 
       getCountries().then(setCountries);
     } else {
@@ -47,6 +44,14 @@ export function UserContextProvider(props: PropsWithChildren): JSX.Element {
       setCountries([]);
     }
   }, [isLoggedIn]);
+
+  async function reloadUser(): Promise<void> {
+    setIsUserLoading(true);
+    getUser()
+      .then(setUser)
+      .catch(console.error) // TODO (Krysh) add real error handling
+      .finally(() => setIsUserLoading(false));
+  }
 
   async function changeMail(mail: string): Promise<void> {
     if (!user) return; // TODO (Krysh) add real error handling
@@ -62,8 +67,8 @@ export function UserContextProvider(props: PropsWithChildren): JSX.Element {
   }
 
   const context: UserInterface = useMemo(
-    () => ({ user, refLink, countries, isUserLoading, isUserUpdating, changeMail, register }),
-    [user, refLink, countries, isUserLoading, isUserUpdating, changeMail, register],
+    () => ({ user, refLink, countries, isUserLoading, isUserUpdating, changeMail, register, reloadUser }),
+    [user, refLink, countries, isUserLoading, isUserUpdating, changeMail, register, reloadUser],
   );
 
   return <UserContext.Provider value={context}>{props.children}</UserContext.Provider>;

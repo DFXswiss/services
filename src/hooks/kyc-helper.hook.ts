@@ -2,7 +2,7 @@ import { useUserContext } from '../api/contexts/user.context';
 import { KycStatus } from '../api/definitions/kyc';
 import { Utils } from '../utils';
 
-interface KycInterface {
+interface KycHelperInterface {
   status: string;
   limit: string;
   isComplete: boolean;
@@ -10,7 +10,7 @@ interface KycInterface {
   isAllowedToBuy: (amount: number) => boolean;
 }
 
-export function useKyc(): KycInterface {
+export function useKycHelper(): KycHelperInterface {
   const { user } = useUserContext();
 
   const kycMap: Record<string, string> = {
