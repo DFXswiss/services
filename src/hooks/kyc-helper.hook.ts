@@ -1,5 +1,4 @@
 import { useUserContext } from '../api/contexts/user.context';
-import { Asset } from '../api/definitions/asset';
 import { KycStatus } from '../api/definitions/kyc';
 import { Utils } from '../utils';
 
@@ -9,7 +8,7 @@ interface KycHelperInterface {
   isComplete: boolean;
   start: () => Promise<void>;
   isAllowedToBuy: (amount: number) => boolean;
-  isAllowedToSell: (amount: number, asset: Asset) => boolean;
+  isAllowedToSell: (amount: number) => boolean;
 }
 
 export function useKycHelper(): KycHelperInterface {
@@ -57,7 +56,7 @@ export function useKycHelper(): KycHelperInterface {
     if (!user) return;
     const newTab = window.open(`${process.env.REACT_APP_KYC_URL}?code=${user.kycHash}`, '_blank', 'noreferrer');
     const popUpBlocked = newTab == null || newTab.closed || typeof newTab.closed == 'undefined';
-    if (popUpBlocked) console.error('popUp blocked'); // TODO (Krysh) use correct error handling here
+    if (popUpBlocked) console.error('popUp blocked'); // TODO: (Krysh) use correct error handling here
   }
 
   function isAllowedToBuy(amount: number): boolean {
@@ -65,9 +64,9 @@ export function useKycHelper(): KycHelperInterface {
     return (user?.tradingLimit.limit ?? 0) >= amount;
   }
 
-  function isAllowedToSell(_amount: number, _asset: Asset): boolean {
-    // TODO: (Krysh) add real checks
-    return true;
+  function isAllowedToSell(amount: number): boolean {
+    if (isComplete) return true;
+    return (user?.tradingLimit.limit ?? 0) >= amount;
   }
 
   return { start, status: buildKycStatusString(), isComplete, limit, isAllowedToBuy, isAllowedToSell };

@@ -25,11 +25,11 @@ import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context
 import { useBalanceContext } from '../contexts/balance.context';
 import { AssetIconVariant } from '../stories/DfxAssetIcon';
 import { StyledModalWidths } from '../stories/StyledModal';
-import StyledInfoText from '../stories/StyledInfoText';
 import StyledButton, { StyledButtonWidths } from '../stories/StyledButton';
 import { useSell } from '../api/hooks/sell.hook';
 import { Sell } from '../api/definitions/sell';
 import { ApiError } from '../api/definitions/error';
+import { KycHint } from '../components/kyc-hint';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -45,7 +45,7 @@ export function SellScreen(): JSX.Element {
   const { balances } = useBalanceContext();
   const { blockchain, availableBlockchains } = useSessionContext();
   const { assets } = useAssetContext();
-  const { isAllowedToSell, start, limit } = useKycHelper();
+  const { isAllowedToSell } = useKycHelper();
   const { toDescription } = useFiat();
   const { receiveFor } = useSell();
   const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
@@ -63,6 +63,7 @@ export function SellScreen(): JSX.Element {
   const validatedData = validateData(useDebounce(data, 500));
   const selectedBankAccount = useWatch({ control, name: 'bankAccount' });
   const selectedAsset = useWatch({ control, name: 'asset' });
+  const enteredAmount = useWatch({ control, name: 'amount' });
 
   const dataValid = validatedData != null;
 
@@ -72,8 +73,11 @@ export function SellScreen(): JSX.Element {
   }, [selectedBankAccount]);
 
   useEffect(() => {
-    setKycRequired(dataValid && !isAllowedToSell(Number(validatedData?.amount), selectedAsset));
-  }, [dataValid, validatedData, selectedAsset]);
+    if ((enteredAmount && enteredAmount.length === 0) || !enteredAmount) {
+      setCustomAmountError(undefined);
+      setKycRequired(false);
+    }
+  }, [enteredAmount]);
 
   useEffect(() => {
     if (assets) {
@@ -103,18 +107,22 @@ export function SellScreen(): JSX.Element {
     })
       .then((value) => checkForMinDeposit(value, amount, validatedData.asset.name))
       .then((value) => checkForAmountAvailable(amount, validatedData.asset.name, value))
+      .then((value) => {
+        setKycRequired(dataValid && !isAllowedToSell(Number(value?.estimatedAmount)));
+        return value;
+      })
       .then(setPaymentInfo)
       .catch((error: ApiError) => {
         if (error.statusCode === 400 && error.message === 'Ident data incomplete') {
           setKycRequired(true);
         }
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [validatedData]);
 
-  // TODO: (Krysh) move to somewhere maybe buy / sell hook and check inside should be a utils or something
   function checkForMinDeposit(sell: Sell, amount: number, currency: string): Sell | undefined {
-    console.log(sell.estimatedAmount);
     if (sell.minVolume > amount) {
       setCustomAmountError(
         translate('screens/sell', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
@@ -134,7 +142,7 @@ export function SellScreen(): JSX.Element {
     const balance = balances?.find((balance) => balance.token === asset);
     if (amount > Number(balance?.amount ?? 0)) {
       setCustomAmountError(
-        translate('screens/sell', 'Entered amount higher than available balance of {{amount}} {{asset}}', {
+        translate('screens/sell', 'Entered amount is higher than available balance of {{amount}} {{asset}}', {
           amount: balance?.amount ?? 0,
           asset,
         }),
@@ -230,26 +238,10 @@ export function SellScreen(): JSX.Element {
               forceErrorMessage={customAmountError}
               loading={isLoading}
             />
-            {kycRequired && (
-              // TODO: (Krysh) move to own component
-              <StyledVerticalStack gap={4} marginY={4}>
-                <StyledInfoText invertedIcon>
-                  {translate(
-                    'kyc',
-                    'Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.',
-                    { limit },
-                  )}
-                </StyledInfoText>
-                <StyledButton
-                  width={StyledButtonWidths.FULL}
-                  label={translate('kyc', 'Complete KYC')}
-                  onClick={start}
-                />
-              </StyledVerticalStack>
-            )}
+            {kycRequired && !customAmountError && <KycHint />}
           </div>
         )}
-        {paymentInfo && (
+        {paymentInfo && !kycRequired && (
           <>
             {paymentInfo.estimatedAmount > 0 && (
               <p className="text-dfxBlue-800 text-start w-full text-xs pl-12">

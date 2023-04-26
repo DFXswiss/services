@@ -8,7 +8,7 @@ export enum AppPage {
 
 interface AppHandlingContextInterface {
   setRedirectUri: (redirectUri: string) => void;
-  openAppPage: (page: AppPage, params?: string) => void;
+  openAppPage: (page: AppPage, params?: URLSearchParams) => void;
 }
 
 const AppHandlingContext = createContext<AppHandlingContextInterface>(undefined as any);
@@ -25,7 +25,7 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
   }, []);
 
-  function openAppPage(page: AppPage, params?: string) {
+  function openAppPage(page: AppPage, params?: URLSearchParams) {
     const win: Window = window;
     win.location = params ? `${redirectUri}${page}?${params}` : `${redirectUri}${page}`;
   }

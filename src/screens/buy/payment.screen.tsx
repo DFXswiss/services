@@ -16,11 +16,11 @@ import { Buy } from '../../api/definitions/buy';
 import { PaymentInformation, PaymentInformationContent } from '../../components/buy/payment-information';
 import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stories/StyledButton';
 import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStack';
-import StyledInfoText from '../../stories/StyledInfoText';
 import DfxIcon, { IconColors, IconSizes, IconVariant } from '../../stories/DfxIcon';
 import { MailEdit } from '../../components/edit/mail.edit';
 import { useUserContext } from '../../api/contexts/user.context';
 import { AppPage, useAppHandlingContext } from '../../contexts/app-handling.context';
+import { KycHint } from '../../components/kyc-hint';
 
 interface FormData {
   amount: number;
@@ -31,7 +31,7 @@ export function BuyPaymentScreen(): JSX.Element {
   const { currencies, receiveFor } = useBuyContext();
   const { translate } = useLanguageContext();
   const { assets, getAsset } = useAssetContext();
-  const { isAllowedToBuy, start, limit } = useKycHelper();
+  const { isAllowedToBuy } = useKycHelper();
   const { toSymbol } = useFiat();
   const { assetId, currencyId } = useQuery();
   const { user } = useUserContext();
@@ -208,19 +208,7 @@ export function BuyPaymentScreen(): JSX.Element {
               />
             </div>
           )}
-          {kycRequired && (
-            // TODO: (Krysh) move to own component
-            <StyledVerticalStack gap={4} marginY={4}>
-              <StyledInfoText invertedIcon>
-                {translate(
-                  'kyc',
-                  'Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.',
-                  { limit },
-                )}
-              </StyledInfoText>
-              <StyledButton width={StyledButtonWidths.FULL} label={translate('kyc', 'Complete KYC')} onClick={start} />
-            </StyledVerticalStack>
-          )}
+          {kycRequired && !customAmountError && <KycHint />}
         </>
       )}
     </Layout>
