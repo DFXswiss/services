@@ -73,7 +73,7 @@ export function SellScreen(): JSX.Element {
   }, [selectedBankAccount]);
 
   useEffect(() => {
-    if ((enteredAmount && enteredAmount.length === 0) || !enteredAmount) {
+    if (!enteredAmount) {
       setCustomAmountError(undefined);
       setKycRequired(false);
     }
