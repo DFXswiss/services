@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import DfxIcon, { IconSizes, IconVariant } from '../DfxIcon';
 import StyledVerticalStack from '../layout-helpers/StyledVerticalStack';
-import StyledModal, { StyledModalColors } from '../StyledModal';
+import StyledModal, { StyledModalColors, StyledModalWidths } from '../StyledModal';
 import { ControlProps } from './Form';
 
 interface StyledModalDropdownProps<T> extends ControlProps {
@@ -12,6 +12,7 @@ interface StyledModalDropdownProps<T> extends ControlProps {
   modal: {
     heading: string;
     items: T[];
+    width?: StyledModalWidths;
     itemContent: (item: T) => JSX.Element;
     form?: (onFormSubmit: (item: T) => void) => JSX.Element;
   };
@@ -37,6 +38,7 @@ export default function StyledModalDropdown<T>({
           <StyledModal
             isVisible={showModal}
             onClose={setShowModal}
+            width={modal.width}
             heading={modal.heading}
             color={StyledModalColors.WHITE}
           >
@@ -60,7 +62,11 @@ export default function StyledModalDropdown<T>({
             )}
             {modal.form && (
               <>
-                <div className="h-[1px] bg-dfxGray-400 -mx-14 my-6" />
+                <div
+                  className={`h-[1px] bg-dfxGray-400 ${
+                    modal.width === StyledModalWidths.NONE ? '-mx-4' : '-mx-14'
+                  } my-6`}
+                />
                 {modal.form((item) => {
                   onChange(item);
                   setShowModal(false);
@@ -69,7 +75,7 @@ export default function StyledModalDropdown<T>({
             )}
           </StyledModal>
           <StyledVerticalStack gap={1} marginY={4}>
-            <label className="text-dfxBlue-800 text-base font-semibold pl-4">{label}</label>
+            <label className="text-dfxBlue-800 text-base font-semibold pl-4 text-start">{label}</label>
             <button
               className="flex justify-between border border-dfxGray-400 text-base font-normal rounded-md px-4 py-2 shadow-sm w-full"
               onClick={() => setShowModal(true)}

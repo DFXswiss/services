@@ -49,16 +49,16 @@ export function UserContextProvider(props: PropsWithChildren): JSX.Element {
     setIsUserLoading(true);
     getUser()
       .then(setUser)
-      .catch(console.error) // TODO (Krysh) add real error handling
+      .catch(console.error) // TODO: (Krysh) add real error handling
       .finally(() => setIsUserLoading(false));
   }
 
   async function changeMail(mail: string): Promise<void> {
-    if (!user) return; // TODO (Krysh) add real error handling
+    if (!user) return; // TODO: (Krysh) add real error handling
     setIsUserUpdating(true);
     return changeUser({ ...user, mail }, userLinkAction)
       .then(setUser)
-      .catch(console.error) // TODO (Krysh) add real error handling
+      .catch(console.error) // TODO: (Krysh) add real error handling
       .finally(() => setIsUserUpdating(false));
   }
 

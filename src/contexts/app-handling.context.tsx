@@ -3,11 +3,12 @@ import { useStore } from '../hooks/store.hook';
 
 export enum AppPage {
   BUY = 'buy',
+  SELL = 'sell',
 }
 
 interface AppHandlingContextInterface {
   setRedirectUri: (redirectUri: string) => void;
-  openAppPage: (page: AppPage) => void;
+  openAppPage: (page: AppPage, params?: URLSearchParams) => void;
 }
 
 const AppHandlingContext = createContext<AppHandlingContextInterface>(undefined as any);
@@ -24,9 +25,9 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
   }, []);
 
-  function openAppPage(page: AppPage) {
+  function openAppPage(page: AppPage, params?: URLSearchParams) {
     const win: Window = window;
-    win.location = `${redirectUri}${page}`;
+    win.location = params ? `${redirectUri}${page}?${params}` : `${redirectUri}${page}`;
   }
 
   const context = {

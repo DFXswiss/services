@@ -47,7 +47,7 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
     const placeholderColor = darkTheme ? 'placeholder:text-dfxGray-800' : 'placeholder:text-dfxGray-600';
     const borderColor = darkTheme ? 'border-none' : 'border border-dfxGray-500';
     const outlineColor = darkTheme ? 'outline-none' : 'outline-2 outline-dfxBlue-400';
-    const leftMargin = prefix ? 'pl-7' : '';
+    const leftMargin = prefix ? (prefix.length === 1 ? 'pl-7' : 'pl-12') : '';
 
     const textOrErrorColor = forceError ? 'text-dfxRed-100' : textColor;
 
@@ -66,7 +66,11 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
             </label>
             <div className="relative">
               {prefix && (
-                <div className="text-dfxGray-800 absolute h-[50px] w-8 flex justify-center items-center">
+                <div
+                  className={`text-dfxGray-800 absolute h-[50px] ${
+                    prefix.length === 1 ? 'w-2 left-3' : 'w-6 left-4'
+                  } flex justify-center items-center`}
+                >
                   <p>{prefix}</p>
                 </div>
               )}

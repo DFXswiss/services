@@ -38,7 +38,7 @@ export function BuyContextProvider(props: PropsWithChildren): JSX.Element {
           setCurrencies(currencies.filter((c) => c.sellable));
           setBankAccounts(bankAccounts);
         })
-        .catch(console.error); // TODO (Krysh) add real error handling
+        .catch(console.error); // TODO: (Krysh) add real error handling
     }
   }, [isLoggedIn]);
 
