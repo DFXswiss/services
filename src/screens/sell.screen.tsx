@@ -169,8 +169,7 @@ export function SellScreen(): JSX.Element {
 
   async function handleNext(): Promise<void> {
     await updateBankAccount();
-    // TODO: (Krysh either receive sell id and add as param or use all possible data like depositAddress and co
-    openAppPage(AppPage.SELL);
+    openAppPage(AppPage.SELL, new URLSearchParams({ routeId: '' + (paymentInfo?.routeId ?? 0) }));
   }
 
   const rules = Utils.createRules({

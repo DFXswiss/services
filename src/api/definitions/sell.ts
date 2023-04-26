@@ -5,6 +5,7 @@ import { Fiat } from './fiat';
 export const SellUrl = { receive: 'sell/paymentInfos' };
 
 export interface Sell {
+  routeId: number;
   depositAddress: string;
   blockchain: Blockchain;
   fee: number;
