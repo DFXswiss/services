@@ -169,7 +169,10 @@ export function SellScreen(): JSX.Element {
 
   async function handleNext(): Promise<void> {
     await updateBankAccount();
-    openAppPage(AppPage.SELL, new URLSearchParams({ routeId: '' + (paymentInfo?.routeId ?? 0) }));
+    openAppPage(
+      AppPage.SELL,
+      new URLSearchParams({ routeId: '' + (paymentInfo?.routeId ?? 0), amount: enteredAmount }),
+    );
   }
 
   const rules = Utils.createRules({
