@@ -85,7 +85,7 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
                   [textOrErrorColor, backgroundColor, placeholderColor, borderColor, outlineColor, leftMargin].join(' ')
                 }
                 type={type}
-                inputMode={type === 'number' ? 'numeric' : undefined}
+                inputMode={type === 'number' ? 'decimal' : undefined}
                 onBlur={onBlur}
                 onChange={(value) => onChange(value.target.value)}
                 placeholder={placeholder}
