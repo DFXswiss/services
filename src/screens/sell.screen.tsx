@@ -30,6 +30,8 @@ import { useSell } from '../api/hooks/sell.hook';
 import { Sell } from '../api/definitions/sell';
 import { ApiError } from '../api/definitions/error';
 import { KycHint } from '../components/kyc-hint';
+import StyledDataTable, { AlignContent } from '../stories/StyledDataTable';
+import StyledDataTableRow from '../stories/StyledDataTableRow';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -253,8 +255,13 @@ export function SellScreen(): JSX.Element {
                 })}
               </p>
             )}
+            <StyledDataTable alignContent={AlignContent.BETWEEN} showBorder={false} narrow minWidth={false}>
+              <StyledDataTableRow discreet>
+                <p>{translate('screens/sell', 'DFX-Fee')}</p>
+                <p>{`${paymentInfo.fee} %`}</p>
+              </StyledDataTableRow>
+            </StyledDataTable>
             <StyledButton
-              className="mt-4"
               width={StyledButtonWidths.FULL}
               label={translate('screens/sell', 'Complete transaction in your wallet')}
               onClick={handleNext}
