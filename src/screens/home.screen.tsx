@@ -2,12 +2,14 @@ import { useSessionContext } from '../api/contexts/session.context';
 import { useUserContext } from '../api/contexts/user.context';
 import { Layout } from '../components/layout';
 import { ServiceButton, ServiceButtonType } from '../components/service-button';
+import { useBalanceContext } from '../contexts/balance.context';
 import { useLanguageContext } from '../contexts/language.context';
 
 export function HomeScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { user } = useUserContext();
   const { translate } = useLanguageContext();
+  const { hasBalance } = useBalanceContext();
 
   return (
     <Layout>
@@ -18,7 +20,11 @@ export function HomeScreen(): JSX.Element {
       {isLoggedIn ? (
         <div className="flex flex-col gap-8 py-8">
           <ServiceButton type={ServiceButtonType.BUY} url="/buy" />
-          <ServiceButton type={ServiceButtonType.SELL} url={user?.kycDataComplete ? '/sell' : '/profile'} />
+          <ServiceButton
+            type={ServiceButtonType.SELL}
+            url={user?.kycDataComplete ? '/sell' : '/profile'}
+            disabled={!hasBalance}
+          />
           {/* <ServiceButton type={ServiceButtonType.CONVERT} url="/convert" disabled /> */}
         </div>
       ) : (
