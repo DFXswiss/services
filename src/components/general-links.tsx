@@ -6,7 +6,7 @@ export function GeneralLinks(): JSX.Element {
   const { authenticationToken } = useAuthContext();
   const { translate } = useLanguageContext();
   return (
-    <div className="flex flex-col text-center gap-2 md:flex-row md:gap-40 justify-center pt-4 pb-16 bg-dfxGray-300">
+    <div className="flex flex-col text-center gap-2 md:flex-row md:gap-40 justify-center py-4 bg-dfxGray-300">
       {authenticationToken && (
         <StyledLink
           label={translate('navigation/links', 'My DFX')}

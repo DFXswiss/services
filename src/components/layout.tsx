@@ -23,9 +23,9 @@ export function Layout({ backTitle, textStart, appPage, children }: LayoutProps)
       <Navigation />
       {backTitle && <NavigationBack title={backTitle} appPage={appPage} />}
       <div
-        className={`flex flex-col items-center ${
+        className={`flex flex-grow flex-col items-center ${
           textStart ? 'text-start' : 'text-center'
-        } px-5 py-2 mt-4 min-h-container gap-2`}
+        } px-5 py-2 mt-4 gap-2`}
       >
         {children}
       </div>
