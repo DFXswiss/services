@@ -29,6 +29,17 @@ input[type='number'] {
     -moz-osx-font-smoothing: grayscale;
     background-color: #fff;
     overflow-x: hidden;
+    height: 100%;
+  }
+
+  body {
+    height: 100%;
+  }
+
+  body > div {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   h1 {

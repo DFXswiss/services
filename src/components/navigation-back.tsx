@@ -15,7 +15,7 @@ export function NavigationBack({ title, home, appPage }: NavigationBackProps): J
   return (
     <button
       type="button"
-      className="w-full h-12 bg-dfxGray-300 text-dfxBlue-800 font-bold text-lg flex flex-row items-center justify-center"
+      className="w-full h-12 bg-dfxGray-300 text-dfxBlue-800 font-bold text-lg flex flex-row flex-shrink-0 items-center justify-center"
       onClick={() => (appPage ? openAppPage(appPage) : home ? navigate('/') : navigate(-1))}
     >
       {!appPage && (
