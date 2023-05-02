@@ -44,7 +44,7 @@ export function BalanceContextProvider(props: PropsWithChildren): JSX.Element {
     () => ({
       balances,
       readBalances,
-      hasBalance: balances?.find((balance) => +balance.amount > 0) !== undefined,
+      hasBalance: balances?.some((balance) => +balance.amount > 0) ?? false,
     }),
     [balances],
   );
