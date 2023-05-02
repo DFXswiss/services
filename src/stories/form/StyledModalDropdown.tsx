@@ -43,22 +43,24 @@ export default function StyledModalDropdown<T>({
             color={StyledModalColors.WHITE}
           >
             {modal.items.length > 0 && (
-              <StyledVerticalStack gap={4}>
-                {modal.items
-                  .map((item) => ({ item, content: modal.itemContent(item) }))
-                  .map((obj, index: number) => (
-                    <button
-                      key={index}
-                      className="text-start"
-                      onClick={() => {
-                        onChange(obj.item);
-                        setShowModal(false);
-                      }}
-                    >
-                      {obj.content}
-                    </button>
-                  ))}
-              </StyledVerticalStack>
+              <div className="max-h-1/4 overflow-auto">
+                <StyledVerticalStack gap={4}>
+                  {modal.items
+                    .map((item) => ({ item, content: modal.itemContent(item) }))
+                    .map((obj, index: number) => (
+                      <button
+                        key={index}
+                        className="text-start"
+                        onClick={() => {
+                          onChange(obj.item);
+                          setShowModal(false);
+                        }}
+                      >
+                        {obj.content}
+                      </button>
+                    ))}
+                </StyledVerticalStack>
+              </div>
             )}
             {modal.form && (
               <>
