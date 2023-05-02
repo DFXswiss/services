@@ -9,6 +9,7 @@ export interface TokenBalance {
 interface BalanceContextInterface {
   balances?: TokenBalance[];
   readBalances: (param: string) => void;
+  hasBalance: boolean;
 }
 
 const BalanceContext = createContext<BalanceContextInterface>(undefined as any);
@@ -43,6 +44,7 @@ export function BalanceContextProvider(props: PropsWithChildren): JSX.Element {
     () => ({
       balances,
       readBalances,
+      hasBalance: balances?.some((balance) => +balance.amount > 0) ?? false,
     }),
     [balances],
   );
