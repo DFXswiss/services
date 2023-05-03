@@ -8,6 +8,9 @@ import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyScreen } from './screens/buy.screen';
 import { BuyPaymentScreen } from './screens/buy/payment.screen';
 import { AppHandlingContextProvider } from './contexts/app-handling.context';
+import { ProfileScreen } from './screens/profile.screen';
+import { SellScreen } from './screens/sell.screen';
+import { BalanceContextProvider } from './contexts/balance.context';
 
 setupLanguages();
 
@@ -26,19 +29,29 @@ const router = createBrowserRouter([
     element: <BuyPaymentScreen />,
   },
   {
+    path: '/sell',
+    element: <SellScreen />,
+  },
+  {
     path: '/bank-accounts',
     element: <BankAccountsScreen />,
+  },
+  {
+    path: '/profile',
+    element: <ProfileScreen />,
   },
 ]);
 
 function App() {
   return (
     <AppHandlingContextProvider>
-      <DfxContextProvider api={{ signMessage: undefined }} data={{ address: undefined, blockchain: undefined }}>
-        <LanguageContextProvider>
-          <RouterProvider router={router} />
-        </LanguageContextProvider>
-      </DfxContextProvider>
+      <BalanceContextProvider>
+        <DfxContextProvider api={{ signMessage: undefined }} data={{ address: undefined, blockchain: undefined }}>
+          <LanguageContextProvider>
+            <RouterProvider router={router} />
+          </LanguageContextProvider>
+        </DfxContextProvider>
+      </BalanceContextProvider>
     </AppHandlingContextProvider>
   );
 }

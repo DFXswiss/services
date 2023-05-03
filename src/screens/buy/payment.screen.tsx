@@ -10,17 +10,17 @@ import Validations from '../../validations';
 import Form from '../../stories/form/Form';
 import StyledInput from '../../stories/form/StyledInput';
 import useDebounce from '../../hooks/debounce.hook';
-import { useKyc } from '../../hooks/kyc.hook';
+import { useKycHelper } from '../../hooks/kyc-helper.hook';
 import { useBuyContext } from '../../api/contexts/buy.context';
 import { Buy } from '../../api/definitions/buy';
 import { PaymentInformation, PaymentInformationContent } from '../../components/buy/payment-information';
 import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stories/StyledButton';
 import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStack';
-import StyledInfoText from '../../stories/StyledInfoText';
 import DfxIcon, { IconColors, IconSizes, IconVariant } from '../../stories/DfxIcon';
 import { MailEdit } from '../../components/edit/mail.edit';
 import { useUserContext } from '../../api/contexts/user.context';
 import { AppPage, useAppHandlingContext } from '../../contexts/app-handling.context';
+import { KycHint } from '../../components/kyc-hint';
 
 interface FormData {
   amount: number;
@@ -31,7 +31,7 @@ export function BuyPaymentScreen(): JSX.Element {
   const { currencies, receiveFor } = useBuyContext();
   const { translate } = useLanguageContext();
   const { assets, getAsset } = useAssetContext();
-  const { isAllowedToBuy, start, limit } = useKyc();
+  const { isAllowedToBuy } = useKycHelper();
   const { toSymbol } = useFiat();
   const { assetId, currencyId } = useQuery();
   const { user } = useUserContext();
@@ -119,7 +119,7 @@ export function BuyPaymentScreen(): JSX.Element {
   }
 
   function onSubmit(_data: FormData) {
-    // TODO (Krysh): fix broken form validation and onSubmit
+    // TODO: (Krysh fix broken form validation and onSubmit
   }
 
   function validateData(data?: DeepPartial<FormData>): FormData | undefined {
@@ -208,22 +208,7 @@ export function BuyPaymentScreen(): JSX.Element {
               />
             </div>
           )}
-          {kycRequired && (
-            <StyledVerticalStack gap={4} marginY={4}>
-              <StyledInfoText invertedIcon>
-                {translate(
-                  'screens/buy/payment',
-                  'Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.',
-                  { limit },
-                )}
-              </StyledInfoText>
-              <StyledButton
-                width={StyledButtonWidths.FULL}
-                label={translate('screens/buy/payment', 'Complete KYC')}
-                onClick={start}
-              />
-            </StyledVerticalStack>
-          )}
+          {kycRequired && !customAmountError && <KycHint />}
         </>
       )}
     </Layout>

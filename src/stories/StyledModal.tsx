@@ -13,6 +13,7 @@ export enum StyledModalTypes {
 }
 
 export enum StyledModalWidths {
+  NONE = 'NONE',
   SMALL = 'SMALL',
   REGULAR = 'REGULAR',
   LARGE = 'LARGE',
@@ -20,6 +21,7 @@ export enum StyledModalWidths {
 }
 
 const WIDTH_MAPS: Record<StyledModalWidths, string> = {
+  [StyledModalWidths.NONE]: 'w-[90%]',
   [StyledModalWidths.SMALL]: 'min-w-[25rem] max-w-lg',
   [StyledModalWidths.REGULAR]: 'min-w-[37.5rem] max-w-2xl',
   [StyledModalWidths.LARGE]: 'w-[90%] max-w-4xl',
@@ -54,9 +56,10 @@ export default function StyledModal({
 
   const parentClasses = 'relative my-6 mx-auto ' + WIDTH_MAPS[width];
   let containerClasses =
-    'rounded-lg shadow-lg max-h-[80vh] relative flex flex-col w-full outline-none focus:outline-none';
+    'rounded-lg shadow-lg max-h-[80vh] relative flex flex-col w-full outline-none focus:outline-none overflow-auto';
   let headingClasses = 'p-3 border-b rounded-t';
-  let bodyClasses = 'relative px-14 pb-10 flex-auto overflow-auto';
+  let bodyClasses =
+    `relative pb-10 ${width === StyledModalWidths.NONE ? 'px-4' : 'px-14'} flex-auto overflow-auto` + WIDTH_MAPS[width];
 
   if (type !== StyledModalTypes.ALERT) {
     color === StyledModalColors.DFX_GRADIENT
@@ -95,7 +98,11 @@ export default function StyledModal({
                 {/*header*/}
                 {showHeader && (
                   <div className={headingClasses}>
-                    <h3 className="text-lg font-bold text-center">{heading}</h3>
+                    <h3
+                      className={`text-lg font-bold ${width === StyledModalWidths.NONE ? 'text-start' : 'text-center'}`}
+                    >
+                      {heading}
+                    </h3>
                   </div>
                 )}
                 {/*body*/}

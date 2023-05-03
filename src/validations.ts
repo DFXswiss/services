@@ -2,6 +2,7 @@ import * as IbanTools from 'ibantools';
 import BlockedIbans from './static/blocked-iban.json';
 import { Country } from './api/definitions/country';
 import regex from './regex';
+import { PhoneNumberUtil } from 'google-libphonenumber';
 
 class ValidationsClass {
   public get Required() {
@@ -20,6 +21,23 @@ class ValidationsClass {
         message: 'Invalid E-mail address',
       },
     };
+  }
+
+  public get Phone() {
+    return this.Custom((number: string) => {
+      try {
+        if (number) {
+          const util = PhoneNumberUtil.getInstance();
+
+          if (!number.match(/^\+\d{5}/)) return 'Please fill in area code and number';
+          if (!util.isValidNumber(util.parseAndKeepRawInput(number))) return 'Invalid pattern';
+        }
+
+        return true;
+      } catch {
+        return 'Invalid pattern';
+      }
+    });
   }
 
   public Iban(countries: Country[]) {

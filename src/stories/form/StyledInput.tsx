@@ -14,6 +14,8 @@ interface StyledInputProps extends ControlProps {
   darkTheme?: boolean;
   full?: boolean;
   loading?: boolean;
+  small?: boolean;
+  smallLabel?: boolean;
 }
 
 const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
@@ -34,6 +36,8 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
       darkTheme = false,
       loading = false,
       full = false,
+      small = false,
+      smallLabel = false,
       ...props
     }: StyledInputProps,
     ref,
@@ -43,7 +47,7 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
     const placeholderColor = darkTheme ? 'placeholder:text-dfxGray-800' : 'placeholder:text-dfxGray-600';
     const borderColor = darkTheme ? 'border-none' : 'border border-dfxGray-500';
     const outlineColor = darkTheme ? 'outline-none' : 'outline-2 outline-dfxBlue-400';
-    const leftMargin = prefix ? 'pl-7' : '';
+    const leftMargin = prefix ? (prefix.length === 1 ? 'pl-7' : 'pl-12') : '';
 
     const textOrErrorColor = forceError ? 'text-dfxRed-100' : textColor;
 
@@ -52,12 +56,21 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
         control={control}
         render={({ field: { onChange, onBlur, value } }) => (
           <StyledVerticalStack gap={1} full={full}>
-            <label hidden={hideLabel} className={'text-base font-semibold pl-3 ' + [textColor].join(' ')}>
+            <label
+              hidden={hideLabel}
+              className={
+                `text-start ${smallLabel ? 'text-sm' : 'text-base'} font-semibold pl-3 ` + [textColor].join(' ')
+              }
+            >
               {label}
             </label>
             <div className="relative">
               {prefix && (
-                <div className="text-dfxGray-800 absolute h-[50px] w-8 flex justify-center items-center">
+                <div
+                  className={`text-dfxGray-800 absolute h-[50px] ${
+                    prefix.length === 1 ? 'w-2 left-3' : 'w-6 left-4'
+                  } flex justify-center items-center`}
+                >
                   <p>{prefix}</p>
                 </div>
               )}
@@ -68,11 +81,11 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
               )}
               <input
                 className={
-                  'text-base font-normal rounded-md p-3 w-full ' +
+                  `text-base font-normal rounded-md p-3 ${small ? 'w-24' : 'w-full'} ` +
                   [textOrErrorColor, backgroundColor, placeholderColor, borderColor, outlineColor, leftMargin].join(' ')
                 }
                 type={type}
-                inputMode={type === 'number' ? 'numeric' : undefined}
+                inputMode={type === 'number' ? 'decimal' : undefined}
                 onBlur={onBlur}
                 onChange={(value) => onChange(value.target.value)}
                 placeholder={placeholder}
@@ -84,7 +97,7 @@ const StyledInput = forwardRef<HTMLInputElement, StyledInputProps>(
               />
             </div>
             {(forceErrorMessage || error) && (
-              <p className="text-sm text-dfxRed-100 pl-3">{forceErrorMessage ?? error?.message}</p>
+              <p className="text-start text-sm text-dfxRed-100 pl-3">{forceErrorMessage ?? error?.message}</p>
             )}
           </StyledVerticalStack>
         )}
