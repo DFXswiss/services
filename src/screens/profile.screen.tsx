@@ -17,6 +17,7 @@ import { AccountType, KycData } from '../api/definitions/kyc';
 import { useKyc } from '../api/hooks/kyc.hook';
 import { useNavigate } from 'react-router-dom';
 import StyledModal, { StyledModalTypes, StyledModalWidths } from '../stories/StyledModal';
+import { ApiError } from '../api/definitions/error';
 
 export function ProfileScreen(): JSX.Element {
   const { translate } = useLanguageContext();
@@ -31,6 +32,7 @@ export function ProfileScreen(): JSX.Element {
   const selectedAccountType = useWatch({ control, name: 'accountType' });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>();
   const [showsErrorAlert, setShowsErrorAlert] = useState(false);
 
   function onSubmit(data: KycData) {
@@ -38,7 +40,10 @@ export function ProfileScreen(): JSX.Element {
     setKycData(data)
       .then(() => reloadUser())
       .then(() => navigate({ pathname: '/sell' }, { replace: true }))
-      .catch(() => setShowsErrorAlert(true))
+      .catch((error: ApiError) => {
+        setErrorMessage(error.message);
+        setShowsErrorAlert(true);
+      })
       .finally(() => setIsSubmitting(false));
   }
 
@@ -81,6 +86,7 @@ export function ProfileScreen(): JSX.Element {
               'Please try again later, if the issue persists please reach out to our support.',
             )}
           </p>
+          {errorMessage && <p className="text-dfxGray-800 text-sm">{errorMessage}</p>}
           <div className="mx-auto">
             <StyledButton
               width={StyledButtonWidths.SM}
