@@ -249,7 +249,7 @@ export function SellScreen(): JSX.Element {
           <>
             {paymentInfo.estimatedAmount > 0 && (
               <p className="text-dfxBlue-800 text-start w-full text-xs pl-12">
-                {translate('screens/sell', '≈ {{estimatedAmount}} {{currency}} (incl. all fees)', {
+                {translate('screens/sell', '≈ {{estimatedAmount}} {{currency}} (incl. DFX fees)', {
                   estimatedAmount: paymentInfo.estimatedAmount,
                   currency: validatedData?.currency.name ?? '',
                 })}

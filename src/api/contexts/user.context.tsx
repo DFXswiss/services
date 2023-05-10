@@ -3,7 +3,7 @@ import { Country } from '../definitions/country';
 import { User } from '../definitions/user';
 import { useCountry } from '../hooks/country.hook';
 import { useUser } from '../hooks/user.hook';
-import { useAuthContext } from './auth.context';
+import { useSessionContext } from './session.context';
 
 interface UserInterface {
   user?: User;
@@ -23,7 +23,7 @@ export function useUserContext(): UserInterface {
 }
 
 export function UserContextProvider(props: PropsWithChildren): JSX.Element {
-  const { isLoggedIn } = useAuthContext();
+  const { isLoggedIn } = useSessionContext();
   const { getUser, changeUser } = useUser();
   const { getCountries } = useCountry();
   const [user, setUser] = useState<User>();
