@@ -10,13 +10,13 @@ type DfxContextProviderProps = SessionContextProviderProps & PropsWithChildren;
 export function DfxContextProvider(props: DfxContextProviderProps): JSX.Element {
   return (
     <AuthContextProvider>
-      <UserContextProvider>
-        <SessionContextProvider api={props.api} data={props.data}>
+      <SessionContextProvider api={props.api} data={props.data}>
+        <UserContextProvider>
           <AssetContextProvider>
             <BuyContextProvider>{props.children}</BuyContextProvider>
           </AssetContextProvider>
-        </SessionContextProvider>
-      </UserContextProvider>
+        </UserContextProvider>
+      </SessionContextProvider>
     </AuthContextProvider>
   );
 }

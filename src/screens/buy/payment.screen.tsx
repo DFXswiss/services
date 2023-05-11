@@ -189,7 +189,7 @@ export function BuyPaymentScreen(): JSX.Element {
           </Form>
           {paymentInfo && (
             <p className="text-dfxBlue-800 text-start w-full text-xs pl-7 pt-1">
-              {translate('screens/buy/payment', '≈ {{estimatedAmount}} (incl. all fees)', {
+              {translate('screens/buy/payment', '≈ {{estimatedAmount}} (incl. DFX fees)', {
                 estimatedAmount: paymentInfo.estimatedAmount,
               })}
             </p>
