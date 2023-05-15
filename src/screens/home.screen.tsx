@@ -17,7 +17,7 @@ export function HomeScreen(): JSX.Element {
       <p className="text-dfxGray-700">
         {translate('screens/home', 'Buy and Sell cryptocurrencies with bank transfers.')}
       </p>
-      {isLoggedIn ? (
+      {isLoggedIn && user ? (
         <div className="flex flex-col gap-8 py-8">
           <ServiceButton type={ServiceButtonType.BUY} url="/buy" />
           <ServiceButton
