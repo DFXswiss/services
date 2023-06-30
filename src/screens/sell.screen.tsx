@@ -1,37 +1,39 @@
 import { DeepPartial, useForm, useWatch } from 'react-hook-form';
-import { useBuyContext } from '../api/contexts/buy.context';
-import { BankAccount } from '../api/definitions/bank-account';
 import { Layout } from '../components/layout';
 import { useLanguageContext } from '../contexts/language.context';
 import StyledBankAccountListItem from '../stories/form/StyledBankAccountListItem';
 import StyledModalDropdown from '../stories/form/StyledModalDropdown';
 import { Utils } from '../utils';
-import { Fiat } from '../api/definitions/fiat';
-import { Asset } from '../api/definitions/asset';
 import { useEffect, useState } from 'react';
 import { AddBankAccount } from '../components/buy/add-bank-account';
 import StyledVerticalStack from '../stories/layout-helpers/StyledVerticalStack';
 import StyledDropdown from '../stories/form/StyledDropdown';
 import { IconVariant } from '../stories/DfxIcon';
-import { useFiat } from '../api/hooks/fiat.hook';
 import StyledInput from '../stories/form/StyledInput';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import Form from '../stories/form/Form';
 import Validations from '../validations';
-import { useAssetContext } from '../api/contexts/asset.context';
-import { useSessionContext } from '../api/contexts/session.context';
 import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useBalanceContext } from '../contexts/balance.context';
 import { AssetIconVariant } from '../stories/DfxAssetIcon';
 import { StyledModalWidths } from '../stories/StyledModal';
 import StyledButton, { StyledButtonWidths } from '../stories/StyledButton';
-import { useSell } from '../api/hooks/sell.hook';
-import { Sell } from '../api/definitions/sell';
-import { ApiError } from '../api/definitions/error';
 import { KycHint } from '../components/kyc-hint';
 import StyledDataTable, { AlignContent } from '../stories/StyledDataTable';
 import StyledDataTableRow from '../stories/StyledDataTableRow';
+import {
+  ApiError,
+  Asset,
+  BankAccount,
+  Fiat,
+  Sell,
+  useAssetContext,
+  useBuyContext,
+  useFiat,
+  useSell,
+  useSessionContext,
+} from '@dfx.swiss/react';
 
 interface FormData {
   bankAccount: BankAccount;

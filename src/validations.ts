@@ -1,8 +1,8 @@
 import * as IbanTools from 'ibantools';
 import BlockedIbans from './static/blocked-iban.json';
-import { Country } from './api/definitions/country';
 import regex from './regex';
 import { PhoneNumberUtil } from 'google-libphonenumber';
+import { Country } from '@dfx.swiss/react';
 
 class ValidationsClass {
   public get Required() {

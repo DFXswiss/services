@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { useAssetContext } from '../api/contexts/asset.context';
-import { useBuyContext } from '../api/contexts/buy.context';
-import { Asset } from '../api/definitions/asset';
-import { Fiat } from '../api/definitions/fiat';
-import { useFiat } from '../api/hooks/fiat.hook';
 import { useLanguageContext } from '../contexts/language.context';
 import { AssetIconVariant } from '../stories/DfxAssetIcon';
 import Form from '../stories/form/Form';
@@ -15,7 +10,7 @@ import { Utils } from '../utils';
 import Validations from '../validations';
 import { Layout } from '../components/layout';
 import StyledVerticalStack from '../stories/layout-helpers/StyledVerticalStack';
-import { useSessionContext } from '../api/contexts/session.context';
+import { Asset, Fiat, useAssetContext, useBuyContext, useFiat, useSessionContext } from '@dfx.swiss/react';
 
 interface FormData {
   currency: Fiat;

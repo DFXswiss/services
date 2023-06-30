@@ -1,4 +1,4 @@
-import { useApiSession } from '../api/hooks/api-session.hook';
+import { useApiSession } from '@dfx.swiss/react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useBalanceContext } from '../contexts/balance.context';
 import { Utils } from '../utils';

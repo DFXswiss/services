@@ -1,8 +1,4 @@
 import { useForm } from 'react-hook-form';
-import { useBuyContext } from '../../api/contexts/buy.context';
-import { useUserContext } from '../../api/contexts/user.context';
-import { BankAccount } from '../../api/definitions/bank-account';
-import { CreateBankAccount } from '../../api/hooks/bank-account.hook';
 import Form from '../../stories/form/Form';
 import StyledInput from '../../stories/form/StyledInput';
 import StyledSpacer from '../../stories/layout-helpers/StyledSpacer';
@@ -10,6 +6,7 @@ import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStac
 import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stories/StyledButton';
 import { Utils } from '../../utils';
 import Validations from '../../validations';
+import { BankAccount, CreateBankAccount, useBuyContext, useUserContext } from '@dfx.swiss/react';
 
 interface AddBankAccountProps {
   onSubmit: (bankAccount: BankAccount) => void;

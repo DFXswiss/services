@@ -1,12 +1,11 @@
-import { Asset } from '../api/definitions/asset';
-import { Protocol } from '../hooks/blockchain.hook';
+import { Asset } from '@dfx.swiss/react';
 import DfxAssetIcon, { AssetIconVariant } from './DfxAssetIcon';
 
 export interface StyledCoinListItemProps {
   asset: Asset;
   disabled?: boolean;
   onClick: () => void;
-  protocol: Protocol;
+  protocol: string;
 }
 
 export default function StyledCoinListItem({ asset, onClick, protocol, disabled }: StyledCoinListItemProps) {
