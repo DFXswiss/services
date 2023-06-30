@@ -1,4 +1,4 @@
-import { useUserContext } from '../../api/contexts/user.context';
+import { useUserContext } from '@dfx.swiss/react';
 import DfxIcon, { IconSizes, IconVariant } from '../../stories/DfxIcon';
 import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStack';
 import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stories/StyledButton';

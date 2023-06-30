@@ -1,4 +1,4 @@
-import { Fiat } from '../../api/definitions/fiat';
+import { Fiat } from '@dfx.swiss/react';
 import { useLanguageContext } from '../../contexts/language.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
 import DfxIcon, { IconColors, IconVariant } from '../../stories/DfxIcon';

@@ -1,6 +1,5 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { HomeScreen } from './screens/home.screen';
-import { DfxContextProvider } from './api/contexts/dfx.context';
 import { LanguageContextProvider } from './contexts/language.context';
 import { setupLanguages } from './translations';
 import { ErrorScreen } from './screens/error.screen';
@@ -11,6 +10,7 @@ import { AppHandlingContextProvider } from './contexts/app-handling.context';
 import { ProfileScreen } from './screens/profile.screen';
 import { SellScreen } from './screens/sell.screen';
 import { BalanceContextProvider } from './contexts/balance.context';
+import { DfxContextProvider } from '@dfx.swiss/react';
 
 setupLanguages();
 
@@ -46,7 +46,7 @@ function App() {
   return (
     <AppHandlingContextProvider>
       <BalanceContextProvider>
-        <DfxContextProvider api={{ signMessage: undefined }} data={{ address: undefined, blockchain: undefined }}>
+        <DfxContextProvider api={{}} data={{}}>
           <LanguageContextProvider>
             <RouterProvider router={router} />
           </LanguageContextProvider>

@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useAssetContext } from '../../api/contexts/asset.context';
 import { useLanguageContext } from '../../contexts/language.context';
 import { useQuery } from '../../hooks/query.hook';
 import { Layout } from '../../components/layout';
-import { useFiat } from '../../api/hooks/fiat.hook';
 import { DeepPartial, useForm, useWatch } from 'react-hook-form';
 import { Utils } from '../../utils';
 import Validations from '../../validations';
@@ -11,16 +9,14 @@ import Form from '../../stories/form/Form';
 import StyledInput from '../../stories/form/StyledInput';
 import useDebounce from '../../hooks/debounce.hook';
 import { useKycHelper } from '../../hooks/kyc-helper.hook';
-import { useBuyContext } from '../../api/contexts/buy.context';
-import { Buy } from '../../api/definitions/buy';
 import { PaymentInformation, PaymentInformationContent } from '../../components/buy/payment-information';
 import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stories/StyledButton';
 import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStack';
 import DfxIcon, { IconColors, IconSizes, IconVariant } from '../../stories/DfxIcon';
 import { MailEdit } from '../../components/edit/mail.edit';
-import { useUserContext } from '../../api/contexts/user.context';
 import { AppPage, useAppHandlingContext } from '../../contexts/app-handling.context';
 import { KycHint } from '../../components/kyc-hint';
+import { Buy, useAssetContext, useBuyContext, useFiat, useUserContext } from '@dfx.swiss/react';
 
 interface FormData {
   amount: number;

@@ -1,4 +1,4 @@
-import { BankAccount } from '../../api/definitions/bank-account';
+import { BankAccount } from '@dfx.swiss/react';
 import { Utils } from '../../utils';
 import DfxIcon, { IconVariant, IconColors } from '../DfxIcon';
 
