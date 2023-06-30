@@ -4,9 +4,7 @@ import StyledInput from '../../stories/form/StyledInput';
 import StyledSpacer from '../../stories/layout-helpers/StyledSpacer';
 import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStack';
 import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stories/StyledButton';
-import { Utils } from '../../utils';
-import Validations from '../../validations';
-import { BankAccount, CreateBankAccount, useBuyContext, useUserContext } from '@dfx.swiss/react';
+import { BankAccount, CreateBankAccount, Utils, Validations, useBuyContext, useUserContext } from '@dfx.swiss/react';
 
 interface AddBankAccountProps {
   onSubmit: (bankAccount: BankAccount) => void;

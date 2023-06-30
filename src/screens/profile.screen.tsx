@@ -5,8 +5,6 @@ import DfxIcon, { IconColors, IconVariant } from '../stories/DfxIcon';
 import StyledInput from '../stories/form/StyledInput';
 import StyledHorizontalStack from '../stories/layout-helpers/StyledHorizontalStack';
 import Form from '../stories/form/Form';
-import { Utils } from '../utils';
-import Validations from '../validations';
 import StyledVerticalStack from '../stories/layout-helpers/StyledVerticalStack';
 import StyledDropdown from '../stories/form/StyledDropdown';
 import StyledButton, { StyledButtonWidths } from '../stories/StyledButton';
@@ -14,7 +12,7 @@ import StyledSpacer from '../stories/layout-helpers/StyledSpacer';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StyledModal, { StyledModalTypes, StyledModalWidths } from '../stories/StyledModal';
-import { AccountType, ApiError, KycData, useKyc, useUserContext } from '@dfx.swiss/react';
+import { AccountType, ApiError, KycData, Utils, Validations, useKyc, useUserContext } from '@dfx.swiss/react';
 
 export function ProfileScreen(): JSX.Element {
   const { translate } = useLanguageContext();
