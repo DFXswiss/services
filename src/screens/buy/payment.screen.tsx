@@ -3,8 +3,6 @@ import { useLanguageContext } from '../../contexts/language.context';
 import { useQuery } from '../../hooks/query.hook';
 import { Layout } from '../../components/layout';
 import { DeepPartial, useForm, useWatch } from 'react-hook-form';
-import { Utils } from '../../utils';
-import Validations from '../../validations';
 import Form from '../../stories/form/Form';
 import StyledInput from '../../stories/form/StyledInput';
 import useDebounce from '../../hooks/debounce.hook';
@@ -16,7 +14,7 @@ import DfxIcon, { IconColors, IconSizes, IconVariant } from '../../stories/DfxIc
 import { MailEdit } from '../../components/edit/mail.edit';
 import { AppPage, useAppHandlingContext } from '../../contexts/app-handling.context';
 import { KycHint } from '../../components/kyc-hint';
-import { Buy, useAssetContext, useBuyContext, useFiat, useUserContext } from '@dfx.swiss/react';
+import { Buy, Utils, Validations, useAssetContext, useBuyContext, useFiat, useUserContext } from '@dfx.swiss/react';
 
 interface FormData {
   amount: number;

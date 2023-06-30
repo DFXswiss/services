@@ -1,5 +1,4 @@
-import { BankAccount } from '@dfx.swiss/react';
-import { Utils } from '../../utils';
+import { BankAccount, Utils } from '@dfx.swiss/react';
 import DfxIcon, { IconVariant, IconColors } from '../DfxIcon';
 
 export interface StyledBankAccountListItemProps {

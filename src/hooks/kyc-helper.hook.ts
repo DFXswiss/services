@@ -1,5 +1,4 @@
-import { KycStatus, useUserContext } from '@dfx.swiss/react';
-import { Utils } from '../utils';
+import { KycStatus, Utils, useUserContext } from '@dfx.swiss/react';
 
 interface KycHelperInterface {
   status: string;

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@dfx.swiss/react": "^1.0.0-beta.10",
+    "@dfx.swiss/react": "^1.0.0-beta.11",
     "classnames": "^2.3.2",
     "copy-to-clipboard": "^3.3.3",
     "env-cmd": "^10.1.0",

@@ -6,11 +6,18 @@ import { AssetIconVariant } from '../stories/DfxAssetIcon';
 import Form from '../stories/form/Form';
 import StyledDropdown from '../stories/form/StyledDropdown';
 import StyledButton, { StyledButtonWidths } from '../stories/StyledButton';
-import { Utils } from '../utils';
-import Validations from '../validations';
 import { Layout } from '../components/layout';
 import StyledVerticalStack from '../stories/layout-helpers/StyledVerticalStack';
-import { Asset, Fiat, useAssetContext, useBuyContext, useFiat, useSessionContext } from '@dfx.swiss/react';
+import {
+  Asset,
+  Fiat,
+  Utils,
+  Validations,
+  useAssetContext,
+  useBuyContext,
+  useFiat,
+  useSessionContext,
+} from '@dfx.swiss/react';
 
 interface FormData {
   currency: Fiat;

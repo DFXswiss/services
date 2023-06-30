@@ -6,10 +6,8 @@ import StyledHorizontalStack from '../../stories/layout-helpers/StyledHorizontal
 import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStack';
 import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stories/StyledButton';
 import StyledInfoText from '../../stories/StyledInfoText';
-import { Utils } from '../../utils';
-import Validations from '../../validations';
 import { useLanguageContext } from '../../contexts/language.context';
-import { useUserContext } from '@dfx.swiss/react';
+import { Utils, Validations, useUserContext } from '@dfx.swiss/react';
 
 interface MailEditProps {
   infoText?: string;

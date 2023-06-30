@@ -3,7 +3,6 @@ import { Layout } from '../components/layout';
 import { useLanguageContext } from '../contexts/language.context';
 import StyledBankAccountListItem from '../stories/form/StyledBankAccountListItem';
 import StyledModalDropdown from '../stories/form/StyledModalDropdown';
-import { Utils } from '../utils';
 import { useEffect, useState } from 'react';
 import { AddBankAccount } from '../components/buy/add-bank-account';
 import StyledVerticalStack from '../stories/layout-helpers/StyledVerticalStack';
@@ -13,7 +12,6 @@ import StyledInput from '../stories/form/StyledInput';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import Form from '../stories/form/Form';
-import Validations from '../validations';
 import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useBalanceContext } from '../contexts/balance.context';
 import { AssetIconVariant } from '../stories/DfxAssetIcon';
@@ -28,6 +26,8 @@ import {
   BankAccount,
   Fiat,
   Sell,
+  Utils,
+  Validations,
   useAssetContext,
   useBuyContext,
   useFiat,
