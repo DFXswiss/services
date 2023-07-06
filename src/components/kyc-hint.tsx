@@ -1,8 +1,6 @@
+import { StyledButton, StyledButtonWidth, StyledInfoText, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useLanguageContext } from '../contexts/language.context';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
-import StyledButton, { StyledButtonWidths } from '../stories/StyledButton';
-import StyledInfoText from '../stories/StyledInfoText';
-import StyledVerticalStack from '../stories/layout-helpers/StyledVerticalStack';
 
 export function KycHint(): JSX.Element {
   const { translate } = useLanguageContext();
@@ -16,7 +14,7 @@ export function KycHint(): JSX.Element {
           { limit },
         )}
       </StyledInfoText>
-      <StyledButton width={StyledButtonWidths.FULL} label={translate('kyc', 'Complete KYC')} onClick={start} />
+      <StyledButton width={StyledButtonWidth.FULL} label={translate('kyc', 'Complete KYC')} onClick={start} />
     </StyledVerticalStack>
   );
 }

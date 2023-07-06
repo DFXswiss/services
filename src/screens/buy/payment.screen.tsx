@@ -3,18 +3,25 @@ import { useLanguageContext } from '../../contexts/language.context';
 import { useQuery } from '../../hooks/query.hook';
 import { Layout } from '../../components/layout';
 import { DeepPartial, useForm, useWatch } from 'react-hook-form';
-import Form from '../../stories/form/Form';
-import StyledInput from '../../stories/form/StyledInput';
 import useDebounce from '../../hooks/debounce.hook';
 import { useKycHelper } from '../../hooks/kyc-helper.hook';
 import { PaymentInformation, PaymentInformationContent } from '../../components/buy/payment-information';
-import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stories/StyledButton';
-import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStack';
-import DfxIcon, { IconColors, IconSizes, IconVariant } from '../../stories/DfxIcon';
 import { MailEdit } from '../../components/edit/mail.edit';
 import { AppPage, useAppHandlingContext } from '../../contexts/app-handling.context';
 import { KycHint } from '../../components/kyc-hint';
-import { Buy, Utils, Validations, useAssetContext, useBuyContext, useFiat, useUserContext } from '@dfx.swiss/react';
+import { Buy, Utils, Validations, useAssetContext, useBuy, useFiat, useUserContext } from '@dfx.swiss/react';
+import {
+  DfxIcon,
+  Form,
+  IconColor,
+  IconSize,
+  IconVariant,
+  StyledButton,
+  StyledButtonColor,
+  StyledButtonWidth,
+  StyledInput,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 
 interface FormData {
   amount: number;
@@ -22,7 +29,7 @@ interface FormData {
 
 export function BuyPaymentScreen(): JSX.Element {
   const { openAppPage } = useAppHandlingContext();
-  const { currencies, receiveFor } = useBuyContext();
+  const { currencies, receiveFor } = useBuy();
   const { translate } = useLanguageContext();
   const { assets, getAsset } = useAssetContext();
   const { isAllowedToBuy } = useKycHelper();
@@ -135,7 +142,7 @@ export function BuyPaymentScreen(): JSX.Element {
       {showsCompletion ? (
         <StyledVerticalStack gap={4}>
           <div className="mx-auto">
-            <DfxIcon size={IconSizes.XXL} icon={IconVariant.PROCESS_DONE} color={IconColors.BLUE} />
+            <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />
           </div>
           <p className="text-base font-bold text-center text-dfxBlue-800">{getHeader()}</p>
           {showsSimple ? (
@@ -149,8 +156,8 @@ export function BuyPaymentScreen(): JSX.Element {
               <StyledButton
                 label={translate('general/actions', 'close')}
                 onClick={() => openAppPage(AppPage.BUY)}
-                color={StyledButtonColors.STURDY_WHITE}
-                width={StyledButtonWidths.FULL}
+                color={StyledButtonColor.STURDY_WHITE}
+                width={StyledButtonWidth.FULL}
                 caps
               />
             </>
@@ -192,7 +199,7 @@ export function BuyPaymentScreen(): JSX.Element {
             <div className="pb-16">
               <PaymentInformationContent info={paymentInfo} />
               <StyledButton
-                width={StyledButtonWidths.FULL}
+                width={StyledButtonWidth.FULL}
                 label={translate('screens/buy/payment', 'Click here once you have issued the transfer')}
                 onClick={() => {
                   setShowsCompletion(true);

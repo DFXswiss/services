@@ -1,6 +1,6 @@
 import { useAuthContext } from '@dfx.swiss/react';
 import { useLanguageContext } from '../contexts/language.context';
-import { StyledLink } from '../stories/StyledLink';
+import { StyledLink } from '@dfx.swiss/react-components';
 
 export function GeneralLinks(): JSX.Element {
   const { authenticationToken } = useAuthContext();

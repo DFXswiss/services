@@ -1,6 +1,6 @@
 import { useState } from 'react'; // import state
-import logo from '../assets/logo.svg';
-import menu from '../assets/menu.svg';
+import logo from '../static/assets/logo.svg';
+import menu from '../static/assets/menu.svg';
 import { useLanguageContext } from '../contexts/language.context';
 
 export function Navigation() {

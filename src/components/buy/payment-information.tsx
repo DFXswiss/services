@@ -1,13 +1,18 @@
 import { Fiat } from '@dfx.swiss/react';
 import { useLanguageContext } from '../../contexts/language.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
-import DfxIcon, { IconColors, IconVariant } from '../../stories/DfxIcon';
-import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStack';
-import StyledDataTable, { AlignContent } from '../../stories/StyledDataTable';
-import StyledDataTableRow from '../../stories/StyledDataTableRow';
-import StyledInfoText from '../../stories/StyledInfoText';
-import { CopyButton } from '../copy-button';
 import { GiroCode } from './giro-code';
+import {
+  AlignContent,
+  CopyButton,
+  DfxIcon,
+  IconColor,
+  IconVariant,
+  StyledDataTable,
+  StyledDataTableRow,
+  StyledInfoText,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 
 export interface PaymentInformation {
   iban: string;
@@ -34,7 +39,7 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
     <>
       <StyledVerticalStack marginY={5} gap={2}>
         <h2 className="text-dfxBlue-800 text-center">{translate('screens/buy/payment', 'Payment Information')}</h2>
-        <StyledInfoText iconColor={IconColors.BLUE}>
+        <StyledInfoText iconColor={IconColor.BLUE}>
           {translate(
             'screens/buy/payment',
             'Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!',
@@ -47,7 +52,7 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
             <p>{info.iban}</p>
             {info.isSepaInstant && (
               <div className="text-white">
-                <DfxIcon icon={IconVariant.SEPA_INSTANT} color={IconColors.RED} />
+                <DfxIcon icon={IconVariant.SEPA_INSTANT} color={IconColor.RED} />
               </div>
             )}
           </div>
