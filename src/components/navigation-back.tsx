@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import DfxIcon, { IconColors, IconVariant, IconSizes } from '../stories/DfxIcon';
 import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
+import { DfxIcon, IconVariant, IconColor, IconSize } from '@dfx.swiss/react-components';
 
 interface NavigationBackProps {
   title: string;
@@ -20,7 +20,7 @@ export function NavigationBack({ title, home, appPage }: NavigationBackProps): J
     >
       {!appPage && (
         <div className="absolute left-6">
-          <DfxIcon icon={IconVariant.BACK} color={IconColors.BLUE} size={IconSizes.LG} />
+          <DfxIcon icon={IconVariant.BACK} color={IconColor.BLUE} size={IconSize.LG} />
         </div>
       )}
       {title}
