@@ -127,12 +127,14 @@ export function ProfileScreen(): JSX.Element {
                   name="firstname"
                   label={translate('screens/profile', 'First name')}
                   placeholder="John"
+                  full
                   smallLabel
                 />
                 <StyledInput
                   name="surname"
                   label={translate('screens/profile', 'Last name')}
                   placeholder="Doe"
+                  full
                   smallLabel
                 />
               </StyledHorizontalStack>
