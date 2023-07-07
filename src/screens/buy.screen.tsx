@@ -1,21 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { useAssetContext } from '../api/contexts/asset.context';
-import { useBuyContext } from '../api/contexts/buy.context';
-import { Asset } from '../api/definitions/asset';
-import { Fiat } from '../api/definitions/fiat';
-import { useFiat } from '../api/hooks/fiat.hook';
 import { useLanguageContext } from '../contexts/language.context';
-import { AssetIconVariant } from '../stories/DfxAssetIcon';
-import Form from '../stories/form/Form';
-import StyledDropdown from '../stories/form/StyledDropdown';
-import StyledButton, { StyledButtonWidths } from '../stories/StyledButton';
-import { Utils } from '../utils';
-import Validations from '../validations';
 import { Layout } from '../components/layout';
-import StyledVerticalStack from '../stories/layout-helpers/StyledVerticalStack';
-import { useSessionContext } from '../api/contexts/session.context';
+import { Asset, Fiat, Utils, Validations, useAssetContext, useBuy, useFiat, useSessionContext } from '@dfx.swiss/react';
+import {
+  AssetIconVariant,
+  Form,
+  StyledButton,
+  StyledButtonWidth,
+  StyledDropdown,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 
 interface FormData {
   currency: Fiat;
@@ -26,7 +22,7 @@ export function BuyScreen(): JSX.Element {
   const { translate } = useLanguageContext();
   const navigate = useNavigate();
   const { blockchain, availableBlockchains } = useSessionContext();
-  const { currencies } = useBuyContext();
+  const { currencies } = useBuy();
   const { assets } = useAssetContext();
   const { toDescription, getDefaultCurrency } = useFiat();
   const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
@@ -103,7 +99,7 @@ export function BuyScreen(): JSX.Element {
 
           <StyledButton
             onClick={() => handleNext()}
-            width={StyledButtonWidths.FULL}
+            width={StyledButtonWidth.FULL}
             label={translate('general/actions', 'Next')}
             disabled={!isValid}
             caps={true}

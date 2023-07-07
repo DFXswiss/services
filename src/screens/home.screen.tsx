@@ -1,5 +1,4 @@
-import { useSessionContext } from '../api/contexts/session.context';
-import { useUserContext } from '../api/contexts/user.context';
+import { useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { Layout } from '../components/layout';
 import { ServiceButton, ServiceButtonType } from '../components/service-button';
 import { useBalanceContext } from '../contexts/balance.context';

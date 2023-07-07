@@ -1,15 +1,21 @@
 import { useForm } from 'react-hook-form';
-import { useBuyContext } from '../../api/contexts/buy.context';
-import { useUserContext } from '../../api/contexts/user.context';
-import { BankAccount } from '../../api/definitions/bank-account';
-import { CreateBankAccount } from '../../api/hooks/bank-account.hook';
-import Form from '../../stories/form/Form';
-import StyledInput from '../../stories/form/StyledInput';
-import StyledSpacer from '../../stories/layout-helpers/StyledSpacer';
-import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStack';
-import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stories/StyledButton';
-import { Utils } from '../../utils';
-import Validations from '../../validations';
+import {
+  BankAccount,
+  CreateBankAccount,
+  Utils,
+  Validations,
+  useBankAccountContext,
+  useUserContext,
+} from '@dfx.swiss/react';
+import {
+  Form,
+  StyledButton,
+  StyledButtonColor,
+  StyledButtonWidth,
+  StyledInput,
+  StyledSpacer,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 
 interface AddBankAccountProps {
   onSubmit: (bankAccount: BankAccount) => void;
@@ -21,7 +27,7 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
     handleSubmit,
     formState: { errors, isValid },
   } = useForm<CreateBankAccount>();
-  const { createAccount, isAccountLoading } = useBuyContext();
+  const { createAccount, isAccountLoading } = useBankAccountContext();
   const { countries } = useUserContext();
 
   async function createBankAccount(newAccount: CreateBankAccount): Promise<void> {
@@ -40,12 +46,12 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
         <StyledSpacer spacing={-1} />
         <StyledButton
           disabled={!isValid}
-          color={StyledButtonColors.RED}
+          color={StyledButtonColor.RED}
           label="Add Bank Account"
           onClick={handleSubmit(createBankAccount)}
           isLoading={isAccountLoading}
           caps
-          width={StyledButtonWidths.FULL}
+          width={StyledButtonWidth.FULL}
         />
       </StyledVerticalStack>
     </Form>

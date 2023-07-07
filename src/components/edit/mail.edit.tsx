@@ -1,19 +1,21 @@
 import { useForm } from 'react-hook-form';
-import { useUserContext } from '../../api/contexts/user.context';
-import { IconColors } from '../../stories/DfxIcon';
-import Form from '../../stories/form/Form';
-import StyledInput from '../../stories/form/StyledInput';
-import StyledHorizontalStack from '../../stories/layout-helpers/StyledHorizontalStack';
-import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStack';
-import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stories/StyledButton';
-import StyledInfoText from '../../stories/StyledInfoText';
-import { Utils } from '../../utils';
-import Validations from '../../validations';
 import { useLanguageContext } from '../../contexts/language.context';
+import { Utils, Validations, useUserContext } from '@dfx.swiss/react';
+import {
+  Form,
+  IconColor,
+  StyledButton,
+  StyledButtonColor,
+  StyledButtonWidth,
+  StyledHorizontalStack,
+  StyledInfoText,
+  StyledInput,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 
 interface MailEditProps {
   infoText?: string;
-  infoTextIconColor?: IconColors;
+  infoTextIconColor?: IconColor;
   infoTextPlacement?: MailEditInfoTextPlacement;
   showCancelButton?: boolean;
   hideLabels?: boolean;
@@ -38,7 +40,7 @@ export function MailEdit({
   hideLabels = false,
   isOptional = false,
   infoText,
-  infoTextIconColor = IconColors.RED,
+  infoTextIconColor = IconColor.RED,
   infoTextPlacement = MailEditInfoTextPlacement.ABOVE_INPUT,
 }: MailEditProps): JSX.Element {
   const {
@@ -78,8 +80,8 @@ export function MailEdit({
             <StyledButton
               label={translate('component/mail-edit', 'cancel')}
               onClick={onCancel}
-              color={StyledButtonColors.STURDY_WHITE}
-              width={StyledButtonWidths.FULL}
+              color={StyledButtonColor.STURDY_WHITE}
+              width={StyledButtonWidth.FULL}
               caps
             />
           )}
@@ -88,7 +90,7 @@ export function MailEdit({
             label={isOptional ? translate('component/mail-edit', 'finish') : translate('component/mail-edit', 'save')}
             onClick={handleSubmit(saveUser)}
             isLoading={isUserUpdating}
-            width={StyledButtonWidths.FULL}
+            width={StyledButtonWidth.FULL}
             caps
           />
         </StyledHorizontalStack>
@@ -97,6 +99,6 @@ export function MailEdit({
   );
 }
 
-function InfoTextElement({ text, iconColor }: { text: string; iconColor: IconColors }): JSX.Element {
+function InfoTextElement({ text, iconColor }: { text: string; iconColor: IconColor }): JSX.Element {
   return <StyledInfoText iconColor={iconColor}>{text}</StyledInfoText>;
 }

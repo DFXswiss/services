@@ -1,23 +1,25 @@
 import { useForm, useWatch } from 'react-hook-form';
 import { Layout } from '../components/layout';
 import { useLanguageContext } from '../contexts/language.context';
-import DfxIcon, { IconColors, IconVariant } from '../stories/DfxIcon';
-import StyledInput from '../stories/form/StyledInput';
-import StyledHorizontalStack from '../stories/layout-helpers/StyledHorizontalStack';
-import Form from '../stories/form/Form';
-import { Utils } from '../utils';
-import Validations from '../validations';
-import StyledVerticalStack from '../stories/layout-helpers/StyledVerticalStack';
-import StyledDropdown from '../stories/form/StyledDropdown';
-import { useUserContext } from '../api/contexts/user.context';
-import StyledButton, { StyledButtonWidths } from '../stories/StyledButton';
-import StyledSpacer from '../stories/layout-helpers/StyledSpacer';
 import { useState } from 'react';
-import { AccountType, KycData } from '../api/definitions/kyc';
-import { useKyc } from '../api/hooks/kyc.hook';
 import { useNavigate } from 'react-router-dom';
-import StyledModal, { StyledModalTypes, StyledModalWidths } from '../stories/StyledModal';
-import { ApiError } from '../api/definitions/error';
+import { AccountType, ApiError, KycData, Utils, Validations, useKyc, useUserContext } from '@dfx.swiss/react';
+import {
+  DfxIcon,
+  Form,
+  IconColor,
+  IconVariant,
+  StyledButton,
+  StyledButtonWidth,
+  StyledDropdown,
+  StyledHorizontalStack,
+  StyledInput,
+  StyledModal,
+  StyledModalType,
+  StyledModalWidth,
+  StyledSpacer,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 
 export function ProfileScreen(): JSX.Element {
   const { translate } = useLanguageContext();
@@ -75,8 +77,8 @@ export function ProfileScreen(): JSX.Element {
       <StyledModal
         isVisible={showsErrorAlert}
         onClose={setShowsErrorAlert}
-        type={StyledModalTypes.ALERT}
-        width={StyledModalWidths.NONE}
+        type={StyledModalType.ALERT}
+        width={StyledModalWidth.NONE}
       >
         <StyledVerticalStack gap={4}>
           <h1>{translate('general/errors', 'Something went wrong')}</h1>
@@ -89,7 +91,7 @@ export function ProfileScreen(): JSX.Element {
           {errorMessage && <p className="text-dfxGray-800 text-sm">{errorMessage}</p>}
           <div className="mx-auto">
             <StyledButton
-              width={StyledButtonWidths.SM}
+              width={StyledButtonWidth.SM}
               onClick={() => setShowsErrorAlert(false)}
               label={translate('general/actions', 'Ok')}
             />
@@ -97,7 +99,7 @@ export function ProfileScreen(): JSX.Element {
         </StyledVerticalStack>
       </StyledModal>
       {/* CONTENT */}
-      <DfxIcon icon={IconVariant.USER_DATA} color={IconColors.BLUE} />
+      <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
       <p className="text-base font-bold text-dfxBlue-800">
         {translate('screens/profile', 'Please fill in personal information to continue.')}
       </p>
@@ -125,12 +127,14 @@ export function ProfileScreen(): JSX.Element {
                   name="firstname"
                   label={translate('screens/profile', 'First name')}
                   placeholder="John"
+                  full
                   smallLabel
                 />
                 <StyledInput
                   name="surname"
                   label={translate('screens/profile', 'Last name')}
                   placeholder="Doe"
+                  full
                   smallLabel
                 />
               </StyledHorizontalStack>
@@ -248,7 +252,7 @@ export function ProfileScreen(): JSX.Element {
               <StyledButton
                 label={translate('general/actions', 'continue')}
                 onClick={handleSubmit(onSubmit)}
-                width={StyledButtonWidths.FULL}
+                width={StyledButtonWidth.FULL}
                 disabled={!isValid}
                 isLoading={isSubmitting}
                 caps

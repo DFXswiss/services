@@ -1,5 +1,5 @@
+import { DfxIcon, IconVariant, IconColor } from '@dfx.swiss/react-components';
 import { useNavigate } from 'react-router-dom';
-import DfxIcon, { IconColors, IconVariant } from '../stories/DfxIcon';
 
 export enum ServiceButtonType {
   BUY = 'Buy',
@@ -16,22 +16,22 @@ interface ServiceButtonProps {
 export function ServiceButton({ type, url, disabled }: ServiceButtonProps): JSX.Element {
   const navigate = useNavigate();
 
-  const iconDefinitions: Record<ServiceButtonType, (color: IconColors) => JSX.Element> = {
-    [ServiceButtonType.BUY]: (color: IconColors) => (
+  const iconDefinitions: Record<ServiceButtonType, (color: IconColor) => JSX.Element> = {
+    [ServiceButtonType.BUY]: (color: IconColor) => (
       <>
         <DfxIcon icon={IconVariant.BANK} color={color} />
         <DfxIcon icon={IconVariant.ARROW_RIGHT} color={color} />
         <DfxIcon icon={IconVariant.WALLET} color={color} />
       </>
     ),
-    [ServiceButtonType.SELL]: (color: IconColors) => (
+    [ServiceButtonType.SELL]: (color: IconColor) => (
       <>
         <DfxIcon icon={IconVariant.WALLET} color={color} />
         <DfxIcon icon={IconVariant.ARROW_RIGHT} color={color} />
         <DfxIcon icon={IconVariant.BANK} color={color} />
       </>
     ),
-    [ServiceButtonType.CONVERT]: (color: IconColors) => (
+    [ServiceButtonType.CONVERT]: (color: IconColor) => (
       <>
         <DfxIcon icon={IconVariant.CIRCLE} color={color} />
         <DfxIcon icon={IconVariant.SWAP} color={color} />
@@ -48,7 +48,7 @@ export function ServiceButton({ type, url, disabled }: ServiceButtonProps): JSX.
       disabled={disabled}
     >
       <p className={`${disabled ? 'text-dfxGray-500' : 'text-dfxBlue-800'} text-lg font-bold`}>{type}</p>
-      <div className="flex flex-row gap-2">{iconDefinitions[type](disabled ? IconColors.GRAY : IconColors.RED)}</div>
+      <div className="flex flex-row gap-2">{iconDefinitions[type](disabled ? IconColor.GRAY : IconColor.RED)}</div>
     </button>
   );
 }

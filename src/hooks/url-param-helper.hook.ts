@@ -1,7 +1,6 @@
-import { useApiSession } from '../api/hooks/api-session.hook';
+import { Utils, useApiSession } from '@dfx.swiss/react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useBalanceContext } from '../contexts/balance.context';
-import { Utils } from '../utils';
 import { useQuery } from './query.hook';
 
 interface UrlParamHelperInterface {

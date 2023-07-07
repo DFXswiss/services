@@ -1,37 +1,43 @@
 import { DeepPartial, useForm, useWatch } from 'react-hook-form';
-import { useBuyContext } from '../api/contexts/buy.context';
-import { BankAccount } from '../api/definitions/bank-account';
 import { Layout } from '../components/layout';
 import { useLanguageContext } from '../contexts/language.context';
-import StyledBankAccountListItem from '../stories/form/StyledBankAccountListItem';
-import StyledModalDropdown from '../stories/form/StyledModalDropdown';
-import { Utils } from '../utils';
-import { Fiat } from '../api/definitions/fiat';
-import { Asset } from '../api/definitions/asset';
 import { useEffect, useState } from 'react';
 import { AddBankAccount } from '../components/buy/add-bank-account';
-import StyledVerticalStack from '../stories/layout-helpers/StyledVerticalStack';
-import StyledDropdown from '../stories/form/StyledDropdown';
-import { IconVariant } from '../stories/DfxIcon';
-import { useFiat } from '../api/hooks/fiat.hook';
-import StyledInput from '../stories/form/StyledInput';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
-import Form from '../stories/form/Form';
-import Validations from '../validations';
-import { useAssetContext } from '../api/contexts/asset.context';
-import { useSessionContext } from '../api/contexts/session.context';
 import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useBalanceContext } from '../contexts/balance.context';
-import { AssetIconVariant } from '../stories/DfxAssetIcon';
-import { StyledModalWidths } from '../stories/StyledModal';
-import StyledButton, { StyledButtonWidths } from '../stories/StyledButton';
-import { useSell } from '../api/hooks/sell.hook';
-import { Sell } from '../api/definitions/sell';
-import { ApiError } from '../api/definitions/error';
 import { KycHint } from '../components/kyc-hint';
-import StyledDataTable, { AlignContent } from '../stories/StyledDataTable';
-import StyledDataTableRow from '../stories/StyledDataTableRow';
+import {
+  ApiError,
+  Asset,
+  BankAccount,
+  Fiat,
+  Sell,
+  Utils,
+  Validations,
+  useAssetContext,
+  useBankAccountContext,
+  useFiat,
+  useSell,
+  useSessionContext,
+} from '@dfx.swiss/react';
+import {
+  AlignContent,
+  AssetIconVariant,
+  Form,
+  IconVariant,
+  StyledBankAccountListItem,
+  StyledButton,
+  StyledButtonWidth,
+  StyledDataTable,
+  StyledDataTableRow,
+  StyledDropdown,
+  StyledInput,
+  StyledModalDropdown,
+  StyledModalWidth,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -43,13 +49,13 @@ interface FormData {
 export function SellScreen(): JSX.Element {
   const { translate } = useLanguageContext();
   const { openAppPage } = useAppHandlingContext();
-  const { bankAccounts, currencies, updateAccount } = useBuyContext();
+  const { bankAccounts, updateAccount } = useBankAccountContext();
   const { balances } = useBalanceContext();
   const { blockchain, availableBlockchains } = useSessionContext();
   const { assets } = useAssetContext();
   const { isAllowedToSell } = useKycHelper();
   const { toDescription } = useFiat();
-  const { receiveFor } = useSell();
+  const { currencies, receiveFor } = useSell();
   const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
@@ -211,7 +217,7 @@ export function SellScreen(): JSX.Element {
               placeholder={translate('screens/sell', 'Add or select your IBAN')}
               modal={{
                 heading: translate('screens/sell', 'Select your payment account'),
-                width: StyledModalWidths.NONE,
+                width: StyledModalWidth.NONE,
                 items: bankAccounts,
                 itemContent: (b) => <StyledBankAccountListItem bankAccount={b} />,
                 form: (onFormSubmit: (item: BankAccount) => void) => <AddBankAccount onSubmit={onFormSubmit} />,
@@ -262,7 +268,7 @@ export function SellScreen(): JSX.Element {
               </StyledDataTableRow>
             </StyledDataTable>
             <StyledButton
-              width={StyledButtonWidths.FULL}
+              width={StyledButtonWidth.FULL}
               label={translate('screens/sell', 'Complete transaction in your wallet')}
               onClick={handleNext}
               caps={false}

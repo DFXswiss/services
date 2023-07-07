@@ -1,8 +1,14 @@
-import { useUserContext } from '../../api/contexts/user.context';
-import DfxIcon, { IconSizes, IconVariant } from '../../stories/DfxIcon';
-import StyledVerticalStack from '../../stories/layout-helpers/StyledVerticalStack';
-import StyledButton, { StyledButtonColors, StyledButtonWidths } from '../../stories/StyledButton';
+import { useUserContext } from '@dfx.swiss/react';
 import { MailEdit } from '../edit/mail.edit';
+import {
+  DfxIcon,
+  IconSize,
+  IconVariant,
+  StyledButton,
+  StyledButtonColor,
+  StyledButtonWidth,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 
 interface BuyCompletionProps {
   onCancel: () => void;
@@ -23,7 +29,7 @@ export function BuyCompletion({ onCancel, onSubmit }: BuyCompletionProps): JSX.E
   return (
     <StyledVerticalStack gap={4}>
       <div className="mx-auto">
-        <DfxIcon size={IconSizes.XL} icon={IconVariant.PROCESS_DONE} />
+        <DfxIcon size={IconSize.XL} icon={IconVariant.PROCESS_DONE} />
       </div>
       <p className="text-lg font-bold text-center">{getHeader()}</p>
       {showsSimple ? (
@@ -35,8 +41,8 @@ export function BuyCompletion({ onCancel, onSubmit }: BuyCompletionProps): JSX.E
           <StyledButton
             label="close"
             onClick={onSubmit}
-            color={StyledButtonColors.PALE_WHITE}
-            width={StyledButtonWidths.FULL}
+            color={StyledButtonColor.PALE_WHITE}
+            width={StyledButtonWidth.FULL}
             caps
           />
         </>
