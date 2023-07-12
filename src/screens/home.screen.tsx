@@ -3,10 +3,11 @@ import { Layout } from '../components/layout';
 import { ServiceButton, ServiceButtonType } from '../components/service-button';
 import { useBalanceContext } from '../contexts/balance.context';
 import { useLanguageContext } from '../contexts/language.context';
+import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 
 export function HomeScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
-  const { user } = useUserContext();
+  const { user, isUserLoading } = useUserContext();
   const { translate } = useLanguageContext();
   const { hasBalance } = useBalanceContext();
 
@@ -16,7 +17,11 @@ export function HomeScreen(): JSX.Element {
       <p className="text-dfxGray-700">
         {translate('screens/home', 'Buy and Sell cryptocurrencies with bank transfers.')}
       </p>
-      {isLoggedIn && user ? (
+      {isUserLoading ? (
+        <div className="mt-4">
+          <StyledLoadingSpinner size={SpinnerSize.LG} />
+        </div>
+      ) : isLoggedIn && user ? (
         <div className="flex flex-col gap-8 py-8">
           <ServiceButton type={ServiceButtonType.BUY} url="/buy" />
           <ServiceButton
