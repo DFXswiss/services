@@ -12,6 +12,7 @@ import {
   StyledDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useQuery } from '../hooks/query.hook';
 
 interface FormData {
   currency: Fiat;
@@ -23,9 +24,11 @@ export function BuyScreen(): JSX.Element {
   const navigate = useNavigate();
   const { blockchain, availableBlockchains } = useSessionContext();
   const { currencies } = useBuy();
-  const { assets } = useAssetContext();
+  const { assets, getAsset } = useAssetContext();
+  const { assetId, currencyId } = useQuery();
   const { toDescription, getDefaultCurrency } = useFiat();
   const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
+
   const {
     control,
     handleSubmit,
@@ -33,6 +36,16 @@ export function BuyScreen(): JSX.Element {
     getValues,
     formState: { errors, isValid },
   } = useForm<FormData>();
+
+  useEffect(() => {
+    const asset = getAsset(Number(assetId), { buyable: true });
+    if (asset) setValue('asset', asset, { shouldValidate: true });
+  }, [assetId, assets, getAsset]);
+
+  useEffect(() => {
+    const currency = currencies?.find((currency) => currency.id === Number(currencyId));
+    if (currency) setValue('currency', currency, { shouldValidate: true });
+  }, [currencyId, currencies]);
 
   useEffect(() => {
     if (assets) {
