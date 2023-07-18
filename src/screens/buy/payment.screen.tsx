@@ -34,7 +34,7 @@ export function BuyPaymentScreen(): JSX.Element {
   const { assets, getAsset } = useAssetContext();
   const { isAllowedToBuy } = useKycHelper();
   const { toSymbol } = useFiat();
-  const { assetId, currencyId } = useQuery();
+  const { assetId, currencyId, amount: paramAmount } = useQuery();
   const { user } = useUserContext();
   const [paymentInfo, setPaymentInfo] = useState<PaymentInformation>();
   const [customAmountError, setCustomAmountError] = useState<string>();
@@ -46,17 +46,18 @@ export function BuyPaymentScreen(): JSX.Element {
     () => currencies?.find((currency) => currency.id === Number(currencyId)),
     [currencyId, currencies],
   );
+  const defaultAmount = paramAmount ? +paramAmount : undefined;
 
   const {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>();
+  } = useForm<FormData>({ defaultValues: { amount: defaultAmount } });
   const data = useWatch({ control });
   const validatedData = validateData(useDebounce(data, 500));
 
   const dataValid = validatedData != null;
-  const kycRequired = dataValid && !isAllowedToBuy(Number(validatedData?.amount));
+  const kycRequired = dataValid && !isLoading && !isAllowedToBuy(Number(validatedData?.amount));
 
   const showsSimple = user?.mail != null;
 

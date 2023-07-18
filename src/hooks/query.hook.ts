@@ -2,12 +2,15 @@ import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 interface QueryInterface {
+  address?: string;
+  signature?: string;
   session?: string;
   redirectUri?: string;
   blockchain?: string;
   balances?: string;
   assetId?: string;
   currencyId?: string;
+  amount?: string;
   reloadWithoutBlockedParams: () => void;
 }
 
@@ -15,7 +18,7 @@ export function useQuery(): QueryInterface {
   const navigate = useNavigate();
   const { search, pathname } = useLocation();
 
-  const blockedParams = ['session', 'blockchain', 'redirect-uri', 'balances'];
+  const blockedParams = ['address', 'signature', 'session', 'blockchain', 'redirect-uri', 'balances', 'amount'];
 
   const query = useMemo(() => new URLSearchParams(search), [search]);
 
@@ -31,12 +34,15 @@ export function useQuery(): QueryInterface {
   }
 
   return {
+    address: getParameter('address'),
+    signature: getParameter('signature'),
     session: getParameter('session'),
     redirectUri: getParameter('redirect-uri'),
     blockchain: getParameter('blockchain'),
     balances: getParameter('balances'),
     assetId: getParameter('assetId'),
     currencyId: getParameter('currencyId'),
+    amount: getParameter('amount'),
     reloadWithoutBlockedParams,
   };
 }

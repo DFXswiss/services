@@ -4,16 +4,20 @@ import { useBalanceContext } from '../contexts/balance.context';
 import { useQuery } from './query.hook';
 
 interface UrlParamHelperInterface {
-  readParamsAndReload: () => void;
+  readParamsAndReload: () => Promise<void>;
 }
 
 export function useUrlParamHelper(): UrlParamHelperInterface {
-  const { updateSession } = useApiSession();
+  const { updateSession, createSession } = useApiSession();
   const { setRedirectUri } = useAppHandlingContext();
   const { readBalances } = useBalanceContext();
-  const { session, redirectUri, balances, reloadWithoutBlockedParams } = useQuery();
+  const { address, signature, session, redirectUri, balances, reloadWithoutBlockedParams } = useQuery();
 
-  function readParamsAndReload() {
+  async function readParamsAndReload() {
+    if (address && signature) {
+      const session = await createSession(address, signature, false);
+      if (session) updateSession(session);
+    }
     if (session && Utils.isJwt(session)) {
       updateSession(session);
     }
