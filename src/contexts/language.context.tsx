@@ -5,8 +5,8 @@ import { Language } from '../definitions/language';
 
 interface LanguageInterface {
   availableLanguages: Language[];
-  language: string;
-  changeLanguage: (language: string) => void;
+  language: Language;
+  changeLanguage: (language: Language) => void;
   translate: (key: string, defaultValue: string, interpolation?: Record<string, string | number>) => string;
 }
 
@@ -22,12 +22,12 @@ export function LanguageContextProvider(props: PropsWithChildren): JSX.Element {
     { id: 1, symbol: 'EN', name: 'English', foreignName: 'English', enable: true },
     { id: 2, symbol: 'DE', name: 'German', foreignName: 'Deutsch', enable: true },
   ];
-  const [language, setLanguage] = useState<string>('en');
+  const [language, setLanguage] = useState<Language>(availableLanguages[0]);
   const { t } = useTranslation();
 
-  function changeLanguage(language: string) {
+  function changeLanguage(language: Language) {
     setLanguage(language);
-    i18n.changeLanguage(language);
+    i18n.changeLanguage(language.symbol.toLowerCase());
   }
 
   const context = useMemo(

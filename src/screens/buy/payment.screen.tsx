@@ -22,6 +22,7 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { IframeMessageType, useIframe } from '../../hooks/iframe.hook';
 
 interface FormData {
   amount: number;
@@ -40,6 +41,8 @@ export function BuyPaymentScreen(): JSX.Element {
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [showsCompletion, setShowsCompletion] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { checkIfUsedByIframe, sendMessage } = useIframe();
+  const [isUsedByIframe] = useState(checkIfUsedByIframe);
 
   const asset = useMemo(() => getAsset(Number(assetId), { buyable: true }), [assetId, assets, getAsset]);
   const currency = useMemo(
@@ -85,7 +88,7 @@ export function BuyPaymentScreen(): JSX.Element {
       ? translate('screens/buy/payment', 'Nice! You are all set! Give us a minute to handle your transaction')
       : translate(
           'screens/buy/payment',
-          'As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet.',
+          'As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet',
         );
   }
 
@@ -155,8 +158,8 @@ export function BuyPaymentScreen(): JSX.Element {
                 )}
               </p>
               <StyledButton
-                label={translate('general/actions', 'close')}
-                onClick={() => openAppPage(AppPage.BUY)}
+                label={translate('general/actions', 'Close')}
+                onClick={() => isUsedByIframe ? sendMessage(IframeMessageType.CLOSE) : openAppPage(AppPage.BUY)}
                 color={StyledButtonColor.STURDY_WHITE}
                 width={StyledButtonWidth.FULL}
                 caps
@@ -167,7 +170,7 @@ export function BuyPaymentScreen(): JSX.Element {
               onSubmit={(email) => (!email || email.length === 0) && openAppPage(AppPage.BUY)}
               infoText={translate(
                 'screens/buy/payment',
-                'Enter your email address if you want to be informed about the progress of any purchase or sale.',
+                'Enter your email address if you want to be informed about the progress of any purchase or sale',
               )}
               hideLabels
               isOptional

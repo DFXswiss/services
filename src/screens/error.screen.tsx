@@ -3,6 +3,7 @@ import { useLanguageContext } from '../contexts/language.context';
 
 export function ErrorScreen(): JSX.Element {
   const { translate } = useLanguageContext();
+
   return (
     <>
       <Navigation />
@@ -11,7 +12,7 @@ export function ErrorScreen(): JSX.Element {
         <p className="text-dfxGray-700">
           {translate(
             'screens/error',
-            'Please return to your previous page, if this problem consists reach out to use via Telegram',
+            'Please return to your previous page. If this problem consists reach out to use via Telegram.',
           )}
         </p>
       </div>

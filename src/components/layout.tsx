@@ -1,7 +1,6 @@
 import { PropsWithChildren, useEffect } from 'react';
 import { Navigation } from './navigation';
 import { GeneralLinks } from './general-links';
-import { NavigationBack } from './navigation-back';
 import { useUrlParamHelper } from '../hooks/url-param-helper.hook';
 import { AppPage } from '../contexts/app-handling.context';
 
@@ -20,8 +19,8 @@ export function Layout({ backTitle, textStart, appPage, children }: LayoutProps)
 
   return (
     <>
-      <Navigation />
-      {backTitle && <NavigationBack title={backTitle} appPage={appPage} />}
+      <Navigation backTitle={backTitle} appPage={appPage} />
+      
       <div
         className={`flex flex-grow flex-col items-center ${
           textStart ? 'text-start' : 'text-center'
@@ -29,6 +28,7 @@ export function Layout({ backTitle, textStart, appPage, children }: LayoutProps)
       >
         {children}
       </div>
+      
       <GeneralLinks />
     </>
   );

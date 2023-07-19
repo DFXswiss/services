@@ -66,7 +66,7 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
           label={translate('screens/buy/payment', 'Purpose of payment')}
           infoText={translate(
             'screens/buy/payment',
-            'The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders.',
+            'The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders',
           )}
         >
           {info.purpose}
