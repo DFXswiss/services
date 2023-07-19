@@ -22,7 +22,6 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { IframeMessageType, useIframe } from '../../hooks/iframe.hook';
 
 interface FormData {
   amount: number;
@@ -41,8 +40,6 @@ export function BuyPaymentScreen(): JSX.Element {
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [showsCompletion, setShowsCompletion] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { checkIfUsedByIframe, sendMessage } = useIframe();
-  const [isUsedByIframe] = useState(checkIfUsedByIframe);
 
   const asset = useMemo(() => getAsset(Number(assetId), { buyable: true }), [assetId, assets, getAsset]);
   const currency = useMemo(
@@ -159,7 +156,7 @@ export function BuyPaymentScreen(): JSX.Element {
               </p>
               <StyledButton
                 label={translate('general/actions', 'Close')}
-                onClick={() => isUsedByIframe ? sendMessage(IframeMessageType.CLOSE) : openAppPage(AppPage.BUY)}
+                onClick={() => openAppPage(AppPage.BUY)}
                 color={StyledButtonColor.STURDY_WHITE}
                 width={StyledButtonWidth.FULL}
                 caps

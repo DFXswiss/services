@@ -2,7 +2,14 @@
   "general/actions": {
     "Please select...": "Bitte auswählen...",
     "Next": "Weiter",
-    "Close": "Schließen"
+    "Continue": "Weiter",
+    "Close": "Schließen",
+    "Ok": "Ok"
+  },
+  "general/errors": {
+    "Something went wrong": "Irgendwas hat nicht funktioniert",
+    "Please try again later. If the issue persists please reach out to our support.":
+    "Bitte versuchen Sie es später noch einmal. Wenn das Problem weiterhin besteht, wenden Sie sich bitte an unseren Support."
   },
   "service/button": {
     "Buy": "Kaufen",
@@ -61,6 +68,9 @@
     "Nice! You are all set! Give us a minute to handle your transaction":
     "Sehr schön! Alles erledigt! Geben Sie uns eine Minute, um Ihre Transaktion zu bearbeiten",
 
+    "As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet":
+    "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir Ihr Guthaben in Ihre Wallet übertragen",
+
     "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet. We will inform you about the progress of any purchase or sale via E-mail.":
     "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir Ihr Guthaben in Ihre Wallet übertragen. Wir werden Sie per E-Mail über den Fortschritt Ihrer Käufe oder Verkäufe informieren."
   },
@@ -76,6 +86,7 @@
     "Add or select your IBAN": "Ihre IBAN hinzufügen oder auswählen",
     "Select your payment account": "Wählen Sie Ihr Konto aus",
     "YOUR CURRENCY": "IHRE WÄHRUNG",
+    "e.g. EUR": "z.B. EUR",
     "Enter your desired payout amount": "Geben Sie den gewünschten Auszahlungsbetrag ein",
     "≈ {{estimatedAmount}} {{currency}} (incl. DFX fees)": "≈ {{estimatedAmount}} {{currency}} (inkl. DFX Gebühren)",
     "Complete transaction in your wallet": "Complete transaction in your wallet",
@@ -90,6 +101,27 @@
 
     "Entered amount is higher than available balance of {{amount}} {{asset}}":
     "Der eingegebene Betrag liegt über dem verfügbaren Guthaben von {{amount}} {{asset}}"
+  },
+  "screens/profile": {
+    "User details": "Benutzerdaten",
+    "Please fill in personal information to continue": "Bitte geben Sie Ihre persönlichen Daten ein, um fortzufahren",
+    "ACCOUNT TYPE": "KONTOTYP",
+    "PERSONAL INFORMATION": "PERSÖNLICHE DATEN",
+    "First name": "Vorname",
+    "John": "Max",
+    "Last name" : "Nachname",
+    "Doe": "Mustermann",
+    "Street": "Straße",
+    "House nr.": "Haus Nr.",
+    "ZIP code": "Postleitzahl",
+    "City": "Ort",
+    "Country": "Land",
+    "Email address": "E-Mail",
+    "example@mail.com": "beispiel@mail.de",
+    "Phone number": "Telefon",
+    "ORGANIZATION INFORMATION": "UNTERNEHMENSINFORMATION",
+    "Organization name": "Bezeichnung des Unternehmens",
+    "Example inc.": "Beispiel GmbH & Co. KG"
   },
   "navigation/links": {
     "Powered by DFX": "Powered by DFX",

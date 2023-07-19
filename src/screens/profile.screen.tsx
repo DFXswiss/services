@@ -85,7 +85,7 @@ export function ProfileScreen(): JSX.Element {
           <p>
             {translate(
               'general/errors',
-              'Please try again later, if the issue persists please reach out to our support.',
+              'Please try again later. If the issue persists please reach out to our support.',
             )}
           </p>
           {errorMessage && <p className="text-dfxGray-800 text-sm">{errorMessage}</p>}
@@ -101,7 +101,7 @@ export function ProfileScreen(): JSX.Element {
       {/* CONTENT */}
       <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
       <p className="text-base font-bold text-dfxBlue-800">
-        {translate('screens/profile', 'Please fill in personal information to continue.')}
+        {translate('screens/profile', 'Please fill in personal information to continue')}
       </p>
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack marginY={4} gap={2} full>
@@ -126,14 +126,14 @@ export function ProfileScreen(): JSX.Element {
                 <StyledInput
                   name="firstname"
                   label={translate('screens/profile', 'First name')}
-                  placeholder="John"
+                  placeholder={translate('screens/profile', 'John')}
                   full
                   smallLabel
                 />
                 <StyledInput
                   name="surname"
                   label={translate('screens/profile', 'Last name')}
-                  placeholder="Doe"
+                  placeholder={translate('screens/profile', 'Doe')}
                   full
                   smallLabel
                 />
@@ -183,7 +183,7 @@ export function ProfileScreen(): JSX.Element {
                 name="mail"
                 type="email"
                 label={translate('screens/profile', 'Email address')}
-                placeholder="example@mail.com"
+                placeholder={translate('screens/profile', 'example@mail.com')}
                 smallLabel
               />
               <StyledInput
@@ -201,7 +201,7 @@ export function ProfileScreen(): JSX.Element {
                   <StyledInput
                     name="organizationName"
                     label={translate('screens/profile', 'Organization name')}
-                    placeholder="Example inc."
+                    placeholder={translate('screens/profile', 'Example inc.')}
                     full
                     smallLabel
                   />
@@ -250,7 +250,7 @@ export function ProfileScreen(): JSX.Element {
               )}
               <StyledSpacer spacing={1} />
               <StyledButton
-                label={translate('general/actions', 'continue')}
+                label={translate('general/actions', 'Continue')}
                 onClick={handleSubmit(onSubmit)}
                 width={StyledButtonWidth.FULL}
                 disabled={!isValid}

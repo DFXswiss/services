@@ -9,6 +9,7 @@ import {
   StyledButtonWidth,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useLanguageContext } from '../../contexts/language.context';
 
 interface BuyCompletionProps {
   onCancel: () => void;
@@ -16,14 +17,21 @@ interface BuyCompletionProps {
 }
 
 export function BuyCompletion({ onCancel, onSubmit }: BuyCompletionProps): JSX.Element {
+  const { translate } = useLanguageContext();
   const { user } = useUserContext();
 
   const showsSimple = user?.mail != null;
 
   function getHeader(): string {
     return showsSimple
-      ? 'Nice! You are all set! Give us a minute to handle your transaction'
-      : 'As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet.';
+      ? translate(
+          'screens/buy/payment',
+          'Nice! You are all set! Give us a minute to handle your transaction'
+        )
+      : translate(
+          'screens/buy/payment',
+          'As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet'
+        );
   }
 
   return (
@@ -34,9 +42,12 @@ export function BuyCompletion({ onCancel, onSubmit }: BuyCompletionProps): JSX.E
       <p className="text-lg font-bold text-center">{getHeader()}</p>
       {showsSimple ? (
         <>
-          <p className="text-center">
-            As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet. We will
-            inform you about the progress of any purchase or sale via E-mail.
+          <p className="text-center">{
+            translate(
+              'screens/buy/payment',
+              'As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet. We will inform you about the progress of any purchase or sale via E-mail.'
+            )
+          }
           </p>
           <StyledButton
             label="close"
@@ -50,7 +61,12 @@ export function BuyCompletion({ onCancel, onSubmit }: BuyCompletionProps): JSX.E
         <MailEdit
           onSubmit={onSubmit}
           onCancel={onCancel}
-          infoText="Enter your email address if you want to be informed about the progress of any purchase or sale."
+          infoText={
+            translate(
+              'screens/buy/payment',
+              'Enter your email address if you want to be informed about the progress of any purchase or sale'
+            )
+          }
           showCancelButton
           hideLabels
           isOptional

@@ -228,7 +228,7 @@ export function SellScreen(): JSX.Element {
             <StyledDropdown<Fiat>
               name="currency"
               label={translate('screens/sell', 'YOUR CURRENCY')}
-              placeholder="e.g. EUR"
+              placeholder={translate('screens/sell', 'e.g. EUR')}
               labelIcon={IconVariant.BANK}
               items={currencies}
               labelFunc={(item) => item.name}
