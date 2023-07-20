@@ -74,16 +74,6 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
       <StyledDataTable label={translate('screens/buy', 'Recipient')} showBorder minWidth={false}>
         <StyledDataTableRow>{info.recipient}</StyledDataTableRow>
       </StyledDataTable>
-      <StyledDataTable alignContent={AlignContent.BETWEEN} showBorder={false} narrow minWidth={false}>
-        <StyledDataTableRow discreet>
-          <p>{translate('screens/buy', 'DFX-Fee')}</p>
-          <p>
-            {info.minFee
-              ? translate('screens/buy', '{{fee}} (min. {{minFee}})', { fee: info.fee, minFee: info.minFee })
-              : info.fee}
-          </p>
-        </StyledDataTableRow>
-      </StyledDataTable>
     </>
   );
 }
