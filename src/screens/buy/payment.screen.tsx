@@ -1,14 +1,3 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useLanguageContext } from '../../contexts/language.context';
-import { useQuery } from '../../hooks/query.hook';
-import { Layout } from '../../components/layout';
-import { DeepPartial, useForm, useWatch } from 'react-hook-form';
-import useDebounce from '../../hooks/debounce.hook';
-import { useKycHelper } from '../../hooks/kyc-helper.hook';
-import { PaymentInformation, PaymentInformationContent } from '../../components/buy/payment-information';
-import { MailEdit } from '../../components/edit/mail.edit';
-import { AppPage, useAppHandlingContext } from '../../contexts/app-handling.context';
-import { KycHint } from '../../components/kyc-hint';
 import { Buy, Utils, Validations, useAssetContext, useBuy, useFiat, useUserContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
@@ -22,6 +11,17 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useEffect, useMemo, useState } from 'react';
+import { DeepPartial, useForm, useWatch } from 'react-hook-form';
+import { PaymentInformation, PaymentInformationContent } from '../../components/buy/payment-information';
+import { MailEdit } from '../../components/edit/mail.edit';
+import { KycHint } from '../../components/kyc-hint';
+import { Layout } from '../../components/layout';
+import { AppPage, useAppHandlingContext } from '../../contexts/app-handling.context';
+import { useLanguageContext } from '../../contexts/language.context';
+import useDebounce from '../../hooks/debounce.hook';
+import { useKycHelper } from '../../hooks/kyc-helper.hook';
+import { useQuery } from '../../hooks/query.hook';
 
 interface FormData {
   amount: number;
@@ -156,7 +156,7 @@ export function BuyPaymentScreen(): JSX.Element {
               </p>
               <StyledButton
                 label={translate('general/actions', 'Close')}
-                onClick={() => openAppPage({page: AppPage.BUY, buyPaymentInfo: paymentInfo})}
+                onClick={() => openAppPage({ page: AppPage.BUY, buyPaymentInfo: paymentInfo })}
                 color={StyledButtonColor.STURDY_WHITE}
                 width={StyledButtonWidth.FULL}
                 caps
@@ -164,7 +164,9 @@ export function BuyPaymentScreen(): JSX.Element {
             </>
           ) : (
             <MailEdit
-              onSubmit={(email) => (!email || email.length === 0) && openAppPage({page: AppPage.BUY, buyPaymentInfo: paymentInfo})}
+              onSubmit={(email) =>
+                (!email || email.length === 0) && openAppPage({ page: AppPage.BUY, buyPaymentInfo: paymentInfo })
+              }
               infoText={translate(
                 'screens/buy/payment',
                 'Enter your email address if you want to be informed about the progress of any purchase or sale',

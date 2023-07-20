@@ -1,16 +1,16 @@
-import { PropsWithChildren, SetStateAction, useEffect, useState } from 'react';
-import logo from '../static/assets/logo.svg';
-import { ReactComponent as MenuIcon }  from '../static/assets/menu.svg';
-import { ReactComponent as CloseIcon }  from '../static/assets/close.svg';
-import { useLanguageContext } from '../contexts/language.context';
 import { useAuthContext } from '@dfx.swiss/react';
-import { NavigationLink } from './navigation-link';
-import { NavigationBack } from './navigation-back';
-import { useIframe } from '../hooks/iframe.hook';
-import { AppPage } from '../contexts/app-handling.context';
 import { Form, StyledDropdown } from '@dfx.swiss/react-components';
+import { PropsWithChildren, SetStateAction, useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { AppPage } from '../contexts/app-handling.context';
+import { useLanguageContext } from '../contexts/language.context';
 import { Language } from '../definitions/language';
+import { useIframe } from '../hooks/iframe.hook';
+import { ReactComponent as CloseIcon } from '../static/assets/close.svg';
+import logo from '../static/assets/logo.svg';
+import { ReactComponent as MenuIcon } from '../static/assets/menu.svg';
+import { NavigationBack } from './navigation-back';
+import { NavigationLink } from './navigation-link';
 
 interface FormData {
   language: Language;
@@ -36,24 +36,25 @@ export function Navigation({ backTitle, appPage }: NavigationIframeProps): JSX.E
   const { isUsedByIframe } = useIframe();
 
   const bgColor = isUsedByIframe ? 'bg-dfxGray-300' : 'bg-dfxBlue-800';
-  const svgColor = isUsedByIframe ? '#0A355C' : '#ffffff'
+  const svgColor = isUsedByIframe ? '#0A355C' : '#ffffff';
 
   return (
     <>
-    <div className={`flex items-center justify-between h-12 px-4 py-5 ${bgColor}`}>
-      { isUsedByIframe? <IframeFirstLineContent backTitle={backTitle} /> : <BrowserFirstLineContent /> }
+      <div className={`flex items-center justify-between h-12 px-4 py-5 ${bgColor}`}>
+        {isUsedByIframe ? <IframeFirstLineContent backTitle={backTitle} /> : <BrowserFirstLineContent />}
 
-      <nav>
-        <section className="flex">
-          { isNavigationOpen
-            ? <NavigationMenuContent svgColor={svgColor} setIsNavigationOpen={setIsNavigationOpen} />
-            : <MenuIconContent svgColor={svgColor} setIsNavigationOpen={setIsNavigationOpen} />
-          }
-        </section>
-      </nav>
-    </div>
+        <nav>
+          <section className="flex">
+            {isNavigationOpen ? (
+              <NavigationMenuContent svgColor={svgColor} setIsNavigationOpen={setIsNavigationOpen} />
+            ) : (
+              <MenuIconContent svgColor={svgColor} setIsNavigationOpen={setIsNavigationOpen} />
+            )}
+          </section>
+        </nav>
+      </div>
 
-    { !isUsedByIframe && <BrowserSecondLineContent backTitle={backTitle} appPage={appPage} /> }
+      {!isUsedByIframe && <BrowserSecondLineContent backTitle={backTitle} appPage={appPage} />}
     </>
   );
 }
@@ -77,22 +78,18 @@ function BrowserFirstLineContent(): JSX.Element {
 }
 
 function BrowserSecondLineContent({ backTitle, appPage }: NavigationIframeProps): JSX.Element {
-  return (
-    <>
-      {backTitle && <NavigationBack title={backTitle} appPage={appPage} />}
-    </>
-  );
+  return <>{backTitle && <NavigationBack title={backTitle} appPage={appPage} />}</>;
 }
 
-function MenuIconContent({svgColor, setIsNavigationOpen}: IconContentProps): JSX.Element {
+function MenuIconContent({ svgColor, setIsNavigationOpen }: IconContentProps): JSX.Element {
   return (
     <div className="space-y-2 w-6 h-6 cursor-pointer" onClick={() => setIsNavigationOpen((prev) => !prev)}>
       <MenuIcon fill={svgColor} />
     </div>
-  )
+  );
 }
 
-function CloseIconContent({svgColor, setIsNavigationOpen}: IconContentProps): JSX.Element {
+function CloseIconContent({ svgColor, setIsNavigationOpen }: IconContentProps): JSX.Element {
   return (
     <div className="space-y-2 px-1 w-6 h-4 cursor-pointer" onClick={() => setIsNavigationOpen((prev) => !prev)}>
       <CloseIcon color={svgColor} />
@@ -100,7 +97,7 @@ function CloseIconContent({svgColor, setIsNavigationOpen}: IconContentProps): JS
   );
 }
 
-function NavigationMenuContent({svgColor, setIsNavigationOpen}: NavigationMenuContentProps): JSX.Element {
+function NavigationMenuContent({ svgColor, setIsNavigationOpen }: NavigationMenuContentProps): JSX.Element {
   const { translate } = useLanguageContext();
   const { authenticationToken } = useAuthContext();
   const { language, availableLanguages, changeLanguage } = useLanguageContext();
@@ -108,8 +105,8 @@ function NavigationMenuContent({svgColor, setIsNavigationOpen}: NavigationMenuCo
   const {
     control,
     formState: { errors },
-  } = useForm<FormData>({ defaultValues: { language: language }});
-  const formData = useWatch({ control, name: "language" });
+  } = useForm<FormData>({ defaultValues: { language: language } });
+  const formData = useWatch({ control, name: 'language' });
 
   useEffect(() => {
     changeLanguage(formData);
@@ -117,21 +114,27 @@ function NavigationMenuContent({svgColor, setIsNavigationOpen}: NavigationMenuCo
 
   return (
     <>
-       <CloseIconContent svgColor={svgColor} setIsNavigationOpen={setIsNavigationOpen} />
+      <CloseIconContent svgColor={svgColor} setIsNavigationOpen={setIsNavigationOpen} />
 
-       <div className="absolute top-14 right-2 border-1 drop-shadow-md w-64 z-20 flex flex-col bg-dfxGray-300">
-       <div className="mx-4 py-4 text-dfxGray-800">
+      <div className="absolute top-14 right-2 border-1 drop-shadow-md w-64 z-20 flex flex-col bg-dfxGray-300">
+        <div className="mx-4 py-4 text-dfxGray-800">
           {authenticationToken && (
-            <NavigationLink label={translate('navigation/links', 'My DFX')} url={`${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`} />
+            <NavigationLink
+              label={translate('navigation/links', 'My DFX')}
+              url={`${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`}
+            />
           )}
-          <NavigationLink label={translate('navigation/links', 'Terms and conditions')} url={process.env.REACT_APP_TNC_URL} />
+          <NavigationLink
+            label={translate('navigation/links', 'Terms and conditions')}
+            url={process.env.REACT_APP_TNC_URL}
+          />
           <NavigationLink label={translate('navigation/links', 'Privacy policy')} url={process.env.REACT_APP_PPO_URL} />
           <NavigationLink label={translate('navigation/links', 'Imprint')} url={process.env.REACT_APP_IMP_URL} />
 
           <Form control={control} errors={errors}>
             <StyledDropdown
               name="language"
-              label=''
+              label=""
               placeholder={translate('general/actions', 'Please select...')}
               items={Object.values(availableLanguages)}
               labelFunc={(item) => item.name}
@@ -141,5 +144,5 @@ function NavigationMenuContent({svgColor, setIsNavigationOpen}: NavigationMenuCo
         </div>
       </div>
     </>
-  );    
+  );
 }

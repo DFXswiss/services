@@ -1,4 +1,3 @@
-import { useForm } from 'react-hook-form';
 import {
   BankAccount,
   CreateBankAccount,
@@ -16,6 +15,7 @@ import {
   StyledSpacer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useForm } from 'react-hook-form';
 import { useLanguageContext } from '../../contexts/language.context';
 
 interface AddBankAccountProps {
@@ -44,11 +44,7 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
   return (
     <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(createBankAccount)}>
       <StyledVerticalStack gap={4}>
-        <StyledInput
-          name="iban"
-          label={translate('screens/sell', 'IBAN')}
-          placeholder="XX XXXX XXXX XXXX XXXX X"
-        />
+        <StyledInput name="iban" label={translate('screens/sell', 'IBAN')} placeholder="XX XXXX XXXX XXXX XXXX X" />
         <StyledInput
           name="label"
           label={translate('screens/sell', 'Optional - Account Designation')}

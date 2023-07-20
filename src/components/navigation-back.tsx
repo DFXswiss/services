@@ -1,6 +1,6 @@
+import { DfxIcon, IconColor, IconSize, IconVariant } from '@dfx.swiss/react-components';
 import { useNavigate } from 'react-router-dom';
 import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
-import { DfxIcon, IconVariant, IconColor, IconSize } from '@dfx.swiss/react-components';
 import { IframeMessageType, useIframe } from '../hooks/iframe.hook';
 
 interface NavigationBackProps {
@@ -16,10 +16,10 @@ export function NavigationBack({ title, home, appPage }: NavigationBackProps): J
   const { isUsedByIframe, sendMessage } = useIframe();
 
   function onClick() {
-    appPage ? openAppPage({page: appPage}) : home ? navigate('/') : navigate(-1);
+    appPage ? openAppPage({ page: appPage }) : home ? navigate('/') : navigate(-1);
 
     if (isUsedByIframe) {
-      sendMessage({type: IframeMessageType.NAVIGATION});
+      sendMessage({ type: IframeMessageType.NAVIGATION });
     }
   }
 

@@ -1,5 +1,3 @@
-import { useForm } from 'react-hook-form';
-import { useLanguageContext } from '../../contexts/language.context';
 import { Utils, Validations, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
@@ -12,6 +10,8 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useForm } from 'react-hook-form';
+import { useLanguageContext } from '../../contexts/language.context';
 
 interface MailEditProps {
   infoText?: string;

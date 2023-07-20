@@ -1,8 +1,3 @@
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
-import { useLanguageContext } from '../contexts/language.context';
-import { Layout } from '../components/layout';
 import { Asset, Fiat, Utils, Validations, useAssetContext, useBuy, useFiat, useSessionContext } from '@dfx.swiss/react';
 import {
   AssetIconVariant,
@@ -12,6 +7,11 @@ import {
   StyledDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { Layout } from '../components/layout';
+import { useLanguageContext } from '../contexts/language.context';
 import { useQuery } from '../hooks/query.hook';
 
 interface FormData {

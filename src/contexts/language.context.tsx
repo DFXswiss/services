@@ -1,5 +1,5 @@
-import { createContext, PropsWithChildren, useContext, useMemo, useState } from 'react';
 import i18n from 'i18next';
+import { createContext, PropsWithChildren, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Language } from '../definitions/language';
 

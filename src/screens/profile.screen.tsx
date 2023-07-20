@@ -1,8 +1,3 @@
-import { useForm, useWatch } from 'react-hook-form';
-import { Layout } from '../components/layout';
-import { useLanguageContext } from '../contexts/language.context';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AccountType, ApiError, KycData, Utils, Validations, useKyc, useUserContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
@@ -20,6 +15,11 @@ import {
   StyledSpacer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { Layout } from '../components/layout';
+import { useLanguageContext } from '../contexts/language.context';
 
 export function ProfileScreen(): JSX.Element {
   const { translate } = useLanguageContext();

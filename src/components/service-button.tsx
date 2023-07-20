@@ -1,4 +1,4 @@
-import { DfxIcon, IconVariant, IconColor } from '@dfx.swiss/react-components';
+import { DfxIcon, IconColor, IconVariant } from '@dfx.swiss/react-components';
 import { useNavigate } from 'react-router-dom';
 import { useLanguageContext } from '../contexts/language.context';
 
@@ -49,7 +49,9 @@ export function ServiceButton({ type, url, disabled }: ServiceButtonProps): JSX.
       onClick={() => navigate(url)}
       disabled={disabled}
     >
-      <p className={`${disabled ? 'text-dfxGray-500' : 'text-dfxBlue-800'} text-lg font-bold`}>{translate('service/button', type)}</p>
+      <p className={`${disabled ? 'text-dfxGray-500' : 'text-dfxBlue-800'} text-lg font-bold`}>
+        {translate('service/button', type)}
+      </p>
       <div className="flex flex-row gap-2">{iconDefinitions[type](disabled ? IconColor.GRAY : IconColor.RED)}</div>
     </button>
   );

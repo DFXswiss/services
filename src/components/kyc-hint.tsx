@@ -5,7 +5,7 @@ import { useKycHelper } from '../hooks/kyc-helper.hook';
 export function KycHint(): JSX.Element {
   const { translate } = useLanguageContext();
   const { start, limit } = useKycHelper();
-  
+
   return (
     <StyledVerticalStack gap={4} marginY={4}>
       <StyledInfoText invertedIcon>

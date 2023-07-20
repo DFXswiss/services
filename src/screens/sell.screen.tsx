@@ -1,13 +1,3 @@
-import { DeepPartial, useForm, useWatch } from 'react-hook-form';
-import { Layout } from '../components/layout';
-import { useLanguageContext } from '../contexts/language.context';
-import { useEffect, useState } from 'react';
-import { AddBankAccount } from '../components/buy/add-bank-account';
-import useDebounce from '../hooks/debounce.hook';
-import { useKycHelper } from '../hooks/kyc-helper.hook';
-import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
-import { useBalanceContext } from '../contexts/balance.context';
-import { KycHint } from '../components/kyc-hint';
 import {
   ApiError,
   Asset,
@@ -38,6 +28,16 @@ import {
   StyledModalWidth,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useEffect, useState } from 'react';
+import { DeepPartial, useForm, useWatch } from 'react-hook-form';
+import { AddBankAccount } from '../components/buy/add-bank-account';
+import { KycHint } from '../components/kyc-hint';
+import { Layout } from '../components/layout';
+import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
+import { useBalanceContext } from '../contexts/balance.context';
+import { useLanguageContext } from '../contexts/language.context';
+import useDebounce from '../hooks/debounce.hook';
+import { useKycHelper } from '../hooks/kyc-helper.hook';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -180,7 +180,7 @@ export function SellScreen(): JSX.Element {
     openAppPage({
       page: AppPage.SELL,
       urlParams: new URLSearchParams({ routeId: '' + (paymentInfo?.routeId ?? 0), amount: enteredAmount }),
-      sellPaymentInfo: paymentInfo
+      sellPaymentInfo: paymentInfo,
     });
   }
 

@@ -1,7 +1,4 @@
 import { Fiat } from '@dfx.swiss/react';
-import { useLanguageContext } from '../../contexts/language.context';
-import { useClipboard } from '../../hooks/clipboard.hook';
-import { GiroCode } from './giro-code';
 import {
   AlignContent,
   CopyButton,
@@ -13,6 +10,9 @@ import {
   StyledInfoText,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useLanguageContext } from '../../contexts/language.context';
+import { useClipboard } from '../../hooks/clipboard.hook';
+import { GiroCode } from './giro-code';
 
 export interface PaymentInformation {
   iban: string;

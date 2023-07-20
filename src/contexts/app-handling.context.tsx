@@ -1,8 +1,8 @@
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Sell } from '@dfx.swiss/react';
-import { useStore } from '../hooks/store.hook';
-import { IframeMessageData, IframeMessageType, useIframe } from '../hooks/iframe.hook';
+import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { PaymentInformation } from '../components/buy/payment-information';
+import { IframeMessageData, IframeMessageType, useIframe } from '../hooks/iframe.hook';
+import { useStore } from '../hooks/store.hook';
 
 export enum AppPage {
   BUY = 'buy',
@@ -41,13 +41,15 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
       sendMessage(createIframeMessageData(params));
     } else {
       const win: Window = window;
-      win.location = params.urlParams ? `${redirectUri}${params.page}?${params.urlParams}` : `${redirectUri}${params.page}`;
+      win.location = params.urlParams
+        ? `${redirectUri}${params.page}?${params.urlParams}`
+        : `${redirectUri}${params.page}`;
     }
   }
 
   function createIframeMessageData(params: OpenAppPageParams): IframeMessageData {
     const data: IframeMessageData = {
-      type: IframeMessageType.CLOSE
+      type: IframeMessageType.CLOSE,
     };
 
     if (params.buyPaymentInfo) {
@@ -55,7 +57,7 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
         iban: params.buyPaymentInfo.iban,
         bic: params.buyPaymentInfo.bic,
         purpose: params.buyPaymentInfo.purpose,
-        estimatedAmount: params.buyPaymentInfo.estimatedAmount
+        estimatedAmount: params.buyPaymentInfo.estimatedAmount,
       };
     }
 
@@ -64,8 +66,8 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
         depositAddress: params.sellPaymentInfo.depositAddress,
         blockchain: params.sellPaymentInfo.blockchain,
         estimatedAmount: params.sellPaymentInfo.estimatedAmount,
-        paymentRequest: params.sellPaymentInfo.paymentRequest
-      }
+        paymentRequest: params.sellPaymentInfo.paymentRequest,
+      };
     }
 
     return data;
@@ -73,12 +75,13 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
 
   const context = useMemo(
     () => ({
-    setRedirectUri: (redirectUri: string) => {
-      setRedirectUri(redirectUri);
-      storeRedirectUri.set(redirectUri);
-    },
-    openAppPage,
-    }), [redirectUri]
+      setRedirectUri: (redirectUri: string) => {
+        setRedirectUri(redirectUri);
+        storeRedirectUri.set(redirectUri);
+      },
+      openAppPage,
+    }),
+    [redirectUri],
   );
 
   return <AppHandlingContext.Provider value={context}>{props.children}</AppHandlingContext.Provider>;
