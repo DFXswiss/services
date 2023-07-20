@@ -1,10 +1,9 @@
-import { useAuthContext } from '@dfx.swiss/react';
+import { Language, useAuthContext } from '@dfx.swiss/react';
 import { Form, StyledDropdown } from '@dfx.swiss/react-components';
 import { PropsWithChildren, SetStateAction, useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { AppPage } from '../contexts/app-handling.context';
-import { useLanguageContext } from '../contexts/language.context';
-import { Language } from '../definitions/language';
+import { useSettingsContext } from '../contexts/settings.context';
 import { useIframe } from '../hooks/iframe.hook';
 import { ReactComponent as CloseIcon } from '../static/assets/close.svg';
 import logo from '../static/assets/logo.svg';
@@ -60,7 +59,7 @@ export function Navigation({ backTitle, appPage }: NavigationIframeProps): JSX.E
 }
 
 function IframeFirstLineContent({ backTitle }: NavigationIframeProps): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
 
   return (
     <div className="w-full pl-8">
@@ -98,9 +97,9 @@ function CloseIconContent({ svgColor, setIsNavigationOpen }: IconContentProps): 
 }
 
 function NavigationMenuContent({ svgColor, setIsNavigationOpen }: NavigationMenuContentProps): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
   const { authenticationToken } = useAuthContext();
-  const { language, availableLanguages, changeLanguage } = useLanguageContext();
+  const { language, availableLanguages, changeLanguage } = useSettingsContext();
 
   const {
     control,

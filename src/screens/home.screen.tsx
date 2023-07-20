@@ -3,7 +3,7 @@ import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Layout } from '../components/layout';
 import { ServiceButton, ServiceButtonType } from '../components/service-button';
 import { useBalanceContext } from '../contexts/balance.context';
-import { useLanguageContext } from '../contexts/language.context';
+import { useSettingsContext } from '../contexts/settings.context';
 import { useIframe } from '../hooks/iframe.hook';
 
 export function HomeScreen(): JSX.Element {
@@ -28,7 +28,7 @@ export function HomeScreen(): JSX.Element {
 }
 
 function BrowserContent(): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
 
   return (
     <>
@@ -58,7 +58,7 @@ function LoggedInContent(): JSX.Element {
 }
 
 function LoggedOffContent(): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
 
   return (
     <p className="text-dfxGray-700 py-8">

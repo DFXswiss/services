@@ -18,7 +18,7 @@ import { MailEdit } from '../../components/edit/mail.edit';
 import { KycHint } from '../../components/kyc-hint';
 import { Layout } from '../../components/layout';
 import { AppPage, useAppHandlingContext } from '../../contexts/app-handling.context';
-import { useLanguageContext } from '../../contexts/language.context';
+import { useSettingsContext } from '../../contexts/settings.context';
 import useDebounce from '../../hooks/debounce.hook';
 import { useKycHelper } from '../../hooks/kyc-helper.hook';
 import { useQuery } from '../../hooks/query.hook';
@@ -30,7 +30,7 @@ interface FormData {
 export function BuyPaymentScreen(): JSX.Element {
   const { openAppPage } = useAppHandlingContext();
   const { currencies, receiveFor } = useBuy();
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
   const { assets, getAsset } = useAssetContext();
   const { isAllowedToBuy } = useKycHelper();
   const { toSymbol } = useFiat();

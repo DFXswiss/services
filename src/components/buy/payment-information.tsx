@@ -10,7 +10,7 @@ import {
   StyledInfoText,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useLanguageContext } from '../../contexts/language.context';
+import { useSettingsContext } from '../../contexts/settings.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
 import { GiroCode } from './giro-code';
 
@@ -33,7 +33,7 @@ interface PaymentInformationContentProps {
 }
 
 export function PaymentInformationContent({ info }: PaymentInformationContentProps): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
   const { copy } = useClipboard();
   return (
     <>

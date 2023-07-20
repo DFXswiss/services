@@ -1,9 +1,9 @@
 import { StyledButton, StyledButtonWidth, StyledInfoText, StyledVerticalStack } from '@dfx.swiss/react-components';
-import { useLanguageContext } from '../contexts/language.context';
+import { useSettingsContext } from '../contexts/settings.context';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 
 export function KycHint(): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
   const { start, limit } = useKycHelper();
 
   return (

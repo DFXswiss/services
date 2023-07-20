@@ -16,14 +16,14 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useForm } from 'react-hook-form';
-import { useLanguageContext } from '../../contexts/language.context';
+import { useSettingsContext } from '../../contexts/settings.context';
 
 interface AddBankAccountProps {
   onSubmit: (bankAccount: BankAccount) => void;
 }
 
 export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
 
   const {
     control,

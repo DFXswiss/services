@@ -2,7 +2,7 @@ import { DfxContextProvider } from '@dfx.swiss/react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AppHandlingContextProvider } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
-import { LanguageContextProvider } from './contexts/language.context';
+import { SettingsContextProvider } from './contexts/settings.context';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyScreen } from './screens/buy.screen';
 import { BuyPaymentScreen } from './screens/buy/payment.screen';
@@ -47,9 +47,9 @@ function App() {
     <AppHandlingContextProvider>
       <BalanceContextProvider>
         <DfxContextProvider api={{}} data={{}}>
-          <LanguageContextProvider>
+          <SettingsContextProvider>
             <RouterProvider router={router} />
-          </LanguageContextProvider>
+          </SettingsContextProvider>
         </DfxContextProvider>
       </BalanceContextProvider>
     </AppHandlingContextProvider>

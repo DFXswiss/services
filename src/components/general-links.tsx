@@ -1,12 +1,12 @@
 import { useAuthContext } from '@dfx.swiss/react';
 import { StyledLink } from '@dfx.swiss/react-components';
-import { useLanguageContext } from '../contexts/language.context';
+import { useSettingsContext } from '../contexts/settings.context';
 import { useIframe } from '../hooks/iframe.hook';
 
 export function GeneralLinks(): JSX.Element {
   const { isUsedByIframe } = useIframe();
   const { authenticationToken } = useAuthContext();
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
 
   return (
     <>

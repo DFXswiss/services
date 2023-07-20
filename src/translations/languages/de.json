@@ -14,7 +14,7 @@
   "service/button": {
     "Buy": "Kaufen",
     "Sell": "Verkaufen",
-    "Convert": "_Umtauschen"
+    "Convert": "Umtauschen"
   },
   "screens/error": {
     "Oh sorry something went wrong": "Entschuldigung, irgendwas hat nicht funktioniert",

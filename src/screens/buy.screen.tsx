@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/layout';
-import { useLanguageContext } from '../contexts/language.context';
+import { useSettingsContext } from '../contexts/settings.context';
 import { useQuery } from '../hooks/query.hook';
 
 interface FormData {
@@ -20,7 +20,7 @@ interface FormData {
 }
 
 export function BuyScreen(): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
   const navigate = useNavigate();
   const { blockchain, availableBlockchains } = useSessionContext();
   const { currencies } = useBuy();

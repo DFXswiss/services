@@ -8,7 +8,7 @@ import {
   StyledButtonWidth,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useLanguageContext } from '../../contexts/language.context';
+import { useSettingsContext } from '../../contexts/settings.context';
 import { MailEdit } from '../edit/mail.edit';
 
 interface BuyCompletionProps {
@@ -17,7 +17,7 @@ interface BuyCompletionProps {
 }
 
 export function BuyCompletion({ onCancel, onSubmit }: BuyCompletionProps): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
   const { user } = useUserContext();
 
   const showsSimple = user?.mail != null;

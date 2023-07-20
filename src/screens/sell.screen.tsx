@@ -35,7 +35,7 @@ import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useBalanceContext } from '../contexts/balance.context';
-import { useLanguageContext } from '../contexts/language.context';
+import { useSettingsContext } from '../contexts/settings.context';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 
@@ -47,7 +47,7 @@ interface FormData {
 }
 
 export function SellScreen(): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
   const { openAppPage } = useAppHandlingContext();
   const { bankAccounts, updateAccount } = useBankAccountContext();
   const { balances } = useBalanceContext();

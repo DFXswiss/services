@@ -1,8 +1,8 @@
 import { Navigation } from '../components/navigation';
-import { useLanguageContext } from '../contexts/language.context';
+import { useSettingsContext } from '../contexts/settings.context';
 
 export function ErrorScreen(): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
 
   return (
     <>

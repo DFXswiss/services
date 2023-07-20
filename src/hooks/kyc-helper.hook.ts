@@ -1,5 +1,5 @@
 import { KycStatus, Utils, useUserContext } from '@dfx.swiss/react';
-import { useLanguageContext } from '../contexts/language.context';
+import { useSettingsContext } from '../contexts/settings.context';
 
 interface KycHelperInterface {
   status: string;
@@ -11,7 +11,7 @@ interface KycHelperInterface {
 }
 
 export function useKycHelper(): KycHelperInterface {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
   const { user } = useUserContext();
 
   const kycMap: Record<string, string> = {

@@ -19,10 +19,10 @@ import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/layout';
-import { useLanguageContext } from '../contexts/language.context';
+import { useSettingsContext } from '../contexts/settings.context';
 
 export function ProfileScreen(): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
   const { countries, reloadUser } = useUserContext();
   const { setKycData } = useKyc();
   const navigate = useNavigate();
