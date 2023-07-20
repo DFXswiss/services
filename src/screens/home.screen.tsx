@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { Layout } from '../components/layout';
 import { ServiceButton, ServiceButtonType } from '../components/service-button';
