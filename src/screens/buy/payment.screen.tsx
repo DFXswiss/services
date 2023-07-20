@@ -156,7 +156,7 @@ export function BuyPaymentScreen(): JSX.Element {
               </p>
               <StyledButton
                 label={translate('general/actions', 'Close')}
-                onClick={() => openAppPage(AppPage.BUY)}
+                onClick={() => openAppPage({page: AppPage.BUY, buyPaymentInfo: paymentInfo})}
                 color={StyledButtonColor.STURDY_WHITE}
                 width={StyledButtonWidth.FULL}
                 caps
@@ -164,7 +164,7 @@ export function BuyPaymentScreen(): JSX.Element {
             </>
           ) : (
             <MailEdit
-              onSubmit={(email) => (!email || email.length === 0) && openAppPage(AppPage.BUY)}
+              onSubmit={(email) => (!email || email.length === 0) && openAppPage({page: AppPage.BUY, buyPaymentInfo: paymentInfo})}
               infoText={translate(
                 'screens/buy/payment',
                 'Enter your email address if you want to be informed about the progress of any purchase or sale',

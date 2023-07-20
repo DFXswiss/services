@@ -1,14 +1,12 @@
-import { useState } from 'react';
 import { useAuthContext } from '@dfx.swiss/react';
 import { useLanguageContext } from '../contexts/language.context';
 import { StyledLink } from '@dfx.swiss/react-components';
 import { useIframe } from '../hooks/iframe.hook';
 
 export function GeneralLinks(): JSX.Element {
+  const { isUsedByIframe } = useIframe();
   const { authenticationToken } = useAuthContext();
   const { translate } = useLanguageContext();
-  const { checkIfUsedByIframe } = useIframe();
-  const [isUsedByIframe] = useState(checkIfUsedByIframe);
 
   return (
     <>

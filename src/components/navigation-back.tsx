@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
 import { DfxIcon, IconVariant, IconColor, IconSize } from '@dfx.swiss/react-components';
@@ -14,14 +13,13 @@ export function NavigationBack({ title, home, appPage }: NavigationBackProps): J
   const { openAppPage } = useAppHandlingContext();
   const navigate = useNavigate();
 
-  const { checkIfUsedByIframe, sendMessage } = useIframe();
-  const [isUsedByIframe] = useState(checkIfUsedByIframe);
+  const { isUsedByIframe, sendMessage } = useIframe();
 
   function onClick() {
-    appPage ? openAppPage(appPage) : home ? navigate('/') : navigate(-1);
+    appPage ? openAppPage({page: appPage}) : home ? navigate('/') : navigate(-1);
 
     if (isUsedByIframe) {
-      sendMessage(IframeMessageType.NAVIGATION);
+      sendMessage({type: IframeMessageType.NAVIGATION});
     }
   }
 

@@ -177,10 +177,11 @@ export function SellScreen(): JSX.Element {
 
   async function handleNext(): Promise<void> {
     await updateBankAccount();
-    openAppPage(
-      AppPage.SELL,
-      new URLSearchParams({ routeId: '' + (paymentInfo?.routeId ?? 0), amount: enteredAmount }),
-    );
+    openAppPage({
+      page: AppPage.SELL,
+      urlParams: new URLSearchParams({ routeId: '' + (paymentInfo?.routeId ?? 0), amount: enteredAmount }),
+      sellPaymentInfo: paymentInfo
+    });
   }
 
   const rules = Utils.createRules({
@@ -198,7 +199,7 @@ export function SellScreen(): JSX.Element {
           {assets && (
             <StyledDropdown<Asset>
               name="asset"
-              label={translate('screens/sell', 'YOUR WALLET')}
+              label={translate('screens/sell', 'Your Wallet')}
               placeholder={translate('general/actions', 'Please select...')}
               labelIcon={IconVariant.WALLET}
               items={availableAssets}
@@ -227,7 +228,7 @@ export function SellScreen(): JSX.Element {
           {currencies && (
             <StyledDropdown<Fiat>
               name="currency"
-              label={translate('screens/sell', 'YOUR CURRENCY')}
+              label={translate('screens/sell', 'Your Currency')}
               placeholder={translate('screens/sell', 'e.g. EUR')}
               labelIcon={IconVariant.BANK}
               items={currencies}

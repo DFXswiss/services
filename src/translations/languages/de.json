@@ -31,6 +31,14 @@
     "Please login via an application to use our services":
     "Bitte melden Sie sich über eine Anwendung an, um unsere Services benutzen zu können"
   },
+  "screens/kyc": {
+    "per day": "pro Tag",
+    "per year": "pro Jahr",
+
+    "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.":
+    "Ihr Konto muss verifiziert werden, sobald Ihr tägliches Transaktionsvolumen {{limit}} überschreitet. Wenn Sie Ihr tägliches Handelslimit erhöhen möchten, schließen Sie bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
+    "Complete KYC": "KYC vervollständigen"
+  },
   "screens/buy": {
     "Buy": "Kaufen",
     "I want to buy": "Ich möchte folgendes kaufen",
@@ -80,12 +88,12 @@
   },
   "screens/sell": {
     "Sell": "Verkaufen",
-    "YOUR WALLET": "IHR WALLET",
+    "Your Wallet": "Ihr Wallet",
     "Please select...": "Bitte auswählen...",
     "Cash out to my bank account": "Auszahlung auf mein Bankkonto",
     "Add or select your IBAN": "Ihre IBAN hinzufügen oder auswählen",
     "Select your payment account": "Wählen Sie Ihr Konto aus",
-    "YOUR CURRENCY": "IHRE WÄHRUNG",
+    "Your Currency": "Ihre Währung",
     "e.g. EUR": "z.B. EUR",
     "Enter your desired payout amount": "Geben Sie den gewünschten Auszahlungsbetrag ein",
     "≈ {{estimatedAmount}} {{currency}} (incl. DFX fees)": "≈ {{estimatedAmount}} {{currency}} (inkl. DFX Gebühren)",
@@ -105,8 +113,11 @@
   "screens/profile": {
     "User details": "Benutzerdaten",
     "Please fill in personal information to continue": "Bitte geben Sie Ihre persönlichen Daten ein, um fortzufahren",
-    "ACCOUNT TYPE": "KONTOTYP",
-    "PERSONAL INFORMATION": "PERSÖNLICHE DATEN",
+    "Account Type": "Kontotyp",
+    "Personal": "Privat",
+    "Business": "Geschäftlich",
+    "SoleProprietorship": "Einzelunternehmen",
+    "Personal Information": "Persönliche Daten",
     "First name": "Vorname",
     "John": "Max",
     "Last name" : "Nachname",
@@ -119,7 +130,7 @@
     "Email address": "E-Mail",
     "example@mail.com": "beispiel@mail.de",
     "Phone number": "Telefon",
-    "ORGANIZATION INFORMATION": "UNTERNEHMENSINFORMATION",
+    "Organization Information": "Unternehmensinformation",
     "Organization name": "Bezeichnung des Unternehmens",
     "Example inc.": "Beispiel GmbH & Co. KG"
   },
