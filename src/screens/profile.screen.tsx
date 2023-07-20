@@ -106,7 +106,7 @@ export function ProfileScreen(): JSX.Element {
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack marginY={4} gap={2} full>
           <div>
-            <p className="text-dfxGray-700 text-xs font-semibold text-start ml-4 -mb-1">
+            <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-4 -mb-1">
               {translate('screens/profile', 'Account Type')}
             </p>
             <StyledDropdown
@@ -119,7 +119,7 @@ export function ProfileScreen(): JSX.Element {
           </div>
           {selectedAccountType && (
             <>
-              <p className="text-dfxGray-700 text-xs font-semibold text-start ml-3 mt-4">
+              <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3 mt-4">
                 {translate('screens/profile', 'Personal Information')}
               </p>
               <StyledHorizontalStack gap={2}>
@@ -195,7 +195,7 @@ export function ProfileScreen(): JSX.Element {
               />
               {selectedAccountType !== AccountType.PERSONAL && (
                 <>
-                  <p className="text-dfxGray-700 text-xs font-semibold text-start ml-3 mt-4">
+                  <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3 mt-4">
                     {translate('screens/profile', 'Organization Information')}
                   </p>
                   <StyledInput

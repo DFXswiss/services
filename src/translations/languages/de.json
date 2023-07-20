@@ -9,7 +9,7 @@
   "general/errors": {
     "Something went wrong": "Irgendwas hat nicht funktioniert",
     "Please try again later. If the issue persists please reach out to our support.":
-    "Bitte versuchen Sie es später noch einmal. Wenn das Problem weiterhin besteht, wenden Sie sich bitte an unseren Support."
+    "Bitte versuche es später noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support."
   },
   "general/services": {
     "Buy": "Kaufen",
@@ -21,23 +21,23 @@
     "per year": "pro Jahr",
 
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.":
-    "Ihr Konto muss verifiziert werden, sobald Ihr tägliches Transaktionsvolumen {{limit}} überschreitet. Wenn Sie Ihr tägliches Handelslimit erhöhen möchten, schließen Sie bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
+    "Dein Konto muss verifiziert werden, sobald Dein tägliches Transaktionsvolumen {{limit}} überschreitet. Wenn Du Dein tägliches Handelslimit erhöhen möchtest, schließe bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
     "Complete KYC": "KYC vervollständigen"
   },
   "screens/error": {
     "Oh sorry something went wrong": "Entschuldigung, irgendwas hat nicht funktioniert",
 
     "Please return to your previous page. If this problem consists reach out to use via Telegram.":
-    "Bitte kehren Sie zur vorherigen Seite zurück. Wenn dieses Problem weiterhin besteht, erreichen Sie uns über Telegram."
+    "Bitte kehre zur vorherigen Seite zurück. Wenn dieses Problem weiterhin besteht, erreichst Du uns über Telegram."
   },
   "screens/home": {
     "DFX services": "DFX Services",
     
     "Buy and Sell cryptocurrencies with bank transfers":
-    "Kaufen und verkaufen Sie Kryptowährungen mit Banküberweisungen",
+    "Kaufe und verkaufe Kryptowährungen mit Banküberweisungen",
     
     "Please login via an application to use our services":
-    "Bitte melden Sie sich über eine Anwendung an, um unsere Services benutzen zu können"
+    "Bitte melde Dich über eine Anwendung an, um unsere Services benutzen zu können"
   },
   "screens/buy": {
     "Buy": "Kaufen",
@@ -46,12 +46,12 @@
     "Buy Amount": "Kaufbetrag",
     "Done!": "Fertig!",
     "≈ {{estimatedAmount}} (incl. DFX fees)": "≈ {{estimatedAmount}} (inkl. DFX Gebühren)",
-    "Click here once you have issued the transfer": "Klicken Sie hier, sobald Sie die Überweisung getätigt haben",
+    "Click here once you have issued the transfer": "Klicke hier, sobald Du die Überweisung getätigt hast",
 
     "Payment Information": "Zahlungsinformation",
 
     "Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!":
-    "Bitte überweisen Sie den Kaufbetrag mit diesen Angaben über Ihre Bankanwendung. Der Verwendungszweck ist wichtig!",
+    "Bitte überweise den Kaufbetrag mit diesen Angaben über Deine Bankanwendung. Der Verwendungszweck ist wichtig!",
 
     "IBAN": "IBAN",
     "BIC": "BIC",
@@ -68,28 +68,28 @@
     "Der eingegebene Betrag liegt unter der Mindesteinlage von {{amount}} {{currency}}",
 
     "Enter your email address if you want to be informed about the progress of any purchase or sale":
-    "Geben Sie Ihre E-Mail Adresse ein, wenn Sie über den Fortschritt Ihrer Käufe oder Verkäufe informiert werden wollen",
+    "Gebe Deine E-Mail Adresse ein, wenn Du über den Fortschritt Deiner Käufe oder Verkäufe informiert werden willst",
 
     "Nice! You are all set! Give us a minute to handle your transaction":
-    "Sehr schön! Alles erledigt! Geben Sie uns eine Minute, um Ihre Transaktion zu bearbeiten",
+    "Sehr schön! Alles erledigt! Gib uns eine Minute, um Deine Transaktion zu bearbeiten",
 
     "As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet":
-    "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir Ihr Guthaben in Ihre Wallet übertragen",
+    "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir Dein Guthaben in Deine Wallet übertragen",
 
     "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet. We will inform you about the progress of any purchase or sale via E-mail.":
-    "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir Ihr Guthaben in Ihre Wallet übertragen. Wir werden Sie per E-Mail über den Fortschritt Ihrer Käufe oder Verkäufe informieren."
+    "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir Dein Guthaben in Deine Wallet übertragen. Wir werden Dich per E-Mail über den Fortschritt Deiner Käufe oder Verkäufe informieren."
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Bankverbindungen",
     "Todo list of bank accounts": "Todo list of bank accounts"
   },
   "screens/sell": {
-    "Your Wallet": "Ihr Wallet",
+    "Your Wallet": "Dein Wallet",
     "Please select...": "Bitte auswählen...",
     "Cash out to my bank account": "Auszahlung auf mein Bankkonto",
-    "Add or select your IBAN": "Ihre IBAN hinzufügen oder auswählen",
-    "Select your payment account": "Wählen Sie Ihr Konto aus",
-    "Your Currency": "Ihre Währung",
+    "Add or select your IBAN": "Deine IBAN hinzufügen oder auswählen",
+    "Select your payment account": "Wähle Dein Konto aus",
+    "Your Currency": "Deine Währung",
     "e.g. EUR": "z.B. EUR",
     "Enter your desired payout amount": "Geben Sie den gewünschten Auszahlungsbetrag ein",
     "≈ {{estimatedAmount}} {{currency}} (incl. DFX fees)": "≈ {{estimatedAmount}} {{currency}} (inkl. DFX Gebühren)",
@@ -108,7 +108,7 @@
   },
   "screens/profile": {
     "User details": "Benutzerdaten",
-    "Please fill in personal information to continue": "Bitte geben Sie Ihre persönlichen Daten ein, um fortzufahren",
+    "Please fill in personal information to continue": "Bitte gib Deine persönlichen Daten ein, um fortzufahren",
     "Account Type": "Kontotyp",
     "Personal": "Privat",
     "Business": "Geschäftlich",
