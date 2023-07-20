@@ -21,7 +21,7 @@ export function Layout({ title, backButton, textStart, children }: LayoutProps):
       <Navigation title={title} backButton={backButton} />
 
       <div
-        className={`flex flex-grow flex-col items-center ${
+        className={`max-w-screen-md flex flex-grow flex-col items-center ${
           textStart ? 'text-start' : 'text-center'
         } px-5 py-2 mt-4 gap-2`}
       >

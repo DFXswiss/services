@@ -13,17 +13,15 @@ import {
   useSessionContext,
 } from '@dfx.swiss/react';
 import {
-  AlignContent,
   AssetIconVariant,
   Form,
   IconVariant,
   StyledBankAccountListItem,
   StyledButton,
   StyledButtonWidth,
-  StyledDataTable,
-  StyledDataTableRow,
   StyledDropdown,
   StyledInput,
+  StyledLink,
   StyledModalDropdown,
   StyledModalWidth,
   StyledVerticalStack,
@@ -54,7 +52,7 @@ export function SellScreen(): JSX.Element {
   const { blockchain, availableBlockchains } = useSessionContext();
   const { assets } = useAssetContext();
   const { isAllowedToSell } = useKycHelper();
-  const { toDescription } = useFiat();
+  const { toDescription, toSymbol } = useFiat();
   const { currencies, receiveFor } = useSell();
   const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
   const [customAmountError, setCustomAmountError] = useState<string>();
@@ -255,23 +253,39 @@ export function SellScreen(): JSX.Element {
           <>
             {paymentInfo.estimatedAmount > 0 && (
               <p className="text-dfxBlue-800 text-start w-full text-xs pl-12">
-                {translate('screens/sell', '≈ {{estimatedAmount}} {{currency}} (incl. DFX fees)', {
-                  estimatedAmount: paymentInfo.estimatedAmount,
-                  currency: validatedData?.currency.name ?? '',
-                })}
+                {translate(
+                  'screens/sell',
+                  paymentInfo.minFeeTarget && validatedData?.currency
+                    ? '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})'
+                    : '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)',
+                  {
+                    estimatedAmount: paymentInfo.estimatedAmount,
+                    currency: validatedData?.currency.name ?? '',
+                    fee: paymentInfo.fee,
+                    minFee: paymentInfo.minFeeTarget,
+                    minFeeCurrency: toSymbol(validatedData?.currency as Fiat),
+                  },
+                )}
               </p>
             )}
-            <StyledDataTable alignContent={AlignContent.BETWEEN} showBorder={false} narrow minWidth={false}>
-              <StyledDataTableRow discreet>
-                <p>{translate('screens/sell', 'DFX-Fee')}</p>
-                <p>{`${paymentInfo.fee} %`}</p>
-              </StyledDataTableRow>
-            </StyledDataTable>
+
+            <div className="pt-4 w-full text-left">
+              <StyledLink
+                label={translate(
+                  'screens/buy/payment',
+                  'Please not that by using this service you automatically accept our terms and conditions.',
+                )}
+                url={process.env.REACT_APP_TNC_URL}
+                dark
+              />
+            </div>
+
             <StyledButton
               width={StyledButtonWidth.FULL}
               label={translate('screens/sell', 'Complete transaction in your wallet')}
               onClick={() => handleNext(paymentInfo)}
               caps={false}
+              className="my-4"
             />
           </>
         )}

@@ -9,6 +9,7 @@ import {
   StyledButtonColor,
   StyledButtonWidth,
   StyledInput,
+  StyledLink,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
@@ -199,14 +200,34 @@ export function BuyPaymentScreen(): JSX.Element {
           </Form>
           {paymentInfo && (
             <p className="text-dfxBlue-800 text-start w-full text-xs pl-7 pt-1">
-              {translate('screens/buy', '≈ {{estimatedAmount}} (incl. DFX fees)', {
-                estimatedAmount: paymentInfo.estimatedAmount,
-              })}
+              {translate(
+                'screens/buy',
+                paymentInfo.minFee
+                  ? '≈ {{estimatedAmount}} (incl. {{fee}} DFX fee - min. {{minFee}})'
+                  : '≈ {{estimatedAmount}} (incl. {{fee}} DFX fee)',
+                {
+                  estimatedAmount: paymentInfo.estimatedAmount,
+                  fee: paymentInfo.fee,
+                  minFee: paymentInfo.minFee ?? 0,
+                },
+              )}
             </p>
           )}
           {paymentInfo && dataValid && !kycRequired && (
-            <div className="pb-16">
+            <div>
               <PaymentInformationContent info={paymentInfo} />
+
+              <div className="pt-4">
+                <StyledLink
+                  label={translate(
+                    'screens/buy/payment',
+                    'Please not that by using this service you automatically accept our terms and conditions.',
+                  )}
+                  url={process.env.REACT_APP_TNC_URL}
+                  dark
+                />
+              </div>
+
               <StyledButton
                 width={StyledButtonWidth.FULL}
                 label={translate('screens/buy', 'Click here once you have issued the transfer')}
@@ -215,6 +236,7 @@ export function BuyPaymentScreen(): JSX.Element {
                   window.scrollTo(0, 0);
                 }}
                 caps={false}
+                className="my-4"
               />
             </div>
           )}
