@@ -34,10 +34,7 @@ export function useKycHelper(): KycHelperInterface {
 
   const limit =
     user?.tradingLimit != null
-      ? `${Utils.formatAmount(user.tradingLimit.limit)} € ${translate(
-          'screens/kyc',
-          periodMap[user.tradingLimit.period],
-        )}`
+      ? `${Utils.formatAmount(user.tradingLimit.limit)} € ${translate('kyc', periodMap[user.tradingLimit.period])}`
       : '';
 
   const isInProgress = [KycStatus.CHATBOT, KycStatus.ONLINE_ID, KycStatus.VIDEO_ID].includes(

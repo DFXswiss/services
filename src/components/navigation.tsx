@@ -1,5 +1,5 @@
 import { Language, useAuthContext } from '@dfx.swiss/react';
-import { Form, StyledDropdown } from '@dfx.swiss/react-components';
+import { Form, IconVariant, StyledDropdown } from '@dfx.swiss/react-components';
 import { PropsWithChildren, SetStateAction, useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { AppPage } from '../contexts/app-handling.context';
@@ -119,16 +119,26 @@ function NavigationMenuContent({ svgColor, setIsNavigationOpen }: NavigationMenu
         <div className="mx-4 py-4 text-dfxGray-800">
           {authenticationToken && (
             <NavigationLink
+              icon={IconVariant.HOME}
               label={translate('navigation/links', 'My DFX')}
               url={`${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`}
             />
           )}
           <NavigationLink
+            icon={IconVariant.FILE}
             label={translate('navigation/links', 'Terms and conditions')}
             url={process.env.REACT_APP_TNC_URL}
           />
-          <NavigationLink label={translate('navigation/links', 'Privacy policy')} url={process.env.REACT_APP_PPO_URL} />
-          <NavigationLink label={translate('navigation/links', 'Imprint')} url={process.env.REACT_APP_IMP_URL} />
+          <NavigationLink
+            icon={IconVariant.OPEN_IN_NEW}
+            label={translate('navigation/links', 'Privacy policy')}
+            url={process.env.REACT_APP_PPO_URL}
+          />
+          <NavigationLink
+            icon={IconVariant.OPEN_IN_NEW}
+            label={translate('navigation/links', 'Imprint')}
+            url={process.env.REACT_APP_IMP_URL}
+          />
 
           <Form control={control} errors={errors}>
             <StyledDropdown

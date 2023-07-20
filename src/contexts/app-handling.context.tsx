@@ -1,7 +1,6 @@
-import { Sell } from '@dfx.swiss/react';
+import { Buy, Sell } from '@dfx.swiss/react';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { PaymentInformation } from '../components/buy/payment-information';
-import { IframeMessageData, IframeMessageType, useIframe } from '../hooks/iframe.hook';
+import { IframeMessageType, useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
 
 export enum AppPage {
@@ -9,10 +8,17 @@ export enum AppPage {
   SELL = 'sell',
 }
 
+export interface IframeMessageData {
+  type: IframeMessageType;
+  path?: string;
+  buy?: Buy;
+  sell?: Sell;
+}
+
 export interface OpenAppPageParams {
   page: AppPage;
   urlParams?: URLSearchParams;
-  buyPaymentInfo?: PaymentInformation;
+  buyPaymentInfo?: Buy;
   sellPaymentInfo?: Sell;
 }
 
@@ -53,21 +59,11 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
     };
 
     if (params.buyPaymentInfo) {
-      data.buy = {
-        iban: params.buyPaymentInfo.iban,
-        bic: params.buyPaymentInfo.bic,
-        purpose: params.buyPaymentInfo.purpose,
-        estimatedAmount: params.buyPaymentInfo.estimatedAmount,
-      };
+      data.buy = params.buyPaymentInfo;
     }
 
     if (params.sellPaymentInfo) {
-      data.sell = {
-        depositAddress: params.sellPaymentInfo.depositAddress,
-        blockchain: params.sellPaymentInfo.blockchain,
-        estimatedAmount: params.sellPaymentInfo.estimatedAmount,
-        paymentRequest: params.sellPaymentInfo.paymentRequest,
-      };
+      data.sell = params.sellPaymentInfo;
     }
 
     return data;

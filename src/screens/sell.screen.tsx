@@ -193,7 +193,7 @@ export function SellScreen(): JSX.Element {
 
   // TODO: (Krysh) add handling for sell screen to replace to profile is user.kycDataIsComplete is false
   return (
-    <Layout backTitle={translate('screens/sell', 'Sell')}>
+    <Layout backTitle={translate('general/services', 'Sell')}>
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack gap={8} full>
           {assets && (

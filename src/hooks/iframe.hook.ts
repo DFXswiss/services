@@ -3,26 +3,9 @@ export enum IframeMessageType {
   CLOSE = 'Close',
 }
 
-export interface IframeMessageData {
-  type: IframeMessageType;
-  path?: string;
-  buy?: {
-    iban: string;
-    bic: string;
-    purpose: string;
-    estimatedAmount: string;
-  };
-  sell?: {
-    depositAddress: string;
-    blockchain: string;
-    estimatedAmount: number;
-    paymentRequest?: string;
-  };
-}
-
 interface IframeInterface {
   isUsedByIframe: boolean;
-  sendMessage: (messageData: IframeMessageData) => void;
+  sendMessage: (messageData: any) => void;
 }
 
 export function useIframe(): IframeInterface {
@@ -36,7 +19,7 @@ export function useIframe(): IframeInterface {
     return windowLocation !== parentLocation;
   }
 
-  function sendMessage(messageData: IframeMessageData) {
+  function sendMessage(messageData: any) {
     const win: Window = window;
 
     messageData.path = messageData.path ?? win.location.pathname;

@@ -83,7 +83,7 @@ export function BuyScreen(): JSX.Element {
   });
 
   return (
-    <Layout backTitle={translate('screens/buy', 'Buy')}>
+    <Layout backTitle={translate('general/services', 'Buy')}>
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack gap={8} full>
           {currencies && assets && (

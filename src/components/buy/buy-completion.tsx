@@ -24,9 +24,9 @@ export function BuyCompletion({ onCancel, onSubmit }: BuyCompletionProps): JSX.E
 
   function getHeader(): string {
     return showsSimple
-      ? translate('screens/buy/payment', 'Nice! You are all set! Give us a minute to handle your transaction')
+      ? translate('screens/buy', 'Nice! You are all set! Give us a minute to handle your transaction')
       : translate(
-          'screens/buy/payment',
+          'screens/buy',
           'As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet',
         );
   }
@@ -41,7 +41,7 @@ export function BuyCompletion({ onCancel, onSubmit }: BuyCompletionProps): JSX.E
         <>
           <p className="text-center">
             {translate(
-              'screens/buy/payment',
+              'screens/buy',
               'As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet. We will inform you about the progress of any purchase or sale via E-mail.',
             )}
           </p>
@@ -58,7 +58,7 @@ export function BuyCompletion({ onCancel, onSubmit }: BuyCompletionProps): JSX.E
           onSubmit={onSubmit}
           onCancel={onCancel}
           infoText={translate(
-            'screens/buy/payment',
+            'screens/buy',
             'Enter your email address if you want to be informed about the progress of any purchase or sale',
           )}
           showCancelButton

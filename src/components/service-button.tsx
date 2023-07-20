@@ -50,7 +50,7 @@ export function ServiceButton({ type, url, disabled }: ServiceButtonProps): JSX.
       disabled={disabled}
     >
       <p className={`${disabled ? 'text-dfxGray-500' : 'text-dfxBlue-800'} text-lg font-bold`}>
-        {translate('service/button', type)}
+        {translate('general/services', type)}
       </p>
       <div className="flex flex-row gap-2">{iconDefinitions[type](disabled ? IconColor.GRAY : IconColor.RED)}</div>
     </button>

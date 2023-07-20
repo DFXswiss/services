@@ -82,9 +82,9 @@ export function BuyPaymentScreen(): JSX.Element {
 
   function getHeader(): string {
     return showsSimple
-      ? translate('screens/buy/payment', 'Nice! You are all set! Give us a minute to handle your transaction')
+      ? translate('screens/buy', 'Nice! You are all set! Give us a minute to handle your transaction')
       : translate(
-          'screens/buy/payment',
+          'screens/buy',
           'As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet',
         );
   }
@@ -92,7 +92,7 @@ export function BuyPaymentScreen(): JSX.Element {
   function checkForMinDeposit(buy: Buy, amount: number, currency: string): Buy | undefined {
     if (buy.minVolume > amount) {
       setCustomAmountError(
-        translate('screens/buy/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+        translate('screens/buy', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
           amount: Utils.formatAmount(buy.minVolume),
           currency,
         }),
@@ -107,10 +107,7 @@ export function BuyPaymentScreen(): JSX.Element {
   function toPaymentInformation(buy: Buy | undefined): PaymentInformation | undefined {
     if (!buy) return undefined;
     return {
-      iban: buy.iban,
-      bic: buy.bic,
-      purpose: buy.remittanceInfo,
-      isSepaInstant: buy.sepaInstant,
+      buy: buy,
       recipient: `${buy.name}, ${buy.street} ${buy.number}, ${buy.zip} ${buy.city}, ${buy.country}`,
       estimatedAmount: `${buy.estimatedAmount} ${asset?.name ?? ''}`,
       fee: `${buy.fee} %`,
@@ -136,7 +133,7 @@ export function BuyPaymentScreen(): JSX.Element {
 
   return (
     <Layout
-      backTitle={showsCompletion ? translate('screens/buy/payment', 'Done!') : translate('screens/buy/payment', 'Buy')}
+      backTitle={showsCompletion ? translate('screens/buy', 'Done!') : translate('screens/buy', 'Buy')}
       appPage={showsCompletion ? AppPage.BUY : undefined}
       textStart
     >
@@ -150,13 +147,13 @@ export function BuyPaymentScreen(): JSX.Element {
             <>
               <p className="text-center text-dfxBlue-800">
                 {translate(
-                  'screens/buy/payment',
+                  'screens/buy',
                   'As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet. We will inform you about the progress of any purchase or sale via E-mail.',
                 )}
               </p>
               <StyledButton
                 label={translate('general/actions', 'Close')}
-                onClick={() => openAppPage({ page: AppPage.BUY, buyPaymentInfo: paymentInfo })}
+                onClick={() => openAppPage({ page: AppPage.BUY, buyPaymentInfo: paymentInfo?.buy })}
                 color={StyledButtonColor.STURDY_WHITE}
                 width={StyledButtonWidth.FULL}
                 caps
@@ -165,10 +162,10 @@ export function BuyPaymentScreen(): JSX.Element {
           ) : (
             <MailEdit
               onSubmit={(email) =>
-                (!email || email.length === 0) && openAppPage({ page: AppPage.BUY, buyPaymentInfo: paymentInfo })
+                (!email || email.length === 0) && openAppPage({ page: AppPage.BUY, buyPaymentInfo: paymentInfo?.buy })
               }
               infoText={translate(
-                'screens/buy/payment',
+                'screens/buy',
                 'Enter your email address if you want to be informed about the progress of any purchase or sale',
               )}
               hideLabels
@@ -181,7 +178,7 @@ export function BuyPaymentScreen(): JSX.Element {
           <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
             <StyledInput
               type={'number'}
-              label={translate('screens/buy/payment', 'Buy Amount')}
+              label={translate('screens/buy', 'Buy Amount')}
               placeholder="0.00"
               prefix={currency && toSymbol(currency)}
               name="amount"
@@ -193,7 +190,7 @@ export function BuyPaymentScreen(): JSX.Element {
           </Form>
           {paymentInfo && (
             <p className="text-dfxBlue-800 text-start w-full text-xs pl-7 pt-1">
-              {translate('screens/buy/payment', '≈ {{estimatedAmount}} (incl. DFX fees)', {
+              {translate('screens/buy', '≈ {{estimatedAmount}} (incl. DFX fees)', {
                 estimatedAmount: paymentInfo.estimatedAmount,
               })}
             </p>
@@ -203,7 +200,7 @@ export function BuyPaymentScreen(): JSX.Element {
               <PaymentInformationContent info={paymentInfo} />
               <StyledButton
                 width={StyledButtonWidth.FULL}
-                label={translate('screens/buy/payment', 'Click here once you have issued the transfer')}
+                label={translate('screens/buy', 'Click here once you have issued the transfer')}
                 onClick={() => {
                   setShowsCompletion(true);
                   window.scrollTo(0, 0);
