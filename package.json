@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@dfx.swiss/react": "^1.1.2-beta.2",
-    "@dfx.swiss/react-components": "^1.1.2-beta.2",
+    "@dfx.swiss/react": "^1.1.2-beta.5",
+    "@dfx.swiss/react-components": "^1.1.2-beta.5",
     "copy-to-clipboard": "^3.3.3",
     "env-cmd": "^10.1.0",
     "i18next": "^22.4.13",

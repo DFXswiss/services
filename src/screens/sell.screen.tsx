@@ -1,13 +1,3 @@
-import { DeepPartial, useForm, useWatch } from 'react-hook-form';
-import { Layout } from '../components/layout';
-import { useLanguageContext } from '../contexts/language.context';
-import { useEffect, useState } from 'react';
-import { AddBankAccount } from '../components/buy/add-bank-account';
-import useDebounce from '../hooks/debounce.hook';
-import { useKycHelper } from '../hooks/kyc-helper.hook';
-import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
-import { useBalanceContext } from '../contexts/balance.context';
-import { KycHint } from '../components/kyc-hint';
 import {
   ApiError,
   Asset,
@@ -38,6 +28,16 @@ import {
   StyledModalWidth,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useEffect, useState } from 'react';
+import { DeepPartial, useForm, useWatch } from 'react-hook-form';
+import { AddBankAccount } from '../components/buy/add-bank-account';
+import { KycHint } from '../components/kyc-hint';
+import { Layout } from '../components/layout';
+import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
+import { useBalanceContext } from '../contexts/balance.context';
+import { useSettingsContext } from '../contexts/settings.context';
+import useDebounce from '../hooks/debounce.hook';
+import { useKycHelper } from '../hooks/kyc-helper.hook';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -47,8 +47,8 @@ interface FormData {
 }
 
 export function SellScreen(): JSX.Element {
-  const { translate } = useLanguageContext();
-  const { openAppPage } = useAppHandlingContext();
+  const { translate } = useSettingsContext();
+  const { closeServices } = useAppHandlingContext();
   const { bankAccounts, updateAccount } = useBankAccountContext();
   const { balances } = useBalanceContext();
   const { blockchain, availableBlockchains } = useSessionContext();
@@ -175,12 +175,12 @@ export function SellScreen(): JSX.Element {
     // TODO: (Krysh fix broken form validation and onSubmit
   }
 
-  async function handleNext(): Promise<void> {
+  async function handleNext(paymentInfo: Sell): Promise<void> {
     await updateBankAccount();
-    openAppPage(
-      AppPage.SELL,
-      new URLSearchParams({ routeId: '' + (paymentInfo?.routeId ?? 0), amount: enteredAmount }),
-    );
+    closeServices({
+      type: CloseType.SELL,
+      sell: { paymentInfo, amount: Number(enteredAmount) },
+    });
   }
 
   const rules = Utils.createRules({
@@ -192,13 +192,13 @@ export function SellScreen(): JSX.Element {
 
   // TODO: (Krysh) add handling for sell screen to replace to profile is user.kycDataIsComplete is false
   return (
-    <Layout backTitle={translate('screens/sell', 'Sell')}>
+    <Layout title={translate('general/services', 'Sell')}>
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack gap={8} full>
           {assets && (
             <StyledDropdown<Asset>
               name="asset"
-              label={translate('screens/sell', 'YOUR WALLET')}
+              label={translate('screens/sell', 'Your Wallet')}
               placeholder={translate('general/actions', 'Please select...')}
               labelIcon={IconVariant.WALLET}
               items={availableAssets}
@@ -227,8 +227,8 @@ export function SellScreen(): JSX.Element {
           {currencies && (
             <StyledDropdown<Fiat>
               name="currency"
-              label={translate('screens/sell', 'YOUR CURRENCY')}
-              placeholder="e.g. EUR"
+              label={translate('screens/sell', 'Your Currency')}
+              placeholder={translate('screens/sell', 'e.g. EUR')}
               labelIcon={IconVariant.BANK}
               items={currencies}
               labelFunc={(item) => item.name}
@@ -270,7 +270,7 @@ export function SellScreen(): JSX.Element {
             <StyledButton
               width={StyledButtonWidth.FULL}
               label={translate('screens/sell', 'Complete transaction in your wallet')}
-              onClick={handleNext}
+              onClick={() => handleNext(paymentInfo)}
               caps={false}
             />
           </>

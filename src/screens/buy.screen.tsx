@@ -1,8 +1,3 @@
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
-import { useLanguageContext } from '../contexts/language.context';
-import { Layout } from '../components/layout';
 import { Asset, Fiat, Utils, Validations, useAssetContext, useBuy, useFiat, useSessionContext } from '@dfx.swiss/react';
 import {
   AssetIconVariant,
@@ -12,6 +7,11 @@ import {
   StyledDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { Layout } from '../components/layout';
+import { useSettingsContext } from '../contexts/settings.context';
 import { useQuery } from '../hooks/query.hook';
 
 interface FormData {
@@ -20,7 +20,7 @@ interface FormData {
 }
 
 export function BuyScreen(): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
   const navigate = useNavigate();
   const { blockchain, availableBlockchains } = useSessionContext();
   const { currencies } = useBuy();
@@ -83,7 +83,7 @@ export function BuyScreen(): JSX.Element {
   });
 
   return (
-    <Layout backTitle={translate('screens/buy', 'Buy')}>
+    <Layout title={translate('general/services', 'Buy')}>
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack gap={8} full>
           {currencies && assets && (

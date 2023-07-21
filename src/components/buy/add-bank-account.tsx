@@ -1,4 +1,3 @@
-import { useForm } from 'react-hook-form';
 import {
   BankAccount,
   CreateBankAccount,
@@ -16,12 +15,16 @@ import {
   StyledSpacer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useForm } from 'react-hook-form';
+import { useSettingsContext } from '../../contexts/settings.context';
 
 interface AddBankAccountProps {
   onSubmit: (bankAccount: BankAccount) => void;
 }
 
 export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
+  const { translate } = useSettingsContext();
+
   const {
     control,
     handleSubmit,
@@ -41,13 +44,17 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
   return (
     <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(createBankAccount)}>
       <StyledVerticalStack gap={4}>
-        <StyledInput label="IBAN" placeholder="XX XXXX XXXX XXXX XXXX X" name="iban" />
-        <StyledInput label="Optional - Account Designation" placeholder="eg. Deutsche Bank" name="label" />
+        <StyledInput name="iban" label={translate('screens/sell', 'IBAN')} placeholder="XX XXXX XXXX XXXX XXXX X" />
+        <StyledInput
+          name="label"
+          label={translate('screens/sell', 'Optional - Account Designation')}
+          placeholder={translate('screens/sell', 'eg. Deutsche Bank')}
+        />
         <StyledSpacer spacing={-1} />
         <StyledButton
           disabled={!isValid}
           color={StyledButtonColor.RED}
-          label="Add Bank Account"
+          label={translate('screens/sell', 'Add Bank Account')}
           onClick={handleSubmit(createBankAccount)}
           isLoading={isAccountLoading}
           caps

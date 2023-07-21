@@ -1,4 +1,5 @@
 import { KycStatus, Utils, useUserContext } from '@dfx.swiss/react';
+import { useSettingsContext } from '../contexts/settings.context';
 
 interface KycHelperInterface {
   status: string;
@@ -10,6 +11,7 @@ interface KycHelperInterface {
 }
 
 export function useKycHelper(): KycHelperInterface {
+  const { translate } = useSettingsContext();
   const { user } = useUserContext();
 
   const kycMap: Record<string, string> = {
@@ -32,7 +34,7 @@ export function useKycHelper(): KycHelperInterface {
 
   const limit =
     user?.tradingLimit != null
-      ? `${Utils.formatAmount(user.tradingLimit.limit)} € ${periodMap[user.tradingLimit.period]}`
+      ? `${Utils.formatAmount(user.tradingLimit.limit)} € ${translate('kyc', periodMap[user.tradingLimit.period])}`
       : '';
 
   const isInProgress = [KycStatus.CHATBOT, KycStatus.ONLINE_ID, KycStatus.VIDEO_ID].includes(

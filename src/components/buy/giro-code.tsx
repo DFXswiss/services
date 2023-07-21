@@ -1,5 +1,5 @@
-import { PaymentInformation } from './payment-information';
 import QRCode from 'react-qr-code';
+import { PaymentInformation } from './payment-information';
 
 interface GiroCodeProps {
   info: PaymentInformation;

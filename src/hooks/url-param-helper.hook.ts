@@ -1,8 +1,8 @@
 import { Utils, useApiSession } from '@dfx.swiss/react';
+import { useMemo } from 'react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useBalanceContext } from '../contexts/balance.context';
 import { useQuery } from './query.hook';
-import { useMemo } from 'react';
 
 interface UrlParamHelperInterface {
   readParamsAndReload: () => Promise<void>;

@@ -1,5 +1,3 @@
-import { useForm } from 'react-hook-form';
-import { useLanguageContext } from '../../contexts/language.context';
 import { Utils, Validations, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
@@ -12,6 +10,8 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useForm } from 'react-hook-form';
+import { useSettingsContext } from '../../contexts/settings.context';
 
 interface MailEditProps {
   infoText?: string;
@@ -49,7 +49,7 @@ export function MailEdit({
     formState: { isValid, errors },
   } = useForm<FormData>();
   const { changeMail, isUserUpdating } = useUserContext();
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
 
   async function saveUser({ email }: FormData): Promise<void> {
     if (!email || email.length === 0) return onSubmit(email);
