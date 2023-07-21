@@ -5,7 +5,6 @@ import { BalanceContextProvider } from './contexts/balance.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyScreen } from './screens/buy.screen';
-import { BuyPaymentScreen } from './screens/buy/payment.screen';
 import { ErrorScreen } from './screens/error.screen';
 import { HomeScreen } from './screens/home.screen';
 import { ProfileScreen } from './screens/profile.screen';
@@ -23,10 +22,6 @@ const router = createBrowserRouter([
   {
     path: '/buy',
     element: <BuyScreen />,
-  },
-  {
-    path: '/buy/payment',
-    element: <BuyPaymentScreen />,
   },
   {
     path: '/sell',
