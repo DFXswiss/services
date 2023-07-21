@@ -72,7 +72,7 @@ export function ProfileScreen(): JSX.Element {
   });
 
   return (
-    <Layout backTitle={translate('screens/profile', 'User details')}>
+    <Layout title={translate('screens/profile', 'User details')}>
       {/* MODAL */}
       <StyledModal
         isVisible={showsErrorAlert}

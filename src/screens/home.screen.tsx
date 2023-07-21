@@ -7,12 +7,13 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useIframe } from '../hooks/iframe.hook';
 
 export function HomeScreen(): JSX.Element {
+  const { translate } = useSettingsContext();
   const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
   const { isUsedByIframe } = useIframe();
 
   return (
-    <Layout>
+    <Layout title={isUsedByIframe ? translate('screens/home', 'DFX services') : undefined}>
       {isUserLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />

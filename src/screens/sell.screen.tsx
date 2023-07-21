@@ -33,7 +33,7 @@ import { DeepPartial, useForm, useWatch } from 'react-hook-form';
 import { AddBankAccount } from '../components/buy/add-bank-account';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
-import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
+import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useBalanceContext } from '../contexts/balance.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import useDebounce from '../hooks/debounce.hook';
@@ -175,11 +175,11 @@ export function SellScreen(): JSX.Element {
     // TODO: (Krysh fix broken form validation and onSubmit
   }
 
-  async function handleNext(): Promise<void> {
+  async function handleNext(paymentInfo: Sell): Promise<void> {
     await updateBankAccount();
     closeServices({
-      page: AppPage.SELL,
-      sell: { paymentInfo: paymentInfo, amount: Number(enteredAmount) },
+      type: CloseType.SELL,
+      sell: { paymentInfo, amount: Number(enteredAmount) },
     });
   }
 
@@ -192,7 +192,7 @@ export function SellScreen(): JSX.Element {
 
   // TODO: (Krysh) add handling for sell screen to replace to profile is user.kycDataIsComplete is false
   return (
-    <Layout backTitle={translate('general/services', 'Sell')}>
+    <Layout title={translate('general/services', 'Sell')}>
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack gap={8} full>
           {assets && (
@@ -270,7 +270,7 @@ export function SellScreen(): JSX.Element {
             <StyledButton
               width={StyledButtonWidth.FULL}
               label={translate('screens/sell', 'Complete transaction in your wallet')}
-              onClick={handleNext}
+              onClick={() => handleNext(paymentInfo)}
               caps={false}
             />
           </>

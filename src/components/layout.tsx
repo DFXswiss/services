@@ -1,16 +1,15 @@
 import { PropsWithChildren, useEffect } from 'react';
-import { AppPage } from '../contexts/app-handling.context';
 import { useUrlParamHelper } from '../hooks/url-param-helper.hook';
 import { GeneralLinks } from './general-links';
 import { Navigation } from './navigation';
 
 interface LayoutProps extends PropsWithChildren {
-  backTitle?: string;
+  title?: string;
+  backButton?: boolean;
   textStart?: boolean;
-  appPage?: AppPage;
 }
 
-export function Layout({ backTitle, textStart, appPage, children }: LayoutProps): JSX.Element {
+export function Layout({ title, backButton, textStart, children }: LayoutProps): JSX.Element {
   const { readParamsAndReload } = useUrlParamHelper();
 
   useEffect(() => {
@@ -19,7 +18,7 @@ export function Layout({ backTitle, textStart, appPage, children }: LayoutProps)
 
   return (
     <>
-      <Navigation backTitle={backTitle} appPage={appPage} />
+      <Navigation title={title} backButton={backButton} />
 
       <div
         className={`flex flex-grow flex-col items-center ${

@@ -21,7 +21,7 @@ export interface PaymentInformation {
   fee: string;
   minFee?: string;
   currency?: Fiat;
-  amount?: number;
+  amount: number;
   giroCode?: string;
 }
 

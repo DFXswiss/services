@@ -17,7 +17,7 @@ import { PaymentInformation, PaymentInformationContent } from '../../components/
 import { MailEdit } from '../../components/edit/mail.edit';
 import { KycHint } from '../../components/kyc-hint';
 import { Layout } from '../../components/layout';
-import { AppPage, useAppHandlingContext } from '../../contexts/app-handling.context';
+import { CloseType, useAppHandlingContext } from '../../contexts/app-handling.context';
 import { useSettingsContext } from '../../contexts/settings.context';
 import useDebounce from '../../hooks/debounce.hook';
 import { useKycHelper } from '../../hooks/kyc-helper.hook';
@@ -133,11 +133,11 @@ export function BuyPaymentScreen(): JSX.Element {
 
   return (
     <Layout
-      backTitle={showsCompletion ? translate('screens/buy', 'Done!') : translate('screens/buy', 'Buy')}
-      appPage={showsCompletion ? AppPage.BUY : undefined}
+      title={showsCompletion ? translate('screens/buy', 'Done!') : translate('screens/buy', 'Buy')}
+      backButton={!showsCompletion}
       textStart
     >
-      {showsCompletion ? (
+      {showsCompletion && paymentInfo ? (
         <StyledVerticalStack gap={4}>
           <div className="mx-auto">
             <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />
@@ -155,8 +155,8 @@ export function BuyPaymentScreen(): JSX.Element {
                 label={translate('general/actions', 'Close')}
                 onClick={() =>
                   closeServices({
-                    page: AppPage.BUY,
-                    buy: { paymentInfo: paymentInfo?.buy, amount: data.amount },
+                    type: CloseType.BUY,
+                    buy: { paymentInfo: paymentInfo.buy, amount: paymentInfo.amount },
                   })
                 }
                 color={StyledButtonColor.STURDY_WHITE}
@@ -168,7 +168,10 @@ export function BuyPaymentScreen(): JSX.Element {
             <MailEdit
               onSubmit={(email) =>
                 (!email || email.length === 0) &&
-                closeServices({ page: AppPage.BUY, buy: { paymentInfo: paymentInfo?.buy, amount: data.amount } })
+                closeServices({
+                  type: CloseType.BUY,
+                  buy: { paymentInfo: paymentInfo.buy, amount: paymentInfo.amount },
+                })
               }
               infoText={translate(
                 'screens/buy',

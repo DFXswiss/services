@@ -3,34 +3,51 @@ import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useSt
 import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
 
-export enum AppPage {
+export enum CloseType {
   BUY = 'buy',
   SELL = 'sell',
-}
-
-export enum IframeMessageType {
-  BUY = 'buy',
-  SELL = 'sell',
-  CLOSE = 'close',
+  CANCEL = 'cancel',
 }
 
 export interface IframeMessageData {
-  type: IframeMessageType;
+  type: CloseType;
   buy?: Buy;
   sell?: Sell;
 }
 
-export interface CloseServicesParams {
-  page?: AppPage;
+export interface ICloseServicesParams {
+  type: CloseType;
   buy?: {
-    paymentInfo?: Buy;
-    amount?: number;
+    paymentInfo: Buy;
+    amount: number;
   };
   sell?: {
-    paymentInfo?: Sell;
-    amount?: number;
+    paymentInfo: Sell;
+    amount: number;
   };
 }
+
+export interface CancelServicesParams extends ICloseServicesParams {
+  type: CloseType.CANCEL;
+}
+
+export interface BuyServicesParams extends ICloseServicesParams {
+  type: CloseType.BUY;
+  buy: {
+    paymentInfo: Buy;
+    amount: number;
+  };
+}
+
+export interface SellServicesParams extends ICloseServicesParams {
+  type: CloseType.SELL;
+  sell: {
+    paymentInfo: Sell;
+    amount: number;
+  };
+}
+
+export type CloseServicesParams = CancelServicesParams | BuyServicesParams | SellServicesParams;
 
 interface AppHandlingContextInterface {
   setRedirectUri: (redirectUri: string) => void;
@@ -56,45 +73,45 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
     if (isUsedByIframe) {
       sendMessage(createIframeMessageData(params));
     } else {
-      if (params.page === AppPage.BUY) {
-        closeBuyService(params);
-      } else if (params.page === AppPage.SELL) {
-        closeSellService(params);
-      }
+      const win: Window = window;
+      win.location = getRedirectUri(params);
     }
   }
 
-  function closeBuyService(params: CloseServicesParams) {
-    const win: Window = window;
-    win.location = `${redirectUri}${params.page}`;
-  }
+  function getRedirectUri(params: CloseServicesParams): string {
+    switch (params.type) {
+      case CloseType.BUY:
+        return `${redirectUri}${params.type}`;
 
-  function closeSellService(params: CloseServicesParams) {
-    const urlParams = new URLSearchParams({
-      routeId: '' + (params.sell?.paymentInfo?.routeId ?? 0),
-      amount: params.sell?.amount ? params.sell.amount.toString() : '0',
-    });
+      case CloseType.SELL:
+        const urlParams = new URLSearchParams({
+          routeId: '' + (params.sell?.paymentInfo?.routeId ?? 0),
+          amount: params.sell?.amount ? params.sell.amount.toString() : '0',
+        });
+        return `${redirectUri}${params.type}?${urlParams}`;
 
-    const win: Window = window;
-    win.location = `${redirectUri}${params.page}?${urlParams}`;
+      default:
+        return `${redirectUri}`;
+    }
   }
 
   function createIframeMessageData(params: CloseServicesParams): IframeMessageData {
-    if (params.buy?.paymentInfo) {
-      return {
-        type: IframeMessageType.BUY,
-        buy: params.buy.paymentInfo,
-      };
-    }
+    switch (params.type) {
+      case CloseType.BUY:
+        return {
+          type: CloseType.BUY,
+          buy: params.buy.paymentInfo,
+        };
 
-    if (params.sell?.paymentInfo) {
-      return {
-        type: IframeMessageType.SELL,
-        sell: params.sell.paymentInfo,
-      };
-    }
+      case CloseType.SELL:
+        return {
+          type: CloseType.SELL,
+          sell: params.sell.paymentInfo,
+        };
 
-    return { type: IframeMessageType.CLOSE };
+      default:
+        return { type: CloseType.CANCEL };
+    }
   }
 
   const context = useMemo(

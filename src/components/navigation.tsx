@@ -2,7 +2,6 @@ import { Language, useAuthContext } from '@dfx.swiss/react';
 import { Form, IconVariant, StyledDropdown } from '@dfx.swiss/react-components';
 import { PropsWithChildren, SetStateAction, useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { AppPage } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useIframe } from '../hooks/iframe.hook';
 import { ReactComponent as CloseIcon } from '../static/assets/close.svg';
@@ -16,8 +15,8 @@ interface FormData {
 }
 
 interface NavigationIframeProps extends PropsWithChildren {
-  backTitle?: string;
-  appPage?: AppPage;
+  title?: string;
+  backButton?: boolean;
 }
 
 interface IconContentProps {
@@ -30,7 +29,7 @@ interface NavigationMenuContentProps {
   setIsNavigationOpen: (value: SetStateAction<boolean>) => void;
 }
 
-export function Navigation({ backTitle, appPage }: NavigationIframeProps): JSX.Element {
+export function Navigation({ title, backButton }: NavigationIframeProps): JSX.Element {
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const { isUsedByIframe } = useIframe();
 
@@ -40,7 +39,7 @@ export function Navigation({ backTitle, appPage }: NavigationIframeProps): JSX.E
   return (
     <>
       <div className={`flex items-center justify-between h-12 px-4 py-5 ${bgColor}`}>
-        {isUsedByIframe ? <IframeFirstLineContent backTitle={backTitle} /> : <BrowserFirstLineContent />}
+        {isUsedByIframe ? <IframeBack title={title} backButton={backButton} /> : <DfxIcon />}
 
         <nav>
           <section className="flex">
@@ -53,31 +52,21 @@ export function Navigation({ backTitle, appPage }: NavigationIframeProps): JSX.E
         </nav>
       </div>
 
-      {!isUsedByIframe && <BrowserSecondLineContent backTitle={backTitle} appPage={appPage} />}
+      {!isUsedByIframe && <NavigationBack title={title} backButton={backButton} />}
     </>
   );
 }
 
-function IframeFirstLineContent({ backTitle }: NavigationIframeProps): JSX.Element {
-  const { translate } = useSettingsContext();
-
-  return (
-    <div className="w-full pl-8">
-      {<NavigationBack title={backTitle ?? translate('screens/home', 'DFX services')} />}
-    </div>
-  );
+function IframeBack({ title, backButton }: NavigationIframeProps): JSX.Element {
+  return <div className="w-full pl-8">{<NavigationBack title={title} backButton={backButton} />}</div>;
 }
 
-function BrowserFirstLineContent(): JSX.Element {
+function DfxIcon(): JSX.Element {
   return (
     <a href="/">
       <img height={23} width={73.6} src={logo} alt="logo" />
     </a>
   );
-}
-
-function BrowserSecondLineContent({ backTitle, appPage }: NavigationIframeProps): JSX.Element {
-  return <>{backTitle && <NavigationBack title={backTitle} appPage={appPage} />}</>;
 }
 
 function MenuIconContent({ svgColor, setIsNavigationOpen }: IconContentProps): JSX.Element {
