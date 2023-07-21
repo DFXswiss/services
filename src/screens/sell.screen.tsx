@@ -48,7 +48,7 @@ interface FormData {
 
 export function SellScreen(): JSX.Element {
   const { translate } = useSettingsContext();
-  const { openAppPage } = useAppHandlingContext();
+  const { closeServices } = useAppHandlingContext();
   const { bankAccounts, updateAccount } = useBankAccountContext();
   const { balances } = useBalanceContext();
   const { blockchain, availableBlockchains } = useSessionContext();
@@ -177,10 +177,10 @@ export function SellScreen(): JSX.Element {
 
   async function handleNext(): Promise<void> {
     await updateBankAccount();
-    openAppPage({
+    closeServices({
       page: AppPage.SELL,
-      urlParams: new URLSearchParams({ routeId: '' + (paymentInfo?.routeId ?? 0), amount: enteredAmount }),
       sellPaymentInfo: paymentInfo,
+      sellEnteredAmount: Number(enteredAmount),
     });
   }
 

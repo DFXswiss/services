@@ -28,7 +28,7 @@ interface FormData {
 }
 
 export function BuyPaymentScreen(): JSX.Element {
-  const { openAppPage } = useAppHandlingContext();
+  const { closeServices } = useAppHandlingContext();
   const { currencies, receiveFor } = useBuy();
   const { translate } = useSettingsContext();
   const { assets, getAsset } = useAssetContext();
@@ -153,7 +153,9 @@ export function BuyPaymentScreen(): JSX.Element {
               </p>
               <StyledButton
                 label={translate('general/actions', 'Close')}
-                onClick={() => openAppPage({ page: AppPage.BUY, buyPaymentInfo: paymentInfo?.buy })}
+                onClick={() =>
+                  closeServices({ page: AppPage.BUY, buyPaymentInfo: paymentInfo?.buy, buyEnteredAmount: data.amount })
+                }
                 color={StyledButtonColor.STURDY_WHITE}
                 width={StyledButtonWidth.FULL}
                 caps
@@ -162,7 +164,8 @@ export function BuyPaymentScreen(): JSX.Element {
           ) : (
             <MailEdit
               onSubmit={(email) =>
-                (!email || email.length === 0) && openAppPage({ page: AppPage.BUY, buyPaymentInfo: paymentInfo?.buy })
+                (!email || email.length === 0) &&
+                closeServices({ page: AppPage.BUY, buyPaymentInfo: paymentInfo?.buy, buyEnteredAmount: data.amount })
               }
               infoText={translate(
                 'screens/buy',

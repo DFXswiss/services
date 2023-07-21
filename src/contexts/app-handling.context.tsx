@@ -15,16 +15,17 @@ export interface IframeMessageData {
   sell?: Sell;
 }
 
-export interface OpenAppPageParams {
+export interface CloseServicesParams {
   page: AppPage;
-  urlParams?: URLSearchParams;
   buyPaymentInfo?: Buy;
+  buyEnteredAmount?: number;
   sellPaymentInfo?: Sell;
+  sellEnteredAmount?: number;
 }
 
 interface AppHandlingContextInterface {
   setRedirectUri: (redirectUri: string) => void;
-  openAppPage: (params: OpenAppPageParams) => void;
+  closeServices: (params: CloseServicesParams) => void;
 }
 
 const AppHandlingContext = createContext<AppHandlingContextInterface>(undefined as any);
@@ -42,18 +43,34 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
   }, []);
 
-  function openAppPage(params: OpenAppPageParams) {
+  function closeServices(params: CloseServicesParams) {
     if (isUsedByIframe) {
       sendMessage(createIframeMessageData(params));
     } else {
-      const win: Window = window;
-      win.location = params.urlParams
-        ? `${redirectUri}${params.page}?${params.urlParams}`
-        : `${redirectUri}${params.page}`;
+      if (params.page === AppPage.BUY) {
+        closeBuyService(params);
+      } else if (params.page === AppPage.SELL) {
+        closeSellService(params);
+      }
     }
   }
 
-  function createIframeMessageData(params: OpenAppPageParams): IframeMessageData {
+  function closeBuyService(params: CloseServicesParams) {
+    const win: Window = window;
+    win.location = `${redirectUri}${params.page}`;
+  }
+
+  function closeSellService(params: CloseServicesParams) {
+    const urlParams = new URLSearchParams({
+      routeId: '' + (params.sellPaymentInfo?.routeId ?? 0),
+      amount: params.sellEnteredAmount ? params.sellEnteredAmount.toString() : '0',
+    });
+
+    const win: Window = window;
+    win.location = `${redirectUri}${params.page}?${urlParams}`;
+  }
+
+  function createIframeMessageData(params: CloseServicesParams): IframeMessageData {
     const data: IframeMessageData = {
       type: IframeMessageType.CLOSE,
     };
@@ -75,7 +92,7 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
         setRedirectUri(redirectUri);
         storeRedirectUri.set(redirectUri);
       },
-      openAppPage,
+      closeServices,
     }),
     [redirectUri],
   );

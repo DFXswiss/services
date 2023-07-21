@@ -10,13 +10,13 @@ interface NavigationBackProps {
 }
 
 export function NavigationBack({ title, home, appPage }: NavigationBackProps): JSX.Element {
-  const { openAppPage } = useAppHandlingContext();
+  const { closeServices } = useAppHandlingContext();
   const navigate = useNavigate();
 
   const { isUsedByIframe, sendMessage } = useIframe();
 
   function onClick() {
-    appPage ? openAppPage({ page: appPage }) : home ? navigate('/') : navigate(-1);
+    appPage ? closeServices({ page: appPage }) : home ? navigate('/') : navigate(-1);
 
     if (isUsedByIframe) {
       sendMessage({ type: IframeMessageType.NAVIGATION });
