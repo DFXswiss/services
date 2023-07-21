@@ -19,16 +19,7 @@ export function useQuery(): QueryInterface {
   const navigate = useNavigate();
   const { search, pathname } = useLocation();
 
-  const blockedParams = [
-    'address',
-    'signature',
-    'walletId',
-    'session',
-    'blockchain',
-    'redirect-uri',
-    'balances',
-    'amount',
-  ];
+  const blockedParams = ['address', 'signature', 'walletId', 'session', 'blockchain', 'redirect-uri', 'balances'];
 
   const query = useMemo(() => new URLSearchParams(search), [search]);
 
