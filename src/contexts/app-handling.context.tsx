@@ -1,11 +1,16 @@
 import { Buy, Sell } from '@dfx.swiss/react';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { IframeMessageType, useIframe } from '../hooks/iframe.hook';
+import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
 
 export enum AppPage {
   BUY = 'buy',
   SELL = 'sell',
+}
+
+export enum IframeMessageType {
+  NAVIGATION = 'Navigation',
+  CLOSE = 'Close',
 }
 
 export interface IframeMessageData {

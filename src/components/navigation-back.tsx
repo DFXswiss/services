@@ -1,7 +1,7 @@
 import { DfxIcon, IconColor, IconSize, IconVariant } from '@dfx.swiss/react-components';
 import { useNavigate } from 'react-router-dom';
-import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
-import { IframeMessageType, useIframe } from '../hooks/iframe.hook';
+import { AppPage, IframeMessageType, useAppHandlingContext } from '../contexts/app-handling.context';
+import { useIframe } from '../hooks/iframe.hook';
 
 interface NavigationBackProps {
   title: string;

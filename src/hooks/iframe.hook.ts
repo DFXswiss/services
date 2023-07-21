@@ -1,8 +1,3 @@
-export enum IframeMessageType {
-  NAVIGATION = 'Navigation',
-  CLOSE = 'Close',
-}
-
 interface IframeInterface {
   isUsedByIframe: boolean;
   sendMessage: (messageData: any) => void;
