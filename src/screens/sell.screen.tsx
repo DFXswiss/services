@@ -179,8 +179,7 @@ export function SellScreen(): JSX.Element {
     await updateBankAccount();
     closeServices({
       page: AppPage.SELL,
-      sellPaymentInfo: paymentInfo,
-      sellEnteredAmount: Number(enteredAmount),
+      sell: { paymentInfo: paymentInfo, amount: Number(enteredAmount) },
     });
   }
 

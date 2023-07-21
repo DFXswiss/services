@@ -16,9 +16,6 @@ export function useIframe(): IframeInterface {
 
   function sendMessage(messageData: any) {
     const win: Window = window;
-
-    messageData.path = messageData.path ?? win.location.pathname;
-
     win.parent.postMessage(JSON.stringify(messageData), '*');
   }
 

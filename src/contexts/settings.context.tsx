@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from '../hooks/store.hook';
 
 interface SettingsInterface {
+  homePath: string;
   availableLanguages: Language[];
   language?: Language;
   changeLanguage: (language: Language) => void;
@@ -18,6 +19,8 @@ export function useSettingsContext(): SettingsInterface {
 }
 
 export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
+  const [homePath] = useState<string>(window.location.pathname);
+
   const { languages } = useLanguageContext();
   const { getDefaultLanguage } = useLanguage();
   const { user, changeLanguage: changeUserLanguage } = useUserContext();
@@ -48,6 +51,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
 
   const context = useMemo(
     () => ({
+      homePath,
       availableLanguages,
       language,
       changeLanguage,

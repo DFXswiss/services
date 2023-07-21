@@ -1,25 +1,24 @@
 import { DfxIcon, IconColor, IconSize, IconVariant } from '@dfx.swiss/react-components';
-import { useNavigate } from 'react-router-dom';
-import { AppPage, IframeMessageType, useAppHandlingContext } from '../contexts/app-handling.context';
-import { useIframe } from '../hooks/iframe.hook';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
+import { useSettingsContext } from '../contexts/settings.context';
 
 interface NavigationBackProps {
   title: string;
-  home?: boolean;
   appPage?: AppPage;
 }
 
-export function NavigationBack({ title, home, appPage }: NavigationBackProps): JSX.Element {
+export function NavigationBack({ title, appPage }: NavigationBackProps): JSX.Element {
+  const { homePath } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const { isUsedByIframe, sendMessage } = useIframe();
-
   function onClick() {
-    appPage ? closeServices({ page: appPage }) : home ? navigate('/') : navigate(-1);
-
-    if (isUsedByIframe) {
-      sendMessage({ type: IframeMessageType.NAVIGATION });
+    if (homePath === location.pathname) {
+      closeServices({ page: appPage });
+    } else {
+      navigate(-1);
     }
   }
 

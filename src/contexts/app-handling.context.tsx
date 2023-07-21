@@ -9,23 +9,27 @@ export enum AppPage {
 }
 
 export enum IframeMessageType {
-  NAVIGATION = 'Navigation',
-  CLOSE = 'Close',
+  BUY = 'buy',
+  SELL = 'sell',
+  CLOSE = 'close',
 }
 
 export interface IframeMessageData {
   type: IframeMessageType;
-  path?: string;
   buy?: Buy;
   sell?: Sell;
 }
 
 export interface CloseServicesParams {
-  page: AppPage;
-  buyPaymentInfo?: Buy;
-  buyEnteredAmount?: number;
-  sellPaymentInfo?: Sell;
-  sellEnteredAmount?: number;
+  page?: AppPage;
+  buy?: {
+    paymentInfo?: Buy;
+    amount?: number;
+  };
+  sell?: {
+    paymentInfo?: Sell;
+    amount?: number;
+  };
 }
 
 interface AppHandlingContextInterface {
@@ -67,8 +71,8 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
 
   function closeSellService(params: CloseServicesParams) {
     const urlParams = new URLSearchParams({
-      routeId: '' + (params.sellPaymentInfo?.routeId ?? 0),
-      amount: params.sellEnteredAmount ? params.sellEnteredAmount.toString() : '0',
+      routeId: '' + (params.sell?.paymentInfo?.routeId ?? 0),
+      amount: params.sell?.amount ? params.sell.amount.toString() : '0',
     });
 
     const win: Window = window;
@@ -76,19 +80,21 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
   }
 
   function createIframeMessageData(params: CloseServicesParams): IframeMessageData {
-    const data: IframeMessageData = {
-      type: IframeMessageType.CLOSE,
-    };
-
-    if (params.buyPaymentInfo) {
-      data.buy = params.buyPaymentInfo;
+    if (params.buy?.paymentInfo) {
+      return {
+        type: IframeMessageType.BUY,
+        buy: params.buy.paymentInfo,
+      };
     }
 
-    if (params.sellPaymentInfo) {
-      data.sell = params.sellPaymentInfo;
+    if (params.sell?.paymentInfo) {
+      return {
+        type: IframeMessageType.SELL,
+        sell: params.sell.paymentInfo,
+      };
     }
 
-    return data;
+    return { type: IframeMessageType.CLOSE };
   }
 
   const context = useMemo(

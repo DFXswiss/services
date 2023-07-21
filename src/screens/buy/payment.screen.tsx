@@ -154,7 +154,10 @@ export function BuyPaymentScreen(): JSX.Element {
               <StyledButton
                 label={translate('general/actions', 'Close')}
                 onClick={() =>
-                  closeServices({ page: AppPage.BUY, buyPaymentInfo: paymentInfo?.buy, buyEnteredAmount: data.amount })
+                  closeServices({
+                    page: AppPage.BUY,
+                    buy: { paymentInfo: paymentInfo?.buy, amount: data.amount },
+                  })
                 }
                 color={StyledButtonColor.STURDY_WHITE}
                 width={StyledButtonWidth.FULL}
@@ -165,7 +168,7 @@ export function BuyPaymentScreen(): JSX.Element {
             <MailEdit
               onSubmit={(email) =>
                 (!email || email.length === 0) &&
-                closeServices({ page: AppPage.BUY, buyPaymentInfo: paymentInfo?.buy, buyEnteredAmount: data.amount })
+                closeServices({ page: AppPage.BUY, buy: { paymentInfo: paymentInfo?.buy, amount: data.amount } })
               }
               infoText={translate(
                 'screens/buy',
