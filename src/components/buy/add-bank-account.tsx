@@ -48,7 +48,7 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
         <StyledInput
           name="label"
           label={translate('screens/sell', 'Optional - Account Designation')}
-          placeholder={translate('screens/sell', 'eg. Deutsche Bank')}
+          placeholder={translate('screens/sell', 'e.g. Deutsche Bank')}
         />
         <StyledSpacer spacing={-1} />
         <StyledButton

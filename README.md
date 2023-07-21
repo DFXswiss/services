@@ -17,7 +17,7 @@ The services can be opened either with address and signature (not recommended) o
 - Address/signature parameters
   - `address`: blockchain address of the user (required)
   - `signature`: signature of the DFX API sign message (required)
-  - `walletId`: wallet/client identifier, used for sign up, see [API documentation](https://github.com/DFXswiss/api#initial-wallet-setup-optional) (optional)
+  - `wallet`: wallet/client identifier (name or ID), used for sign up, see [API documentation](https://github.com/DFXswiss/api#initial-wallet-setup-optional) (optional)
 - Token parameters
   - `session`: access token for the DFX API (required)
 
@@ -32,7 +32,7 @@ There are multiple entry points (URL paths) for the services, depending on what 
 
 #### Query Parameters
 
-There are parameters to preselect all or a part of the required information. To select an asset, either the name of the asset (e.g. `BTC`, caution when using multi-chain accounts), the unique name (e.g. `Ethereum/ETH`) or the DFX asset ID (get from [asset endpoint](https://api.dfx.swiss/swagger#/Asset/AssetController_getAllAsset)) can be used. To select a currency, either the name (e.g. `USD`) or the DFX fiat ID (get from [fiat endpoint](https://api.dfx.swiss/swagger#/Fiat/FiatController_getAllFiat)) can be used.
+There are parameters to preselect all or a part of the required information. To select an asset, either the name of the asset (e.g. `BTC`, caution when using multi-chain accounts - not recommended), the unique name (e.g. `Ethereum/ETH`) or the DFX asset ID (get from [asset endpoint](https://api.dfx.swiss/swagger#/Asset/AssetController_getAllAsset)) can be used. To select a currency, either the name (e.g. `USD`) or the DFX fiat ID (get from [fiat endpoint](https://api.dfx.swiss/swagger#/Fiat/FiatController_getAllFiat)) can be used.
 
 - Redirect URI (`redirect-uri`): URI to redirect the user to after cancel or completion (see [closing](#closing))
 - Blockchain (`blockchain`): filter for the asset selection (useful if the user has a multi-chain address)
@@ -70,10 +70,10 @@ On cancel or completion, a message will be sent on the window object of the brow
 
 ```ts
 enum CloseType {
-  CANCEL = 'Cancel',
-  BUY = 'Buy',
-  SELL = 'Sell',
-  CONVERT = 'Convert',
+  CANCEL = 'cancel',
+  BUY = 'buy',
+  SELL = 'sell',
+  CONVERT = 'convert',
 }
 
 interface CloseMessage {
