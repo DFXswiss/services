@@ -50,11 +50,11 @@ export function SellScreen(): JSX.Element {
   const { bankAccounts, updateAccount } = useBankAccountContext();
   const { balances } = useBalanceContext();
   const { blockchain, availableBlockchains } = useSessionContext();
-  const { assets } = useAssetContext();
+  const { getAssets } = useAssetContext();
   const { isAllowedToSell } = useKycHelper();
   const { toDescription, toSymbol } = useFiat();
   const { currencies, receiveFor } = useSell();
-  const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
+  const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
   const [kycRequired, setKycRequired] = useState(false);
@@ -86,16 +86,13 @@ export function SellScreen(): JSX.Element {
   }, [enteredAmount]);
 
   useEffect(() => {
-    if (assets) {
-      const blockchainAssets = availableBlockchains
-        ?.filter((b) => (blockchain ? blockchain === b : true))
-        .map((blockchain) => assets.get(blockchain))
-        .reduce((prev, curr) => prev?.concat(curr ?? []), [])
-        ?.filter((asset) => asset.sellable);
-      blockchainAssets?.length === 1 && setValue('asset', blockchainAssets[0], { shouldValidate: true });
-      setAvailableAssets(blockchainAssets ?? []);
-    }
-  }, [assets]);
+    const blockchains = blockchain ? [blockchain] : availableBlockchains ?? [];
+    const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
+    setAvailableAssets(blockchainAssets);
+
+    const asset = blockchainAssets.length === 1 && blockchainAssets[0];
+    if (asset) setValue('asset', asset, { shouldValidate: true });
+  }, [getAssets]);
 
   useEffect(() => {
     if (!dataValid) {
@@ -193,7 +190,7 @@ export function SellScreen(): JSX.Element {
     <Layout title={translate('general/services', 'Sell')}>
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack gap={8} full>
-          {assets && (
+          {availableAssets && (
             <StyledDropdown<Asset>
               name="asset"
               label={translate('screens/sell', 'Your Wallet')}

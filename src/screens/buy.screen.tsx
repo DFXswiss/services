@@ -48,13 +48,13 @@ export function BuyScreen(): JSX.Element {
   const { blockchain, availableBlockchains } = useSessionContext();
   const { currencies, receiveFor } = useBuy();
   const { toSymbol } = useFiat();
-  const { assets } = useAssetContext();
+  const { getAssets } = useAssetContext();
   const { assetId, currencyId, amount: paramAmount } = useQuery();
   const { toDescription, getDefaultCurrency } = useFiat();
   const { isAllowedToBuy } = useKycHelper();
   const { user } = useUserContext();
 
-  const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
+  const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<PaymentInformation>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [showsCompletion, setShowsCompletion] = useState(false);
@@ -62,13 +62,14 @@ export function BuyScreen(): JSX.Element {
 
   // default params
   useEffect(() => {
-    const blockchainAssets = getAvailableAssets();
+    const blockchains = blockchain ? [blockchain] : availableBlockchains ?? [];
+    const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false });
     setAvailableAssets(blockchainAssets);
 
     const asset =
-      blockchainAssets.find((a) => a.id === Number(assetId)) ?? (blockchainAssets?.length === 1 && blockchainAssets[0]);
+      blockchainAssets.find((a) => a.id === Number(assetId)) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
     if (asset) setValue('asset', asset, { shouldValidate: true });
-  }, [assetId, assets]);
+  }, [assetId, getAssets]);
 
   useEffect(() => {
     const currency =
@@ -77,16 +78,6 @@ export function BuyScreen(): JSX.Element {
   }, [currencyId, currencies]);
 
   const defaultAmount = paramAmount ? +paramAmount : undefined;
-
-  function getAvailableAssets(): Asset[] {
-    return (
-      availableBlockchains
-        ?.filter((b) => (blockchain ? blockchain === b : true))
-        .map((blockchain) => assets.get(blockchain))
-        .reduce((prev, curr) => prev?.concat(curr ?? []), [])
-        ?.filter((asset) => asset.buyable) ?? []
-    );
-  }
 
   // data validation
   const {
@@ -182,7 +173,7 @@ export function BuyScreen(): JSX.Element {
       ) : (
         <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
           <StyledVerticalStack gap={8} full>
-            {currencies && assets && (
+            {currencies && availableAssets && (
               <>
                 <StyledDropdown<Asset>
                   name="asset"
