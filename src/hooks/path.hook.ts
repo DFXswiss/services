@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { NavigateFunction, NavigateOptions, To, useLocation, useNavigate } from 'react-router-dom';
 
-interface QueryInterface {
+interface PathInterface {
   address?: string;
   signature?: string;
   wallet?: string;
@@ -13,25 +13,30 @@ interface QueryInterface {
   currencyId?: string;
   amount?: string;
   reloadWithoutBlockedParams: () => void;
+  navigate: NavigateFunction;
 }
 
-export function useQuery(): QueryInterface {
-  const navigate = useNavigate();
+export function usePath(): PathInterface {
+  const navigateTo = useNavigate();
   const { search, pathname } = useLocation();
 
-  const blockedParams = ['address', 'signature', 'wallet', 'session', 'blockchain', 'redirect-uri', 'balances'];
+  const blockedParams = ['address', 'signature', 'wallet', 'session', 'redirect-uri', 'balances'];
 
   const query = useMemo(() => new URLSearchParams(search), [search]);
 
   function getParameter(key: string): string | undefined {
-    const value = query.get(key);
-    return value !== null ? value : undefined;
+    return query.get(key) ?? undefined;
   }
 
   function reloadWithoutBlockedParams() {
     if (blockedParams.map((param) => query.has(param)).every((b) => !b)) return;
     blockedParams.forEach((param) => query.delete(param));
-    navigate(`${pathname}?${query.toString()}`);
+
+    navigate(pathname);
+  }
+
+  function navigate(to: To | number, options?: NavigateOptions) {
+    typeof to === 'number' ? navigateTo(to) : navigateTo(`${to}?${query.toString()}`, options);
   }
 
   return {
@@ -46,5 +51,6 @@ export function useQuery(): QueryInterface {
     currencyId: getParameter('currencyId'),
     amount: getParameter('amount'),
     reloadWithoutBlockedParams,
+    navigate,
   };
 }

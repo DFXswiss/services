@@ -1,7 +1,8 @@
 import { DfxIcon, IconColor, IconSize, IconVariant } from '@dfx.swiss/react-components';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
+import { usePath } from '../hooks/path.hook';
 
 interface NavigationBackProps {
   title?: string;
@@ -12,7 +13,7 @@ export function NavigationBack({ title, backButton = true }: NavigationBackProps
   const { homePath } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
   const location = useLocation();
-  const navigate = useNavigate();
+  const { navigate } = usePath();
 
   function onClick() {
     if (homePath === location.pathname) {

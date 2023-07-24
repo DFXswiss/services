@@ -2,6 +2,7 @@ import {
   ApiError,
   Asset,
   BankAccount,
+  Blockchain,
   Fiat,
   Sell,
   Utils,
@@ -36,6 +37,7 @@ import { useBalanceContext } from '../contexts/balance.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
+import { usePath } from '../hooks/path.hook';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -49,8 +51,9 @@ export function SellScreen(): JSX.Element {
   const { closeServices } = useAppHandlingContext();
   const { bankAccounts, updateAccount } = useBankAccountContext();
   const { balances } = useBalanceContext();
-  const { blockchain, availableBlockchains } = useSessionContext();
+  const { availableBlockchains } = useSessionContext();
   const { getAssets } = useAssetContext();
+  const { blockchain } = usePath();
   const { isAllowedToSell } = useKycHelper();
   const { toDescription, toSymbol } = useFiat();
   const { currencies, receiveFor } = useSell();
@@ -86,7 +89,7 @@ export function SellScreen(): JSX.Element {
   }, [enteredAmount]);
 
   useEffect(() => {
-    const blockchains = blockchain ? [blockchain] : availableBlockchains ?? [];
+    const blockchains = blockchain ? [blockchain as Blockchain] : availableBlockchains ?? [];
     const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
     setAvailableAssets(blockchainAssets);
 

@@ -1,5 +1,6 @@
 import {
   Asset,
+  Blockchain,
   Buy,
   Fiat,
   Utils,
@@ -35,7 +36,7 @@ import { CloseType, useAppHandlingContext } from '../contexts/app-handling.conte
 import { useSettingsContext } from '../contexts/settings.context';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
-import { useQuery } from '../hooks/query.hook';
+import { usePath } from '../hooks/path.hook';
 
 interface FormData {
   currency: Fiat;
@@ -45,11 +46,11 @@ interface FormData {
 
 export function BuyScreen(): JSX.Element {
   const { translate } = useSettingsContext();
-  const { blockchain, availableBlockchains } = useSessionContext();
+  const { availableBlockchains } = useSessionContext();
   const { currencies, receiveFor } = useBuy();
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
-  const { assetId, currencyId, amount: paramAmount } = useQuery();
+  const { assetId, currencyId, amount: paramAmount, blockchain } = usePath();
   const { toDescription, getDefaultCurrency } = useFiat();
   const { isAllowedToBuy } = useKycHelper();
   const { user } = useUserContext();
@@ -62,7 +63,7 @@ export function BuyScreen(): JSX.Element {
 
   // default params
   useEffect(() => {
-    const blockchains = blockchain ? [blockchain] : availableBlockchains ?? [];
+    const blockchains = blockchain ? [blockchain as Blockchain] : availableBlockchains ?? [];
     const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false });
     setAvailableAssets(blockchainAssets);
 

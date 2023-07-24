@@ -2,7 +2,7 @@ import { Utils, useApiSession, useSessionContext } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useBalanceContext } from '../contexts/balance.context';
-import { useQuery } from './query.hook';
+import { usePath } from './path.hook';
 
 interface UrlParamHelperInterface {
   readParamsAndReload: () => Promise<void>;
@@ -13,7 +13,7 @@ export function useUrlParamHelper(): UrlParamHelperInterface {
   const { login, signUp, logout } = useSessionContext();
   const { setRedirectUri } = useAppHandlingContext();
   const { readBalances } = useBalanceContext();
-  const { address, signature, wallet, session, redirectUri, balances, reloadWithoutBlockedParams } = useQuery();
+  const { address, signature, wallet, session, redirectUri, balances, reloadWithoutBlockedParams } = usePath();
 
   async function readParamsAndReload() {
     // session
