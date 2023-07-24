@@ -17,15 +17,15 @@ import {
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
+import { usePath } from '../hooks/path.hook';
 
 export function ProfileScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { countries, reloadUser } = useUserContext();
   const { setKycData } = useKyc();
-  const navigate = useNavigate();
+  const { navigate } = usePath();
   const {
     control,
     handleSubmit,
