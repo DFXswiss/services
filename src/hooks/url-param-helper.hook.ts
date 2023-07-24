@@ -13,12 +13,12 @@ export function useUrlParamHelper(): UrlParamHelperInterface {
   const { login, signUp, logout } = useSessionContext();
   const { setRedirectUri } = useAppHandlingContext();
   const { readBalances } = useBalanceContext();
-  const { address, signature, walletId, session, redirectUri, balances, reloadWithoutBlockedParams } = useQuery();
+  const { address, signature, wallet, session, redirectUri, balances, reloadWithoutBlockedParams } = useQuery();
 
   async function readParamsAndReload() {
     // session
     if (address && signature) {
-      const session = await createSession(address, signature, walletId ? +walletId : undefined);
+      const session = await createSession(address, signature, wallet);
 
       !session && logout();
     } else if (session && Utils.isJwt(session)) {
@@ -36,9 +36,9 @@ export function useUrlParamHelper(): UrlParamHelperInterface {
     reloadWithoutBlockedParams();
   }
 
-  async function createSession(address: string, signature: string, walletId?: number): Promise<string | undefined> {
+  async function createSession(address: string, signature: string, wallet?: string): Promise<string | undefined> {
     try {
-      return (await login(address, signature)) ?? (await signUp(address, signature, walletId));
+      return (await login(address, signature)) ?? (await signUp(address, signature, wallet));
     } catch {}
   }
 
