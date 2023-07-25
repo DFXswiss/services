@@ -7,11 +7,14 @@ import {
   Sell,
   Utils,
   Validations,
+  useAsset,
   useAssetContext,
+  useBankAccount,
   useBankAccountContext,
   useFiat,
   useSell,
   useSessionContext,
+  useUserContext,
 } from '@dfx.swiss/react';
 import {
   AssetIconVariant,
@@ -49,31 +52,68 @@ interface FormData {
 export function SellScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
-  const { bankAccounts, updateAccount } = useBankAccountContext();
+  const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
+  const { getAccount } = useBankAccount();
   const { balances } = useBalanceContext();
   const { availableBlockchains } = useSessionContext();
   const { getAssets } = useAssetContext();
-  const { blockchain } = usePath();
+  const { getAsset } = useAsset();
+  const { assetIn, assetOut, amountIn, bankAccount, blockchain } = usePath();
   const { isAllowedToSell } = useKycHelper();
-  const { toDescription, toSymbol } = useFiat();
+  const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
+  const { countries } = useUserContext();
+
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
   const [kycRequired, setKycRequired] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+
+  // default params
+  useEffect(() => {
+    const blockchains = blockchain ? [blockchain as Blockchain] : availableBlockchains ?? [];
+    const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
+    setAvailableAssets(blockchainAssets);
+
+    const asset = getAsset(blockchainAssets, assetIn) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
+    if (asset) setValue('asset', asset, { shouldValidate: true });
+  }, [getAssets]);
+
+  useEffect(() => {
+    const currency = getCurrency(currencies, assetOut) ?? getDefaultCurrency(currencies);
+    if (currency) setValue('currency', currency, { shouldValidate: true });
+  }, [assetIn, getCurrency, currencies]);
+
+  useEffect(() => {
+    if (bankAccount && bankAccounts?.length) {
+      const account = getAccount(bankAccounts, bankAccount);
+      if (account) {
+        setValue('bankAccount', account, { shouldValidate: true });
+      } else if (!isCreatingAccount && Validations.Iban(countries).validate(bankAccount)) {
+        setIsCreatingAccount(true);
+        createAccount({ iban: bankAccount })
+          .then((b) => setValue('bankAccount', b, { shouldValidate: true }))
+          .finally(() => setIsCreatingAccount(false));
+      }
+    }
+  }, [bankAccount, getAccount, bankAccounts, countries]);
+
+  // data validation
   const {
     control,
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<FormData>({ mode: 'onTouched' });
+  } = useForm<FormData>({ defaultValues: { amount: amountIn }, mode: 'onTouched' });
+
   const data = useWatch({ control });
-  const validatedData = validateData(useDebounce(data, 500));
   const selectedBankAccount = useWatch({ control, name: 'bankAccount' });
   const selectedAsset = useWatch({ control, name: 'asset' });
   const enteredAmount = useWatch({ control, name: 'amount' });
 
+  const validatedData = validateData(useDebounce(data, 500));
   const dataValid = validatedData != null;
 
   useEffect(() => {
@@ -89,30 +129,27 @@ export function SellScreen(): JSX.Element {
   }, [enteredAmount]);
 
   useEffect(() => {
-    const blockchains = blockchain ? [blockchain as Blockchain] : availableBlockchains ?? [];
-    const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
-    setAvailableAssets(blockchainAssets);
-
-    const asset = blockchainAssets.length === 1 && blockchainAssets[0];
-    if (asset) setValue('asset', asset, { shouldValidate: true });
-  }, [getAssets]);
-
-  useEffect(() => {
     if (!dataValid) {
       setPaymentInfo(undefined);
       return;
     }
 
     const amount = Number(validatedData.amount);
+    const { asset, currency, bankAccount } = validatedData;
+
+    if (!checkForAmountAvailable(amount, asset)) {
+      setPaymentInfo(undefined);
+      return;
+    }
+
     setIsLoading(true);
     receiveFor({
-      iban: validatedData.bankAccount.iban,
-      currency: validatedData.currency,
+      iban: bankAccount.iban,
+      currency: currency,
       amount,
-      asset: validatedData.asset,
+      asset: asset,
     })
-      .then((value) => checkForMinDeposit(value, amount, validatedData.asset.name))
-      .then((value) => checkForAmountAvailable(amount, validatedData.asset.name, value))
+      .then((value) => checkForMinDeposit(value, amount, asset.name))
       .then((value) => {
         setKycRequired(dataValid && !isAllowedToSell(Number(value?.estimatedAmount)));
         return value;
@@ -127,6 +164,22 @@ export function SellScreen(): JSX.Element {
         setIsLoading(false);
       });
   }, [validatedData]);
+
+  function checkForAmountAvailable(amount: number, asset: Asset): boolean {
+    const balance = findBalance(asset) ?? '0';
+    if (amount > Number(balance)) {
+      setCustomAmountError(
+        translate('screens/sell', 'Entered amount is higher than available balance of {{amount}} {{asset}}', {
+          amount: balance,
+          asset: asset.name,
+        }),
+      );
+      return false;
+    } else {
+      setCustomAmountError(undefined);
+      return true;
+    }
+  }
 
   function checkForMinDeposit(sell: Sell, amount: number, currency: string): Sell | undefined {
     if (sell.minVolume > amount) {
@@ -143,26 +196,19 @@ export function SellScreen(): JSX.Element {
     }
   }
 
-  function checkForAmountAvailable(amount: number, asset: string, sell?: Sell): Sell | undefined {
-    if (!sell) return sell;
-    const balance = balances?.find((balance) => balance.token === asset);
-    if (amount > Number(balance?.amount ?? 0)) {
-      setCustomAmountError(
-        translate('screens/sell', 'Entered amount is higher than available balance of {{amount}} {{asset}}', {
-          amount: balance?.amount ?? 0,
-          asset,
-        }),
-      );
-    } else {
-      setCustomAmountError(undefined);
-      return sell;
-    }
-  }
-
   function validateData(data?: DeepPartial<FormData>): FormData | undefined {
     if (data && Number(data.amount) > 0 && data.asset != null && data.bankAccount != null && data.currency != null) {
       return data as FormData;
     }
+  }
+
+  function findBalance(asset: Asset): string | undefined {
+    const balance =
+      balances?.find((b) => +b.token === asset.id) ??
+      balances?.find((b) => b.token.toLowerCase() === asset.uniqueName.toLowerCase()) ??
+      balances?.find((b) => b.token.toLowerCase() === asset.name.toLowerCase());
+
+    return balance?.amount;
   }
 
   async function updateBankAccount(): Promise<BankAccount> {
@@ -201,12 +247,12 @@ export function SellScreen(): JSX.Element {
               labelIcon={IconVariant.WALLET}
               items={availableAssets}
               labelFunc={(item) => item.name}
-              balanceFunc={(item) => balances?.find((balance) => balance.token === item.name)?.amount ?? ''}
+              balanceFunc={(item) => findBalance(item) ?? ''}
               assetIconFunc={(item) => item.name as AssetIconVariant}
               descriptionFunc={(item) => item.blockchain}
             />
           )}
-          {bankAccounts && (
+          {bankAccounts && !isCreatingAccount && (
             <StyledModalDropdown<BankAccount>
               name="bankAccount"
               labelFunc={(item) => Utils.formatIban(item.iban) ?? ''}

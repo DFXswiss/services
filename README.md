@@ -32,15 +32,22 @@ There are multiple entry points (URL paths) for the services, depending on what 
 
 #### Query Parameters
 
-There are parameters to preselect all or a part of the required information. To select an asset, either the name of the asset (e.g. `BTC`, caution when using multi-chain accounts - not recommended), the unique name (e.g. `Ethereum/ETH`) or the DFX asset ID (get from [asset endpoint](https://api.dfx.swiss/swagger#/Asset/AssetController_getAllAsset)) can be used. To select a currency, either the name (e.g. `USD`) or the DFX fiat ID (get from [fiat endpoint](https://api.dfx.swiss/swagger#/Fiat/FiatController_getAllFiat)) can be used.
+There are parameters to preselect all or a part of the required information.
 
 - Redirect URI (`redirect-uri`): URI to redirect the user to after cancel or completion (see [closing](#closing))
 - Blockchain (`blockchain`): filter for the asset selection (useful if the user has a multi-chain address)
 - Balances (`balances`): wallet balances of the user (required for sell and convert), usage example: `balances=0.35@113,12.3@111`
 - Input amount (`amount-in`): the amount to sell or convert (in input asset)
-- Output amount (`amount-out`): the amount to receive (in output asset)
+- Output amount (`amount-out`): the amount to receive (in output asset) (_TBD_)
 - Input asset: (`asset-in`): the asset to sell or convert (crypto asset or currency)
 - Output asset (`asset-out`): the asset to receive (crypto asset or currency)
+- Bank account (`bank-account`): the bank account to send the money to (for sell)
+
+Hints:
+
+- To select an asset, either the name of the asset (e.g. `BTC`, caution when using multi-chain accounts - not recommended), the unique name (e.g. `Ethereum/ETH`) or the DFX asset ID (get from [asset endpoint](https://api.dfx.swiss/swagger#/Asset/AssetController_getAllAsset)) can be used.
+- To select a currency, either the name (e.g. `USD`) or the DFX fiat ID (get from [fiat endpoint](https://api.dfx.swiss/swagger#/Fiat/FiatController_getAllFiat)) can be used.
+- To select a bank account, either an IBAN, the account id or the account label (get from [bank accounts endpoint](https://api.dfx.swiss/swagger#/BankAccount/BankAccountController_getAllUserBankAccount)) can be used.
 
 ### Closing
 
