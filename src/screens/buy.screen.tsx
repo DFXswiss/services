@@ -28,7 +28,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
-import { DeepPartial, useForm, useWatch } from 'react-hook-form';
+import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformation, PaymentInformationContent } from '../components/buy/payment-information';
 import { MailEdit } from '../components/edit/mail.edit';
 import { KycHint } from '../components/kyc-hint';
@@ -65,22 +65,7 @@ export function BuyScreen(): JSX.Element {
   const [showsCompletion, setShowsCompletion] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // default params
-  useEffect(() => {
-    const blockchains = blockchain ? [blockchain as Blockchain] : availableBlockchains ?? [];
-    const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false });
-    setAvailableAssets(blockchainAssets);
-
-    const asset = getAsset(blockchainAssets, assetOut) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
-    if (asset) setValue('asset', asset, { shouldValidate: true });
-  }, [assetOut, getAsset, getAssets]);
-
-  useEffect(() => {
-    const currency = getCurrency(currencies, assetIn) ?? getDefaultCurrency(currencies);
-    if (currency) setValue('currency', currency, { shouldValidate: true });
-  }, [assetIn, getCurrency, currencies]);
-
-  // data validation
+  // form
   const {
     control,
     handleSubmit,
@@ -91,6 +76,26 @@ export function BuyScreen(): JSX.Element {
   const data = useWatch({ control });
   const selectedCurrency = useWatch({ control, name: 'currency' });
 
+  // default params
+  function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
+    setValue(field, value, { shouldValidate: true });
+  }
+
+  useEffect(() => {
+    const blockchains = blockchain ? [blockchain as Blockchain] : availableBlockchains ?? [];
+    const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false });
+    setAvailableAssets(blockchainAssets);
+
+    const asset = getAsset(blockchainAssets, assetOut) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
+    if (asset) setVal('asset', asset);
+  }, [assetOut, getAsset, getAssets]);
+
+  useEffect(() => {
+    const currency = getCurrency(currencies, assetIn) ?? getDefaultCurrency(currencies);
+    if (currency) setVal('currency', currency);
+  }, [assetIn, getCurrency, currencies]);
+
+  // data validation
   const validatedData = validateData(useDebounce(data, 500));
   const dataValid = validatedData != null;
   const kycRequired = dataValid && !isLoading && !isAllowedToBuy(Number(validatedData?.amount));
