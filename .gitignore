@@ -14,6 +14,7 @@
 
 # production
 /build
+/widget
 
 # misc
 .DS_Store

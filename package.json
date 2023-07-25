@@ -5,6 +5,7 @@
   "dependencies": {
     "@dfx.swiss/react": "^1.1.2-beta.10",
     "@dfx.swiss/react-components": "^1.1.2-beta.10",
+    "@r2wc/react-to-web-component": "^2.0.2",
     "copy-to-clipboard": "^3.3.3",
     "env-cmd": "^10.1.0",
     "i18next": "^22.4.13",
@@ -23,6 +24,7 @@
     "start": "env-cmd -f .env.loc react-scripts start",
     "build": "env-cmd -f .env.prd react-scripts build",
     "build:dev": "env-cmd -f .env.dev react-scripts build",
+    "build:widget": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.widget react-scripts build && mv src/index.bak.tsx src/index.tsx",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --no-fix",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "react-scripts test --watchAll=false --passWithNoTests",
