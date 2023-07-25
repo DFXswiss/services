@@ -31,7 +31,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
-import { DeepPartial, useForm, useWatch } from 'react-hook-form';
+import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { AddBankAccount } from '../components/buy/add-bank-account';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
@@ -49,6 +49,8 @@ interface FormData {
   asset: Asset;
   amount: string;
 }
+
+export type UseFormSetValue = (name: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) => void;
 
 export function SellScreen(): JSX.Element {
   useSessionGuard();
@@ -73,36 +75,7 @@ export function SellScreen(): JSX.Element {
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
-  // default params
-  useEffect(() => {
-    const blockchains = blockchain ? [blockchain as Blockchain] : availableBlockchains ?? [];
-    const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
-    setAvailableAssets(blockchainAssets);
-
-    const asset = getAsset(blockchainAssets, assetIn) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
-    if (asset) setValue('asset', asset, { shouldValidate: true });
-  }, [getAssets]);
-
-  useEffect(() => {
-    const currency = getCurrency(currencies, assetOut) ?? getDefaultCurrency(currencies);
-    if (currency) setValue('currency', currency, { shouldValidate: true });
-  }, [assetIn, getCurrency, currencies]);
-
-  useEffect(() => {
-    if (bankAccount && bankAccounts?.length) {
-      const account = getAccount(bankAccounts, bankAccount);
-      if (account) {
-        setValue('bankAccount', account, { shouldValidate: true });
-      } else if (!isCreatingAccount && Validations.Iban(countries).validate(bankAccount)) {
-        setIsCreatingAccount(true);
-        createAccount({ iban: bankAccount })
-          .then((b) => setValue('bankAccount', b, { shouldValidate: true }))
-          .finally(() => setIsCreatingAccount(false));
-      }
-    }
-  }, [bankAccount, getAccount, bankAccounts, countries]);
-
-  // data validation
+  // form
   const {
     control,
     handleSubmit,
@@ -115,12 +88,46 @@ export function SellScreen(): JSX.Element {
   const selectedAsset = useWatch({ control, name: 'asset' });
   const enteredAmount = useWatch({ control, name: 'amount' });
 
+  // default params
+  function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
+    setValue(field, value, { shouldValidate: true });
+  }
+
+  useEffect(() => {
+    const blockchains = blockchain ? [blockchain as Blockchain] : availableBlockchains ?? [];
+    const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
+    setAvailableAssets(blockchainAssets);
+
+    const asset = getAsset(blockchainAssets, assetIn) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
+    if (asset) setVal('asset', asset);
+  }, [getAssets]);
+
+  useEffect(() => {
+    const currency = getCurrency(currencies, assetOut) ?? getDefaultCurrency(currencies);
+    if (currency) setVal('currency', currency);
+  }, [assetIn, getCurrency, currencies]);
+
+  useEffect(() => {
+    if (bankAccount && bankAccounts?.length) {
+      const account = getAccount(bankAccounts, bankAccount);
+      if (account) {
+        setVal('bankAccount', account);
+      } else if (!isCreatingAccount && Validations.Iban(countries).validate(bankAccount)) {
+        setIsCreatingAccount(true);
+        createAccount({ iban: bankAccount })
+          .then((b) => setVal('bankAccount', b))
+          .finally(() => setIsCreatingAccount(false));
+      }
+    }
+  }, [bankAccount, getAccount, bankAccounts, countries]);
+
+  // data validation
   const validatedData = validateData(useDebounce(data, 500));
   const dataValid = validatedData != null;
 
   useEffect(() => {
     if (selectedBankAccount && selectedBankAccount.preferredCurrency)
-      setValue('currency', selectedBankAccount.preferredCurrency);
+      setVal('currency', selectedBankAccount.preferredCurrency);
   }, [selectedBankAccount]);
 
   useEffect(() => {
