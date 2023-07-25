@@ -67,6 +67,28 @@ module.exports = {
       boxShadow: {
         dfx: '0 3px 20px -10px rgba(0, 0, 0, 0.25)',
       },
+      zIndex: {
+        1: 1,
+      },
+      borderWidth: {
+        0.5: '0.5px',
+      },
+      height: {
+        2.5: '10px',
+        62.5: '250px',
+      },
+      width: {
+        2.5: '10px',
+      },
+      maxHeight: {
+        150: '600px',
+      },
+      padding: {
+        15: '60px',
+      },
+      minWidth: {
+        62.5: '250px',
+      },
     },
   },
 };
