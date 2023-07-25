@@ -41,6 +41,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { usePath } from '../hooks/path.hook';
+import useSessionGuard from '../hooks/session-guard.hook';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -50,6 +51,7 @@ interface FormData {
 }
 
 export function SellScreen(): JSX.Element {
+  useSessionGuard();
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
