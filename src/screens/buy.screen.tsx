@@ -5,6 +5,7 @@ import {
   Fiat,
   Utils,
   Validations,
+  useAsset,
   useAssetContext,
   useBuy,
   useFiat,
@@ -41,7 +42,7 @@ import { usePath } from '../hooks/path.hook';
 interface FormData {
   currency: Fiat;
   asset: Asset;
-  amount: number;
+  amount: string;
 }
 
 export function BuyScreen(): JSX.Element {
@@ -50,8 +51,9 @@ export function BuyScreen(): JSX.Element {
   const { currencies, receiveFor } = useBuy();
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
-  const { assetId, currencyId, amount: paramAmount, blockchain } = usePath();
-  const { toDescription, getDefaultCurrency } = useFiat();
+  const { getAsset } = useAsset();
+  const { assetIn, assetOut, amountIn, blockchain } = usePath();
+  const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isAllowedToBuy } = useKycHelper();
   const { user } = useUserContext();
 
@@ -67,18 +69,14 @@ export function BuyScreen(): JSX.Element {
     const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false });
     setAvailableAssets(blockchainAssets);
 
-    const asset =
-      blockchainAssets.find((a) => a.id === Number(assetId)) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
+    const asset = getAsset(blockchainAssets, assetOut) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
     if (asset) setValue('asset', asset, { shouldValidate: true });
-  }, [assetId, getAssets]);
+  }, [assetOut, getAsset, getAssets]);
 
   useEffect(() => {
-    const currency =
-      currencies?.find((currency) => currency.id === Number(currencyId)) ?? getDefaultCurrency(currencies ?? []);
-    if (currency) setTimeout(() => setValue('currency', currency, { shouldValidate: true }));
-  }, [currencyId, currencies]);
-
-  const defaultAmount = paramAmount ? +paramAmount : undefined;
+    const currency = getCurrency(currencies, assetIn) ?? getDefaultCurrency(currencies);
+    if (currency) setValue('currency', currency, { shouldValidate: true });
+  }, [assetIn, getCurrency, currencies]);
 
   // data validation
   const {
@@ -86,7 +84,7 @@ export function BuyScreen(): JSX.Element {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<FormData>({ defaultValues: { amount: defaultAmount } });
+  } = useForm<FormData>({ defaultValues: { amount: amountIn } });
 
   const data = useWatch({ control });
   const selectedCurrency = useWatch({ control, name: 'currency' });

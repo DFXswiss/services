@@ -9,9 +9,11 @@ interface PathInterface {
   redirectUri?: string;
   blockchain?: string;
   balances?: string;
-  assetId?: string;
-  currencyId?: string;
-  amount?: string;
+  amountIn?: string;
+  amountOut?: string;
+  assetIn?: string;
+  assetOut?: string;
+  bankAccount?: string;
   reloadWithoutBlockedParams: () => void;
   navigate: NavigateFunction;
 }
@@ -47,9 +49,11 @@ export function usePath(): PathInterface {
     redirectUri: getParameter('redirect-uri'),
     blockchain: getParameter('blockchain'),
     balances: getParameter('balances'),
-    assetId: getParameter('assetId'),
-    currencyId: getParameter('currencyId'),
-    amount: getParameter('amount'),
+    amountIn: getParameter('amount-in'),
+    amountOut: getParameter('amount-out'),
+    assetIn: getParameter('asset-in'),
+    assetOut: getParameter('asset-out'),
+    bankAccount: getParameter('bank-account'),
     reloadWithoutBlockedParams,
     navigate,
   };
