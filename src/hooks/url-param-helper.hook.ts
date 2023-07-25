@@ -39,7 +39,9 @@ export function useUrlParamHelper(): UrlParamHelperInterface {
   async function createSession(address: string, signature: string, wallet?: string): Promise<string | undefined> {
     try {
       return (await login(address, signature)) ?? (await signUp(address, signature, wallet));
-    } catch {}
+    } catch (e) {
+      console.error('Failed to create session:', e);
+    }
   }
 
   return useMemo(() => ({ readParamsAndReload }), []);
