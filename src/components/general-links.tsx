@@ -13,7 +13,7 @@ export function GeneralLinks(): JSX.Element {
       {isUsedByIframe ? (
         <p className="p-2 text-center text-dfxGray-700">{translate('navigation/links', 'Powered by DFX')}</p>
       ) : (
-        <div className="flex flex-col text-center gap-2 md:flex-row md:gap-40 justify-center py-4 bg-dfxGray-300">
+        <div className="flex flex-col text-center gap-2 md:flex-row justify-around py-4 bg-dfxGray-300">
           {authenticationToken && (
             <StyledLink
               label={translate('navigation/links', 'My DFX')}
