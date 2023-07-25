@@ -93,12 +93,15 @@ function NavigationMenuContent({ svgColor, setIsNavigationOpen }: NavigationMenu
   const {
     control,
     formState: { errors },
-  } = useForm<FormData>({ defaultValues: { language: language } });
-  const formData = useWatch({ control, name: 'language' });
+  } = useForm<FormData>({ defaultValues: { language } });
+  const selectedLanguage = useWatch({ control, name: 'language' });
 
   useEffect(() => {
-    changeLanguage(formData);
-  }, [formData]);
+    if (selectedLanguage.id !== language?.id) {
+      changeLanguage(selectedLanguage);
+      setIsNavigationOpen(false);
+    }
+  }, [selectedLanguage]);
 
   return (
     <>
