@@ -20,8 +20,10 @@ import { useForm, useWatch } from 'react-hook-form';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { usePath } from '../hooks/path.hook';
+import useSessionGuard from '../hooks/session-guard.hook';
 
 export function ProfileScreen(): JSX.Element {
+  useSessionGuard();
   const { translate } = useSettingsContext();
   const { countries, reloadUser } = useUserContext();
   const { setKycData } = useKyc();

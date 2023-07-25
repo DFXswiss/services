@@ -38,6 +38,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { usePath } from '../hooks/path.hook';
+import useSessionGuard from '../hooks/session-guard.hook';
 
 interface FormData {
   currency: Fiat;
@@ -46,6 +47,7 @@ interface FormData {
 }
 
 export function BuyScreen(): JSX.Element {
+  useSessionGuard();
   const { translate } = useSettingsContext();
   const { availableBlockchains } = useSessionContext();
   const { currencies, receiveFor } = useBuy();
