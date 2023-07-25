@@ -17,14 +17,8 @@ export interface IframeMessageData {
 
 export interface ICloseServicesParams {
   type: CloseType;
-  buy?: {
-    paymentInfo: Buy;
-    amount: number;
-  };
-  sell?: {
-    paymentInfo: Sell;
-    amount: number;
-  };
+  buy?: Buy;
+  sell?: Sell;
 }
 
 export interface CancelServicesParams extends ICloseServicesParams {
@@ -33,18 +27,12 @@ export interface CancelServicesParams extends ICloseServicesParams {
 
 export interface BuyServicesParams extends ICloseServicesParams {
   type: CloseType.BUY;
-  buy: {
-    paymentInfo: Buy;
-    amount: number;
-  };
+  buy: Buy;
 }
 
 export interface SellServicesParams extends ICloseServicesParams {
   type: CloseType.SELL;
-  sell: {
-    paymentInfo: Sell;
-    amount: number;
-  };
+  sell: Sell;
 }
 
 export type CloseServicesParams = CancelServicesParams | BuyServicesParams | SellServicesParams;
@@ -85,7 +73,7 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
 
       case CloseType.SELL:
         const urlParams = new URLSearchParams({
-          routeId: '' + (params.sell?.paymentInfo?.routeId ?? 0),
+          routeId: '' + params.sell.routeId,
           amount: params.sell?.amount ? params.sell.amount.toString() : '0',
         });
         return `${redirectUri}${params.type}?${urlParams}`;
@@ -100,13 +88,13 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
       case CloseType.BUY:
         return {
           type: CloseType.BUY,
-          buy: params.buy.paymentInfo,
+          buy: params.buy,
         };
 
       case CloseType.SELL:
         return {
           type: CloseType.SELL,
-          sell: params.sell.paymentInfo,
+          sell: params.sell,
         };
 
       default:

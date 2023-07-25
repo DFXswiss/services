@@ -14,13 +14,8 @@ import {
 } from '@dfx.swiss/react';
 import {
   AssetIconVariant,
-  DfxIcon,
   Form,
-  IconColor,
-  IconSize,
-  IconVariant,
   StyledButton,
-  StyledButtonColor,
   StyledButtonWidth,
   StyledDropdown,
   StyledInput,
@@ -29,11 +24,10 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+import { BuyCompletion } from '../components/buy/buy-completion';
 import { PaymentInformation, PaymentInformationContent } from '../components/buy/payment-information';
-import { MailEdit } from '../components/edit/mail.edit';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
-import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import useDebounce from '../hooks/debounce.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
@@ -171,7 +165,7 @@ export function BuyScreen(): JSX.Element {
       textStart
     >
       {showsCompletion && paymentInfo ? (
-        <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo} />
+        <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo.buy} />
       ) : (
         <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
           <StyledVerticalStack gap={8} full>
@@ -263,72 +257,5 @@ export function BuyScreen(): JSX.Element {
         </Form>
       )}
     </Layout>
-  );
-}
-
-function BuyCompletion({
-  showsSimple,
-  paymentInfo,
-}: {
-  showsSimple: boolean;
-  paymentInfo: PaymentInformation;
-}): JSX.Element {
-  const { translate } = useSettingsContext();
-  const { closeServices } = useAppHandlingContext();
-
-  function getHeader(): string {
-    return showsSimple
-      ? translate('screens/buy', 'Nice! You are all set! Give us a minute to handle your transaction')
-      : translate(
-          'screens/buy',
-          'As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet',
-        );
-  }
-
-  return (
-    <StyledVerticalStack gap={4}>
-      <div className="mx-auto">
-        <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />
-      </div>
-      <p className="text-base font-bold text-center text-dfxBlue-800">{getHeader()}</p>
-      {showsSimple ? (
-        <>
-          <p className="text-center text-dfxBlue-800">
-            {translate(
-              'screens/buy',
-              'As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet. We will inform you about the progress of any purchase or sale via E-mail.',
-            )}
-          </p>
-          <StyledButton
-            label={translate('general/actions', 'Close')}
-            onClick={() =>
-              closeServices({
-                type: CloseType.BUY,
-                buy: { paymentInfo: paymentInfo.buy, amount: paymentInfo.amount },
-              })
-            }
-            color={StyledButtonColor.STURDY_WHITE}
-            width={StyledButtonWidth.FULL}
-            caps
-          />
-        </>
-      ) : (
-        <MailEdit
-          onSubmit={(email) =>
-            (!email || email.length === 0) &&
-            closeServices({
-              type: CloseType.BUY,
-              buy: { paymentInfo: paymentInfo.buy, amount: paymentInfo.amount },
-            })
-          }
-          infoText={translate(
-            'screens/buy',
-            'Enter your email address if you want to be informed about the progress of any purchase or sale',
-          )}
-          hideLabels
-          isOptional
-        />
-      )}
-    </StyledVerticalStack>
   );
 }
