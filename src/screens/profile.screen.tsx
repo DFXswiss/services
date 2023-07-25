@@ -19,8 +19,8 @@ import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useSessionGuard } from '../hooks/guard.hook';
 import { usePath } from '../hooks/path.hook';
-import useSessionGuard from '../hooks/session-guard.hook';
 
 export function ProfileScreen(): JSX.Element {
   useSessionGuard();

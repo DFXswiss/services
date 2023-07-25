@@ -36,9 +36,9 @@ import { Layout } from '../components/layout';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import useDebounce from '../hooks/debounce.hook';
+import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { usePath } from '../hooks/path.hook';
-import useSessionGuard from '../hooks/session-guard.hook';
 
 interface FormData {
   currency: Fiat;
@@ -112,11 +112,7 @@ export function BuyScreen(): JSX.Element {
     const { asset, currency } = validatedData;
 
     setIsLoading(true);
-    receiveFor({
-      currency: currency,
-      amount,
-      asset: asset,
-    })
+    receiveFor({ currency, amount, asset })
       .then((value) => checkForMinDeposit(value, amount, currency.name))
       .then((value) => toPaymentInformation(value, currency))
       .then(setPaymentInfo)
@@ -216,7 +212,7 @@ export function BuyScreen(): JSX.Element {
                     />
 
                     {paymentInfo && (
-                      <p className="text-dfxBlue-800 text-start w-full text-xs pl-7 pt-1">
+                      <p className="text-dfxBlue-800 text-start w-full text-xs pl-7 pt-2">
                         {translate(
                           'screens/buy',
                           paymentInfo.minFee
@@ -230,6 +226,7 @@ export function BuyScreen(): JSX.Element {
                         )}
                       </p>
                     )}
+                    {kycRequired && !customAmountError && <KycHint />}
                   </div>
                 )}
 
@@ -260,7 +257,6 @@ export function BuyScreen(): JSX.Element {
                     />
                   </div>
                 )}
-                {kycRequired && !customAmountError && <KycHint />}
               </>
             )}
           </StyledVerticalStack>

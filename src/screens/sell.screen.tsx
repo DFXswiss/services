@@ -39,9 +39,9 @@ import { CloseType, useAppHandlingContext } from '../contexts/app-handling.conte
 import { useBalanceContext } from '../contexts/balance.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import useDebounce from '../hooks/debounce.hook';
+import { useKycDataGuard, useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { usePath } from '../hooks/path.hook';
-import useSessionGuard from '../hooks/session-guard.hook';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -50,10 +50,9 @@ interface FormData {
   amount: string;
 }
 
-export type UseFormSetValue = (name: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) => void;
-
 export function SellScreen(): JSX.Element {
   useSessionGuard();
+  useKycDataGuard('/profile');
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
@@ -152,17 +151,9 @@ export function SellScreen(): JSX.Element {
     }
 
     setIsLoading(true);
-    receiveFor({
-      iban: bankAccount.iban,
-      currency: currency,
-      amount,
-      asset: asset,
-    })
+    receiveFor({ iban: bankAccount.iban, currency, amount, asset })
       .then((value) => checkForMinDeposit(value, amount, asset.name))
-      .then((value) => {
-        setKycRequired(dataValid && !isAllowedToSell(Number(value?.estimatedAmount)));
-        return value;
-      })
+      .then(checkForKyc)
       .then(setPaymentInfo)
       .catch((error: ApiError) => {
         if (error.statusCode === 400 && error.message === 'Ident data incomplete') {
@@ -203,6 +194,14 @@ export function SellScreen(): JSX.Element {
       setCustomAmountError(undefined);
       return sell;
     }
+  }
+
+  function checkForKyc(sell: Sell | undefined): Sell | undefined {
+    if (!sell) return sell;
+
+    setKycRequired(dataValid && !isAllowedToSell(Number(sell.estimatedAmount)));
+
+    return sell;
   }
 
   function validateData(data?: DeepPartial<FormData>): FormData | undefined {
@@ -288,62 +287,61 @@ export function SellScreen(): JSX.Element {
               descriptionFunc={(item) => toDescription(item)}
             />
           )}
-        </StyledVerticalStack>
-        {selectedAsset && (
-          <div className="mt-8 text-start w-full">
-            <StyledInput
-              type={'number'}
-              label={translate('screens/sell', 'Enter your desired payout amount')}
-              placeholder="0.00"
-              prefix={selectedAsset.name}
-              name="amount"
-              forceError={kycRequired || customAmountError != null}
-              forceErrorMessage={customAmountError}
-              loading={isLoading}
-            />
-            {kycRequired && !customAmountError && <KycHint />}
-          </div>
-        )}
-        {paymentInfo && !kycRequired && (
-          <>
-            {paymentInfo.estimatedAmount > 0 && (
-              <p className="text-dfxBlue-800 text-start w-full text-xs pl-12">
-                {translate(
-                  'screens/sell',
-                  paymentInfo.minFeeTarget && validatedData?.currency
-                    ? '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})'
-                    : '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)',
-                  {
-                    estimatedAmount: paymentInfo.estimatedAmount,
-                    currency: validatedData?.currency.name ?? '',
-                    fee: paymentInfo.fee,
-                    minFee: paymentInfo.minFeeTarget,
-                    minFeeCurrency: toSymbol(validatedData?.currency as Fiat),
-                  },
-                )}
-              </p>
-            )}
+          {selectedAsset && (
+            <div className="text-start w-full">
+              <StyledInput
+                type={'number'}
+                label={translate('screens/sell', 'Enter your desired payout amount')}
+                placeholder="0.00"
+                prefix={selectedAsset.name}
+                name="amount"
+                forceError={kycRequired || customAmountError != null}
+                forceErrorMessage={customAmountError}
+                loading={isLoading}
+              />
+              {paymentInfo && paymentInfo.estimatedAmount > 0 && (
+                <p className="text-dfxBlue-800 text-start w-full text-xs pt-2 pl-7">
+                  {translate(
+                    'screens/sell',
+                    paymentInfo.minFeeTarget && validatedData?.currency
+                      ? '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})'
+                      : '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)',
+                    {
+                      estimatedAmount: paymentInfo.estimatedAmount,
+                      currency: validatedData?.currency.name ?? '',
+                      fee: paymentInfo.fee,
+                      minFee: paymentInfo.minFeeTarget,
+                      minFeeCurrency: toSymbol(validatedData?.currency as Fiat),
+                    },
+                  )}
+                </p>
+              )}
+              {kycRequired && !customAmountError && <KycHint />}
+            </div>
+          )}
+          {paymentInfo && !kycRequired && (
+            <div>
+              <div className="pt-4 w-full text-left">
+                <StyledLink
+                  label={translate(
+                    'screens/payment',
+                    'Please not that by using this service you automatically accept our terms and conditions.',
+                  )}
+                  url={process.env.REACT_APP_TNC_URL}
+                  dark
+                />
+              </div>
 
-            <div className="pt-4 w-full text-left">
-              <StyledLink
-                label={translate(
-                  'screens/payment',
-                  'Please not that by using this service you automatically accept our terms and conditions.',
-                )}
-                url={process.env.REACT_APP_TNC_URL}
-                dark
+              <StyledButton
+                width={StyledButtonWidth.FULL}
+                label={translate('screens/sell', 'Complete transaction in your wallet')}
+                onClick={() => handleNext(paymentInfo)}
+                caps={false}
+                className="my-4"
               />
             </div>
-
-            <StyledButton
-              width={StyledButtonWidth.FULL}
-              label={translate('screens/sell', 'Complete transaction in your wallet')}
-              onClick={() => handleNext(paymentInfo)}
-              caps={false}
-              className="my-4"
-            />
-          </>
-        )}
+          )}
+        </StyledVerticalStack>
       </Form>
     </Layout>
   );
