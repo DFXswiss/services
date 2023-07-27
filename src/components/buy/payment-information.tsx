@@ -70,7 +70,9 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
           <CopyButton onCopy={() => copy(info.buy.remittanceInfo)} />
         </StyledDataTableRow>
       </StyledDataTable>
-      <GiroCode info={info} />
+
+      <GiroCode info={info.buy} />
+
       <StyledDataTable label={translate('screens/buy', 'Recipient')} showBorder minWidth={false}>
         <StyledDataTableRow>{info.recipient}</StyledDataTableRow>
       </StyledDataTable>

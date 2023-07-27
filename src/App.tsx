@@ -4,6 +4,7 @@ import { AppHandlingContextProvider } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
+import { BuyInfoScreen } from './screens/buy-info.screen';
 import { BuyScreen } from './screens/buy.screen';
 import { ErrorScreen } from './screens/error.screen';
 import { HomeScreen } from './screens/home.screen';
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
   {
     path: '/buy',
     element: <BuyScreen />,
+  },
+  {
+    path: '/buy/info',
+    element: <BuyInfoScreen />,
   },
   {
     path: '/sell',
