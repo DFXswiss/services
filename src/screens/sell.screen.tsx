@@ -61,7 +61,7 @@ export function SellScreen(): JSX.Element {
   const { availableBlockchains } = useSessionContext();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assetIn, assetOut, amountIn, bankAccount, blockchain } = usePath();
+  const { navigate, assetIn, assetOut, amountIn, bankAccount, blockchain } = usePath();
   const { isAllowedToSell } = useKycHelper();
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
@@ -70,7 +70,6 @@ export function SellScreen(): JSX.Element {
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
-  const [kycRequired, setKycRequired] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
@@ -132,7 +131,6 @@ export function SellScreen(): JSX.Element {
   useEffect(() => {
     if (!enteredAmount) {
       setCustomAmountError(undefined);
-      setKycRequired(false);
     }
   }, [enteredAmount]);
 
@@ -153,11 +151,10 @@ export function SellScreen(): JSX.Element {
     setIsLoading(true);
     receiveFor({ iban: bankAccount.iban, currency, amount, asset })
       .then((value) => checkForMinDeposit(value, amount, asset.name))
-      .then(checkForKyc)
       .then(setPaymentInfo)
       .catch((error: ApiError) => {
         if (error.statusCode === 400 && error.message === 'Ident data incomplete') {
-          setKycRequired(true);
+          navigate('/profile');
         }
       })
       .finally(() => {
@@ -196,13 +193,7 @@ export function SellScreen(): JSX.Element {
     }
   }
 
-  function checkForKyc(sell: Sell | undefined): Sell | undefined {
-    if (!sell) return sell;
-
-    setKycRequired(dataValid && !isAllowedToSell(Number(sell.estimatedAmount)));
-
-    return sell;
-  }
+  const kycRequired = paymentInfo && !isAllowedToSell(paymentInfo.estimatedAmount);
 
   function validateData(data?: DeepPartial<FormData>): FormData | undefined {
     if (data && Number(data.amount) > 0 && data.asset != null && data.bankAccount != null && data.currency != null) {
@@ -309,7 +300,7 @@ export function SellScreen(): JSX.Element {
                       currency: validatedData?.currency.name ?? '',
                       fee: paymentInfo.fee,
                       minFee: paymentInfo.minFeeTarget,
-                      minFeeCurrency: toSymbol(validatedData?.currency as Fiat),
+                      minFeeCurrency: validatedData?.currency ? toSymbol(validatedData.currency) : '',
                     },
                   )}
                 </p>

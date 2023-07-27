@@ -92,7 +92,7 @@ export function BuyScreen(): JSX.Element {
   // data validation
   const validatedData = validateData(useDebounce(data, 500));
   const dataValid = validatedData != null;
-  const kycRequired = dataValid && !isLoading && !isAllowedToBuy(Number(validatedData?.amount));
+  const kycRequired = paymentInfo && !isAllowedToBuy(paymentInfo.amount);
 
   const showsSimple = user?.mail != null;
 

@@ -51,6 +51,7 @@
 
     "Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!": "Bitte überweise den Kaufbetrag mit diesen Angaben über Deine Bankanwendung. Der Verwendungszweck ist wichtig!",
 
+    "Bank Transaction Details": "Angaben zur Banktransaktion",
     "IBAN": "IBAN",
     "BIC": "BIC",
     "Purpose of payment": "Verwendungszweck",
@@ -58,6 +59,9 @@
     "The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders": "Der Verwendungszweck bleibt für die ausgewählte Anlage identisch und kann für wiederkehrende Zahlungen und Daueraufträge verwendet werden",
 
     "Recipient": "Empfänger",
+    "Name": "Name",
+    "Address": "Adresse",
+
     "DFX-Fee": "DFX-Gebühren",
 
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
