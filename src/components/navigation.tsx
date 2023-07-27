@@ -1,13 +1,13 @@
 import { Language, useAuthContext } from '@dfx.swiss/react';
-import { Form, IconVariant, StyledDropdown } from '@dfx.swiss/react-components';
+import { DfxIcon, Form, IconColor, IconSize, IconVariant, StyledDropdown } from '@dfx.swiss/react-components';
 import { PropsWithChildren, SetStateAction, useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { useLocation } from 'react-router-dom';
+import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useIframe } from '../hooks/iframe.hook';
-import { ReactComponent as CloseIcon } from '../static/assets/close.svg';
-import logo from '../static/assets/logo.svg';
-import { ReactComponent as MenuIcon } from '../static/assets/menu.svg';
-import { NavigationBack } from './navigation-back';
+import { useNavigation } from '../hooks/navigation.hook';
+import logo from '../static/assets/logo-dark.svg';
 import { NavigationLink } from './navigation-link';
 
 interface FormData {
@@ -20,48 +20,73 @@ interface NavigationIframeProps extends PropsWithChildren {
 }
 
 interface IconContentProps {
-  svgColor: string;
+  icon: IconVariant;
   setIsNavigationOpen: (value: SetStateAction<boolean>) => void;
 }
 
 interface NavigationMenuContentProps {
-  svgColor: string;
   setIsNavigationOpen: (value: SetStateAction<boolean>) => void;
 }
 
-export function Navigation({ title, backButton }: NavigationIframeProps): JSX.Element {
+export function Navigation({ title, backButton = true }: NavigationIframeProps): JSX.Element {
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const { isUsedByIframe } = useIframe();
 
-  const bgColor = isUsedByIframe ? 'bg-dfxGray-300' : 'bg-dfxBlue-800';
-  const svgColor = isUsedByIframe ? '#0A355C' : '#ffffff';
+  return title || !isUsedByIframe ? (
+    <div className={`flex items-center justify-between h-12 px-4 py-5 bg-dfxGray-300`}>
+      <BackButton title={title} backButton={backButton} />
 
-  return (
-    <>
-      <div className={`flex items-center justify-between h-12 px-4 py-5 ${bgColor}`}>
-        {isUsedByIframe ? <IframeBack title={title} backButton={backButton} /> : <DfxIcon />}
-
-        <nav>
-          <section className="flex">
-            {isNavigationOpen ? (
-              <NavigationMenuContent svgColor={svgColor} setIsNavigationOpen={setIsNavigationOpen} />
-            ) : (
-              <MenuIconContent svgColor={svgColor} setIsNavigationOpen={setIsNavigationOpen} />
-            )}
-          </section>
-        </nav>
+      <div className="absolute right-4">
+        <MenuIcon
+          icon={isNavigationOpen ? IconVariant.CLOSE : IconVariant.MENU}
+          setIsNavigationOpen={setIsNavigationOpen}
+        />
       </div>
 
-      {!isUsedByIframe && <NavigationBack title={title} backButton={backButton} />}
-    </>
+      {isNavigationOpen && <NavigationMenu setIsNavigationOpen={setIsNavigationOpen} />}
+    </div>
+  ) : (
+    <></>
   );
 }
 
-function IframeBack({ title, backButton }: NavigationIframeProps): JSX.Element {
-  return <div className="w-full pl-8">{<NavigationBack title={title} backButton={backButton} />}</div>;
+function BackButton({ title, backButton }: NavigationIframeProps): JSX.Element {
+  const { homePath } = useSettingsContext();
+  const { closeServices } = useAppHandlingContext();
+  const location = useLocation();
+  const { navigate } = useNavigation();
+  const { isUsedByIframe } = useIframe();
+
+  function onClick() {
+    if (homePath === location.pathname) {
+      closeServices({ type: CloseType.CANCEL });
+    } else {
+      navigate(-1);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      className="text-dfxBlue-800 font-bold text-lg flex flex-row flex-grow flex-shrink-0 items-center justify-center"
+      onClick={() => onClick()}
+      disabled={!backButton}
+    >
+      <div className="absolute left-4">
+        {backButton ? (
+          <div className="ml-2">
+            <DfxIcon icon={IconVariant.BACK} color={IconColor.BLUE} size={IconSize.LG} />
+          </div>
+        ) : (
+          !isUsedByIframe && <DfxLogo />
+        )}
+      </div>
+      {title}
+    </button>
+  );
 }
 
-function DfxIcon(): JSX.Element {
+function DfxLogo(): JSX.Element {
   return (
     <a href="/">
       <img height={23} width={73.6} src={logo} alt="logo" />
@@ -69,23 +94,15 @@ function DfxIcon(): JSX.Element {
   );
 }
 
-function MenuIconContent({ svgColor, setIsNavigationOpen }: IconContentProps): JSX.Element {
+function MenuIcon({ icon, setIsNavigationOpen }: IconContentProps): JSX.Element {
   return (
-    <div className="space-y-2 w-6 h-6 cursor-pointer" onClick={() => setIsNavigationOpen((prev) => !prev)}>
-      <MenuIcon fill={svgColor} />
+    <div className="cursor-pointer" onClick={() => setIsNavigationOpen((prev) => !prev)}>
+      <DfxIcon icon={icon} size={IconSize.LG} color={IconColor.BLUE} />
     </div>
   );
 }
 
-function CloseIconContent({ svgColor, setIsNavigationOpen }: IconContentProps): JSX.Element {
-  return (
-    <div className="space-y-2 px-1 w-6 h-4 cursor-pointer" onClick={() => setIsNavigationOpen((prev) => !prev)}>
-      <CloseIcon color={svgColor} />
-    </div>
-  );
-}
-
-function NavigationMenuContent({ svgColor, setIsNavigationOpen }: NavigationMenuContentProps): JSX.Element {
+function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { authenticationToken } = useAuthContext();
   const { language, availableLanguages, changeLanguage } = useSettingsContext();
@@ -104,9 +121,7 @@ function NavigationMenuContent({ svgColor, setIsNavigationOpen }: NavigationMenu
   }, [selectedLanguage]);
 
   return (
-    <>
-      <CloseIconContent svgColor={svgColor} setIsNavigationOpen={setIsNavigationOpen} />
-
+    <nav>
       <div className="absolute top-14 right-2 border-1 drop-shadow-md w-64 z-20 flex flex-col bg-dfxGray-300">
         <div className="mx-4 py-4 text-dfxGray-800">
           {authenticationToken && (
@@ -144,6 +159,6 @@ function NavigationMenuContent({ svgColor, setIsNavigationOpen }: NavigationMenu
           </Form>
         </div>
       </div>
-    </>
+    </nav>
   );
 }

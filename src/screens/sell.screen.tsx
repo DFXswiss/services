@@ -37,11 +37,12 @@ import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useBalanceContext } from '../contexts/balance.context';
+import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycDataGuard, useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
-import { usePath } from '../hooks/path.hook';
+import { useNavigation } from '../hooks/navigation.hook';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -61,7 +62,8 @@ export function SellScreen(): JSX.Element {
   const { availableBlockchains } = useSessionContext();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { navigate, assetIn, assetOut, amountIn, bankAccount, blockchain } = usePath();
+  const { navigate } = useNavigation();
+  const { assetIn, assetOut, amountIn, bankAccount, blockchain } = useParamContext();
   const { isAllowedToSell } = useKycHelper();
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
@@ -79,7 +81,7 @@ export function SellScreen(): JSX.Element {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<FormData>({ defaultValues: { amount: amountIn }, mode: 'onTouched' });
+  } = useForm<FormData>({ mode: 'onTouched' });
 
   const data = useWatch({ control });
   const selectedBankAccount = useWatch({ control, name: 'bankAccount' });
@@ -104,6 +106,10 @@ export function SellScreen(): JSX.Element {
     const currency = getCurrency(currencies, assetOut) ?? getDefaultCurrency(currencies);
     if (currency) setVal('currency', currency);
   }, [assetIn, getCurrency, currencies]);
+
+  useEffect(() => {
+    if (amountIn) setVal('amount', amountIn);
+  }, [amountIn]);
 
   useEffect(() => {
     if (bankAccount && bankAccounts?.length) {

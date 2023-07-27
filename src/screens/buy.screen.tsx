@@ -28,11 +28,11 @@ import { BuyCompletion } from '../components/buy/buy-completion';
 import { PaymentInformation, PaymentInformationContent } from '../components/buy/payment-information';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
+import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import useDebounce from '../hooks/debounce.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
-import { usePath } from '../hooks/path.hook';
 
 interface FormData {
   currency: Fiat;
@@ -48,7 +48,7 @@ export function BuyScreen(): JSX.Element {
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assetIn, assetOut, amountIn, blockchain } = usePath();
+  const { assetIn, assetOut, amountIn, blockchain } = useParamContext();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isAllowedToBuy } = useKycHelper();
   const { user } = useUserContext();
@@ -65,7 +65,7 @@ export function BuyScreen(): JSX.Element {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<FormData>({ defaultValues: { amount: amountIn } });
+  } = useForm<FormData>();
 
   const data = useWatch({ control });
   const selectedCurrency = useWatch({ control, name: 'currency' });
@@ -88,6 +88,10 @@ export function BuyScreen(): JSX.Element {
     const currency = getCurrency(currencies, assetIn) ?? getDefaultCurrency(currencies);
     if (currency) setVal('currency', currency);
   }, [assetIn, getCurrency, currencies]);
+
+  useEffect(() => {
+    if (amountIn) setVal('amount', amountIn);
+  }, [amountIn]);
 
   // data validation
   const validatedData = validateData(useDebounce(data, 500));

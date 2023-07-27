@@ -32,17 +32,17 @@ import { GiroCode } from '../components/buy/giro-code';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
+import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
-import { usePath } from '../hooks/path.hook';
 
 export function BuyInfoScreen(): JSX.Element {
   useSessionGuard();
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
   const { availableBlockchains } = useSessionContext();
-  const { assetIn, assetOut, amountIn, amountOut } = usePath();
+  const { assetIn, assetOut, amountIn, amountOut } = useParamContext();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
@@ -104,7 +104,7 @@ export function BuyInfoScreen(): JSX.Element {
   const showsSimple = user?.mail != null;
 
   return (
-    <Layout textStart>
+    <Layout textStart backButton={false}>
       {showsCompletion && paymentInfo ? (
         <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo} />
       ) : isLoading ? (

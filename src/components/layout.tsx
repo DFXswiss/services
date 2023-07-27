@@ -1,5 +1,6 @@
 import { PropsWithChildren, useEffect } from 'react';
-import { useUrlParamHelper } from '../hooks/url-param-helper.hook';
+import { useLocation } from 'react-router-dom';
+import { useParamContext } from '../contexts/param.context';
 import { GeneralLinks } from './general-links';
 import { Navigation } from './navigation';
 
@@ -10,11 +11,12 @@ interface LayoutProps extends PropsWithChildren {
 }
 
 export function Layout({ title, backButton, textStart, children }: LayoutProps): JSX.Element {
-  const { readParamsAndReload } = useUrlParamHelper();
+  const { search } = useLocation();
+  const { init } = useParamContext();
 
   useEffect(() => {
-    readParamsAndReload();
-  }, [readParamsAndReload]);
+    init(search);
+  }, [search]);
 
   return (
     <>

@@ -20,14 +20,14 @@ import { useForm, useWatch } from 'react-hook-form';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useSessionGuard } from '../hooks/guard.hook';
-import { usePath } from '../hooks/path.hook';
+import { useNavigation } from '../hooks/navigation.hook';
 
 export function ProfileScreen(): JSX.Element {
   useSessionGuard();
   const { translate } = useSettingsContext();
   const { countries, reloadUser } = useUserContext();
   const { setKycData } = useKyc();
-  const { navigate } = usePath();
+  const { navigate } = useNavigation();
   const {
     control,
     handleSubmit,

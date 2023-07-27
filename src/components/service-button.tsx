@@ -1,6 +1,6 @@
 import { DfxIcon, IconColor, IconVariant } from '@dfx.swiss/react-components';
 import { useSettingsContext } from '../contexts/settings.context';
-import { usePath } from '../hooks/path.hook';
+import { useNavigation } from '../hooks/navigation.hook';
 
 export enum ServiceButtonType {
   BUY = 'Buy',
@@ -16,7 +16,7 @@ interface ServiceButtonProps {
 
 export function ServiceButton({ type, url, disabled }: ServiceButtonProps): JSX.Element {
   const { translate } = useSettingsContext();
-  const { navigate } = usePath();
+  const { navigate } = useNavigation();
 
   const iconDefinitions: Record<ServiceButtonType, (color: IconColor) => JSX.Element> = {
     [ServiceButtonType.BUY]: (color: IconColor) => (

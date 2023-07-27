@@ -13,7 +13,7 @@ export function HomeScreen(): JSX.Element {
   const { isUsedByIframe } = useIframe();
 
   return (
-    <Layout title={isUsedByIframe ? translate('screens/home', 'DFX services') : undefined}>
+    <Layout title={isUsedByIframe ? translate('screens/home', 'DFX services') : undefined} backButton={isUsedByIframe}>
       {isProcessing || isUserLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />

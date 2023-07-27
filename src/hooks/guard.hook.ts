@@ -1,19 +1,21 @@
 import { useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { useEffect } from 'react';
-import { usePath } from './path.hook';
+import { useParamContext } from '../contexts/param.context';
+import { useNavigation } from './navigation.hook';
 
 export function useSessionGuard(redirectPath = '/') {
-  const { isInitialized, isLoggedIn } = useSessionContext();
-  const { navigate } = usePath();
+  const { isInitialized: sessionInitialized, isLoggedIn } = useSessionContext();
+  const { isInitialized: paramsInitialized } = useParamContext();
+  const { navigate } = useNavigation();
 
   useEffect(() => {
-    if (isInitialized && !isLoggedIn) navigate(redirectPath);
-  }, [isInitialized, isLoggedIn, navigate]);
+    if (sessionInitialized && paramsInitialized && !isLoggedIn) navigate(redirectPath);
+  }, [sessionInitialized, paramsInitialized, isLoggedIn, navigate]);
 }
 
 export function useKycDataGuard(redirectPath = '/') {
   const { user } = useUserContext();
-  const { navigate } = usePath();
+  const { navigate } = useNavigation();
 
   useEffect(() => {
     if (user && !user.kycDataComplete) navigate(redirectPath);
