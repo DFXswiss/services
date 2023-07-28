@@ -43,7 +43,8 @@ export function ProfileScreen(): JSX.Element {
     setIsSubmitting(true);
     setKycData(data)
       .then(() => reloadUser())
-      .then(() => navigate({ pathname: '/sell' }, { replace: true }))
+      // wait for the user to reload
+      .then(() => setTimeout(() => navigate({ pathname: '/sell' }, { replace: true })))
       .catch((error: ApiError) => {
         setErrorMessage(error.message);
         setShowsErrorAlert(true);

@@ -10,7 +10,17 @@ export function useNavigation(): NavigationInterface {
   const { search } = useLocation();
 
   function navigate(to: To | number, options?: NavigateOptions) {
-    typeof to === 'number' ? navigateTo(to) : navigateTo(`${to}?${new URLSearchParams(search).toString()}`, options);
+    switch (typeof to) {
+      case 'number':
+        return navigateTo(to);
+
+      case 'string':
+        return navigateTo(`${to}?${new URLSearchParams(search)}`, options);
+
+      default:
+        to.search = search;
+        return navigateTo(to, options);
+    }
   }
 
   return useMemo(() => ({ navigate }), [navigateTo, search]);
