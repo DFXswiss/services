@@ -1,5 +1,6 @@
-import { DfxIcon, IconVariant, IconColor } from '@dfx.swiss/react-components';
-import { useNavigate } from 'react-router-dom';
+import { DfxIcon, IconColor, IconVariant } from '@dfx.swiss/react-components';
+import { useSettingsContext } from '../contexts/settings.context';
+import { useNavigation } from '../hooks/navigation.hook';
 
 export enum ServiceButtonType {
   BUY = 'Buy',
@@ -14,7 +15,8 @@ interface ServiceButtonProps {
 }
 
 export function ServiceButton({ type, url, disabled }: ServiceButtonProps): JSX.Element {
-  const navigate = useNavigate();
+  const { translate } = useSettingsContext();
+  const { navigate } = useNavigation();
 
   const iconDefinitions: Record<ServiceButtonType, (color: IconColor) => JSX.Element> = {
     [ServiceButtonType.BUY]: (color: IconColor) => (
@@ -47,7 +49,9 @@ export function ServiceButton({ type, url, disabled }: ServiceButtonProps): JSX.
       onClick={() => navigate(url)}
       disabled={disabled}
     >
-      <p className={`${disabled ? 'text-dfxGray-500' : 'text-dfxBlue-800'} text-lg font-bold`}>{type}</p>
+      <p className={`${disabled ? 'text-dfxGray-500' : 'text-dfxBlue-800'} text-lg font-bold`}>
+        {translate('general/services', type)}
+      </p>
       <div className="flex flex-row gap-2">{iconDefinitions[type](disabled ? IconColor.GRAY : IconColor.RED)}</div>
     </button>
   );

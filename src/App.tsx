@@ -1,16 +1,17 @@
+import { DfxContextProvider } from '@dfx.swiss/react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { HomeScreen } from './screens/home.screen';
-import { LanguageContextProvider } from './contexts/language.context';
-import { setupLanguages } from './translations';
-import { ErrorScreen } from './screens/error.screen';
-import { BankAccountsScreen } from './screens/bank-accounts.screen';
-import { BuyScreen } from './screens/buy.screen';
-import { BuyPaymentScreen } from './screens/buy/payment.screen';
 import { AppHandlingContextProvider } from './contexts/app-handling.context';
+import { BalanceContextProvider } from './contexts/balance.context';
+import { ParamContextProvider } from './contexts/param.context';
+import { SettingsContextProvider } from './contexts/settings.context';
+import { BankAccountsScreen } from './screens/bank-accounts.screen';
+import { BuyInfoScreen } from './screens/buy-info.screen';
+import { BuyScreen } from './screens/buy.screen';
+import { ErrorScreen } from './screens/error.screen';
+import { HomeScreen } from './screens/home.screen';
 import { ProfileScreen } from './screens/profile.screen';
 import { SellScreen } from './screens/sell.screen';
-import { BalanceContextProvider } from './contexts/balance.context';
-import { DfxContextProvider } from '@dfx.swiss/react';
+import { setupLanguages } from './translations';
 
 setupLanguages();
 
@@ -25,8 +26,8 @@ const router = createBrowserRouter([
     element: <BuyScreen />,
   },
   {
-    path: '/buy/payment',
-    element: <BuyPaymentScreen />,
+    path: '/buy/info',
+    element: <BuyInfoScreen />,
   },
   {
     path: '/sell',
@@ -47,9 +48,11 @@ function App() {
     <AppHandlingContextProvider>
       <BalanceContextProvider>
         <DfxContextProvider api={{}} data={{}}>
-          <LanguageContextProvider>
-            <RouterProvider router={router} />
-          </LanguageContextProvider>
+          <SettingsContextProvider>
+            <ParamContextProvider>
+              <RouterProvider router={router} />
+            </ParamContextProvider>
+          </SettingsContextProvider>
         </DfxContextProvider>
       </BalanceContextProvider>
     </AppHandlingContextProvider>

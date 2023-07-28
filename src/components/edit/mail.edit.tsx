@@ -1,5 +1,3 @@
-import { useForm } from 'react-hook-form';
-import { useLanguageContext } from '../../contexts/language.context';
 import { Utils, Validations, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
@@ -12,6 +10,8 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useForm } from 'react-hook-form';
+import { useSettingsContext } from '../../contexts/settings.context';
 
 interface MailEditProps {
   infoText?: string;
@@ -49,7 +49,7 @@ export function MailEdit({
     formState: { isValid, errors },
   } = useForm<FormData>();
   const { changeMail, isUserUpdating } = useUserContext();
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
 
   async function saveUser({ email }: FormData): Promise<void> {
     if (!email || email.length === 0) return onSubmit(email);
@@ -67,8 +67,8 @@ export function MailEdit({
           <InfoTextElement text={infoText} iconColor={infoTextIconColor} />
         )}
         <StyledInput
-          label={translate('component/mail-edit', 'Contact information')}
-          placeholder={translate('component/mail-edit', 'E-mail address')}
+          label={translate('screens/profile', 'Contact information')}
+          placeholder={translate('screens/profile', 'Email address')}
           name="email"
           hideLabel={hideLabels}
         />
@@ -78,7 +78,7 @@ export function MailEdit({
         <StyledHorizontalStack gap={4}>
           {showCancelButton && onCancel && (
             <StyledButton
-              label={translate('component/mail-edit', 'cancel')}
+              label={translate('general/actions', 'Cancel')}
               onClick={onCancel}
               color={StyledButtonColor.STURDY_WHITE}
               width={StyledButtonWidth.FULL}
@@ -87,7 +87,7 @@ export function MailEdit({
           )}
           <StyledButton
             disabled={!isValid}
-            label={isOptional ? translate('component/mail-edit', 'finish') : translate('component/mail-edit', 'save')}
+            label={isOptional ? translate('general/actions', 'Finish') : translate('general/actions', 'Save')}
             onClick={handleSubmit(saveUser)}
             isLoading={isUserUpdating}
             width={StyledButtonWidth.FULL}

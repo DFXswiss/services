@@ -1,34 +1,37 @@
 import { PropsWithChildren, useEffect } from 'react';
-import { Navigation } from './navigation';
+import { useLocation } from 'react-router-dom';
+import { useParamContext } from '../contexts/param.context';
 import { GeneralLinks } from './general-links';
-import { NavigationBack } from './navigation-back';
-import { useUrlParamHelper } from '../hooks/url-param-helper.hook';
-import { AppPage } from '../contexts/app-handling.context';
+import { Navigation } from './navigation';
 
 interface LayoutProps extends PropsWithChildren {
-  backTitle?: string;
+  title?: string;
+  backButton?: boolean;
   textStart?: boolean;
-  appPage?: AppPage;
 }
 
-export function Layout({ backTitle, textStart, appPage, children }: LayoutProps): JSX.Element {
-  const { readParamsAndReload } = useUrlParamHelper();
+export function Layout({ title, backButton, textStart, children }: LayoutProps): JSX.Element {
+  const { search } = useLocation();
+  const { init } = useParamContext();
 
   useEffect(() => {
-    readParamsAndReload();
-  }, [readParamsAndReload]);
+    init(search);
+  }, [search]);
 
   return (
     <>
-      <Navigation />
-      {backTitle && <NavigationBack title={backTitle} appPage={appPage} />}
-      <div
-        className={`flex flex-grow flex-col items-center ${
-          textStart ? 'text-start' : 'text-center'
-        } px-5 py-2 mt-4 gap-2`}
-      >
-        {children}
+      <Navigation title={title} backButton={backButton} />
+
+      <div className="flex flex-grow justify-center">
+        <div
+          className={`max-w-screen-md flex flex-grow flex-col items-center ${
+            textStart ? 'text-start' : 'text-center'
+          } px-5 py-2 mt-4 gap-2`}
+        >
+          {children}
+        </div>
       </div>
+
       <GeneralLinks />
     </>
   );

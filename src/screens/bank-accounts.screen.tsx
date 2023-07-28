@@ -1,8 +1,8 @@
 import { Layout } from '../components/layout';
-import { useLanguageContext } from '../contexts/language.context';
+import { useSettingsContext } from '../contexts/settings.context';
 
 export function BankAccountsScreen(): JSX.Element {
-  const { translate } = useLanguageContext();
+  const { translate } = useSettingsContext();
   return (
     <Layout>
       <h2 className="text-dfxBlue-800">{translate('screens/bank-accounts', 'DFX bank accounts')}</h2>

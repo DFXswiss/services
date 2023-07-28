@@ -1,8 +1,3 @@
-import { useForm, useWatch } from 'react-hook-form';
-import { Layout } from '../components/layout';
-import { useLanguageContext } from '../contexts/language.context';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AccountType, ApiError, KycData, Utils, Validations, useKyc, useUserContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
@@ -20,12 +15,19 @@ import {
   StyledSpacer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { Layout } from '../components/layout';
+import { useSettingsContext } from '../contexts/settings.context';
+import { useSessionGuard } from '../hooks/guard.hook';
+import { useNavigation } from '../hooks/navigation.hook';
 
 export function ProfileScreen(): JSX.Element {
-  const { translate } = useLanguageContext();
+  useSessionGuard();
+  const { translate } = useSettingsContext();
   const { countries, reloadUser } = useUserContext();
   const { setKycData } = useKyc();
-  const navigate = useNavigate();
+  const { navigate } = useNavigation();
   const {
     control,
     handleSubmit,
@@ -41,7 +43,8 @@ export function ProfileScreen(): JSX.Element {
     setIsSubmitting(true);
     setKycData(data)
       .then(() => reloadUser())
-      .then(() => navigate({ pathname: '/sell' }, { replace: true }))
+      // wait for the user to reload
+      .then(() => setTimeout(() => navigate({ pathname: '/sell' }, { replace: true }), 10))
       .catch((error: ApiError) => {
         setErrorMessage(error.message);
         setShowsErrorAlert(true);
@@ -72,7 +75,7 @@ export function ProfileScreen(): JSX.Element {
   });
 
   return (
-    <Layout backTitle={translate('screens/profile', 'User details')}>
+    <Layout title={translate('screens/profile', 'User details')}>
       {/* MODAL */}
       <StyledModal
         isVisible={showsErrorAlert}
@@ -85,7 +88,7 @@ export function ProfileScreen(): JSX.Element {
           <p>
             {translate(
               'general/errors',
-              'Please try again later, if the issue persists please reach out to our support.',
+              'Please try again later. If the issue persists please reach out to our support.',
             )}
           </p>
           {errorMessage && <p className="text-dfxGray-800 text-sm">{errorMessage}</p>}
@@ -101,39 +104,39 @@ export function ProfileScreen(): JSX.Element {
       {/* CONTENT */}
       <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
       <p className="text-base font-bold text-dfxBlue-800">
-        {translate('screens/profile', 'Please fill in personal information to continue.')}
+        {translate('screens/profile', 'Please fill in personal information to continue')}
       </p>
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack marginY={4} gap={2} full>
           <div>
-            <p className="text-dfxGray-700 text-xs font-semibold text-start ml-4 -mb-1">
-              {translate('screens/profile', 'ACCOUNT TYPE')}
+            <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-4 -mb-1">
+              {translate('screens/profile', 'Account Type')}
             </p>
             <StyledDropdown
               name="accountType"
               label=""
               placeholder={translate('general/actions', 'Please select...')}
               items={Object.values(AccountType)}
-              labelFunc={(item) => item}
+              labelFunc={(item) => translate('screens/profile', item)}
             />
           </div>
           {selectedAccountType && (
             <>
-              <p className="text-dfxGray-700 text-xs font-semibold text-start ml-3 mt-4">
-                {translate('screens/profile', 'PERSONAL INFORMATION')}
+              <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3 mt-4">
+                {translate('screens/profile', 'Personal Information')}
               </p>
               <StyledHorizontalStack gap={2}>
                 <StyledInput
                   name="firstname"
                   label={translate('screens/profile', 'First name')}
-                  placeholder="John"
+                  placeholder={translate('screens/profile', 'John')}
                   full
                   smallLabel
                 />
                 <StyledInput
                   name="surname"
                   label={translate('screens/profile', 'Last name')}
-                  placeholder="Doe"
+                  placeholder={translate('screens/profile', 'Doe')}
                   full
                   smallLabel
                 />
@@ -183,7 +186,7 @@ export function ProfileScreen(): JSX.Element {
                 name="mail"
                 type="email"
                 label={translate('screens/profile', 'Email address')}
-                placeholder="example@mail.com"
+                placeholder={translate('screens/profile', 'example@mail.com')}
                 smallLabel
               />
               <StyledInput
@@ -195,13 +198,13 @@ export function ProfileScreen(): JSX.Element {
               />
               {selectedAccountType !== AccountType.PERSONAL && (
                 <>
-                  <p className="text-dfxGray-700 text-xs font-semibold text-start ml-3 mt-4">
-                    {translate('screens/profile', 'ORGANIZATION INFORMATION')}
+                  <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3 mt-4">
+                    {translate('screens/profile', 'Organization Information')}
                   </p>
                   <StyledInput
                     name="organizationName"
                     label={translate('screens/profile', 'Organization name')}
-                    placeholder="Example inc."
+                    placeholder={translate('screens/profile', 'Example inc.')}
                     full
                     smallLabel
                   />
@@ -250,7 +253,7 @@ export function ProfileScreen(): JSX.Element {
               )}
               <StyledSpacer spacing={1} />
               <StyledButton
-                label={translate('general/actions', 'continue')}
+                label={translate('general/actions', 'Continue')}
                 onClick={handleSubmit(onSubmit)}
                 width={StyledButtonWidth.FULL}
                 disabled={!isValid}

@@ -1,5 +1,9 @@
 {
   "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true,
+    "source.sortMembers": true
+  },
   "git.ignoreLimitWarning": true,
   "cSpell.words": [
     "testid",

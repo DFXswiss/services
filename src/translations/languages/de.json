@@ -1,6 +1,139 @@
 {
+  "general/actions": {
+    "Please select...": "Bitte auswählen...",
+    "Next": "Weiter",
+    "Continue": "Weiter",
+    "Close": "Schliessen",
+    "Ok": "Ok",
+    "Cancel": "Abbrechen",
+    "Finish": "Fertig",
+    "Save": "Speichern"
+  },
+  "general/errors": {
+    "Something went wrong": "Irgendwas hat nicht funktioniert",
+    "Please try again later. If the issue persists please reach out to our support.": "Bitte versuche es später noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support."
+  },
+  "general/services": {
+    "Buy": "Kaufen",
+    "Sell": "Verkaufen",
+    "Convert": "Umtauschen"
+  },
+  "kyc": {
+    "per day": "pro Tag",
+    "per year": "pro Jahr",
+
+    "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Dein Konto muss verifiziert werden, sobald Dein tägliches Transaktionsvolumen {{limit}} überschreitet. Wenn Du Dein tägliches Handelslimit erhöhen möchtest, schliesse bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
+    "Complete KYC": "KYC vervollständigen"
+  },
+  "screens/error": {
+    "Oh sorry something went wrong": "Entschuldigung, irgendwas hat nicht funktioniert",
+
+    "Please return to your previous page. If this problem consists reach out to use via Telegram.": "Bitte kehre zur vorherigen Seite zurück. Wenn dieses Problem weiterhin besteht, erreichst Du uns über Telegram."
+  },
   "screens/home": {
     "DFX services": "DFX Services",
-    "Buy and Sell cryptocurrencies with bank transfers.": "Kaufen und verkaufen Sie Kryptowährungen mit Banküberweisungen."
+
+    "Buy and Sell cryptocurrencies with bank transfers": "Kaufe und verkaufe Kryptowährungen mit Banküberweisungen",
+
+    "Please login via an application to use our services": "Bitte melde Dich über eine Anwendung an, um unsere Services benutzen zu können"
+  },
+  "screens/buy": {
+    "Buy": "Kaufen",
+    "I want to buy": "Ich möchte folgendes kaufen",
+    "with": "mit",
+    "Buy Amount": "Kaufbetrag",
+    "Done!": "Fertig!",
+    "≈ {{estimatedAmount}} (incl. {{fee}} DFX fee - min. {{minFee}})": "≈ {{estimatedAmount}} (inkl. {{fee}} DFX Gebühr - min. {{minFee}})",
+    "≈ {{estimatedAmount}} (incl. {{fee}} DFX fee)": "≈ {{estimatedAmount}} (inkl. {{fee}} DFX Gebühr)",
+    "Click here once you have issued the transfer": "Klicke hier, sobald Du die Überweisung getätigt hast",
+
+    "Payment Information": "Zahlungsinformation",
+
+    "Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!": "Bitte überweise den Kaufbetrag mit diesen Angaben über Deine Bankanwendung. Der Verwendungszweck ist wichtig!",
+
+    "Bank Transaction Details": "Angaben zur Banktransaktion",
+    "IBAN": "IBAN",
+    "BIC": "BIC",
+    "Purpose of payment": "Verwendungszweck",
+
+    "The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders": "Der Verwendungszweck bleibt für die ausgewählte Anlage identisch und kann für wiederkehrende Zahlungen und Daueraufträge verwendet werden",
+
+    "Recipient": "Empfänger",
+    "Name": "Name",
+    "Address": "Adresse",
+
+    "DFX-Fee": "DFX-Gebühren",
+
+    "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
+
+    "Enter your email address if you want to be informed about the progress of any purchase or sale": "Gebe Deine E-Mail Adresse ein, wenn Du über den Fortschritt Deiner Käufe oder Verkäufe informiert werden willst",
+
+    "Nice! You are all set! Give us a minute to handle your transaction": "Sehr schön! Alles erledigt! Gib uns eine Minute, um Deine Transaktion zu bearbeiten",
+
+    "As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir Dein Guthaben in Deine Wallet übertragen",
+
+    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet. We will inform you about the progress of any purchase or sale via E-mail.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir Dein Guthaben in Deine Wallet übertragen. Wir werden Dich per E-Mail über den Fortschritt Deiner Käufe oder Verkäufe informieren."
+  },
+  "screens/bank-accounts": {
+    "DFX bank accounts": "DFX Bankverbindungen",
+    "Todo list of bank accounts": "Todo list of bank accounts"
+  },
+  "screens/sell": {
+    "Your Wallet": "Deine Wallet",
+    "Please select...": "Bitte auswählen...",
+    "Cash out to my bank account": "Auszahlung auf mein Bankkonto",
+    "Add or select your IBAN": "Deine IBAN hinzufügen oder auswählen",
+    "Select your payment account": "Wähle Dein Konto aus",
+    "Your Currency": "Deine Währung",
+    "e.g. EUR": "z.B. EUR",
+    "Enter your desired payout amount": "Gib den gewünschten Auszahlungsbetrag ein",
+    "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)": "≈ {{estimatedAmount}} {{currency}} (inkl. {{fee}} % DFX Gebühr)",
+    "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})": "≈ {{estimatedAmount}} {{currency}} (inkl. {{fee}} % DFX Gebühr - min. {{minFee}}{{minFeeCurrency}})",
+
+    "Complete transaction in your wallet": "Schliesse die Transaktion in deiner Wallet ab",
+
+    "IBAN": "IBAN",
+    "Optional - Account Designation": "Optional - Kontobezeichnung",
+    "e.g. Deutsche Bank": "z.B. Deutsche Bank",
+    "Add Bank Account": "Bankverbindung hinzufügen",
+
+    "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
+
+    "Entered amount is higher than available balance of {{amount}} {{asset}}": "Der eingegebene Betrag liegt über dem verfügbaren Guthaben von {{amount}} {{asset}}"
+  },
+  "screens/payment": {
+    "Please not that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst."
+  },
+  "screens/profile": {
+    "User details": "Benutzerdaten",
+    "Please fill in personal information to continue": "Bitte gib Deine persönlichen Daten ein, um fortzufahren",
+    "Account Type": "Kontotyp",
+    "Personal": "Privatkonto",
+    "Business": "Geschäftskonto",
+    "SoleProprietorship": "Einzelunternehmen",
+    "Personal Information": "Persönliche Daten",
+    "First name": "Vorname",
+    "John": "Max",
+    "Last name": "Nachname",
+    "Doe": "Mustermann",
+    "Street": "Strasse",
+    "House nr.": "Hausnummer",
+    "ZIP code": "PLZ",
+    "City": "Ort",
+    "Country": "Land",
+    "Email address": "E-Mail Adresse",
+    "example@mail.com": "beispiel@mail.de",
+    "Phone number": "Handynummer",
+    "Organization Information": "Organisation",
+    "Organization name": "Name der Organisation",
+    "Example inc.": "Beispiel GmbH & Co. KG",
+    "Contact information": "Kontaktdaten"
+  },
+  "navigation/links": {
+    "Powered by DFX": "Powered by DFX",
+    "My DFX": "My DFX",
+    "Terms and conditions": "Geschäftsbedingungen",
+    "Privacy policy": "Datenschutzerklärung",
+    "Imprint": "Impressum"
   }
 }

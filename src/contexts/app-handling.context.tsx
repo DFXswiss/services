@@ -1,14 +1,45 @@
-import { PropsWithChildren, createContext, useContext, useEffect, useState } from 'react';
+import { Buy, Sell } from '@dfx.swiss/react';
+import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
 
-export enum AppPage {
+export enum CloseType {
   BUY = 'buy',
   SELL = 'sell',
+  CANCEL = 'cancel',
 }
+
+export interface IframeMessageData {
+  type: CloseType;
+  buy?: Buy;
+  sell?: Sell;
+}
+
+export interface ICloseServicesParams {
+  type: CloseType;
+  buy?: Buy;
+  sell?: Sell;
+}
+
+export interface CancelServicesParams extends ICloseServicesParams {
+  type: CloseType.CANCEL;
+}
+
+export interface BuyServicesParams extends ICloseServicesParams {
+  type: CloseType.BUY;
+  buy: Buy;
+}
+
+export interface SellServicesParams extends ICloseServicesParams {
+  type: CloseType.SELL;
+  sell: Sell;
+}
+
+export type CloseServicesParams = CancelServicesParams | BuyServicesParams | SellServicesParams;
 
 interface AppHandlingContextInterface {
   setRedirectUri: (redirectUri: string) => void;
-  openAppPage: (page: AppPage, params?: URLSearchParams) => void;
+  closeServices: (params: CloseServicesParams) => void;
 }
 
 const AppHandlingContext = createContext<AppHandlingContextInterface>(undefined as any);
@@ -20,23 +51,67 @@ export function useAppHandlingContext(): AppHandlingContextInterface {
 export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Element {
   const { redirectUri: storeRedirectUri } = useStore();
   const [redirectUri, setRedirectUri] = useState<string>();
+  const { isUsedByIframe, sendMessage } = useIframe();
 
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
   }, []);
 
-  function openAppPage(page: AppPage, params?: URLSearchParams) {
-    const win: Window = window;
-    win.location = params ? `${redirectUri}${page}?${params}` : `${redirectUri}${page}`;
+  function closeServices(params: CloseServicesParams) {
+    if (isUsedByIframe) {
+      sendMessage(createIframeMessageData(params));
+    } else {
+      const win: Window = window;
+      win.location = getRedirectUri(params);
+    }
   }
 
-  const context = {
-    setRedirectUri: (redirectUri: string) => {
-      setRedirectUri(redirectUri);
-      storeRedirectUri.set(redirectUri);
-    },
-    openAppPage,
-  };
+  function getRedirectUri(params: CloseServicesParams): string {
+    switch (params.type) {
+      case CloseType.BUY:
+        return `${redirectUri}${params.type}`;
+
+      case CloseType.SELL:
+        const urlParams = new URLSearchParams({
+          routeId: '' + params.sell.routeId,
+          amount: params.sell?.amount ? params.sell.amount.toString() : '0',
+        });
+        return `${redirectUri}${params.type}?${urlParams}`;
+
+      default:
+        return `${redirectUri}`;
+    }
+  }
+
+  function createIframeMessageData(params: CloseServicesParams): IframeMessageData {
+    switch (params.type) {
+      case CloseType.BUY:
+        return {
+          type: CloseType.BUY,
+          buy: params.buy,
+        };
+
+      case CloseType.SELL:
+        return {
+          type: CloseType.SELL,
+          sell: params.sell,
+        };
+
+      default:
+        return { type: CloseType.CANCEL };
+    }
+  }
+
+  const context = useMemo(
+    () => ({
+      setRedirectUri: (redirectUri: string) => {
+        setRedirectUri(redirectUri);
+        storeRedirectUri.set(redirectUri);
+      },
+      closeServices,
+    }),
+    [redirectUri],
+  );
 
   return <AppHandlingContext.Provider value={context}>{props.children}</AppHandlingContext.Provider>;
 }

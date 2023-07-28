@@ -1,43 +1,48 @@
-import { DeepPartial, useForm, useWatch } from 'react-hook-form';
-import { Layout } from '../components/layout';
-import { useLanguageContext } from '../contexts/language.context';
-import { useEffect, useState } from 'react';
-import { AddBankAccount } from '../components/buy/add-bank-account';
-import useDebounce from '../hooks/debounce.hook';
-import { useKycHelper } from '../hooks/kyc-helper.hook';
-import { AppPage, useAppHandlingContext } from '../contexts/app-handling.context';
-import { useBalanceContext } from '../contexts/balance.context';
-import { KycHint } from '../components/kyc-hint';
 import {
   ApiError,
   Asset,
   BankAccount,
+  Blockchain,
   Fiat,
   Sell,
   Utils,
   Validations,
+  useAsset,
   useAssetContext,
+  useBankAccount,
   useBankAccountContext,
   useFiat,
   useSell,
   useSessionContext,
+  useUserContext,
 } from '@dfx.swiss/react';
 import {
-  AlignContent,
   AssetIconVariant,
   Form,
   IconVariant,
   StyledBankAccountListItem,
   StyledButton,
   StyledButtonWidth,
-  StyledDataTable,
-  StyledDataTableRow,
   StyledDropdown,
   StyledInput,
+  StyledLink,
   StyledModalDropdown,
   StyledModalWidth,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useEffect, useState } from 'react';
+import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+import { AddBankAccount } from '../components/buy/add-bank-account';
+import { KycHint } from '../components/kyc-hint';
+import { Layout } from '../components/layout';
+import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
+import { useBalanceContext } from '../contexts/balance.context';
+import { useParamContext } from '../contexts/param.context';
+import { useSettingsContext } from '../contexts/settings.context';
+import useDebounce from '../hooks/debounce.hook';
+import { useKycDataGuard, useSessionGuard } from '../hooks/guard.hook';
+import { useKycHelper } from '../hooks/kyc-helper.hook';
+import { useNavigation } from '../hooks/navigation.hook';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -47,57 +52,93 @@ interface FormData {
 }
 
 export function SellScreen(): JSX.Element {
-  const { translate } = useLanguageContext();
-  const { openAppPage } = useAppHandlingContext();
-  const { bankAccounts, updateAccount } = useBankAccountContext();
+  useSessionGuard();
+  useKycDataGuard('/profile');
+  const { translate } = useSettingsContext();
+  const { closeServices } = useAppHandlingContext();
+  const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
+  const { getAccount } = useBankAccount();
   const { balances } = useBalanceContext();
-  const { blockchain, availableBlockchains } = useSessionContext();
-  const { assets } = useAssetContext();
+  const { availableBlockchains } = useSessionContext();
+  const { getAssets } = useAssetContext();
+  const { getAsset } = useAsset();
+  const { navigate } = useNavigation();
+  const { assetIn, assetOut, amountIn, bankAccount, blockchain } = useParamContext();
   const { isAllowedToSell } = useKycHelper();
-  const { toDescription } = useFiat();
+  const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
-  const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
+  const { countries } = useUserContext();
+
+  const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
-  const [kycRequired, setKycRequired] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+
+  // form
   const {
     control,
     handleSubmit,
     setValue,
     formState: { errors },
   } = useForm<FormData>({ mode: 'onTouched' });
+
   const data = useWatch({ control });
-  const validatedData = validateData(useDebounce(data, 500));
   const selectedBankAccount = useWatch({ control, name: 'bankAccount' });
   const selectedAsset = useWatch({ control, name: 'asset' });
   const enteredAmount = useWatch({ control, name: 'amount' });
 
+  // default params
+  function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
+    setValue(field, value, { shouldValidate: true });
+  }
+
+  useEffect(() => {
+    const blockchains = blockchain ? [blockchain as Blockchain] : availableBlockchains ?? [];
+    const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
+    setAvailableAssets(blockchainAssets);
+
+    const asset = getAsset(blockchainAssets, assetIn) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
+    if (asset) setVal('asset', asset);
+  }, [getAssets]);
+
+  useEffect(() => {
+    const currency = getCurrency(currencies, assetOut) ?? getDefaultCurrency(currencies);
+    if (currency) setVal('currency', currency);
+  }, [assetIn, getCurrency, currencies]);
+
+  useEffect(() => {
+    if (amountIn) setVal('amount', amountIn);
+  }, [amountIn]);
+
+  useEffect(() => {
+    if (bankAccount && bankAccounts?.length) {
+      const account = getAccount(bankAccounts, bankAccount);
+      if (account) {
+        setVal('bankAccount', account);
+      } else if (!isCreatingAccount && Validations.Iban(countries).validate(bankAccount) === true) {
+        setIsCreatingAccount(true);
+        createAccount({ iban: bankAccount })
+          .then((b) => setVal('bankAccount', b))
+          .finally(() => setIsCreatingAccount(false));
+      }
+    }
+  }, [bankAccount, getAccount, bankAccounts, countries]);
+
+  // data validation
+  const validatedData = validateData(useDebounce(data, 500));
   const dataValid = validatedData != null;
 
   useEffect(() => {
     if (selectedBankAccount && selectedBankAccount.preferredCurrency)
-      setValue('currency', selectedBankAccount.preferredCurrency);
+      setVal('currency', selectedBankAccount.preferredCurrency);
   }, [selectedBankAccount]);
 
   useEffect(() => {
     if (!enteredAmount) {
       setCustomAmountError(undefined);
-      setKycRequired(false);
     }
   }, [enteredAmount]);
-
-  useEffect(() => {
-    if (assets) {
-      const blockchainAssets = availableBlockchains
-        ?.filter((b) => (blockchain ? blockchain === b : true))
-        .map((blockchain) => assets.get(blockchain))
-        .reduce((prev, curr) => prev?.concat(curr ?? []), [])
-        ?.filter((asset) => asset.sellable);
-      blockchainAssets?.length === 1 && setValue('asset', blockchainAssets[0], { shouldValidate: true });
-      setAvailableAssets(blockchainAssets ?? []);
-    }
-  }, [assets]);
 
   useEffect(() => {
     if (!dataValid) {
@@ -106,29 +147,42 @@ export function SellScreen(): JSX.Element {
     }
 
     const amount = Number(validatedData.amount);
+    const { asset, currency, bankAccount } = validatedData;
+
+    if (!checkForAmountAvailable(amount, asset)) {
+      setPaymentInfo(undefined);
+      return;
+    }
+
     setIsLoading(true);
-    receiveFor({
-      iban: validatedData.bankAccount.iban,
-      currency: validatedData.currency,
-      amount,
-      asset: validatedData.asset,
-    })
-      .then((value) => checkForMinDeposit(value, amount, validatedData.asset.name))
-      .then((value) => checkForAmountAvailable(amount, validatedData.asset.name, value))
-      .then((value) => {
-        setKycRequired(dataValid && !isAllowedToSell(Number(value?.estimatedAmount)));
-        return value;
-      })
+    receiveFor({ iban: bankAccount.iban, currency, amount, asset })
+      .then((value) => checkForMinDeposit(value, amount, asset.name))
       .then(setPaymentInfo)
       .catch((error: ApiError) => {
         if (error.statusCode === 400 && error.message === 'Ident data incomplete') {
-          setKycRequired(true);
+          navigate('/profile');
         }
       })
       .finally(() => {
         setIsLoading(false);
       });
   }, [validatedData]);
+
+  function checkForAmountAvailable(amount: number, asset: Asset): boolean {
+    const balance = findBalance(asset) ?? '0';
+    if (amount > Number(balance)) {
+      setCustomAmountError(
+        translate('screens/sell', 'Entered amount is higher than available balance of {{amount}} {{asset}}', {
+          amount: balance,
+          asset: asset.name,
+        }),
+      );
+      return false;
+    } else {
+      setCustomAmountError(undefined);
+      return true;
+    }
+  }
 
   function checkForMinDeposit(sell: Sell, amount: number, currency: string): Sell | undefined {
     if (sell.minVolume > amount) {
@@ -145,26 +199,21 @@ export function SellScreen(): JSX.Element {
     }
   }
 
-  function checkForAmountAvailable(amount: number, asset: string, sell?: Sell): Sell | undefined {
-    if (!sell) return sell;
-    const balance = balances?.find((balance) => balance.token === asset);
-    if (amount > Number(balance?.amount ?? 0)) {
-      setCustomAmountError(
-        translate('screens/sell', 'Entered amount is higher than available balance of {{amount}} {{asset}}', {
-          amount: balance?.amount ?? 0,
-          asset,
-        }),
-      );
-    } else {
-      setCustomAmountError(undefined);
-      return sell;
-    }
-  }
+  const kycRequired = paymentInfo && !isAllowedToSell(paymentInfo.estimatedAmount);
 
   function validateData(data?: DeepPartial<FormData>): FormData | undefined {
     if (data && Number(data.amount) > 0 && data.asset != null && data.bankAccount != null && data.currency != null) {
       return data as FormData;
     }
+  }
+
+  function findBalance(asset: Asset): string | undefined {
+    const balance =
+      balances?.find((b) => +b.token === asset.id) ??
+      balances?.find((b) => b.token.toLowerCase() === asset.uniqueName.toLowerCase()) ??
+      balances?.find((b) => b.token.toLowerCase() === asset.name.toLowerCase());
+
+    return balance?.amount;
   }
 
   async function updateBankAccount(): Promise<BankAccount> {
@@ -175,12 +224,10 @@ export function SellScreen(): JSX.Element {
     // TODO: (Krysh fix broken form validation and onSubmit
   }
 
-  async function handleNext(): Promise<void> {
+  async function handleNext(paymentInfo: Sell): Promise<void> {
     await updateBankAccount();
-    openAppPage(
-      AppPage.SELL,
-      new URLSearchParams({ routeId: '' + (paymentInfo?.routeId ?? 0), amount: enteredAmount }),
-    );
+
+    closeServices({ type: CloseType.SELL, sell: paymentInfo });
   }
 
   const rules = Utils.createRules({
@@ -192,23 +239,23 @@ export function SellScreen(): JSX.Element {
 
   // TODO: (Krysh) add handling for sell screen to replace to profile is user.kycDataIsComplete is false
   return (
-    <Layout backTitle={translate('screens/sell', 'Sell')}>
+    <Layout title={translate('general/services', 'Sell')}>
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack gap={8} full>
-          {assets && (
+          {availableAssets && (
             <StyledDropdown<Asset>
               name="asset"
-              label={translate('screens/sell', 'YOUR WALLET')}
+              label={translate('screens/sell', 'Your Wallet')}
               placeholder={translate('general/actions', 'Please select...')}
               labelIcon={IconVariant.WALLET}
               items={availableAssets}
               labelFunc={(item) => item.name}
-              balanceFunc={(item) => balances?.find((balance) => balance.token === item.name)?.amount ?? ''}
+              balanceFunc={(item) => findBalance(item) ?? ''}
               assetIconFunc={(item) => item.name as AssetIconVariant}
               descriptionFunc={(item) => item.blockchain}
             />
           )}
-          {bankAccounts && (
+          {bankAccounts && !isCreatingAccount && (
             <StyledModalDropdown<BankAccount>
               name="bankAccount"
               labelFunc={(item) => Utils.formatIban(item.iban) ?? ''}
@@ -227,54 +274,69 @@ export function SellScreen(): JSX.Element {
           {currencies && (
             <StyledDropdown<Fiat>
               name="currency"
-              label={translate('screens/sell', 'YOUR CURRENCY')}
-              placeholder="e.g. EUR"
+              label={translate('screens/sell', 'Your Currency')}
+              placeholder={translate('screens/sell', 'e.g. EUR')}
               labelIcon={IconVariant.BANK}
               items={currencies}
               labelFunc={(item) => item.name}
               descriptionFunc={(item) => toDescription(item)}
             />
           )}
+          {selectedAsset && (
+            <div className="text-start w-full">
+              <StyledInput
+                type={'number'}
+                label={translate('screens/sell', 'Enter your desired payout amount')}
+                placeholder="0.00"
+                prefix={selectedAsset.name}
+                name="amount"
+                forceError={kycRequired || customAmountError != null}
+                forceErrorMessage={customAmountError}
+                loading={isLoading}
+              />
+              {paymentInfo && paymentInfo.estimatedAmount > 0 && (
+                <p className="text-dfxBlue-800 text-start w-full text-xs pt-2 pl-7">
+                  {translate(
+                    'screens/sell',
+                    paymentInfo.minFeeTarget && validatedData?.currency
+                      ? '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})'
+                      : '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)',
+                    {
+                      estimatedAmount: paymentInfo.estimatedAmount,
+                      currency: validatedData?.currency.name ?? '',
+                      fee: paymentInfo.fee,
+                      minFee: paymentInfo.minFeeTarget,
+                      minFeeCurrency: validatedData?.currency ? toSymbol(validatedData.currency) : '',
+                    },
+                  )}
+                </p>
+              )}
+              {kycRequired && !customAmountError && <KycHint />}
+            </div>
+          )}
+          {paymentInfo && !kycRequired && (
+            <div>
+              <div className="pt-4 w-full text-left">
+                <StyledLink
+                  label={translate(
+                    'screens/payment',
+                    'Please not that by using this service you automatically accept our terms and conditions.',
+                  )}
+                  url={process.env.REACT_APP_TNC_URL}
+                  dark
+                />
+              </div>
+
+              <StyledButton
+                width={StyledButtonWidth.FULL}
+                label={translate('screens/sell', 'Complete transaction in your wallet')}
+                onClick={() => handleNext(paymentInfo)}
+                caps={false}
+                className="my-4"
+              />
+            </div>
+          )}
         </StyledVerticalStack>
-        {selectedAsset && (
-          <div className="mt-8 text-start w-full">
-            <StyledInput
-              type={'number'}
-              label={translate('screens/sell', 'Enter your desired payout amount')}
-              placeholder="0.00"
-              prefix={selectedAsset.name}
-              name="amount"
-              forceError={kycRequired || customAmountError != null}
-              forceErrorMessage={customAmountError}
-              loading={isLoading}
-            />
-            {kycRequired && !customAmountError && <KycHint />}
-          </div>
-        )}
-        {paymentInfo && !kycRequired && (
-          <>
-            {paymentInfo.estimatedAmount > 0 && (
-              <p className="text-dfxBlue-800 text-start w-full text-xs pl-12">
-                {translate('screens/sell', '≈ {{estimatedAmount}} {{currency}} (incl. DFX fees)', {
-                  estimatedAmount: paymentInfo.estimatedAmount,
-                  currency: validatedData?.currency.name ?? '',
-                })}
-              </p>
-            )}
-            <StyledDataTable alignContent={AlignContent.BETWEEN} showBorder={false} narrow minWidth={false}>
-              <StyledDataTableRow discreet>
-                <p>{translate('screens/sell', 'DFX-Fee')}</p>
-                <p>{`${paymentInfo.fee} %`}</p>
-              </StyledDataTableRow>
-            </StyledDataTable>
-            <StyledButton
-              width={StyledButtonWidth.FULL}
-              label={translate('screens/sell', 'Complete transaction in your wallet')}
-              onClick={handleNext}
-              caps={false}
-            />
-          </>
-        )}
       </Form>
     </Layout>
   );
