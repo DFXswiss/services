@@ -116,7 +116,7 @@ export function SellScreen(): JSX.Element {
       const account = getAccount(bankAccounts, bankAccount);
       if (account) {
         setVal('bankAccount', account);
-      } else if (!isCreatingAccount && Validations.Iban(countries).validate(bankAccount)) {
+      } else if (!isCreatingAccount && Validations.Iban(countries).validate(bankAccount) === true) {
         setIsCreatingAccount(true);
         createAccount({ iban: bankAccount })
           .then((b) => setVal('bankAccount', b))
