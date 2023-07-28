@@ -14,10 +14,10 @@ export function useSessionGuard(redirectPath = '/') {
 }
 
 export function useKycDataGuard(redirectPath = '/') {
-  const { user } = useUserContext();
+  const { user, isUserLoading } = useUserContext();
   const { navigate } = useNavigation();
 
   useEffect(() => {
-    if (user && !user.kycDataComplete) navigate(redirectPath);
-  }, [user, navigate]);
+    if (user && !isUserLoading && !user.kycDataComplete) navigate(redirectPath);
+  }, [user, isUserLoading, navigate]);
 }
