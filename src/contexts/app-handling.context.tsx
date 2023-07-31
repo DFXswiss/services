@@ -38,6 +38,7 @@ export interface SellServicesParams extends ICloseServicesParams {
 export type CloseServicesParams = CancelServicesParams | BuyServicesParams | SellServicesParams;
 
 interface AppHandlingContextInterface {
+  isEmbedded: boolean;
   setRedirectUri: (redirectUri: string) => void;
   closeServices: (params: CloseServicesParams) => void;
 }
@@ -104,6 +105,7 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
 
   const context = useMemo(
     () => ({
+      isEmbedded: isUsedByIframe,
       setRedirectUri: (redirectUri: string) => {
         setRedirectUri(redirectUri);
         storeRedirectUri.set(redirectUri);

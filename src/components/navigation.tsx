@@ -5,7 +5,6 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useIframe } from '../hooks/iframe.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import logo from '../static/assets/logo-dark.svg';
 import { NavigationLink } from './navigation-link';
@@ -30,9 +29,9 @@ interface NavigationMenuContentProps {
 
 export function Navigation({ title, backButton = true }: NavigationIframeProps): JSX.Element {
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
-  const { isUsedByIframe } = useIframe();
+  const { isEmbedded } = useAppHandlingContext();
 
-  return title || !isUsedByIframe ? (
+  return title || !isEmbedded ? (
     <div className={`relative flex items-center justify-between h-12 px-4 py-5 bg-dfxGray-300`}>
       <BackButton title={title} backButton={backButton} />
 
@@ -52,10 +51,9 @@ export function Navigation({ title, backButton = true }: NavigationIframeProps):
 
 function BackButton({ title, backButton }: NavigationIframeProps): JSX.Element {
   const { homePath } = useSettingsContext();
-  const { closeServices } = useAppHandlingContext();
+  const { isEmbedded, closeServices } = useAppHandlingContext();
   const location = useLocation();
   const { navigate } = useNavigation();
-  const { isUsedByIframe } = useIframe();
 
   function onClick() {
     if (homePath === location.pathname) {
@@ -78,7 +76,7 @@ function BackButton({ title, backButton }: NavigationIframeProps): JSX.Element {
             <DfxIcon icon={IconVariant.BACK} color={IconColor.BLUE} size={IconSize.LG} />
           </div>
         ) : (
-          !isUsedByIframe && <DfxLogo />
+          !isEmbedded && <DfxLogo />
         )}
       </div>
       {title}
