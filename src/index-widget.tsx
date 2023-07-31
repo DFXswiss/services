@@ -1,7 +1,23 @@
 import createWebComponent from '@r2wc/react-to-web-component';
-import App from './App';
+import { AppParams } from './App';
+import MainWidget from './Main.widget';
 import './index.css';
 
-const DfxSwiss = createWebComponent(App);
+const propNames: (keyof AppParams)[] = [
+  'address',
+  'signature',
+  'wallet',
+  'session',
+  'redirectUri',
+  'blockchain',
+  'balances',
+  'amountIn',
+  'amountOut',
+  'assetIn',
+  'assetOut',
+  'bankAccount',
+];
 
-customElements.define('dfx-swiss', DfxSwiss);
+const DfxServices = createWebComponent(MainWidget, { shadow: 'closed', props: propNames });
+
+customElements.define('dfx-services', DfxServices);

@@ -1,6 +1,4 @@
-import { PropsWithChildren, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useParamContext } from '../contexts/param.context';
+import { PropsWithChildren } from 'react';
 import { GeneralLinks } from './general-links';
 import { Navigation } from './navigation';
 
@@ -11,13 +9,6 @@ interface LayoutProps extends PropsWithChildren {
 }
 
 export function Layout({ title, backButton, textStart, children }: LayoutProps): JSX.Element {
-  const { search } = useLocation();
-  const { init } = useParamContext();
-
-  useEffect(() => {
-    init(search);
-  }, [search]);
-
   return (
     <>
       <Navigation title={title} backButton={backButton} />
