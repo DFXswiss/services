@@ -33,7 +33,7 @@ export function Navigation({ title, backButton = true }: NavigationIframeProps):
   const { isUsedByIframe } = useIframe();
 
   return title || !isUsedByIframe ? (
-    <div className={`flex items-center justify-between h-12 px-4 py-5 bg-dfxGray-300`}>
+    <div className={`relative flex items-center justify-between h-12 px-4 py-5 bg-dfxGray-300`}>
       <BackButton title={title} backButton={backButton} />
 
       <div className="absolute right-4">

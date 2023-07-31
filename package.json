@@ -1,6 +1,6 @@
 {
   "name": "services",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@dfx.swiss/react": "^1.1.2-beta.10",
@@ -24,7 +24,8 @@
     "start": "env-cmd -f .env.loc react-scripts start",
     "build": "env-cmd -f .env.prd react-scripts build",
     "build:dev": "env-cmd -f .env.dev react-scripts build",
-    "build:widget": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.widget react-scripts build && mv src/index.bak.tsx src/index.tsx",
+    "widget": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.prd env-cmd -f .env.widget react-scripts build && mv src/index.bak.tsx src/index.tsx",
+    "widget:dev": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.dev env-cmd -f .env.widget react-scripts build && mv src/index.bak.tsx src/index.tsx",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --no-fix",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "react-scripts test --watchAll=false --passWithNoTests",

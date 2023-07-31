@@ -1,5 +1,6 @@
 import { DfxContextProvider } from '@dfx.swiss/react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { Router } from '@remix-run/router';
+import { RouteObject, RouterProvider } from 'react-router-dom';
 import { AppHandlingContextProvider } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
 import { ParamContextProvider } from './contexts/param.context';
@@ -15,7 +16,7 @@ import { setupLanguages } from './translations';
 
 setupLanguages();
 
-const router = createBrowserRouter([
+const routes = [
   {
     path: '/',
     element: <HomeScreen />,
@@ -41,16 +42,36 @@ const router = createBrowserRouter([
     path: '/profile',
     element: <ProfileScreen />,
   },
-]);
+];
 
-function App() {
+export interface AppParams {
+  address?: string;
+  signature?: string;
+  wallet?: string;
+  session?: string;
+  redirectUri?: string;
+  blockchain?: string;
+  balances?: string;
+  amountIn?: string;
+  amountOut?: string;
+  assetIn?: string;
+  assetOut?: string;
+  bankAccount?: string;
+}
+
+interface AppProps {
+  routerFactory: (routes: RouteObject[]) => Router;
+  params?: AppParams;
+}
+
+function App({ routerFactory, params }: AppProps) {
   return (
     <AppHandlingContextProvider>
       <BalanceContextProvider>
         <DfxContextProvider api={{}} data={{}}>
           <SettingsContextProvider>
-            <ParamContextProvider>
-              <RouterProvider router={router} />
+            <ParamContextProvider params={params}>
+              <RouterProvider router={routerFactory(routes)} />
             </ParamContextProvider>
           </SettingsContextProvider>
         </DfxContextProvider>
