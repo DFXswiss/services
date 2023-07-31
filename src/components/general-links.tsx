@@ -1,16 +1,16 @@
 import { useAuthContext } from '@dfx.swiss/react';
 import { StyledLink } from '@dfx.swiss/react-components';
+import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useIframe } from '../hooks/iframe.hook';
 
 export function GeneralLinks(): JSX.Element {
-  const { isUsedByIframe } = useIframe();
+  const { isEmbedded } = useAppHandlingContext();
   const { authenticationToken } = useAuthContext();
   const { translate } = useSettingsContext();
 
   return (
     <>
-      {isUsedByIframe ? (
+      {isEmbedded ? (
         <p className="p-2 text-center text-dfxGray-700">{translate('navigation/links', 'Powered by DFX')}</p>
       ) : (
         <div className="flex flex-col text-center gap-2 md:flex-row justify-around py-4 bg-dfxGray-300">

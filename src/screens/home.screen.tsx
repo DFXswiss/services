@@ -2,25 +2,25 @@ import { useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Layout } from '../components/layout';
 import { ServiceButton, ServiceButtonType } from '../components/service-button';
+import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useBalanceContext } from '../contexts/balance.context';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useIframe } from '../hooks/iframe.hook';
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isProcessing, isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
-  const { isUsedByIframe } = useIframe();
+  const { isEmbedded } = useAppHandlingContext();
 
   return (
-    <Layout title={isUsedByIframe ? translate('screens/home', 'DFX services') : undefined} backButton={isUsedByIframe}>
+    <Layout title={isEmbedded ? translate('screens/home', 'DFX services') : undefined} backButton={isEmbedded}>
       {isProcessing || isUserLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
       ) : (
         <>
-          {!isUsedByIframe && <BrowserContent />}
+          {!isEmbedded && <BrowserContent />}
           {isLoggedIn && user ? <LoggedInContent /> : <LoggedOffContent />}
         </>
       )}
