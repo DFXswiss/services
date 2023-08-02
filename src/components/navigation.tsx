@@ -111,7 +111,7 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
   const selectedLanguage = useWatch({ control, name: 'language' });
 
   useEffect(() => {
-    if (selectedLanguage.id !== language?.id) {
+    if (selectedLanguage?.id !== language?.id) {
       changeLanguage(selectedLanguage);
       setIsNavigationOpen(false);
     }
