@@ -4,11 +4,15 @@ Reusable web widget to buy, sell and convert crypto assets
 
 ## Usage
 
-DFX Services can be used as a standalone page or integrated into any webpage using an Iframe.
+DFX Services can be used as a standalone page or integrated into any webpage using an Iframe or a web component.
+
+- [Opening](#opening)
+- [Closing](#closing)
+- [Code examples](#code-examples)
 
 ### Opening
 
-Just open [services.dfx.swiss](https://services.dfx.swiss/) with the authentication information of the user (see [below](#authentication)). If the services are used as a standalone page, a redirect URI has to be provided (see [query parameters](#query-parameters)).
+Just open [services.dfx.swiss](https://services.dfx.swiss/) with the authentication information of the user (see [below](#authentication)). If the services are used as a standalone page, a redirect URI has to be provided (see [query parameters](#query-parameters)). For more details on the Usage with an Iframe or web component see [code examples](#code-examples).
 
 #### Authentication
 
@@ -23,7 +27,7 @@ The services can be opened either with address and signature (not recommended) o
 
 #### Entry Points
 
-There are multiple entry points (URL paths) for the services, depending on what the user should do.
+There are multiple entry points for the services, depending on what the user should do. For standalone or Iframe usage, entry points are selected using URL paths, for the web component, use the `service` parameter.
 
 - Home (`/`): the user can select the action himself (buy, sell, convert)
 - Buy (`/buy`): the user is directly forwarded to the buy crypto page
@@ -34,14 +38,22 @@ There are multiple entry points (URL paths) for the services, depending on what 
 
 There are parameters to preselect all or a part of the required information.
 
-- Redirect URI (`redirect-uri`): URI to redirect the user to after cancel or completion (see [closing](#closing))
 - Blockchain (`blockchain`): filter for the asset selection (useful if the user has a multi-chain address)
 - Balances (`balances`): wallet balances of the user (required for sell and convert), usage example: `balances=0.35@113,12.3@111`
 - Input amount (`amount-in`): the amount to sell or convert (in input asset)
 - Output amount (`amount-out`): the amount to receive (in output asset) (_TBD_)
 - Input asset: (`asset-in`): the asset to sell or convert (crypto asset or currency)
 - Output asset (`asset-out`): the asset to receive (crypto asset or currency)
-- Bank account (`bank-account`): the bank account to send the money to (for sell)
+- Bank account (`bank-account`): the bank account to send the money to (sell only)
+
+Additional query parameters for standalone usage.
+
+- Redirect URI (`redirect-uri`): URI to redirect the user to after cancel or completion (see [closing](#closing))
+
+Additional query parameters for usage in web component.
+
+- Service (`service`): entry point selection (`buy` or `sell`)
+- Closing callback (`on-close`): callback called on cancel or completion (see [closing](#closing))
 
 Hints:
 
@@ -71,9 +83,9 @@ On cancel or completion, the user will be redirected to the `redirect-uri`. Depe
   - `amount`: Amount to sell
 - Convert: _TBD_
 
-#### Iframe
+#### Iframe / Web Component
 
-On cancel or completion, a message will be sent on the window object of the browser. The following data format is used.
+On cancel or completion, a message will be sent on the window object of the browser. For web component, the close callback (see [query parameters](#query-parameters)) is called. The following data format is used.
 
 ```ts
 enum CloseType {
@@ -90,7 +102,11 @@ interface CloseMessage {
 }
 ```
 
-Example code:
+Documentation on `BuyPaymentInfoDto` and `SellPaymentInfoDto` can be found in the [DFX API Swagger documentation](https://api.dfx.swiss/).
+
+### Code Examples
+
+#### Iframe
 
 ```html
 <script>
@@ -109,4 +125,17 @@ Example code:
 <iframe src="https://services.dfx.swiss" height="600" width="500" frameborder="0" />
 ```
 
-Documentation on `BuyPaymentInfoDto` and `SellPaymentInfoDto` can be found in the [DFX API Swagger documentation](https://api.dfx.swiss/).
+#### Web Component
+
+```html
+<script defer="defer" src="https://services.dfx.swiss/widget/v1.0"></script>
+<script>
+  function handleClose(data: CloseMessage) {
+    /* ADD YOUR CODE HERE */
+  }
+</script>
+
+<h1>DFX Services in a Widget</h1>
+
+<dfx-services on-close="handleClose" session="{ACCESS_TOKEN}" />
+```
