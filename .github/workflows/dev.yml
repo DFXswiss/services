@@ -34,6 +34,10 @@ jobs:
         run: |
           npm ci
 
+      - name: Read version
+        id: version
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
+
       - name: Build code
         run: |
           npm run build:dev
@@ -45,6 +49,17 @@ jobs:
       - name: Run linter
         run: |
           npm run lint
+
+      - name: Build widget
+        run: |
+          npm run widget:dev
+
+      - name: Copy widget
+        run: |
+          mkdir -p build/widget/media
+          version=$(echo "v${{ steps.version.outputs.current-version }}" | cut -d '.' -f1-2)
+          cp widget/static/js/main.*.js build/widget/v$version
+          cp widget/static/css/main.*.css build/widget/v$version.css
 
       - name: Deploy to Azure Storage (DEV)
         uses: azure/CLI@v1
