@@ -19,7 +19,7 @@ input[type='number'] {
 }
 
 @layer base {
-  html {
+  html, #app-root {
     @apply text-white;
     @apply bg-white;
 
@@ -28,6 +28,9 @@ input[type='number'] {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: #fff;
+  }
+
+  html {
     overflow-x: hidden;
     height: 100%;
   }

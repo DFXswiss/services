@@ -15,7 +15,7 @@ export function Layout({ title, backButton, textStart, children }: LayoutProps):
   const { isEmbedded } = useAppHandlingContext();
 
   return (
-    <div className="h-full flex flex-col">
+    <div id="app-root" className="h-full flex flex-col">
       <Navigation title={title} backButton={backButton} />
 
       <div className="flex-grow overflow-auto">
