@@ -1,9 +1,9 @@
 import { DfxContextProvider } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { RouteObject, RouterProvider } from 'react-router-dom';
-import { AppHandlingContextProvider } from './contexts/app-handling.context';
+import { AppHandlingContextProvider, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
-import { ParamContextProvider } from './contexts/param.context';
+import { AppParams, ParamContextProvider } from './contexts/param.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyInfoScreen } from './screens/buy-info.screen';
@@ -44,34 +44,34 @@ const routes = [
   },
 ];
 
-export interface AppParams {
-  address?: string;
-  signature?: string;
-  wallet?: string;
-  session?: string;
-  redirectUri?: string;
-  blockchain?: string;
-  balances?: string;
-  amountIn?: string;
-  amountOut?: string;
-  assetIn?: string;
-  assetOut?: string;
-  bankAccount?: string;
+export enum Service {
+  BUY = 'buy',
+  SELL = 'sell',
+}
+
+export interface WidgetParams extends AppParams {
+  service?: Service;
+  onClose?: (data: CloseMessageData) => void;
 }
 
 interface AppProps {
   routerFactory: (routes: RouteObject[]) => Router;
-  params?: AppParams;
+  params?: WidgetParams;
 }
 
 function App({ routerFactory, params }: AppProps) {
+  const router = routerFactory(routes);
+
+  const home = params?.service && `/${params.service}`;
+  if (home) router.navigate(home);
+
   return (
-    <AppHandlingContextProvider>
+    <AppHandlingContextProvider home={home} isWidget={params != null} closeCallback={params?.onClose}>
       <BalanceContextProvider>
         <DfxContextProvider api={{}} data={{}}>
           <SettingsContextProvider>
             <ParamContextProvider params={params}>
-              <RouterProvider router={routerFactory(routes)} />
+              <RouterProvider router={router} />
             </ParamContextProvider>
           </SettingsContextProvider>
         </DfxContextProvider>

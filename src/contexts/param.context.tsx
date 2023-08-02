@@ -1,8 +1,22 @@
 import { Utils, useApiSession, useSessionContext } from '@dfx.swiss/react';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { AppParams } from '../App';
 import { useAppHandlingContext } from './app-handling.context';
 import { useBalanceContext } from './balance.context';
+
+export interface AppParams {
+  address?: string;
+  signature?: string;
+  wallet?: string;
+  session?: string;
+  redirectUri?: string;
+  blockchain?: string;
+  balances?: string;
+  amountIn?: string;
+  amountOut?: string;
+  assetIn?: string;
+  assetOut?: string;
+  bankAccount?: string;
+}
 
 interface ParamContextInterface extends AppParams {
   isInitialized: boolean;

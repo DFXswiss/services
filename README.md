@@ -92,17 +92,21 @@ interface CloseMessage {
 
 Example code:
 
-```ts
-window.addEventListener('message', (event: MessageEvent<string>) => handleClose(event.data));
+```html
+<script>
+  window.addEventListener('message', (event: MessageEvent<string>) => handleClose(event.data));
 
-function handleClose(data: string) {
-  try {
-    const message: CloseMessage = JSON.parse(data);
-    /* ADD YOUR CODE HERE */
-  } catch (e) {
-    console.error('Failed to handle Iframe message:', e);
+  function handleClose(data: string) {
+    try {
+      const message: CloseMessage = JSON.parse(data);
+      /* ADD YOUR CODE HERE */
+    } catch (e) {
+      console.error('Failed to handle Iframe message:', e);
+    }
   }
-}
+</script>
+
+<iframe src="https://services.dfx.swiss" height="600" width="500" frameborder="0" />
 ```
 
 Documentation on `BuyPaymentInfoDto` and `SellPaymentInfoDto` can be found in the [DFX API Swagger documentation](https://api.dfx.swiss/).
