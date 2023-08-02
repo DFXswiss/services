@@ -6,7 +6,7 @@ import { useLocation } from 'react-router-dom';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from '../hooks/navigation.hook';
-import logo from '../static/assets/logo-dark.svg';
+import Logo from '../static/assets/logo-dark.svg';
 import { NavigationLink } from './navigation-link';
 
 interface FormData {
@@ -86,7 +86,7 @@ function BackButton({ title, backButton }: NavigationIframeProps): JSX.Element {
 function DfxLogo(): JSX.Element {
   return (
     <a href="/">
-      <img height={23} width={73.6} src={logo} alt="logo" />
+      <img height={23} width={73.6} src={Logo} alt="logo" />
     </a>
   );
 }
