@@ -9,7 +9,7 @@ export enum CloseType {
   CANCEL = 'cancel',
 }
 
-export interface IframeMessageData {
+export interface CloseMessageData {
   type: CloseType;
   buy?: Buy;
   sell?: Sell;
@@ -38,9 +38,16 @@ export interface SellServicesParams extends ICloseServicesParams {
 export type CloseServicesParams = CancelServicesParams | BuyServicesParams | SellServicesParams;
 
 interface AppHandlingContextInterface {
+  homePath: string;
   isEmbedded: boolean;
   setRedirectUri: (redirectUri: string) => void;
   closeServices: (params: CloseServicesParams) => void;
+}
+
+interface AppHandlingContextProps extends PropsWithChildren {
+  home?: string;
+  isWidget: boolean;
+  closeCallback?: (data: CloseMessageData) => void;
 }
 
 const AppHandlingContext = createContext<AppHandlingContextInterface>(undefined as any);
@@ -49,18 +56,27 @@ export function useAppHandlingContext(): AppHandlingContextInterface {
   return useContext(AppHandlingContext);
 }
 
-export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Element {
+export function AppHandlingContextProvider({
+  home,
+  isWidget,
+  closeCallback,
+  children,
+}: AppHandlingContextProps): JSX.Element {
   const { redirectUri: storeRedirectUri } = useStore();
   const [redirectUri, setRedirectUri] = useState<string>();
   const { isUsedByIframe, sendMessage } = useIframe();
+
+  const [homePath] = useState<string>(home ?? window.location.pathname);
 
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
   }, []);
 
   function closeServices(params: CloseServicesParams) {
-    if (isUsedByIframe) {
-      sendMessage(createIframeMessageData(params));
+    if (isWidget) {
+      closeCallback?.(createCloseMessageData(params));
+    } else if (isUsedByIframe) {
+      sendMessage(createCloseMessageData(params));
     } else {
       const win: Window = window;
       win.location = getRedirectUri(params);
@@ -84,7 +100,7 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
     }
   }
 
-  function createIframeMessageData(params: CloseServicesParams): IframeMessageData {
+  function createCloseMessageData(params: CloseServicesParams): CloseMessageData {
     switch (params.type) {
       case CloseType.BUY:
         return {
@@ -105,7 +121,8 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
 
   const context = useMemo(
     () => ({
-      isEmbedded: isUsedByIframe,
+      homePath,
+      isEmbedded: isWidget || isUsedByIframe,
       setRedirectUri: (redirectUri: string) => {
         setRedirectUri(redirectUri);
         storeRedirectUri.set(redirectUri);
@@ -115,5 +132,5 @@ export function AppHandlingContextProvider(props: PropsWithChildren): JSX.Elemen
     [redirectUri],
   );
 
-  return <AppHandlingContext.Provider value={context}>{props.children}</AppHandlingContext.Provider>;
+  return <AppHandlingContext.Provider value={context}>{children}</AppHandlingContext.Provider>;
 }

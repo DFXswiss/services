@@ -50,8 +50,7 @@ export function Navigation({ title, backButton = true }: NavigationIframeProps):
 }
 
 function BackButton({ title, backButton }: NavigationIframeProps): JSX.Element {
-  const { homePath } = useSettingsContext();
-  const { isEmbedded, closeServices } = useAppHandlingContext();
+  const { homePath, isEmbedded, closeServices } = useAppHandlingContext();
   const location = useLocation();
   const { navigate } = useNavigation();
 

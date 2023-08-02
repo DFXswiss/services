@@ -1,7 +1,7 @@
 import { createMemoryRouter } from 'react-router-dom';
-import App, { AppParams } from './App';
+import App, { WidgetParams } from './App';
 
-function MainWidget(params: AppParams) {
+function MainWidget(params: WidgetParams) {
   return <App routerFactory={createMemoryRouter} params={params} />;
 }
 
