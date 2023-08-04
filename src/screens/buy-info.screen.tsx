@@ -70,7 +70,7 @@ export function BuyInfoScreen(): JSX.Element {
   }, [assetIn, getCurrency, currencies]);
 
   useEffect(() => {
-    if (!asset || !currency) return;
+    if (!(asset && currency && (amountIn || amountOut))) return;
 
     const request: BuyPaymentInfo = { asset, currency };
     if (amountIn) {

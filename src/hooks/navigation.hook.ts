@@ -1,15 +1,19 @@
 import { useMemo } from 'react';
-import { NavigateFunction, NavigateOptions, To, useLocation, useNavigate } from 'react-router-dom';
+import { NavigateOptions, To, useLocation, useNavigate } from 'react-router-dom';
+
+interface NavigationOptions extends NavigateOptions {
+  clearSearch?: string[];
+}
 
 interface NavigationInterface {
-  navigate: NavigateFunction;
+  navigate: (to: To | number, options?: NavigationOptions) => void;
 }
 
 export function useNavigation(): NavigationInterface {
   const navigateTo = useNavigate();
   const { search } = useLocation();
 
-  function navigate(to: To | number, options?: NavigateOptions) {
+  function navigate(to: To | number, options?: NavigationOptions) {
     switch (typeof to) {
       case 'number':
         return navigateTo(to);
@@ -18,7 +22,12 @@ export function useNavigation(): NavigationInterface {
         return navigateTo(`${to}?${new URLSearchParams(search)}`, options);
 
       default:
-        to.search = search;
+        // join params
+        const params = new URLSearchParams(search);
+        new URLSearchParams(to.search).forEach((val, key) => params.set(key, val));
+        options?.clearSearch?.forEach((s) => params.delete(s));
+
+        to.search = `?${params}`;
         return navigateTo(to, options);
     }
   }

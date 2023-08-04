@@ -17,6 +17,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { useLocation } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useSessionGuard } from '../hooks/guard.hook';
@@ -28,6 +29,7 @@ export function ProfileScreen(): JSX.Element {
   const { countries, reloadUser } = useUserContext();
   const { setKycData } = useKyc();
   const { navigate } = useNavigation();
+  const { search } = useLocation();
   const {
     control,
     handleSubmit,
@@ -39,12 +41,14 @@ export function ProfileScreen(): JSX.Element {
   const [errorMessage, setErrorMessage] = useState<string>();
   const [showsErrorAlert, setShowsErrorAlert] = useState(false);
 
+  const redirectPath = new URLSearchParams(search).get('redirect-path') ?? '/';
+
   function onSubmit(data: KycData) {
     setIsSubmitting(true);
     setKycData(data)
       .then(() => reloadUser())
       // wait for the user to reload
-      .then(() => setTimeout(() => navigate({ pathname: '/sell' }, { replace: true }), 10))
+      .then(() => setTimeout(() => navigate({ pathname: redirectPath }, { clearSearch: ['redirect-path'] }), 10))
       .catch((error: ApiError) => {
         setErrorMessage(error.message);
         setShowsErrorAlert(true);
@@ -128,6 +132,7 @@ export function ProfileScreen(): JSX.Element {
               <StyledHorizontalStack gap={2}>
                 <StyledInput
                   name="firstname"
+                  autocomplete="firstname"
                   label={translate('screens/profile', 'First name')}
                   placeholder={translate('screens/profile', 'John')}
                   full
@@ -135,6 +140,7 @@ export function ProfileScreen(): JSX.Element {
                 />
                 <StyledInput
                   name="surname"
+                  autocomplete="lastname"
                   label={translate('screens/profile', 'Last name')}
                   placeholder={translate('screens/profile', 'Doe')}
                   full
@@ -144,6 +150,7 @@ export function ProfileScreen(): JSX.Element {
               <StyledHorizontalStack gap={2}>
                 <StyledInput
                   name="street"
+                  autocomplete="street"
                   label={translate('screens/profile', 'Street')}
                   placeholder={translate('screens/profile', 'Street')}
                   full
@@ -151,6 +158,7 @@ export function ProfileScreen(): JSX.Element {
                 />
                 <StyledInput
                   name="houseNumber"
+                  autocomplete="house-number"
                   label={translate('screens/profile', 'House nr.')}
                   placeholder="xx"
                   small
@@ -160,6 +168,7 @@ export function ProfileScreen(): JSX.Element {
               <StyledHorizontalStack gap={2}>
                 <StyledInput
                   name="zip"
+                  autocomplete="zip"
                   type="number"
                   label={translate('screens/profile', 'ZIP code')}
                   placeholder="12345"
@@ -168,6 +177,7 @@ export function ProfileScreen(): JSX.Element {
                 />
                 <StyledInput
                   name="location"
+                  autocomplete="city"
                   label={translate('screens/profile', 'City')}
                   placeholder="Berlin"
                   full
@@ -184,6 +194,7 @@ export function ProfileScreen(): JSX.Element {
               />
               <StyledInput
                 name="mail"
+                autocomplete="email"
                 type="email"
                 label={translate('screens/profile', 'Email address')}
                 placeholder={translate('screens/profile', 'example@mail.com')}
@@ -191,6 +202,7 @@ export function ProfileScreen(): JSX.Element {
               />
               <StyledInput
                 name="phone"
+                autocomplete="phone"
                 type="tel"
                 label={translate('screens/profile', 'Phone number')}
                 placeholder="+49 12345678"
@@ -203,6 +215,7 @@ export function ProfileScreen(): JSX.Element {
                   </p>
                   <StyledInput
                     name="organizationName"
+                    autocomplete="organization-name"
                     label={translate('screens/profile', 'Organization name')}
                     placeholder={translate('screens/profile', 'Example inc.')}
                     full
@@ -211,6 +224,7 @@ export function ProfileScreen(): JSX.Element {
                   <StyledHorizontalStack gap={2}>
                     <StyledInput
                       name="organizationStreet"
+                      autocomplete="street"
                       label={translate('screens/profile', 'Street')}
                       placeholder={translate('screens/profile', 'Street')}
                       full
@@ -218,6 +232,7 @@ export function ProfileScreen(): JSX.Element {
                     />
                     <StyledInput
                       name="organizationHouseNumber"
+                      autocomplete="houseNumber"
                       label={translate('screens/profile', 'House nr.')}
                       placeholder="xx"
                       small
@@ -227,6 +242,7 @@ export function ProfileScreen(): JSX.Element {
                   <StyledHorizontalStack gap={2}>
                     <StyledInput
                       name="organizationZip"
+                      autocomplete="zip"
                       type="number"
                       label={translate('screens/profile', 'ZIP code')}
                       placeholder="12345"
@@ -235,6 +251,7 @@ export function ProfileScreen(): JSX.Element {
                     />
                     <StyledInput
                       name="organizationLocation"
+                      autocomplete="city"
                       label={translate('screens/profile', 'City')}
                       placeholder="Berlin"
                       full
