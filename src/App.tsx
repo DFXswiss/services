@@ -11,6 +11,7 @@ import { BuyScreen } from './screens/buy.screen';
 import { ErrorScreen } from './screens/error.screen';
 import { HomeScreen } from './screens/home.screen';
 import { ProfileScreen } from './screens/profile.screen';
+import { SellInfoScreen } from './screens/sell-info.screen';
 import { SellScreen } from './screens/sell.screen';
 import { setupLanguages } from './translations';
 
@@ -33,6 +34,10 @@ const routes = [
   {
     path: '/sell',
     element: <SellScreen />,
+  },
+  {
+    path: '/sell/info',
+    element: <SellInfoScreen />,
   },
   {
     path: '/bank-accounts',

@@ -24,10 +24,10 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
-import { BuyCompletion } from '../components/buy/buy-completion';
-import { PaymentInformation, PaymentInformationContent } from '../components/buy/payment-information';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
+import { BuyCompletion } from '../components/payment/buy-completion';
+import { PaymentInformation, PaymentInformationContent } from '../components/payment/payment-information';
 import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import useDebounce from '../hooks/debounce.hook';
@@ -120,7 +120,7 @@ export function BuyScreen(): JSX.Element {
   function checkForMinDeposit(buy: Buy, amount: number, currency: string): Buy | undefined {
     if (buy.minVolume > amount) {
       setCustomAmountError(
-        translate('screens/buy', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+        translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
           amount: Utils.formatAmount(buy.minVolume),
           currency,
         }),

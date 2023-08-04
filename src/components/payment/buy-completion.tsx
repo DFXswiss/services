@@ -19,10 +19,10 @@ export function BuyCompletion({ showsSimple, paymentInfo }: { showsSimple: boole
 
   function getHeader(): string {
     return showsSimple
-      ? translate('screens/buy', 'Nice! You are all set! Give us a minute to handle your transaction')
+      ? translate('screens/payment', 'Nice! You are all set! Give us a minute to handle your transaction')
       : translate(
           'screens/buy',
-          'As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet',
+          'As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet.',
         );
   }
 
@@ -41,8 +41,9 @@ export function BuyCompletion({ showsSimple, paymentInfo }: { showsSimple: boole
           <p className="text-center text-dfxBlue-800">
             {translate(
               'screens/buy',
-              'As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet. We will inform you about the progress of any purchase or sale via E-mail.',
-            )}
+              'As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.',
+            )}{' '}
+            {translate('screens/payment', 'We will inform you about the progress of any purchase or sale via E-mail.')}
           </p>
           <StyledButton
             label={translate('general/actions', 'Close')}
@@ -56,7 +57,7 @@ export function BuyCompletion({ showsSimple, paymentInfo }: { showsSimple: boole
         <MailEdit
           onSubmit={(email) => (!email || email.length === 0) && close()}
           infoText={translate(
-            'screens/buy',
+            'screens/payment',
             'Enter your email address if you want to be informed about the progress of any purchase or sale',
           )}
           hideLabels

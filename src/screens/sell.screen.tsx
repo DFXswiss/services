@@ -32,9 +32,9 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
-import { AddBankAccount } from '../components/buy/add-bank-account';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
+import { AddBankAccount } from '../components/payment/add-bank-account';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useBalanceContext } from '../contexts/balance.context';
 import { useParamContext } from '../contexts/param.context';
@@ -187,7 +187,7 @@ export function SellScreen(): JSX.Element {
   function checkForMinDeposit(sell: Sell, amount: number, currency: string): Sell | undefined {
     if (sell.minVolume > amount) {
       setCustomAmountError(
-        translate('screens/sell', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+        translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
           amount: Utils.formatAmountCrypto(sell.minVolume),
           currency,
         }),
