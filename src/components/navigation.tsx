@@ -1,5 +1,15 @@
-import { Language, useAuthContext } from '@dfx.swiss/react';
-import { DfxIcon, Form, IconColor, IconSize, IconVariant, StyledDropdown } from '@dfx.swiss/react-components';
+import { Language, useAuthContext, useSessionContext } from '@dfx.swiss/react';
+import {
+  DfxIcon,
+  Form,
+  IconColor,
+  IconSize,
+  IconVariant,
+  StyledButton,
+  StyledButtonColor,
+  StyledButtonWidth,
+  StyledDropdown,
+} from '@dfx.swiss/react-components';
 import { PropsWithChildren, SetStateAction, useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
@@ -100,9 +110,9 @@ function MenuIcon({ icon, setIsNavigationOpen }: IconContentProps): JSX.Element 
 }
 
 function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JSX.Element {
-  const { translate } = useSettingsContext();
   const { authenticationToken } = useAuthContext();
-  const { language, availableLanguages, changeLanguage } = useSettingsContext();
+  const { translate, language, availableLanguages, changeLanguage } = useSettingsContext();
+  const { isLoggedIn, logout } = useSessionContext();
 
   const {
     control,
@@ -129,6 +139,11 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             />
           )}
           <NavigationLink
+            icon={IconVariant.TELEGRAM}
+            label={translate('navigation/links', 'Telegram')}
+            url={process.env.REACT_APP_TG_URL}
+          />
+          <NavigationLink
             icon={IconVariant.FILE}
             label={translate('navigation/links', 'Terms and conditions')}
             url={process.env.REACT_APP_TNC_URL}
@@ -154,6 +169,16 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
               descriptionFunc={(item) => item.foreignName}
             />
           </Form>
+
+          {isLoggedIn && (
+            <StyledButton
+              className="mt-4"
+              label={translate('general/actions', 'Logout')}
+              onClick={logout}
+              color={StyledButtonColor.STURDY_WHITE}
+              width={StyledButtonWidth.FULL}
+            />
+          )}
         </div>
       </div>
     </nav>
