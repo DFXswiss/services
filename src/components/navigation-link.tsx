@@ -8,7 +8,7 @@ interface NavigationLinkProps {
 
 export function NavigationLink({ icon, label, url }: NavigationLinkProps): JSX.Element {
   return (
-    <div className="flex flex-row space-x-2">
+    <div className="flex flex-row items-center space-x-2">
       <DfxIcon icon={icon} color={IconColor.RED} />
       <StyledLink label={label} url={url} dark />
     </div>
