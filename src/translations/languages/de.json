@@ -7,7 +7,8 @@
     "Ok": "Ok",
     "Cancel": "Abbrechen",
     "Finish": "Fertig",
-    "Save": "Speichern"
+    "Save": "Speichern",
+    "Logout": "Logout"
   },
   "general/errors": {
     "Something went wrong": "Irgendwas hat nicht funktioniert",
@@ -132,6 +133,7 @@
   "navigation/links": {
     "Powered by DFX": "Powered by DFX",
     "My DFX": "My DFX",
+    "Telegram": "Telegram",
     "Terms and conditions": "Geschäftsbedingungen",
     "Privacy policy": "Datenschutzerklärung",
     "Imprint": "Impressum"
