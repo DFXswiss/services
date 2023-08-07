@@ -1,24 +1,15 @@
+export interface StoreItem<T> {
+  get: () => T | undefined;
+  set: (item: T) => void;
+  remove: () => void;
+}
+
 export interface StoreInterface {
-  authenticationToken: {
-    get: () => string | undefined;
-    set: (token: string) => void;
-    remove: () => void;
-  };
-  redirectUri: {
-    get: () => string | undefined;
-    set: (uri: string) => void;
-    remove: () => void;
-  };
-  balances: {
-    get: () => string | undefined;
-    set: (balances: string) => void;
-    remove: () => void;
-  };
-  language: {
-    get: () => string | undefined;
-    set: (language: string) => void;
-    remove: () => void;
-  };
+  authenticationToken: StoreItem<string>;
+  redirectUri: StoreItem<string>;
+  balances: StoreItem<string>;
+  language: StoreItem<string>;
+  showsSignatureInfo: StoreItem<boolean>;
 }
 
 enum StoreKey {
@@ -26,6 +17,7 @@ enum StoreKey {
   REDIRECT_URI = 'redirectUri',
   BALANCES = 'balances',
   LANGUAGE = 'language',
+  SHOWS_SIGNATURE_INFO = 'showsSignatureInfo',
 }
 
 export function useStore(): StoreInterface {
@@ -63,6 +55,11 @@ export function useStore(): StoreInterface {
       get: () => get(StoreKey.LANGUAGE),
       set: (value: string) => set(StoreKey.LANGUAGE, value),
       remove: () => remove(StoreKey.LANGUAGE),
+    },
+    showsSignatureInfo: {
+      get: () => (get(StoreKey.SHOWS_SIGNATURE_INFO) ?? 'true') === 'true',
+      set: (value: boolean) => set(StoreKey.SHOWS_SIGNATURE_INFO, value ? 'true' : 'false'),
+      remove: () => remove(StoreKey.SHOWS_SIGNATURE_INFO),
     },
   };
 }

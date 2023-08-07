@@ -5,6 +5,7 @@ import { AppHandlingContextProvider, CloseMessageData } from './contexts/app-han
 import { BalanceContextProvider } from './contexts/balance.context';
 import { AppParams, ParamContextProvider } from './contexts/param.context';
 import { SettingsContextProvider } from './contexts/settings.context';
+import { WalletContextProvider } from './contexts/wallet.context';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyInfoScreen } from './screens/buy-info.screen';
 import { BuyScreen } from './screens/buy.screen';
@@ -72,15 +73,17 @@ function App({ routerFactory, params }: AppProps) {
 
   return (
     <AppHandlingContextProvider home={home} isWidget={params != null} closeCallback={params?.onClose}>
-      <BalanceContextProvider>
-        <DfxContextProvider api={{}} data={{}}>
+      <DfxContextProvider api={{}} data={{}}>
+        <BalanceContextProvider>
           <SettingsContextProvider>
             <ParamContextProvider params={params}>
-              <RouterProvider router={router} />
+              <WalletContextProvider>
+                <RouterProvider router={router} />
+              </WalletContextProvider>
             </ParamContextProvider>
           </SettingsContextProvider>
-        </DfxContextProvider>
-      </BalanceContextProvider>
+        </BalanceContextProvider>
+      </DfxContextProvider>
     </AppHandlingContextProvider>
   );
 }
