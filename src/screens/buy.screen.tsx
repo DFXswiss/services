@@ -30,6 +30,7 @@ import { BuyCompletion } from '../components/payment/buy-completion';
 import { PaymentInformation, PaymentInformationContent } from '../components/payment/payment-information';
 import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useWalletContext } from '../contexts/wallet.context';
 import useDebounce from '../hooks/debounce.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
@@ -52,6 +53,7 @@ export function BuyScreen(): JSX.Element {
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isAllowedToBuy } = useKycHelper();
   const { user } = useUserContext();
+  const { blockchain: walletBlockchain } = useWalletContext();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<PaymentInformation>();
@@ -76,13 +78,14 @@ export function BuyScreen(): JSX.Element {
   }
 
   useEffect(() => {
-    const blockchains = blockchain ? [blockchain as Blockchain] : availableBlockchains ?? [];
+    const activeBlockchain = walletBlockchain ?? blockchain;
+    const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
     const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false });
     setAvailableAssets(blockchainAssets);
 
     const asset = getAsset(blockchainAssets, assetOut) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
     if (asset) setVal('asset', asset);
-  }, [assetOut, getAsset, getAssets]);
+  }, [assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
     const currency = getCurrency(currencies, assetIn) ?? getDefaultCurrency(currencies);
