@@ -36,7 +36,13 @@
 
     "Buy and Sell cryptocurrencies with bank transfers": "Kaufe und verkaufe Kryptowährungen mit Banküberweisungen",
 
-    "Please login via an application to use our services": "Bitte melde Dich über eine Anwendung an, um unsere Services benutzen zu können"
+    "Please login via an application to use our services": "Bitte melde Dich über eine Anwendung an, um unsere Services benutzen zu können",
+    "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Melde Dich bei Deinem DFX-Konto an, indem Du mit Deiner Unterschrift bestätigst, dass Du der alleinige Eigentümer der angegebenen Blockchain-Adresse bist.",
+    "Don't show this again.": "Nicht mehr anzeigen.",
+
+    "Please install MetaMask or Rabby!": "Bitte installiere MetaMask oder Rabby!",
+    "You need to install the MetaMask or Rabby browser extension to be able to use this service. Visit": "Um diesen Dienst nutzen zu können, musst Du die Browsererweiterung MetaMask oder Rabby installieren. Siehe",
+    "for more details.": "für mehr Details."
   },
   "screens/buy": {
     "Buy": "Kaufen",
