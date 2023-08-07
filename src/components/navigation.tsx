@@ -112,7 +112,7 @@ function MenuIcon({ icon, setIsNavigationOpen }: IconContentProps): JSX.Element 
 function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JSX.Element {
   const { authenticationToken } = useAuthContext();
   const { translate, language, availableLanguages, changeLanguage } = useSettingsContext();
-  const { isLoggedIn, logout } = useSessionContext();
+  const { isLoggedIn, logout: apiLogout } = useSessionContext();
 
   const {
     control,
@@ -126,6 +126,11 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
       setIsNavigationOpen(false);
     }
   }, [selectedLanguage]);
+
+  async function logout() {
+    await apiLogout();
+    setIsNavigationOpen(false);
+  }
 
   return (
     <nav>
