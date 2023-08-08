@@ -68,6 +68,7 @@ export function ParamContextProvider(props: ParamContextProps): JSX.Element {
     setParams(params);
 
     // session
+    const hasSession = (params.address && params.signature) || params.session;
     if (params.address && params.signature) {
       const session = await createSession(params.address, params.signature, params.wallet);
 
@@ -80,7 +81,7 @@ export function ParamContextProvider(props: ParamContextProps): JSX.Element {
       setRedirectUri(params.redirectUri);
     }
 
-    if (params.balances) {
+    if (params.balances || hasSession) {
       readBalances(params.balances);
     }
 
