@@ -18,8 +18,8 @@ export function Layout({ title, backButton, textStart, children }: LayoutProps):
     <div id="app-root" className="h-full flex flex-col">
       <Navigation title={title} backButton={backButton} />
 
-      <div className="flex-grow overflow-auto">
-        <div className="flex justify-center">
+      <div className="flex flex-col flex-grow overflow-auto">
+        <div className="flex flex-grow justify-center">
           <div
             className={`max-w-screen-md flex flex-grow flex-col items-center ${
               textStart ? 'text-start' : 'text-center'
