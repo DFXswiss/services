@@ -1,3 +1,5 @@
+import { WalletType } from '../contexts/wallet.context';
+
 export interface StoreItem<T> {
   get: () => T | undefined;
   set: (item: T) => void;
@@ -5,11 +7,11 @@ export interface StoreItem<T> {
 }
 
 export interface StoreInterface {
-  authenticationToken: StoreItem<string>;
   redirectUri: StoreItem<string>;
   balances: StoreItem<string>;
   language: StoreItem<string>;
   showsSignatureInfo: StoreItem<boolean>;
+  activeWallet: StoreItem<WalletType>;
 }
 
 enum StoreKey {
@@ -18,6 +20,7 @@ enum StoreKey {
   BALANCES = 'balances',
   LANGUAGE = 'language',
   SHOWS_SIGNATURE_INFO = 'showsSignatureInfo',
+  ACTIVE_WALLET = 'activeWallet',
 }
 
 export function useStore(): StoreInterface {
@@ -36,11 +39,6 @@ export function useStore(): StoreInterface {
   }
 
   return {
-    authenticationToken: {
-      get: () => get(StoreKey.AUTH_TOKEN),
-      set: (value: string) => set(StoreKey.AUTH_TOKEN, value),
-      remove: () => remove(StoreKey.AUTH_TOKEN),
-    },
     redirectUri: {
       get: () => get(StoreKey.REDIRECT_URI),
       set: (value: string) => set(StoreKey.REDIRECT_URI, value),
@@ -60,6 +58,11 @@ export function useStore(): StoreInterface {
       get: () => (get(StoreKey.SHOWS_SIGNATURE_INFO) ?? 'true') === 'true',
       set: (value: boolean) => set(StoreKey.SHOWS_SIGNATURE_INFO, value ? 'true' : 'false'),
       remove: () => remove(StoreKey.SHOWS_SIGNATURE_INFO),
+    },
+    activeWallet: {
+      get: () => get(StoreKey.ACTIVE_WALLET) as WalletType,
+      set: (value: WalletType) => set(StoreKey.ACTIVE_WALLET, value),
+      remove: () => remove(StoreKey.ACTIVE_WALLET),
     },
   };
 }
