@@ -1,6 +1,7 @@
-import { Asset, Blockchain, useAuth, useSessionContext } from '@dfx.swiss/react';
+import { Asset, Blockchain, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useMetaMask } from '../hooks/metamask.hook';
+import { useStore } from '../hooks/store.hook';
 import { AssetBalance, useBalanceContext } from './balance.context';
 import { useParamContext } from './param.context';
 
@@ -27,26 +28,55 @@ export function useWalletContext(): WalletInterface {
 }
 
 export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
+  const { isInitialized, isLoggedIn } = useSessionContext();
+  const { session } = useApiSession();
   const { isInstalled, register, requestAccount, requestBlockchain, sign, readBalance } = useMetaMask();
   const { login: apiLogin, logout: apiLogout, signUp: apiSignUp } = useSessionContext();
   const { wallet: paramWallet } = useParamContext();
   const { getSignMessage } = useAuth();
   const { hasBalance, getBalances: getParamBalances } = useBalanceContext();
+  const { activeWallet: activeWalletStore } = useStore();
 
-  const [address, setAddress] = useState<string>();
-  const [blockchain, setBlockchain] = useState<Blockchain>();
-  const [activeWallet, setActiveWallet] = useState<WalletType>();
+  const [activeAddress, setActiveAddress] = useState<string>();
+  const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
+
+  const [mmAddress, setMmAddress] = useState<string>();
+  const [mmBlockchain, setMmBlockchain] = useState<Blockchain>();
 
   useEffect(() => {
-    register(setAddress, setBlockchain);
+    register(setMmAddress, setMmBlockchain);
   }, []);
+
+  useEffect(() => {
+    if (activeAddress && mmAddress) {
+      // logout on account switch
+      if (activeAddress !== mmAddress) apiLogout();
+    } else if (activeWallet === WalletType.META_MASK) {
+      setActiveAddress(mmAddress);
+    }
+  }, [activeAddress, mmAddress, activeWallet]);
+
+  useEffect(() => {
+    if (activeAddress && session?.address && activeAddress !== session.address) resetWallet();
+  }, [session, activeAddress]);
+
+  useEffect(() => {
+    if (isInitialized && !isLoggedIn) resetWallet();
+  }, [isInitialized, isLoggedIn]);
+
+  function resetWallet() {
+    setActiveAddress(undefined);
+    setActiveWallet(undefined);
+    activeWalletStore.remove();
+  }
 
   async function login(wallet: WalletType, signHintCallback?: () => Promise<void>): Promise<string> {
     const [address, blockchain] = await connect(wallet);
 
-    setAddress(address);
-    setBlockchain(blockchain);
     setActiveWallet(wallet);
+    activeWalletStore.set(wallet);
+    setMmAddress(address);
+    setMmBlockchain(blockchain);
 
     // show signature hint
     await signHintCallback?.();
@@ -96,7 +126,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   async function getBalances(assets: Asset[]): Promise<AssetBalance[]> {
     switch (activeWallet) {
       case WalletType.META_MASK:
-        return await Promise.all(assets.map((asset: Asset) => readBalance(asset, address)));
+        return (await Promise.all(assets.map((asset: Asset) => readBalance(asset, activeAddress)))).filter(
+          (b) => b.amount > 0,
+        );
       default:
         return getParamBalances(assets);
     }
@@ -104,8 +136,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
   const context: WalletInterface = useMemo(
     () => ({
-      address,
-      blockchain,
+      address: activeWallet === WalletType.META_MASK ? mmAddress : undefined,
+      blockchain: activeWallet === WalletType.META_MASK ? mmBlockchain : undefined,
       wallets: Object.values(WalletType),
       getInstalledWallets,
       login,
@@ -114,7 +146,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       hasBalance: hasBalance, // || activeWallet != null, // TODO: activate
       getBalances,
     }),
-    [address, blockchain, isInstalled, activeWallet, requestAccount, requestBlockchain, sign, getParamBalances],
+    [mmAddress, mmBlockchain, getParamBalances, activeWallet, isInstalled, requestAccount, requestBlockchain, sign],
   );
 
   return <WalletContext.Provider value={context}>{props.children}</WalletContext.Provider>;
