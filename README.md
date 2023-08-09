@@ -137,5 +137,5 @@ Documentation on `BuyPaymentInfoDto` and `SellPaymentInfoDto` can be found in th
 
 <h1>DFX Services in a Widget</h1>
 
-<dfx-services on-close="handleClose" session="{ACCESS_TOKEN}" />
+<dfx-services on-close="handleClose" session="{ACCESS_TOKEN}">Loading ...</dfx-services>
 ```

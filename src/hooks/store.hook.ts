@@ -15,12 +15,12 @@ export interface StoreInterface {
 }
 
 enum StoreKey {
-  AUTH_TOKEN = 'authenticationToken',
-  REDIRECT_URI = 'redirectUri',
-  BALANCES = 'balances',
-  LANGUAGE = 'language',
-  SHOWS_SIGNATURE_INFO = 'showsSignatureInfo',
-  ACTIVE_WALLET = 'activeWallet',
+  AUTH_TOKEN = 'dfx.srv.authenticationToken',
+  REDIRECT_URI = 'dfx.srv.redirectUri',
+  BALANCES = 'dfx.srv.balances',
+  LANGUAGE = 'dfx.srv.language',
+  SHOWS_SIGNATURE_INFO = 'dfx.srv.showsSignatureInfo',
+  ACTIVE_WALLET = 'dfx.srv.activeWallet',
 }
 
 export function useStore(): StoreInterface {
