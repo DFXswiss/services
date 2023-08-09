@@ -22,7 +22,7 @@ export function BuyCompletion({ showsSimple, paymentInfo }: { showsSimple: boole
       ? translate('screens/payment', 'Nice! You are all set! Give us a minute to handle your transaction')
       : translate(
           'screens/buy',
-          'As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet.',
+          'As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.',
         );
   }
 
