@@ -12,12 +12,14 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { ServiceButton, ServiceButtonType } from '../components/service-button';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { useDeferredPromise } from '../hooks/deferred-promise.hook';
+import { useNavigation } from '../hooks/navigation.hook';
 import { useStore } from '../hooks/store.hook';
 
 export function HomeScreen(): JSX.Element {
@@ -79,6 +81,8 @@ function LoggedOffContent(): JSX.Element {
   const { wallets, getInstalledWallets, login } = useWalletContext();
   const { defer, deferRef } = useDeferredPromise<void>();
   const { showsSignatureInfo } = useStore();
+  const { navigate } = useNavigation();
+  const { search } = useLocation();
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [showInstallHint, setShowInstallHint] = useState<WalletType>();
@@ -87,6 +91,8 @@ function LoggedOffContent(): JSX.Element {
   const labels: { [type in WalletType]: string } = {
     [WalletType.META_MASK]: 'MetaMask / Rabby',
   };
+
+  const redirectPath = new URLSearchParams(search).get('redirect-path');
 
   async function confirmSignHint(): Promise<void> {
     if (!showsSignatureInfo.get()) return;
@@ -104,7 +110,14 @@ function LoggedOffContent(): JSX.Element {
   function connect(wallet: WalletType) {
     if (getInstalledWallets().some((w) => w === wallet)) {
       setIsConnecting(true);
-      login(wallet, confirmSignHint).finally(() => setIsConnecting(false));
+      login(wallet, confirmSignHint)
+        .then(() => {
+          if (redirectPath) {
+            // wait for the user to reload
+            setTimeout(() => navigate({ pathname: redirectPath }, { clearSearch: ['redirect-path'] }), 10);
+          }
+        })
+        .finally(() => setIsConnecting(false));
     } else {
       setShowInstallHint(wallet);
     }

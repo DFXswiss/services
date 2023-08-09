@@ -8,9 +8,11 @@ export function useSessionGuard(redirectPath = '/') {
   const { isInitialized: sessionInitialized, isLoggedIn } = useSessionContext();
   const { isInitialized: paramsInitialized } = useParamContext();
   const { navigate } = useNavigation();
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    if (sessionInitialized && paramsInitialized && !isLoggedIn) navigate(redirectPath);
+    if (sessionInitialized && paramsInitialized && !isLoggedIn)
+      navigate({ pathname: redirectPath, search: `?${new URLSearchParams({ 'redirect-path': pathname })}` });
   }, [sessionInitialized, paramsInitialized, isLoggedIn, navigate]);
 }
 
