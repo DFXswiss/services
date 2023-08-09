@@ -45,7 +45,7 @@ interface AppHandlingContextInterface {
 }
 
 interface AppHandlingContextProps extends PropsWithChildren {
-  home?: string;
+  home: string;
   isWidget: boolean;
   closeCallback?: (data: CloseMessageData) => void;
 }
@@ -65,8 +65,6 @@ export function AppHandlingContextProvider({
   const { redirectUri: storeRedirectUri } = useStore();
   const [redirectUri, setRedirectUri] = useState<string>();
   const { isUsedByIframe, sendMessage } = useIframe();
-
-  const [homePath] = useState<string>(home ?? window.location.pathname);
 
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
@@ -121,7 +119,7 @@ export function AppHandlingContextProvider({
 
   const context = useMemo(
     () => ({
-      homePath,
+      homePath: home,
       isEmbedded: isWidget || isUsedByIframe,
       setRedirectUri: (redirectUri: string) => {
         setRedirectUri(redirectUri);
@@ -129,7 +127,7 @@ export function AppHandlingContextProvider({
       },
       closeServices,
     }),
-    [redirectUri],
+    [home, redirectUri],
   );
 
   return <AppHandlingContext.Provider value={context}>{children}</AppHandlingContext.Provider>;

@@ -72,7 +72,11 @@ function App({ routerFactory, params }: AppProps) {
   if (home) router.navigate(home);
 
   return (
-    <AppHandlingContextProvider home={home} isWidget={params != null} closeCallback={params?.onClose}>
+    <AppHandlingContextProvider
+      home={router.state.location.pathname}
+      isWidget={params != null}
+      closeCallback={params?.onClose}
+    >
       <DfxContextProvider api={{}} data={{}}>
         <BalanceContextProvider>
           <SettingsContextProvider>

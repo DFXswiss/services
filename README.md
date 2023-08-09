@@ -12,9 +12,11 @@ DFX Services can be used as a standalone page or integrated into any webpage usi
 
 ### Opening
 
-Just open [services.dfx.swiss](https://services.dfx.swiss/) with the authentication information of the user (see [below](#authentication)). If the services are used as a standalone page, a redirect URI has to be provided (see [query parameters](#query-parameters)). For more details on the Usage with an Iframe or web component see [code examples](#code-examples).
+Just open [services.dfx.swiss](https://services.dfx.swiss/) with the desired parameters. If the services are used as a standalone page, a redirect URI has to be provided (see [query parameters](#query-parameters)). For more details on the Usage with an Iframe or web component see [code examples](#code-examples).
 
-#### Authentication
+The services support multiple login methods (see [user login](#user-login)) or an automated login (see [user authentication](#user-authentication)).
+
+#### User Authentication
 
 The services can be opened either with address and signature (not recommended) or a JWT access token for DFX API. Details on the authentication can be found in the [API documentation](https://github.com/DFXswiss/api#registration).
 
@@ -24,6 +26,17 @@ The services can be opened either with address and signature (not recommended) o
   - `wallet`: wallet/client identifier (name or ID), used for sign up, see [API documentation](https://github.com/DFXswiss/api#initial-wallet-setup-optional) (optional)
 - Token parameters
   - `session`: access token for the DFX API (required)
+
+#### User Login
+
+If no authentication parameters are provided, the user can use one of the following login methods.
+
+- MetaMask / Rabby browser extension
+- Alby browser extension (_TBD_)
+- BitBox hardware wallet (_TBD_)
+- Ledger hardware wallet (_TBD_)
+
+It is recommended to use the `wallet` parameter (wallet/client identifier (name or ID) used for sign up, see [API documentation](https://github.com/DFXswiss/api#initial-wallet-setup-optional)).
 
 #### Entry Points
 
@@ -70,7 +83,7 @@ There are multiple types of closings.
 - Sell: user wants to sell crypto
 - Convert: user wants to convert crypto
 
-If the user wants to sell or convert, the caller has to initiate the corresponding transaction, as the widget does not have the right to issue a transaction. The required information is provided on closing (see below);
+If the user wants to sell or convert and automated login (see [user authentication](#user-authentication)) was used, the caller has to initiate the corresponding transaction, as the widget does not have the right to issue a transaction. The required information is provided on closing (see below);
 
 #### Standalone
 
