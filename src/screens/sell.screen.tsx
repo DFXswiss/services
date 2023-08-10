@@ -236,7 +236,7 @@ export function SellScreen(): JSX.Element {
   async function handleNext(paymentInfo: Sell): Promise<void> {
     await updateBankAccount();
 
-    closeServices({ type: CloseType.SELL, sell: paymentInfo });
+    closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo });
   }
 
   const rules = Utils.createRules({

@@ -17,7 +17,7 @@ export function SellCompletion({ paymentInfo }: { paymentInfo: Sell }): JSX.Elem
   const { closeServices } = useAppHandlingContext();
 
   function close() {
-    closeServices({ type: CloseType.SELL, sell: paymentInfo });
+    closeServices({ type: CloseType.SELL, isComplete: true, sell: paymentInfo });
   }
 
   return (

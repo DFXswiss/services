@@ -27,7 +27,7 @@ export function BuyCompletion({ showsSimple, paymentInfo }: { showsSimple: boole
   }
 
   function close() {
-    closeServices({ type: CloseType.BUY, buy: paymentInfo });
+    closeServices({ type: CloseType.BUY, isComplete: true, buy: paymentInfo });
   }
 
   return (

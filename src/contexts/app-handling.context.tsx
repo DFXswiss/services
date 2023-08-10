@@ -17,6 +17,7 @@ export interface CloseMessageData {
 
 export interface ICloseServicesParams {
   type: CloseType;
+  isComplete?: boolean;
   buy?: Buy;
   sell?: Sell;
 }
@@ -27,11 +28,13 @@ export interface CancelServicesParams extends ICloseServicesParams {
 
 export interface BuyServicesParams extends ICloseServicesParams {
   type: CloseType.BUY;
+  isComplete: boolean;
   buy: Buy;
 }
 
 export interface SellServicesParams extends ICloseServicesParams {
   type: CloseType.SELL;
+  isComplete: boolean;
   sell: Sell;
 }
 
@@ -88,8 +91,9 @@ export function AppHandlingContextProvider({
 
       case CloseType.SELL:
         const urlParams = new URLSearchParams({
-          routeId: '' + params.sell.routeId,
-          amount: params.sell?.amount ? params.sell.amount.toString() : '0',
+          routeId: params.sell.routeId.toString(),
+          amount: params.sell.amount.toString(),
+          isComplete: params.isComplete.toString(),
         });
         return `${redirectUri}${params.type}?${urlParams}`;
 

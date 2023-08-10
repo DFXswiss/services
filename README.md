@@ -83,7 +83,7 @@ There are multiple types of closings.
 - Sell: user wants to sell crypto
 - Convert: user wants to convert crypto
 
-If the user wants to sell or convert and automated login (see [user authentication](#user-authentication)) was used, the caller has to initiate the corresponding transaction, as the widget does not have the right to issue a transaction. The required information is provided on closing (see below);
+If the user wants to sell or convert and automated login (see [user authentication](#user-authentication)) was used, the caller has to initiate the corresponding transaction, as the widget does not have the right to issue a transaction. The `isComplete` field is set to `false` and the required information is provided on closing (see below).
 
 #### Standalone
 
@@ -94,6 +94,7 @@ On cancel or completion, the user will be redirected to the `redirect-uri`. Depe
 - Sell: redirected to `{redirect-url}sell` with the following parameters:
   - `routeId`: Sell route ID (get details from [route endpoint](https://api.dfx.swiss/swagger#/Sell/SellController_getSell), authentication required)
   - `amount`: Amount to sell
+  - `isComplete`: Is `true`, if blockchain transaction is already executed
 - Convert: _TBD_
 
 #### Iframe / Web Component
@@ -110,6 +111,7 @@ enum CloseType {
 
 interface CloseMessage {
   type: CloseType;
+  isComplete?: boolean;
   buy?: BuyPaymentInfoDto;
   sell?: SellPaymentInfoDto;
 }
