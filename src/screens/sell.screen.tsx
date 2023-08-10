@@ -44,6 +44,7 @@ import useDebounce from '../hooks/debounce.hook';
 import { useKycDataGuard, useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
+import { isDefined } from '../util/utils';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -64,7 +65,7 @@ export function SellScreen(): JSX.Element {
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
-  const { assetIn, assetOut, amountIn, bankAccount, blockchain } = useParamContext();
+  const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain } = useParamContext();
   const { isAllowedToSell } = useKycHelper();
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
@@ -103,9 +104,15 @@ export function SellScreen(): JSX.Element {
     const activeBlockchain = walletBlockchain ?? blockchain;
     const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
     const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
-    setAvailableAssets(blockchainAssets);
+    const activeAssets = assets
+      ? assets
+          .split(',')
+          .map((a) => getAsset(blockchainAssets, a))
+          .filter(isDefined)
+      : blockchainAssets;
+    setAvailableAssets(activeAssets);
 
-    const asset = getAsset(blockchainAssets, assetIn) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
+    const asset = getAsset(activeAssets, assetIn) ?? (activeAssets.length === 1 && activeAssets[0]);
     if (asset) setVal('asset', asset);
   }, [assetIn, getAsset, getAssets, blockchain, walletBlockchain]);
 

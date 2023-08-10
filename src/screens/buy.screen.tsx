@@ -34,6 +34,7 @@ import { useWalletContext } from '../contexts/wallet.context';
 import useDebounce from '../hooks/debounce.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
+import { isDefined } from '../util/utils';
 
 interface FormData {
   currency: Fiat;
@@ -49,7 +50,7 @@ export function BuyScreen(): JSX.Element {
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assetIn, assetOut, amountIn, blockchain } = useParamContext();
+  const { assets, assetIn, assetOut, amountIn, blockchain } = useParamContext();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isAllowedToBuy } = useKycHelper();
   const { user } = useUserContext();
@@ -81,9 +82,15 @@ export function BuyScreen(): JSX.Element {
     const activeBlockchain = walletBlockchain ?? blockchain;
     const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
     const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false });
-    setAvailableAssets(blockchainAssets);
+    const activeAssets = assets
+      ? assets
+          .split(',')
+          .map((a) => getAsset(blockchainAssets, a))
+          .filter(isDefined)
+      : blockchainAssets;
+    setAvailableAssets(activeAssets);
 
-    const asset = getAsset(blockchainAssets, assetOut) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
+    const asset = getAsset(activeAssets, assetOut) ?? (activeAssets.length === 1 && activeAssets[0]);
     if (asset) setVal('asset', asset);
   }, [assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
 

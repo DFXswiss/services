@@ -13,6 +13,7 @@ export interface AppParams {
   balances?: string;
   amountIn?: string;
   amountOut?: string;
+  assets?: string;
   assetIn?: string;
   assetOut?: string;
   bankAccount?: string;
@@ -101,6 +102,7 @@ export function ParamContextProvider(props: ParamContextProps): JSX.Element {
       balances: getParameter(query, 'balances'),
       amountIn: getParameter(query, 'amount-in'),
       amountOut: getParameter(query, 'amount-out'),
+      assets: getParameter(query, 'assets'),
       assetIn: getParameter(query, 'asset-in'),
       assetOut: getParameter(query, 'asset-out'),
       bankAccount: getParameter(query, 'bank-account'),

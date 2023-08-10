@@ -1,6 +1,7 @@
 import { Asset, useAsset, useSessionContext } from '@dfx.swiss/react';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../hooks/store.hook';
+import { isDefined } from '../util/utils';
 
 export interface AssetBalance {
   asset: Asset;
@@ -37,10 +38,6 @@ export function BalanceContextProvider(props: PropsWithChildren): JSX.Element {
   useEffect(() => {
     if (isInitialized && !isLoggedIn) readBalances(undefined);
   }, [isInitialized, isLoggedIn]);
-
-  function isDefined<T>(balance: T | undefined): balance is T {
-    return balance != null;
-  }
 
   function readBalances(param?: string) {
     param ? storeBalances.set(param) : storeBalances.remove();

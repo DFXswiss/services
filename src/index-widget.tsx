@@ -13,6 +13,7 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   balances: 'string',
   amountIn: 'string',
   amountOut: 'string',
+  assets: 'string',
   assetIn: 'string',
   assetOut: 'string',
   bankAccount: 'string',
