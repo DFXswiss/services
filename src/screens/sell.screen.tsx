@@ -32,17 +32,19 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
-import { AddBankAccount } from '../components/buy/add-bank-account';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
+import { AddBankAccount } from '../components/payment/add-bank-account';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
-import { useBalanceContext } from '../contexts/balance.context';
+import { AssetBalance } from '../contexts/balance.context';
 import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useWalletContext } from '../contexts/wallet.context';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycDataGuard, useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
+import { isDefined } from '../util/utils';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -58,12 +60,12 @@ export function SellScreen(): JSX.Element {
   const { closeServices } = useAppHandlingContext();
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
-  const { balances } = useBalanceContext();
+  const { getBalances, blockchain: walletBlockchain } = useWalletContext();
   const { availableBlockchains } = useSessionContext();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
-  const { assetIn, assetOut, amountIn, bankAccount, blockchain } = useParamContext();
+  const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain } = useParamContext();
   const { isAllowedToSell } = useKycHelper();
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
@@ -74,6 +76,11 @@ export function SellScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [balances, setBalances] = useState<AssetBalance[]>();
+
+  useEffect(() => {
+    availableAssets && getBalances(availableAssets).then(setBalances);
+  }, [getBalances, availableAssets]);
 
   // form
   const {
@@ -94,18 +101,25 @@ export function SellScreen(): JSX.Element {
   }
 
   useEffect(() => {
-    const blockchains = blockchain ? [blockchain as Blockchain] : availableBlockchains ?? [];
+    const activeBlockchain = walletBlockchain ?? blockchain;
+    const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
     const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
-    setAvailableAssets(blockchainAssets);
+    const activeAssets = assets
+      ? assets
+          .split(',')
+          .map((a) => getAsset(blockchainAssets, a))
+          .filter(isDefined)
+      : blockchainAssets;
+    setAvailableAssets(activeAssets);
 
-    const asset = getAsset(blockchainAssets, assetIn) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
+    const asset = getAsset(activeAssets, assetIn) ?? (activeAssets.length === 1 && activeAssets[0]);
     if (asset) setVal('asset', asset);
-  }, [getAssets]);
+  }, [assetIn, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
     const currency = getCurrency(currencies, assetOut) ?? getDefaultCurrency(currencies);
     if (currency) setVal('currency', currency);
-  }, [assetIn, getCurrency, currencies]);
+  }, [assetOut, getCurrency, currencies]);
 
   useEffect(() => {
     if (amountIn) setVal('amount', amountIn);
@@ -169,7 +183,7 @@ export function SellScreen(): JSX.Element {
   }, [validatedData]);
 
   function checkForAmountAvailable(amount: number, asset: Asset): boolean {
-    const balance = findBalance(asset) ?? '0';
+    const balance = findBalance(asset) ?? 0;
     if (amount > Number(balance)) {
       setCustomAmountError(
         translate('screens/sell', 'Entered amount is higher than available balance of {{amount}} {{asset}}', {
@@ -187,7 +201,7 @@ export function SellScreen(): JSX.Element {
   function checkForMinDeposit(sell: Sell, amount: number, currency: string): Sell | undefined {
     if (sell.minVolume > amount) {
       setCustomAmountError(
-        translate('screens/sell', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+        translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
           amount: Utils.formatAmountCrypto(sell.minVolume),
           currency,
         }),
@@ -207,13 +221,8 @@ export function SellScreen(): JSX.Element {
     }
   }
 
-  function findBalance(asset: Asset): string | undefined {
-    const balance =
-      balances?.find((b) => +b.token === asset.id) ??
-      balances?.find((b) => b.token.toLowerCase() === asset.uniqueName.toLowerCase()) ??
-      balances?.find((b) => b.token.toLowerCase() === asset.name.toLowerCase());
-
-    return balance?.amount;
+  function findBalance(asset: Asset): number | undefined {
+    return balances?.find((b) => b.asset.id === asset.id)?.amount;
   }
 
   async function updateBankAccount(): Promise<BankAccount> {
@@ -227,7 +236,7 @@ export function SellScreen(): JSX.Element {
   async function handleNext(paymentInfo: Sell): Promise<void> {
     await updateBankAccount();
 
-    closeServices({ type: CloseType.SELL, sell: paymentInfo });
+    closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo });
   }
 
   const rules = Utils.createRules({
@@ -250,7 +259,7 @@ export function SellScreen(): JSX.Element {
               labelIcon={IconVariant.WALLET}
               items={availableAssets}
               labelFunc={(item) => item.name}
-              balanceFunc={(item) => findBalance(item) ?? ''}
+              balanceFunc={(item) => findBalance(item)?.toString() ?? ''}
               assetIconFunc={(item) => item.name as AssetIconVariant}
               descriptionFunc={(item) => item.blockchain}
             />

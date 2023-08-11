@@ -1,9 +1,9 @@
 import { Utils, useApiSession, useSessionContext } from '@dfx.swiss/react';
-import { PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
+import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useAppHandlingContext } from './app-handling.context';
 import { useBalanceContext } from './balance.context';
 
-interface AppParams {
+export interface AppParams {
   address?: string;
   signature?: string;
   wallet?: string;
@@ -13,14 +13,18 @@ interface AppParams {
   balances?: string;
   amountIn?: string;
   amountOut?: string;
+  assets?: string;
   assetIn?: string;
   assetOut?: string;
   bankAccount?: string;
 }
 
 interface ParamContextInterface extends AppParams {
-  init(search: string): Promise<void>;
   isInitialized: boolean;
+}
+
+interface ParamContextProps extends PropsWithChildren {
+  params?: AppParams;
 }
 
 const ParamContext = createContext<ParamContextInterface>(undefined as any);
@@ -29,7 +33,7 @@ export function useParamContext(): ParamContextInterface {
   return useContext(ParamContext);
 }
 
-export function ParamContextProvider(props: PropsWithChildren): JSX.Element {
+export function ParamContextProvider(props: ParamContextProps): JSX.Element {
   const { updateSession } = useApiSession();
   const { login, signUp, logout } = useSessionContext();
   const { setRedirectUri } = useAppHandlingContext();
@@ -37,6 +41,13 @@ export function ParamContextProvider(props: PropsWithChildren): JSX.Element {
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [params, setParams] = useState<AppParams>({});
+
+  const search = (window as Window).location.search;
+  const query = new URLSearchParams(search);
+
+  useEffect(() => {
+    init();
+  }, []);
 
   const blockedParams = ['address', 'signature', 'wallet', 'session', 'redirect-uri', 'balances'];
 
@@ -52,10 +63,36 @@ export function ParamContextProvider(props: PropsWithChildren): JSX.Element {
     location.replace(`${location.origin}${location.pathname}?${query}`);
   }
 
-  async function init(search: string) {
-    // extract params
-    const query = new URLSearchParams(search);
-    const urlParams = {
+  async function init() {
+    const params = props.params ?? extractUrlParams();
+
+    setParams(params);
+
+    // session
+    const hasSession = (params.address && params.signature) || params.session;
+    if (params.address && params.signature) {
+      const session = await createSession(params.address, params.signature, params.wallet);
+
+      !session && logout();
+    } else if (params.session && Utils.isJwt(params.session)) {
+      updateSession(params.session);
+    }
+
+    if (params.redirectUri) {
+      setRedirectUri(params.redirectUri);
+    }
+
+    if (params.balances || hasSession) {
+      readBalances(params.balances);
+    }
+
+    setIsInitialized(true);
+
+    reloadWithoutBlockedParams(query);
+  }
+
+  function extractUrlParams(): AppParams {
+    return {
       address: getParameter(query, 'address'),
       signature: getParameter(query, 'signature'),
       wallet: getParameter(query, 'wallet'),
@@ -65,33 +102,11 @@ export function ParamContextProvider(props: PropsWithChildren): JSX.Element {
       balances: getParameter(query, 'balances'),
       amountIn: getParameter(query, 'amount-in'),
       amountOut: getParameter(query, 'amount-out'),
+      assets: getParameter(query, 'assets'),
       assetIn: getParameter(query, 'asset-in'),
       assetOut: getParameter(query, 'asset-out'),
       bankAccount: getParameter(query, 'bank-account'),
     };
-
-    setParams(urlParams);
-
-    // session
-    if (urlParams.address && urlParams.signature) {
-      const session = await createSession(urlParams.address, urlParams.signature, urlParams.wallet);
-
-      !session && logout();
-    } else if (urlParams.session && Utils.isJwt(urlParams.session)) {
-      updateSession(urlParams.session);
-    }
-
-    if (urlParams.redirectUri) {
-      setRedirectUri(urlParams.redirectUri);
-    }
-
-    if (urlParams.balances) {
-      readBalances(urlParams.balances);
-    }
-
-    setIsInitialized(true);
-
-    reloadWithoutBlockedParams(query);
   }
 
   async function createSession(address: string, signature: string, wallet?: string): Promise<string | undefined> {
@@ -102,7 +117,7 @@ export function ParamContextProvider(props: PropsWithChildren): JSX.Element {
     }
   }
 
-  const context = useMemo(() => ({ init, isInitialized, ...params }), [isInitialized, params]);
+  const context = useMemo(() => ({ isInitialized, ...params }), [isInitialized, params]);
 
   return <ParamContext.Provider value={context}>{props.children}</ParamContext.Provider>;
 }

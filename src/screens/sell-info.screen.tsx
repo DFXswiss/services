@@ -1,22 +1,24 @@
 import {
   Asset,
-  Buy,
-  BuyPaymentInfo,
+  BankAccount,
+  Blockchain,
   Fiat,
+  Sell,
+  SellPaymentInfo,
   Utils,
+  Validations,
   useAsset,
   useAssetContext,
-  useBuy,
+  useBankAccount,
+  useBankAccountContext,
   useFiat,
+  useSell,
   useSessionContext,
   useUserContext,
 } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
-  DfxIcon,
-  IconColor,
-  IconVariant,
   SpinnerSize,
   StyledButton,
   StyledButtonWidth,
@@ -30,51 +32,72 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
-import { BuyCompletion } from '../components/payment/buy-completion';
-import { GiroCode } from '../components/payment/giro-code';
+import { QrCopy } from '../components/payment/qr-copy';
+import { SellCompletion } from '../components/payment/sell-completion';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useKycDataGuard, useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 
-export function BuyInfoScreen(): JSX.Element {
+export function SellInfoScreen(): JSX.Element {
   useSessionGuard();
+  useKycDataGuard('/profile');
   const { translate } = useSettingsContext();
-  const { user } = useUserContext();
   const { availableBlockchains } = useSessionContext();
-  const { assetIn, assetOut, amountIn, amountOut } = useParamContext();
+  const { bankAccounts, createAccount } = useBankAccountContext();
+  const { getAccount } = useBankAccount();
+  const { assetIn, assetOut, amountIn, amountOut, bankAccount: bankAccountParam } = useParamContext();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
-  const { isAllowedToBuy } = useKycHelper();
-  const { currencies, receiveFor } = useBuy();
+  const { isAllowedToSell } = useKycHelper();
+  const { currencies, receiveFor } = useSell();
+  const { countries } = useUserContext();
   const { closeServices } = useAppHandlingContext();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [paymentInfo, setPaymentInfo] = useState<Buy>();
+  const [paymentInfo, setPaymentInfo] = useState<Sell>();
   const [showsCompletion, setShowsCompletion] = useState(false);
   const [asset, setAsset] = useState<Asset>();
   const [currency, setCurrency] = useState<Fiat>();
+  const [bankAccount, setBankAccount] = useState<BankAccount>();
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [customAmountError, setCustomAmountError] = useState<string>();
 
   // default params
   useEffect(() => {
     const blockchains = availableBlockchains ?? [];
-    const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false });
+    const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
 
-    if (!asset) setAsset(getAsset(blockchainAssets, assetOut));
-  }, [assetOut, getAsset, getAssets]);
-
-  useEffect(() => {
-    if (!currency) setCurrency(getCurrency(currencies, assetIn));
-  }, [assetIn, getCurrency, currencies]);
+    if (!asset) setAsset(getAsset(blockchainAssets, assetIn));
+  }, [assetIn, getAsset, getAssets]);
 
   useEffect(() => {
-    if (!(asset && currency && (amountIn || amountOut))) return;
+    if (!currency) setCurrency(getCurrency(currencies, assetOut));
+  }, [assetOut, getCurrency, currencies]);
 
-    const request: BuyPaymentInfo = { asset, currency };
+  useEffect(() => {
+    if (bankAccountParam && bankAccounts?.length) {
+      const account = getAccount(bankAccounts, bankAccountParam);
+      if (account) {
+        setBankAccount(account);
+      } else if (!isCreatingAccount && Validations.Iban(countries).validate(bankAccountParam) === true) {
+        setIsCreatingAccount(true);
+        createAccount({ iban: bankAccountParam })
+          .then(setBankAccount)
+          .finally(() => setIsCreatingAccount(false));
+      }
+    }
+  }, [bankAccountParam, getAccount, bankAccounts, countries]);
+
+  useEffect(() => {
+    // TODO: remove LN check with DEV-1679
+    if (!(asset && asset.blockchain === Blockchain.LIGHTNING && currency && bankAccount && (amountIn || amountOut)))
+      return;
+
+    const request: SellPaymentInfo = { asset, currency, iban: bankAccount?.iban };
     if (amountIn) {
       request.amount = +amountIn;
     } else if (amountOut) {
@@ -85,65 +108,36 @@ export function BuyInfoScreen(): JSX.Element {
       .then(checkForMinDeposit)
       .then(setPaymentInfo)
       .finally(() => setIsLoading(false));
-  }, [asset, currency, amountIn, amountOut]);
+  }, [asset, currency, bankAccount, amountIn, amountOut]);
 
-  function checkForMinDeposit(buy: Buy): Buy | undefined {
-    if (buy.minVolume > buy.amount) {
+  function checkForMinDeposit(sell: Sell): Sell | undefined {
+    if (sell.minVolume > sell.amount) {
       setCustomAmountError(
         translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
-          amount: Utils.formatAmount(buy.minVolume),
-          currency: buy.currency.name,
+          amount: Utils.formatAmount(sell.minVolumeTarget),
+          currency: sell.currency.name,
         }),
       );
       return undefined;
     } else {
       setCustomAmountError(undefined);
-      return buy;
+      return sell;
     }
   }
 
-  const kycRequired = paymentInfo && !isAllowedToBuy(paymentInfo.amount);
-  const showsSimple = user?.mail != null;
+  const kycRequired = paymentInfo && !isAllowedToSell(paymentInfo.estimatedAmount);
 
   return (
     <Layout textStart backButton={false} scrollRef={scrollRef}>
       {showsCompletion && paymentInfo ? (
-        <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo} />
+        <SellCompletion paymentInfo={paymentInfo} />
       ) : isLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
-      ) : paymentInfo && !kycRequired ? (
+      ) : bankAccount && paymentInfo && !kycRequired ? (
         <>
           <h2 className="text-dfxBlue-800 text-center">{translate('screens/payment', 'Payment Information')}</h2>
-
-          <StyledDataTable
-            label={translate('screens/payment', 'Recipient')}
-            alignContent={AlignContent.RIGHT}
-            showBorder
-            minWidth={false}
-          >
-            <StyledDataTableRow label={translate('screens/buy', 'Name')}>
-              {paymentInfo.name}
-              <CopyButton onCopy={() => copy(`${paymentInfo.name}`)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/buy', 'Address')}>
-              {`${paymentInfo.street} ${paymentInfo.number}`}
-              <CopyButton onCopy={() => copy(`${paymentInfo.street} ${paymentInfo.number}`)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/profile', 'ZIP code')}>
-              {paymentInfo.zip}
-              <CopyButton onCopy={() => copy(`${paymentInfo.zip}`)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/profile', 'City')}>
-              {paymentInfo.city}
-              <CopyButton onCopy={() => copy(`${paymentInfo.city}`)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/profile', 'Country')}>
-              {paymentInfo.country}
-              <CopyButton onCopy={() => copy(`${paymentInfo.country}`)} />
-            </StyledDataTableRow>
-          </StyledDataTable>
 
           <StyledDataTable
             label={translate('screens/payment', 'Bank Transaction Details')}
@@ -152,8 +146,8 @@ export function BuyInfoScreen(): JSX.Element {
             minWidth={false}
           >
             <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-              {paymentInfo.amount}
-              <CopyButton onCopy={() => copy(`${paymentInfo.amount}`)} />
+              {paymentInfo.estimatedAmount}
+              <CopyButton onCopy={() => copy(`${paymentInfo.estimatedAmount}`)} />
             </StyledDataTableRow>
             <StyledDataTableRow label={translate('screens/payment', 'Currency')}>
               {paymentInfo.currency.name}
@@ -161,26 +155,14 @@ export function BuyInfoScreen(): JSX.Element {
             </StyledDataTableRow>
             <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
               <div>
-                <p>{paymentInfo.iban}</p>
-                {paymentInfo.sepaInstant && (
-                  <div className="text-white">
-                    <DfxIcon icon={IconVariant.SEPA_INSTANT} color={IconColor.RED} />
-                  </div>
-                )}
+                <p>{bankAccount.iban}</p>
               </div>
-              <CopyButton onCopy={() => copy(paymentInfo.iban)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
-              {paymentInfo.bic}
-              <CopyButton onCopy={() => copy(paymentInfo.bic)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/payment', 'Purpose of payment')}>
-              {paymentInfo.remittanceInfo}
-              <CopyButton onCopy={() => copy(paymentInfo.remittanceInfo)} />
+              <CopyButton onCopy={() => copy(bankAccount.iban)} />
             </StyledDataTableRow>
           </StyledDataTable>
 
-          <GiroCode info={paymentInfo} />
+          <p className="font-semibold text-sm text-dfxBlue-800">{translate('screens/sell', 'Pay with your wallet')}</p>
+          {paymentInfo.paymentRequest && <QrCopy data={paymentInfo.paymentRequest} />}
 
           <div className="pt-4">
             <StyledLink
@@ -195,7 +177,7 @@ export function BuyInfoScreen(): JSX.Element {
 
           <StyledButton
             width={StyledButtonWidth.FULL}
-            label={translate('screens/buy', 'Click here once you have issued the transfer')}
+            label={translate('screens/sell', 'Click here once you have issued the transaction')}
             onClick={() => {
               setShowsCompletion(true);
               scrollRef.current?.scrollTo(0, 0);

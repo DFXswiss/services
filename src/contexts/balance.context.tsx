@@ -1,14 +1,21 @@
+import { Asset, useAsset, useSessionContext } from '@dfx.swiss/react';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../hooks/store.hook';
+import { isDefined } from '../util/utils';
 
-export interface TokenBalance {
-  token: string;
-  amount: string;
+export interface AssetBalance {
+  asset: Asset;
+  amount: number;
+}
+
+interface Balance {
+  asset: string;
+  amount: number;
 }
 
 interface BalanceContextInterface {
-  balances?: TokenBalance[];
-  readBalances: (param: string) => void;
+  getBalances: (assets: Asset[]) => AssetBalance[];
+  readBalances: (param?: string) => void;
   hasBalance: boolean;
 }
 
@@ -20,11 +27,17 @@ export function useBalanceContext(): BalanceContextInterface {
 
 export function BalanceContextProvider(props: PropsWithChildren): JSX.Element {
   const { balances: storeBalances } = useStore();
-  const [balances, setBalances] = useState<TokenBalance[]>();
+  const [balances, setBalances] = useState<Balance[]>();
+  const { getAsset } = useAsset();
+  const { isInitialized, isLoggedIn } = useSessionContext();
 
   useEffect(() => {
     if (!balances) readBalances(storeBalances.get());
   }, []);
+
+  useEffect(() => {
+    if (isInitialized && !isLoggedIn) readBalances(undefined);
+  }, [isInitialized, isLoggedIn]);
 
   function readBalances(param?: string) {
     param ? storeBalances.set(param) : storeBalances.remove();
@@ -33,18 +46,28 @@ export function BalanceContextProvider(props: PropsWithChildren): JSX.Element {
         ?.split(',')
         .map((balance) => {
           const split = balance.split('@');
-          if (split.length !== 2) return { token: '', amount: '' };
-          return { token: split[1], amount: split[0] };
+          if (split.length !== 2) return undefined;
+
+          return { asset: split[1], amount: +split[0] };
         })
-        .filter((balance) => balance.token.length > 0),
+        .filter(isDefined),
     );
+  }
+
+  function getBalances(assets: Asset[]): AssetBalance[] {
+    return assets
+      .map((asset) => {
+        const amount = balances?.find((b) => getAsset(assets, b.asset)?.id === asset.id)?.amount;
+        return amount ? { asset, amount } : undefined;
+      })
+      .filter(isDefined);
   }
 
   const context = useMemo(
     () => ({
-      balances,
+      getBalances,
       readBalances,
-      hasBalance: balances?.some((balance) => +balance.amount > 0) ?? false,
+      hasBalance: balances?.some((balance) => balance.amount > 0) ?? false,
     }),
     [balances],
   );

@@ -7,7 +7,8 @@
     "Ok": "Ok",
     "Cancel": "Abbrechen",
     "Finish": "Fertig",
-    "Save": "Speichern"
+    "Save": "Speichern",
+    "Logout": "Logout"
   },
   "general/errors": {
     "Something went wrong": "Irgendwas hat nicht funktioniert",
@@ -35,7 +36,13 @@
 
     "Buy and Sell cryptocurrencies with bank transfers": "Kaufe und verkaufe Kryptowährungen mit Banküberweisungen",
 
-    "Please login via an application to use our services": "Bitte melde Dich über eine Anwendung an, um unsere Services benutzen zu können"
+    "Please login via an application to use our services": "Bitte melde Dich über eine Anwendung an, um unsere Services benutzen zu können",
+    "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Melde Dich bei Deinem DFX-Konto an, indem Du mit Deiner Unterschrift bestätigst, dass Du der alleinige Eigentümer der angegebenen Blockchain-Adresse bist.",
+    "Don't show this again.": "Nicht mehr anzeigen.",
+
+    "Please install MetaMask or Rabby!": "Bitte installiere MetaMask oder Rabby!",
+    "You need to install the MetaMask or Rabby browser extension to be able to use this service. Visit": "Um diesen Dienst nutzen zu können, musst Du die Browsererweiterung MetaMask oder Rabby installieren. Siehe",
+    "for more details.": "für mehr Details."
   },
   "screens/buy": {
     "Buy": "Kaufen",
@@ -47,18 +54,10 @@
     "≈ {{estimatedAmount}} (incl. {{fee}} DFX fee)": "≈ {{estimatedAmount}} (inkl. {{fee}} DFX Gebühr)",
     "Click here once you have issued the transfer": "Klicke hier, sobald Du die Überweisung getätigt hast",
 
-    "Payment Information": "Zahlungsinformation",
-
     "Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!": "Bitte überweise den Kaufbetrag mit diesen Angaben über Deine Bankanwendung. Der Verwendungszweck ist wichtig!",
-
-    "Bank Transaction Details": "Angaben zur Banktransaktion",
-    "IBAN": "IBAN",
-    "BIC": "BIC",
-    "Purpose of payment": "Verwendungszweck",
 
     "The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders": "Der Verwendungszweck bleibt für die ausgewählte Anlage identisch und kann für wiederkehrende Zahlungen und Daueraufträge verwendet werden",
 
-    "Recipient": "Empfänger",
     "Name": "Name",
     "Address": "Adresse",
 
@@ -66,13 +65,7 @@
 
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
 
-    "Enter your email address if you want to be informed about the progress of any purchase or sale": "Gebe Deine E-Mail Adresse ein, wenn Du über den Fortschritt Deiner Käufe oder Verkäufe informiert werden willst",
-
-    "Nice! You are all set! Give us a minute to handle your transaction": "Sehr schön! Alles erledigt! Gib uns eine Minute, um Deine Transaktion zu bearbeiten",
-
-    "As soon as the transfer arrives in our bank account, we will transfer your asset in your wallet": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir Dein Guthaben in Deine Wallet übertragen",
-
-    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet. We will inform you about the progress of any purchase or sale via E-mail.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir Dein Guthaben in Deine Wallet übertragen. Wir werden Dich per E-Mail über den Fortschritt Deiner Käufe oder Verkäufe informieren."
+    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir das Asset in Deine Wallet übertragen."
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Bankverbindungen",
@@ -90,19 +83,33 @@
     "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)": "≈ {{estimatedAmount}} {{currency}} (inkl. {{fee}} % DFX Gebühr)",
     "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})": "≈ {{estimatedAmount}} {{currency}} (inkl. {{fee}} % DFX Gebühr - min. {{minFee}}{{minFeeCurrency}})",
 
-    "Complete transaction in your wallet": "Schliesse die Transaktion in deiner Wallet ab",
+    "Click here once you have issued the transaction": "Klicke hier, sobald Du die Transaktion getätigt hast",
+    "Complete transaction in your wallet": "Schliesse die Transaktion in Deiner Wallet ab",
+    "Pay with your wallet": "Bezahle mit Deiner Wallet",
 
-    "IBAN": "IBAN",
     "Optional - Account Designation": "Optional - Kontobezeichnung",
     "e.g. Deutsche Bank": "z.B. Deutsche Bank",
     "Add Bank Account": "Bankverbindung hinzufügen",
 
-    "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
+    "Entered amount is higher than available balance of {{amount}} {{asset}}": "Der eingegebene Betrag liegt über dem verfügbaren Guthaben von {{amount}} {{asset}}",
 
-    "Entered amount is higher than available balance of {{amount}} {{asset}}": "Der eingegebene Betrag liegt über dem verfügbaren Guthaben von {{amount}} {{asset}}"
+    "As soon as the transaction arrives in our wallet, we will transfer your money to your bank account.": "Sobald die Transaktion in unserem Wallet eingegangen ist, werden wir Dein Guthaben auf Dein Bankkonto überweisen."
   },
   "screens/payment": {
-    "Please not that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst."
+    "Payment Information": "Zahlungsinformation",
+    "Bank Transaction Details": "Angaben zur Banktransaktion",
+    "Recipient": "Empfänger",
+    "Amount": "Betrag",
+    "Currency": "Währung",
+    "IBAN": "IBAN",
+    "BIC": "BIC",
+    "Purpose of payment": "Verwendungszweck",
+
+    "Please not that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst.",
+    "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
+    "Nice! You are all set! Give us a minute to handle your transaction": "Sehr schön! Alles erledigt! Gib uns eine Minute, um Deine Transaktion zu bearbeiten",
+    "We will inform you about the progress of any purchase or sale via E-mail.": "Wir werden Dich per E-Mail über den Fortschritt Deiner Käufe oder Verkäufe informieren.",
+    "Enter your email address if you want to be informed about the progress of any purchase or sale": "Gebe Deine E-Mail Adresse ein, wenn Du über den Fortschritt Deiner Käufe oder Verkäufe informiert werden willst"
   },
   "screens/profile": {
     "User details": "Benutzerdaten",
@@ -132,6 +139,7 @@
   "navigation/links": {
     "Powered by DFX": "Powered by DFX",
     "My DFX": "My DFX",
+    "Telegram": "Telegram",
     "Terms and conditions": "Geschäftsbedingungen",
     "Privacy policy": "Datenschutzerklärung",
     "Imprint": "Impressum"

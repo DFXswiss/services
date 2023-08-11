@@ -22,17 +22,19 @@ import {
   StyledLink,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
-import { BuyCompletion } from '../components/buy/buy-completion';
-import { PaymentInformation, PaymentInformationContent } from '../components/buy/payment-information';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
+import { BuyCompletion } from '../components/payment/buy-completion';
+import { PaymentInformation, PaymentInformationContent } from '../components/payment/payment-information';
 import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useWalletContext } from '../contexts/wallet.context';
 import useDebounce from '../hooks/debounce.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
+import { isDefined } from '../util/utils';
 
 interface FormData {
   currency: Fiat;
@@ -48,10 +50,12 @@ export function BuyScreen(): JSX.Element {
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assetIn, assetOut, amountIn, blockchain } = useParamContext();
+  const { assets, assetIn, assetOut, amountIn, blockchain } = useParamContext();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isAllowedToBuy } = useKycHelper();
   const { user } = useUserContext();
+  const { blockchain: walletBlockchain } = useWalletContext();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<PaymentInformation>();
@@ -76,13 +80,20 @@ export function BuyScreen(): JSX.Element {
   }
 
   useEffect(() => {
-    const blockchains = blockchain ? [blockchain as Blockchain] : availableBlockchains ?? [];
+    const activeBlockchain = walletBlockchain ?? blockchain;
+    const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
     const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false });
-    setAvailableAssets(blockchainAssets);
+    const activeAssets = assets
+      ? assets
+          .split(',')
+          .map((a) => getAsset(blockchainAssets, a))
+          .filter(isDefined)
+      : blockchainAssets;
+    setAvailableAssets(activeAssets);
 
-    const asset = getAsset(blockchainAssets, assetOut) ?? (blockchainAssets.length === 1 && blockchainAssets[0]);
+    const asset = getAsset(activeAssets, assetOut) ?? (activeAssets.length === 1 && activeAssets[0]);
     if (asset) setVal('asset', asset);
-  }, [assetOut, getAsset, getAssets]);
+  }, [assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
     const currency = getCurrency(currencies, assetIn) ?? getDefaultCurrency(currencies);
@@ -120,7 +131,7 @@ export function BuyScreen(): JSX.Element {
   function checkForMinDeposit(buy: Buy, amount: number, currency: string): Buy | undefined {
     if (buy.minVolume > amount) {
       setCustomAmountError(
-        translate('screens/buy', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+        translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
           amount: Utils.formatAmount(buy.minVolume),
           currency,
         }),
@@ -167,6 +178,7 @@ export function BuyScreen(): JSX.Element {
       title={showsCompletion ? translate('screens/buy', 'Done!') : translate('screens/buy', 'Buy')}
       backButton={!showsCompletion}
       textStart
+      scrollRef={scrollRef}
     >
       {showsCompletion && paymentInfo ? (
         <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo.buy} />
@@ -248,7 +260,7 @@ export function BuyScreen(): JSX.Element {
                       label={translate('screens/buy', 'Click here once you have issued the transfer')}
                       onClick={() => {
                         setShowsCompletion(true);
-                        window.scrollTo(0, 0);
+                        scrollRef.current?.scrollTo(0, 0);
                       }}
                       caps={false}
                       className="my-4"

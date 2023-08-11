@@ -1,13 +1,22 @@
-import { Language, useAuthContext } from '@dfx.swiss/react';
-import { DfxIcon, Form, IconColor, IconSize, IconVariant, StyledDropdown } from '@dfx.swiss/react-components';
+import { Language, useAuthContext, useSessionContext } from '@dfx.swiss/react';
+import {
+  DfxIcon,
+  Form,
+  IconColor,
+  IconSize,
+  IconVariant,
+  StyledButton,
+  StyledButtonColor,
+  StyledButtonWidth,
+  StyledDropdown,
+} from '@dfx.swiss/react-components';
 import { PropsWithChildren, SetStateAction, useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useIframe } from '../hooks/iframe.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import logo from '../static/assets/logo-dark.svg';
+import Logo from '../static/assets/logo-dark.svg';
 import { NavigationLink } from './navigation-link';
 
 interface FormData {
@@ -30,10 +39,10 @@ interface NavigationMenuContentProps {
 
 export function Navigation({ title, backButton = true }: NavigationIframeProps): JSX.Element {
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
-  const { isUsedByIframe } = useIframe();
+  const { isEmbedded } = useAppHandlingContext();
 
-  return title || !isUsedByIframe ? (
-    <div className={`flex items-center justify-between h-12 px-4 py-5 bg-dfxGray-300`}>
+  return title || !isEmbedded ? (
+    <div className={`relative flex items-center justify-between h-12 px-4 py-5 bg-dfxGray-300`}>
       <BackButton title={title} backButton={backButton} />
 
       <div className="absolute right-4">
@@ -51,11 +60,9 @@ export function Navigation({ title, backButton = true }: NavigationIframeProps):
 }
 
 function BackButton({ title, backButton }: NavigationIframeProps): JSX.Element {
-  const { homePath } = useSettingsContext();
-  const { closeServices } = useAppHandlingContext();
+  const { homePath, isEmbedded, closeServices } = useAppHandlingContext();
   const location = useLocation();
   const { navigate } = useNavigation();
-  const { isUsedByIframe } = useIframe();
 
   function onClick() {
     if (homePath === location.pathname) {
@@ -78,7 +85,7 @@ function BackButton({ title, backButton }: NavigationIframeProps): JSX.Element {
             <DfxIcon icon={IconVariant.BACK} color={IconColor.BLUE} size={IconSize.LG} />
           </div>
         ) : (
-          !isUsedByIframe && <DfxLogo />
+          !isEmbedded && <DfxLogo />
         )}
       </div>
       {title}
@@ -89,7 +96,7 @@ function BackButton({ title, backButton }: NavigationIframeProps): JSX.Element {
 function DfxLogo(): JSX.Element {
   return (
     <a href="/">
-      <img height={23} width={73.6} src={logo} alt="logo" />
+      <img height={23} width={73.6} src={Logo} alt="logo" />
     </a>
   );
 }
@@ -103,9 +110,9 @@ function MenuIcon({ icon, setIsNavigationOpen }: IconContentProps): JSX.Element 
 }
 
 function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JSX.Element {
-  const { translate } = useSettingsContext();
   const { authenticationToken } = useAuthContext();
-  const { language, availableLanguages, changeLanguage } = useSettingsContext();
+  const { translate, language, availableLanguages, changeLanguage } = useSettingsContext();
+  const { isLoggedIn, logout: apiLogout } = useSessionContext();
 
   const {
     control,
@@ -114,11 +121,16 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
   const selectedLanguage = useWatch({ control, name: 'language' });
 
   useEffect(() => {
-    if (selectedLanguage.id !== language?.id) {
+    if (selectedLanguage?.id !== language?.id) {
       changeLanguage(selectedLanguage);
       setIsNavigationOpen(false);
     }
   }, [selectedLanguage]);
+
+  async function logout() {
+    await apiLogout();
+    setIsNavigationOpen(false);
+  }
 
   return (
     <nav>
@@ -131,6 +143,11 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
               url={`${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`}
             />
           )}
+          <NavigationLink
+            icon={IconVariant.TELEGRAM}
+            label={translate('navigation/links', 'Telegram')}
+            url={process.env.REACT_APP_TG_URL}
+          />
           <NavigationLink
             icon={IconVariant.FILE}
             label={translate('navigation/links', 'Terms and conditions')}
@@ -157,6 +174,16 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
               descriptionFunc={(item) => item.foreignName}
             />
           </Form>
+
+          {isLoggedIn && (
+            <StyledButton
+              className="mt-4"
+              label={translate('general/actions', 'Logout')}
+              onClick={logout}
+              color={StyledButtonColor.STURDY_WHITE}
+              width={StyledButtonWidth.FULL}
+            />
+          )}
         </div>
       </div>
     </nav>

@@ -35,7 +35,7 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
   return (
     <>
       <StyledVerticalStack marginY={5} gap={2}>
-        <h2 className="text-dfxBlue-800 text-center">{translate('screens/buy', 'Payment Information')}</h2>
+        <h2 className="text-dfxBlue-800 text-center">{translate('screens/payment', 'Payment Information')}</h2>
         <StyledInfoText iconColor={IconColor.BLUE}>
           {translate(
             'screens/buy',
@@ -44,7 +44,7 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
         </StyledInfoText>
       </StyledVerticalStack>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-        <StyledDataTableRow label={translate('screens/buy', 'IBAN')}>
+        <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
           <div>
             <p>{info.buy.iban}</p>
             {info.buy.sepaInstant && (
@@ -55,12 +55,12 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
           </div>
           <CopyButton onCopy={() => copy(info.buy.iban)} />
         </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/buy', 'BIC')}>
+        <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
           {info.buy.bic}
           <CopyButton onCopy={() => copy(info.buy.bic)} />
         </StyledDataTableRow>
         <StyledDataTableRow
-          label={translate('screens/buy', 'Purpose of payment')}
+          label={translate('screens/payment', 'Purpose of payment')}
           infoText={translate(
             'screens/buy',
             'The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders',
