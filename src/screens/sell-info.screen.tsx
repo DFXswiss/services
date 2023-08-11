@@ -29,7 +29,7 @@ import {
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { QrCopy } from '../components/payment/qr-copy';
@@ -55,6 +55,7 @@ export function SellInfoScreen(): JSX.Element {
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
   const { closeServices } = useAppHandlingContext();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
@@ -127,7 +128,7 @@ export function SellInfoScreen(): JSX.Element {
   const kycRequired = paymentInfo && !isAllowedToSell(paymentInfo.estimatedAmount);
 
   return (
-    <Layout textStart backButton={false}>
+    <Layout textStart backButton={false} scrollRef={scrollRef}>
       {showsCompletion && paymentInfo ? (
         <SellCompletion paymentInfo={paymentInfo} />
       ) : isLoading ? (
@@ -179,7 +180,7 @@ export function SellInfoScreen(): JSX.Element {
             label={translate('screens/sell', 'Click here once you have issued the transaction')}
             onClick={() => {
               setShowsCompletion(true);
-              window.scrollTo(0, 0);
+              scrollRef.current?.scrollTo(0, 0);
             }}
             caps={false}
             className="my-4"

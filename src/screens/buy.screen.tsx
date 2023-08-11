@@ -22,7 +22,7 @@ import {
   StyledLink,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
@@ -55,6 +55,7 @@ export function BuyScreen(): JSX.Element {
   const { isAllowedToBuy } = useKycHelper();
   const { user } = useUserContext();
   const { blockchain: walletBlockchain } = useWalletContext();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<PaymentInformation>();
@@ -177,6 +178,7 @@ export function BuyScreen(): JSX.Element {
       title={showsCompletion ? translate('screens/buy', 'Done!') : translate('screens/buy', 'Buy')}
       backButton={!showsCompletion}
       textStart
+      scrollRef={scrollRef}
     >
       {showsCompletion && paymentInfo ? (
         <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo.buy} />
@@ -258,7 +260,7 @@ export function BuyScreen(): JSX.Element {
                       label={translate('screens/buy', 'Click here once you have issued the transfer')}
                       onClick={() => {
                         setShowsCompletion(true);
-                        window.scrollTo(0, 0);
+                        scrollRef.current?.scrollTo(0, 0);
                       }}
                       caps={false}
                       className="my-4"

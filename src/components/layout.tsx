@@ -1,4 +1,4 @@
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, Ref } from 'react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { GeneralLinks } from './general-links';
@@ -8,9 +8,10 @@ interface LayoutProps extends PropsWithChildren {
   title?: string;
   backButton?: boolean;
   textStart?: boolean;
+  scrollRef?: Ref<HTMLDivElement>;
 }
 
-export function Layout({ title, backButton, textStart, children }: LayoutProps): JSX.Element {
+export function Layout({ title, backButton, textStart, children, scrollRef }: LayoutProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { isEmbedded } = useAppHandlingContext();
 
@@ -18,7 +19,7 @@ export function Layout({ title, backButton, textStart, children }: LayoutProps):
     <div id="app-root" className="h-full flex flex-col">
       <Navigation title={title} backButton={backButton} />
 
-      <div className="flex flex-col flex-grow overflow-auto">
+      <div className="flex flex-col flex-grow overflow-auto" ref={scrollRef}>
         <div className="flex flex-grow justify-center">
           <div
             className={`max-w-screen-md flex flex-grow flex-col items-center ${

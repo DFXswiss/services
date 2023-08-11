@@ -55,6 +55,7 @@ There are parameters to preselect all or a part of the required information.
 - Balances (`balances`): wallet balances of the user (required for sell and convert), usage example: `balances=0.35@113,12.3@111`
 - Input amount (`amount-in`): the amount to sell or convert (in input asset)
 - Output amount (`amount-out`): the amount to receive (in output asset) (_TBD_)
+- Assets: (`assets`): crypto asset filter
 - Input asset: (`asset-in`): the asset to sell or convert (crypto asset or currency)
 - Output asset (`asset-out`): the asset to receive (crypto asset or currency)
 - Bank account (`bank-account`): the bank account to send the money to (sell only)

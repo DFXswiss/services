@@ -27,7 +27,7 @@ import {
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
@@ -50,6 +50,7 @@ export function BuyInfoScreen(): JSX.Element {
   const { isAllowedToBuy } = useKycHelper();
   const { currencies, receiveFor } = useBuy();
   const { closeServices } = useAppHandlingContext();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
@@ -105,7 +106,7 @@ export function BuyInfoScreen(): JSX.Element {
   const showsSimple = user?.mail != null;
 
   return (
-    <Layout textStart backButton={false}>
+    <Layout textStart backButton={false} scrollRef={scrollRef}>
       {showsCompletion && paymentInfo ? (
         <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo} />
       ) : isLoading ? (
@@ -197,7 +198,7 @@ export function BuyInfoScreen(): JSX.Element {
             label={translate('screens/buy', 'Click here once you have issued the transfer')}
             onClick={() => {
               setShowsCompletion(true);
-              window.scrollTo(0, 0);
+              scrollRef.current?.scrollTo(0, 0);
             }}
             caps={false}
             className="my-4"
