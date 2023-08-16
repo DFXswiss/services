@@ -1,5 +1,5 @@
 import { Blockchain } from '@dfx.swiss/react';
-import { MetaMaskChainInterface } from './metamask.hook';
+import { MetaMaskChainInterface } from './wallets/metamask.hook';
 
 export interface BlockchainInterface {
   toBlockchain: (chainId: string | number) => Blockchain | undefined;

@@ -27,6 +27,57 @@ export function HomeScreen(): JSX.Element {
   const { isProcessing, isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
   const { isEmbedded } = useAppHandlingContext();
+  const { wallets, getInstalledWallets, login } = useWalletContext();
+  const { defer, deferRef } = useDeferredPromise<void>();
+  const { showsSignatureInfo } = useStore();
+  const { navigate } = useNavigation();
+  const { search } = useLocation();
+
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [showInstallHint, setShowInstallHint] = useState<WalletType>();
+  const [showSignHint, setShowSignHint] = useState(false);
+
+  // connect button labels
+  const labels: { [type in WalletType]: string } = {
+    [WalletType.META_MASK]: 'MetaMask / Rabby',
+    [WalletType.ALBY]: 'Alby',
+  };
+
+  const redirectPath = new URLSearchParams(search).get('redirect-path');
+
+  async function confirmSignHint(): Promise<void> {
+    if (!showsSignatureInfo.get()) return;
+
+    setShowSignHint(true);
+    return defer().promise;
+  }
+
+  function signHintConfirmed(hide: boolean) {
+    showsSignatureInfo.set(!hide);
+    setShowSignHint(false);
+    deferRef?.resolve();
+  }
+
+  function onHintConfirmed() {
+    setShowInstallHint(undefined);
+  }
+
+  // connect
+  function connect(wallet: WalletType, address?: string) {
+    if (getInstalledWallets().some((w) => w === wallet)) {
+      setIsConnecting(true);
+      login(wallet, confirmSignHint, address)
+        .then(() => {
+          if (redirectPath) {
+            // wait for the user to reload
+            setTimeout(() => navigate({ pathname: redirectPath }, { clearSearch: ['redirect-path'] }), 10);
+          }
+        })
+        .finally(() => setIsConnecting(false));
+    } else {
+      setShowInstallHint(wallet);
+    }
+  }
 
   return (
     <Layout title={isEmbedded ? translate('screens/home', 'DFX services') : undefined} backButton={isEmbedded}>
@@ -35,7 +86,35 @@ export function HomeScreen(): JSX.Element {
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
       ) : (
-        <>{isLoggedIn && user ? <LoggedInContent /> : <LoggedOffContent />}</>
+        <>
+          {isLoggedIn && user ? (
+            <LoggedInContent />
+          ) : showInstallHint ? (
+            <InstallHint type={showInstallHint} onConfirm={onHintConfirmed} />
+          ) : showSignHint ? (
+            <SignHint onConfirm={signHintConfirmed} />
+          ) : isConnecting ? (
+            <>
+              <StyledLoadingSpinner size={SpinnerSize.LG} />
+            </>
+          ) : (
+            <>
+              {!isEmbedded && <BrowserContent />}
+              <p className="text-dfxGray-700 pt-8 pb-4">
+                {translate('screens/home', 'Please login via an application to use our services')}
+              </p>
+
+              {wallets.map((w) => (
+                <StyledButton
+                  key={w}
+                  label={translate('screens/home', labels[w])}
+                  color={StyledButtonColor.RED}
+                  onClick={() => connect(w)}
+                />
+              ))}
+            </>
+          )}
+        </>
       )}
     </Layout>
   );
@@ -56,7 +135,7 @@ function BrowserContent(): JSX.Element {
 
 function LoggedInContent(): JSX.Element {
   const { user } = useUserContext();
-  const { hasBalance } = useWalletContext();
+  const { sellEnabled } = useWalletContext();
   const { isEmbedded } = useAppHandlingContext();
 
   return (
@@ -67,89 +146,10 @@ function LoggedInContent(): JSX.Element {
         <ServiceButton
           type={ServiceButtonType.SELL}
           url={user?.kycDataComplete ? '/sell' : '/profile'}
-          disabled={!hasBalance}
+          disabled={!sellEnabled}
         />
         {/* <ServiceButton type={ServiceButtonType.CONVERT} url="/convert" disabled /> */}
       </div>
-    </>
-  );
-}
-
-function LoggedOffContent(): JSX.Element {
-  const { translate } = useSettingsContext();
-  const { isEmbedded } = useAppHandlingContext();
-  const { wallets, getInstalledWallets, login } = useWalletContext();
-  const { defer, deferRef } = useDeferredPromise<void>();
-  const { showsSignatureInfo } = useStore();
-  const { navigate } = useNavigation();
-  const { search } = useLocation();
-
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [showInstallHint, setShowInstallHint] = useState<WalletType>();
-  const [showSignHint, setShowSignHint] = useState(false);
-
-  const labels: { [type in WalletType]: string } = {
-    [WalletType.META_MASK]: 'MetaMask / Rabby',
-  };
-
-  const redirectPath = new URLSearchParams(search).get('redirect-path');
-
-  async function confirmSignHint(): Promise<void> {
-    if (!showsSignatureInfo.get()) return;
-
-    setShowSignHint(true);
-    return defer().promise;
-  }
-
-  function signHintConfirmed(hide: boolean) {
-    showsSignatureInfo.set(!hide);
-    setShowSignHint(false);
-    deferRef?.resolve();
-  }
-
-  function connect(wallet: WalletType) {
-    if (getInstalledWallets().some((w) => w === wallet)) {
-      setIsConnecting(true);
-      login(wallet, confirmSignHint)
-        .then(() => {
-          if (redirectPath) {
-            // wait for the user to reload
-            setTimeout(() => navigate({ pathname: redirectPath }, { clearSearch: ['redirect-path'] }), 10);
-          }
-        })
-        .finally(() => setIsConnecting(false));
-    } else {
-      setShowInstallHint(wallet);
-    }
-  }
-
-  function onHintConfirmed() {
-    setShowInstallHint(undefined);
-  }
-
-  return showInstallHint === WalletType.META_MASK ? (
-    <MetaMaskHint onConfirm={onHintConfirmed} />
-  ) : showSignHint ? (
-    <SignHint onConfirm={signHintConfirmed} />
-  ) : isConnecting ? (
-    <>
-      <StyledLoadingSpinner size={SpinnerSize.LG} />
-    </>
-  ) : (
-    <>
-      {!isEmbedded && <BrowserContent />}
-      <p className="text-dfxGray-700 pt-8 pb-4">
-        {translate('screens/home', 'Please login via an application to use our services')}
-      </p>
-
-      {wallets.map((w) => (
-        <StyledButton
-          key={w}
-          label={translate('screens/home', labels[w])}
-          color={StyledButtonColor.RED}
-          onClick={() => connect(w)}
-        />
-      ))}
     </>
   );
 }
@@ -184,6 +184,15 @@ function SignHint({ onConfirm }: { onConfirm: (hide: boolean) => void }): JSX.El
   );
 }
 
+function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: () => void }): JSX.Element {
+  switch (type) {
+    case WalletType.META_MASK:
+      return <MetaMaskHint onConfirm={onConfirm} />;
+    case WalletType.ALBY:
+      return <AlbyHint onConfirm={onConfirm} />;
+  }
+}
+
 function MetaMaskHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
   const { translate } = useSettingsContext();
 
@@ -197,6 +206,28 @@ function MetaMaskHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
         )}{' '}
         <StyledLink label="metamask.io" url="https://metamask.io" dark /> /{' '}
         <StyledLink label="rabby.io" url="https://rabby.io/" dark /> {translate('screens/home', 'for more details.')}
+      </p>
+
+      <div className="mx-auto">
+        <StyledButton width={StyledButtonWidth.SM} onClick={onConfirm} label={translate('general/actions', 'OK')} />
+      </div>
+    </StyledVerticalStack>
+  );
+}
+
+function AlbyHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  return (
+    <StyledVerticalStack gap={4}>
+      <h1 className="text-dfxGray-700">{translate('screens/home', 'Please install Alby!')}</h1>
+      <p className="text-dfxGray-700">
+        {translate(
+          'screens/home',
+          'You need to install the Alby browser extension to be able to use this service. Visit',
+        )}{' '}
+        <StyledLink label="getalby.com" url="https://getalby.com/" dark />{' '}
+        {translate('screens/home', 'for more details.')}
       </p>
 
       <div className="mx-auto">

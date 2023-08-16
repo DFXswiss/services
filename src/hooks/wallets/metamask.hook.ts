@@ -3,9 +3,9 @@ import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
-import { AssetBalance } from '../contexts/balance.context';
-import ERC20_ABI from '../static/erc20.abi.json';
-import { useBlockchain } from './blockchain.hook';
+import { AssetBalance } from '../../contexts/balance.context';
+import ERC20_ABI from '../../static/erc20.abi.json';
+import { useBlockchain } from '../blockchain.hook';
 
 export enum WalletType {
   META_MASK = 'MetaMask',
