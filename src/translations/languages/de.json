@@ -42,6 +42,8 @@
 
     "Please install MetaMask or Rabby!": "Bitte installiere MetaMask oder Rabby!",
     "You need to install the MetaMask or Rabby browser extension to be able to use this service. Visit": "Um diesen Dienst nutzen zu können, musst Du die Browsererweiterung MetaMask oder Rabby installieren. Siehe",
+    "Please install Alby!": "Bitte installiere Alby!",
+    "You need to install the Alby browser extension to be able to use this service. Visit": "Um diesen Dienst nutzen zu können, musst Du die Browsererweiterung Alby installieren. Siehe",
     "for more details.": "für mehr Details."
   },
   "screens/buy": {

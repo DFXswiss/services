@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@dfx.swiss/react": "^1.1.2",
-    "@dfx.swiss/react-components": "^1.1.2",
+    "@dfx.swiss/react": "^1.1.3-beta.0",
+    "@dfx.swiss/react-components": "^1.1.3-beta.0",
     "@r2wc/react-to-web-component": "^2.0.2",
     "copy-to-clipboard": "^3.3.3",
     "env-cmd": "^10.1.0",
@@ -19,7 +19,8 @@
     "react-scripts": "5.0.1",
     "typescript": "^4.9.3",
     "web-vitals": "^2.1.4",
-    "web3": "^1.8.1"
+    "web3": "^1.8.1",
+    "webln": "^0.3.2"
   },
   "scripts": {
     "start": "env-cmd -f .env.loc react-scripts start",
