@@ -1,4 +1,5 @@
-import { Asset, Blockchain, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
+import { Asset, Blockchain, Sell, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
+import BigNumber from 'bignumber.js';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { GetInfoResponse } from 'webln';
 import { useStore } from '../hooks/store.hook';
@@ -22,6 +23,7 @@ interface WalletInterface {
   activeWallet: WalletType | undefined;
   sellEnabled: boolean;
   getBalances: (assets: Asset[]) => Promise<AssetBalance[] | undefined>;
+  sendTransaction: (sell: Sell) => Promise<string>;
 }
 
 const WalletContext = createContext<WalletInterface>(undefined as any);
@@ -40,8 +42,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     requestBlockchain,
     sign: signMm,
     readBalance,
+    createTransaction,
   } = useMetaMask();
-  const { isInstalled: isAlbyInstalled, enable, signMessage: signAlby } = useAlby();
+  const { isInstalled: isAlbyInstalled, enable, signMessage: signAlby, sendPayment } = useAlby();
   const { login: apiLogin, logout: apiLogout, signUp: apiSignUp } = useSessionContext();
   const { wallet: paramWallet } = useParamContext();
   const { getSignMessage } = useAuth();
@@ -53,6 +56,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
   const [mmAddress, setMmAddress] = useState<string>();
   const [mmBlockchain, setMmBlockchain] = useState<Blockchain>();
+
+  useEffect(() => {
+    if (activeWallet) connect(activeWallet);
+  }, []);
 
   // listen to MM account switches
   useEffect(() => {
@@ -91,7 +98,22 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     signHintCallback?: () => Promise<void>,
     usedAddress?: string,
   ): Promise<string> {
-    const [address, blockchain] = await connect(wallet, usedAddress);
+    const address = await connect(wallet, usedAddress);
+
+    // show signature hint
+    await signHintCallback?.();
+
+    const session = await createSession(wallet, address, paramWallet);
+    if (!session) {
+      apiLogout();
+      resetWallet();
+    }
+
+    return address;
+  }
+
+  async function connect(wallet: WalletType, usedAddress?: string): Promise<string> {
+    const [address, blockchain] = await readData(wallet, usedAddress);
 
     setActiveWallet(wallet);
     activeWalletStore.set(wallet);
@@ -107,19 +129,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         break;
     }
 
-    // show signature hint
-    await signHintCallback?.();
-
-    const session = await createSession(wallet, address, paramWallet);
-    if (!session) {
-      apiLogout();
-      resetWallet();
-    }
-
     return address;
   }
 
-  async function connect(wallet: WalletType, address?: string): Promise<[string, Blockchain | undefined]> {
+  async function readData(wallet: WalletType, address?: string): Promise<[string, Blockchain | undefined]> {
     switch (wallet) {
       case WalletType.META_MASK:
         address ??= await requestAccount();
@@ -198,7 +211,6 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
       case WalletType.ALBY:
         // no balance available
-        // TODO: no balance check on Sell!
         return undefined;
 
       default:
@@ -232,6 +244,23 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     }
   }
 
+  async function sendTransaction(sell: Sell): Promise<string> {
+    switch (activeWallet) {
+      case WalletType.META_MASK:
+        if (!mmAddress) throw new Error('Address is not defined');
+
+        return createTransaction(new BigNumber(sell.amount), sell.asset, mmAddress, sell.depositAddress);
+
+      case WalletType.ALBY:
+        if (!sell.paymentRequest) throw new Error('Payment request not defined');
+
+        return sendPayment(sell.paymentRequest).then((p) => p.preimage);
+
+      default:
+        throw new Error('No wallet connected');
+    }
+  }
+
   const context: WalletInterface = useMemo(
     () => ({
       address: getAddress(),
@@ -243,6 +272,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       sellEnabled:
         hasBalance || (activeWallet != null && [WalletType.META_MASK, WalletType.ALBY].includes(activeWallet)),
       getBalances,
+      sendTransaction,
     }),
     [
       mmAddress,
