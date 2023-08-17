@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { GetInfoResponse, SendPaymentResponse, WebLNProvider } from 'webln';
+import { delay } from '../../util/utils';
 
 export interface AlbyInterface {
   isInstalled: () => boolean;
@@ -20,7 +21,9 @@ export function useAlby(): AlbyInterface {
     return Boolean(webln());
   }
 
-  function enable(): Promise<GetInfoResponse | undefined> {
+  async function enable(): Promise<GetInfoResponse | undefined> {
+    await waitForWebln();
+
     return webln()
       .enable()
       .then(() => webln().getInfo())
@@ -39,6 +42,14 @@ export function useAlby(): AlbyInterface {
 
   function sendPayment(request: string): Promise<SendPaymentResponse> {
     return webln().sendPayment(request);
+  }
+
+  async function waitForWebln() {
+    for (let i = 0; i < 10; i++) {
+      if (isInstalled()) break;
+
+      await delay(0.01);
+    }
   }
 
   return {
