@@ -9,8 +9,8 @@
     },
     {
       "src": "logo.png",
-      "type": "image/png",
-      "sizes": "116x95"
+      "sizes": "256x256",
+      "type": "image/png"
     }
   ],
   "start_url": ".",
