@@ -35,17 +35,9 @@ export function useWalletContext(): WalletInterface {
 export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const { isInitialized, isLoggedIn } = useSessionContext();
   const { session } = useApiSession();
-  const {
-    isInstalled: isMmInstalled,
-    register,
-    requestAccount,
-    requestBlockchain,
-    sign: signMm,
-    readBalance,
-    createTransaction,
-  } = useMetaMask();
-  const { isInstalled: isAlbyInstalled, enable, signMessage: signAlby, sendPayment } = useAlby();
-  const { login: apiLogin, logout: apiLogout, signUp: apiSignUp } = useSessionContext();
+  const metaMask = useMetaMask();
+  const alby = useAlby();
+  const api = useSessionContext();
   const { wallet: paramWallet } = useParamContext();
   const { getSignMessage } = useAuth();
   const { hasBalance, getBalances: getParamBalances } = useBalanceContext();
@@ -63,14 +55,14 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
   // listen to MM account switches
   useEffect(() => {
-    register(setMmAddress, setMmBlockchain);
+    metaMask.register(setMmAddress, setMmBlockchain);
   }, []);
 
   useEffect(() => {
     if (activeWallet === WalletType.META_MASK) {
       if (activeAddress && mmAddress) {
         // logout on account switch
-        if (activeAddress !== mmAddress) apiLogout();
+        if (activeAddress !== mmAddress) api.logout();
       } else {
         setActiveAddress(mmAddress);
       }
@@ -105,7 +97,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
     const session = await createSession(wallet, address, paramWallet);
     if (!session) {
-      apiLogout();
+      api.logout();
       resetWallet();
     }
 
@@ -135,15 +127,15 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   async function readData(wallet: WalletType, address?: string): Promise<[string, Blockchain | undefined]> {
     switch (wallet) {
       case WalletType.META_MASK:
-        address ??= await requestAccount();
+        address ??= await metaMask.requestAccount();
         if (!address) throw new Error('Permission denied or account not verified');
 
-        const blockchain = await requestBlockchain();
+        const blockchain = await metaMask.requestBlockchain();
 
         return [address, blockchain];
 
       case WalletType.ALBY:
-        const account = await enable().catch();
+        const account = await alby.enable().catch();
         if (!account) throw new Error('Permission denied or account not verified');
 
         address ??= await getAlbyAddress(account);
@@ -173,10 +165,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   async function signMessage(wallet: WalletType, message: string, address: string): Promise<string> {
     switch (wallet) {
       case WalletType.META_MASK:
-        return signMm(address, message);
+        return metaMask.sign(address, message);
 
       case WalletType.ALBY:
-        return signAlby(message);
+        return alby.signMessage(message);
 
       default:
         throw new Error('No wallet active');
@@ -186,8 +178,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   function getInstalledWallets(): WalletType[] {
     const wallets: WalletType[] = [];
 
-    if (isMmInstalled()) wallets.push(WalletType.META_MASK);
-    if (isAlbyInstalled()) wallets.push(WalletType.ALBY);
+    if (metaMask.isInstalled()) wallets.push(WalletType.META_MASK);
+    if (alby.isInstalled()) wallets.push(WalletType.ALBY);
 
     return wallets;
   }
@@ -196,7 +188,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     try {
       const message = await getSignMessage(address);
       const signature = await signMessage(walletType, message, address);
-      return (await apiLogin(address, signature)) ?? (await apiSignUp(address, signature, wallet));
+      return (await api.login(address, signature)) ?? (await api.signUp(address, signature, wallet));
     } catch (e) {
       console.error('Failed to create session:', e);
     }
@@ -205,7 +197,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {
     switch (activeWallet) {
       case WalletType.META_MASK:
-        return (await Promise.all(assets.map((asset: Asset) => readBalance(asset, activeAddress)))).filter(
+        return (await Promise.all(assets.map((asset: Asset) => metaMask.readBalance(asset, activeAddress)))).filter(
           (b) => b.amount > 0,
         );
 
@@ -249,12 +241,12 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.META_MASK:
         if (!mmAddress) throw new Error('Address is not defined');
 
-        return createTransaction(new BigNumber(sell.amount), sell.asset, mmAddress, sell.depositAddress);
+        return metaMask.createTransaction(new BigNumber(sell.amount), sell.asset, mmAddress, sell.depositAddress);
 
       case WalletType.ALBY:
         if (!sell.paymentRequest) throw new Error('Payment request not defined');
 
-        return sendPayment(sell.paymentRequest).then((p) => p.preimage);
+        return alby.sendPayment(sell.paymentRequest).then((p) => p.preimage);
 
       default:
         throw new Error('No wallet connected');
@@ -275,17 +267,16 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       sendTransaction,
     }),
     [
+      activeWallet,
+      activeAddress,
       mmAddress,
       mmBlockchain,
+      metaMask,
+      alby,
+      api,
+      hasBalance,
       getParamBalances,
-      activeWallet,
-      isMmInstalled,
-      requestAccount,
-      requestBlockchain,
-      signMm,
-      isAlbyInstalled,
-      enable,
-      signAlby,
+      paramWallet,
     ],
   );
 
