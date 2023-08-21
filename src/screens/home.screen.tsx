@@ -41,6 +41,7 @@ export function HomeScreen(): JSX.Element {
   const labels: { [type in WalletType]: string } = {
     [WalletType.META_MASK]: 'MetaMask / Rabby',
     [WalletType.ALBY]: 'Alby',
+    [WalletType.LEDGER]: 'Ledger',
   };
 
   const redirectPath = new URLSearchParams(search).get('redirect-path');
@@ -63,8 +64,9 @@ export function HomeScreen(): JSX.Element {
   }
 
   // connect
-  function connect(wallet: WalletType, address?: string) {
-    if (getInstalledWallets().some((w) => w === wallet)) {
+  async function connect(wallet: WalletType, address?: string) {
+    const installedWallets = await getInstalledWallets();
+    if (installedWallets.some((w) => w === wallet)) {
       setIsConnecting(true);
       login(wallet, confirmSignHint, address)
         .then(() => {
@@ -190,6 +192,8 @@ function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: () => v
       return <MetaMaskHint onConfirm={onConfirm} />;
     case WalletType.ALBY:
       return <AlbyHint onConfirm={onConfirm} />;
+    case WalletType.LEDGER:
+      return <LedgerHint onConfirm={onConfirm} />;
   }
 }
 
@@ -227,6 +231,25 @@ function AlbyHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
           'You need to install the Alby browser extension to be able to use this service. Visit',
         )}{' '}
         <StyledLink label="getalby.com" url="https://getalby.com/" dark />{' '}
+        {translate('screens/home', 'for more details.')}
+      </p>
+
+      <div className="mx-auto">
+        <StyledButton width={StyledButtonWidth.SM} onClick={onConfirm} label={translate('general/actions', 'OK')} />
+      </div>
+    </StyledVerticalStack>
+  );
+}
+
+function LedgerHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  return (
+    <StyledVerticalStack gap={4}>
+      <h1 className="text-dfxGray-700">{translate('screens/home', 'Please use a other browser (e.g. Chrome)!')}</h1>
+      <p className="text-dfxGray-700">
+        {translate('screens/home', 'Your Browser is not able to use this service. Visit')}{' '}
+        <StyledLink label="caniuse.com" url="https://caniuse.com/webhid" dark />{' '}
         {translate('screens/home', 'for more details.')}
       </p>
 

@@ -4,6 +4,7 @@ import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useSt
 import { GetInfoResponse } from 'webln';
 import { useStore } from '../hooks/store.hook';
 import { useAlby } from '../hooks/wallets/alby.hook';
+import { useLedger } from '../hooks/wallets/ledger.hook';
 import { useMetaMask } from '../hooks/wallets/metamask.hook';
 import { delay } from '../util/utils';
 import { AssetBalance, useBalanceContext } from './balance.context';
@@ -12,13 +13,14 @@ import { useParamContext } from './param.context';
 export enum WalletType {
   META_MASK = 'MetaMask',
   ALBY = 'Alby',
+  LEDGER = 'Ledger',
 }
 
 interface WalletInterface {
   address?: string;
   blockchain?: Blockchain;
   wallets: WalletType[];
-  getInstalledWallets: () => WalletType[];
+  getInstalledWallets: () => Promise<WalletType[]>;
   login: (wallet: WalletType, signHintCallback?: () => Promise<void>, address?: string) => Promise<string | undefined>;
   activeWallet: WalletType | undefined;
   sellEnabled: boolean;
@@ -37,6 +39,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const { session } = useApiSession();
   const metaMask = useMetaMask();
   const alby = useAlby();
+  const ledger = useLedger();
   const api = useSessionContext();
   const { wallet: paramWallet } = useParamContext();
   const { getSignMessage } = useAuth();
@@ -45,6 +48,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
   const [activeAddress, setActiveAddress] = useState<string>();
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
+
+  const [ledgerAddress, setLedgerAddress] = useState<string>();
+  const [ledgerBlockchain, setLedgerBlockchain] = useState<Blockchain>();
 
   const [mmAddress, setMmAddress] = useState<string>();
   const [mmBlockchain, setMmBlockchain] = useState<Blockchain>();
@@ -115,9 +121,12 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         setMmAddress(address);
         setMmBlockchain(blockchain);
         break;
-
       case WalletType.ALBY:
         setActiveAddress(address);
+        break;
+      case WalletType.LEDGER:
+        setLedgerAddress(address);
+        setLedgerBlockchain(blockchain);
         break;
     }
 
@@ -133,7 +142,6 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         const blockchain = await metaMask.requestBlockchain();
 
         return [address, blockchain];
-
       case WalletType.ALBY:
         const account = await alby.enable().catch();
         if (!account) throw new Error('Permission denied or account not verified');
@@ -141,6 +149,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         address ??= await getAlbyAddress(account);
 
         return [address, Blockchain.LIGHTNING];
+      case WalletType.LEDGER:
+        address ??= await ledger.getAddress();
+        return [address, Blockchain.BITCOIN];
     }
   }
 
@@ -170,16 +181,20 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.ALBY:
         return alby.signMessage(message);
 
+      case WalletType.LEDGER:
+        return await ledger.signMessage(message);
+
       default:
         throw new Error('No wallet active');
     }
   }
 
-  function getInstalledWallets(): WalletType[] {
+  async function getInstalledWallets(): Promise<WalletType[]> {
     const wallets: WalletType[] = [];
 
     if (metaMask.isInstalled()) wallets.push(WalletType.META_MASK);
     if (alby.isInstalled()) wallets.push(WalletType.ALBY);
+    if (await ledger.isSupported()) wallets.push(WalletType.LEDGER);
 
     return wallets;
   }
@@ -205,6 +220,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         // no balance available
         return undefined;
 
+      case WalletType.LEDGER:
+        // no balance available
+        return undefined;
+
       default:
         return getParamBalances(assets);
     }
@@ -218,6 +237,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.ALBY:
         return activeAddress;
 
+      case WalletType.LEDGER:
+        return ledgerAddress;
+
       default:
         return undefined;
     }
@@ -230,6 +252,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
       case WalletType.ALBY:
         return Blockchain.LIGHTNING;
+
+      case WalletType.LEDGER:
+        return ledgerBlockchain;
 
       default:
         return undefined;
@@ -248,6 +273,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
         return alby.sendPayment(sell.paymentRequest).then((p) => p.preimage);
 
+      case WalletType.LEDGER:
+        throw new Error('Not supported yet');
       default:
         throw new Error('No wallet connected');
     }
@@ -262,7 +289,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       login,
       activeWallet,
       sellEnabled:
-        hasBalance || (activeWallet != null && [WalletType.META_MASK, WalletType.ALBY].includes(activeWallet)),
+        hasBalance ||
+        (activeWallet != null && [WalletType.META_MASK, WalletType.ALBY, WalletType.LEDGER].includes(activeWallet)),
       getBalances,
       sendTransaction,
     }),
@@ -273,6 +301,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       mmBlockchain,
       metaMask,
       alby,
+      ledgerAddress,
+      ledgerBlockchain,
       api,
       hasBalance,
       getParamBalances,

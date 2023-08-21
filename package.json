@@ -13,7 +13,6 @@
     "env-cmd": "^10.1.0",
     "i18next": "^22.4.13",
     "i18next-browser-languagedetector": "^7.0.1",
-    "invariant": "^2.2.4",
     "ledger-bitcoin": "^0.2.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -28,7 +27,7 @@
     "webln": "^0.3.2"
   },
   "scripts": {
-    "start": "env-cmd -f .env.loc react-scripts start",
+    "start": "env-cmd -f .env.loc react-app-rewired start",
     "build": "env-cmd -f .env.prd react-scripts build",
     "build:dev": "env-cmd -f .env.dev react-scripts build",
     "widget": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.prd env-cmd -f .env.widget react-scripts build && mv src/index.bak.tsx src/index.tsx",
@@ -85,7 +84,11 @@
     "@types/react-dom": "^18.0.9",
     "autoprefixer": "^10.4.13",
     "babel-plugin-named-exports-order": "^0.0.2",
+    "buffer": "^6.0.3",
     "postcss": "^8.4.19",
+    "process": "^0.11.10",
+    "react-app-rewired": "^2.2.1",
+    "stream-browserify": "^3.0.0",
     "tailwindcss": "^3.2.4",
     "webpack": "^5.75.0"
   },
@@ -96,5 +99,8 @@
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ]
+  },
+  "alias": {
+    "@ledgerhq/devices": "@ledgerhq/devices/lib-es"
   }
 }
