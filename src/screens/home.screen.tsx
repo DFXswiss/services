@@ -62,7 +62,7 @@ export function HomeScreen(): JSX.Element {
   }
 
   function handleNext(tile: Tile) {
-    if (tile.comingSoon) return;
+    if (tile.disabled) return;
 
     if (tile.wallet) {
       connect(tile.wallet);
@@ -131,7 +131,7 @@ export function HomeScreen(): JSX.Element {
                     <img
                       key={t.id}
                       src={t.img}
-                      className={t.comingSoon ? undefined : 'cursor-pointer'}
+                      className={t.disabled ? undefined : 'cursor-pointer'}
                       onClick={() => handleNext(t)}
                     />
                   ))}

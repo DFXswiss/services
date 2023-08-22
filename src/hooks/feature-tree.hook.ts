@@ -11,12 +11,12 @@ export interface Page {
   tiles: Tile[];
 }
 
-export type Tile = DefaultTile | ComingSoonTile | WalletTile;
+export type Tile = DefaultTile | DisabledTile | WalletTile;
 
 export interface BaseTile {
   id: string;
   img: string;
-  comingSoon?: boolean;
+  disabled?: boolean;
   next?: Next;
   wallet?: WalletType;
 }
@@ -25,8 +25,8 @@ interface DefaultTile extends BaseTile {
   next: Next;
 }
 
-interface ComingSoonTile extends BaseTile {
-  comingSoon: true;
+interface DisabledTile extends BaseTile {
+  disabled: true;
 }
 
 interface WalletTile extends BaseTile {

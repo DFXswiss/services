@@ -22,12 +22,12 @@ export const FeatureTree: Page[] = [
       {
         id: 'convert',
         img: 'tauschen',
-        comingSoon: true,
+        disabled: true,
       },
       {
         id: 'send',
         img: 'senden',
-        comingSoon: true,
+        disabled: true,
       },
     ],
   },
@@ -49,7 +49,7 @@ export const FeatureTree: Page[] = [
       {
         id: 'taproot',
         img: 'taproot',
-        comingSoon: true,
+        disabled: true,
       },
       {
         id: 'erc20',
@@ -97,6 +97,18 @@ export const FeatureTree: Page[] = [
     id: 'wallets',
     tiles: [
       {
+        id: 'dfx-wallet',
+        img: 'bitcoinapp',
+        disabled: true,
+      },
+      {
+        id: 'hw-wallet',
+        img: 'hardwarewallets',
+        next: {
+          page: 'hw-wallets',
+        },
+      },
+      {
         id: 'alby',
         img: 'alby',
         wallet: WalletType.ALBY,
@@ -106,11 +118,15 @@ export const FeatureTree: Page[] = [
         img: 'metamaskrabby',
         wallet: WalletType.META_MASK,
       },
-      /* TODO */
+      {
+        id: 'cli',
+        img: 'command',
+        disabled: true,
+      },
     ],
   },
   {
-    id: 'hardware-wallets',
+    id: 'hw-wallets',
     tiles: [
       /* TODO */
     ],
