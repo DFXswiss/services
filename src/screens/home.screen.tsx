@@ -128,12 +128,21 @@ export function HomeScreen(): JSX.Element {
                 {tiles
                   .filter((t) => !allowedTiles || allowedTiles.includes(t.id))
                   .map((t) => (
-                    <img
-                      key={t.id}
-                      src={t.img}
-                      className={t.disabled ? undefined : 'cursor-pointer'}
-                      onClick={() => handleNext(t)}
-                    />
+                    <div key={t.id} className="relative">
+                      <img
+                        src={t.img}
+                        className={t.disabled ? 'opacity-60' : 'cursor-pointer'}
+                        onClick={() => handleNext(t)}
+                      />
+                      {t.disabled && (
+                        <div
+                          className="absolute right-2 bottom-3 text-dfxBlue-800 font-extrabold rotate-180 uppercase"
+                          style={{ writingMode: 'vertical-rl', fontSize: 'min(2vw, 1rem)' }}
+                        >
+                          {translate('screens/home', 'Coming Soon')}
+                        </div>
+                      )}
+                    </div>
                   ))}
               </div>
             </>
