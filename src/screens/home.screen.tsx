@@ -66,10 +66,11 @@ export function HomeScreen(): JSX.Element {
 
     if (tile.wallet) {
       connect(tile.wallet);
+      setAllowedTiles(undefined);
       setCurrentPage(undefined);
     } else {
-      setAllowedTiles(tile.next.tiles);
       if (tile.next.options) setOptions(tile.next.options);
+      setAllowedTiles(tile.next.tiles);
       setCurrentPage(tile.next.page);
     }
   }
@@ -124,11 +125,11 @@ export function HomeScreen(): JSX.Element {
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-2.5 w-full">
                 {tiles
                   .filter((t) => !allowedTiles || allowedTiles.includes(t.id))
                   .map((t) => (
-                    <div key={t.id} className="relative">
+                    <div key={t.id} className="relative aspect-square">
                       <img
                         src={t.img}
                         className={t.disabled ? 'opacity-60' : 'cursor-pointer'}
