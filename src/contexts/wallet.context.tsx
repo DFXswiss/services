@@ -17,7 +17,6 @@ export enum WalletType {
 interface WalletInterface {
   address?: string;
   blockchain?: Blockchain;
-  wallets: WalletType[];
   getInstalledWallets: () => WalletType[];
   login: (wallet: WalletType, signHintCallback?: () => Promise<void>, address?: string) => Promise<string | undefined>;
   activeWallet: WalletType | undefined;
@@ -257,7 +256,6 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     () => ({
       address: getAddress(),
       blockchain: getBlockchain(),
-      wallets: Object.values(WalletType),
       getInstalledWallets,
       login,
       activeWallet,

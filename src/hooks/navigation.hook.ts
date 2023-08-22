@@ -2,16 +2,17 @@ import { useMemo } from 'react';
 import { NavigateOptions, To, useLocation, useNavigate } from 'react-router-dom';
 
 interface NavigationOptions extends NavigateOptions {
-  clearSearch?: string[];
+  clearParams?: string[];
 }
 
 interface NavigationInterface {
   navigate: (to: To | number, options?: NavigationOptions) => void;
+  setParams: (params: URLSearchParams) => void;
 }
 
 export function useNavigation(): NavigationInterface {
   const navigateTo = useNavigate();
-  const { search } = useLocation();
+  const { search, pathname } = useLocation();
 
   function navigate(to: To | number, options?: NavigationOptions) {
     switch (typeof to) {
@@ -22,15 +23,27 @@ export function useNavigation(): NavigationInterface {
         return navigateTo(`${to}?${new URLSearchParams(search)}`, options);
 
       default:
-        // join params
-        const params = new URLSearchParams(search);
-        new URLSearchParams(to.search).forEach((val, key) => params.set(key, val));
-        options?.clearSearch?.forEach((s) => params.delete(s));
+        const params = addParams(new URLSearchParams(to.search), options?.clearParams);
 
         to.search = `?${params}`;
         return navigateTo(to, options);
     }
   }
 
-  return useMemo(() => ({ navigate }), [navigateTo, search]);
+  function setParams(newParams: URLSearchParams) {
+    const params = addParams(newParams);
+
+    return navigateTo(`${pathname}?${params}`);
+  }
+
+  function addParams(newParams: URLSearchParams, clearParams?: string[]): URLSearchParams {
+    console.log('joinParams');
+    const params = new URLSearchParams(search);
+    newParams.forEach((val, key) => params.set(key, val));
+    clearParams?.forEach((s) => params.delete(s));
+
+    return params;
+  }
+
+  return useMemo(() => ({ navigate, setParams }), [navigateTo, search, pathname]);
 }

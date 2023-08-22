@@ -48,7 +48,7 @@ export function ProfileScreen(): JSX.Element {
     setKycData(data)
       .then(() => reloadUser())
       // wait for the user to reload
-      .then(() => setTimeout(() => navigate({ pathname: redirectPath }, { clearSearch: ['redirect-path'] }), 10))
+      .then(() => setTimeout(() => navigate({ pathname: redirectPath }, { clearParams: ['redirect-path'] }), 10))
       .catch((error: ApiError) => {
         setErrorMessage(error.message);
         setShowsErrorAlert(true);

@@ -33,10 +33,10 @@
   },
   "screens/home": {
     "DFX services": "DFX Services",
+    "Access all": "Benütze alle",
+    "with this easy": "mit dieser simplen",
+    "toolbox": "Toolbox",
 
-    "Buy and Sell cryptocurrencies with bank transfers": "Kaufe und verkaufe Kryptowährungen mit Banküberweisungen",
-
-    "Please login via an application to use our services": "Bitte melde Dich über eine Anwendung an, um unsere Services benutzen zu können",
     "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Melde Dich bei Deinem DFX-Konto an, indem Du mit Deiner Unterschrift bestätigst, dass Du der alleinige Eigentümer der angegebenen Blockchain-Adresse bist.",
     "Don't show this again.": "Nicht mehr anzeigen.",
 

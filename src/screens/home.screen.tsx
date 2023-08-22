@@ -19,6 +19,7 @@ import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { useDeferredPromise } from '../hooks/deferred-promise.hook';
+import { Tile, useFeatureTree } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useStore } from '../hooks/store.hook';
 
@@ -27,23 +28,21 @@ export function HomeScreen(): JSX.Element {
   const { isProcessing, isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
   const { isEmbedded } = useAppHandlingContext();
-  const { wallets, getInstalledWallets, login } = useWalletContext();
+  const { getInstalledWallets, login } = useWalletContext();
   const { defer, deferRef } = useDeferredPromise<void>();
   const { showsSignatureInfo } = useStore();
   const { navigate } = useNavigation();
   const { search } = useLocation();
+  const { getTiles, setOptions } = useFeatureTree();
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [showInstallHint, setShowInstallHint] = useState<WalletType>();
   const [showSignHint, setShowSignHint] = useState(false);
-
-  // connect button labels
-  const labels: { [type in WalletType]: string } = {
-    [WalletType.META_MASK]: 'MetaMask / Rabby',
-    [WalletType.ALBY]: 'Alby',
-  };
+  const [currentPage, setCurrentPage] = useState<string>();
+  const [allowedTiles, setAllowedTiles] = useState<string[]>();
 
   const redirectPath = new URLSearchParams(search).get('redirect-path');
+  const tiles = getTiles(currentPage);
 
   async function confirmSignHint(): Promise<void> {
     if (!showsSignatureInfo.get()) return;
@@ -62,6 +61,19 @@ export function HomeScreen(): JSX.Element {
     setShowInstallHint(undefined);
   }
 
+  function handleNext(tile: Tile) {
+    if (tile.comingSoon) return;
+
+    if (tile.wallet) {
+      connect(tile.wallet);
+      setCurrentPage(undefined);
+    } else {
+      setAllowedTiles(tile.next.tiles);
+      if (tile.next.options) setOptions(tile.next.options);
+      setCurrentPage(tile.next.page);
+    }
+  }
+
   // connect
   function connect(wallet: WalletType, address?: string) {
     if (getInstalledWallets().some((w) => w === wallet)) {
@@ -70,7 +82,7 @@ export function HomeScreen(): JSX.Element {
         .then(() => {
           if (redirectPath) {
             // wait for the user to reload
-            setTimeout(() => navigate({ pathname: redirectPath }, { clearSearch: ['redirect-path'] }), 10);
+            setTimeout(() => navigate({ pathname: redirectPath }, { clearParams: ['redirect-path'] }), 10);
           }
         })
         .finally(() => setIsConnecting(false));
@@ -81,7 +93,7 @@ export function HomeScreen(): JSX.Element {
 
   return (
     <Layout title={isEmbedded ? translate('screens/home', 'DFX services') : undefined} backButton={isEmbedded}>
-      {isProcessing || isUserLoading ? (
+      {isProcessing || isUserLoading || !tiles ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
@@ -99,19 +111,31 @@ export function HomeScreen(): JSX.Element {
             </>
           ) : (
             <>
-              {!isEmbedded && <BrowserContent />}
-              <p className="text-dfxGray-700 pt-8 pb-4">
-                {translate('screens/home', 'Please login via an application to use our services')}
-              </p>
-
-              {wallets.map((w) => (
-                <StyledButton
-                  key={w}
-                  label={translate('screens/home', labels[w])}
-                  color={StyledButtonColor.RED}
-                  onClick={() => connect(w)}
-                />
-              ))}
+              <div className="flex self-start mt-8 mb-14">
+                <div className="bg-dfxRed-100" style={{ width: '11px', marginRight: '12px' }}></div>
+                <div className="text-xl text-dfxBlue-800 font-extrabold text-left">
+                  <div>
+                    {translate('screens/home', 'Access all')}{' '}
+                    <span className="text-dfxRed-100 uppercase">{translate('screens/home', 'DFX Services')}</span>
+                  </div>
+                  <div>
+                    {translate('screens/home', 'with this easy')}{' '}
+                    <span className="text-dfxRed-100 uppercase">{translate('screens/home', 'toolbox')}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                {tiles
+                  .filter((t) => !allowedTiles || allowedTiles.includes(t.id))
+                  .map((t) => (
+                    <img
+                      key={t.id}
+                      src={t.img}
+                      className={t.comingSoon ? undefined : 'cursor-pointer'}
+                      onClick={() => handleNext(t)}
+                    />
+                  ))}
+              </div>
             </>
           )}
         </>
@@ -120,27 +144,12 @@ export function HomeScreen(): JSX.Element {
   );
 }
 
-function BrowserContent(): JSX.Element {
-  const { translate } = useSettingsContext();
-
-  return (
-    <>
-      <h2 className="text-dfxBlue-800">{translate('screens/home', 'DFX services')}</h2>
-      <p className="text-dfxGray-700">
-        {translate('screens/home', 'Buy and Sell cryptocurrencies with bank transfers')}
-      </p>
-    </>
-  );
-}
-
 function LoggedInContent(): JSX.Element {
   const { user } = useUserContext();
   const { sellEnabled } = useWalletContext();
-  const { isEmbedded } = useAppHandlingContext();
 
   return (
     <>
-      {!isEmbedded && <BrowserContent />}
       <div className="flex flex-col gap-8 py-8">
         <ServiceButton type={ServiceButtonType.BUY} url="/buy" />
         <ServiceButton
