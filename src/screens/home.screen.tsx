@@ -14,7 +14,6 @@ import {
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Layout } from '../components/layout';
-import { ServiceButton, ServiceButtonType } from '../components/service-button';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
@@ -25,10 +24,10 @@ import { useStore } from '../hooks/store.hook';
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
-  const { isProcessing, isLoggedIn } = useSessionContext();
-  const { user, isUserLoading } = useUserContext();
+  const { isProcessing, logout } = useSessionContext();
+  const { isUserLoading } = useUserContext();
   const { isEmbedded } = useAppHandlingContext();
-  const { getInstalledWallets, login } = useWalletContext();
+  const { getInstalledWallets, login, activeWallet } = useWalletContext();
   const { defer, deferRef } = useDeferredPromise<void>();
   const { showsSignatureInfo } = useStore();
   const { navigate } = useNavigation();
@@ -79,7 +78,7 @@ export function HomeScreen(): JSX.Element {
   function connect(wallet: WalletType, address?: string) {
     if (getInstalledWallets().some((w) => w === wallet)) {
       setIsConnecting(true);
-      login(wallet, confirmSignHint, address)
+      doLogin(wallet, address)
         .then(() => {
           if (redirectPath) {
             // wait for the user to reload
@@ -92,6 +91,10 @@ export function HomeScreen(): JSX.Element {
     }
   }
 
+  async function doLogin(wallet: WalletType, address?: string) {
+    return activeWallet === wallet ? undefined : logout().then(() => login(wallet, confirmSignHint, address));
+  }
+
   return (
     <Layout title={isEmbedded ? translate('screens/home', 'DFX services') : undefined} backButton={isEmbedded}>
       {isProcessing || isUserLoading || !tiles ? (
@@ -100,9 +103,7 @@ export function HomeScreen(): JSX.Element {
         </div>
       ) : (
         <>
-          {isLoggedIn && user ? (
-            <LoggedInContent />
-          ) : showInstallHint ? (
+          {showInstallHint ? (
             <InstallHint type={showInstallHint} onConfirm={onHintConfirmed} />
           ) : showSignHint ? (
             <SignHint onConfirm={signHintConfirmed} />
@@ -112,7 +113,7 @@ export function HomeScreen(): JSX.Element {
             </>
           ) : (
             <>
-              <div className="flex self-start mt-8 mb-14">
+              <div className="flex self-start mb-4 sm:mt-8 sm:mb-14">
                 <div className="bg-dfxRed-100" style={{ width: '11px', marginRight: '12px' }}></div>
                 <div className="text-xl text-dfxBlue-800 font-extrabold text-left">
                   <div>
@@ -151,25 +152,6 @@ export function HomeScreen(): JSX.Element {
         </>
       )}
     </Layout>
-  );
-}
-
-function LoggedInContent(): JSX.Element {
-  const { user } = useUserContext();
-  const { sellEnabled } = useWalletContext();
-
-  return (
-    <>
-      <div className="flex flex-col gap-8 py-8">
-        <ServiceButton type={ServiceButtonType.BUY} url="/buy" />
-        <ServiceButton
-          type={ServiceButtonType.SELL}
-          url={user?.kycDataComplete ? '/sell' : '/profile'}
-          disabled={!sellEnabled}
-        />
-        {/* <ServiceButton type={ServiceButtonType.CONVERT} url="/convert" disabled /> */}
-      </div>
-    </>
   );
 }
 

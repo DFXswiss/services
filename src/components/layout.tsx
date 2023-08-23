@@ -1,7 +1,6 @@
 import { PropsWithChildren, Ref } from 'react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
-import { GeneralLinks } from './general-links';
 import { Navigation } from './navigation';
 
 interface LayoutProps extends PropsWithChildren {
@@ -34,8 +33,6 @@ export function Layout({ title, backButton, textStart, children, scrollRef }: La
           <p className="p-2 text-center text-dfxGray-700">{translate('navigation/links', 'Powered by DFX')}</p>
         )}
       </div>
-
-      {!isEmbedded && <GeneralLinks />}
     </div>
   );
 }
