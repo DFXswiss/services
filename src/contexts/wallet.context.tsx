@@ -49,7 +49,6 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const [activeAddress, setActiveAddress] = useState<string>();
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
 
-  const [ledgerAddress, setLedgerAddress] = useState<string>();
   const [ledgerBlockchain, setLedgerBlockchain] = useState<Blockchain>();
 
   const [mmAddress, setMmAddress] = useState<string>();
@@ -125,7 +124,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         setActiveAddress(address);
         break;
       case WalletType.LEDGER:
-        setLedgerAddress(address);
+        setActiveAddress(address);
         setLedgerBlockchain(blockchain);
         break;
     }
@@ -150,6 +149,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
         return [address, Blockchain.LIGHTNING];
       case WalletType.LEDGER:
+        await ledger.connect();
         address ??= await ledger.getAddress();
         return [address, Blockchain.BITCOIN];
     }
@@ -235,10 +235,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         return mmAddress;
 
       case WalletType.ALBY:
-        return activeAddress;
-
       case WalletType.LEDGER:
-        return ledgerAddress;
+        return activeAddress;
 
       default:
         return undefined;
@@ -289,8 +287,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       login,
       activeWallet,
       sellEnabled:
-        hasBalance ||
-        (activeWallet != null && [WalletType.META_MASK, WalletType.ALBY, WalletType.LEDGER].includes(activeWallet)),
+        hasBalance || (activeWallet != null && [WalletType.META_MASK, WalletType.ALBY].includes(activeWallet)),
       getBalances,
       sendTransaction,
     }),
@@ -301,7 +298,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       mmBlockchain,
       metaMask,
       alby,
-      ledgerAddress,
+      ledger,
       ledgerBlockchain,
       api,
       hasBalance,

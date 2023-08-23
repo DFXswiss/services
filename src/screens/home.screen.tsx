@@ -246,9 +246,9 @@ function LedgerHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
 
   return (
     <StyledVerticalStack gap={4}>
-      <h1 className="text-dfxGray-700">{translate('screens/home', 'Please use a other browser (e.g. Chrome)!')}</h1>
+      <h1 className="text-dfxGray-700">{translate('screens/home', 'Browser not supported!')}</h1>
       <p className="text-dfxGray-700">
-        {translate('screens/home', 'Your Browser is not able to use this service. Visit')}{' '}
+        {translate('screens/home', 'Please use a compatible browser (e.g. Chrome). Visit')}{' '}
         <StyledLink label="caniuse.com" url="https://caniuse.com/webhid" dark />{' '}
         {translate('screens/home', 'for more details.')}
       </p>
