@@ -57,7 +57,6 @@ export const FeatureTree: Page[] = [
         img: 'ethereumarbitrumoptimismpolygon',
         next: {
           page: 'buy-erc20-assets',
-          },
         },
       },
       {
@@ -103,7 +102,6 @@ export const FeatureTree: Page[] = [
         img: 'polygon',
         disabled: true,
       },
-
     ],
   },
   {
@@ -119,7 +117,7 @@ export const FeatureTree: Page[] = [
         img: 'dai',
         disabled: true,
       },
-    ]
+    ],
   },
   {
     id: 'sell-asset',
@@ -133,14 +131,14 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { assetIn: 'BTC' },
-         },
-       },
+          },
+        },
       },
       /* TODO */
     ],
   },
-{
-  id: 'wallets',
+  {
+    id: 'wallets',
     tiles: [
       {
         id: 'dfx-wallet',
@@ -171,8 +169,8 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
- {
-  id: 'hw-wallets',
+  {
+    id: 'hw-wallets',
     tiles: [
       /* TODO */
     ],
