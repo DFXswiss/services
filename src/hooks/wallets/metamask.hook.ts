@@ -101,27 +101,28 @@ export function useMetaMask(): MetaMaskInterface {
 
   async function requestChangeToBlockchain(blockchain?: Blockchain): Promise<void> {
     if (!blockchain) return;
-    const id = toChainId(blockchain);
-    if (!id) return;
-    const chainId = web3.utils.toHex(id);
-    return ethereum().sendAsync(
-      {
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId }],
-      },
-      (e?: MetaMaskError) => {
+
+    const chainId = toChainId(blockchain);
+    if (!chainId) return;
+
+    return ethereum()
+      .request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] })
+      .catch((e: MetaMaskError) => {
         // 4902 chain is not yet added to MetaMask, therefore add chainId to MetaMask
         if (e && e.code === 4902) {
-          requestAddChainId(blockchain);
+          return requestAddChainId(blockchain);
         }
-      },
-    );
+
+        throw e;
+      });
   }
 
   async function requestAddChainId(blockchain: Blockchain): Promise<void> {
-    return ethereum().sendAsync({
+    const chain = toChainObject(blockchain);
+
+    return ethereum().request({
       method: 'wallet_addEthereumChain',
-      params: [toChainObject(blockchain)],
+      params: [chain],
     });
   }
 
@@ -143,7 +144,7 @@ export function useMetaMask(): MetaMaskInterface {
     const symbol = await tokenContract.methods.symbol().call();
     const decimals = await tokenContract.methods.decimals().call();
 
-    return ethereum().sendAsync({
+    return ethereum().request({
       method: 'wallet_watchAsset',
       params: {
         type: 'ERC20',

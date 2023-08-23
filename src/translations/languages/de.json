@@ -33,9 +33,7 @@
   },
   "screens/home": {
     "DFX services": "DFX Services",
-    "Access all": "Benütze alle",
-    "with this easy": "mit dieser simplen",
-    "toolbox": "Toolbox",
+    "title": "Eine einfache <1>Toolbox</1><2/>für alle <4>DFX Services</4>",
     "Coming Soon": "Coming Soon",
 
     "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Melde Dich bei Deinem DFX-Konto an, indem Du mit Deiner Unterschrift bestätigst, dass Du der alleinige Eigentümer der angegebenen Blockchain-Adresse bist.",
