@@ -18,7 +18,12 @@ interface WalletInterface {
   address?: string;
   blockchain?: Blockchain;
   getInstalledWallets: () => WalletType[];
-  login: (wallet: WalletType, signHintCallback?: () => Promise<void>, address?: string) => Promise<string | undefined>;
+  login: (
+    wallet: WalletType,
+    signHintCallback?: () => Promise<void>,
+    blockchain?: Blockchain,
+    address?: string,
+  ) => Promise<string | undefined>;
   switchBlockchain: (to: Blockchain) => Promise<void>;
   activeWallet: WalletType | undefined;
   sellEnabled: boolean;
@@ -88,6 +93,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   async function login(
     wallet: WalletType,
     signHintCallback?: () => Promise<void>,
+    blockchain?: Blockchain,
     usedAddress?: string,
   ): Promise<string> {
     const address = await connect(wallet, usedAddress);
@@ -103,6 +109,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
       throw e;
     }
+
+    blockchain && (await switchBlockchain(blockchain, wallet));
 
     return address;
   }
@@ -238,8 +246,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     }
   }
 
-  function switchBlockchain(to: Blockchain): Promise<void> {
-    switch (activeWallet) {
+  function switchBlockchain(to: Blockchain, wallet?: WalletType): Promise<void> {
+    switch (wallet ?? activeWallet) {
       case WalletType.META_MASK:
         return metaMask.requestChangeToBlockchain(to);
 

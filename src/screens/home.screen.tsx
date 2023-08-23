@@ -73,7 +73,7 @@ export function HomeScreen(): JSX.Element {
     if (tile.wallet) {
       connect(tile.wallet)
         .then(() => setPages(new Stack()))
-        .catch(() => undefined);
+        .catch(console.error);
     } else {
       if (tile.next.options) setOptions(tile.next.options);
       setPages((p) => p.push({ page: tile.next.page, allowedTiles: tile.next.tiles }));
@@ -89,7 +89,6 @@ export function HomeScreen(): JSX.Element {
     if (getInstalledWallets().some((w) => w === wallet)) {
       setIsConnecting(true);
       return doLogin(wallet, address)
-        .then(() => (blockchain ? switchBlockchain(blockchain as Blockchain) : undefined))
         .then(() => {
           if (redirectPath) {
             // wait for the user to reload
@@ -104,7 +103,10 @@ export function HomeScreen(): JSX.Element {
   }
 
   async function doLogin(wallet: WalletType, address?: string) {
-    return activeWallet === wallet ? undefined : logout().then(() => login(wallet, confirmSignHint, address));
+    const selectedChain = blockchain as Blockchain;
+    return activeWallet === wallet
+      ? switchBlockchain(selectedChain)
+      : logout().then(() => login(wallet, confirmSignHint, selectedChain, address));
   }
 
   return (
@@ -139,7 +141,7 @@ export function HomeScreen(): JSX.Element {
                   </Trans>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2.5 w-full">
+              <div className="grid grid-cols-2 gap-2.5 w-full z-1">
                 {tiles
                   .filter((t) => !allowedTiles || allowedTiles.includes(t.id))
                   .map((t) => (
@@ -168,6 +170,9 @@ export function HomeScreen(): JSX.Element {
           )}
         </>
       )}
+      <div className="fixed bottom-0 w-full max-w-screen-md">
+        <img src="https://content.dfx.swiss/img/v1/services/berge.png" className="w-full" />
+      </div>
     </Layout>
   );
 }

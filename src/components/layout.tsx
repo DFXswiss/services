@@ -1,6 +1,4 @@
 import { PropsWithChildren, Ref } from 'react';
-import { useAppHandlingContext } from '../contexts/app-handling.context';
-import { useSettingsContext } from '../contexts/settings.context';
 import { Navigation } from './navigation';
 
 interface LayoutProps extends PropsWithChildren {
@@ -12,9 +10,6 @@ interface LayoutProps extends PropsWithChildren {
 }
 
 export function Layout({ title, backButton, onBack, textStart, children, scrollRef }: LayoutProps): JSX.Element {
-  const { translate } = useSettingsContext();
-  const { isEmbedded } = useAppHandlingContext();
-
   return (
     <div id="app-root" className="h-full flex flex-col">
       <Navigation title={title} backButton={backButton} onBack={onBack} />
@@ -29,10 +24,6 @@ export function Layout({ title, backButton, onBack, textStart, children, scrollR
             {children}
           </div>
         </div>
-
-        {isEmbedded && (
-          <p className="p-2 text-center text-dfxGray-700">{translate('navigation/links', 'Powered by DFX')}</p>
-        )}
       </div>
     </div>
   );
