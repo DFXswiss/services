@@ -1,4 +1,4 @@
-import { useSessionContext, useUserContext } from '@dfx.swiss/react';
+import { Blockchain, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
   IconVariant,
@@ -12,9 +12,11 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
+import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
+import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { useDeferredPromise } from '../hooks/deferred-promise.hook';
@@ -28,12 +30,13 @@ export function HomeScreen(): JSX.Element {
   const { isProcessing, logout } = useSessionContext();
   const { isUserLoading } = useUserContext();
   const { isEmbedded } = useAppHandlingContext();
-  const { getInstalledWallets, login, activeWallet } = useWalletContext();
+  const { getInstalledWallets, login, switchBlockchain, activeWallet } = useWalletContext();
   const { defer, deferRef } = useDeferredPromise<void>();
   const { showsSignatureInfo } = useStore();
   const { navigate } = useNavigation();
   const { search } = useLocation();
   const { getTiles, setOptions } = useFeatureTree();
+  const { blockchain } = useParamContext();
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [showInstallHint, setShowInstallHint] = useState<WalletType>();
@@ -86,6 +89,7 @@ export function HomeScreen(): JSX.Element {
     if (getInstalledWallets().some((w) => w === wallet)) {
       setIsConnecting(true);
       return doLogin(wallet, address)
+        .then(() => (blockchain ? switchBlockchain(blockchain as Blockchain) : undefined))
         .then(() => {
           if (redirectPath) {
             // wait for the user to reload
@@ -128,21 +132,22 @@ export function HomeScreen(): JSX.Element {
               <div className="flex self-start mb-4 sm:mt-8 sm:mb-14">
                 <div className="bg-dfxRed-100" style={{ width: '11px', marginRight: '12px' }}></div>
                 <div className="text-xl text-dfxBlue-800 font-extrabold text-left">
-                  <div>
-                    {translate('screens/home', 'Access all')}{' '}
-                    <span className="text-dfxRed-100 uppercase">{translate('screens/home', 'DFX Services')}</span>
-                  </div>
-                  <div>
-                    {translate('screens/home', 'with this easy')}{' '}
-                    <span className="text-dfxRed-100 uppercase">{translate('screens/home', 'toolbox')}</span>
-                  </div>
+                  <Trans i18nKey={'screens/home.title'}>
+                    Access all <span className="text-dfxRed-100 uppercase">DFX Services</span>
+                    <br />
+                    with this easy <span className="text-dfxRed-100 uppercase">toolbox</span>
+                  </Trans>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2.5 w-full">
                 {tiles
                   .filter((t) => !allowedTiles || allowedTiles.includes(t.id))
                   .map((t) => (
-                    <div key={t.id} className="relative aspect-square">
+                    <div
+                      key={t.id}
+                      className="relative aspect-square"
+                      style={{ borderRadius: '4%', boxShadow: '0px 0px 5px 3px rgba(0, 0, 0, 0.25)' }}
+                    >
                       <img
                         src={t.img}
                         className={t.disabled ? 'opacity-60' : 'cursor-pointer'}

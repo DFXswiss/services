@@ -19,6 +19,7 @@ interface WalletInterface {
   blockchain?: Blockchain;
   getInstalledWallets: () => WalletType[];
   login: (wallet: WalletType, signHintCallback?: () => Promise<void>, address?: string) => Promise<string | undefined>;
+  switchBlockchain: (to: Blockchain) => Promise<void>;
   activeWallet: WalletType | undefined;
   sellEnabled: boolean;
   getBalances: (assets: Asset[]) => Promise<AssetBalance[] | undefined>;
@@ -237,6 +238,16 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     }
   }
 
+  function switchBlockchain(to: Blockchain): Promise<void> {
+    switch (activeWallet) {
+      case WalletType.META_MASK:
+        return metaMask.requestChangeToBlockchain(to);
+
+      default:
+        throw new Error(`Blockchain switch not supported by ${activeWallet}`);
+    }
+  }
+
   async function sendTransaction(sell: Sell): Promise<string> {
     switch (activeWallet) {
       case WalletType.META_MASK:
@@ -260,6 +271,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       blockchain: getBlockchain(),
       getInstalledWallets,
       login,
+      switchBlockchain,
       activeWallet,
       sellEnabled:
         hasBalance || (activeWallet != null && [WalletType.META_MASK, WalletType.ALBY].includes(activeWallet)),

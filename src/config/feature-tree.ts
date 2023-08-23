@@ -1,3 +1,4 @@
+import { Blockchain } from '@dfx.swiss/react';
 import { WalletType } from '../contexts/wallet.context';
 import { Page } from '../hooks/feature-tree.hook';
 
@@ -56,6 +57,7 @@ export const FeatureTree: Page[] = [
         img: 'ethereumarbitrumoptimismpolygon',
         next: {
           page: 'buy-erc20-assets',
+          },
         },
       },
       {
@@ -66,6 +68,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN },
           },
         },
       },
