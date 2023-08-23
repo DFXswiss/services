@@ -56,11 +56,7 @@ export const FeatureTree: Page[] = [
         id: 'erc20',
         img: 'ethereumarbitrumoptimismpolygon',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM },
+          page: 'buy-erc20-assets',
           },
         },
       },
@@ -79,6 +75,53 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
+    id: 'buy-erc20-assets',
+    tiles: [
+      {
+        id: 'ethereum',
+        img: 'ethereum',
+        next: {
+          page: 'eth',
+        },
+      },
+      {
+        id: 'arbitrum',
+        img: 'arbitrum',
+        next: {
+          page: 'eth',
+        },
+      },
+      {
+        id: 'optimism',
+        img: 'optimism',
+        next: {
+          page: 'eth',
+        },
+      },
+      {
+        id: 'polygon',
+        img: 'polygon',
+        disabled: true,
+      },
+
+    ],
+  },
+  {
+    id: 'eth',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        disabled: true,
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        disabled: true,
+      },
+    ]
+  },
+  {
     id: 'sell-asset',
     tiles: [
       {
@@ -90,14 +133,14 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { assetIn: 'BTC' },
-          },
-        },
+         },
+       },
       },
       /* TODO */
     ],
   },
-  {
-    id: 'wallets',
+{
+  id: 'wallets',
     tiles: [
       {
         id: 'dfx-wallet',
@@ -128,8 +171,8 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
-  {
-    id: 'hw-wallets',
+ {
+  id: 'hw-wallets',
     tiles: [
       /* TODO */
     ],
