@@ -21,6 +21,7 @@ import { useDeferredPromise } from '../hooks/deferred-promise.hook';
 import { Tile, useFeatureTree } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useStore } from '../hooks/store.hook';
+import { Stack } from '../util/stack';
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -37,12 +38,14 @@ export function HomeScreen(): JSX.Element {
   const [isConnecting, setIsConnecting] = useState(false);
   const [showInstallHint, setShowInstallHint] = useState<WalletType>();
   const [showSignHint, setShowSignHint] = useState(false);
-  const [currentPage, setCurrentPage] = useState<string>();
-  const [allowedTiles, setAllowedTiles] = useState<string[]>();
+  const [pages, setPages] = useState(new Stack<{ page: string; allowedTiles: string[] | undefined }>());
 
   const redirectPath = new URLSearchParams(search).get('redirect-path');
+  const currentPage = pages.current?.page;
+  const allowedTiles = pages.current?.allowedTiles;
   const tiles = getTiles(currentPage);
 
+  // signature hint
   async function confirmSignHint(): Promise<void> {
     if (!showsSignatureInfo.get()) return;
 
@@ -60,25 +63,29 @@ export function HomeScreen(): JSX.Element {
     setShowInstallHint(undefined);
   }
 
+  // tile handling
   function handleNext(tile: Tile) {
     if (tile.disabled) return;
 
     if (tile.wallet) {
-      connect(tile.wallet);
-      setAllowedTiles(undefined);
-      setCurrentPage(undefined);
+      connect(tile.wallet)
+        .then(() => setPages(new Stack()))
+        .catch(() => undefined);
     } else {
       if (tile.next.options) setOptions(tile.next.options);
-      setAllowedTiles(tile.next.tiles);
-      setCurrentPage(tile.next.page);
+      setPages((p) => p.push({ page: tile.next.page, allowedTiles: tile.next.tiles }));
     }
   }
 
+  function handleBack() {
+    setPages((p) => p.pop());
+  }
+
   // connect
-  function connect(wallet: WalletType, address?: string) {
+  async function connect(wallet: WalletType, address?: string) {
     if (getInstalledWallets().some((w) => w === wallet)) {
       setIsConnecting(true);
-      doLogin(wallet, address)
+      return doLogin(wallet, address)
         .then(() => {
           if (redirectPath) {
             // wait for the user to reload
@@ -88,6 +95,7 @@ export function HomeScreen(): JSX.Element {
         .finally(() => setIsConnecting(false));
     } else {
       setShowInstallHint(wallet);
+      throw new Error('Wallet not installed');
     }
   }
 
@@ -96,7 +104,11 @@ export function HomeScreen(): JSX.Element {
   }
 
   return (
-    <Layout title={isEmbedded ? translate('screens/home', 'DFX services') : undefined} backButton={isEmbedded}>
+    <Layout
+      title={isEmbedded ? translate('screens/home', 'DFX services') : undefined}
+      backButton={isEmbedded || currentPage != null}
+      onBack={currentPage ? handleBack : undefined}
+    >
       {isProcessing || isUserLoading || !tiles ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />

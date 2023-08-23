@@ -6,17 +6,18 @@ import { Navigation } from './navigation';
 interface LayoutProps extends PropsWithChildren {
   title?: string;
   backButton?: boolean;
+  onBack?: () => void;
   textStart?: boolean;
   scrollRef?: Ref<HTMLDivElement>;
 }
 
-export function Layout({ title, backButton, textStart, children, scrollRef }: LayoutProps): JSX.Element {
+export function Layout({ title, backButton, onBack, textStart, children, scrollRef }: LayoutProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { isEmbedded } = useAppHandlingContext();
 
   return (
     <div id="app-root" className="h-full flex flex-col">
-      <Navigation title={title} backButton={backButton} />
+      <Navigation title={title} backButton={backButton} onBack={onBack} />
 
       <div className="flex flex-col flex-grow overflow-auto" ref={scrollRef}>
         <div className="flex flex-grow justify-center">

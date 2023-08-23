@@ -94,10 +94,13 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     // show signature hint
     await signHintCallback?.();
 
-    const session = await createSession(wallet, address, paramWallet);
-    if (!session) {
+    try {
+      await createSession(wallet, address, paramWallet);
+    } catch (e) {
       api.logout();
       resetWallet();
+
+      throw e;
     }
 
     return address;
@@ -183,14 +186,13 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     return wallets;
   }
 
-  async function createSession(walletType: WalletType, address: string, wallet?: string): Promise<string | undefined> {
-    try {
-      const message = await getSignMessage(address);
-      const signature = await signMessage(walletType, message, address);
-      return (await api.login(address, signature)) ?? (await api.signUp(address, signature, wallet));
-    } catch (e) {
-      console.error('Failed to create session:', e);
-    }
+  async function createSession(walletType: WalletType, address: string, wallet?: string): Promise<string> {
+    const message = await getSignMessage(address);
+    const signature = await signMessage(walletType, message, address);
+    const session = (await api.login(address, signature)) ?? (await api.signUp(address, signature, wallet));
+    if (!session) throw new Error('Failed to create session');
+
+    return session;
   }
 
   async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {

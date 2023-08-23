@@ -102,13 +102,6 @@ export const FeatureTree: Page[] = [
         disabled: true,
       },
       {
-        id: 'hw-wallet',
-        img: 'hardwarewallets',
-        next: {
-          page: 'hw-wallets',
-        },
-      },
-      {
         id: 'alby',
         img: 'alby',
         wallet: WalletType.ALBY,
@@ -117,6 +110,13 @@ export const FeatureTree: Page[] = [
         id: 'metamask',
         img: 'metamaskrabby',
         wallet: WalletType.META_MASK,
+      },
+      {
+        id: 'hw-wallet',
+        img: 'hardwarewallets',
+        next: {
+          page: 'hw-wallets',
+        },
       },
       {
         id: 'cli',
