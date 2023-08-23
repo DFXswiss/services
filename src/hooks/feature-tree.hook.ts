@@ -1,6 +1,7 @@
 import { Language } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import { FeatureTree } from '../config/feature-tree';
+import { AppParams, useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { WalletType } from '../contexts/wallet.context';
 import { useNavigation } from './navigation.hook';
@@ -41,7 +42,7 @@ export interface Next {
 
 export interface Options {
   service?: string;
-  query?: Record<string, string>;
+  query?: { [k in keyof AppParams]: string };
 }
 
 // --- HOOK --- //
@@ -53,7 +54,8 @@ interface FeatureTreeInterface {
 
 export function useFeatureTree(): FeatureTreeInterface {
   const { language } = useSettingsContext();
-  const { setParams } = useNavigation();
+  const { setParams } = useParamContext();
+  const { setParams: setUrlParams } = useNavigation();
 
   function getTiles(pageId?: string): Tile[] | undefined {
     if (!language) return;
@@ -69,16 +71,16 @@ export function useFeatureTree(): FeatureTreeInterface {
   }
 
   function setOptions(options: Options) {
-    const params = new URLSearchParams();
-
     // service
-    if (options.service) params.set('redirect-path', `/${options.service}`);
+    if (options.service) {
+      const params = new URLSearchParams({ 'redirect-path': `/${options.service}` });
+      setUrlParams(params);
+    }
 
     // query
-    for (const [key, value] of Object.entries(options.query ?? {})) {
-      params.set(key, value);
+    if (options.query) {
+      setParams(options.query);
     }
-    setParams(params);
   }
 
   return useMemo(() => ({ getTiles, setOptions }), [language, setParams]);
