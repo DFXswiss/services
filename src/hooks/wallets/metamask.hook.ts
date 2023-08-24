@@ -5,6 +5,7 @@ import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
 import { AssetBalance } from '../../contexts/balance.context';
 import ERC20_ABI from '../../static/erc20.abi.json';
+import { TranslatedError } from '../../util/translated-error';
 import { useBlockchain } from '../blockchain.hook';
 
 export enum WalletType {
@@ -92,7 +93,22 @@ export function useMetaMask(): MetaMaskInterface {
 
   async function requestAccount(): Promise<string | undefined> {
     await checkConnection();
-    return verifyAccount(await web3.eth.requestAccounts());
+    try {
+      return verifyAccount(await web3.eth.requestAccounts());
+    } catch (e) {
+      const { code } = e as MetaMaskError;
+      switch (code) {
+        case 4001:
+          throw new Error('User cancelled');
+
+        case -32002:
+          throw new TranslatedError(
+            'There is already a request pending. Please confirm it in your MetaMask and retry.',
+          );
+      }
+
+      throw e;
+    }
   }
 
   async function requestBlockchain(): Promise<Blockchain | undefined> {

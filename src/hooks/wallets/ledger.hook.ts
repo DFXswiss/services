@@ -17,6 +17,7 @@ export interface LedgerInterface {
 export function useLedger(): LedgerInterface {
   const rootPath = "84'/0'/0'";
 
+  let tmpClient: AppClient;
   const [appClient, setAppClient] = useState<AppClient>();
 
   async function isSupported(): Promise<boolean> {
@@ -26,6 +27,8 @@ export function useLedger(): LedgerInterface {
   async function connect(): Promise<string> {
     try {
       const client = appClient ?? (await setupConnection());
+
+      tmpClient = client;
       setAppClient(client);
 
       // fetch default wallet policy
@@ -38,9 +41,13 @@ export function useLedger(): LedgerInterface {
       const { name, statusText } = e as LedgerError;
 
       if (name === 'TransportOpenUserCancelled') {
-        throw new Error('User cancelled');
+        throw new TranslatedError('Please connect your Ledger');
       } else if (name === 'LockedDeviceError') {
         throw new TranslatedError('Please unlock your Ledger');
+      } else if (name === 'TransportRaceCondition') {
+        throw new TranslatedError(
+          'There is already a request pending. Please confirm it in your Ledger or reload the page and retry.',
+        );
       } else if (statusText === 'CLA_NOT_SUPPORTED') {
         throw new TranslatedError(
           'You are using a wrong or outdated Ledger app. Please install the newest version of the Bitcoin app on your Ledger.',
@@ -59,9 +66,10 @@ export function useLedger(): LedgerInterface {
   }
 
   async function signMessage(msg: string): Promise<string> {
-    if (!appClient) throw new Error('Not connected');
+    const client = appClient ?? tmpClient;
+    if (!client) throw new Error('Not connected');
 
-    return appClient.signMessage(Buffer.from(msg), `m/${rootPath}/0/0`);
+    return client.signMessage(Buffer.from(msg), `m/${rootPath}/0/0`);
   }
 
   return {

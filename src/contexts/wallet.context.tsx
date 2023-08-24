@@ -1,6 +1,6 @@
 import { Asset, Blockchain, Sell, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { GetInfoResponse } from 'webln';
 import { useStore } from '../hooks/store.hook';
 import { useAlby } from '../hooks/wallets/alby.hook';
@@ -59,10 +59,6 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const [mmAddress, setMmAddress] = useState<string>();
   const [mmBlockchain, setMmBlockchain] = useState<Blockchain>();
 
-  useEffect(() => {
-    if (activeWallet) connect(activeWallet);
-  }, []);
-
   // listen to MM account switches
   useEffect(() => {
     metaMask.register(setMmAddress, setMmBlockchain);
@@ -84,8 +80,18 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     if (activeAddress && session?.address && activeAddress !== session.address) resetWallet();
   }, [session, activeAddress]);
 
+  const hasCheckedConnection = useRef(false);
+
   useEffect(() => {
-    if (isInitialized && !isLoggedIn) resetWallet();
+    if (!isInitialized) return;
+
+    if (!hasCheckedConnection.current && isLoggedIn) {
+      activeWallet && connect(activeWallet).catch(() => api.logout());
+    }
+
+    if (!isLoggedIn) resetWallet();
+
+    hasCheckedConnection.current = true;
   }, [isInitialized, isLoggedIn]);
 
   function resetWallet() {
@@ -276,9 +282,6 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     switch (wallet ?? activeWallet) {
       case WalletType.META_MASK:
         return metaMask.requestChangeToBlockchain(to);
-
-      default:
-        throw new Error(`Blockchain switch not supported by ${activeWallet}`);
     }
   }
 

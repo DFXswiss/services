@@ -24,6 +24,7 @@ import { Tile, useFeatureTree } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useStore } from '../hooks/store.hook';
 import { Stack } from '../util/stack';
+import { TranslatedError } from '../util/translated-error';
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -38,7 +39,8 @@ export function HomeScreen(): JSX.Element {
   const { getTiles, setOptions } = useFeatureTree();
   const { blockchain } = useParamContext();
 
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnectingTo, setIsConnectingTo] = useState<WalletType>();
+  const [connectError, setConnectError] = useState<string>();
   const [showInstallHint, setShowInstallHint] = useState<WalletType>();
   const [showSignHint, setShowSignHint] = useState(false);
   const [pages, setPages] = useState(new Stack<{ page: string; allowedTiles: string[] | undefined }>());
@@ -81,14 +83,21 @@ export function HomeScreen(): JSX.Element {
   }
 
   function handleBack() {
-    setPages((p) => p.pop());
+    if (isConnectingTo) {
+      setConnectError(undefined);
+      setIsConnectingTo(undefined);
+    } else {
+      setPages((p) => p.pop());
+    }
   }
 
   // connect
   async function connect(wallet: WalletType, address?: string) {
     const installedWallets = await getInstalledWallets();
     if (installedWallets.some((w) => w === wallet)) {
-      setIsConnecting(true);
+      setIsConnectingTo(wallet);
+      setConnectError(undefined);
+
       return doLogin(wallet, address)
         .then(() => {
           if (redirectPath) {
@@ -96,7 +105,15 @@ export function HomeScreen(): JSX.Element {
             setTimeout(() => navigate({ pathname: redirectPath }, { clearParams: ['redirect-path'] }), 10);
           }
         })
-        .finally(() => setIsConnecting(false));
+        .catch((e) => {
+          if (e instanceof TranslatedError) {
+            setConnectError(e.message);
+          } else {
+            setIsConnectingTo(undefined);
+          }
+
+          throw e;
+        });
     } else {
       setShowInstallHint(wallet);
       throw new Error('Wallet not installed');
@@ -126,10 +143,28 @@ export function HomeScreen(): JSX.Element {
             <InstallHint type={showInstallHint} onConfirm={onHintConfirmed} />
           ) : showSignHint ? (
             <SignHint onConfirm={signHintConfirmed} />
-          ) : isConnecting ? (
-            <>
-              <StyledLoadingSpinner size={SpinnerSize.LG} />
-            </>
+          ) : isConnectingTo ? (
+            connectError ? (
+              <>
+                <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
+                <p className="text-dfxRed-150">{translate('screens/home', connectError)}</p>
+
+                <StyledButton
+                  className="mt-4"
+                  label={translate('general/actions', 'Back')}
+                  onClick={handleBack}
+                  color={StyledButtonColor.GRAY_OUTLINE}
+                  width={StyledButtonWidth.MIN}
+                />
+              </>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <StyledLoadingSpinner size={SpinnerSize.LG} />
+                </div>
+                <ConnectHint type={isConnectingTo} />
+              </>
+            )
           ) : (
             <>
               <div className="flex self-start mb-4 sm:mt-8 sm:mb-14">
@@ -289,4 +324,28 @@ function LedgerHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
       </div>
     </StyledVerticalStack>
   );
+}
+
+function ConnectHint({ type }: { type: WalletType }): JSX.Element {
+  const { translate } = useSettingsContext();
+  switch (type) {
+    case WalletType.META_MASK:
+      return (
+        <p className="text-dfxGray-700">
+          {translate('screens/home', 'Please confirm the connection in your MetaMask.')}
+        </p>
+      );
+    case WalletType.ALBY:
+      return (
+        <p className="text-dfxGray-700">
+          {translate('screens/home', 'Please confirm the connection in the Alby browser extension.')}
+        </p>
+      );
+    case WalletType.LEDGER:
+      return (
+        <p className="text-dfxGray-700">
+          {translate('screens/home', 'Please confirm the connection with your Ledger.')}
+        </p>
+      );
+  }
 }
