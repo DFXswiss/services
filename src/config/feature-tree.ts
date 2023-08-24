@@ -87,14 +87,14 @@ export const FeatureTree: Page[] = [
         id: 'arbitrum',
         img: 'arbitrum',
         next: {
-          page: 'eth',
+          page: 'buy-arbitrum-assets',
         },
       },
       {
         id: 'optimism',
         img: 'optimism',
         next: {
-          page: 'eth',
+          page: 'buy-optimism-assets',
         },
       },
       {
@@ -200,6 +200,107 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM },
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'buy-arbitrum-assets',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
+          }
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          }
+        },
+      },
+      {
+        id: 'stablecoin',
+        img: 'stablecoin',
+        next: {
+          page: 'buy-arbitrum-stablecoins',
+        },
+      },
+      {
+        id: 'othersarbitrum',
+        img: 'othersarbitrum',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM },
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'buy-arbitrum-stablecoins',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
+          }
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
+          }
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'DAI' },
+          }
+        },
+      },
+      {
+        id: 'othersarbitrum',
+        img: 'othersarbitrum',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM },
           }
         },
       },
