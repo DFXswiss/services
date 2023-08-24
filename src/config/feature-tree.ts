@@ -43,7 +43,7 @@ export const FeatureTree: Page[] = [
           tiles: ['dfx-wallet', 'hw-wallet', 'alby', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+            query: { assetOut: 'BTC' },
           },
         },
       },
@@ -946,7 +946,7 @@ export const FeatureTree: Page[] = [
       {
         id: 'ledger',
         img: 'ledger',
-        disabled: true,
+        wallet: WalletType.LEDGER,
       },
       {
         id: 'trezor',
