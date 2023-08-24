@@ -251,10 +251,6 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.META_MASK:
         return metaMask.requestChangeToBlockchain(to);
 
-      case WalletType.ALBY:
-        if (to !== Blockchain.BITCOIN) throw new Error(`Alby only supports ${Blockchain.BITCOIN}`);
-        break;
-
       default:
         throw new Error(`Blockchain switch not supported by ${activeWallet}`);
     }

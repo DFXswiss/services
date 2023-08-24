@@ -60,10 +60,10 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'bep20',
+        id: 'bsc',
         img: 'binancesmartchain',
         next: {
-          page: 'buy-bep20',
+          page: 'buy-bsc',
         },
       },
     ],
@@ -379,7 +379,7 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
-    id: 'buy-bep20',
+    id: 'buy-bsc',
     tiles: [
       {
         id: 'bnb',
@@ -409,7 +409,7 @@ export const FeatureTree: Page[] = [
         id: 'stable',
         img: 'stablecoin',
         next: {
-          page: 'buy-binancesmartchain-stable',
+          page: 'buy-bsc-stable',
         },
       },
       {
@@ -427,7 +427,7 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
-    id: 'buy-binancesmartchain-stable',
+    id: 'buy-bsc-stable',
     tiles: [
       {
         id: 'usdt',
@@ -491,41 +491,41 @@ export const FeatureTree: Page[] = [
         id: 'erc20',
         img: 'ethereumarbitrumoptimismpolygon',
         next: {
-          page: 'sell-erc20-assets',
+          page: 'sell-erc20',
         },
       },
       {
-        id: 'bep20',
+        id: 'bsc',
         img: 'binancesmartchain',
         next: {
-          page: 'sell-bep20-assets',
+          page: 'sell-bsc',
         },
       },
     ],
   },
 
   {
-    id: 'sell-erc20-assets',
+    id: 'sell-erc20',
     tiles: [
       {
         id: 'ethereum',
         img: 'ethereum',
         next: {
-          page: 'sell-ethereum-assets',
+          page: 'sell-ethereum',
         },
       },
       {
         id: 'arbitrum',
         img: 'arbitrum',
         next: {
-          page: 'sell-arbitrum-assets',
+          page: 'sell-arbitrum',
         },
       },
       {
         id: 'optimism',
         img: 'optimism',
         next: {
-          page: 'sell-optimism-assets',
+          page: 'sell-optimism',
         },
       },
       {
@@ -534,9 +534,9 @@ export const FeatureTree: Page[] = [
         disabled: true,
       },
     ],
-  }, 
+  },
   {
-    id: 'sell-ethereum-assets',
+    id: 'sell-ethereum',
     tiles: [
       {
         id: 'eth',
@@ -547,7 +547,7 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: 'ETH' },
-          }
+          },
         },
       },
       {
@@ -559,18 +559,18 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: 'WBTC' },
-          }
+          },
         },
       },
       {
-        id: 'stablecoin',
+        id: 'stable',
         img: 'stablecoin',
         next: {
-          page: 'sell-ethereum-stablecoins',
+          page: 'sell-ethereum-stable',
         },
       },
       {
-        id: 'othersethereum',
+        id: 'other',
         img: 'othersethereum',
         next: {
           page: 'wallets',
@@ -578,13 +578,13 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
-          }
+          },
         },
       },
     ],
   },
   {
-    id: 'sell-ethereum-stablecoins',
+    id: 'sell-ethereum-stable',
     tiles: [
       {
         id: 'usdt',
@@ -595,7 +595,7 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: 'USDT' },
-          }
+          },
         },
       },
       {
@@ -607,7 +607,7 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: 'USDC' },
-          }
+          },
         },
       },
       {
@@ -619,11 +619,11 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: 'DAI' },
-          }
+          },
         },
       },
       {
-        id: 'othersethereum',
+        id: 'other',
         img: 'othersethereum',
         next: {
           page: 'wallets',
@@ -631,13 +631,13 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
-          }
+          },
         },
       },
     ],
   },
   {
-    id: 'sell-arbitrum-assets',
+    id: 'sell-arbitrum',
     tiles: [
       {
         id: 'eth',
@@ -648,7 +648,7 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: 'ETH' },
-          }
+          },
         },
       },
       {
@@ -660,18 +660,18 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: 'WBTC' },
-          }
+          },
         },
       },
       {
-        id: 'stablecoin',
+        id: 'stable',
         img: 'stablecoin',
         next: {
-          page: 'sell-arbitrum-stablecoins',
+          page: 'sell-arbitrum-stable',
         },
       },
       {
-        id: 'othersarbitrum',
+        id: 'other',
         img: 'othersarbitrum',
         next: {
           page: 'wallets',
@@ -679,13 +679,13 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
-          }
+          },
         },
       },
     ],
   },
   {
-    id: 'sell-arbitrum-stablecoins',
+    id: 'sell-arbitrum-stable',
     tiles: [
       {
         id: 'usdt',
@@ -696,7 +696,7 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: 'USDT' },
-          }
+          },
         },
       },
       {
@@ -708,7 +708,7 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: 'USDC' },
-          }
+          },
         },
       },
       {
@@ -720,11 +720,11 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: 'DAI' },
-          }
+          },
         },
       },
       {
-        id: 'othersarbitrum',
+        id: 'other',
         img: 'othersarbitrum',
         next: {
           page: 'wallets',
@@ -732,13 +732,13 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
-          }
+          },
         },
       },
     ],
   },
   {
-    id: 'sell-optimism-assets',
+    id: 'sell-optimism',
     tiles: [
       {
         id: 'eth',
@@ -749,32 +749,32 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.OPTIMISM, assetIn: 'ETH' },
-          }
+          },
         },
       },
       {
-        id: 'stablecoin',
+        id: 'stable',
         img: 'stablecoin',
         next: {
-          page: 'sell-optimism-stablecoins',
+          page: 'sell-optimism-stable',
         },
       },
       {
-        id: 'othersoptimism',
+        id: 'other',
         img: 'othersoptimism',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined},
-          }
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
+          },
         },
       },
     ],
   },
   {
-    id: 'sell-optimism-stablecoins',
+    id: 'sell-optimism-stable',
     tiles: [
       {
         id: 'usdt',
@@ -785,7 +785,7 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.OPTIMISM, assetIn: 'USDT' },
-          }
+          },
         },
       },
       {
@@ -797,11 +797,11 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.OPTIMISM, assetIn: 'XCHF' },
-          }
+          },
         },
       },
       {
-        id: 'othersoptimism',
+        id: 'other',
         img: 'othersoptimism',
         next: {
           page: 'wallets',
@@ -809,13 +809,13 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
-          }
+          },
         },
       },
     ],
   },
   {
-    id: 'sell-bep20-assets',
+    id: 'sell-bsc',
     tiles: [
       {
         id: 'bnb',
@@ -826,7 +826,7 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'BNB' },
-          }
+          },
         },
       },
       {
@@ -838,18 +838,18 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'WBTC' },
-          }
+          },
         },
       },
       {
-        id: 'stablecoin',
+        id: 'stable',
         img: 'stablecoin',
         next: {
-          page: 'sell-binancesmartchain-stablecoins',
+          page: 'sell-bsc-stable',
         },
       },
       {
-        id: 'othersbinancesmartchain',
+        id: 'other',
         img: 'othersbinancesmartchain',
         next: {
           page: 'wallets',
@@ -857,13 +857,13 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
-          }
+          },
         },
       },
     ],
   },
   {
-    id: 'sell-binancesmartchain-stablecoins',
+    id: 'sell-bsc-stable',
     tiles: [
       {
         id: 'usdt',
@@ -874,7 +874,7 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'USDT' },
-          }
+          },
         },
       },
       {
@@ -886,11 +886,11 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'DAI' },
-          }
+          },
         },
       },
       {
-        id: 'othersbinancesmartchain',
+        id: 'other',
         img: 'othersbinancesmartchain',
         next: {
           page: 'wallets',
@@ -898,7 +898,7 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
-          }
+          },
         },
       },
     ],

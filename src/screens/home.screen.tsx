@@ -141,7 +141,7 @@ export function HomeScreen(): JSX.Element {
                   </Trans>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2.5 w-full z-1">
+              <div className="grid grid-cols-2 gap-2.5 w-full z-1 mb-3">
                 {tiles
                   .filter((t) => !allowedTiles || allowedTiles.includes(t.id))
                   .map((t) => (
