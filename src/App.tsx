@@ -80,7 +80,7 @@ function App({ routerFactory, params }: AppProps) {
       <DfxContextProvider api={{}} data={{}}>
         <BalanceContextProvider>
           <SettingsContextProvider>
-            <ParamContextProvider params={params}>
+            <ParamContextProvider params={params} router={router}>
               <WalletContextProvider>
                 <RouterProvider router={router} />
               </WalletContextProvider>

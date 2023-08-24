@@ -1,4 +1,4 @@
-import { useSessionContext, useUserContext } from '@dfx.swiss/react';
+import { Blockchain, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
   IconVariant,
@@ -15,38 +15,40 @@ import { useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { Layout } from '../components/layout';
-import { ServiceButton, ServiceButtonType } from '../components/service-button';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
+import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { useDeferredPromise } from '../hooks/deferred-promise.hook';
+import { Tile, useFeatureTree } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useStore } from '../hooks/store.hook';
+import { Stack } from '../util/stack';
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
-  const { isProcessing, isLoggedIn } = useSessionContext();
-  const { user, isUserLoading } = useUserContext();
+  const { isProcessing, logout } = useSessionContext();
+  const { isUserLoading } = useUserContext();
   const { isEmbedded } = useAppHandlingContext();
-  const { wallets, getInstalledWallets, login } = useWalletContext();
+  const { getInstalledWallets, login, switchBlockchain, activeWallet } = useWalletContext();
   const { defer, deferRef } = useDeferredPromise<void>();
   const { showsSignatureInfo } = useStore();
   const { navigate } = useNavigation();
   const { search } = useLocation();
+  const { getTiles, setOptions } = useFeatureTree();
+  const { blockchain } = useParamContext();
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [showInstallHint, setShowInstallHint] = useState<WalletType>();
   const [showSignHint, setShowSignHint] = useState(false);
-
-  // connect button labels
-  const labels: { [type in WalletType]: string } = {
-    [WalletType.META_MASK]: 'MetaMask / Rabby',
-    [WalletType.ALBY]: 'Alby',
-    [WalletType.LEDGER]: 'Ledger',
-  };
+  const [pages, setPages] = useState(new Stack<{ page: string; allowedTiles: string[] | undefined }>());
 
   const redirectPath = new URLSearchParams(search).get('redirect-path');
+  const currentPage = pages.current?.page;
+  const allowedTiles = pages.current?.allowedTiles;
+  const tiles = getTiles(currentPage);
 
+  // signature hint
   async function confirmSignHint(): Promise<void> {
     if (!showsSignatureInfo.get()) return;
 
@@ -64,35 +66,63 @@ export function HomeScreen(): JSX.Element {
     setShowInstallHint(undefined);
   }
 
+  // tile handling
+  function handleNext(tile: Tile) {
+    if (tile.disabled) return;
+
+    if (tile.wallet) {
+      connect(tile.wallet)
+        .then(() => setPages(new Stack()))
+        .catch(console.error);
+    } else {
+      if (tile.next.options) setOptions(tile.next.options);
+      setPages((p) => p.push({ page: tile.next.page, allowedTiles: tile.next.tiles }));
+    }
+  }
+
+  function handleBack() {
+    setPages((p) => p.pop());
+  }
+
   // connect
   async function connect(wallet: WalletType, address?: string) {
     const installedWallets = await getInstalledWallets();
     if (installedWallets.some((w) => w === wallet)) {
       setIsConnecting(true);
-      login(wallet, confirmSignHint, address)
+      return doLogin(wallet, address)
         .then(() => {
           if (redirectPath) {
             // wait for the user to reload
-            setTimeout(() => navigate({ pathname: redirectPath }, { clearSearch: ['redirect-path'] }), 10);
+            setTimeout(() => navigate({ pathname: redirectPath }, { clearParams: ['redirect-path'] }), 10);
           }
         })
         .finally(() => setIsConnecting(false));
     } else {
       setShowInstallHint(wallet);
+      throw new Error('Wallet not installed');
     }
   }
 
+  async function doLogin(wallet: WalletType, address?: string) {
+    const selectedChain = blockchain as Blockchain;
+    return activeWallet === wallet
+      ? selectedChain && switchBlockchain(selectedChain)
+      : logout().then(() => login(wallet, confirmSignHint, selectedChain, address));
+  }
+
   return (
-    <Layout title={isEmbedded ? translate('screens/home', 'DFX services') : undefined} backButton={isEmbedded}>
-      {isProcessing || isUserLoading ? (
+    <Layout
+      title={isEmbedded ? translate('screens/home', 'DFX services') : undefined}
+      backButton={isEmbedded || currentPage != null}
+      onBack={currentPage ? handleBack : undefined}
+    >
+      {isProcessing || isUserLoading || !tiles ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
       ) : (
         <>
-          {isLoggedIn && user ? (
-            <LoggedInContent />
-          ) : showInstallHint ? (
+          {showInstallHint ? (
             <InstallHint type={showInstallHint} onConfirm={onHintConfirmed} />
           ) : showSignHint ? (
             <SignHint onConfirm={signHintConfirmed} />
@@ -102,58 +132,49 @@ export function HomeScreen(): JSX.Element {
             </>
           ) : (
             <>
-              {!isEmbedded && <BrowserContent />}
-              <p className="text-dfxGray-700 pt-8 pb-4">
-                {translate('screens/home', 'Please login via an application to use our services')}
-              </p>
-
-              {wallets.map((w) => (
-                <StyledButton
-                  key={w}
-                  label={translate('screens/home', labels[w])}
-                  color={StyledButtonColor.RED}
-                  onClick={() => connect(w)}
-                />
-              ))}
+              <div className="flex self-start mb-4 sm:mt-8 sm:mb-14">
+                <div className="bg-dfxRed-100" style={{ width: '11px', marginRight: '12px' }}></div>
+                <div className="text-xl text-dfxBlue-800 font-extrabold text-left">
+                  <Trans i18nKey={'screens/home.title'}>
+                    Access all <span className="text-dfxRed-100 uppercase">DFX Services</span>
+                    <br />
+                    with this easy <span className="text-dfxRed-100 uppercase">toolbox</span>
+                  </Trans>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 w-full z-1 mb-3">
+                {tiles
+                  .filter((t) => !allowedTiles || allowedTiles.includes(t.id))
+                  .map((t) => (
+                    <div
+                      key={t.id}
+                      className="relative aspect-square"
+                      style={{ borderRadius: '4%', boxShadow: '0px 0px 5px 3px rgba(0, 0, 0, 0.25)' }}
+                    >
+                      <img
+                        src={t.img}
+                        className={t.disabled ? 'opacity-60' : 'cursor-pointer'}
+                        onClick={() => handleNext(t)}
+                      />
+                      {t.disabled && (
+                        <div
+                          className="absolute right-2 bottom-3 text-dfxBlue-800 font-extrabold rotate-180 uppercase"
+                          style={{ writingMode: 'vertical-rl', fontSize: 'min(2vw, 1rem)' }}
+                        >
+                          {translate('screens/home', 'Coming Soon')}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </div>
             </>
           )}
         </>
       )}
-    </Layout>
-  );
-}
-
-function BrowserContent(): JSX.Element {
-  const { translate } = useSettingsContext();
-
-  return (
-    <>
-      <h2 className="text-dfxBlue-800">{translate('screens/home', 'DFX services')}</h2>
-      <p className="text-dfxGray-700">
-        {translate('screens/home', 'Buy and Sell cryptocurrencies with bank transfers')}
-      </p>
-    </>
-  );
-}
-
-function LoggedInContent(): JSX.Element {
-  const { user } = useUserContext();
-  const { sellEnabled } = useWalletContext();
-  const { isEmbedded } = useAppHandlingContext();
-
-  return (
-    <>
-      {!isEmbedded && <BrowserContent />}
-      <div className="flex flex-col gap-8 py-8">
-        <ServiceButton type={ServiceButtonType.BUY} url="/buy" />
-        <ServiceButton
-          type={ServiceButtonType.SELL}
-          url={user?.kycDataComplete ? '/sell' : '/profile'}
-          disabled={!sellEnabled}
-        />
-        {/* <ServiceButton type={ServiceButtonType.CONVERT} url="/convert" disabled /> */}
+      <div className="absolute bottom-0 w-full max-w-screen-md">
+        <img src="https://content.dfx.swiss/img/v1/services/berge.png" className="w-full" />
       </div>
-    </>
+    </Layout>
   );
 }
 

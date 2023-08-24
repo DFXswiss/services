@@ -1,4 +1,5 @@
 import { Blockchain } from '@dfx.swiss/react';
+import Web3 from 'web3';
 import { MetaMaskChainInterface } from './wallets/metamask.hook';
 
 export interface BlockchainInterface {
@@ -36,15 +37,18 @@ export function useBlockchain(): BlockchainInterface {
     return chainIds[+chainId];
   }
 
-  function toChainId(blockchain: Blockchain): string | number | undefined {
-    return Object.entries(chainIds).find(([_, b]) => b === blockchain)?.[0];
+  function toChainId(blockchain: Blockchain): string | undefined {
+    const web3 = new Web3(Web3.givenProvider);
+
+    const id = Object.entries(chainIds).find(([_, b]) => b === blockchain)?.[0];
+    return id && web3.utils.toHex(id);
   }
 
   function toChainObject(blockchain: Blockchain): MetaMaskChainInterface | undefined {
-    let chainId = toChainId(blockchain)?.toString(16);
-    if (!chainId) return undefined;
-    chainId = `0x${chainId}`;
     const chainName = definitions.stringValue[blockchain];
+    const chainId = toChainId(blockchain);
+    if (!chainId) return undefined;
+
     switch (blockchain) {
       case Blockchain.BINANCE_SMART_CHAIN:
         return {
@@ -52,7 +56,7 @@ export function useBlockchain(): BlockchainInterface {
           chainName,
           nativeCurrency: {
             name: 'BNB',
-            symbol: 'bnb',
+            symbol: 'BNB',
             decimals: 18,
           },
           rpcUrls: ['https://bsc-dataseed.binance.org/'],

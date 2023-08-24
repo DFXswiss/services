@@ -1,7 +1,24 @@
 import { Utils, useApiSession, useSessionContext } from '@dfx.swiss/react';
+import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useAppHandlingContext } from './app-handling.context';
 import { useBalanceContext } from './balance.context';
+
+const urlParams = [
+  'address',
+  'signature',
+  'wallet',
+  'session',
+  'redirect-uri',
+  'blockchain',
+  'balances',
+  'amount-in',
+  'amount-out',
+  'assets',
+  'asset-in',
+  'asset-out',
+  'bank-account',
+];
 
 export interface AppParams {
   address?: string;
@@ -21,10 +38,12 @@ export interface AppParams {
 
 interface ParamContextInterface extends AppParams {
   isInitialized: boolean;
+  setParams: (params: Partial<AppParams>) => void;
 }
 
 interface ParamContextProps extends PropsWithChildren {
   params?: AppParams;
+  router: Router;
 }
 
 const ParamContext = createContext<ParamContextInterface>(undefined as any);
@@ -49,18 +68,20 @@ export function ParamContextProvider(props: ParamContextProps): JSX.Element {
     init();
   }, []);
 
-  const blockedParams = ['address', 'signature', 'wallet', 'session', 'redirect-uri', 'balances'];
-
   function getParameter(query: URLSearchParams, key: string): string | undefined {
     return query.get(key) ?? undefined;
   }
 
-  function reloadWithoutBlockedParams(query: URLSearchParams) {
-    if (blockedParams.map((param) => query.has(param)).every((b) => !b)) return;
-    blockedParams.forEach((param) => query.delete(param));
+  function setParameters(params: Partial<AppParams>) {
+    setParams((p) => ({ ...p, ...params }));
+  }
 
-    const { location } = window as Window;
-    location.replace(`${location.origin}${location.pathname}?${query}`);
+  function reloadWithoutBlockedParams(query: URLSearchParams) {
+    if (urlParams.map((param) => query.has(param)).every((b) => !b)) return;
+    urlParams.forEach((param) => query.delete(param));
+
+    const { location } = window;
+    props.router.navigate({ pathname: `${location.origin}${location.pathname}`, search: `?${query}` });
   }
 
   async function init() {
@@ -117,7 +138,7 @@ export function ParamContextProvider(props: ParamContextProps): JSX.Element {
     }
   }
 
-  const context = useMemo(() => ({ isInitialized, ...params }), [isInitialized, params]);
+  const context = useMemo(() => ({ isInitialized, setParams: setParameters, ...params }), [isInitialized, params]);
 
   return <ParamContext.Provider value={context}>{props.children}</ParamContext.Provider>;
 }

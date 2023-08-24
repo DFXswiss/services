@@ -2,6 +2,7 @@ import { Buy, Sell } from '@dfx.swiss/react';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
+import { url } from '../util/utils';
 
 export enum CloseType {
   BUY = 'buy',
@@ -95,7 +96,7 @@ export function AppHandlingContextProvider({
           amount: params.sell.amount.toString(),
           isComplete: params.isComplete.toString(),
         });
-        return `${redirectUri}${params.type}?${urlParams}`;
+        return url(`${redirectUri}${params.type}`, urlParams);
 
       default:
         return `${redirectUri}`;

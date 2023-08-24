@@ -19,9 +19,14 @@ export enum WalletType {
 interface WalletInterface {
   address?: string;
   blockchain?: Blockchain;
-  wallets: WalletType[];
   getInstalledWallets: () => Promise<WalletType[]>;
-  login: (wallet: WalletType, signHintCallback?: () => Promise<void>, address?: string) => Promise<string | undefined>;
+  login: (
+    wallet: WalletType,
+    signHintCallback?: () => Promise<void>,
+    blockchain?: Blockchain,
+    address?: string,
+  ) => Promise<string | undefined>;
+  switchBlockchain: (to: Blockchain) => Promise<void>;
   activeWallet: WalletType | undefined;
   sellEnabled: boolean;
   getBalances: (assets: Asset[]) => Promise<AssetBalance[] | undefined>;
@@ -93,6 +98,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   async function login(
     wallet: WalletType,
     signHintCallback?: () => Promise<void>,
+    blockchain?: Blockchain,
     usedAddress?: string,
   ): Promise<string> {
     const address = await connect(wallet, usedAddress);
@@ -100,11 +106,16 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     // show signature hint
     await signHintCallback?.();
 
-    const session = await createSession(wallet, address, paramWallet);
-    if (!session) {
+    try {
+      await createSession(wallet, address, paramWallet);
+    } catch (e) {
       api.logout();
       resetWallet();
+
+      throw e;
     }
+
+    blockchain && (await switchBlockchain(blockchain, wallet));
 
     return address;
   }
@@ -202,14 +213,13 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     return wallets;
   }
 
-  async function createSession(walletType: WalletType, address: string, wallet?: string): Promise<string | undefined> {
-    try {
-      const message = await getSignMessage(address);
-      const signature = await signMessage(walletType, message, address);
-      return (await api.login(address, signature)) ?? (await api.signUp(address, signature, wallet));
-    } catch (e) {
-      console.error('Failed to create session:', e);
-    }
+  async function createSession(walletType: WalletType, address: string, wallet?: string): Promise<string> {
+    const message = await getSignMessage(address);
+    const signature = await signMessage(walletType, message, address);
+    const session = (await api.login(address, signature)) ?? (await api.signUp(address, signature, wallet));
+    if (!session) throw new Error('Failed to create session');
+
+    return session;
   }
 
   async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {
@@ -262,6 +272,16 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     }
   }
 
+  async function switchBlockchain(to: Blockchain, wallet?: WalletType): Promise<void> {
+    switch (wallet ?? activeWallet) {
+      case WalletType.META_MASK:
+        return metaMask.requestChangeToBlockchain(to);
+
+      default:
+        throw new Error(`Blockchain switch not supported by ${activeWallet}`);
+    }
+  }
+
   async function sendTransaction(sell: Sell): Promise<string> {
     switch (activeWallet) {
       case WalletType.META_MASK:
@@ -286,9 +306,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     () => ({
       address: getAddress(),
       blockchain: getBlockchain(),
-      wallets: Object.values(WalletType),
       getInstalledWallets,
       login,
+      switchBlockchain,
       activeWallet,
       sellEnabled:
         hasBalance || (activeWallet != null && [WalletType.META_MASK, WalletType.ALBY].includes(activeWallet)),
