@@ -115,7 +115,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'eth' },
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
           }
         },
       },
@@ -139,8 +139,8 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'others',
-        img: 'others',
+        id: 'othersethereum',
+        img: 'othersethereum',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'cli'],
@@ -192,14 +192,103 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'others',
-        img: 'others',
+        id: 'othersethereum',
+        img: 'othersethereum',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM },
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'buy-optimism-assets',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+          }
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
+          }
+        },
+      },
+      {
+        id: 'stablecoin',
+        img: 'stablecoin',
+        next: {
+          page: 'buy-optimism-stablecoins',
+        },
+      },
+      {
+        id: 'othersoptimism',
+        img: 'othersoptimism',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM },
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'buy-optimism-stablecoins',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
+          }
+        },
+      },
+      {
+        id: 'xchf',
+        img: 'xchf',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'XCHF' },
+          }
+        },
+      },
+      {
+        id: 'othersoptimism',
+        img: 'othersoptimism',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM },
           }
         },
       },
