@@ -5,6 +5,7 @@ import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
 import { AssetBalance } from '../../contexts/balance.context';
 import ERC20_ABI from '../../static/erc20.abi.json';
+import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
 import { useBlockchain } from '../blockchain.hook';
 
@@ -99,7 +100,7 @@ export function useMetaMask(): MetaMaskInterface {
       const { code } = e as MetaMaskError;
       switch (code) {
         case 4001:
-          throw new Error('User cancelled');
+          throw new AbortError('User cancelled');
 
         case -32002:
           throw new TranslatedError(

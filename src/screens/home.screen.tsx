@@ -23,8 +23,8 @@ import { useDeferredPromise } from '../hooks/deferred-promise.hook';
 import { Tile, useFeatureTree } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useStore } from '../hooks/store.hook';
+import { AbortError } from '../util/abort-error';
 import { Stack } from '../util/stack';
-import { TranslatedError } from '../util/translated-error';
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -106,10 +106,10 @@ export function HomeScreen(): JSX.Element {
           }
         })
         .catch((e) => {
-          if (e instanceof TranslatedError) {
-            setConnectError(e.message);
-          } else {
+          if (e instanceof AbortError) {
             setIsConnectingTo(undefined);
+          } else {
+            setConnectError(e.message);
           }
 
           throw e;

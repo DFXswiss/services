@@ -1,7 +1,9 @@
 import TransportWebHID from '@ledgerhq/hw-transport-webhid';
 import AppClient, { DefaultWalletPolicy } from 'ledger-bitcoin';
 import { useState } from 'react';
+import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
+import { timeout } from '../../util/utils';
 
 interface LedgerError extends Error {
   statusCode: number;
@@ -25,29 +27,24 @@ export function useLedger(): LedgerInterface {
   }
 
   async function connect(): Promise<string> {
+    const client = appClient ?? (await setupConnection());
+
+    tmpClient = client;
+    setAppClient(client);
+
     try {
-      const client = appClient ?? (await setupConnection());
-
-      tmpClient = client;
-      setAppClient(client);
-
-      // fetch default wallet policy
-      const fpr = await client.getMasterFingerprint();
-      const pubKey = await client.getExtendedPubkey(`m/${rootPath}`);
-      const policy = new DefaultWalletPolicy('wpkh(@0/**)', `[${fpr}/${rootPath}]${pubKey}`);
-
-      return client.getWalletAddress(policy, null, 0, 0, false);
+      return await timeout(fetchAddress(client), 5000);
     } catch (e) {
-      const { name, statusText } = e as LedgerError;
+      const { name, message, statusText } = e as LedgerError;
 
-      if (name === 'TransportOpenUserCancelled') {
-        throw new TranslatedError('Please connect your Ledger');
+      if (message?.includes('Timeout')) {
+        client.transport.close();
+        setAppClient(undefined);
+        throw new TranslatedError('Connection timed out. Please retry.');
       } else if (name === 'LockedDeviceError') {
         throw new TranslatedError('Please unlock your Ledger');
       } else if (name === 'TransportRaceCondition') {
-        throw new TranslatedError(
-          'There is already a request pending. Please confirm it in your Ledger or reload the page and retry.',
-        );
+        throw new TranslatedError('There is already a request pending. Please reload the page and retry.');
       } else if (statusText === 'CLA_NOT_SUPPORTED') {
         throw new TranslatedError(
           'You are using a wrong or outdated Ledger app. Please install the newest version of the Bitcoin app on your Ledger.',
@@ -61,15 +58,43 @@ export function useLedger(): LedgerInterface {
   }
 
   async function setupConnection(): Promise<AppClient> {
-    const transport = await TransportWebHID.create();
-    return new AppClient(transport);
+    try {
+      const transport = await TransportWebHID.create();
+      return new AppClient(transport);
+    } catch (e) {
+      const { name } = e as Error;
+
+      if (name === 'TransportOpenUserCancelled') {
+        throw new TranslatedError('Please connect your Ledger');
+      }
+
+      throw e;
+    }
+  }
+
+  async function fetchAddress(client: AppClient): Promise<string> {
+    const fpr = await client.getMasterFingerprint();
+    const pubKey = await client.getExtendedPubkey(`m/${rootPath}`);
+    const policy = new DefaultWalletPolicy('wpkh(@0/**)', `[${fpr}/${rootPath}]${pubKey}`);
+
+    return client.getWalletAddress(policy, null, 0, 0, false);
   }
 
   async function signMessage(msg: string): Promise<string> {
     const client = appClient ?? tmpClient;
-    if (!client) throw new Error('Not connected');
+    if (!client) throw new Error('Ledger not connected');
 
-    return client.signMessage(Buffer.from(msg), `m/${rootPath}/0/0`);
+    try {
+      return await client.signMessage(Buffer.from(msg), `m/${rootPath}/0/0`);
+    } catch (e) {
+      const { statusText } = e as LedgerError;
+
+      if (statusText === 'CONDITIONS_OF_USE_NOT_SATISFIED') {
+        throw new AbortError('User cancelled');
+      }
+
+      throw e;
+    }
   }
 
   return {

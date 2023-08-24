@@ -6,6 +6,7 @@ import { useStore } from '../hooks/store.hook';
 import { useAlby } from '../hooks/wallets/alby.hook';
 import { useLedger } from '../hooks/wallets/ledger.hook';
 import { useMetaMask } from '../hooks/wallets/metamask.hook';
+import { AbortError } from '../util/abort-error';
 import { delay } from '../util/utils';
 import { AssetBalance, useBalanceContext } from './balance.context';
 import { useParamContext } from './param.context';
@@ -187,7 +188,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       win.location = `${process.env.REACT_APP_API_URL}/alby?redirect_uri=${encodeURIComponent(redirectUrl.toString())}`;
 
       await delay(5);
-      throw new Error('Forwarded to Alby page');
+      throw new AbortError('Forwarded to Alby page');
     }
 
     throw new Error('No login method found');
