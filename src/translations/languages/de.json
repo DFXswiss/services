@@ -40,10 +40,12 @@
     "Don't show this again.": "Nicht mehr anzeigen.",
 
     "Please install MetaMask or Rabby!": "Bitte installiere MetaMask oder Rabby!",
-    "You need to install the MetaMask or Rabby browser extension to be able to use this service. Visit": "Um diesen Dienst nutzen zu können, musst Du die Browsererweiterung MetaMask oder Rabby installieren. Siehe",
+    "You need to install the MetaMask or Rabby browser extension to be able to use this service.": "Um diesen Dienst nutzen zu können, musst Du die Browsererweiterung MetaMask oder Rabby installieren.",
     "Please install Alby!": "Bitte installiere Alby!",
-    "You need to install the Alby browser extension to be able to use this service. Visit": "Um diesen Dienst nutzen zu können, musst Du die Browsererweiterung Alby installieren. Siehe",
-    "for more details.": "für mehr Details."
+    "You need to install the Alby browser extension to be able to use this service.": "Um diesen Dienst nutzen zu können, musst Du die Browsererweiterung Alby installieren.",
+    "Browser not supported!": "Browser nicht unterstützt!",
+    "Please use a compatible browser (e.g. Chrome) to be able to use this service.": "Bitte verwende einen kompatiblen Browser (z.B. Chrome), um diesen Dienst nutzen zu können.",
+    "visit": "Siehe <1></1> für mehr Details."
   },
   "screens/buy": {
     "Buy": "Kaufen",
