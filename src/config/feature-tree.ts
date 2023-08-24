@@ -478,7 +478,7 @@ export const FeatureTree: Page[] = [
           tiles: ['dfx-wallet', 'hw-wallet', 'alby', 'cli'],
           options: {
             service: 'sell',
-            query: { assetOut: 'BTC' },
+            query: { assetIn: 'BTC' },
           },
         },
       },
@@ -546,7 +546,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'ETH' },
           }
         },
       },
@@ -558,7 +558,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'WBTC' },
           }
         },
       },
@@ -577,7 +577,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
           }
         },
       },
@@ -594,7 +594,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'USDT' },
           }
         },
       },
@@ -606,7 +606,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'USDC' },
           }
         },
       },
@@ -618,7 +618,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DAI' },
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'DAI' },
           }
         },
       },
@@ -630,7 +630,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
           }
         },
       },
@@ -647,7 +647,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'ETH' },
           }
         },
       },
@@ -659,7 +659,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'WBTC' },
           }
         },
       },
@@ -678,7 +678,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
           }
         },
       },
@@ -695,7 +695,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'USDT' },
           }
         },
       },
@@ -707,7 +707,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'USDC' },
           }
         },
       },
@@ -719,7 +719,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'DAI' },
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'DAI' },
           }
         },
       },
@@ -731,7 +731,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
           }
         },
       },
@@ -748,7 +748,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'ETH' },
           }
         },
       },
@@ -767,7 +767,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined},
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined},
           }
         },
       },
@@ -784,7 +784,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'USDT' },
           }
         },
       },
@@ -796,7 +796,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'XCHF' },
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'XCHF' },
           }
         },
       },
@@ -808,7 +808,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
           }
         },
       },
@@ -825,7 +825,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'BNB' },
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'BNB' },
           }
         },
       },
@@ -837,7 +837,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'WBTC' },
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'WBTC' },
           }
         },
       },
@@ -856,7 +856,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
           }
         },
       },
@@ -873,7 +873,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'USDT' },
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'USDT' },
           }
         },
       },
@@ -885,7 +885,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'DAI' },
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'DAI' },
           }
         },
       },
@@ -897,7 +897,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
           }
         },
       },
