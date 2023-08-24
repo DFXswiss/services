@@ -132,6 +132,66 @@ export const FeatureTree: Page[] = [
         },
       },
       {
+        id: 'stablecoin',
+        img: 'stablecoin',
+        next: {
+          page: 'buy-ethereum-stablecoins',
+        },
+      },
+      {
+        id: 'others',
+        img: 'others',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM },
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'buy-ethereum-stablecoins',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
+          }
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
+          }
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DAI' },
+          }
+        },
+      },
+      {
         id: 'others',
         img: 'others',
         next: {
