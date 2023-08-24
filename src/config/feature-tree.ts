@@ -478,11 +478,429 @@ export const FeatureTree: Page[] = [
           tiles: ['dfx-wallet', 'hw-wallet', 'alby', 'cli'],
           options: {
             service: 'sell',
-            query: { assetIn: 'BTC' },
+            query: { assetOut: 'BTC' },
           },
         },
       },
-      /* TODO */
+      {
+        id: 'taproot',
+        img: 'taproot',
+        disabled: true,
+      },
+      {
+        id: 'erc20',
+        img: 'ethereumarbitrumoptimismpolygon',
+        next: {
+          page: 'sell-erc20-assets',
+        },
+      },
+      {
+        id: 'bep20',
+        img: 'binancesmartchain',
+        next: {
+          page: 'sell-bep20-assets',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'sell-erc20-assets',
+    tiles: [
+      {
+        id: 'ethereum',
+        img: 'ethereum',
+        next: {
+          page: 'sell-ethereum-assets',
+        },
+      },
+      {
+        id: 'arbitrum',
+        img: 'arbitrum',
+        next: {
+          page: 'sell-arbitrum-assets',
+        },
+      },
+      {
+        id: 'optimism',
+        img: 'optimism',
+        next: {
+          page: 'sell-optimism-assets',
+        },
+      },
+      {
+        id: 'polygon',
+        img: 'polygon',
+        disabled: true,
+      },
+    ],
+  }, 
+  {
+    id: 'sell-ethereum-assets',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+          }
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+          }
+        },
+      },
+      {
+        id: 'stablecoin',
+        img: 'stablecoin',
+        next: {
+          page: 'sell-ethereum-stablecoins',
+        },
+      },
+      {
+        id: 'othersethereum',
+        img: 'othersethereum',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-ethereum-stablecoins',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
+          }
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
+          }
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DAI' },
+          }
+        },
+      },
+      {
+        id: 'othersethereum',
+        img: 'othersethereum',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-arbitrum-assets',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
+          }
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          }
+        },
+      },
+      {
+        id: 'stablecoin',
+        img: 'stablecoin',
+        next: {
+          page: 'sell-arbitrum-stablecoins',
+        },
+      },
+      {
+        id: 'othersarbitrum',
+        img: 'othersarbitrum',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-arbitrum-stablecoins',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
+          }
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
+          }
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'DAI' },
+          }
+        },
+      },
+      {
+        id: 'othersarbitrum',
+        img: 'othersarbitrum',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-optimism-assets',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+          }
+        },
+      },
+      {
+        id: 'stablecoin',
+        img: 'stablecoin',
+        next: {
+          page: 'sell-optimism-stablecoins',
+        },
+      },
+      {
+        id: 'othersoptimism',
+        img: 'othersoptimism',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined},
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-optimism-stablecoins',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
+          }
+        },
+      },
+      {
+        id: 'xchf',
+        img: 'xchf',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'XCHF' },
+          }
+        },
+      },
+      {
+        id: 'othersoptimism',
+        img: 'othersoptimism',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-bep20-assets',
+    tiles: [
+      {
+        id: 'bnb',
+        img: 'bnb',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'BNB' },
+          }
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'WBTC' },
+          }
+        },
+      },
+      {
+        id: 'stablecoin',
+        img: 'stablecoin',
+        next: {
+          page: 'sell-binancesmartchain-stablecoins',
+        },
+      },
+      {
+        id: 'othersbinancesmartchain',
+        img: 'othersbinancesmartchain',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-binancesmartchain-stablecoins',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'USDT' },
+          }
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'DAI' },
+          }
+        },
+      },
+      {
+        id: 'othersbinancesmartchain',
+        img: 'othersbinancesmartchain',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
+          }
+        },
+      },
     ],
   },
   {
