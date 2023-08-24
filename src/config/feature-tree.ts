@@ -63,14 +63,8 @@ export const FeatureTree: Page[] = [
         id: 'bep20',
         img: 'binancesmartchain',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN },
-          },
+          page: 'buy-bep20-assets',
         },
-      },
     ],
   },
   {
@@ -396,17 +390,91 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
-    id: 'eth',
+    id: 'buy-bep20-assets',
     tiles: [
       {
-        id: 'eth',
-        img: 'eth',
-        disabled: true,
+        id: 'bnb',
+        img: 'bnb',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'BNB' },
+          }
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'WBTC' },
+          }
+        },
+      },
+      {
+        id: 'stablecoin',
+        img: 'stablecoin',
+        next: {
+          page: 'buy-binancesmartchain-stablecoins',
+        },
+      },
+      {
+        id: 'othersbinancesmartchain',
+        img: 'othersbinancesmartchain',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN },
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'buy-binancesmartchain-stablecoins',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'USDT' },
+          }
+        },
       },
       {
         id: 'dai',
         img: 'dai',
-        disabled: true,
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'DAI' },
+          }
+        },
+      },
+      {
+        id: 'othersbinancesmartchain',
+        img: 'othersbinancesmartchain',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN },
+          }
+        },
       },
     ],
   },
