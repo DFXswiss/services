@@ -105,7 +105,7 @@ export function HomeScreen(): JSX.Element {
   async function doLogin(wallet: WalletType, address?: string) {
     const selectedChain = blockchain as Blockchain;
     return activeWallet === wallet
-      ? switchBlockchain(selectedChain)
+      ? selectedChain && switchBlockchain(selectedChain)
       : logout().then(() => login(wallet, confirmSignHint, selectedChain, address));
   }
 
@@ -170,7 +170,7 @@ export function HomeScreen(): JSX.Element {
           )}
         </>
       )}
-      <div className="fixed bottom-0 w-full max-w-screen-md">
+      <div className="absolute bottom-0 w-full max-w-screen-md">
         <img src="https://content.dfx.swiss/img/v1/services/berge.png" className="w-full" />
       </div>
     </Layout>
