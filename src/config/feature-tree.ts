@@ -938,7 +938,21 @@ export const FeatureTree: Page[] = [
   {
     id: 'hw-wallets',
     tiles: [
-      /* TODO */
+      {
+        id: 'bitbox',
+        img: 'bitbox',
+        disabled: true,
+      },
+      {
+        id: 'ledger',
+        img: 'ledger',
+        disabled: true,
+      },
+      {
+        id: 'trezor',
+        img: 'trezor',
+        disabled: true,
+      },
     ],
   },
 ];
