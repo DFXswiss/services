@@ -2,6 +2,9 @@
 
 Reusable web widget to buy, sell and convert crypto assets
 
+# DFX Services
+Taproot Feak super lösung
+
 ## Usage
 
 DFX Services can be used as a standalone page or integrated into any webpage using an Iframe or a web component.
