@@ -65,6 +65,7 @@ export const FeatureTree: Page[] = [
         next: {
           page: 'buy-bep20-assets',
         },
+      },
     ],
   },
   {
@@ -140,7 +141,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM },
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
           }
         },
       },
@@ -193,7 +194,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM },
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
           }
         },
       },
@@ -241,7 +242,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ARBITRUM },
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
           }
         },
       },
@@ -294,7 +295,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ARBITRUM },
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
           }
         },
       },
@@ -316,18 +317,6 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'wbtc',
-        img: 'wbtc',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
-          }
-        },
-      },
-      {
         id: 'stablecoin',
         img: 'stablecoin',
         next: {
@@ -342,7 +331,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.OPTIMISM },
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined},
           }
         },
       },
@@ -383,7 +372,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.OPTIMISM },
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
           }
         },
       },
@@ -431,7 +420,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN },
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
           }
         },
       },
@@ -472,7 +461,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN },
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
           }
         },
       },
