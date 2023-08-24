@@ -80,7 +80,7 @@ export const FeatureTree: Page[] = [
         id: 'ethereum',
         img: 'ethereum',
         next: {
-          page: 'eth',
+          page: 'buy-ethereum-assets',
         },
       },
       {
