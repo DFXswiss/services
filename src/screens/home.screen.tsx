@@ -184,25 +184,7 @@ export function HomeScreen(): JSX.Element {
                 {tiles
                   .filter((t) => !allowedTiles || allowedTiles.includes(t.id))
                   .map((t) => (
-                    <div
-                      key={t.id}
-                      className="relative aspect-square"
-                      style={{ borderRadius: '4%', boxShadow: '0px 0px 5px 3px rgba(0, 0, 0, 0.25)' }}
-                    >
-                      <img
-                        src={t.img}
-                        className={t.disabled ? 'opacity-60' : 'cursor-pointer'}
-                        onClick={() => handleNext(t)}
-                      />
-                      {t.disabled && (
-                        <div
-                          className="absolute right-2 bottom-3 text-dfxBlue-800 font-extrabold rotate-180 uppercase"
-                          style={{ writingMode: 'vertical-rl', fontSize: 'min(2vw, 1rem)' }}
-                        >
-                          {translate('screens/home', 'Coming Soon')}
-                        </div>
-                      )}
-                    </div>
+                    <TileComponent key={t.id} tile={t} onClick={handleNext} />
                   ))}
               </div>
             </>
@@ -213,6 +195,27 @@ export function HomeScreen(): JSX.Element {
         <img src="https://content.dfx.swiss/img/v1/services/berge.png" className="w-full" />
       </div>
     </Layout>
+  );
+}
+
+function TileComponent({ tile, onClick }: { tile: Tile; onClick: (t: Tile) => void }): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  return (
+    <div
+      className="relative aspect-square"
+      style={{ borderRadius: '4%', boxShadow: '0px 0px 5px 3px rgba(0, 0, 0, 0.25)' }}
+    >
+      <img src={tile.img} className={tile.disabled ? 'opacity-60' : 'cursor-pointer'} onClick={() => onClick(tile)} />
+      {tile.disabled && (
+        <div
+          className="absolute right-2 bottom-3 text-dfxBlue-800 font-extrabold rotate-180 uppercase"
+          style={{ writingMode: 'vertical-rl', fontSize: 'min(2vw, 1rem)' }}
+        >
+          {translate('screens/home', 'Coming Soon')}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -373,6 +376,12 @@ function ConnectHint({
       );
 
     case WalletType.LEDGER:
+      const steps = [
+        'Connect your Ledger with your computer',
+        'Open the Bitcoin app on your Ledger',
+        'Click on "Connect"',
+      ];
+
       return (
         <>
           <StyledVerticalStack gap={5} center>
@@ -386,14 +395,16 @@ function ConnectHint({
             )}
 
             <ol className="text-dfxBlue-800 text-left font-bold list-decimal">
-              <li className="list-inside">{translate('screens/home', 'Connect your Ledger with your computer')}</li>
-              <li className="list-inside">{translate('screens/home', 'Open the Bitcoin app on your Ledger')}</li>
-              <li className="list-inside">{translate('screens/home', 'Click on "Connect"')}</li>
+              {steps.map((s, i) => (
+                <li key={i} className="list-inside">
+                  {translate('screens/home', s)}
+                </li>
+              ))}
             </ol>
 
             <img
               src="https://content.dfx.swiss/img/v1/services/ledgerbitcoinready_en.png"
-              className="w-full max-w-sm	"
+              className="w-full max-w-sm"
             />
 
             <StyledButton
