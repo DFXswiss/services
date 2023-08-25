@@ -38,15 +38,15 @@
     "title": "Eine einfache <1>Toolbox</1><2/>für alle <4>DFX Services</4>",
     "Coming Soon": "Coming Soon",
 
-    "Please confirm the ion in your MetaMask.": "Bitte bestätige die Verbindung in Deiner MetaMask.",
-    "Please confirm the ion in the Alby browser extension.": "Bitte bestätige die Verbindung in der Alby Browsererweiterung.",
-    "Please confirm the ion with your Ledger.": "Bitte bestätige die Verbindung mit Deinem Ledger.",
+    "Please confirm the connection in your MetaMask.": "Bitte bestätige die Verbindung in Deiner MetaMask.",
+    "Please confirm the connection in the Alby browser extension.": "Bitte bestätige die Verbindung in der Alby Browsererweiterung.",
+    "Please confirm the connection with your Ledger.": "Bitte bestätige die Verbindung mit Deinem Ledger.",
     "Connection failed!": "Verbindung fehlgeschlagen!",
 
     "Connect your Ledger with your computer": "Verbinde Deinen Ledger mit Deinem Computer",
     "Open the Bitcoin app on your Ledger": "Öffne die Bitcoin App auf Deinem Ledger",
     "Click on \"Connect\"": "Klicke auf \"Verbinden\"",
-    "Confirm \"sign message\" on your ledger": "Bestätige \"Sign Message\" auf Deinem Ledger",
+    "Confirm \"Sign message\" on your ledger": "Bestätige \"Sign message\" auf Deinem Ledger",
 
     "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Melde Dich bei Deinem DFX-Konto an, indem Du mit Deiner Unterschrift bestätigst, dass Du der alleinige Eigentümer der angegebenen Blockchain-Adresse bist.",
     "Don't show this again.": "Nicht mehr anzeigen.",
