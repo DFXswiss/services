@@ -18,12 +18,17 @@ import {
 } from '@dfx.swiss/react';
 import {
   AssetIconVariant,
+  CopyButton,
+  DfxIcon,
   Form,
+  IconColor,
+  IconSize,
   IconVariant,
   StyledBankAccountListItem,
   StyledButton,
   StyledButtonWidth,
   StyledDropdown,
+  StyledHorizontalStack,
   StyledInput,
   StyledLink,
   StyledModalDropdown,
@@ -37,9 +42,10 @@ import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance } from '../contexts/balance.context';
-import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
+import { useAppParams } from '../hooks/app-params.hook';
+import { useClipboard } from '../hooks/clipboard.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycDataGuard, useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
@@ -56,16 +62,17 @@ interface FormData {
 export function SellScreen(): JSX.Element {
   useSessionGuard();
   useKycDataGuard('/profile');
+  const { copy } = useClipboard();
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
-  const { getBalances, blockchain: walletBlockchain } = useWalletContext();
+  const { getBalances, blockchain: walletBlockchain, activeWallet, sendTransaction } = useWalletContext();
   const { availableBlockchains } = useSessionContext();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
-  const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain } = useParamContext();
+  const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain } = useAppParams();
   const { isAllowedToSell } = useKycHelper();
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
@@ -77,6 +84,8 @@ export function SellScreen(): JSX.Element {
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [balances, setBalances] = useState<AssetBalance[]>();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [sellTxId, setSellTxId] = useState<string>();
 
   useEffect(() => {
     availableAssets && getBalances(availableAssets).then(setBalances);
@@ -184,7 +193,7 @@ export function SellScreen(): JSX.Element {
 
   function checkForAmountAvailable(amount: number, asset: Asset): boolean {
     const balance = findBalance(asset) ?? 0;
-    if (amount > Number(balance)) {
+    if (balances && amount > Number(balance)) {
       setCustomAmountError(
         translate('screens/sell', 'Entered amount is higher than available balance of {{amount}} {{asset}}', {
           amount: balance,
@@ -234,9 +243,20 @@ export function SellScreen(): JSX.Element {
   }
 
   async function handleNext(paymentInfo: Sell): Promise<void> {
+    setIsProcessing(true);
     await updateBankAccount();
 
-    closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo });
+    if (activeWallet) {
+      sendTransaction(paymentInfo)
+        .then(setSellTxId)
+        .finally(() => setIsProcessing(false));
+    } else {
+      close(paymentInfo, false);
+    }
+  }
+
+  function close(sell: Sell, isComplete: boolean) {
+    closeServices({ type: CloseType.SELL, isComplete, sell });
   }
 
   const rules = Utils.createRules({
@@ -250,102 +270,135 @@ export function SellScreen(): JSX.Element {
   return (
     <Layout title={translate('general/services', 'Sell')}>
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
-        <StyledVerticalStack gap={8} full>
-          {availableAssets && (
-            <StyledDropdown<Asset>
-              name="asset"
-              label={translate('screens/sell', 'Your Wallet')}
-              placeholder={translate('general/actions', 'Please select...')}
-              labelIcon={IconVariant.WALLET}
-              items={availableAssets}
-              labelFunc={(item) => item.name}
-              balanceFunc={(item) => findBalance(item)?.toString() ?? ''}
-              assetIconFunc={(item) => item.name as AssetIconVariant}
-              descriptionFunc={(item) => item.blockchain}
-            />
-          )}
-          {bankAccounts && !isCreatingAccount && (
-            <StyledModalDropdown<BankAccount>
-              name="bankAccount"
-              labelFunc={(item) => Utils.formatIban(item.iban) ?? ''}
-              descriptionFunc={(item) => item.label}
-              label={translate('screens/sell', 'Cash out to my bank account')}
-              placeholder={translate('screens/sell', 'Add or select your IBAN')}
-              modal={{
-                heading: translate('screens/sell', 'Select your payment account'),
-                width: StyledModalWidth.NONE,
-                items: bankAccounts,
-                itemContent: (b) => <StyledBankAccountListItem bankAccount={b} />,
-                form: (onFormSubmit: (item: BankAccount) => void) => <AddBankAccount onSubmit={onFormSubmit} />,
-              }}
-            />
-          )}
-          {currencies && (
-            <StyledDropdown<Fiat>
-              name="currency"
-              label={translate('screens/sell', 'Your Currency')}
-              placeholder={translate('screens/sell', 'e.g. EUR')}
-              labelIcon={IconVariant.BANK}
-              items={currencies}
-              labelFunc={(item) => item.name}
-              descriptionFunc={(item) => toDescription(item)}
-            />
-          )}
-          {selectedAsset && (
-            <div className="text-start w-full">
-              <StyledInput
-                type={'number'}
-                label={translate('screens/sell', 'Enter your desired payout amount')}
-                placeholder="0.00"
-                prefix={selectedAsset.name}
-                name="amount"
-                forceError={kycRequired || customAmountError != null}
-                forceErrorMessage={customAmountError}
-                loading={isLoading}
-              />
-              {paymentInfo && paymentInfo.estimatedAmount > 0 && (
-                <p className="text-dfxBlue-800 text-start w-full text-xs pt-2 pl-7">
-                  {translate(
-                    'screens/sell',
-                    paymentInfo.minFeeTarget && validatedData?.currency
-                      ? '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})'
-                      : '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)',
-                    {
-                      estimatedAmount: paymentInfo.estimatedAmount,
-                      currency: validatedData?.currency.name ?? '',
-                      fee: paymentInfo.fee,
-                      minFee: paymentInfo.minFeeTarget,
-                      minFeeCurrency: validatedData?.currency ? toSymbol(validatedData.currency) : '',
-                    },
-                  )}
-                </p>
-              )}
-              {kycRequired && !customAmountError && <KycHint />}
+        {paymentInfo && sellTxId ? (
+          <StyledVerticalStack gap={4} full>
+            <div className="mx-auto">
+              <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />
             </div>
-          )}
-          {paymentInfo && !kycRequired && (
-            <div>
-              <div className="pt-4 w-full text-left">
-                <StyledLink
-                  label={translate(
-                    'screens/payment',
-                    'Please not that by using this service you automatically accept our terms and conditions.',
-                  )}
-                  url={process.env.REACT_APP_TNC_URL}
-                  dark
+            <p className="text-dfxBlue-800 text-center px-20">
+              {translate('screens/sell', 'Your transaction was executed successfully.')}
+              <br />
+              {translate(
+                'screens/payment',
+                'We will inform you about the progress of any purchase or sale via E-mail.',
+              )}
+            </p>
+            <StyledHorizontalStack gap={2} center>
+              <p className="text-dfxBlue-800">{translate('screens/sell', 'Transaction hash')}:</p>
+              <span className="text-dfxBlue-800 font-bold">{`${sellTxId.substring(0, 5)}...${sellTxId.substring(
+                sellTxId.length - 5,
+              )}`}</span>
+              <CopyButton onCopy={() => copy(sellTxId)} />
+            </StyledHorizontalStack>
+
+            <StyledButton
+              width={StyledButtonWidth.FULL}
+              label={translate('general/actions', 'Close')}
+              onClick={() => close(paymentInfo, true)}
+              caps={false}
+              className="my-4"
+              isLoading={isProcessing}
+            />
+          </StyledVerticalStack>
+        ) : (
+          <StyledVerticalStack gap={8} full>
+            {availableAssets && (
+              <StyledDropdown<Asset>
+                name="asset"
+                label={translate('screens/sell', 'Your Wallet')}
+                placeholder={translate('general/actions', 'Please select...')}
+                labelIcon={IconVariant.WALLET}
+                items={availableAssets}
+                labelFunc={(item) => item.name}
+                balanceFunc={(item) => findBalance(item)?.toString() ?? ''}
+                assetIconFunc={(item) => item.name as AssetIconVariant}
+                descriptionFunc={(item) => item.blockchain}
+              />
+            )}
+            {bankAccounts && !isCreatingAccount && (
+              <StyledModalDropdown<BankAccount>
+                name="bankAccount"
+                labelFunc={(item) => Utils.formatIban(item.iban) ?? ''}
+                descriptionFunc={(item) => item.label}
+                label={translate('screens/sell', 'Cash out to my bank account')}
+                placeholder={translate('screens/sell', 'Add or select your IBAN')}
+                modal={{
+                  heading: translate('screens/sell', 'Select your payment account'),
+                  width: StyledModalWidth.NONE,
+                  items: bankAccounts,
+                  itemContent: (b) => <StyledBankAccountListItem bankAccount={b} />,
+                  form: (onFormSubmit: (item: BankAccount) => void) => <AddBankAccount onSubmit={onFormSubmit} />,
+                }}
+              />
+            )}
+            {currencies && (
+              <StyledDropdown<Fiat>
+                name="currency"
+                label={translate('screens/sell', 'Your Currency')}
+                placeholder={translate('screens/sell', 'e.g. EUR')}
+                labelIcon={IconVariant.BANK}
+                items={currencies}
+                labelFunc={(item) => item.name}
+                descriptionFunc={(item) => toDescription(item)}
+              />
+            )}
+            {selectedAsset && (
+              <div className="text-start w-full">
+                <StyledInput
+                  type={'number'}
+                  label={translate('screens/sell', 'Enter your desired payout amount')}
+                  placeholder="0.00"
+                  prefix={selectedAsset.name}
+                  name="amount"
+                  forceError={kycRequired || customAmountError != null}
+                  forceErrorMessage={customAmountError}
+                  loading={isLoading}
+                />
+                {paymentInfo && paymentInfo.estimatedAmount > 0 && (
+                  <p className="text-dfxBlue-800 text-start w-full text-xs pt-2 pl-7">
+                    {translate(
+                      'screens/sell',
+                      paymentInfo.minFeeTarget && validatedData?.currency
+                        ? '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})'
+                        : '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)',
+                      {
+                        estimatedAmount: paymentInfo.estimatedAmount,
+                        currency: validatedData?.currency.name ?? '',
+                        fee: paymentInfo.fee,
+                        minFee: paymentInfo.minFeeTarget,
+                        minFeeCurrency: validatedData?.currency ? toSymbol(validatedData.currency) : '',
+                      },
+                    )}
+                  </p>
+                )}
+                {kycRequired && !customAmountError && <KycHint />}
+              </div>
+            )}
+            {paymentInfo && !kycRequired && (
+              <div>
+                <div className="pt-4 w-full text-left">
+                  <StyledLink
+                    label={translate(
+                      'screens/payment',
+                      'Please not that by using this service you automatically accept our terms and conditions.',
+                    )}
+                    url={process.env.REACT_APP_TNC_URL}
+                    dark
+                  />
+                </div>
+
+                <StyledButton
+                  width={StyledButtonWidth.FULL}
+                  label={translate('screens/sell', 'Complete transaction in your wallet')}
+                  onClick={() => handleNext(paymentInfo)}
+                  caps={false}
+                  className="my-4"
+                  isLoading={isProcessing}
                 />
               </div>
-
-              <StyledButton
-                width={StyledButtonWidth.FULL}
-                label={translate('screens/sell', 'Complete transaction in your wallet')}
-                onClick={() => handleNext(paymentInfo)}
-                caps={false}
-                className="my-4"
-              />
-            </div>
-          )}
-        </StyledVerticalStack>
+            )}
+          </StyledVerticalStack>
+        )}
       </Form>
     </Layout>
   );

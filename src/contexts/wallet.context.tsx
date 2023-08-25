@@ -1,24 +1,36 @@
-import { Asset, Blockchain, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { useMetaMask } from '../hooks/metamask.hook';
+import { Asset, Blockchain, Sell, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
+import BigNumber from 'bignumber.js';
+import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { GetInfoResponse } from 'webln';
+import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
+import { useAlby } from '../hooks/wallets/alby.hook';
+import { useLedger } from '../hooks/wallets/ledger.hook';
+import { useMetaMask } from '../hooks/wallets/metamask.hook';
+import { AbortError } from '../util/abort-error';
+import { delay } from '../util/utils';
 import { AssetBalance, useBalanceContext } from './balance.context';
-import { useParamContext } from './param.context';
 
 export enum WalletType {
   META_MASK = 'MetaMask',
+  ALBY = 'Alby',
+  LEDGER = 'Ledger',
 }
 
 interface WalletInterface {
   address?: string;
   blockchain?: Blockchain;
-  wallets: WalletType[];
-  getInstalledWallets: () => WalletType[];
-  login: (wallet: WalletType, signHintCallback?: () => Promise<void>) => Promise<string>;
+  getInstalledWallets: () => Promise<WalletType[]>;
+  login: (
+    wallet: WalletType,
+    signHintCallback?: () => Promise<void>,
+    blockchain?: Blockchain,
+    address?: string,
+  ) => Promise<string | undefined>;
+  switchBlockchain: (to: Blockchain) => Promise<void>;
   activeWallet: WalletType | undefined;
-  signMessage: (message: string, address: string) => Promise<string>;
-  hasBalance: boolean;
-  getBalances: (assets: Asset[]) => Promise<AssetBalance[]>;
+  getBalances: (assets: Asset[]) => Promise<AssetBalance[] | undefined>;
+  sendTransaction: (sell: Sell) => Promise<string>;
 }
 
 const WalletContext = createContext<WalletInterface>(undefined as any);
@@ -30,9 +42,11 @@ export function useWalletContext(): WalletInterface {
 export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const { isInitialized, isLoggedIn } = useSessionContext();
   const { session } = useApiSession();
-  const { isInstalled, register, requestAccount, requestBlockchain, sign, readBalance } = useMetaMask();
-  const { login: apiLogin, logout: apiLogout, signUp: apiSignUp } = useSessionContext();
-  const { wallet: paramWallet } = useParamContext();
+  const metaMask = useMetaMask();
+  const alby = useAlby();
+  const ledger = useLedger();
+  const api = useSessionContext();
+  const { wallet: paramWallet } = useAppParams();
   const { getSignMessage } = useAuth();
   const { hasBalance, getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
@@ -40,28 +54,44 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const [activeAddress, setActiveAddress] = useState<string>();
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
 
+  const [ledgerBlockchain, setLedgerBlockchain] = useState<Blockchain>();
+
   const [mmAddress, setMmAddress] = useState<string>();
   const [mmBlockchain, setMmBlockchain] = useState<Blockchain>();
 
+  // listen to MM account switches
   useEffect(() => {
-    register(setMmAddress, setMmBlockchain);
+    metaMask.register(setMmAddress, setMmBlockchain);
   }, []);
 
   useEffect(() => {
-    if (activeAddress && mmAddress) {
-      // logout on account switch
-      if (activeAddress !== mmAddress) apiLogout();
-    } else if (activeWallet === WalletType.META_MASK) {
-      setActiveAddress(mmAddress);
+    if (activeWallet === WalletType.META_MASK) {
+      if (activeAddress && mmAddress) {
+        // logout on account switch
+        if (activeAddress !== mmAddress) api.logout();
+      } else {
+        setActiveAddress(mmAddress);
+      }
     }
   }, [activeAddress, mmAddress, activeWallet]);
 
+  // reset on session change
   useEffect(() => {
     if (activeAddress && session?.address && activeAddress !== session.address) resetWallet();
   }, [session, activeAddress]);
 
+  const hasCheckedConnection = useRef(false);
+
   useEffect(() => {
-    if (isInitialized && !isLoggedIn) resetWallet();
+    if (!isInitialized) return;
+
+    if (!hasCheckedConnection.current && isLoggedIn) {
+      activeWallet && connect(activeWallet).catch(() => api.logout());
+    }
+
+    if (!isLoggedIn) resetWallet();
+
+    hasCheckedConnection.current = true;
   }, [isInitialized, isLoggedIn]);
 
   function resetWallet() {
@@ -70,83 +100,235 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     activeWalletStore.remove();
   }
 
-  async function login(wallet: WalletType, signHintCallback?: () => Promise<void>): Promise<string> {
-    const [address, blockchain] = await connect(wallet);
+  // public API
+  async function login(
+    wallet: WalletType,
+    signHintCallback?: () => Promise<void>,
+    blockchain?: Blockchain,
+    usedAddress?: string,
+  ): Promise<string> {
+    const address = await connect(wallet, usedAddress);
 
-    setActiveWallet(wallet);
-    activeWalletStore.set(wallet);
-    setMmAddress(address);
-    setMmBlockchain(blockchain);
+    try {
+      // show signature hint
+      await signHintCallback?.();
 
-    // show signature hint
-    await signHintCallback?.();
+      await createSession(wallet, address, paramWallet);
+    } catch (e) {
+      api.logout();
+      resetWallet();
 
-    const session = await createSession(address, paramWallet);
-    !session && apiLogout();
+      throw e;
+    }
+
+    blockchain && (await switchBlockchain(blockchain, wallet));
 
     return address;
   }
 
-  async function connect(_: WalletType): Promise<[string, Blockchain | undefined]> {
-    const address = await requestAccount();
-    if (!address) throw new Error('Permission denied or account not verified');
+  async function connect(wallet: WalletType, usedAddress?: string): Promise<string> {
+    const [address, blockchain] = await readData(wallet, usedAddress);
 
-    const blockchain = await requestBlockchain();
+    setActiveWallet(wallet);
+    activeWalletStore.set(wallet);
 
-    return [address, blockchain];
+    switch (wallet) {
+      case WalletType.META_MASK:
+        setMmAddress(address);
+        setMmBlockchain(blockchain);
+        break;
+
+      case WalletType.ALBY:
+        setActiveAddress(address);
+        break;
+
+      case WalletType.LEDGER:
+        setActiveAddress(address);
+        setLedgerBlockchain(blockchain);
+        break;
+    }
+
+    return address;
   }
 
-  async function signMessage(message: string, address: string): Promise<string> {
-    try {
-      return await sign(address, message);
-    } catch (e: any) {
-      console.error(e.message, e.code);
-      throw e;
+  async function readData(wallet: WalletType, address?: string): Promise<[string, Blockchain | undefined]> {
+    switch (wallet) {
+      case WalletType.META_MASK:
+        address ??= await metaMask.requestAccount();
+        if (!address) throw new Error('Permission denied or account not verified');
+
+        const blockchain = await metaMask.requestBlockchain();
+
+        return [address, blockchain];
+
+      case WalletType.ALBY:
+        const account = await alby.enable();
+
+        address ??= await getAlbyAddress(account);
+
+        return [address, Blockchain.LIGHTNING];
+
+      case WalletType.LEDGER:
+        address ??= await ledger.connect();
+        return [address, Blockchain.BITCOIN];
     }
   }
 
-  function getInstalledWallets(): WalletType[] {
+  async function getAlbyAddress(account: GetInfoResponse): Promise<string> {
+    if (account?.node?.pubkey) {
+      // log in with pub key
+      return `LNNID${account.node.pubkey.toUpperCase()}`;
+    } else if (account?.node?.alias?.includes('getalby.com')) {
+      // log in with Alby
+      const win: Window = window;
+      const redirectUrl = new URL(win.location.href);
+      redirectUrl.searchParams.set('type', WalletType.ALBY);
+      win.location = `${process.env.REACT_APP_API_URL}/alby?redirect_uri=${encodeURIComponent(redirectUrl.toString())}`;
+
+      await delay(5);
+      throw new AbortError('Forwarded to Alby page');
+    }
+
+    throw new Error('No login method found');
+  }
+
+  async function signMessage(wallet: WalletType, message: string, address: string): Promise<string> {
+    switch (wallet) {
+      case WalletType.META_MASK:
+        return metaMask.sign(address, message);
+
+      case WalletType.ALBY:
+        return alby.signMessage(message);
+
+      case WalletType.LEDGER:
+        return await ledger.signMessage(message);
+
+      default:
+        throw new Error('No wallet active');
+    }
+  }
+
+  async function getInstalledWallets(): Promise<WalletType[]> {
     const wallets: WalletType[] = [];
 
-    if (isInstalled()) wallets.push(WalletType.META_MASK);
+    if (metaMask.isInstalled()) wallets.push(WalletType.META_MASK);
+    if (alby.isInstalled()) wallets.push(WalletType.ALBY);
+    if (await ledger.isSupported()) wallets.push(WalletType.LEDGER);
 
     return wallets;
   }
 
-  async function createSession(address: string, wallet?: string): Promise<string | undefined> {
-    try {
-      const message = await getSignMessage(address);
-      const signature = await signMessage(message, address);
-      return (await apiLogin(address, signature)) ?? (await apiSignUp(address, signature, wallet));
-    } catch (e) {
-      console.error('Failed to create session:', e);
-    }
+  async function createSession(walletType: WalletType, address: string, wallet?: string): Promise<string> {
+    const message = await getSignMessage(address);
+    const signature = await signMessage(walletType, message, address);
+    const session = (await api.login(address, signature)) ?? (await api.signUp(address, signature, wallet));
+    if (!session) throw new Error('Failed to create session');
+
+    return session;
   }
 
-  async function getBalances(assets: Asset[]): Promise<AssetBalance[]> {
+  async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {
     switch (activeWallet) {
       case WalletType.META_MASK:
-        return (await Promise.all(assets.map((asset: Asset) => readBalance(asset, activeAddress)))).filter(
+        return (await Promise.all(assets.map((asset: Asset) => metaMask.readBalance(asset, activeAddress)))).filter(
           (b) => b.amount > 0,
         );
+
+      case WalletType.ALBY:
+        // no balance available
+        return undefined;
+
+      case WalletType.LEDGER:
+        // no balance available
+        return undefined;
+
       default:
         return getParamBalances(assets);
     }
   }
 
+  function getAddress(): string | undefined {
+    switch (activeWallet) {
+      case WalletType.META_MASK:
+        return mmAddress;
+
+      case WalletType.ALBY:
+      case WalletType.LEDGER:
+        return activeAddress;
+
+      default:
+        return undefined;
+    }
+  }
+
+  function getBlockchain(): Blockchain | undefined {
+    switch (activeWallet) {
+      case WalletType.META_MASK:
+        return mmBlockchain;
+
+      case WalletType.ALBY:
+        return Blockchain.LIGHTNING;
+
+      case WalletType.LEDGER:
+        return ledgerBlockchain;
+
+      default:
+        return undefined;
+    }
+  }
+
+  async function switchBlockchain(to: Blockchain, wallet?: WalletType): Promise<void> {
+    switch (wallet ?? activeWallet) {
+      case WalletType.META_MASK:
+        return metaMask.requestChangeToBlockchain(to);
+    }
+  }
+
+  async function sendTransaction(sell: Sell): Promise<string> {
+    switch (activeWallet) {
+      case WalletType.META_MASK:
+        if (!mmAddress) throw new Error('Address is not defined');
+
+        return metaMask.createTransaction(new BigNumber(sell.amount), sell.asset, mmAddress, sell.depositAddress);
+
+      case WalletType.ALBY:
+        if (!sell.paymentRequest) throw new Error('Payment request not defined');
+
+        return alby.sendPayment(sell.paymentRequest).then((p) => p.preimage);
+
+      case WalletType.LEDGER:
+        throw new Error('Not supported yet');
+
+      default:
+        throw new Error('No wallet connected');
+    }
+  }
+
   const context: WalletInterface = useMemo(
     () => ({
-      address: activeWallet === WalletType.META_MASK ? mmAddress : undefined,
-      blockchain: activeWallet === WalletType.META_MASK ? mmBlockchain : undefined,
-      wallets: Object.values(WalletType),
+      address: getAddress(),
+      blockchain: getBlockchain(),
       getInstalledWallets,
       login,
+      switchBlockchain,
       activeWallet,
-      signMessage,
-      hasBalance: hasBalance, // || activeWallet != null, // TODO: activate
       getBalances,
+      sendTransaction,
     }),
-    [mmAddress, mmBlockchain, getParamBalances, activeWallet, isInstalled, requestAccount, requestBlockchain, sign],
+    [
+      activeWallet,
+      activeAddress,
+      mmAddress,
+      mmBlockchain,
+      metaMask,
+      alby,
+      ledger,
+      ledgerBlockchain,
+      api,
+      hasBalance,
+      getParamBalances,
+      paramWallet,
+    ],
   );
 
   return <WalletContext.Provider value={context}>{props.children}</WalletContext.Provider>;

@@ -16,7 +16,6 @@ import { useLocation } from 'react-router-dom';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from '../hooks/navigation.hook';
-import Logo from '../static/assets/logo-dark.svg';
 import { NavigationLink } from './navigation-link';
 
 interface FormData {
@@ -26,6 +25,7 @@ interface FormData {
 interface NavigationIframeProps extends PropsWithChildren {
   title?: string;
   backButton?: boolean;
+  onBack?: () => void;
 }
 
 interface IconContentProps {
@@ -37,13 +37,13 @@ interface NavigationMenuContentProps {
   setIsNavigationOpen: (value: SetStateAction<boolean>) => void;
 }
 
-export function Navigation({ title, backButton = true }: NavigationIframeProps): JSX.Element {
+export function Navigation({ title, backButton = true, onBack }: NavigationIframeProps): JSX.Element {
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const { isEmbedded } = useAppHandlingContext();
 
   return title || !isEmbedded ? (
     <div className={`relative flex items-center justify-between h-12 px-4 py-5 bg-dfxGray-300`}>
-      <BackButton title={title} backButton={backButton} />
+      <BackButton title={title} backButton={backButton} onBack={onBack} />
 
       <div className="absolute right-4">
         <MenuIcon
@@ -59,13 +59,13 @@ export function Navigation({ title, backButton = true }: NavigationIframeProps):
   );
 }
 
-function BackButton({ title, backButton }: NavigationIframeProps): JSX.Element {
+function BackButton({ title, backButton, onBack }: NavigationIframeProps): JSX.Element {
   const { homePath, isEmbedded, closeServices } = useAppHandlingContext();
-  const location = useLocation();
+  const { pathname } = useLocation();
   const { navigate } = useNavigation();
 
   function onClick() {
-    if (homePath === location.pathname) {
+    if (homePath === pathname) {
       closeServices({ type: CloseType.CANCEL });
     } else {
       navigate(-1);
@@ -76,19 +76,17 @@ function BackButton({ title, backButton }: NavigationIframeProps): JSX.Element {
     <button
       type="button"
       className="text-dfxBlue-800 font-bold text-lg flex flex-row flex-grow flex-shrink-0 items-center justify-center"
-      onClick={() => onClick()}
+      onClick={onBack ?? onClick}
       disabled={!backButton}
     >
       <div className="absolute left-4">
-        {backButton ? (
+        {backButton && (
           <div className="ml-2">
             <DfxIcon icon={IconVariant.BACK} color={IconColor.BLUE} size={IconSize.LG} />
           </div>
-        ) : (
-          !isEmbedded && <DfxLogo />
         )}
       </div>
-      {title}
+      {title ? title : !isEmbedded && <DfxLogo />}
     </button>
   );
 }
@@ -96,7 +94,7 @@ function BackButton({ title, backButton }: NavigationIframeProps): JSX.Element {
 function DfxLogo(): JSX.Element {
   return (
     <a href="/">
-      <img height={23} width={73.6} src={Logo} alt="logo" />
+      <img height={23} width={73.6} src="https://content.dfx.swiss/img/v1/website/logo-dark.svg" alt="logo" />
     </a>
   );
 }

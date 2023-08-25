@@ -3,9 +3,11 @@ import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
-import { AssetBalance } from '../contexts/balance.context';
-import ERC20_ABI from '../static/erc20.abi.json';
-import { useBlockchain } from './blockchain.hook';
+import { AssetBalance } from '../../contexts/balance.context';
+import ERC20_ABI from '../../static/erc20.abi.json';
+import { AbortError } from '../../util/abort-error';
+import { TranslatedError } from '../../util/translated-error';
+import { useBlockchain } from '../blockchain.hook';
 
 export enum WalletType {
   META_MASK = 'MetaMask',
@@ -92,7 +94,13 @@ export function useMetaMask(): MetaMaskInterface {
 
   async function requestAccount(): Promise<string | undefined> {
     await checkConnection();
-    return verifyAccount(await web3.eth.requestAccounts());
+
+    try {
+      const accounts = await web3.eth.requestAccounts();
+      return verifyAccount(accounts);
+    } catch (e) {
+      handleError(e as MetaMaskError);
+    }
   }
 
   async function requestBlockchain(): Promise<Blockchain | undefined> {
@@ -101,27 +109,28 @@ export function useMetaMask(): MetaMaskInterface {
 
   async function requestChangeToBlockchain(blockchain?: Blockchain): Promise<void> {
     if (!blockchain) return;
-    const id = toChainId(blockchain);
-    if (!id) return;
-    const chainId = web3.utils.toHex(id);
-    return ethereum().sendAsync(
-      {
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId }],
-      },
-      (e?: MetaMaskError) => {
+
+    const chainId = toChainId(blockchain);
+    if (!chainId) return;
+
+    return ethereum()
+      .request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] })
+      .catch((e: MetaMaskError) => {
         // 4902 chain is not yet added to MetaMask, therefore add chainId to MetaMask
         if (e && e.code === 4902) {
-          requestAddChainId(blockchain);
+          return requestAddChainId(blockchain);
         }
-      },
-    );
+
+        handleError(e);
+      });
   }
 
   async function requestAddChainId(blockchain: Blockchain): Promise<void> {
-    return ethereum().sendAsync({
+    const chain = toChainObject(blockchain);
+
+    return ethereum().request({
       method: 'wallet_addEthereumChain',
-      params: [toChainObject(blockchain)],
+      params: [chain],
     });
   }
 
@@ -130,7 +139,7 @@ export function useMetaMask(): MetaMaskInterface {
   }
 
   async function sign(address: string, message: string): Promise<string> {
-    return web3.eth.personal.sign(message, address, '');
+    return web3.eth.personal.sign(message, address, '').catch(handleError);
   }
 
   async function addContract(asset: Asset, svgData: string, currentBlockchain?: Blockchain): Promise<boolean> {
@@ -143,7 +152,7 @@ export function useMetaMask(): MetaMaskInterface {
     const symbol = await tokenContract.methods.symbol().call();
     const decimals = await tokenContract.methods.decimals().call();
 
-    return ethereum().sendAsync({
+    return ethereum().request({
       method: 'wallet_watchAsset',
       params: {
         type: 'ERC20',
@@ -210,6 +219,18 @@ export function useMetaMask(): MetaMaskInterface {
     const timeoutPromise = new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout));
 
     return Promise.race([promise, timeoutPromise]);
+  }
+
+  function handleError(e: MetaMaskError): never {
+    switch (e.code) {
+      case 4001:
+        throw new AbortError('User cancelled');
+
+      case -32002:
+        throw new TranslatedError('There is already a request pending. Please confirm it in your MetaMask and retry.');
+    }
+
+    throw e;
   }
 
   return {
