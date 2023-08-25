@@ -45,7 +45,7 @@ export function useLedger(): LedgerInterface {
         throw new TranslatedError('Please unlock your Ledger');
       } else if (name === 'TransportRaceCondition') {
         throw new TranslatedError('There is already a request pending. Please reload the page and retry.');
-      } else if (statusText === 'CLA_NOT_SUPPORTED') {
+      } else if (statusText === 'CLA_NOT_SUPPORTED' || statusText === 'INS_NOT_SUPPORTED') {
         throw new TranslatedError(
           'You are using a wrong or outdated Ledger app. Please install the newest version of the Bitcoin app on your Ledger.',
         );

@@ -22,15 +22,15 @@ export interface BaseTile {
   wallet?: Wallet;
 }
 
-interface DefaultTile extends BaseTile {
+export interface DefaultTile extends BaseTile {
   next: Next;
 }
 
-interface DisabledTile extends BaseTile {
+export interface DisabledTile extends BaseTile {
   disabled: true;
 }
 
-interface WalletTile extends BaseTile {
+export interface WalletTile extends BaseTile {
   wallet: Wallet;
 }
 
