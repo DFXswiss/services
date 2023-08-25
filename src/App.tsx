@@ -1,9 +1,8 @@
 import { DfxContextProvider } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { RouteObject, RouterProvider } from 'react-router-dom';
-import { AppHandlingContextProvider, CloseMessageData } from './contexts/app-handling.context';
+import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
-import { AppParams, ParamContextProvider } from './contexts/param.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
@@ -72,23 +71,23 @@ function App({ routerFactory, params }: AppProps) {
   if (home) router.navigate(home);
 
   return (
-    <AppHandlingContextProvider
-      home={router.state.location.pathname}
-      isWidget={params != null}
-      closeCallback={params?.onClose}
-    >
-      <DfxContextProvider api={{}} data={{}}>
-        <BalanceContextProvider>
+    <DfxContextProvider api={{}} data={{}}>
+      <BalanceContextProvider>
+        <AppHandlingContextProvider
+          home={router.state.location.pathname}
+          isWidget={params != null}
+          closeCallback={params?.onClose}
+          params={params}
+          router={router}
+        >
           <SettingsContextProvider>
-            <ParamContextProvider params={params} router={router}>
-              <WalletContextProvider>
-                <RouterProvider router={router} />
-              </WalletContextProvider>
-            </ParamContextProvider>
+            <WalletContextProvider>
+              <RouterProvider router={router} />
+            </WalletContextProvider>
           </SettingsContextProvider>
-        </BalanceContextProvider>
-      </DfxContextProvider>
-    </AppHandlingContextProvider>
+        </AppHandlingContextProvider>
+      </BalanceContextProvider>
+    </DfxContextProvider>
   );
 }
 

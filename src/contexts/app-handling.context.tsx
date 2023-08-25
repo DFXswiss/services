@@ -1,8 +1,43 @@
-import { Buy, Sell } from '@dfx.swiss/react';
+import { Buy, Sell, Utils, useApiSession, useSessionContext } from '@dfx.swiss/react';
+import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
 import { url } from '../util/utils';
+import { useBalanceContext } from './balance.context';
+
+// --- INTERFACES --- //
+const urlParams = [
+  'address',
+  'signature',
+  'wallet',
+  'session',
+  'redirect-uri',
+  'blockchain',
+  'balances',
+  'amount-in',
+  'amount-out',
+  'assets',
+  'asset-in',
+  'asset-out',
+  'bank-account',
+];
+
+export interface AppParams {
+  address?: string;
+  signature?: string;
+  wallet?: string;
+  session?: string;
+  redirectUri?: string;
+  blockchain?: string;
+  balances?: string;
+  amountIn?: string;
+  amountOut?: string;
+  assets?: string;
+  assetIn?: string;
+  assetOut?: string;
+  bankAccount?: string;
+}
 
 export enum CloseType {
   BUY = 'buy',
@@ -12,28 +47,22 @@ export enum CloseType {
 
 export interface CloseMessageData {
   type: CloseType;
-  buy?: Buy;
-  sell?: Sell;
-}
-
-export interface ICloseServicesParams {
-  type: CloseType;
   isComplete?: boolean;
   buy?: Buy;
   sell?: Sell;
 }
 
-export interface CancelServicesParams extends ICloseServicesParams {
+export interface CancelServicesParams extends CloseMessageData {
   type: CloseType.CANCEL;
 }
 
-export interface BuyServicesParams extends ICloseServicesParams {
+export interface BuyServicesParams extends CloseMessageData {
   type: CloseType.BUY;
   isComplete: boolean;
   buy: Buy;
 }
 
-export interface SellServicesParams extends ICloseServicesParams {
+export interface SellServicesParams extends CloseMessageData {
   type: CloseType.SELL;
   isComplete: boolean;
   sell: Sell;
@@ -41,16 +70,21 @@ export interface SellServicesParams extends ICloseServicesParams {
 
 export type CloseServicesParams = CancelServicesParams | BuyServicesParams | SellServicesParams;
 
+// --- CONTEXT --- //
 interface AppHandlingContextInterface {
   homePath: string;
+  isInitialized: boolean;
   isEmbedded: boolean;
-  setRedirectUri: (redirectUri: string) => void;
+  params: AppParams;
+  setParams: (params: Partial<AppParams>) => void;
   closeServices: (params: CloseServicesParams) => void;
 }
 
 interface AppHandlingContextProps extends PropsWithChildren {
   home: string;
   isWidget: boolean;
+  params?: AppParams;
+  router: Router;
   closeCallback?: (data: CloseMessageData) => void;
 }
 
@@ -60,23 +94,112 @@ export function useAppHandlingContext(): AppHandlingContextInterface {
   return useContext(AppHandlingContext);
 }
 
-export function AppHandlingContextProvider({
-  home,
-  isWidget,
-  closeCallback,
-  children,
-}: AppHandlingContextProps): JSX.Element {
+export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.Element {
   const { redirectUri: storeRedirectUri } = useStore();
-  const [redirectUri, setRedirectUri] = useState<string>();
   const { isUsedByIframe, sendMessage } = useIframe();
+  const { updateSession } = useApiSession();
+  const { login, signUp, logout } = useSessionContext();
+  const { readBalances } = useBalanceContext();
+
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [redirectUri, setRedirectUri] = useState<string>();
+  const [params, setParams] = useState<AppParams>({});
+
+  const search = (window as Window).location.search;
+  const query = new URLSearchParams(search);
+
+  useEffect(() => {
+    init();
+  }, []);
 
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
   }, []);
 
+  // parameters
+  function getParameter(query: URLSearchParams, key: string): string | undefined {
+    return query.get(key) ?? undefined;
+  }
+
+  function setParameters(params: Partial<AppParams>) {
+    setParams((p) => ({ ...p, ...params }));
+  }
+
+  async function init() {
+    const params = props.params ?? extractUrlParams();
+
+    setParams(params);
+
+    const hasSession = await checkSession(params);
+
+    if (params.redirectUri) {
+      setRedirectUri(params.redirectUri);
+    }
+
+    if (params.balances || hasSession) {
+      readBalances(params.balances);
+    }
+
+    setIsInitialized(true);
+
+    removeUrlParams(query);
+  }
+
+  function extractUrlParams(): AppParams {
+    return {
+      address: getParameter(query, 'address'),
+      signature: getParameter(query, 'signature'),
+      wallet: getParameter(query, 'wallet'),
+      session: getParameter(query, 'session'),
+      redirectUri: getParameter(query, 'redirect-uri'),
+      blockchain: getParameter(query, 'blockchain'),
+      balances: getParameter(query, 'balances'),
+      amountIn: getParameter(query, 'amount-in'),
+      amountOut: getParameter(query, 'amount-out'),
+      assets: getParameter(query, 'assets'),
+      assetIn: getParameter(query, 'asset-in'),
+      assetOut: getParameter(query, 'asset-out'),
+      bankAccount: getParameter(query, 'bank-account'),
+    };
+  }
+
+  function removeUrlParams(query: URLSearchParams) {
+    if (urlParams.map((param) => query.has(param)).every((b) => !b)) return;
+    urlParams.forEach((param) => query.delete(param));
+
+    const { location } = window;
+    props.router.navigate({ pathname: `${location.origin}${location.pathname}`, search: `?${query}` });
+  }
+
+  async function checkSession(params: AppParams): Promise<boolean> {
+    if (params.address && params.signature) {
+      const session = await createSession(params.address, params.signature, params.wallet);
+      if (session) {
+        return true;
+      } else {
+        logout();
+        return false;
+      }
+    } else if (params.session && Utils.isJwt(params.session)) {
+      updateSession(params.session);
+      return true;
+    }
+
+    return false;
+  }
+
+  async function createSession(address: string, signature: string, wallet?: string): Promise<string | undefined> {
+    try {
+      return (await login(address, signature)) ?? (await signUp(address, signature, wallet));
+    } catch (e) {
+      console.error('Failed to create session:', e);
+    }
+  }
+
+  // closing
   function closeServices(params: CloseServicesParams) {
-    if (isWidget) {
-      closeCallback?.(createCloseMessageData(params));
+    if (props.isWidget) {
+      props.closeCallback?.(createCloseMessageData(params));
     } else if (isUsedByIframe) {
       sendMessage(createCloseMessageData(params));
     } else {
@@ -106,16 +229,8 @@ export function AppHandlingContextProvider({
   function createCloseMessageData(params: CloseServicesParams): CloseMessageData {
     switch (params.type) {
       case CloseType.BUY:
-        return {
-          type: CloseType.BUY,
-          buy: params.buy,
-        };
-
       case CloseType.SELL:
-        return {
-          type: CloseType.SELL,
-          sell: params.sell,
-        };
+        return params;
 
       default:
         return { type: CloseType.CANCEL };
@@ -124,16 +239,15 @@ export function AppHandlingContextProvider({
 
   const context = useMemo(
     () => ({
-      homePath: home,
-      isEmbedded: isWidget || isUsedByIframe,
-      setRedirectUri: (redirectUri: string) => {
-        setRedirectUri(redirectUri);
-        storeRedirectUri.set(redirectUri);
-      },
+      homePath: props.home,
+      isEmbedded: props.isWidget || isUsedByIframe,
       closeServices,
+      isInitialized,
+      params,
+      setParams: setParameters,
     }),
-    [home, redirectUri],
+    [props.home, props.isWidget, isUsedByIframe, redirectUri, isInitialized, params],
   );
 
-  return <AppHandlingContext.Provider value={context}>{children}</AppHandlingContext.Provider>;
+  return <AppHandlingContext.Provider value={context}>{props.children}</AppHandlingContext.Provider>;
 }

@@ -33,8 +33,8 @@ import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { GiroCode } from '../components/payment/giro-code';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
-import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useAppParams } from '../hooks/app-params.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 
@@ -43,7 +43,7 @@ export function BuyInfoScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
   const { availableBlockchains } = useSessionContext();
-  const { assetIn, assetOut, amountIn, amountOut } = useParamContext();
+  const { assetIn, assetOut, amountIn, amountOut } = useAppParams();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();

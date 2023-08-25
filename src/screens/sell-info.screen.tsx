@@ -35,8 +35,8 @@ import { Layout } from '../components/layout';
 import { QrCopy } from '../components/payment/qr-copy';
 import { SellCompletion } from '../components/payment/sell-completion';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
-import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useAppParams } from '../hooks/app-params.hook';
 import { useKycDataGuard, useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 
@@ -47,7 +47,7 @@ export function SellInfoScreen(): JSX.Element {
   const { availableBlockchains } = useSessionContext();
   const { bankAccounts, createAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
-  const { assetIn, assetOut, amountIn, amountOut, bankAccount: bankAccountParam } = useParamContext();
+  const { assetIn, assetOut, amountIn, amountOut, bankAccount: bankAccountParam } = useAppParams();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();

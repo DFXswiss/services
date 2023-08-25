@@ -94,8 +94,10 @@ export function useMetaMask(): MetaMaskInterface {
 
   async function requestAccount(): Promise<string | undefined> {
     await checkConnection();
+
     try {
-      return verifyAccount(await web3.eth.requestAccounts());
+      const accounts = await web3.eth.requestAccounts();
+      return verifyAccount(accounts);
     } catch (e) {
       handleError(e as MetaMaskError);
     }
@@ -119,7 +121,7 @@ export function useMetaMask(): MetaMaskInterface {
           return requestAddChainId(blockchain);
         }
 
-        throw e;
+        handleError(e);
       });
   }
 
@@ -137,11 +139,7 @@ export function useMetaMask(): MetaMaskInterface {
   }
 
   async function sign(address: string, message: string): Promise<string> {
-    try {
-      return await web3.eth.personal.sign(message, address, '');
-    } catch (e) {
-      handleError(e as MetaMaskError);
-    }
+    return web3.eth.personal.sign(message, address, '').catch(handleError);
   }
 
   async function addContract(asset: Asset, svgData: string, currentBlockchain?: Blockchain): Promise<boolean> {

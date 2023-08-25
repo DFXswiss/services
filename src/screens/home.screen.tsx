@@ -11,14 +11,14 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
-import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
+import { useAppParams } from '../hooks/app-params.hook';
 import { useDeferredPromise } from '../hooks/deferred-promise.hook';
 import { Tile, Wallet, useFeatureTree } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -28,7 +28,7 @@ import { Stack } from '../util/stack';
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
-  const { isProcessing, logout } = useSessionContext();
+  const { isLoggedIn, isInitialized, isProcessing, logout } = useSessionContext();
   const { isUserLoading } = useUserContext();
   const { isEmbedded } = useAppHandlingContext();
   const { getInstalledWallets, login, switchBlockchain, activeWallet } = useWalletContext();
@@ -37,7 +37,7 @@ export function HomeScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { search } = useLocation();
   const { getTiles, setOptions } = useFeatureTree();
-  const { blockchain: paramBlockchain } = useParamContext();
+  const { blockchain: paramBlockchain } = useAppParams();
 
   const [isConnectingTo, setIsConnectingTo] = useState<Wallet>();
   const [connectError, setConnectError] = useState<string>();
@@ -49,6 +49,12 @@ export function HomeScreen(): JSX.Element {
   const currentPage = pages.current?.page;
   const allowedTiles = pages.current?.allowedTiles;
   const tiles = getTiles(currentPage);
+
+  useEffect(() => {
+    if (isInitialized && isLoggedIn && !activeWallet) {
+      navigate('/buy');
+    }
+  }, [isInitialized, isLoggedIn, activeWallet]);
 
   // signature hint
   async function confirmSignHint(): Promise<void> {

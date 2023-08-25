@@ -2,6 +2,7 @@ import { Asset, Blockchain, Sell, useApiSession, useAuth, useSessionContext } fr
 import BigNumber from 'bignumber.js';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { GetInfoResponse } from 'webln';
+import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
 import { useAlby } from '../hooks/wallets/alby.hook';
 import { useLedger } from '../hooks/wallets/ledger.hook';
@@ -9,7 +10,6 @@ import { useMetaMask } from '../hooks/wallets/metamask.hook';
 import { AbortError } from '../util/abort-error';
 import { delay } from '../util/utils';
 import { AssetBalance, useBalanceContext } from './balance.context';
-import { useParamContext } from './param.context';
 
 export enum WalletType {
   META_MASK = 'MetaMask',
@@ -29,7 +29,6 @@ interface WalletInterface {
   ) => Promise<string | undefined>;
   switchBlockchain: (to: Blockchain) => Promise<void>;
   activeWallet: WalletType | undefined;
-  sellEnabled: boolean;
   getBalances: (assets: Asset[]) => Promise<AssetBalance[] | undefined>;
   sendTransaction: (sell: Sell) => Promise<string>;
 }
@@ -47,7 +46,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const alby = useAlby();
   const ledger = useLedger();
   const api = useSessionContext();
-  const { wallet: paramWallet } = useParamContext();
+  const { wallet: paramWallet } = useAppParams();
   const { getSignMessage } = useAuth();
   const { hasBalance, getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
@@ -313,8 +312,6 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       login,
       switchBlockchain,
       activeWallet,
-      sellEnabled:
-        hasBalance || (activeWallet != null && [WalletType.META_MASK, WalletType.ALBY].includes(activeWallet)),
       getBalances,
       sendTransaction,
     }),
