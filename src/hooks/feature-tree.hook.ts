@@ -1,4 +1,4 @@
-import { Language } from '@dfx.swiss/react';
+import { Blockchain, Language } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import { FeatureTree } from '../config/feature-tree';
 import { AppParams, useParamContext } from '../contexts/param.context';
@@ -19,19 +19,19 @@ export interface BaseTile {
   img: string;
   disabled?: boolean;
   next?: Next;
-  wallet?: WalletType;
+  wallet?: Wallet;
 }
 
-interface DefaultTile extends BaseTile {
+export interface DefaultTile extends BaseTile {
   next: Next;
 }
 
-interface DisabledTile extends BaseTile {
+export interface DisabledTile extends BaseTile {
   disabled: true;
 }
 
-interface WalletTile extends BaseTile {
-  wallet: WalletType;
+export interface WalletTile extends BaseTile {
+  wallet: Wallet;
 }
 
 export interface Next {
@@ -40,10 +40,17 @@ export interface Next {
   options?: Options;
 }
 
+export interface Wallet {
+  type: WalletType;
+  blockchain?: Blockchain;
+}
+
 export interface Options {
   service?: string;
-  query?: { [k in keyof AppParams]: string };
+  query?: Query;
 }
+
+type Query = { [k in keyof AppParams]: string };
 
 // --- HOOK --- //
 

@@ -97,18 +97,7 @@ export function useMetaMask(): MetaMaskInterface {
     try {
       return verifyAccount(await web3.eth.requestAccounts());
     } catch (e) {
-      const { code } = e as MetaMaskError;
-      switch (code) {
-        case 4001:
-          throw new AbortError('User cancelled');
-
-        case -32002:
-          throw new TranslatedError(
-            'There is already a request pending. Please confirm it in your MetaMask and retry.',
-          );
-      }
-
-      throw e;
+      handleError(e as MetaMaskError);
     }
   }
 
@@ -148,7 +137,11 @@ export function useMetaMask(): MetaMaskInterface {
   }
 
   async function sign(address: string, message: string): Promise<string> {
-    return web3.eth.personal.sign(message, address, '');
+    try {
+      return await web3.eth.personal.sign(message, address, '');
+    } catch (e) {
+      handleError(e as MetaMaskError);
+    }
   }
 
   async function addContract(asset: Asset, svgData: string, currentBlockchain?: Blockchain): Promise<boolean> {
@@ -228,6 +221,18 @@ export function useMetaMask(): MetaMaskInterface {
     const timeoutPromise = new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout));
 
     return Promise.race([promise, timeoutPromise]);
+  }
+
+  function handleError(e: MetaMaskError): never {
+    switch (e.code) {
+      case 4001:
+        throw new AbortError('User cancelled');
+
+      case -32002:
+        throw new TranslatedError('There is already a request pending. Please confirm it in your MetaMask and retry.');
+    }
+
+    throw e;
   }
 
   return {

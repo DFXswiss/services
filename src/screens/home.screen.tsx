@@ -20,7 +20,7 @@ import { useParamContext } from '../contexts/param.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { useDeferredPromise } from '../hooks/deferred-promise.hook';
-import { Tile, useFeatureTree } from '../hooks/feature-tree.hook';
+import { Tile, Wallet, useFeatureTree } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useStore } from '../hooks/store.hook';
 import { AbortError } from '../util/abort-error';
@@ -37,9 +37,9 @@ export function HomeScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { search } = useLocation();
   const { getTiles, setOptions } = useFeatureTree();
-  const { blockchain } = useParamContext();
+  const { blockchain: paramBlockchain } = useParamContext();
 
-  const [isConnectingTo, setIsConnectingTo] = useState<WalletType>();
+  const [isConnectingTo, setIsConnectingTo] = useState<Wallet>();
   const [connectError, setConnectError] = useState<string>();
   const [showInstallHint, setShowInstallHint] = useState<WalletType>();
   const [showSignHint, setShowSignHint] = useState(false);
@@ -64,26 +64,32 @@ export function HomeScreen(): JSX.Element {
     deferRef?.resolve();
   }
 
+  function signHintRejected() {
+    setShowSignHint(false);
+    deferRef?.reject(new AbortError('User cancelled'));
+  }
+
   function onHintConfirmed() {
     setShowInstallHint(undefined);
   }
 
   // tile handling
   function handleNext(tile: Tile) {
-    if (tile.disabled) return;
-
     if (tile.wallet) {
-      connect(tile.wallet)
-        .then(() => setPages(new Stack()))
-        .catch(console.error);
-    } else {
+      connectWallet(tile.wallet);
+    } else if (tile.next) {
       if (tile.next.options) setOptions(tile.next.options);
-      setPages((p) => p.push({ page: tile.next.page, allowedTiles: tile.next.tiles }));
+      const page = { page: tile.next.page, allowedTiles: tile.next.tiles };
+      setPages((p) => p.push(page));
     }
   }
 
   function handleBack() {
-    if (isConnectingTo) {
+    if (showInstallHint) {
+      setShowInstallHint(undefined);
+    } else if (showSignHint) {
+      signHintRejected();
+    } else if (isConnectingTo) {
       setConnectError(undefined);
       setIsConnectingTo(undefined);
     } else {
@@ -91,14 +97,24 @@ export function HomeScreen(): JSX.Element {
     }
   }
 
+  function handleRetry() {
+    isConnectingTo && connectWallet(isConnectingTo);
+  }
+
   // connect
-  async function connect(wallet: WalletType, address?: string) {
+  async function connectWallet(wallet: Wallet) {
+    connect(wallet)
+      .then(() => setPages(new Stack()))
+      .catch(console.error);
+  }
+
+  async function connect(wallet: Wallet, address?: string) {
     const installedWallets = await getInstalledWallets();
-    if (installedWallets.some((w) => w === wallet)) {
+    if (installedWallets.some((w) => w === wallet.type)) {
       setIsConnectingTo(wallet);
       setConnectError(undefined);
 
-      return doLogin(wallet, address)
+      return doLogin(wallet.type, wallet.blockchain, address)
         .then(() => {
           if (redirectPath) {
             // wait for the user to reload
@@ -115,13 +131,14 @@ export function HomeScreen(): JSX.Element {
           throw e;
         });
     } else {
-      setShowInstallHint(wallet);
+      setShowInstallHint(wallet.type);
       throw new Error('Wallet not installed');
     }
   }
 
-  async function doLogin(wallet: WalletType, address?: string) {
-    const selectedChain = blockchain as Blockchain;
+  async function doLogin(wallet: WalletType, blockchain?: Blockchain, address?: string) {
+    const selectedChain = blockchain ?? (paramBlockchain as Blockchain);
+
     return activeWallet === wallet
       ? selectedChain && switchBlockchain(selectedChain)
       : logout().then(() => login(wallet, confirmSignHint, selectedChain, address));
@@ -138,33 +155,13 @@ export function HomeScreen(): JSX.Element {
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
       ) : (
-        <>
+        <div className="z-1 flex flex-grow flex-col items-center">
           {showInstallHint ? (
             <InstallHint type={showInstallHint} onConfirm={onHintConfirmed} />
           ) : showSignHint ? (
             <SignHint onConfirm={signHintConfirmed} />
           ) : isConnectingTo ? (
-            connectError ? (
-              <>
-                <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
-                <p className="text-dfxRed-150">{translate('screens/home', connectError)}</p>
-
-                <StyledButton
-                  className="mt-4"
-                  label={translate('general/actions', 'Back')}
-                  onClick={handleBack}
-                  color={StyledButtonColor.GRAY_OUTLINE}
-                  width={StyledButtonWidth.MIN}
-                />
-              </>
-            ) : (
-              <>
-                <div className="mb-4">
-                  <StyledLoadingSpinner size={SpinnerSize.LG} />
-                </div>
-                <ConnectHint type={isConnectingTo} />
-              </>
-            )
+            <ConnectHint type={isConnectingTo.type} error={connectError} onBack={handleBack} onRetry={handleRetry} />
           ) : (
             <>
               <div className="flex self-start mb-4 sm:mt-8 sm:mb-14">
@@ -177,7 +174,7 @@ export function HomeScreen(): JSX.Element {
                   </Trans>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2.5 w-full z-1 mb-3">
+              <div className="grid grid-cols-2 gap-2.5 w-full mb-3">
                 {tiles
                   .filter((t) => !allowedTiles || allowedTiles.includes(t.id))
                   .map((t) => (
@@ -204,9 +201,9 @@ export function HomeScreen(): JSX.Element {
               </div>
             </>
           )}
-        </>
+        </div>
       )}
-      <div className="absolute bottom-0 w-full max-w-screen-md">
+      <div className="absolute bottom-0 w-full">
         <img src="https://content.dfx.swiss/img/v1/services/berge.png" className="w-full" />
       </div>
     </Layout>
@@ -326,26 +323,81 @@ function LedgerHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
   );
 }
 
-function ConnectHint({ type }: { type: WalletType }): JSX.Element {
+function ConnectHint({
+  type,
+  error,
+  onBack,
+  onRetry,
+}: {
+  type: WalletType;
+  error?: string;
+  onBack: () => void;
+  onRetry: () => void;
+}): JSX.Element {
   const { translate } = useSettingsContext();
+
   switch (type) {
     case WalletType.META_MASK:
-      return (
-        <p className="text-dfxGray-700">
-          {translate('screens/home', 'Please confirm the connection in your MetaMask.')}
-        </p>
-      );
     case WalletType.ALBY:
-      return (
-        <p className="text-dfxGray-700">
-          {translate('screens/home', 'Please confirm the connection in the Alby browser extension.')}
-        </p>
+      const confirmMessage =
+        type === WalletType.META_MASK
+          ? 'Please confirm the connection in your MetaMask.'
+          : 'Please confirm the connection in the Alby browser extension.';
+
+      return error ? (
+        <>
+          <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
+          <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
+
+          <StyledButton
+            className="mt-4"
+            label={translate('general/actions', 'Back')}
+            onClick={onBack}
+            color={StyledButtonColor.GRAY_OUTLINE}
+            width={StyledButtonWidth.MIN}
+          />
+        </>
+      ) : (
+        <>
+          <div className="mb-4">
+            <StyledLoadingSpinner size={SpinnerSize.LG} />
+          </div>
+          <p className="text-dfxGray-700">{translate('screens/home', confirmMessage)}</p>
+        </>
       );
+
     case WalletType.LEDGER:
       return (
-        <p className="text-dfxGray-700">
-          {translate('screens/home', 'Please confirm the connection with your Ledger.')}
-        </p>
+        <>
+          <StyledVerticalStack gap={5} center>
+            {error ? (
+              <div>
+                <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
+                <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
+              </div>
+            ) : (
+              <StyledLoadingSpinner size={SpinnerSize.LG} />
+            )}
+
+            <ol className="text-dfxBlue-800 text-left font-bold list-decimal">
+              <li className="list-inside">{translate('screens/home', 'Connect your Ledger with your computer')}</li>
+              <li className="list-inside">{translate('screens/home', 'Open the Bitcoin app on your Ledger')}</li>
+              <li className="list-inside">{translate('screens/home', 'Click on "Connect"')}</li>
+            </ol>
+
+            <img
+              src="https://content.dfx.swiss/img/v1/services/ledgerbitcoinready_en.png"
+              className="w-full max-w-sm	"
+            />
+
+            <StyledButton
+              label={translate('general/actions', 'Connect')}
+              onClick={onRetry}
+              width={StyledButtonWidth.MIN}
+              className="self-center"
+            />
+          </StyledVerticalStack>
+        </>
       );
   }
 }
