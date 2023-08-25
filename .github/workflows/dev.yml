@@ -58,6 +58,7 @@ jobs:
         run: |
           version=$(echo "v${{ steps.package_version.outputs.current-version }}" | cut -d '.' -f1-2)
 
+          mkdir -p ./build/widget
           cp ./widget/static/js/main.*.js ./build/widget/$version
           cp ./widget/static/css/main.*.css ./build/widget/$version.css
 

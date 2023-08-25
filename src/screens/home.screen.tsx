@@ -170,7 +170,7 @@ export function HomeScreen(): JSX.Element {
             <ConnectHint type={isConnectingTo.type} error={connectError} onBack={handleBack} onRetry={handleRetry} />
           ) : (
             <>
-              <div className="flex self-start mb-4 sm:mt-8 sm:mb-14">
+              <div className="flex self-start mb-6">
                 <div className="bg-dfxRed-100" style={{ width: '11px', marginRight: '12px' }}></div>
                 <div className="text-xl text-dfxBlue-800 font-extrabold text-left">
                   <Trans i18nKey={'screens/home.title'}>
