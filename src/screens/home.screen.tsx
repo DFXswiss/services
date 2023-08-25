@@ -138,7 +138,7 @@ export function HomeScreen(): JSX.Element {
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
       ) : (
-        <>
+        <div className="z-1">
           {showInstallHint ? (
             <InstallHint type={showInstallHint} onConfirm={onHintConfirmed} />
           ) : showSignHint ? (
@@ -177,7 +177,7 @@ export function HomeScreen(): JSX.Element {
                   </Trans>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2.5 w-full z-1 mb-3">
+              <div className="grid grid-cols-2 gap-2.5 w-full mb-3">
                 {tiles
                   .filter((t) => !allowedTiles || allowedTiles.includes(t.id))
                   .map((t) => (
@@ -204,9 +204,9 @@ export function HomeScreen(): JSX.Element {
               </div>
             </>
           )}
-        </>
+        </div>
       )}
-      <div className="absolute bottom-0 w-full max-w-screen-md">
+      <div className="absolute bottom-0 w-full">
         <img src="https://content.dfx.swiss/img/v1/services/berge.png" className="w-full" />
       </div>
     </Layout>
