@@ -108,13 +108,13 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     blockchain?: Blockchain,
     usedAddress?: string,
   ): Promise<string> {
-    const address = await connect(wallet, usedAddress);
+    const address = await connect(wallet, usedAddress, blockchain);
 
     // show signature hint
     await signHintCallback?.();
 
     try {
-      await createSession(wallet, address, paramWallet);
+      await createSession(wallet, address, paramWallet, blockchain);
     } catch (e) {
       api.logout();
       resetWallet();
@@ -127,8 +127,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     return address;
   }
 
-  async function connect(wallet: WalletType, usedAddress?: string): Promise<string> {
-    const [address, blockchain] = await readData(wallet, usedAddress);
+  async function connect(wallet: WalletType, usedAddress?: string, usedBlockchain?: Blockchain): Promise<string> {
+    const [address, blockchain] = await readData(wallet, usedAddress, usedBlockchain);
 
     setActiveWallet(wallet);
     activeWalletStore.set(wallet);
@@ -152,7 +152,11 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     return address;
   }
 
-  async function readData(wallet: WalletType, address?: string): Promise<[string, Blockchain | undefined]> {
+  async function readData(
+    wallet: WalletType,
+    address?: string,
+    usedBlockchain?: Blockchain,
+  ): Promise<[string, Blockchain | undefined]> {
     switch (wallet) {
       case WalletType.META_MASK:
         address ??= await metaMask.requestAccount();
@@ -171,8 +175,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         return [address, Blockchain.LIGHTNING];
 
       case WalletType.LEDGER:
-        address ??= await ledger.connect();
-        return [address, Blockchain.BITCOIN];
+        setLedgerBlockchain(usedBlockchain);
+        address ??= await ledger.connect(usedBlockchain ?? Blockchain.BITCOIN);
+        return [address, usedBlockchain ?? Blockchain.BITCOIN];
     }
   }
 
@@ -194,7 +199,12 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     throw new Error('No login method found');
   }
 
-  async function signMessage(wallet: WalletType, message: string, address: string): Promise<string> {
+  async function signMessage(
+    wallet: WalletType,
+    message: string,
+    address: string,
+    blockchain?: Blockchain,
+  ): Promise<string> {
     switch (wallet) {
       case WalletType.META_MASK:
         return metaMask.sign(address, message);
@@ -203,7 +213,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         return alby.signMessage(message);
 
       case WalletType.LEDGER:
-        return await ledger.signMessage(message);
+        return await ledger.signMessage(message, blockchain ?? Blockchain.BITCOIN);
 
       default:
         throw new Error('No wallet active');
@@ -220,9 +230,14 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     return wallets;
   }
 
-  async function createSession(walletType: WalletType, address: string, wallet?: string): Promise<string> {
+  async function createSession(
+    walletType: WalletType,
+    address: string,
+    wallet?: string,
+    blockchain?: Blockchain,
+  ): Promise<string> {
     const message = await getSignMessage(address);
-    const signature = await signMessage(walletType, message, address);
+    const signature = await signMessage(walletType, message, address, blockchain);
     const session = (await api.login(address, signature)) ?? (await api.signUp(address, signature, wallet));
     if (!session) throw new Error('Failed to create session');
 
