@@ -40,7 +40,7 @@ export const FeatureTree: Page[] = [
         img: 'bitcoinlightning',
         next: {
           page: 'wallets',
-          tiles: ['dfx-wallet', 'hw-wallet', 'alby', 'cli'],
+          tiles: ['dfx-wallet', 'hw-wallet', '', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
@@ -475,7 +475,7 @@ export const FeatureTree: Page[] = [
         img: 'bitcoinlightning',
         next: {
           page: 'wallets',
-          tiles: ['dfx-wallet', 'alby', 'cli'],
+          tiles: ['dfx-wallet', '', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
@@ -915,7 +915,6 @@ export const FeatureTree: Page[] = [
         id: 'alby',
         img: 'alby',
         disabled: true,
-        },
       },
       {
         id: 'metamask',
