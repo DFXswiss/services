@@ -64,6 +64,11 @@ export function HomeScreen(): JSX.Element {
     deferRef?.resolve();
   }
 
+  function signHintRejected() {
+    setShowSignHint(false);
+    deferRef?.reject(new AbortError('User cancelled'));
+  }
+
   function onHintConfirmed() {
     setShowInstallHint(undefined);
   }
@@ -82,7 +87,9 @@ export function HomeScreen(): JSX.Element {
   }
 
   function handleBack() {
-    if (isConnectingTo) {
+    if (showSignHint) {
+      signHintRejected();
+    } else if (isConnectingTo) {
       setConnectError(undefined);
       setIsConnectingTo(undefined);
     } else {

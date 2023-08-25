@@ -110,10 +110,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   ): Promise<string> {
     const address = await connect(wallet, usedAddress);
 
-    // show signature hint
-    await signHintCallback?.();
-
     try {
+      // show signature hint
+      await signHintCallback?.();
+
       await createSession(wallet, address, paramWallet);
     } catch (e) {
       api.logout();
@@ -163,8 +163,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         return [address, blockchain];
 
       case WalletType.ALBY:
-        const account = await alby.enable().catch();
-        if (!account) throw new Error('Permission denied or account not verified');
+        const account = await alby.enable();
 
         address ??= await getAlbyAddress(account);
 
