@@ -146,7 +146,7 @@ Documentation on `BuyPaymentInfoDto` and `SellPaymentInfoDto` can be found in th
 #### Web Component
 
 ```html
-<script defer="defer" src="https://services.dfx.swiss/widget/v1.1"></script>
+<script defer="defer" src="https://services.dfx.swiss/widget/v1.0"></script>
 <script>
   function handleClose(data: CloseMessage) {
     /* ADD YOUR CODE HERE */

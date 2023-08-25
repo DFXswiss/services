@@ -58,18 +58,9 @@ jobs:
         run: |
           version=$(echo "v${{ steps.package_version.outputs.current-version }}" | cut -d '.' -f1-2)
 
-          mkdir -p ./build/widget/media/$version
           cp ./widget/static/js/main.*.js ./build/widget/$version
           cp ./widget/static/css/main.*.css ./build/widget/$version.css
 
-          for file in ./widget/static/media/*; do
-            newFile=$(echo $file | cut -d '.' -f1,2,4)
-            mv $file $newFile
-          done
-
-          cp ./widget/static/media/* ./build/widget/media/
-
-          sed -i "s|__webpack_require__.p+\"static/media/\([[:alnum:]-]*\)\.[[:alnum:]]*|\"https://dev.services.dfx.swiss/widget/media/\\1|g" "./build/widget/$version"
           sed -i "s|main-widget.css|https://dev.services.dfx.swiss/widget/$version.css|g" "./build/widget/$version"
 
       - name: Deploy to Azure Storage (DEV)
