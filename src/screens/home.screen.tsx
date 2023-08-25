@@ -37,7 +37,7 @@ export function HomeScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { search } = useLocation();
   const { getTiles, setOptions } = useFeatureTree();
-  const { blockchain } = useParamContext();
+  const { blockchain: paramBlockchain } = useParamContext();
 
   const [isConnectingTo, setIsConnectingTo] = useState<WalletType>();
   const [connectError, setConnectError] = useState<string>();
@@ -70,15 +70,14 @@ export function HomeScreen(): JSX.Element {
 
   // tile handling
   function handleNext(tile: Tile) {
-    if (tile.disabled) return;
-
     if (tile.wallet) {
-      connect(tile.wallet)
+      connect(tile.wallet.type, tile.wallet.blockchain)
         .then(() => setPages(new Stack()))
         .catch(console.error);
-    } else {
+    } else if (tile.next) {
       if (tile.next.options) setOptions(tile.next.options);
-      setPages((p) => p.push({ page: tile.next.page, allowedTiles: tile.next.tiles }));
+      const page = { page: tile.next.page, allowedTiles: tile.next.tiles };
+      setPages((p) => p.push(page));
     }
   }
 
@@ -92,13 +91,13 @@ export function HomeScreen(): JSX.Element {
   }
 
   // connect
-  async function connect(wallet: WalletType, address?: string) {
+  async function connect(wallet: WalletType, blockchain?: Blockchain, address?: string) {
     const installedWallets = await getInstalledWallets();
     if (installedWallets.some((w) => w === wallet)) {
       setIsConnectingTo(wallet);
       setConnectError(undefined);
 
-      return doLogin(wallet, address)
+      return doLogin(wallet, blockchain, address)
         .then(() => {
           if (redirectPath) {
             // wait for the user to reload
@@ -120,8 +119,9 @@ export function HomeScreen(): JSX.Element {
     }
   }
 
-  async function doLogin(wallet: WalletType, address?: string) {
-    const selectedChain = blockchain as Blockchain;
+  async function doLogin(wallet: WalletType, blockchain?: Blockchain, address?: string) {
+    const selectedChain = blockchain ?? (paramBlockchain as Blockchain);
+
     return activeWallet === wallet
       ? selectedChain && switchBlockchain(selectedChain)
       : logout().then(() => login(wallet, confirmSignHint, selectedChain, address));
