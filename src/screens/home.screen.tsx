@@ -379,7 +379,7 @@ function ConnectHint({
       const steps = [
         'Connect your Ledger with your computer',
         'Open the Bitcoin app on your Ledger',
-        'Confirm \"sign message\" on your ledger',
+        'Confirm "sign message" on your ledger',
       ];
 
       return (
