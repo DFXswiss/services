@@ -255,7 +255,9 @@ function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: () => v
       return <MetaMaskHint onConfirm={onConfirm} />;
     case WalletType.ALBY:
       return <AlbyHint onConfirm={onConfirm} />;
-    case WalletType.LEDGER:
+    case WalletType.LEDGER_BTC:
+      return <LedgerHint onConfirm={onConfirm} />;
+    case WalletType.LEDGER_ETH:
       return <LedgerHint onConfirm={onConfirm} />;
   }
 }
@@ -375,7 +377,7 @@ function ConnectHint({
         </>
       );
 
-    case WalletType.LEDGER:
+    case WalletType.LEDGER_BTC:
       const steps = [
         'Connect your Ledger with your computer',
         'Open the Bitcoin app on your Ledger',
@@ -405,6 +407,49 @@ function ConnectHint({
 
             <img
               src="https://content.dfx.swiss/img/v1/services/ledgerbitcoinready_en.png"
+              className="w-full max-w-sm"
+            />
+
+            <StyledButton
+              label={translate('general/actions', 'Connect')}
+              onClick={onRetry}
+              width={StyledButtonWidth.MIN}
+              className="self-center"
+            />
+          </StyledVerticalStack>
+        </>
+      );
+
+    case WalletType.LEDGER_ETH:
+      const ethSteps = [
+        'Connect your Ledger with your computer',
+        'Open the Ethereum app on your Ledger',
+        'Click on "Connect"',
+        'Confirm "Sign message" on your ledger',
+      ];
+
+      return (
+        <>
+          <StyledVerticalStack gap={5} center>
+            {error ? (
+              <div>
+                <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
+                <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
+              </div>
+            ) : (
+              <StyledLoadingSpinner size={SpinnerSize.LG} />
+            )}
+
+            <ol className="text-dfxBlue-800 text-left font-bold list-decimal">
+              {ethSteps.map((s, i) => (
+                <li key={i} className="list-inside">
+                  {translate('screens/home', s)}
+                </li>
+              ))}
+            </ol>
+
+            <img
+              src="https://content.dfx.swiss/img/v1/services/ledgerethereumready_en.png"
               className="w-full max-w-sm"
             />
 

@@ -944,9 +944,14 @@ export const FeatureTree: Page[] = [
         disabled: true,
       },
       {
-        id: 'ledger',
+        id: 'ledger-btc',
         img: 'ledger',
-        wallet: { type: WalletType.LEDGER },
+        wallet: { type: WalletType.LEDGER_BTC },
+      },
+      {
+        id: 'ledger-eth',
+        img: 'ledger',
+        wallet: { type: WalletType.LEDGER_ETH },
       },
       {
         id: 'trezor',
