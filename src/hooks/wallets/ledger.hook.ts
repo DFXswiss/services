@@ -1,8 +1,8 @@
 import { Blockchain } from '@dfx.swiss/react';
-import Eth from '@ledgerhq/hw-app-eth';
+import EthClient from '@ledgerhq/hw-app-eth';
 import Transport from '@ledgerhq/hw-transport';
 import TransportWebHID from '@ledgerhq/hw-transport-webhid';
-import AppClient, { DefaultWalletPolicy } from 'ledger-bitcoin';
+import BtcClient, { DefaultWalletPolicy } from 'ledger-bitcoin';
 import { useState } from 'react';
 import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
@@ -23,51 +23,32 @@ export function useLedger(): LedgerInterface {
   const rootPathBtc = "84'/0'/0'";
   const rootPathEth = "44'/60'/0'";
 
-  let tmpClient: AppClient;
-  const [appClient, setAppClient] = useState<AppClient>();
-
-  let tmpEthClient: Eth;
-  const [ethClient, setEthClient] = useState<Eth>();
-
   const [transport, setTransport] = useState<Transport>();
+
+  let tmpBtcClient: BtcClient;
+  const [btcClient, setBtcClient] = useState<BtcClient>();
+
+  let tmpEthClient: EthClient;
+  const [ethClient, setEthClient] = useState<EthClient>();
 
   async function isSupported(): Promise<boolean> {
     return TransportWebHID.isSupported();
   }
 
   async function connect(blockchain: Blockchain): Promise<string> {
-    return blockchain == Blockchain.BITCOIN ? connectBtc() : connectEth();
+    return blockchain === Blockchain.BITCOIN ? connectBtc() : connectEth();
   }
 
   async function connectBtc(): Promise<string> {
-    const client = appClient ?? (await setupBtcConnection());
+    const client = btcClient ?? (await setupBtcConnection());
 
-    tmpClient = client;
-    setAppClient(client);
+    tmpBtcClient = client;
+    setBtcClient(client);
 
-    try {
-      return await timeout(fetchBtcAddress(client), 5000);
-    } catch (e) {
-      const { name, message, statusText } = e as LedgerError;
-
-      if (message?.includes('Timeout')) {
-        client.transport.close();
-        setAppClient(undefined);
-        throw new TranslatedError('Connection timed out. Please retry.');
-      } else if (name === 'LockedDeviceError') {
-        throw new TranslatedError('Please unlock your Ledger');
-      } else if (name === 'TransportRaceCondition') {
-        throw new TranslatedError('There is already a request pending. Please reload the page and retry.');
-      } else if (statusText === 'CLA_NOT_SUPPORTED') {
-        throw new TranslatedError(
-          'You are using a wrong or outdated Ledger app. Please install the newest version of the Bitcoin app on your Ledger.',
-        );
-      } else if (statusText === 'UNKNOWN_ERROR') {
-        throw new TranslatedError('Please open the Bitcoin app on your Ledger');
-      }
-
-      throw e;
-    }
+    return fetchAddress(fetchBtcAddress(client), () => {
+      client.transport.close();
+      setBtcClient(undefined);
+    });
   }
 
   async function connectEth(): Promise<string> {
@@ -76,14 +57,20 @@ export function useLedger(): LedgerInterface {
     tmpEthClient = client;
     setEthClient(client);
 
+    return fetchAddress(fetchEthAddress(client), () => {
+      client.transport.close();
+      setEthClient(undefined);
+    });
+  }
+
+  async function fetchAddress(addressFetch: Promise<string>, onTimeout: () => void): Promise<string> {
     try {
-      return await timeout(fetchEthAddress(client), 5000);
+      return await timeout(addressFetch, 5000);
     } catch (e) {
       const { name, message, statusText } = e as LedgerError;
 
       if (message?.includes('Timeout')) {
-        client.transport.close();
-        setAppClient(undefined);
+        onTimeout();
         throw new TranslatedError('Connection timed out. Please retry.');
       } else if (name === 'LockedDeviceError') {
         throw new TranslatedError('Please unlock your Ledger');
@@ -101,11 +88,12 @@ export function useLedger(): LedgerInterface {
     }
   }
 
-  async function setupBtcConnection(): Promise<AppClient> {
+  async function setupTransport(): Promise<Transport> {
     try {
       const tmpTransport = transport ?? (await TransportWebHID.create());
       setTransport(tmpTransport);
-      return new AppClient(tmpTransport);
+
+      return tmpTransport;
     } catch (e) {
       const { name } = e as Error;
 
@@ -117,23 +105,17 @@ export function useLedger(): LedgerInterface {
     }
   }
 
-  async function setupEthConnection(): Promise<Eth> {
-    try {
-      const tmpTransport = transport ?? (await TransportWebHID.create());
-      setTransport(tmpTransport);
-      return new Eth(tmpTransport);
-    } catch (e) {
-      const { name } = e as Error;
-
-      if (name === 'TransportOpenUserCancelled') {
-        throw new TranslatedError('Please connect your Ledger');
-      }
-
-      throw e;
-    }
+  async function setupBtcConnection(): Promise<BtcClient> {
+    const tmpTransport = await setupTransport();
+    return new BtcClient(tmpTransport);
   }
 
-  async function fetchBtcAddress(client: AppClient): Promise<string> {
+  async function setupEthConnection(): Promise<EthClient> {
+    const tmpTransport = await setupTransport();
+    return new EthClient(tmpTransport);
+  }
+
+  async function fetchBtcAddress(client: BtcClient): Promise<string> {
     const fpr = await client.getMasterFingerprint();
     const pubKey = await client.getExtendedPubkey(`m/${rootPathBtc}`);
     const policy = new DefaultWalletPolicy('wpkh(@0/**)', `[${fpr}/${rootPathBtc}]${pubKey}`);
@@ -141,9 +123,8 @@ export function useLedger(): LedgerInterface {
     return client.getWalletAddress(policy, null, 0, 0, false);
   }
 
-  async function fetchEthAddress(client: Eth): Promise<string> {
-    const { address } = await client.getAddress("44'/60'/0'/0/0", false, false);
-    return address;
+  async function fetchEthAddress(client: EthClient): Promise<string> {
+    return client.getAddress("44'/60'/0'/0/0", false, false).then((r) => r.address);
   }
 
   async function signMessage(msg: string, blockchain: Blockchain): Promise<string> {
@@ -151,7 +132,7 @@ export function useLedger(): LedgerInterface {
   }
 
   async function signBtcMessage(msg: string): Promise<string> {
-    const client = appClient ?? tmpClient;
+    const client = btcClient ?? tmpBtcClient;
     if (!client) throw new Error('Ledger not connected');
 
     try {
@@ -171,7 +152,6 @@ export function useLedger(): LedgerInterface {
     const client = ethClient ?? tmpEthClient;
     if (!client) throw new Error('Ledger not connected');
 
-    console.log(msg);
     try {
       const signature = await client.signPersonalMessage(`m/${rootPathEth}/0/0`, Buffer.from(msg).toString('hex'));
       return '0x' + signature.r + signature.s + signature.v.toString(16);

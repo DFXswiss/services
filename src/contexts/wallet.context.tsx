@@ -107,7 +107,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     blockchain?: Blockchain,
     usedAddress?: string,
   ): Promise<string> {
-    const address = await connect(wallet, usedAddress, blockchain);
+    const address = await connect(wallet, blockchain, usedAddress);
 
     try {
       // show signature hint
@@ -126,8 +126,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     return address;
   }
 
-  async function connect(wallet: WalletType, usedAddress?: string, usedBlockchain?: Blockchain): Promise<string> {
-    const [address, blockchain] = await readData(wallet, usedAddress, usedBlockchain);
+  async function connect(wallet: WalletType, usedBlockchain?: Blockchain, usedAddress?: string): Promise<string> {
+    const [address, blockchain] = await readData(wallet, usedBlockchain, usedAddress);
 
     setActiveWallet(wallet);
     activeWalletStore.set(wallet);
@@ -153,8 +153,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
   async function readData(
     wallet: WalletType,
-    address?: string,
     usedBlockchain?: Blockchain,
+    address?: string,
   ): Promise<[string, Blockchain | undefined]> {
     switch (wallet) {
       case WalletType.META_MASK:
@@ -173,9 +173,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         return [address, Blockchain.LIGHTNING];
 
       case WalletType.LEDGER:
-        setLedgerBlockchain(usedBlockchain);
-        address ??= await ledger.connect(usedBlockchain ?? Blockchain.BITCOIN);
-        return [address, usedBlockchain ?? Blockchain.BITCOIN];
+        if (!usedBlockchain) throw new Error('Blockchain not specified');
+
+        address ??= await ledger.connect(usedBlockchain);
+        return [address, usedBlockchain];
     }
   }
 
@@ -211,7 +212,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         return alby.signMessage(message);
 
       case WalletType.LEDGER:
-        return await ledger.signMessage(message, blockchain ?? Blockchain.BITCOIN);
+        if (!blockchain) throw new Error('Blockchain not specified');
+
+        return await ledger.signMessage(message, blockchain);
 
       default:
         throw new Error('No wallet active');
