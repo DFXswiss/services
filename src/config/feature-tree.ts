@@ -914,10 +914,7 @@ export const FeatureTree: Page[] = [
       {
         id: 'alby',
         img: 'alby',
-        wallet: {
-          type: WalletType.ALBY,
-          blockchain: Blockchain.LIGHTNING,
-        },
+        disabled: true,
       },
       {
         id: 'metamask',

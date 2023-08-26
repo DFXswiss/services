@@ -380,6 +380,7 @@ function ConnectHint({
         'Connect your Ledger with your computer',
         'Open the Bitcoin app on your Ledger',
         'Click on "Connect"',
+        'Confirm "Sign message" on your ledger',
       ];
 
       return (
