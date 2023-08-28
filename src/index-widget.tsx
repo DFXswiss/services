@@ -4,11 +4,14 @@ import MainWidget from './Main.widget';
 import './index.css';
 
 const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'function' | 'json' } = {
+  lang: 'string',
   address: 'string',
   signature: 'string',
   wallet: 'string',
+  refCode: 'string',
   session: 'string',
   redirectUri: 'string',
+  mode: 'string',
   blockchain: 'string',
   balances: 'string',
   amountIn: 'string',

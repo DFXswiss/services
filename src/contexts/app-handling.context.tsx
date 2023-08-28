@@ -7,12 +7,16 @@ import { url } from '../util/utils';
 import { useBalanceContext } from './balance.context';
 
 // --- INTERFACES --- //
+// CAUTION: params need to be added to index-widget.tsx
 const urlParams = [
+  'lang',
   'address',
   'signature',
   'wallet',
+  'ref-code',
   'session',
   'redirect-uri',
+  'mode',
   'blockchain',
   'balances',
   'amount-in',
@@ -24,11 +28,14 @@ const urlParams = [
 ];
 
 export interface AppParams {
+  lang?: string;
   address?: string;
   signature?: string;
   wallet?: string;
+  refCode?: string;
   session?: string;
   redirectUri?: string;
+  mode?: string;
   blockchain?: string;
   balances?: string;
   amountIn?: string;
@@ -147,11 +154,14 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
   function extractUrlParams(): AppParams {
     return {
+      lang: getParameter(query, 'lang'),
       address: getParameter(query, 'address'),
       signature: getParameter(query, 'signature'),
       wallet: getParameter(query, 'wallet'),
+      refCode: getParameter(query, 'ref-code'),
       session: getParameter(query, 'session'),
       redirectUri: getParameter(query, 'redirect-uri'),
+      mode: getParameter(query, 'mode'),
       blockchain: getParameter(query, 'blockchain'),
       balances: getParameter(query, 'balances'),
       amountIn: getParameter(query, 'amount-in'),
@@ -173,7 +183,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
   async function checkSession(params: AppParams): Promise<boolean> {
     if (params.address && params.signature) {
-      const session = await createSession(params.address, params.signature, params.wallet);
+      const session = await createSession(params.address, params.signature, params.wallet, params.refCode);
       if (session) {
         return true;
       } else {
@@ -188,9 +198,14 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     return false;
   }
 
-  async function createSession(address: string, signature: string, wallet?: string): Promise<string | undefined> {
+  async function createSession(
+    address: string,
+    signature: string,
+    wallet?: string,
+    refCode?: string,
+  ): Promise<string | undefined> {
     try {
-      return (await login(address, signature)) ?? (await signUp(address, signature, wallet));
+      return (await login(address, signature)) ?? (await signUp(address, signature, wallet, refCode));
     } catch (e) {
       console.error('Failed to create session:', e);
     }
