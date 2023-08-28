@@ -55,8 +55,6 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const [activeAddress, setActiveAddress] = useState<string>();
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
 
-  const [ledgerBlockchain, setLedgerBlockchain] = useState<Blockchain>();
-
   const [mmAddress, setMmAddress] = useState<string>();
   const [mmBlockchain, setMmBlockchain] = useState<Blockchain>();
 
@@ -140,12 +138,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         break;
 
       case WalletType.ALBY:
-        setActiveAddress(address);
-        break;
-
       case WalletType.LEDGER_BTC:
-        setActiveAddress(address);
-        break;
       case WalletType.LEDGER_ETH:
         setActiveAddress(address);
         break;
@@ -172,12 +165,11 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         return [address, Blockchain.LIGHTNING];
 
       case WalletType.LEDGER_BTC:
-        address ??= await ledger.connect(Blockchain.BITCOIN);
-        return [address, Blockchain.BITCOIN];
-
       case WalletType.LEDGER_ETH:
-        address ??= await ledger.connect(Blockchain.ETHEREUM);
-        return [address, Blockchain.ETHEREUM];
+        const ledgerBlockchain = getLedgerBlockchain(wallet);
+
+        address ??= await ledger.connect(ledgerBlockchain);
+        return [address, ledgerBlockchain];
     }
   }
 
@@ -208,10 +200,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         return alby.signMessage(message);
 
       case WalletType.LEDGER_BTC:
-        return await ledger.signMessage(message, Blockchain.BITCOIN);
-
       case WalletType.LEDGER_ETH:
-        return await ledger.signMessage(message, Blockchain.ETHEREUM);
+        return await ledger.signMessage(message, getLedgerBlockchain(wallet));
 
       default:
         throw new Error('No wallet active');
@@ -223,8 +213,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
     if (metaMask.isInstalled()) wallets.push(WalletType.META_MASK);
     if (alby.isInstalled()) wallets.push(WalletType.ALBY);
-    if (await ledger.isSupported()) wallets.push(WalletType.LEDGER_BTC);
-    if (await ledger.isSupported()) wallets.push(WalletType.LEDGER_ETH);
+    if (await ledger.isSupported()) wallets.push(WalletType.LEDGER_BTC, WalletType.LEDGER_ETH);
 
     return wallets;
   }
@@ -259,8 +248,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     }
   }
 
-  function getAddress(): string | undefined {
-    switch (activeWallet) {
+  function getAddress(wallet?: WalletType): string | undefined {
+    switch (wallet ?? activeWallet) {
       case WalletType.META_MASK:
         return mmAddress;
 
@@ -274,8 +263,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     }
   }
 
-  function getBlockchain(): Blockchain | undefined {
-    switch (activeWallet) {
+  function getBlockchain(wallet?: WalletType): Blockchain | undefined {
+    switch (wallet ?? activeWallet) {
       case WalletType.META_MASK:
         return mmBlockchain;
 
@@ -291,6 +280,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       default:
         return undefined;
     }
+  }
+
+  function getLedgerBlockchain(wallet: WalletType.LEDGER_BTC | WalletType.LEDGER_ETH): Blockchain {
+    return getBlockchain(wallet) as Blockchain;
   }
 
   async function switchBlockchain(to: Blockchain, wallet?: WalletType): Promise<void> {
@@ -342,7 +335,6 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       metaMask,
       alby,
       ledger,
-      ledgerBlockchain,
       api,
       hasBalance,
       getParamBalances,

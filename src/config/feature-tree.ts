@@ -973,14 +973,11 @@ export const FeatureTree: Page[] = [
         disabled: true,
       },
       {
-        id: 'ledger-btc',
+        id: 'ledger',
         img: 'ledger',
-        wallet: { type: WalletType.LEDGER_BTC },
-      },
-      {
-        id: 'ledger-eth',
-        img: 'ledger',
-        wallet: { type: WalletType.LEDGER_ETH },
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
+        }),
       },
       {
         id: 'trezor',

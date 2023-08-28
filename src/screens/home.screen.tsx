@@ -20,7 +20,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useDeferredPromise } from '../hooks/deferred-promise.hook';
-import { Tile, Wallet, useFeatureTree } from '../hooks/feature-tree.hook';
+import { Tile, Wallet, isWallet, useFeatureTree } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useStore } from '../hooks/store.hook';
 import { AbortError } from '../util/abort-error';
@@ -36,8 +36,8 @@ export function HomeScreen(): JSX.Element {
   const { showsSignatureInfo } = useStore();
   const { navigate } = useNavigation();
   const { search } = useLocation();
-  const { getTiles, setOptions } = useFeatureTree();
-  const { blockchain: paramBlockchain } = useAppParams();
+  const { getTiles, getWallet, setOptions } = useFeatureTree();
+  const appParams = useAppParams();
 
   const [isConnectingTo, setIsConnectingTo] = useState<Wallet>();
   const [connectError, setConnectError] = useState<string>();
@@ -81,8 +81,8 @@ export function HomeScreen(): JSX.Element {
 
   // tile handling
   function handleNext(tile: Tile) {
-    if (tile.wallet) {
-      connectWallet(tile.wallet);
+    if (isWallet(tile)) {
+      connectWallet(getWallet(tile, appParams));
     } else if (tile.next) {
       if (tile.next.options) setOptions(tile.next.options);
       const page = { page: tile.next.page, allowedTiles: tile.next.tiles };
@@ -143,7 +143,7 @@ export function HomeScreen(): JSX.Element {
   }
 
   async function doLogin(wallet: WalletType, blockchain?: Blockchain, address?: string) {
-    const selectedChain = blockchain ?? (paramBlockchain as Blockchain);
+    const selectedChain = blockchain ?? (appParams.blockchain as Blockchain);
 
     return activeWallet === wallet
       ? selectedChain && switchBlockchain(selectedChain)
@@ -253,10 +253,11 @@ function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: () => v
   switch (type) {
     case WalletType.META_MASK:
       return <MetaMaskHint onConfirm={onConfirm} />;
+
     case WalletType.ALBY:
       return <AlbyHint onConfirm={onConfirm} />;
+
     case WalletType.LEDGER_BTC:
-      return <LedgerHint onConfirm={onConfirm} />;
     case WalletType.LEDGER_ETH:
       return <LedgerHint onConfirm={onConfirm} />;
   }
@@ -378,9 +379,11 @@ function ConnectHint({
       );
 
     case WalletType.LEDGER_BTC:
+    case WalletType.LEDGER_ETH:
+      const app = type === WalletType.LEDGER_BTC ? 'Bitcoin' : 'Ethereum';
       const steps = [
         'Connect your Ledger with your computer',
-        'Open the Bitcoin app on your Ledger',
+        'Open the {{app}} app on your Ledger',
         'Click on "Connect"',
         'Confirm "Sign message" on your ledger',
       ];
@@ -400,56 +403,13 @@ function ConnectHint({
             <ol className="text-dfxBlue-800 text-left font-bold list-decimal">
               {steps.map((s, i) => (
                 <li key={i} className="list-inside">
-                  {translate('screens/home', s)}
+                  {translate('screens/home', s, { app })}
                 </li>
               ))}
             </ol>
 
             <img
-              src="https://content.dfx.swiss/img/v1/services/ledgerbitcoinready_en.png"
-              className="w-full max-w-sm"
-            />
-
-            <StyledButton
-              label={translate('general/actions', 'Connect')}
-              onClick={onRetry}
-              width={StyledButtonWidth.MIN}
-              className="self-center"
-            />
-          </StyledVerticalStack>
-        </>
-      );
-
-    case WalletType.LEDGER_ETH:
-      const ethSteps = [
-        'Connect your Ledger with your computer',
-        'Open the Ethereum app on your Ledger',
-        'Click on "Connect"',
-        'Confirm "Sign message" on your ledger',
-      ];
-
-      return (
-        <>
-          <StyledVerticalStack gap={5} center>
-            {error ? (
-              <div>
-                <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
-                <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
-              </div>
-            ) : (
-              <StyledLoadingSpinner size={SpinnerSize.LG} />
-            )}
-
-            <ol className="text-dfxBlue-800 text-left font-bold list-decimal">
-              {ethSteps.map((s, i) => (
-                <li key={i} className="list-inside">
-                  {translate('screens/home', s)}
-                </li>
-              ))}
-            </ol>
-
-            <img
-              src="https://content.dfx.swiss/img/v1/services/ledgerethereumready_en.png"
+              src={`https://content.dfx.swiss/img/v1/services/ledger${app.toLowerCase()}ready_en.png`}
               className="w-full max-w-sm"
             />
 
