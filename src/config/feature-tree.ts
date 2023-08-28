@@ -912,14 +912,14 @@ export const FeatureTree: Page[] = [
         id: 'bitcoinonly-buy',
         img: 'kaufen',
         next: {
-          page: 'buy',
+          page: 'bitcoinonly-buy',
         },
       },
       {
         id: 'bitcoinonly-sell',
         img: 'verkaufen',
         next: {
-          page: 'sell',
+          page: 'bitcoinonly-sell',
         },
       },
     ],
@@ -932,7 +932,7 @@ export const FeatureTree: Page[] = [
         img: 'bitcoinlightning',
         next: {
           page: 'wallets',
-          tiles: ['dfx-wallet', 'hw-wallet', 'alby', 'cli'],
+          tiles: ['dfx-wallet', 'hw-wallet', 'alby'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
@@ -949,7 +949,7 @@ export const FeatureTree: Page[] = [
         img: 'bitcoinlightning',
         next: {
           page: 'wallets',
-          tiles: ['dfx-wallet', 'alby', 'cli'],
+          tiles: ['dfx-wallet', 'alby'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
@@ -1042,7 +1042,7 @@ export const FeatureTree: Page[] = [
         img: 'eth',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask',
+          tiles: ['hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
