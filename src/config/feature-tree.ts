@@ -108,7 +108,7 @@ export const FeatureTree: Page[] = [
         img: 'eth',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
@@ -120,7 +120,7 @@ export const FeatureTree: Page[] = [
         img: 'wbtc',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
@@ -139,7 +139,7 @@ export const FeatureTree: Page[] = [
         img: 'othersethereum',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
@@ -156,7 +156,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
@@ -168,7 +168,7 @@ export const FeatureTree: Page[] = [
         img: 'usdc',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
@@ -180,7 +180,7 @@ export const FeatureTree: Page[] = [
         img: 'dai',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DAI' },
@@ -192,7 +192,7 @@ export const FeatureTree: Page[] = [
         img: 'othersethereum',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
@@ -209,7 +209,7 @@ export const FeatureTree: Page[] = [
         img: 'eth',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
@@ -221,7 +221,7 @@ export const FeatureTree: Page[] = [
         img: 'wbtc',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
@@ -240,7 +240,7 @@ export const FeatureTree: Page[] = [
         img: 'othersarbitrum',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
@@ -257,7 +257,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
@@ -269,7 +269,7 @@ export const FeatureTree: Page[] = [
         img: 'usdc',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
@@ -281,7 +281,7 @@ export const FeatureTree: Page[] = [
         img: 'dai',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'DAI' },
@@ -293,7 +293,7 @@ export const FeatureTree: Page[] = [
         img: 'othersarbitrum',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
@@ -310,7 +310,7 @@ export const FeatureTree: Page[] = [
         img: 'eth',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
@@ -329,7 +329,7 @@ export const FeatureTree: Page[] = [
         img: 'othersoptimism',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
@@ -346,7 +346,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
@@ -358,7 +358,7 @@ export const FeatureTree: Page[] = [
         img: 'xchf',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'XCHF' },
@@ -370,7 +370,7 @@ export const FeatureTree: Page[] = [
         img: 'othersoptimism',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
@@ -387,7 +387,7 @@ export const FeatureTree: Page[] = [
         img: 'bnb',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'BNB' },
@@ -399,7 +399,7 @@ export const FeatureTree: Page[] = [
         img: 'wbtc',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'WBTC' },
@@ -418,7 +418,7 @@ export const FeatureTree: Page[] = [
         img: 'othersbinancesmartchain',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
@@ -435,7 +435,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'USDT' },
@@ -447,7 +447,7 @@ export const FeatureTree: Page[] = [
         img: 'dai',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'DAI' },
@@ -459,7 +459,7 @@ export const FeatureTree: Page[] = [
         img: 'othersbinancesmartchain',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
@@ -543,7 +543,7 @@ export const FeatureTree: Page[] = [
         img: 'eth',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: 'ETH' },
@@ -555,7 +555,7 @@ export const FeatureTree: Page[] = [
         img: 'wbtc',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: 'WBTC' },
@@ -574,7 +574,7 @@ export const FeatureTree: Page[] = [
         img: 'othersethereum',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
@@ -591,7 +591,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: 'USDT' },
@@ -603,7 +603,7 @@ export const FeatureTree: Page[] = [
         img: 'usdc',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: 'USDC' },
@@ -615,7 +615,7 @@ export const FeatureTree: Page[] = [
         img: 'dai',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: 'DAI' },
@@ -627,7 +627,7 @@ export const FeatureTree: Page[] = [
         img: 'othersethereum',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
@@ -644,7 +644,7 @@ export const FeatureTree: Page[] = [
         img: 'eth',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: 'ETH' },
@@ -656,7 +656,7 @@ export const FeatureTree: Page[] = [
         img: 'wbtc',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: 'WBTC' },
@@ -675,7 +675,7 @@ export const FeatureTree: Page[] = [
         img: 'othersarbitrum',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
@@ -692,7 +692,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: 'USDT' },
@@ -704,7 +704,7 @@ export const FeatureTree: Page[] = [
         img: 'usdc',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: 'USDC' },
@@ -716,7 +716,7 @@ export const FeatureTree: Page[] = [
         img: 'dai',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: 'DAI' },
@@ -728,7 +728,7 @@ export const FeatureTree: Page[] = [
         img: 'othersarbitrum',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
@@ -745,7 +745,7 @@ export const FeatureTree: Page[] = [
         img: 'eth',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.OPTIMISM, assetIn: 'ETH' },
@@ -764,7 +764,7 @@ export const FeatureTree: Page[] = [
         img: 'othersoptimism',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
@@ -781,7 +781,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.OPTIMISM, assetIn: 'USDT' },
@@ -793,7 +793,7 @@ export const FeatureTree: Page[] = [
         img: 'xchf',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.OPTIMISM, assetIn: 'XCHF' },
@@ -805,7 +805,7 @@ export const FeatureTree: Page[] = [
         img: 'othersoptimism',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
@@ -822,7 +822,7 @@ export const FeatureTree: Page[] = [
         img: 'bnb',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'BNB' },
@@ -834,7 +834,7 @@ export const FeatureTree: Page[] = [
         img: 'wbtc',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'WBTC' },
@@ -853,7 +853,7 @@ export const FeatureTree: Page[] = [
         img: 'othersbinancesmartchain',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
@@ -870,7 +870,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'USDT' },
@@ -882,7 +882,7 @@ export const FeatureTree: Page[] = [
         img: 'dai',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'DAI' },
@@ -894,7 +894,7 @@ export const FeatureTree: Page[] = [
         img: 'othersbinancesmartchain',
         next: {
           page: 'wallets',
-          tiles: ['metamask', 'cli'],
+          tiles: ['metamask', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
