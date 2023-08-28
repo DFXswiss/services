@@ -971,7 +971,7 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'sell',
+        id: 'marcsteiner-sell',
         img: 'verkaufen',
         next: {
           page: 'sell',
@@ -998,7 +998,7 @@ export const FeatureTree: Page[] = [
         id: 'marcsteiner-buy-erc20',
         img: 'ethereumarbitrumoptimismpolygon',
         next: {
-          page: 'buy-erc20',
+          page: 'marcsteiner-buy-erc20',
         },
       },
     ],
@@ -1189,6 +1189,30 @@ export const FeatureTree: Page[] = [
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDC' },
           },
+        },
+      },
+    ],
+  },
+  {
+    id: 'marcsteiner-sell',
+    tiles: [
+      {
+        id: 'bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'wallets',
+          tiles: ['dfx-wallet', 'alby', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
+          },
+        },
+      },
+      {
+        id: 'erc20',
+        img: 'ethereumarbitrumoptimismpolygon',
+        next: {
+          page: 'sell-erc20',
         },
       },
     ],
