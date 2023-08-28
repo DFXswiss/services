@@ -3,6 +3,11 @@ import { WalletType } from '../contexts/wallet.context';
 import { Page } from '../hooks/feature-tree.hook';
 
 export const FeatureTree: Page[] = [
+
+  // Änderungen: 
+  // Bitcoin Only eingebaut 
+  // Marc Steiner angepasst
+
   {
     id: 'home',
     tiles: [
@@ -49,19 +54,27 @@ export const FeatureTree: Page[] = [
           page: 'sell',
         },
       },
-      {
-        id: 'convert',
-        img: 'tauschen',
-        disabled: true,
-      },
-      {
-        id: 'send',
-        img: 'senden',
-        disabled: true,
-      },
     ],
   },
-  
+  {
+    id: 'bitcoinonly',
+    tiles: [
+      {
+        id: 'bitcoinonly-buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
+      },
+      {
+        id: 'bitcoinonly-sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
+      },
+    ],
+  },  
   {
     id: 'kevinsoell',
     tiles: [
@@ -118,6 +131,23 @@ export const FeatureTree: Page[] = [
         img: 'binancesmartchain',
         next: {
           page: 'buy-bsc',
+        },
+      },
+    ],
+  },
+  {
+    id: 'bitcoinonly-buy',
+    tiles: [
+      {
+        id: 'bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'wallets',
+          tiles: ['dfx-wallet', 'hw-wallet', 'alby', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+          },
         },
       },
     ],
@@ -557,7 +587,23 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
-
+  {
+    id: 'bitcoinonly-sell',
+    tiles: [
+      {
+        id: 'bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'wallets',
+          tiles: ['dfx-wallet', 'alby', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
+          },
+        },
+      },
+    ],
+  },
   {
     id: 'sell-erc20',
     tiles: [
@@ -1012,4 +1058,3 @@ export const FeatureTree: Page[] = [
     ],
   },
 ];
-// Kommentar von mir 
