@@ -968,8 +968,15 @@ export const FeatureTree: Page[] = [
     id: 'hw-wallets',
     tiles: [
       {
-        id: 'bitbox',
+        id: 'bitbox-btc',
         img: 'bitbox',
+        wallet: { type: WalletType.BITBOX_BTC },
+        disabled: true,
+      },
+      {
+        id: 'bitbox-eth',
+        img: 'bitbox',
+        wallet: { type: WalletType.BITBOX_ETH },
         disabled: true,
       },
       {
