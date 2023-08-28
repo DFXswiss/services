@@ -3,11 +3,7 @@ import { WalletType } from '../contexts/wallet.context';
 import { Page } from '../hooks/feature-tree.hook';
 
 export const FeatureTree: Page[] = [
-
-  // Änderungen: 
-  // Bitcoin Only eingebaut 
-  // Marc Steiner angepasst
-
+  // --- DEFAULT CONFIG --- //
   {
     id: 'home',
     tiles: [
@@ -33,68 +29,6 @@ export const FeatureTree: Page[] = [
       {
         id: 'send',
         img: 'senden',
-        disabled: true,
-      },
-    ],
-  },
-  {
-    id: 'marcsteiner',
-    tiles: [
-      {
-        id: 'marcsteiner-buy',
-        img: 'kaufen',
-        next: {
-          page: 'buy',
-        },
-      },
-      {
-        id: 'sell',
-        img: 'verkaufen',
-        next: {
-          page: 'sell',
-        },
-      },
-    ],
-  },
-  {
-    id: 'bitcoinonly',
-    tiles: [
-      {
-        id: 'bitcoinonly-buy',
-        img: 'kaufen',
-        next: {
-          page: 'buy',
-        },
-      },
-      {
-        id: 'bitcoinonly-sell',
-        img: 'verkaufen',
-        next: {
-          page: 'sell',
-        },
-      },
-    ],
-  },  
-  {
-    id: 'kevinsoell',
-    tiles: [
-      {
-        id: 'buy',
-        img: 'kaufen',
-        next: {
-          page: 'buy',
-        },
-      },
-      {
-        id: 'sell',
-        img: 'verkaufen',
-        next: {
-          page: 'sell',
-        },
-      },
-      {
-        id: 'convert',
-        img: 'tauschen',
         disabled: true,
       },
     ],
@@ -136,47 +70,6 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
-    id: 'bitcoinonly-buy',
-    tiles: [
-      {
-        id: 'bitcoin',
-        img: 'bitcoinlightning',
-        next: {
-          page: 'wallets',
-          tiles: ['dfx-wallet', 'hw-wallet', 'alby', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
-          },
-        },
-      },
-    ],
-  },
-  {
-    id: 'marcsteiner-buy',
-    tiles: [
-      {
-        id: 'bitcoin',
-        img: 'bitcoinlightning',
-        next: {
-          page: 'wallets',
-          tiles: ['dfx-wallet', 'hw-wallet', 'alby', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
-          },
-        },
-      },
-      {
-        id: 'marcsteiner-buy-erc20',
-        img: 'ethereumarbitrumoptimismpolygon',
-        next: {
-          page: 'buy-erc20',
-        },
-      },
-    ],
-  },
-  {
     id: 'buy-erc20',
     tiles: [
       {
@@ -198,37 +91,6 @@ export const FeatureTree: Page[] = [
         img: 'optimism',
         next: {
           page: 'buy-optimism',
-        },
-      },
-      {
-        id: 'polygon',
-        img: 'polygon',
-        disabled: true,
-      },
-    ],
-  },
-  {
-    id: 'marcsteiner-buy-erc20',
-    tiles: [
-      {
-        id: 'ethereum',
-        img: 'ethereum',
-        next: {
-          page: 'marcsteiner-buy-ethereum',
-        },
-      },
-      {
-        id: 'arbitrum',
-        img: 'arbitrum',
-        next: {
-          page: 'marcsteiner-buy-arbitrum',
-        },
-      },
-      {
-        id: 'optimism',
-        img: 'optimism',
-        next: {
-          page: 'marcsteiner-buy-optimism',
         },
       },
       {
@@ -281,165 +143,6 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
-          },
-        },
-      },
-    ],
-  },
-  {
-    id: 'marcsteiner-buy-ethereum',
-    tiles: [
-      {
-        id: 'eth',
-        img: 'eth',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
-          },
-        },
-      },
-      {
-        id: 'wbtc',
-        img: 'wbtc',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
-          },
-        },
-      },
-      {
-        id: 'usdt',
-        img: 'usdt',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
-          },
-        },
-      },
-      {
-        id: 'usdc',
-        img: 'usdc',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
-          },
-        },
-      },
-    ],
-  },
-  {
-    id: 'marcsteiner-buy-arbitrum',
-    tiles: [
-      {
-        id: 'eth',
-        img: 'eth',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
-          },
-        },
-      },
-      {
-        id: 'wbtc',
-        img: 'wbtc',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
-          },
-        },
-      },
-      {
-        id: 'usdt',
-        img: 'usdt',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
-          },
-        },
-      },
-      {
-        id: 'usdc',
-        img: 'usdc',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
-          },
-        },
-      },
-    ],
-  },
-  {
-    id: 'marcsteiner-buy-optimism',
-    tiles: [
-      {
-        id: 'eth',
-        img: 'eth',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
-          },
-        },
-      },
-      {
-        id: 'wbtc',
-        img: 'wbtc',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
-          },
-        },
-      },
-      {
-        id: 'usdt',
-        img: 'usdt',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
-          },
-        },
-      },
-      {
-        id: 'usdc',
-        img: 'usdc',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDC' },
           },
         },
       },
@@ -797,23 +500,6 @@ export const FeatureTree: Page[] = [
         img: 'binancesmartchain',
         next: {
           page: 'sell-bsc',
-        },
-      },
-    ],
-  },
-  {
-    id: 'bitcoinonly-sell',
-    tiles: [
-      {
-        id: 'bitcoin',
-        img: 'bitcoinlightning',
-        next: {
-          page: 'wallets',
-          tiles: ['dfx-wallet', 'alby', 'cli'],
-          options: {
-            service: 'sell',
-            query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
-          },
         },
       },
     ],
@@ -1217,6 +903,324 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
+
+  // --- BITCOIN ONLY --- //
+  {
+    id: 'bitcoinonly',
+    tiles: [
+      {
+        id: 'bitcoinonly-buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
+      },
+      {
+        id: 'bitcoinonly-sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
+      },
+    ],
+  },
+  {
+    id: 'bitcoinonly-buy',
+    tiles: [
+      {
+        id: 'bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'wallets',
+          tiles: ['dfx-wallet', 'hw-wallet', 'alby', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'bitcoinonly-sell',
+    tiles: [
+      {
+        id: 'bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'wallets',
+          tiles: ['dfx-wallet', 'alby', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
+          },
+        },
+      },
+    ],
+  },
+
+  // --- MARC STEINER --- //
+  {
+    id: 'marcsteiner',
+    tiles: [
+      {
+        id: 'marcsteiner-buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
+      },
+      {
+        id: 'sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
+      },
+    ],
+  },
+  {
+    id: 'marcsteiner-buy',
+    tiles: [
+      {
+        id: 'bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'wallets',
+          tiles: ['dfx-wallet', 'hw-wallet', 'alby', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+          },
+        },
+      },
+      {
+        id: 'marcsteiner-buy-erc20',
+        img: 'ethereumarbitrumoptimismpolygon',
+        next: {
+          page: 'buy-erc20',
+        },
+      },
+    ],
+  },
+  {
+    id: 'marcsteiner-buy-erc20',
+    tiles: [
+      {
+        id: 'ethereum',
+        img: 'ethereum',
+        next: {
+          page: 'marcsteiner-buy-ethereum',
+        },
+      },
+      {
+        id: 'arbitrum',
+        img: 'arbitrum',
+        next: {
+          page: 'marcsteiner-buy-arbitrum',
+        },
+      },
+      {
+        id: 'optimism',
+        img: 'optimism',
+        next: {
+          page: 'marcsteiner-buy-optimism',
+        },
+      },
+      {
+        id: 'polygon',
+        img: 'polygon',
+        disabled: true,
+      },
+    ],
+  },
+  {
+    id: 'marcsteiner-buy-ethereum',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'marcsteiner-buy-arbitrum',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'marcsteiner-buy-optimism',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDC' },
+          },
+        },
+      },
+    ],
+  },
+
+  // --- KEVIN SOELL --- //
+  {
+    id: 'kevinsoell',
+    tiles: [
+      {
+        id: 'buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
+      },
+      {
+        id: 'sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
+      },
+      {
+        id: 'convert',
+        img: 'tauschen',
+        disabled: true,
+      },
+    ],
+  },
+
+  // --- WALLETS --- //
   {
     id: 'wallets',
     tiles: [
