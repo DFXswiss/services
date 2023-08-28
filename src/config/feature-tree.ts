@@ -1231,6 +1231,11 @@ export const FeatureTree: Page[] = [
         disabled: true,
       },
       {
+        id: 'walletconnect',
+        img: 'walletconnect',
+        disabled: true,
+      },
+      {
         id: 'metamask',
         img: 'metamaskrabby',
         wallet: { type: WalletType.META_MASK },
