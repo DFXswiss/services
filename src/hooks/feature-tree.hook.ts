@@ -20,7 +20,7 @@ export interface BaseTile {
   img: string;
   disabled?: boolean;
   next?: Next;
-  wallet?: Wallet;
+  wallet?: Wallet | WalletSelector;
 }
 
 export interface DefaultTile extends BaseTile {
@@ -32,7 +32,7 @@ export interface DisabledTile extends BaseTile {
 }
 
 export interface WalletTile extends BaseTile {
-  wallet: Wallet;
+  wallet: Wallet | WalletSelector;
 }
 
 export interface Next {
@@ -46,6 +46,8 @@ export interface Wallet {
   blockchain?: Blockchain;
 }
 
+export type WalletSelector = (params: AppParams) => Wallet;
+
 export interface Options {
   service?: string;
   query?: Query;
@@ -53,10 +55,15 @@ export interface Options {
 
 type Query = { [k in keyof AppParams]: string };
 
+export function isWallet(tile: Tile): tile is WalletTile {
+  return tile?.wallet != null;
+}
+
 // --- HOOK --- //
 
 interface FeatureTreeInterface {
   getTiles: (id?: string) => Tile[] | undefined;
+  getWallet: (tile: WalletTile, params: AppParams) => Wallet;
   setOptions: (options: Options) => void;
 }
 
@@ -72,6 +79,10 @@ export function useFeatureTree(): FeatureTreeInterface {
       ...t,
       img: getImgUrl(t, language),
     }));
+  }
+
+  function getWallet(tile: WalletTile, params: AppParams): Wallet {
+    return typeof tile.wallet === 'function' ? tile.wallet(params) : tile.wallet;
   }
 
   function getImgUrl(tile: BaseTile, lang: Language): string {
@@ -91,5 +102,5 @@ export function useFeatureTree(): FeatureTreeInterface {
     }
   }
 
-  return useMemo(() => ({ getTiles, setOptions }), [language, setParams]);
+  return useMemo(() => ({ getTiles, getWallet, setOptions }), [language, setParams]);
 }
