@@ -302,6 +302,18 @@ export const FeatureTree: Page[] = [
         },
       },
       {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
         id: 'usdt',
         img: 'usdt',
         next: {
@@ -343,6 +355,18 @@ export const FeatureTree: Page[] = [
         },
       },
       {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
         id: 'usdt',
         img: 'usdt',
         next: {
@@ -380,6 +404,18 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
           },
         },
       },
