@@ -48,7 +48,7 @@ export function HomeScreen(): JSX.Element {
   const redirectPath = new URLSearchParams(search).get('redirect-path');
   const currentPage = pages.current?.page;
   const allowedTiles = pages.current?.allowedTiles;
-  const tiles = getTiles(currentPage);
+  const tiles = getTiles(currentPage, allowedTiles);
 
   useEffect(() => {
     if (isInitialized && isLoggedIn && !activeWallet) {
@@ -92,6 +92,9 @@ export function HomeScreen(): JSX.Element {
       if (tile.next.options) setOptions(tile.next.options);
       const page = { page: tile.next.page, allowedTiles: tile.next.tiles };
       setPages((p) => p.push(page));
+
+      const tiles = getTiles(page.page, page.allowedTiles);
+      if (tiles?.length === 1 && tiles[0].next) handleNext(tiles[0]);
     }
   }
 
@@ -104,7 +107,7 @@ export function HomeScreen(): JSX.Element {
       setConnectError(undefined);
       setIsConnectingTo(undefined);
     } else {
-      setPages((p) => p.pop());
+      setPages((p) => p.pop((i) => getTiles(i.page, i.allowedTiles)?.length === 1));
     }
   }
 
@@ -186,11 +189,9 @@ export function HomeScreen(): JSX.Element {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2.5 w-full mb-3">
-                {tiles
-                  .filter((t) => !allowedTiles || allowedTiles.includes(t.id))
-                  .map((t) => (
-                    <TileComponent key={t.id} tile={t} onClick={handleNext} />
-                  ))}
+                {tiles.map((t) => (
+                  <TileComponent key={t.id} tile={t} onClick={handleNext} />
+                ))}
               </div>
             </>
           )}

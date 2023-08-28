@@ -62,7 +62,7 @@ export function isWallet(tile: Tile): tile is WalletTile {
 // --- HOOK --- //
 
 interface FeatureTreeInterface {
-  getTiles: (id?: string) => Tile[] | undefined;
+  getTiles: (pageId?: string, allowed?: string[]) => Tile[] | undefined;
   getWallet: (tile: WalletTile, params: AppParams) => Wallet;
   setOptions: (options: Options) => void;
 }
@@ -72,13 +72,13 @@ export function useFeatureTree(): FeatureTreeInterface {
   const { setParams } = useAppParams();
   const { setParams: setUrlParams } = useNavigation();
 
-  function getTiles(pageId?: string): Tile[] | undefined {
+  function getTiles(pageId?: string, allowed?: string[]): Tile[] | undefined {
     if (!language) return;
 
-    return (FeatureTree.find((p) => p.id === pageId) ?? FeatureTree[0]).tiles.map((t) => ({
-      ...t,
-      img: getImgUrl(t, language),
-    }));
+    const nextPage = FeatureTree.find((p) => p.id === pageId) ?? FeatureTree[0];
+    return nextPage.tiles
+      .map((t) => ({ ...t, img: getImgUrl(t, language) }))
+      ?.filter((t) => !allowed || allowed.includes(t.id));
   }
 
   function getWallet(tile: WalletTile, params: AppParams): Wallet {
