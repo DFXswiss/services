@@ -65,7 +65,7 @@ export function useLedger(): LedgerInterface {
 
   async function fetchAddress(addressFetch: Promise<string>, onTimeout: () => void): Promise<string> {
     try {
-      return await timeout(addressFetch, 5000);
+      return await timeout(addressFetch, 10000);
     } catch (e) {
       const { name, message, statusText } = e as LedgerError;
 
