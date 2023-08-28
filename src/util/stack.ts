@@ -5,8 +5,11 @@ export class Stack<T> {
     return new Stack([item, ...this.items]);
   }
 
-  pop(): Stack<T> {
-    this.items.shift();
+  pop(asLongAs?: (item: T) => boolean): Stack<T> {
+    do {
+      this.items.shift();
+    } while (this.current && asLongAs?.(this.current));
+
     return new Stack(this.items);
   }
 
