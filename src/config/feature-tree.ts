@@ -62,6 +62,30 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
+    id: 'kevinsoell',
+    tiles: [
+      {
+        id: 'buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
+      },
+      {
+        id: 'sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
+      },
+      {
+        id: 'convert',
+        img: 'tauschen',
+        disabled: true,
+      },
+    ],
+  },
+  {
     id: 'buy',
     tiles: [
       {
