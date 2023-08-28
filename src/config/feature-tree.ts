@@ -1042,7 +1042,7 @@ export const FeatureTree: Page[] = [
         img: 'eth',
         next: {
           page: 'wallets',
-          tiles: ['hw-wallet', 'metamask',
+          tiles: ['hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
