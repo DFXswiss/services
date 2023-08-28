@@ -56,6 +56,11 @@ export function HomeScreen(): JSX.Element {
     }
   }, [isInitialized, isLoggedIn, activeWallet]);
 
+  useEffect(() => {
+    const { mode } = appParams;
+    mode && setPages((p) => p.push({ page: mode, allowedTiles: undefined }));
+  }, [appParams.mode]);
+
   // signature hint
   async function confirmSignHint(): Promise<void> {
     if (!showsSignatureInfo.get()) return;

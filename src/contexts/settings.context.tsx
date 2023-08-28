@@ -2,6 +2,7 @@ import { Language, useLanguage, useLanguageContext, useUserContext } from '@dfx.
 import i18n from 'i18next';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
 
 interface SettingsInterface {
@@ -22,6 +23,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { getDefaultLanguage } = useLanguage();
   const { user, changeLanguage: changeUserLanguage } = useUserContext();
   const { language: storedLanguage } = useStore();
+  const { lang } = useAppParams();
 
   const [language, setLanguage] = useState<Language>();
   const { t } = useTranslation();
@@ -29,11 +31,12 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const availableLanguages = languages?.filter((l) => ['DE', 'EN'].includes(l.symbol)) ?? [];
 
   useEffect(() => {
-    const userLanguage = user?.language.symbol ?? storedLanguage.get();
+    const customLanguage = user?.language.symbol ?? lang?.toUpperCase() ?? storedLanguage.get();
     const newAppLanguage =
-      availableLanguages?.find((l) => l.symbol === userLanguage) ?? getDefaultLanguage(availableLanguages);
-    newAppLanguage && changeAppLanguage(newAppLanguage);
-  }, [user, languages]);
+      availableLanguages?.find((l) => l.symbol === customLanguage) ?? getDefaultLanguage(availableLanguages);
+
+    newAppLanguage && newAppLanguage.id !== language?.id && changeAppLanguage(newAppLanguage);
+  }, [user, lang, languages]);
 
   function changeAppLanguage(language: Language) {
     setLanguage(language);
