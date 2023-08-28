@@ -37,7 +37,7 @@ export function HomeScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { search } = useLocation();
   const { getTiles, setOptions } = useFeatureTree();
-  const { blockchain: paramBlockchain } = useAppParams();
+  const { blockchain: paramBlockchain, mode } = useAppParams();
 
   const [isConnectingTo, setIsConnectingTo] = useState<Wallet>();
   const [connectError, setConnectError] = useState<string>();
@@ -55,6 +55,10 @@ export function HomeScreen(): JSX.Element {
       navigate('/buy');
     }
   }, [isInitialized, isLoggedIn, activeWallet]);
+
+  useEffect(() => {
+    mode && setPages((p) => p.push({ page: mode, allowedTiles: undefined }));
+  }, [mode]);
 
   // signature hint
   async function confirmSignHint(): Promise<void> {
