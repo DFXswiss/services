@@ -14,8 +14,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "typeRoots": ["typings"]
   },
-  "include": ["src"],
+  "include": ["src", "typings"],
   "exclude": ["**/*.stories.tsx"]
 }

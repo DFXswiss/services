@@ -5,6 +5,7 @@ import { GetInfoResponse } from 'webln';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
 import { useAlby } from '../hooks/wallets/alby.hook';
+import { useBitbox } from '../hooks/wallets/bitbox.hook';
 import { useLedger } from '../hooks/wallets/ledger.hook';
 import { useMetaMask } from '../hooks/wallets/metamask.hook';
 import { useTrezor } from '../hooks/wallets/trezor.hook';
@@ -17,6 +18,8 @@ export enum WalletType {
   ALBY = 'Alby',
   LEDGER_BTC = 'LedgerBtc',
   LEDGER_ETH = 'LedgerEth',
+  BITBOX_BTC = 'BitBoxBtc',
+  BITBOX_ETH = 'BitBoxEth',
   TREZOR_BTC = 'TrezorBtc',
   TREZOR_ETH = 'TrezorEth',
 }
@@ -27,7 +30,8 @@ interface WalletInterface {
   getInstalledWallets: () => Promise<WalletType[]>;
   login: (
     wallet: WalletType,
-    signHintCallback?: () => Promise<void>,
+    onSignHint?: () => Promise<void>,
+    onPairing?: (code: string) => Promise<void>,
     blockchain?: Blockchain,
     address?: string,
   ) => Promise<string | undefined>;
@@ -49,6 +53,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const metaMask = useMetaMask();
   const alby = useAlby();
   const ledger = useLedger();
+  const bitBox = useBitbox();
   const trezor = useTrezor();
   const api = useSessionContext();
   const { wallet: paramWallet, refcode: paramRef } = useAppParams();
@@ -106,15 +111,16 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   // public API
   async function login(
     wallet: WalletType,
-    signHintCallback?: () => Promise<void>,
+    onSignHint?: () => Promise<void>,
+    onPairing?: (code: string) => Promise<void>,
     blockchain?: Blockchain,
     usedAddress?: string,
   ): Promise<string> {
-    const address = await connect(wallet, usedAddress);
+    const address = await connect(wallet, onPairing, usedAddress);
 
     try {
       // show signature hint
-      await signHintCallback?.();
+      await onSignHint?.();
 
       await createSession(wallet, address);
     } catch (e) {
@@ -129,8 +135,12 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     return address;
   }
 
-  async function connect(wallet: WalletType, usedAddress?: string): Promise<string> {
-    const [address, blockchain] = await readData(wallet, usedAddress);
+  async function connect(
+    wallet: WalletType,
+    onPairing?: (code: string) => Promise<void>,
+    usedAddress?: string,
+  ): Promise<string> {
+    const [address, blockchain] = await readData(wallet, onPairing, usedAddress);
 
     setActiveWallet(wallet);
     activeWalletStore.set(wallet);
@@ -144,6 +154,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.ALBY:
       case WalletType.LEDGER_BTC:
       case WalletType.LEDGER_ETH:
+      case WalletType.BITBOX_BTC:
+      case WalletType.BITBOX_ETH:
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
         setActiveAddress(address);
@@ -153,7 +165,11 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     return address;
   }
 
-  async function readData(wallet: WalletType, address?: string): Promise<[string, Blockchain | undefined]> {
+  async function readData(
+    wallet: WalletType,
+    onPairing?: (code: string) => Promise<void>,
+    address?: string,
+  ): Promise<[string, Blockchain | undefined]> {
     switch (wallet) {
       case WalletType.META_MASK:
         address ??= await metaMask.requestAccount();
@@ -176,6 +192,15 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
         address ??= await ledger.connect(ledgerBlockchain);
         return [address, ledgerBlockchain];
+
+      case WalletType.BITBOX_BTC:
+      case WalletType.BITBOX_ETH:
+        if (!onPairing) throw new Error('Pairing callback not set');
+
+        const bitboxBlockchain = getBitboxBlockchain(wallet);
+
+        address ??= await bitBox.connect(bitboxBlockchain, onPairing);
+        return [address, bitboxBlockchain];
 
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
@@ -216,6 +241,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.LEDGER_ETH:
         return await ledger.signMessage(message, getLedgerBlockchain(wallet));
 
+      case WalletType.BITBOX_BTC:
+      case WalletType.BITBOX_ETH:
+        return await bitBox.signMessage(message, getBitboxBlockchain(wallet));
+
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
         return await trezor.signMessage(message, getTrezorBlockchain(wallet));
@@ -231,6 +260,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     if (metaMask.isInstalled()) wallets.push(WalletType.META_MASK);
     if (alby.isInstalled()) wallets.push(WalletType.ALBY);
     if (await ledger.isSupported()) wallets.push(WalletType.LEDGER_BTC, WalletType.LEDGER_ETH);
+    if (await bitBox.isSupported()) wallets.push(WalletType.BITBOX_BTC, WalletType.BITBOX_ETH);
     if (trezor.isSupported()) wallets.push(WalletType.TREZOR_BTC, WalletType.TREZOR_ETH);
 
     return wallets;
@@ -259,6 +289,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
       case WalletType.LEDGER_BTC:
       case WalletType.LEDGER_ETH:
+      case WalletType.BITBOX_BTC:
+      case WalletType.BITBOX_ETH:
         // no balance available
         return undefined;
 
@@ -280,6 +312,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.ALBY:
       case WalletType.LEDGER_BTC:
       case WalletType.LEDGER_ETH:
+      case WalletType.BITBOX_BTC:
+      case WalletType.BITBOX_ETH:
+
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
         return activeAddress;
@@ -303,6 +338,12 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.LEDGER_ETH:
         return Blockchain.ETHEREUM;
 
+      case WalletType.BITBOX_BTC:
+        return Blockchain.BITCOIN;
+
+      case WalletType.BITBOX_ETH:
+        return Blockchain.ETHEREUM;
+
       case WalletType.TREZOR_BTC:
         return Blockchain.BITCOIN;
 
@@ -315,11 +356,15 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   }
 
   function getLedgerBlockchain(wallet: WalletType.LEDGER_BTC | WalletType.LEDGER_ETH): Blockchain {
-    return getBlockchain(wallet) as Blockchain;
+    return wallet === WalletType.LEDGER_BTC ? Blockchain.BITCOIN : Blockchain.ETHEREUM;
+  }
+
+  function getBitboxBlockchain(wallet: WalletType.BITBOX_BTC | WalletType.BITBOX_ETH): Blockchain {
+    return wallet === WalletType.BITBOX_BTC ? Blockchain.BITCOIN : Blockchain.ETHEREUM;
   }
 
   function getTrezorBlockchain(wallet: WalletType.TREZOR_BTC | WalletType.TREZOR_ETH): Blockchain {
-    return getBlockchain(wallet) as Blockchain;
+    return wallet === WalletType.TREZOR_BTC ? Blockchain.BITCOIN : Blockchain.ETHEREUM;
   }
 
   async function switchBlockchain(to: Blockchain, wallet?: WalletType): Promise<void> {
@@ -342,14 +387,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         return alby.sendPayment(sell.paymentRequest).then((p) => p.preimage);
 
       case WalletType.LEDGER_BTC:
-        throw new Error('Not supported yet');
-
       case WalletType.LEDGER_ETH:
-        throw new Error('Not supported yet');
-
+      case WalletType.BITBOX_BTC:
+      case WalletType.BITBOX_ETH:
       case WalletType.TREZOR_BTC:
-        throw new Error('Not supported yet');
-
       case WalletType.TREZOR_ETH:
         throw new Error('Not supported yet');
 

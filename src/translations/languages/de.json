@@ -44,15 +44,21 @@
     "Please confirm the connection with your Ledger.": "Bitte bestätige die Verbindung mit Deinem Ledger.",
     "Connection failed!": "Verbindung fehlgeschlagen!",
 
-    "Connect your Ledger with your computer": "Verbinde Deinen Ledger mit Deinem Computer",
-    "Open the {{app}} app on your Ledger": "Öffne die {{app}} App auf Deinem Ledger",
+    "Connect your {{device}} with your computer": "Verbinde Deinen {{device}} mit Deinem Computer",
     "Click on \"Connect\"": "Klicke auf \"Verbinden\"",
-    "Confirm \"Sign message\" on your ledger": "Bestätige \"Sign message\" auf Deinem Ledger",
+    "Confirm \"Sign message\" on your {{device}}": "Bestätige \"Sign message\" auf Deinem {{device}}",
 
-    "Connect your Trezor with your computer": "Verbinde Deinen Trezor mit Deinem Computer",
+    "Open the {{app}} app on your Ledger": "Öffne die {{app}} App auf Deinem Ledger",
+
+    "Enter your password on your BitBox": "Gib Dein Passwort auf Deinem BitBox ein",
+    "Confirm the pairing code": "Bestätige den Pairing-Code",
+    "Pairing code": "Pairing-Code",
+    "Check that the pairing code below matches the one displayed on your BitBox": "Prüfe, ob der untenstehende Pairing-Code mit dem auf Deinem BitBox angezeigten übereinstimmt",
+    "Confirm the pairing code on your BitBox": "Bestätige den Pairing-Code auf Deinem BitBox",
+    "Click on \"Continue\"": "Klicke auf \"Weiter\"",
+
     "Click on \"Continue in Trezor Connect\"": "Klicke auf \"Weiter zu Trezor Connect\"",
     "Follow the steps in the Trezor Connect website": "Führe die Schritte in der Trezor Connect Webseite aus",
-    "Confirm \"Sign message\" on your Trezor": "Bestätige \"Sign message\" auf Deinem Trezor",
 
     "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Melde Dich bei Deinem DFX-Konto an, indem Du mit Deiner Unterschrift bestätigst, dass Du der alleinige Eigentümer der angegebenen Blockchain-Adresse bist.",
     "Don't show this again.": "Nicht mehr anzeigen.",
