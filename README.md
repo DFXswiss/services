@@ -140,7 +140,7 @@ Documentation on `BuyPaymentInfoDto` and `SellPaymentInfoDto` can be found in th
   }
 </script>
 
-<iframe src="https://services.dfx.swiss" height="600" width="500" frameborder="0" />
+<iframe src="https://services.dfx.swiss" height="600" width="450" frameborder="0" />
 ```
 
 #### Web Component

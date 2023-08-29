@@ -51,7 +51,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const ledger = useLedger();
   const trezor = useTrezor();
   const api = useSessionContext();
-  const { wallet: paramWallet, refCode: paramRef } = useAppParams();
+  const { wallet: paramWallet, refcode: paramRef } = useAppParams();
   const { getSignMessage } = useAuth();
   const { hasBalance, getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
