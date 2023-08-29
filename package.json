@@ -9,6 +9,7 @@
     "@ledgerhq/hw-app-eth": "^6.34.3",
     "@ledgerhq/hw-transport-webhid": "^6.27.19",
     "@r2wc/react-to-web-component": "^2.0.2",
+    "@trezor/connect-web": "^9.1.1",
     "buffer": "^6.0.3",
     "copy-to-clipboard": "^3.3.3",
     "env-cmd": "^10.1.0",

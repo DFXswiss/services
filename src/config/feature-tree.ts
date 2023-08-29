@@ -1300,7 +1300,7 @@ export const FeatureTree: Page[] = [
       {
         id: 'trezor',
         img: 'trezor',
-        disabled: true,
+        wallet: { type: WalletType.TREZOR },
       },
     ],
   },
