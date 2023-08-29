@@ -267,7 +267,8 @@ function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: () => v
     case WalletType.LEDGER_ETH:
       return <LedgerHint onConfirm={onConfirm} />;
 
-    case WalletType.TREZOR:
+    case WalletType.TREZOR_BTC:
+    case WalletType.TREZOR_ETH:
       return <TrezorHint onConfirm={onConfirm} />;
   }
 }
@@ -453,7 +454,8 @@ function ConnectHint({
         </>
       );
 
-    case WalletType.TREZOR:
+    case WalletType.TREZOR_BTC:
+    case WalletType.TREZOR_ETH:
       const trezorSteps = [
         'Connect your Trezor with your computer',
         'Click on "Continue in Trezor Connect"',

@@ -1605,7 +1605,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'trezor',
         img: 'trezor',
-        wallet: { type: WalletType.TREZOR },
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
+        }),
       },
     ],
   },

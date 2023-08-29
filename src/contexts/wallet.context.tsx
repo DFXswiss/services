@@ -17,7 +17,8 @@ export enum WalletType {
   ALBY = 'Alby',
   LEDGER_BTC = 'LedgerBtc',
   LEDGER_ETH = 'LedgerEth',
-  TREZOR = 'Trezor',
+  TREZOR_BTC = 'TrezorBtc',
+  TREZOR_ETH = 'TrezorEth',
 }
 
 interface WalletInterface {
@@ -143,7 +144,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.ALBY:
       case WalletType.LEDGER_BTC:
       case WalletType.LEDGER_ETH:
-      case WalletType.TREZOR:
+      case WalletType.TREZOR_BTC:
+      case WalletType.TREZOR_ETH:
         setActiveAddress(address);
         break;
     }
@@ -175,9 +177,12 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         address ??= await ledger.connect(ledgerBlockchain);
         return [address, ledgerBlockchain];
 
-      case WalletType.TREZOR:
-        address ??= await trezor.connect();
-        return [address, Blockchain.BITCOIN];
+      case WalletType.TREZOR_BTC:
+      case WalletType.TREZOR_ETH:
+        const trezorBlockchain = getTrezorBlockchain(wallet);
+
+        address ??= await trezor.connect(trezorBlockchain);
+        return [address, trezorBlockchain];
     }
   }
 
@@ -211,8 +216,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.LEDGER_ETH:
         return await ledger.signMessage(message, getLedgerBlockchain(wallet));
 
-      case WalletType.TREZOR:
-        return await trezor.signMessage(message);
+      case WalletType.TREZOR_BTC:
+      case WalletType.TREZOR_ETH:
+        return await trezor.signMessage(message, getTrezorBlockchain(wallet));
 
       default:
         throw new Error('No wallet active');
@@ -225,7 +231,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     if (metaMask.isInstalled()) wallets.push(WalletType.META_MASK);
     if (alby.isInstalled()) wallets.push(WalletType.ALBY);
     if (await ledger.isSupported()) wallets.push(WalletType.LEDGER_BTC, WalletType.LEDGER_ETH);
-    if (trezor.isSupported()) wallets.push(WalletType.TREZOR);
+    if (trezor.isSupported()) wallets.push(WalletType.TREZOR_BTC, WalletType.TREZOR_ETH);
 
     return wallets;
   }
@@ -256,7 +262,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         // no balance available
         return undefined;
 
-      case WalletType.TREZOR:
+      case WalletType.TREZOR_BTC:
+      case WalletType.TREZOR_ETH:
         // no balance available
         return undefined;
 
@@ -273,7 +280,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.ALBY:
       case WalletType.LEDGER_BTC:
       case WalletType.LEDGER_ETH:
-      case WalletType.TREZOR:
+      case WalletType.TREZOR_BTC:
+      case WalletType.TREZOR_ETH:
         return activeAddress;
 
       default:
@@ -295,8 +303,11 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.LEDGER_ETH:
         return Blockchain.ETHEREUM;
 
-      case WalletType.TREZOR:
+      case WalletType.TREZOR_BTC:
         return Blockchain.BITCOIN;
+
+      case WalletType.TREZOR_ETH:
+        return Blockchain.ETHEREUM;
 
       default:
         return undefined;
@@ -304,6 +315,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   }
 
   function getLedgerBlockchain(wallet: WalletType.LEDGER_BTC | WalletType.LEDGER_ETH): Blockchain {
+    return getBlockchain(wallet) as Blockchain;
+  }
+
+  function getTrezorBlockchain(wallet: WalletType.TREZOR_BTC | WalletType.TREZOR_ETH): Blockchain {
     return getBlockchain(wallet) as Blockchain;
   }
 
@@ -332,7 +347,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       case WalletType.LEDGER_ETH:
         throw new Error('Not supported yet');
 
-      case WalletType.TREZOR:
+      case WalletType.TREZOR_BTC:
+        throw new Error('Not supported yet');
+
+      case WalletType.TREZOR_ETH:
         throw new Error('Not supported yet');
 
       default:
