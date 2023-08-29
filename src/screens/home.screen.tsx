@@ -412,10 +412,10 @@ function ConnectHint({
     case WalletType.LEDGER_ETH:
       const app = type === WalletType.LEDGER_BTC ? 'Bitcoin' : 'Ethereum';
       const ledgerSteps = [
-        translate('screens/home', 'Connect your Ledger with your computer'),
-        translate('screens/home', 'Open the {{app}} app on your Ledger'),
-        translate('screens/home', 'Click on "Connect"'),
-        translate('screens/home', 'Confirm "Sign message" on your ledger'),
+        'Connect your Ledger with your computer',
+        'Open the {{app}} app on your Ledger',
+        'Click on "Connect"',
+        'Confirm "Sign message" on your ledger',
       ];
 
       return (
@@ -455,10 +455,10 @@ function ConnectHint({
 
     case WalletType.TREZOR:
       const trezorSteps = [
-        translate('screens/home', 'Connect your Trezor with your computer'),
-        translate('screens/home', 'Click on "Continue in Trezor Connect"'),
-        translate('screens/home', 'Follow the steps in the Trezor Connect website'),
-        translate('screens/home', 'Confirm "Sign message" on your Trezor'),
+        'Connect your Trezor with your computer',
+        'Click on "Continue in Trezor Connect"',
+        'Follow the steps in the Trezor Connect website',
+        'Confirm "Sign message" on your Trezor',
       ];
 
       return (
