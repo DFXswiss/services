@@ -11,7 +11,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { Layout } from '../components/layout';
@@ -206,9 +206,21 @@ export function HomeScreen(): JSX.Element {
 
 function TileComponent({ tile, onClick }: { tile: Tile; onClick: (t: Tile) => void }): JSX.Element {
   const { translate } = useSettingsContext();
+  const tileRef = useRef<HTMLDivElement>(null);
+
+  const [size, setSize] = useState<number>();
+
+  function setTileSize() {
+    setSize(tileRef.current?.offsetHeight);
+  }
+
+  useEffect(setTileSize, [tileRef.current]);
+
+  window.addEventListener('resize', setTileSize);
 
   return (
     <div
+      ref={tileRef}
       className="relative aspect-square"
       style={{ borderRadius: '4%', boxShadow: '0px 0px 5px 3px rgba(0, 0, 0, 0.25)' }}
     >
@@ -216,7 +228,7 @@ function TileComponent({ tile, onClick }: { tile: Tile; onClick: (t: Tile) => vo
       {tile.disabled && (
         <div
           className="absolute right-2 bottom-3 text-dfxBlue-800 font-extrabold rotate-180 uppercase"
-          style={{ writingMode: 'vertical-rl', fontSize: 'min(2vw, 1rem)' }}
+          style={{ writingMode: 'vertical-rl', fontSize: `${(size ?? 0) / 20}px` }}
         >
           {translate('screens/home', 'Coming Soon')}
         </div>
