@@ -36,7 +36,7 @@ export function useBitbox(): BitboxInterface {
   }
 
   async function connect(wallet: BitboxWallet, onPairing: (code: string) => Promise<void>): Promise<string> {
-    const bitBox = client ?? new BitBox02API(await getDevicePath());
+    const bitBox = client ?? new BitBox02API('WEBHID');
 
     tmpClient = bitBox;
     setClient(bitBox);
