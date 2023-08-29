@@ -1,10 +1,10 @@
-import { Blockchain } from '@dfx.swiss/react';
 import EthClient from '@ledgerhq/hw-app-eth';
 import Transport from '@ledgerhq/hw-transport';
 import TransportWebHID from '@ledgerhq/hw-transport-webhid';
 import BtcClient, { DefaultWalletPolicy } from 'ledger-bitcoin';
 import { useState } from 'react';
 import KeyPath from '../../config/key-path';
+import { WalletType } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
 import { timeout } from '../../util/utils';
@@ -14,10 +14,12 @@ interface LedgerError extends Error {
   statusText: string;
 }
 
+type LedgerWallet = WalletType.LEDGER_BTC | WalletType.LEDGER_ETH;
+
 export interface LedgerInterface {
   isSupported: () => Promise<boolean>;
-  connect: (blockchain: Blockchain) => Promise<string>;
-  signMessage: (msg: string, blockchain: Blockchain) => Promise<string>;
+  connect: (wallet: LedgerWallet) => Promise<string>;
+  signMessage: (msg: string, wallet: LedgerWallet) => Promise<string>;
 }
 
 export function useLedger(): LedgerInterface {
@@ -33,8 +35,8 @@ export function useLedger(): LedgerInterface {
     return TransportWebHID.isSupported();
   }
 
-  async function connect(blockchain: Blockchain): Promise<string> {
-    return blockchain === Blockchain.BITCOIN ? connectBtc() : connectEth();
+  async function connect(wallet: LedgerWallet): Promise<string> {
+    return wallet === WalletType.LEDGER_BTC ? connectBtc() : connectEth();
   }
 
   async function connectBtc(): Promise<string> {
@@ -125,9 +127,9 @@ export function useLedger(): LedgerInterface {
     return client.getAddress(KeyPath.ETH.address, false, false).then((r) => r.address);
   }
 
-  async function signMessage(msg: string, blockchain: Blockchain): Promise<string> {
+  async function signMessage(msg: string, wallet: LedgerWallet): Promise<string> {
     try {
-      return blockchain == Blockchain.BITCOIN ? await signBtcMessage(msg) : await signEthMessage(msg);
+      return wallet === WalletType.LEDGER_BTC ? await signBtcMessage(msg) : await signEthMessage(msg);
     } catch (e) {
       const { statusText } = e as LedgerError;
 
