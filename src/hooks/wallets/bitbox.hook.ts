@@ -1,20 +1,22 @@
-import { Blockchain } from '@dfx.swiss/react';
 import { BitBox02API, constants, getDevicePath, getKeypathFromString } from 'bitbox02-api';
 import { useState } from 'react';
 import KeyPath from '../../config/key-path';
+import { WalletType } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
 
-interface LedgerError extends Error {
+interface BitboxError extends Error {
   ErrorType: string;
   Code: number;
   Message: string;
 }
 
+type BitboxWallet = WalletType.BITBOX_BTC | WalletType.BITBOX_ETH;
+
 export interface BitboxInterface {
   isSupported: () => Promise<boolean>;
-  connect: (blockchain: Blockchain, onPairing: (code: string) => Promise<void>) => Promise<string>;
-  signMessage: (msg: string, blockchain: Blockchain) => Promise<string>;
+  connect: (wallet: BitboxWallet, onPairing: (code: string) => Promise<void>) => Promise<string>;
+  signMessage: (msg: string, wallet: BitboxWallet) => Promise<string>;
 }
 
 export function useBitbox(): BitboxInterface {
@@ -33,7 +35,7 @@ export function useBitbox(): BitboxInterface {
     }
   }
 
-  async function connect(blockchain: Blockchain, onPairing: (code: string) => Promise<void>): Promise<string> {
+  async function connect(wallet: BitboxWallet, onPairing: (code: string) => Promise<void>): Promise<string> {
     const bitBox = client ?? new BitBox02API(await getDevicePath());
 
     tmpClient = bitBox;
@@ -81,15 +83,15 @@ export function useBitbox(): BitboxInterface {
 
       // verify product
       const product = bitBox.firmware().Product();
-      if (blockchain !== Blockchain.BITCOIN && product === constants.Product.BitBox02BTCOnly)
+      if (wallet !== WalletType.BITBOX_BTC && product === constants.Product.BitBox02BTCOnly)
         throw new TranslatedError('Your BitBox only supports Bitcoin');
 
       // fetch address
-      return blockchain === Blockchain.BITCOIN ? await getBtcAddress(bitBox) : await getEthAddress(bitBox);
+      return wallet === WalletType.BITBOX_BTC ? await getBtcAddress(bitBox) : await getEthAddress(bitBox);
     } catch (e) {
       bitBox.close();
 
-      const { message, Message } = e as LedgerError;
+      const { message, Message } = e as BitboxError;
       const msg = message ?? Message;
 
       if (msg.includes('User cancelled')) {
@@ -115,16 +117,16 @@ export function useBitbox(): BitboxInterface {
     return bitBox.ethDisplayAddress(KeyPath.ETH.address, false);
   }
 
-  async function signMessage(msg: string, blockchain: Blockchain): Promise<string> {
+  async function signMessage(msg: string, wallet: BitboxWallet): Promise<string> {
     const bitBox = tmpClient ?? client;
     if (!bitBox) throw new Error('Bitbox not connected');
 
     try {
-      return blockchain === Blockchain.BITCOIN ? await signBtcMessage(bitBox, msg) : await signEthMessage(bitBox, msg);
+      return wallet === WalletType.BITBOX_BTC ? await signBtcMessage(bitBox, msg) : await signEthMessage(bitBox, msg);
     } catch (e) {
       bitBox.close();
 
-      const { message, Message } = e as LedgerError;
+      const { message, Message } = e as BitboxError;
       const msg = message ?? Message;
 
       if (msg.includes('aborted by the user') || msg.includes('User abort')) {
