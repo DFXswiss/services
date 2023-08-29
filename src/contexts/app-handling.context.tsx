@@ -13,7 +13,7 @@ const urlParams = [
   'address',
   'signature',
   'wallet',
-  'ref-code',
+  'refcode',
   'session',
   'redirect-uri',
   'mode',
@@ -32,7 +32,7 @@ export interface AppParams {
   address?: string;
   signature?: string;
   wallet?: string;
-  refCode?: string;
+  refcode?: string;
   session?: string;
   redirectUri?: string;
   mode?: string;
@@ -158,7 +158,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       address: getParameter(query, 'address'),
       signature: getParameter(query, 'signature'),
       wallet: getParameter(query, 'wallet'),
-      refCode: getParameter(query, 'ref-code'),
+      refcode: getParameter(query, 'refcode'),
       session: getParameter(query, 'session'),
       redirectUri: getParameter(query, 'redirect-uri'),
       mode: getParameter(query, 'mode'),
@@ -183,7 +183,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
   async function checkSession(params: AppParams): Promise<boolean> {
     if (params.address && params.signature) {
-      const session = await createSession(params.address, params.signature, params.wallet, params.refCode);
+      const session = await createSession(params.address, params.signature, params.wallet, params.refcode);
       if (session) {
         return true;
       } else {
@@ -202,10 +202,10 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     address: string,
     signature: string,
     wallet?: string,
-    refCode?: string,
+    refcode?: string,
   ): Promise<string | undefined> {
     try {
-      return (await login(address, signature)) ?? (await signUp(address, signature, wallet, refCode));
+      return (await login(address, signature)) ?? (await signUp(address, signature, wallet, refcode));
     } catch (e) {
       console.error('Failed to create session:', e);
     }

@@ -8,7 +8,7 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   address: 'string',
   signature: 'string',
   wallet: 'string',
-  refCode: 'string',
+  refcode: 'string',
   session: 'string',
   redirectUri: 'string',
   mode: 'string',

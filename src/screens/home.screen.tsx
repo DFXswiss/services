@@ -266,6 +266,10 @@ function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: () => v
     case WalletType.LEDGER_BTC:
     case WalletType.LEDGER_ETH:
       return <LedgerHint onConfirm={onConfirm} />;
+
+    case WalletType.TREZOR_BTC:
+    case WalletType.TREZOR_ETH:
+      return <TrezorHint onConfirm={onConfirm} />;
   }
 }
 
@@ -341,6 +345,27 @@ function LedgerHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
   );
 }
 
+function TrezorHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  return (
+    <StyledVerticalStack gap={4}>
+      <h1 className="text-dfxGray-700">{translate('screens/home', 'Trezor Bridge not installed!')}</h1>
+      <p className="text-dfxGray-700">
+        {translate('screens/home', 'Please install the Trezor Bridge to be able to use this service.')}{' '}
+        <Trans i18nKey="screens/home.visit">
+          Visit <StyledLink label="trezor.io" url="https://trezor.io/learn/a/what-is-trezor-bridge" dark /> for more
+          details.
+        </Trans>
+      </p>
+
+      <div className="mx-auto">
+        <StyledButton width={StyledButtonWidth.SM} onClick={onConfirm} label={translate('general/actions', 'OK')} />
+      </div>
+    </StyledVerticalStack>
+  );
+}
+
 function ConnectHint({
   type,
   error,
@@ -387,7 +412,7 @@ function ConnectHint({
     case WalletType.LEDGER_BTC:
     case WalletType.LEDGER_ETH:
       const app = type === WalletType.LEDGER_BTC ? 'Bitcoin' : 'Ethereum';
-      const steps = [
+      const ledgerSteps = [
         'Connect your Ledger with your computer',
         'Open the {{app}} app on your Ledger',
         'Click on "Connect"',
@@ -407,7 +432,7 @@ function ConnectHint({
             )}
 
             <ol className="text-dfxBlue-800 text-left font-bold list-decimal">
-              {steps.map((s, i) => (
+              {ledgerSteps.map((s, i) => (
                 <li key={i} className="list-inside">
                   {translate('screens/home', s, { app })}
                 </li>
@@ -421,6 +446,47 @@ function ConnectHint({
 
             <StyledButton
               label={translate('general/actions', 'Connect')}
+              onClick={onRetry}
+              width={StyledButtonWidth.MIN}
+              className="self-center"
+            />
+          </StyledVerticalStack>
+        </>
+      );
+
+    case WalletType.TREZOR_BTC:
+    case WalletType.TREZOR_ETH:
+      const trezorSteps = [
+        'Connect your Trezor with your computer',
+        'Click on "Continue in Trezor Connect"',
+        'Follow the steps in the Trezor Connect website',
+        'Confirm "Sign message" on your Trezor',
+      ];
+
+      return (
+        <>
+          <StyledVerticalStack gap={5} center>
+            {error ? (
+              <div>
+                <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
+                <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
+              </div>
+            ) : (
+              <StyledLoadingSpinner size={SpinnerSize.LG} />
+            )}
+
+            <ol className="text-dfxBlue-800 text-left font-bold list-decimal">
+              {trezorSteps.map((s, i) => (
+                <li key={i} className="list-inside">
+                  {translate('screens/home', s)}
+                </li>
+              ))}
+            </ol>
+
+            <img src="https://content.dfx.swiss/img/v1/services/trezorready_en.png" className="w-full max-w-sm" />
+
+            <StyledButton
+              label={translate('general/actions', 'Continue in Trezor Connect')}
               onClick={onRetry}
               width={StyledButtonWidth.MIN}
               className="self-center"

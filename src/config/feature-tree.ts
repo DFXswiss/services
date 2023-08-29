@@ -1226,20 +1226,325 @@ export const FeatureTree: Page[] = [
         id: 'buy',
         img: 'kaufen',
         next: {
-          page: 'buy',
+          page: 'kevinsoell-buy',
         },
       },
       {
         id: 'sell',
         img: 'verkaufen',
         next: {
-          page: 'sell',
+          page: 'kevinsoell-sell',
         },
       },
       {
         id: 'convert',
         img: 'tauschen',
         disabled: true,
+      },
+    ],
+  },
+  {
+    id: 'kevinsoell-buy',
+    tiles: [
+      {
+        id: 'bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+          },
+        },
+      },
+      {
+        id: 'kevinsoell-buy-erc20',
+        img: 'ethereumarbitrumoptimismpolygon',
+        next: {
+          page: 'kevinsoell-buy-erc20',
+        },
+      },
+    ],
+  },
+  {
+    id: 'kevinsoell-buy-erc20',
+    tiles: [
+      {
+        id: 'ethereum',
+        img: 'ethereum',
+        next: {
+          page: 'kevinsoell-buy-ethereum',
+        },
+      },
+      {
+        id: 'arbitrum',
+        img: 'arbitrum',
+        next: {
+          page: 'kevinsoell-buy-arbitrum',
+        },
+      },
+      {
+        id: 'optimism',
+        img: 'optimism',
+        next: {
+          page: 'kevinsoell-buy-optimism',
+        },
+      },
+    ],
+  },
+  {
+    id: 'kevinsoell-buy-ethereum',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'kevinsoell-buy-ethereum-stable',
+        },
+      },
+    ],
+  },
+  {
+    id: 'kevinsoell-buy-ethereum-stable',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DAI' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'kevinsoell-buy-arbitrum',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'kevinsoell-buy-arbitrum-stable',
+        },
+      },
+    ],
+  },
+  {
+    id: 'kevinsoell-buy-arbitrum-stable',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'DAI' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'kevinsoell-buy-optimism',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'kevinsoell-buy-optimism-stable',
+        },
+      },
+    ],
+  },
+  {
+    id: 'kevinsoell-buy-optimism-stable',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'DAI' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'kevinsoell-sell',
+    tiles: [
+      {
+        id: 'bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'wallets',
+          tiles: ['dfx-wallet', 'alby'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
+          },
+        },
+      },
+      {
+        id: 'erc20',
+        img: 'ethereumarbitrumoptimismpolygon',
+        next: {
+          page: 'sell-erc20',
+        },
       },
     ],
   },
@@ -1300,7 +1605,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'trezor',
         img: 'trezor',
-        disabled: true,
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
+        }),
       },
     ],
   },
