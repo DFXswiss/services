@@ -43,21 +43,10 @@ export function useTrezor(): TrezorInterface {
   }
 
   async function connect(blockchain: Blockchain): Promise<string> {
-    return blockchain === Blockchain.BITCOIN ? connectBtc() : connectEth();
-  }
-
-  async function connectBtc(): Promise<string> {
-    const result = await TrezorConnect.getAddress({ path: derivationPathBtc, showOnTrezor: false });
-
-    if (result.success) {
-      return result.payload.address;
-    }
-
-    handlePayloadError('Trezor not connected', result.payload.error);
-  }
-
-  async function connectEth(): Promise<string> {
-    const result = await TrezorConnect.ethereumGetAddress({ path: derivationPathEth, showOnTrezor: false });
+    const result =
+      blockchain === Blockchain.BITCOIN
+        ? await TrezorConnect.getAddress({ path: derivationPathBtc, showOnTrezor: false })
+        : await TrezorConnect.ethereumGetAddress({ path: derivationPathEth, showOnTrezor: false });
 
     if (result.success) {
       return result.payload.address;
@@ -67,28 +56,10 @@ export function useTrezor(): TrezorInterface {
   }
 
   async function signMessage(msg: string, blockchain: Blockchain): Promise<string> {
-    return blockchain == Blockchain.BITCOIN ? signBtcMessage(msg) : signEthMessage(msg);
-  }
-
-  async function signBtcMessage(msg: string): Promise<string> {
-    const result = await TrezorConnect.signMessage({
-      path: derivationPathBtc,
-      message: msg,
-      coin: 'btc',
-    });
-
-    if (result.success) {
-      return result.payload.signature;
-    }
-
-    handlePayloadError('Cannot sign message', result.payload.error);
-  }
-
-  async function signEthMessage(msg: string): Promise<string> {
-    const result = await TrezorConnect.ethereumSignMessage({
-      path: derivationPathEth,
-      message: msg,
-    });
+    const result =
+      blockchain == Blockchain.BITCOIN
+        ? await TrezorConnect.signMessage({ path: derivationPathBtc, message: msg, coin: 'btc' })
+        : await TrezorConnect.ethereumSignMessage({ path: derivationPathEth, message: msg });
 
     if (result.success) {
       return result.payload.signature;
