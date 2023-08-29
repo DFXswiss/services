@@ -1274,21 +1274,21 @@ export const FeatureTree: Page[] = [
         id: 'ethereum',
         img: 'ethereum',
         next: {
-          page: 'marcsteiner-buy-ethereum',
+          page: 'kevinsoell-buy-ethereum',
         },
       },
       {
         id: 'arbitrum',
         img: 'arbitrum',
         next: {
-          page: 'marcsteiner-buy-arbitrum',
+          page: 'kevinsoell-buy-arbitrum',
         },
       },
       {
         id: 'optimism',
         img: 'optimism',
         next: {
-          page: 'marcsteiner-buy-optimism',
+          page: 'kevinsoell-buy-optimism',
         },
       },
     ],
