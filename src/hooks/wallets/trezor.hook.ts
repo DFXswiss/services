@@ -42,7 +42,7 @@ export function useTrezor(): TrezorInterface {
       return result.payload.address;
     }
 
-    throw new Error('Trezor not connected');
+    throw new Error(`Trezor not connected: ${result.payload.error}`);
   }
 
   async function signMessage(message: string): Promise<string> {
