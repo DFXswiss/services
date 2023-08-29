@@ -7,13 +7,14 @@ import {
   StyledButtonColor,
   StyledButtonWidth,
   StyledCheckboxRow,
-  StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
+import { ConnectHint } from '../components/home/connect-hint';
+import { InstallHint } from '../components/home/install-hint';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -32,18 +33,23 @@ export function HomeScreen(): JSX.Element {
   const { isUserLoading } = useUserContext();
   const { isEmbedded } = useAppHandlingContext();
   const { getInstalledWallets, login, switchBlockchain, activeWallet } = useWalletContext();
-  const { defer, deferRef } = useDeferredPromise<void>();
   const { showsSignatureInfo } = useStore();
   const { navigate } = useNavigation();
   const { search } = useLocation();
   const { getTiles, getWallet, setOptions } = useFeatureTree();
   const appParams = useAppParams();
 
-  const [isConnectingTo, setIsConnectingTo] = useState<Wallet>();
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectTo, setConnectTo] = useState<Wallet>();
   const [connectError, setConnectError] = useState<string>();
   const [showInstallHint, setShowInstallHint] = useState<WalletType>();
+  const [createSignHint, signHint] = useDeferredPromise<void>();
   const [showSignHint, setShowSignHint] = useState(false);
+  const [createPairing, pairing] = useDeferredPromise<void>();
+  const [pairingCode, setPairingCode] = useState<string>();
   const [pages, setPages] = useState(new Stack<{ page: string; allowedTiles: string[] | undefined }>());
+
+  const autoConnectWallets = [WalletType.META_MASK, WalletType.ALBY];
 
   const redirectPath = new URLSearchParams(search).get('redirect-path');
   const currentPage = pages.current?.page;
@@ -66,28 +72,47 @@ export function HomeScreen(): JSX.Element {
     if (!showsSignatureInfo.get()) return;
 
     setShowSignHint(true);
-    return defer().promise;
+    return createSignHint();
   }
 
   function signHintConfirmed(hide: boolean) {
     showsSignatureInfo.set(!hide);
     setShowSignHint(false);
-    deferRef?.resolve();
+    signHint?.resolve();
   }
 
   function signHintRejected() {
     setShowSignHint(false);
-    deferRef?.reject(new AbortError('User cancelled'));
+    signHint?.reject(new AbortError('User cancelled'));
   }
 
   function onHintConfirmed() {
     setShowInstallHint(undefined);
   }
 
+  // pairing
+  async function confirmPairing(code: string): Promise<void> {
+    setPairingCode(code);
+    return createPairing();
+  }
+
+  function pairingConfirmed() {
+    pairing?.resolve();
+    setPairingCode(undefined);
+  }
+
+  function pairingRejected() {
+    setPairingCode(undefined);
+    pairing?.reject(new AbortError('User cancelled'));
+  }
+
   // tile handling
   function handleNext(tile: Tile) {
     if (isWallet(tile)) {
-      connectWallet(getWallet(tile, appParams));
+      const wallet = getWallet(tile, appParams);
+      setConnectTo(wallet);
+
+      autoConnectWallets.includes(wallet.type) || (activeWallet === wallet.type && connectWallet(wallet));
     } else if (tile.next) {
       if (tile.next.options) setOptions(tile.next.options);
       const page = { page: tile.next.page, allowedTiles: tile.next.tiles };
@@ -103,16 +128,20 @@ export function HomeScreen(): JSX.Element {
       setShowInstallHint(undefined);
     } else if (showSignHint) {
       signHintRejected();
-    } else if (isConnectingTo) {
+    } else if (pairingCode) {
+      pairingRejected();
+      setIsConnecting(false);
+    } else if (connectTo) {
       setConnectError(undefined);
-      setIsConnectingTo(undefined);
+      setIsConnecting(false);
+      setConnectTo(undefined);
     } else {
       setPages((p) => p.pop((i) => getTiles(i.page, i.allowedTiles)?.length === 1));
     }
   }
 
   function handleRetry() {
-    isConnectingTo && connectWallet(isConnectingTo);
+    connectTo && connectWallet(connectTo);
   }
 
   // connect
@@ -125,7 +154,7 @@ export function HomeScreen(): JSX.Element {
   async function connect(wallet: Wallet, address?: string) {
     const installedWallets = await getInstalledWallets();
     if (installedWallets.some((w) => w === wallet.type)) {
-      setIsConnectingTo(wallet);
+      setIsConnecting(true);
       setConnectError(undefined);
 
       return doLogin(wallet.type, wallet.blockchain, address)
@@ -137,12 +166,16 @@ export function HomeScreen(): JSX.Element {
         })
         .catch((e) => {
           if (e instanceof AbortError) {
-            setIsConnectingTo(undefined);
+            setConnectTo(undefined);
           } else {
             setConnectError(e.message);
           }
 
           throw e;
+        })
+        .finally(() => {
+          setIsConnecting(false);
+          setPairingCode(undefined);
         });
     } else {
       setShowInstallHint(wallet.type);
@@ -155,7 +188,7 @@ export function HomeScreen(): JSX.Element {
 
     return activeWallet === wallet
       ? selectedChain && switchBlockchain(selectedChain)
-      : logout().then(() => login(wallet, confirmSignHint, selectedChain, address));
+      : logout().then(() => login(wallet, confirmSignHint, confirmPairing, selectedChain, address));
   }
 
   return (
@@ -174,8 +207,16 @@ export function HomeScreen(): JSX.Element {
             <InstallHint type={showInstallHint} onConfirm={onHintConfirmed} />
           ) : showSignHint ? (
             <SignHint onConfirm={signHintConfirmed} />
-          ) : isConnectingTo ? (
-            <ConnectHint type={isConnectingTo.type} error={connectError} onBack={handleBack} onRetry={handleRetry} />
+          ) : connectTo ? (
+            <ConnectHint
+              type={connectTo.type}
+              isLoading={isConnecting}
+              error={connectError}
+              pairingCode={pairingCode}
+              onPairingConfirmed={pairingConfirmed}
+              onBack={handleBack}
+              onRetry={handleRetry}
+            />
           ) : (
             <>
               <div className="flex self-start mb-6">
@@ -265,246 +306,4 @@ function SignHint({ onConfirm }: { onConfirm: (hide: boolean) => void }): JSX.El
       />
     </StyledVerticalStack>
   );
-}
-
-function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: () => void }): JSX.Element {
-  switch (type) {
-    case WalletType.META_MASK:
-      return <MetaMaskHint onConfirm={onConfirm} />;
-
-    case WalletType.ALBY:
-      return <AlbyHint onConfirm={onConfirm} />;
-
-    case WalletType.LEDGER_BTC:
-    case WalletType.LEDGER_ETH:
-      return <LedgerHint onConfirm={onConfirm} />;
-
-    case WalletType.TREZOR_BTC:
-    case WalletType.TREZOR_ETH:
-      return <TrezorHint onConfirm={onConfirm} />;
-  }
-}
-
-function MetaMaskHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
-  const { translate } = useSettingsContext();
-
-  return (
-    <StyledVerticalStack gap={4}>
-      <h1 className="text-dfxGray-700">{translate('screens/home', 'Please install MetaMask or Rabby!')}</h1>
-      <p className="text-dfxGray-700">
-        {translate(
-          'screens/home',
-          'You need to install the MetaMask or Rabby browser extension to be able to use this service.',
-        )}{' '}
-        <Trans i18nKey="screens/home.visit">
-          Visit <MetaMaskLink /> for more details.
-        </Trans>
-      </p>
-
-      <div className="mx-auto">
-        <StyledButton width={StyledButtonWidth.SM} onClick={onConfirm} label={translate('general/actions', 'OK')} />
-      </div>
-    </StyledVerticalStack>
-  );
-}
-
-function MetaMaskLink(): JSX.Element {
-  return (
-    <>
-      <StyledLink label="metamask.io" url="https://metamask.io" dark /> /{' '}
-      <StyledLink label="rabby.io" url="https://rabby.io/" dark />
-    </>
-  );
-}
-
-function AlbyHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
-  const { translate } = useSettingsContext();
-
-  return (
-    <StyledVerticalStack gap={4}>
-      <h1 className="text-dfxGray-700">{translate('screens/home', 'Please install Alby!')}</h1>
-      <p className="text-dfxGray-700">
-        {translate('screens/home', 'You need to install the Alby browser extension to be able to use this service.')}{' '}
-        <Trans i18nKey="screens/home.visit">
-          Visit <StyledLink label="getalby.com" url="https://getalby.com/" dark /> for more details.
-        </Trans>
-      </p>
-
-      <div className="mx-auto">
-        <StyledButton width={StyledButtonWidth.SM} onClick={onConfirm} label={translate('general/actions', 'OK')} />
-      </div>
-    </StyledVerticalStack>
-  );
-}
-
-function LedgerHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
-  const { translate } = useSettingsContext();
-
-  return (
-    <StyledVerticalStack gap={4}>
-      <h1 className="text-dfxGray-700">{translate('screens/home', 'Browser not supported!')}</h1>
-      <p className="text-dfxGray-700">
-        {translate('screens/home', 'Please use a compatible browser (e.g. Chrome) to be able to use this service.')}{' '}
-        <Trans i18nKey="screens/home.visit">
-          Visit <StyledLink label="caniuse.com" url="https://caniuse.com/webhid" dark /> for more details.
-        </Trans>
-      </p>
-
-      <div className="mx-auto">
-        <StyledButton width={StyledButtonWidth.SM} onClick={onConfirm} label={translate('general/actions', 'OK')} />
-      </div>
-    </StyledVerticalStack>
-  );
-}
-
-function TrezorHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
-  const { translate } = useSettingsContext();
-
-  return (
-    <StyledVerticalStack gap={4}>
-      <h1 className="text-dfxGray-700">{translate('screens/home', 'Trezor Bridge not installed!')}</h1>
-      <p className="text-dfxGray-700">
-        {translate('screens/home', 'Please install the Trezor Bridge to be able to use this service.')}{' '}
-        <Trans i18nKey="screens/home.visit">
-          Visit <StyledLink label="trezor.io" url="https://trezor.io/learn/a/what-is-trezor-bridge" dark /> for more
-          details.
-        </Trans>
-      </p>
-
-      <div className="mx-auto">
-        <StyledButton width={StyledButtonWidth.SM} onClick={onConfirm} label={translate('general/actions', 'OK')} />
-      </div>
-    </StyledVerticalStack>
-  );
-}
-
-function ConnectHint({
-  type,
-  error,
-  onBack,
-  onRetry,
-}: {
-  type: WalletType;
-  error?: string;
-  onBack: () => void;
-  onRetry: () => void;
-}): JSX.Element {
-  const { translate } = useSettingsContext();
-
-  switch (type) {
-    case WalletType.META_MASK:
-    case WalletType.ALBY:
-      const confirmMessage =
-        type === WalletType.META_MASK
-          ? 'Please confirm the connection in your MetaMask.'
-          : 'Please confirm the connection in the Alby browser extension.';
-
-      return error ? (
-        <>
-          <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
-          <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
-
-          <StyledButton
-            className="mt-4"
-            label={translate('general/actions', 'Back')}
-            onClick={onBack}
-            color={StyledButtonColor.GRAY_OUTLINE}
-            width={StyledButtonWidth.MIN}
-          />
-        </>
-      ) : (
-        <>
-          <div className="mb-4">
-            <StyledLoadingSpinner size={SpinnerSize.LG} />
-          </div>
-          <p className="text-dfxGray-700">{translate('screens/home', confirmMessage)}</p>
-        </>
-      );
-
-    case WalletType.LEDGER_BTC:
-    case WalletType.LEDGER_ETH:
-      const app = type === WalletType.LEDGER_BTC ? 'Bitcoin' : 'Ethereum';
-      const ledgerSteps = [
-        'Connect your Ledger with your computer',
-        'Open the {{app}} app on your Ledger',
-        'Click on "Connect"',
-        'Confirm "Sign message" on your ledger',
-      ];
-
-      return (
-        <>
-          <StyledVerticalStack gap={5} center>
-            {error ? (
-              <div>
-                <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
-                <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
-              </div>
-            ) : (
-              <StyledLoadingSpinner size={SpinnerSize.LG} />
-            )}
-
-            <ol className="text-dfxBlue-800 text-left font-bold list-decimal">
-              {ledgerSteps.map((s, i) => (
-                <li key={i} className="list-inside">
-                  {translate('screens/home', s, { app })}
-                </li>
-              ))}
-            </ol>
-
-            <img
-              src={`https://content.dfx.swiss/img/v1/services/ledger${app.toLowerCase()}ready_en.png`}
-              className="w-full max-w-sm"
-            />
-
-            <StyledButton
-              label={translate('general/actions', 'Connect')}
-              onClick={onRetry}
-              width={StyledButtonWidth.MIN}
-              className="self-center"
-            />
-          </StyledVerticalStack>
-        </>
-      );
-
-    case WalletType.TREZOR_BTC:
-    case WalletType.TREZOR_ETH:
-      const trezorSteps = [
-        'Connect your Trezor with your computer',
-        'Click on "Continue in Trezor Connect"',
-        'Follow the steps in the Trezor Connect website',
-        'Confirm "Sign message" on your Trezor',
-      ];
-
-      return (
-        <>
-          <StyledVerticalStack gap={5} center>
-            {error ? (
-              <div>
-                <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
-                <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
-              </div>
-            ) : (
-              <StyledLoadingSpinner size={SpinnerSize.LG} />
-            )}
-
-            <ol className="text-dfxBlue-800 text-left font-bold list-decimal">
-              {trezorSteps.map((s, i) => (
-                <li key={i} className="list-inside">
-                  {translate('screens/home', s)}
-                </li>
-              ))}
-            </ol>
-
-            <img src="https://content.dfx.swiss/img/v1/services/trezorready_en.png" className="w-full max-w-sm" />
-
-            <StyledButton
-              label={translate('general/actions', 'Continue in Trezor Connect')}
-              onClick={onRetry}
-              width={StyledButtonWidth.MIN}
-              className="self-center"
-            />
-          </StyledVerticalStack>
-        </>
-      );
-  }
 }

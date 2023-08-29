@@ -6,10 +6,10 @@ type DeferredPromise<T> = {
   promise: Promise<T>;
 };
 
-export function useDeferredPromise<T>() {
+export function useDeferredPromise<T>(): [() => Promise<T>, DeferredPromise<T> | null] {
   const deferRef = useRef<DeferredPromise<T> | null>(null);
 
-  function defer() {
+  function defer(): Promise<T> {
     const deferred = {} as DeferredPromise<T>;
 
     const promise = new Promise<T>((resolve, reject) => {
@@ -19,8 +19,9 @@ export function useDeferredPromise<T>() {
 
     deferred.promise = promise;
     deferRef.current = deferred;
-    return deferRef.current;
+
+    return deferRef.current.promise;
   }
 
-  return { defer, deferRef: deferRef.current };
+  return [defer, deferRef.current];
 }

@@ -1,18 +1,16 @@
 import { Blockchain } from '@dfx.swiss/react';
 import TrezorConnect from '@trezor/connect-web';
 import { useEffect, useState } from 'react';
+import KeyPath from '../../config/key-path';
 import { AbortError } from '../../util/abort-error';
 
 export interface TrezorInterface {
+  isSupported: () => boolean;
   connect: (blockchain: Blockchain) => Promise<string>;
   signMessage: (msg: string, blockchain: Blockchain) => Promise<string>;
-  isSupported: () => boolean;
 }
 
 export function useTrezor(): TrezorInterface {
-  const derivationPathBtc = "m/84'/0'/0'/0/0";
-  const derivationPathEth = "m/44'/60'/0'/0/0";
-
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
   useEffect(() => {
@@ -45,8 +43,8 @@ export function useTrezor(): TrezorInterface {
   async function connect(blockchain: Blockchain): Promise<string> {
     const result =
       blockchain === Blockchain.BITCOIN
-        ? await TrezorConnect.getAddress({ path: derivationPathBtc, showOnTrezor: false })
-        : await TrezorConnect.ethereumGetAddress({ path: derivationPathEth, showOnTrezor: false });
+        ? await TrezorConnect.getAddress({ path: KeyPath.BTC.address, showOnTrezor: false })
+        : await TrezorConnect.ethereumGetAddress({ path: KeyPath.ETH.address, showOnTrezor: false });
 
     if (result.success) {
       return result.payload.address;
@@ -58,8 +56,8 @@ export function useTrezor(): TrezorInterface {
   async function signMessage(msg: string, blockchain: Blockchain): Promise<string> {
     const result =
       blockchain == Blockchain.BITCOIN
-        ? await TrezorConnect.signMessage({ path: derivationPathBtc, message: msg, coin: 'btc' })
-        : await TrezorConnect.ethereumSignMessage({ path: derivationPathEth, message: msg });
+        ? await TrezorConnect.signMessage({ path: KeyPath.BTC.address, message: msg, coin: 'btc' })
+        : await TrezorConnect.ethereumSignMessage({ path: KeyPath.ETH.address, message: msg });
 
     if (result.success) {
       return result.payload.signature;
@@ -77,8 +75,8 @@ export function useTrezor(): TrezorInterface {
   }
 
   return {
+    isSupported,
     connect,
     signMessage,
-    isSupported,
   };
 }

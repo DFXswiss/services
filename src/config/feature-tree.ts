@@ -1593,7 +1593,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'bitbox',
         img: 'bitbox',
-        disabled: true,
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
+        }),
       },
       {
         id: 'ledger',
