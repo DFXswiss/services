@@ -88,6 +88,7 @@ export function HomeScreen(): JSX.Element {
 
   function onHintConfirmed() {
     setShowInstallHint(undefined);
+    setConnectTo(undefined);
   }
 
   // pairing
@@ -125,7 +126,7 @@ export function HomeScreen(): JSX.Element {
 
   function handleBack() {
     if (showInstallHint) {
-      setShowInstallHint(undefined);
+      onHintConfirmed();
     } else if (showSignHint) {
       signHintRejected();
     } else if (pairingCode) {

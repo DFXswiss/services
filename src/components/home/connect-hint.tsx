@@ -51,8 +51,7 @@ function AutoConnectHint({ error, onBack, message }: ConnectHintProps & { messag
 
   return error ? (
     <>
-      <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
-      <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
+      <Error error={error} />
 
       <StyledButton
         className="mt-4"
@@ -85,23 +84,13 @@ function LedgerHint({ app, error, onRetry, isLoading }: ConnectHintProps & { app
   return (
     <>
       <StyledVerticalStack gap={5} center>
-        <ol className="text-dfxBlue-800 text-left font-bold list-decimal ml-4 max-w-sm">
-          {steps.map((s, i) => (
-            <li key={i}>{translate('screens/home', s, { app, device: 'Ledger' })}</li>
-          ))}
-        </ol>
-
-        <img
-          src={`https://content.dfx.swiss/img/v1/services/ledger${app.toLowerCase()}ready_en.png`}
-          className="w-full max-w-sm"
+        <Instructions
+          steps={steps}
+          params={{ app, device: 'Ledger' }}
+          img={`https://content.dfx.swiss/img/v1/services/ledger${app.toLowerCase()}ready_en.png`}
         />
 
-        {error && (
-          <div>
-            <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
-            <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
-          </div>
-        )}
+        {error && <Error error={error} />}
 
         <StyledButton
           label={translate('general/actions', 'Connect')}
@@ -137,27 +126,13 @@ function BitboxHint({ pairingCode, onPairingConfirmed, error, onRetry, isLoading
   return (
     <>
       <StyledVerticalStack gap={5} center>
-        <ol className="text-dfxBlue-800 text-left font-bold list-decimal ml-6 max-w-sm">
-          {steps.map((s, i) => (
-            <li key={i}>{translate('screens/home', s, { device: 'BitBox' })}</li>
-          ))}
-        </ol>
+        <Instructions
+          steps={steps}
+          params={{ device: 'BitBox' }}
+          img="https://content.dfx.swiss/img/v1/services/bitboxready_en.png"
+        />
 
-        {pairingCode ? (
-          <div>
-            <h2 className="text-dfxGray-700">{translate('screens/home', 'Pairing code')}:</h2>
-            <p className="text-dfxGray-700">{pairingCode}</p>
-          </div>
-        ) : (
-          <img src={`https://content.dfx.swiss/img/v1/services/bitboxready_en.png`} className="w-full max-w-sm" />
-        )}
-
-        {error && (
-          <div>
-            <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
-            <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
-          </div>
-        )}
+        {error && <Error error={error} />}
 
         <StyledButton
           label={translate('general/actions', pairingCode ? 'Next' : 'Connect')}
@@ -184,20 +159,13 @@ function TrezorHint({ error, onRetry, isLoading }: ConnectHintProps): JSX.Elemen
   return (
     <>
       <StyledVerticalStack gap={5} center>
-        <ol className="text-dfxBlue-800 text-left font-bold list-decimal ml-4 max-w-sm">
-          {steps.map((s, i) => (
-            <li key={i}>{translate('screens/home', s, { device: 'Trezor' })}</li>
-          ))}
-        </ol>
+        <Instructions
+          steps={steps}
+          params={{ device: 'Trezor' }}
+          img="https://content.dfx.swiss/img/v1/services/trezorready_en.png"
+        />
 
-        <img src="https://content.dfx.swiss/img/v1/services/trezorready_en.png" className="w-full max-w-sm" />
-
-        {error && (
-          <div>
-            <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
-            <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
-          </div>
-        )}
+        {error && <Error error={error} />}
 
         <StyledButton
           label={translate('general/actions', 'Continue in Trezor Connect')}
@@ -208,5 +176,40 @@ function TrezorHint({ error, onRetry, isLoading }: ConnectHintProps): JSX.Elemen
         />
       </StyledVerticalStack>
     </>
+  );
+}
+
+function Instructions({
+  steps,
+  params,
+  img,
+}: {
+  steps: string[];
+  params: Record<string, string>;
+  img: string;
+}): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  return (
+    <>
+      <ol className="text-dfxBlue-800 text-left font-bold list-decimal ml-6 max-w-sm">
+        {steps.map((s, i) => (
+          <li key={i}>{translate('screens/home', s, params)}</li>
+        ))}
+      </ol>
+
+      <img src={img} className="w-full max-w-sm" />
+    </>
+  );
+}
+
+function Error({ error }: { error: string }): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  return (
+    <div>
+      <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
+      <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
+    </div>
   );
 }
