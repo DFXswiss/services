@@ -112,7 +112,7 @@ export function HomeScreen(): JSX.Element {
       const wallet = getWallet(tile, appParams);
       setConnectTo(wallet);
 
-      autoConnectWallets.includes(wallet.type) || (activeWallet === wallet.type && connectWallet(wallet));
+      if (autoConnectWallets.includes(wallet.type) || activeWallet === wallet.type) connectWallet(wallet);
     } else if (tile.next) {
       if (tile.next.options) setOptions(tile.next.options);
       const page = { page: tile.next.page, allowedTiles: tile.next.tiles };
