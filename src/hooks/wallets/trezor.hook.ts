@@ -1,18 +1,18 @@
-import { Blockchain } from '@dfx.swiss/react';
 import TrezorConnect from '@trezor/connect-web';
 import { useEffect, useState } from 'react';
+import KeyPath from '../../config/key-path';
+import { WalletType } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
 
+type TrezorWallet = WalletType.TREZOR_BTC | WalletType.TREZOR_ETH;
+
 export interface TrezorInterface {
-  connect: (blockchain: Blockchain) => Promise<string>;
-  signMessage: (msg: string, blockchain: Blockchain) => Promise<string>;
   isSupported: () => boolean;
+  connect: (wallet: TrezorWallet) => Promise<string>;
+  signMessage: (msg: string, wallet: TrezorWallet) => Promise<string>;
 }
 
 export function useTrezor(): TrezorInterface {
-  const derivationPathBtc = "m/84'/0'/0'/0/0";
-  const derivationPathEth = "m/44'/60'/0'/0/0";
-
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
   useEffect(() => {
@@ -42,11 +42,11 @@ export function useTrezor(): TrezorInterface {
     return isInitialized;
   }
 
-  async function connect(blockchain: Blockchain): Promise<string> {
+  async function connect(wallet: TrezorWallet): Promise<string> {
     const result =
-      blockchain === Blockchain.BITCOIN
-        ? await TrezorConnect.getAddress({ path: derivationPathBtc, showOnTrezor: false })
-        : await TrezorConnect.ethereumGetAddress({ path: derivationPathEth, showOnTrezor: false });
+      wallet === WalletType.TREZOR_BTC
+        ? await TrezorConnect.getAddress({ path: KeyPath.BTC.address, showOnTrezor: false })
+        : await TrezorConnect.ethereumGetAddress({ path: KeyPath.ETH.address, showOnTrezor: false });
 
     if (result.success) {
       return result.payload.address;
@@ -55,11 +55,11 @@ export function useTrezor(): TrezorInterface {
     handlePayloadError('Trezor not connected', result.payload.error);
   }
 
-  async function signMessage(msg: string, blockchain: Blockchain): Promise<string> {
+  async function signMessage(msg: string, wallet: TrezorWallet): Promise<string> {
     const result =
-      blockchain == Blockchain.BITCOIN
-        ? await TrezorConnect.signMessage({ path: derivationPathBtc, message: msg, coin: 'btc' })
-        : await TrezorConnect.ethereumSignMessage({ path: derivationPathEth, message: msg });
+      wallet === WalletType.TREZOR_BTC
+        ? await TrezorConnect.signMessage({ path: KeyPath.BTC.address, message: msg, coin: 'btc' })
+        : await TrezorConnect.ethereumSignMessage({ path: KeyPath.ETH.address, message: msg });
 
     if (result.success) {
       return result.payload.signature;
@@ -77,8 +77,8 @@ export function useTrezor(): TrezorInterface {
   }
 
   return {
+    isSupported,
     connect,
     signMessage,
-    isSupported,
   };
 }

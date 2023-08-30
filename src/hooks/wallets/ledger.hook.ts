@@ -1,9 +1,10 @@
-import { Blockchain } from '@dfx.swiss/react';
 import EthClient from '@ledgerhq/hw-app-eth';
 import Transport from '@ledgerhq/hw-transport';
 import TransportWebHID from '@ledgerhq/hw-transport-webhid';
 import BtcClient, { DefaultWalletPolicy } from 'ledger-bitcoin';
 import { useState } from 'react';
+import KeyPath from '../../config/key-path';
+import { WalletType } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
 import { timeout } from '../../util/utils';
@@ -13,16 +14,15 @@ interface LedgerError extends Error {
   statusText: string;
 }
 
+type LedgerWallet = WalletType.LEDGER_BTC | WalletType.LEDGER_ETH;
+
 export interface LedgerInterface {
-  connect: (blockchain: Blockchain) => Promise<string>;
-  signMessage: (msg: string, blockchain: Blockchain) => Promise<string>;
   isSupported: () => Promise<boolean>;
+  connect: (wallet: LedgerWallet) => Promise<string>;
+  signMessage: (msg: string, wallet: LedgerWallet) => Promise<string>;
 }
 
 export function useLedger(): LedgerInterface {
-  const rootPathBtc = "84'/0'/0'";
-  const rootPathEth = "44'/60'/0'";
-
   const [transport, setTransport] = useState<Transport>();
 
   let tmpBtcClient: BtcClient;
@@ -35,8 +35,8 @@ export function useLedger(): LedgerInterface {
     return TransportWebHID.isSupported();
   }
 
-  async function connect(blockchain: Blockchain): Promise<string> {
-    return blockchain === Blockchain.BITCOIN ? connectBtc() : connectEth();
+  async function connect(wallet: LedgerWallet): Promise<string> {
+    return wallet === WalletType.LEDGER_BTC ? connectBtc() : connectEth();
   }
 
   async function connectBtc(): Promise<string> {
@@ -73,7 +73,7 @@ export function useLedger(): LedgerInterface {
         onTimeout();
         throw new TranslatedError('Connection timed out. Please retry.');
       } else if (name === 'LockedDeviceError') {
-        throw new TranslatedError('Please unlock your Ledger');
+        throw new TranslatedError('Please unlock your Ledger.');
       } else if (name === 'TransportRaceCondition') {
         throw new TranslatedError('There is already a request pending. Please reload the page and retry.');
       } else if (statusText === 'CLA_NOT_SUPPORTED' || statusText === 'INS_NOT_SUPPORTED') {
@@ -81,7 +81,7 @@ export function useLedger(): LedgerInterface {
           'You are using a wrong or outdated Ledger app. Please install the newest version of the Bitcoin app on your Ledger.',
         );
       } else if (statusText === 'UNKNOWN_ERROR') {
-        throw new TranslatedError('Please open the Bitcoin app on your Ledger');
+        throw new TranslatedError('Please open the Bitcoin app on your Ledger.');
       }
 
       throw e;
@@ -98,7 +98,7 @@ export function useLedger(): LedgerInterface {
       const { name } = e as Error;
 
       if (name === 'TransportOpenUserCancelled') {
-        throw new TranslatedError('Please connect your Ledger');
+        throw new TranslatedError('Please connect your Ledger.');
       }
 
       throw e;
@@ -117,58 +117,48 @@ export function useLedger(): LedgerInterface {
 
   async function fetchBtcAddress(client: BtcClient): Promise<string> {
     const fpr = await client.getMasterFingerprint();
-    const pubKey = await client.getExtendedPubkey(`m/${rootPathBtc}`);
-    const policy = new DefaultWalletPolicy('wpkh(@0/**)', `[${fpr}/${rootPathBtc}]${pubKey}`);
+    const pubKey = await client.getExtendedPubkey(KeyPath.BTC.xPub);
+    const policy = new DefaultWalletPolicy('wpkh(@0/**)', `[${fpr}/${KeyPath.BTC.root}]${pubKey}`);
 
     return client.getWalletAddress(policy, null, 0, 0, false);
   }
 
   async function fetchEthAddress(client: EthClient): Promise<string> {
-    return client.getAddress("44'/60'/0'/0/0", false, false).then((r) => r.address);
+    return client.getAddress(KeyPath.ETH.address, false, false).then((r) => r.address);
   }
 
-  async function signMessage(msg: string, blockchain: Blockchain): Promise<string> {
-    return blockchain == Blockchain.BITCOIN ? signBtcMessage(msg) : signEthMessage(msg);
+  async function signMessage(msg: string, wallet: LedgerWallet): Promise<string> {
+    try {
+      return wallet === WalletType.LEDGER_BTC ? await signBtcMessage(msg) : await signEthMessage(msg);
+    } catch (e) {
+      const { statusText } = e as LedgerError;
+
+      if (statusText === 'CONDITIONS_OF_USE_NOT_SATISFIED') {
+        throw new AbortError('User cancelled');
+      }
+
+      throw e;
+    }
   }
 
   async function signBtcMessage(msg: string): Promise<string> {
-    const client = btcClient ?? tmpBtcClient;
+    const client = tmpBtcClient ?? btcClient;
     if (!client) throw new Error('Ledger not connected');
 
-    try {
-      return await client.signMessage(Buffer.from(msg), `m/${rootPathBtc}/0/0`);
-    } catch (e) {
-      const { statusText } = e as LedgerError;
-
-      if (statusText === 'CONDITIONS_OF_USE_NOT_SATISFIED') {
-        throw new AbortError('User cancelled');
-      }
-
-      throw e;
-    }
+    return client.signMessage(Buffer.from(msg), KeyPath.BTC.address);
   }
 
   async function signEthMessage(msg: string): Promise<string> {
-    const client = ethClient ?? tmpEthClient;
+    const client = tmpEthClient ?? ethClient;
     if (!client) throw new Error('Ledger not connected');
 
-    try {
-      const signature = await client.signPersonalMessage(`m/${rootPathEth}/0/0`, Buffer.from(msg).toString('hex'));
-      return '0x' + signature.r + signature.s + signature.v.toString(16);
-    } catch (e) {
-      const { statusText } = e as LedgerError;
-
-      if (statusText === 'CONDITIONS_OF_USE_NOT_SATISFIED') {
-        throw new AbortError('User cancelled');
-      }
-
-      throw e;
-    }
+    const signature = await client.signPersonalMessage(KeyPath.ETH.address, Buffer.from(msg).toString('hex'));
+    return '0x' + signature.r + signature.s + signature.v.toString(16);
   }
 
   return {
+    isSupported,
     connect,
     signMessage,
-    isSupported,
   };
 }
