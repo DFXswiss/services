@@ -6,12 +6,21 @@ interface LayoutProps extends PropsWithChildren {
   backButton?: boolean;
   onBack?: () => void;
   textStart?: boolean;
+  rootRef?: Ref<HTMLDivElement>;
   scrollRef?: Ref<HTMLDivElement>;
 }
 
-export function Layout({ title, backButton, onBack, textStart, children, scrollRef }: LayoutProps): JSX.Element {
+export function Layout({
+  title,
+  backButton,
+  onBack,
+  textStart,
+  children,
+  rootRef,
+  scrollRef,
+}: LayoutProps): JSX.Element {
   return (
-    <div id="app-root" className="h-full flex flex-col">
+    <div id="app-root" className="h-full flex flex-col" ref={rootRef}>
       <Navigation title={title} backButton={backButton} onBack={onBack} />
 
       <div className="flex flex-col flex-grow overflow-auto" ref={scrollRef}>
