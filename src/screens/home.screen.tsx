@@ -10,7 +10,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { ConnectHint } from '../components/home/connect-hint';
@@ -23,6 +23,7 @@ import { useAppParams } from '../hooks/app-params.hook';
 import { useDeferredPromise } from '../hooks/deferred-promise.hook';
 import { Tile, Wallet, isWallet, useFeatureTree } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
+import { useResizeObserver } from '../hooks/resize-observer.hook';
 import { useStore } from '../hooks/store.hook';
 import { AbortError } from '../util/abort-error';
 import { Stack } from '../util/stack';
@@ -249,17 +250,9 @@ export function HomeScreen(): JSX.Element {
 
 function TileComponent({ tile, onClick }: { tile: Tile; onClick: (t: Tile) => void }): JSX.Element {
   const { translate } = useSettingsContext();
-  const tileRef = useRef<HTMLDivElement>(null);
+  const tileRef = useResizeObserver<HTMLDivElement>((el) => setSize(el.offsetHeight));
 
   const [size, setSize] = useState<number>();
-
-  function setTileSize() {
-    setSize(tileRef.current?.offsetHeight);
-  }
-
-  useEffect(setTileSize, [tileRef.current]);
-
-  window.addEventListener('resize', setTileSize);
 
   return (
     <div
