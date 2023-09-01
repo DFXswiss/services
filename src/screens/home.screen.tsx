@@ -30,7 +30,7 @@ import { Stack } from '../util/stack';
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isLoggedIn, isInitialized, isProcessing, logout } = useSessionContext();
-  const { isUserLoading } = useUserContext();
+  const { isUserLoading, user } = useUserContext();
   const { isEmbedded } = useAppHandlingContext();
   const { getInstalledWallets, login, switchBlockchain, activeWallet } = useWalletContext();
   const { showsSignatureInfo } = useStore();
@@ -161,8 +161,9 @@ export function HomeScreen(): JSX.Element {
       return doLogin(wallet.type, wallet.blockchain, address)
         .then(() => {
           if (redirectPath) {
+            const path = redirectPath.includes('sell') && !user?.kycDataComplete ? '/profile' : redirectPath;
             // wait for the user to reload
-            setTimeout(() => navigate({ pathname: redirectPath }, { clearParams: ['redirect-path'] }), 10);
+            setTimeout(() => navigate({ pathname: path }, { clearParams: ['redirect-path'] }), 10);
           }
         })
         .catch((e) => {
