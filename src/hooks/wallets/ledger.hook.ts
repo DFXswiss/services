@@ -1,6 +1,7 @@
 import EthClient from '@ledgerhq/hw-app-eth';
 import Transport from '@ledgerhq/hw-transport';
 import TransportWebHID from '@ledgerhq/hw-transport-webhid';
+import * as ethUtil from 'ethereumjs-util';
 import BtcClient, { DefaultWalletPolicy } from 'ledger-bitcoin';
 import { useState } from 'react';
 import KeyPath from '../../config/key-path';
@@ -152,7 +153,10 @@ export function useLedger(): LedgerInterface {
     const client = tmpEthClient ?? ethClient;
     if (!client) throw new Error('Ledger not connected');
 
-    const signature = await client.signPersonalMessage(KeyPath.ETH.address, Buffer.from(msg).toString('hex'));
+    const signature = await client.signPersonalMessage(
+      KeyPath.ETH.address,
+      ethUtil.stripHexPrefix(Buffer.from(msg).toString('hex')),
+    );
     return '0x' + signature.r + signature.s + signature.v.toString(16);
   }
 
