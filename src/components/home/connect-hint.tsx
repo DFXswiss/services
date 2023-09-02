@@ -129,15 +129,8 @@ function BitboxHint({ pairingCode, onPairingConfirmed, error, onRetry, isLoading
         <Instructions
           steps={steps}
           params={{ device: 'BitBox' }}
-          img={pairingCode ? undefined : 'https://content.dfx.swiss/img/v1/services/bitboxready_en.png'}
+          img="https://content.dfx.swiss/img/v1/services/bitboxready_en.png"
         />
-
-        {pairingCode && (
-          <div>
-            <h2 className="text-dfxGray-700">{translate('screens/home', 'Pairing code')}:</h2>
-            <p className="text-dfxGray-700">{pairingCode}</p>
-          </div>
-        )}
 
         {error && <Error error={error} />}
 
@@ -193,7 +186,7 @@ function Instructions({
 }: {
   steps: string[];
   params: Record<string, string>;
-  img?: string;
+  img: string;
 }): JSX.Element {
   const { translate } = useSettingsContext();
 
@@ -205,7 +198,7 @@ function Instructions({
         ))}
       </ol>
 
-      {img && <img src={img} className="w-full max-w-sm" />}
+      <img src={img} className="w-full max-w-sm" />
     </>
   );
 }

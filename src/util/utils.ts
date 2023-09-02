@@ -16,7 +16,3 @@ export function url(url: string, params: URLSearchParams): string {
   const search = (params as any).size > 0 ? `?${params}` : '';
   return `${url}${search}`;
 }
-
-export function isNode(e: EventTarget | null): e is Node {
-  return e != null && 'nodeType' in e;
-}

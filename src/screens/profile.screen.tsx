@@ -9,10 +9,13 @@ import {
   StyledDropdown,
   StyledHorizontalStack,
   StyledInput,
+  StyledModal,
+  StyledModalType,
+  StyledModalWidth,
   StyledSpacer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { Layout } from '../components/layout';
@@ -33,10 +36,10 @@ export function ProfileScreen(): JSX.Element {
     formState: { isValid, errors },
   } = useForm<KycData>({ mode: 'onTouched' });
   const selectedAccountType = useWatch({ control, name: 'accountType' });
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
+  const [showsErrorAlert, setShowsErrorAlert] = useState(false);
 
   const redirectPath = new URLSearchParams(search).get('redirect-path') ?? '/';
 
@@ -47,7 +50,8 @@ export function ProfileScreen(): JSX.Element {
       // wait for the user to reload
       .then(() => setTimeout(() => navigate({ pathname: redirectPath }, { clearParams: ['redirect-path'] }), 10))
       .catch((error: ApiError) => {
-        setErrorMessage(error.message ?? 'Unknown error');
+        setErrorMessage(error.message);
+        setShowsErrorAlert(true);
       })
       .finally(() => setIsSubmitting(false));
   }
@@ -75,7 +79,32 @@ export function ProfileScreen(): JSX.Element {
   });
 
   return (
-    <Layout title={translate('screens/profile', 'User details')} rootRef={rootRef}>
+    <Layout title={translate('screens/profile', 'User details')}>
+      {/* MODAL */}
+      <StyledModal
+        isVisible={showsErrorAlert}
+        onClose={setShowsErrorAlert}
+        type={StyledModalType.ALERT}
+        width={StyledModalWidth.NONE}
+      >
+        <StyledVerticalStack gap={4}>
+          <h1>{translate('general/errors', 'Something went wrong')}</h1>
+          <p>
+            {translate(
+              'general/errors',
+              'Please try again later. If the issue persists please reach out to our support.',
+            )}
+          </p>
+          {errorMessage && <p className="text-dfxGray-800 text-sm">{errorMessage}</p>}
+          <div className="mx-auto">
+            <StyledButton
+              width={StyledButtonWidth.SM}
+              onClick={() => setShowsErrorAlert(false)}
+              label={translate('general/actions', 'Ok')}
+            />
+          </div>
+        </StyledVerticalStack>
+      </StyledModal>
       {/* CONTENT */}
       <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
       <p className="text-base font-bold text-dfxBlue-800">
@@ -88,7 +117,6 @@ export function ProfileScreen(): JSX.Element {
               {translate('screens/profile', 'Account Type')}
             </p>
             <StyledDropdown
-              rootRef={rootRef}
               name="accountType"
               label=""
               placeholder={translate('general/actions', 'Please select...')}
@@ -157,7 +185,6 @@ export function ProfileScreen(): JSX.Element {
                 />
               </StyledHorizontalStack>
               <StyledDropdown
-                rootRef={rootRef}
                 name="country"
                 label={translate('screens/profile', 'Country')}
                 placeholder={translate('general/actions', 'Please select...')}
@@ -232,7 +259,6 @@ export function ProfileScreen(): JSX.Element {
                     />
                   </StyledHorizontalStack>
                   <StyledDropdown
-                    rootRef={rootRef}
                     name="organizationCountry"
                     label={translate('screens/profile', 'Country')}
                     placeholder={translate('general/actions', 'Please select...')}
@@ -243,20 +269,6 @@ export function ProfileScreen(): JSX.Element {
                 </>
               )}
               <StyledSpacer spacing={1} />
-
-              {errorMessage && (
-                <>
-                  <p className="text-dfxRed-100">
-                    {translate(
-                      'general/errors',
-                      'Something went wrong. Please try again later. If the issue persists please reach out to our support.',
-                    )}
-                  </p>
-                  <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
-                  <StyledSpacer spacing={1} />
-                </>
-              )}
-
               <StyledButton
                 label={translate('general/actions', 'Continue')}
                 onClick={handleSubmit(onSubmit)}

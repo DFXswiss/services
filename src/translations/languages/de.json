@@ -14,7 +14,8 @@
     "Continue in Trezor Connect": "Weiter zu Trezor Connect"
   },
   "general/errors": {
-    "Something went wrong. Please try again later. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es später noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support."
+    "Something went wrong": "Irgendwas hat nicht funktioniert",
+    "Please try again later. If the issue persists please reach out to our support.": "Bitte versuche es später noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support."
   },
   "general/services": {
     "Buy": "Kaufen",
@@ -102,7 +103,7 @@
     "Please select...": "Bitte auswählen...",
     "Cash out to my bank account": "Auszahlung auf mein Bankkonto",
     "Add or select your IBAN": "Deine IBAN hinzufügen oder auswählen",
-    "Select payment account": "Bankkonto auswählen",
+    "Select your payment account": "Wähle Dein Konto aus",
     "Your Currency": "Deine Währung",
     "e.g. EUR": "z.B. EUR",
     "Enter your desired payout amount": "Gib den gewünschten Auszahlungsbetrag ein",

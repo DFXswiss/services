@@ -1,7 +1,8 @@
-import { Asset, Blockchain, Sell, Utils, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
+import { Asset, Blockchain, Sell, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { GetInfoResponse } from 'webln';
+import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
 import { useAlby } from '../hooks/wallets/alby.hook';
 import { useBitbox } from '../hooks/wallets/bitbox.hook';
@@ -9,8 +10,7 @@ import { useLedger } from '../hooks/wallets/ledger.hook';
 import { useMetaMask } from '../hooks/wallets/metamask.hook';
 import { useTrezor } from '../hooks/wallets/trezor.hook';
 import { AbortError } from '../util/abort-error';
-import { delay, url } from '../util/utils';
-import { useAppHandlingContext } from './app-handling.context';
+import { delay } from '../util/utils';
 import { AssetBalance, useBalanceContext } from './balance.context';
 
 export enum WalletType {
@@ -25,6 +25,7 @@ export enum WalletType {
 }
 
 interface WalletInterface {
+  address?: string;
   blockchain?: Blockchain;
   getInstalledWallets: () => Promise<WalletType[]>;
   login: (
@@ -47,8 +48,7 @@ export function useWalletContext(): WalletInterface {
 }
 
 export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
-  const { isInitialized, isLoggedIn, logout } = useSessionContext();
-  const { updateSession } = useApiSession();
+  const { isInitialized, isLoggedIn } = useSessionContext();
   const { session } = useApiSession();
   const metaMask = useMetaMask();
   const alby = useAlby();
@@ -56,11 +56,12 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const bitBox = useBitbox();
   const trezor = useTrezor();
   const api = useSessionContext();
-  const { isInitialized: isParamsInitialized, params: appParams } = useAppHandlingContext();
+  const { wallet: paramWallet, refcode: paramRef } = useAppParams();
   const { getSignMessage } = useAuth();
   const { hasBalance, getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
 
+  const [activeAddress, setActiveAddress] = useState<string>();
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
 
   const [mmAddress, setMmAddress] = useState<string>();
@@ -76,42 +77,39 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   }, []);
 
   useEffect(() => {
-    // logout on MetaMask account switch
-    if (activeWallet === WalletType.META_MASK && session?.address && mmAddress && session.address !== mmAddress) {
-      api.logout();
+    if (activeWallet === WalletType.META_MASK) {
+      if (activeAddress && mmAddress) {
+        // logout on account switch
+        if (activeAddress !== mmAddress) api.logout();
+      } else {
+        setActiveAddress(mmAddress);
+      }
     }
-  }, [session?.address, mmAddress, activeWallet]);
+  }, [activeAddress, mmAddress, activeWallet]);
+
+  // reset on session change
+  useEffect(() => {
+    if (activeAddress && session?.address && activeAddress !== session.address) resetWallet();
+  }, [session, activeAddress]);
+
+  const hasCheckedConnection = useRef(false);
 
   useEffect(() => {
-    if (isInitialized && !isLoggedIn) {
-      setWallet();
+    if (!isInitialized) return;
+
+    if (!hasCheckedConnection.current && isLoggedIn) {
+      activeWallet && connect(activeWallet).catch(() => api.logout());
     }
+
+    if (!isLoggedIn) resetWallet();
+
+    hasCheckedConnection.current = true;
   }, [isInitialized, isLoggedIn]);
 
-  useEffect(() => {
-    if (isParamsInitialized)
-      handleParamSession().then((hasSession) => hasSession && setWallet(appParams.type as WalletType));
-  }, [isParamsInitialized]);
-
-  async function handleParamSession(): Promise<boolean> {
-    try {
-      if (appParams.address && appParams.signature) {
-        await createSession(appParams.address, appParams.signature);
-        return true;
-      } else if (appParams.session && Utils.isJwt(appParams.session)) {
-        updateSession(appParams.session);
-        return true;
-      }
-    } catch (e) {
-      logout();
-    }
-
-    return false;
-  }
-
-  function setWallet(walletType?: WalletType) {
-    setActiveWallet(walletType);
-    walletType ? activeWalletStore.set(walletType) : activeWalletStore.remove();
+  function resetWallet() {
+    setActiveAddress(undefined);
+    setActiveWallet(undefined);
+    activeWalletStore.remove();
   }
 
   // public API
@@ -128,13 +126,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       // show signature hint
       await onSignHint?.();
 
-      // create session
-      const message = await getSignMessage(address);
-      const signature = await signMessage(wallet, message, address);
-      await createSession(address, signature);
+      await createSession(wallet, address);
     } catch (e) {
       api.logout();
-      setWallet();
+      resetWallet();
 
       throw e;
     }
@@ -152,7 +147,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   ): Promise<string> {
     const [address, blockchain] = await readData(wallet, onPairing, usedBlockchain, usedAddress);
 
-    setWallet(wallet);
+    setActiveWallet(wallet);
+    activeWalletStore.set(wallet);
 
     switch (wallet) {
       case WalletType.META_MASK:
@@ -161,20 +157,24 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
         break;
 
       case WalletType.ALBY:
+        setActiveAddress(address);
         break;
 
       case WalletType.LEDGER_BTC:
       case WalletType.LEDGER_ETH:
+        setActiveAddress(address);
         setLedgerBlockchain(blockchain);
         break;
 
       case WalletType.BITBOX_BTC:
       case WalletType.BITBOX_ETH:
+        setActiveAddress(address);
         setBitboxBlockchain(blockchain);
         break;
 
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
+        setActiveAddress(address);
         setTrezorBlockchain(blockchain);
         break;
     }
@@ -232,12 +232,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       const win: Window = window;
       const redirectUrl = new URL(win.location.href);
       redirectUrl.searchParams.set('type', WalletType.ALBY);
-
-      const params = new URLSearchParams({ redirectUri: redirectUrl.toString() });
-      appParams.wallet && params.set('wallet', appParams.wallet);
-      appParams.refcode && params.set('usedRef', appParams.refcode);
-
-      win.location = url(`${process.env.REACT_APP_API_URL}/auth/alby`, params);
+      win.location = `${process.env.REACT_APP_API_URL}/alby?redirect_uri=${encodeURIComponent(redirectUrl.toString())}`;
 
       await delay(5);
       throw new AbortError('Forwarded to Alby page');
@@ -283,10 +278,11 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     return wallets;
   }
 
-  async function createSession(address: string, signature: string): Promise<string> {
+  async function createSession(walletType: WalletType, address: string): Promise<string> {
+    const message = await getSignMessage(address);
+    const signature = await signMessage(walletType, message, address);
     const session =
-      (await api.login(address, signature)) ??
-      (await api.signUp(address, signature, appParams.wallet, appParams.refcode));
+      (await api.login(address, signature)) ?? (await api.signUp(address, signature, paramWallet, paramRef));
     if (!session) throw new Error('Failed to create session');
 
     return session;
@@ -295,7 +291,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {
     switch (activeWallet) {
       case WalletType.META_MASK:
-        return (await Promise.all(assets.map((asset: Asset) => metaMask.readBalance(asset, mmAddress)))).filter(
+        return (await Promise.all(assets.map((asset: Asset) => metaMask.readBalance(asset, activeAddress)))).filter(
           (b) => b.amount > 0,
         );
 
@@ -317,6 +313,26 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
       default:
         return getParamBalances(assets);
+    }
+  }
+
+  function getAddress(wallet?: WalletType): string | undefined {
+    switch (wallet ?? activeWallet) {
+      case WalletType.META_MASK:
+        return mmAddress;
+
+      case WalletType.ALBY:
+      case WalletType.LEDGER_BTC:
+      case WalletType.LEDGER_ETH:
+      case WalletType.BITBOX_BTC:
+      case WalletType.BITBOX_ETH:
+
+      case WalletType.TREZOR_BTC:
+      case WalletType.TREZOR_ETH:
+        return activeAddress;
+
+      default:
+        return undefined;
     }
   }
 
@@ -394,6 +410,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
   const context: WalletInterface = useMemo(
     () => ({
+      address: getAddress(),
       blockchain: getBlockchain(),
       getInstalledWallets,
       login,
@@ -404,6 +421,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     }),
     [
       activeWallet,
+      activeAddress,
       mmAddress,
       mmBlockchain,
       metaMask,
@@ -413,7 +431,8 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       api,
       hasBalance,
       getParamBalances,
-      appParams,
+      paramWallet,
+      paramRef,
     ],
   );
 

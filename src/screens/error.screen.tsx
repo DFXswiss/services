@@ -1,11 +1,12 @@
-import { Layout } from '../components/layout';
+import { Navigation } from '../components/navigation';
 import { useSettingsContext } from '../contexts/settings.context';
 
 export function ErrorScreen(): JSX.Element {
   const { translate } = useSettingsContext();
 
   return (
-    <Layout>
+    <>
+      <Navigation />
       <div className="flex flex-col items-center text-center px-8 mt-6">
         <h2 className="text-dfxBlue-800">{translate('screens/error', 'Oh sorry something went wrong')}</h2>
         <p className="text-dfxGray-700">
@@ -15,6 +16,6 @@ export function ErrorScreen(): JSX.Element {
           )}
         </p>
       </div>
-    </Layout>
+    </>
   );
 }
