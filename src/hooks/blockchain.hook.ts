@@ -4,6 +4,7 @@ import { MetaMaskChainInterface } from './wallets/metamask.hook';
 
 export interface BlockchainInterface {
   toBlockchain: (chainId: string | number) => Blockchain | undefined;
+  toChainHex: (blockchain: Blockchain) => string | number | undefined;
   toChainId: (blockchain: Blockchain) => string | number | undefined;
   toChainObject: (blockchain: Blockchain) => MetaMaskChainInterface | undefined;
   toHeader: (blockchain: Blockchain) => string;
@@ -37,16 +38,22 @@ export function useBlockchain(): BlockchainInterface {
     return chainIds[+chainId];
   }
 
-  function toChainId(blockchain: Blockchain): string | undefined {
+  function toChainHex(blockchain: Blockchain): string | undefined {
     const web3 = new Web3(Web3.givenProvider);
 
     const id = Object.entries(chainIds).find(([_, b]) => b === blockchain)?.[0];
     return id && web3.utils.toHex(id);
   }
 
+  function toChainId(blockchain: Blockchain): string | undefined {
+    const web3 = new Web3(Web3.givenProvider);
+    const id = Object.entries(chainIds).find(([_, b]) => b === blockchain)?.[0];
+    return id;
+  }
+
   function toChainObject(blockchain: Blockchain): MetaMaskChainInterface | undefined {
     const chainName = definitions.stringValue[blockchain];
-    const chainId = toChainId(blockchain);
+    const chainId = toChainHex(blockchain);
     if (!chainId) return undefined;
 
     switch (blockchain) {
@@ -125,6 +132,7 @@ export function useBlockchain(): BlockchainInterface {
 
   return {
     toBlockchain,
+    toChainHex,
     toChainId,
     toChainObject,
     toHeader: (blockchain: Blockchain) => definitions.headings[blockchain],

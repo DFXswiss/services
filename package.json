@@ -10,6 +10,8 @@
     "@ledgerhq/hw-transport-webhid": "^6.27.19",
     "@r2wc/react-to-web-component": "^2.0.2",
     "@trezor/connect-web": "^9.1.1",
+    "@walletconnect/ethereum-provider": "^2.10.0",
+    "@walletconnect/modal": "^2.6.1",
     "bitbox02-api": "^0.15.0",
     "buffer": "^6.0.3",
     "copy-to-clipboard": "^3.3.3",

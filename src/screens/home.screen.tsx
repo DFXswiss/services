@@ -50,7 +50,7 @@ export function HomeScreen(): JSX.Element {
   const [pairingCode, setPairingCode] = useState<string>();
   const [pages, setPages] = useState(new Stack<{ page: string; allowedTiles: string[] | undefined }>());
 
-  const autoConnectWallets = [WalletType.META_MASK, WalletType.ALBY];
+  const autoConnectWallets = [WalletType.META_MASK, WalletType.ALBY, WalletType.WALLET_CONNECT];
 
   const redirectPath = new URLSearchParams(search).get('redirect-path');
   const currentPage = pages.current?.page;
