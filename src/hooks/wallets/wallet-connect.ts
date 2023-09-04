@@ -25,7 +25,7 @@ export function useWalletConnect(): WalletConnectInterface {
     const chainId = toChainId(blockchain);
 
     const provider = await EthereumProvider.init({
-      projectId: '40d5335cbc27edf36ef95389c9d1ac22',
+      projectId: process.env.REACT_APP_WC_PID ?? '40d5335cbc27edf36ef95389c9d1ac22',
       chains: [+(chainId ?? 1)],
       showQrModal: true,
       metadata: {
