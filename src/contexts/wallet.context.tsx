@@ -25,6 +25,7 @@ export enum WalletType {
 }
 
 interface WalletInterface {
+  isInitialized: boolean;
   blockchain?: Blockchain;
   getInstalledWallets: () => Promise<WalletType[]>;
   login: (
@@ -47,7 +48,7 @@ export function useWalletContext(): WalletInterface {
 }
 
 export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
-  const { isInitialized, isLoggedIn, logout } = useSessionContext();
+  const { isInitialized: isSessionInitialized, isLoggedIn, logout } = useSessionContext();
   const { updateSession } = useApiSession();
   const { session } = useApiSession();
   const metaMask = useMetaMask();
@@ -61,6 +62,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const { hasBalance, getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
 
+  const [isInitialized, setIsInitialized] = useState(false);
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
 
   const [mmAddress, setMmAddress] = useState<string>();
@@ -82,15 +84,19 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     }
   }, [session?.address, mmAddress, activeWallet]);
 
+  // initialize
   useEffect(() => {
-    if (isInitialized && !isLoggedIn) {
+    if (isSessionInitialized && !isLoggedIn) {
       setWallet();
     }
-  }, [isInitialized, isLoggedIn]);
+  }, [isSessionInitialized, isLoggedIn]);
 
   useEffect(() => {
     if (isParamsInitialized)
-      handleParamSession().then((hasSession) => hasSession && setWallet(appParams.type as WalletType));
+      handleParamSession().then((hasSession) => {
+        hasSession && setWallet(appParams.type as WalletType);
+        setIsInitialized(true);
+      });
   }, [isParamsInitialized]);
 
   async function handleParamSession(): Promise<boolean> {
@@ -394,6 +400,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
   const context: WalletInterface = useMemo(
     () => ({
+      isInitialized: isInitialized && isSessionInitialized && isParamsInitialized,
       blockchain: getBlockchain(),
       getInstalledWallets,
       login,
@@ -403,6 +410,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       sendTransaction,
     }),
     [
+      isInitialized,
+      isSessionInitialized,
+      isParamsInitialized,
       activeWallet,
       mmAddress,
       mmBlockchain,

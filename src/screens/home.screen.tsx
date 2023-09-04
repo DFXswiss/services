@@ -30,10 +30,10 @@ import { Stack } from '../util/stack';
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
-  const { isLoggedIn, isInitialized, isProcessing, logout } = useSessionContext();
+  const { isLoggedIn, isProcessing, logout } = useSessionContext();
   const { isUserLoading, user } = useUserContext();
   const { isEmbedded } = useAppHandlingContext();
-  const { getInstalledWallets, login, switchBlockchain, activeWallet } = useWalletContext();
+  const { isInitialized, getInstalledWallets, login, switchBlockchain, activeWallet } = useWalletContext();
   const { showsSignatureInfo } = useStore();
   const { navigate } = useNavigation();
   const { search } = useLocation();
@@ -59,7 +59,7 @@ export function HomeScreen(): JSX.Element {
 
   useEffect(() => {
     if (isInitialized && isLoggedIn && !activeWallet) {
-      navigate('/buy');
+      openPage(redirectPath ?? '/buy');
     }
   }, [isInitialized, isLoggedIn, activeWallet]);
 
@@ -161,11 +161,8 @@ export function HomeScreen(): JSX.Element {
 
       return doLogin(wallet.type, wallet.blockchain, address)
         .then(() => {
-          if (redirectPath) {
-            const path = redirectPath.includes('sell') && !user?.kycDataComplete ? '/profile' : redirectPath;
-            // wait for the user to reload
-            setTimeout(() => navigate({ pathname: path }, { clearParams: ['redirect-path'] }), 10);
-          }
+          // wait for the user to reload
+          if (redirectPath) setTimeout(() => openPage(redirectPath), 10);
         })
         .catch((e) => {
           if (e instanceof AbortError) {
@@ -192,6 +189,11 @@ export function HomeScreen(): JSX.Element {
     return activeWallet === wallet
       ? selectedChain && switchBlockchain(selectedChain)
       : logout().then(() => login(wallet, confirmSignHint, confirmPairing, selectedChain, address));
+  }
+
+  function openPage(path: string) {
+    path = path.includes('sell') && !user?.kycDataComplete ? '/profile' : path;
+    navigate({ pathname: path }, { clearParams: ['redirect-path'] });
   }
 
   return (
