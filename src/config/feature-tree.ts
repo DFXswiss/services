@@ -959,6 +959,337 @@ export const FeatureTree: Page[] = [
     ],
   },
 
+  // --- BitBox ONLY Buy --- //
+  {
+    id: 'bitboxonly-buy',
+    tiles: [
+      {
+        id: 'bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+          },
+        },
+      },
+      {
+        id: 'erc20',
+        img: 'ethereumarbitrumoptimismpolygon',
+        next: {
+          page: 'bitboxonly-buy-erc20',
+        },
+      },
+    ],
+  },
+  {
+    id: 'bitboxonly-buy-erc20',
+    tiles: [
+      {
+        id: 'ethereum',
+        img: 'ethereum',
+        next: {
+          page: 'bitboxonly-buy-ethereum',
+        },
+      },
+      {
+        id: 'arbitrum',
+        img: 'arbitrum',
+        next: {
+          page: 'bitboxonly-buy-arbitrum',
+        },
+      },
+      {
+        id: 'optimism',
+        img: 'optimism',
+        next: {
+          page: 'bitboxonly-buy-optimism',
+        },
+      },
+    ],
+  },
+  {
+    id: 'bitboxonly-buy-ethereum',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'bitboxonly-buy-ethereum-stable',
+        },
+      },
+      {
+        id: 'other',
+        img: 'othersethereum',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'bitboxonly-buy-ethereum-stable',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'other',
+        img: 'othersethereum',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'bitboxonly-buy-arbitrum',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'buy-arbitrum-stable',
+        },
+      },
+      {
+        id: 'other',
+        img: 'othersarbitrum',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'bitboxonly-buy-arbitrum-stable',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'other',
+        img: 'othersarbitrum',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'bitboxonly-buy-optimism',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'bitboxonly-buy-optimism-stable',
+        },
+      },
+      {
+        id: 'other',
+        img: 'othersoptimism',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'bitboxonly-buy-optimism-stable',
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'xchf',
+        img: 'xchf',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'XCHF' },
+          },
+        },
+      },
+      {
+        id: 'other',
+        img: 'othersoptimism',
+        next: {
+          page: 'wallets',
+          tiles: ['bitbox'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+
   // --- MARC STEINER --- //
   {
     id: 'marcsteiner',
