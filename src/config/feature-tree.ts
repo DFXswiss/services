@@ -1296,14 +1296,14 @@ export const FeatureTree: Page[] = [
     tiles: [
       {
         id: 'marcsteiner-buy',
-        img: 'kaufen',
+        img: 'kaufen_simple',
         next: {
           page: 'marcsteiner-buy',
         },
       },
       {
         id: 'marcsteiner-sell',
-        img: 'verkaufen',
+        img: 'verkaufen_simple',
         next: {
           page: 'marcsteiner-sell',
         },
@@ -1315,7 +1315,7 @@ export const FeatureTree: Page[] = [
     tiles: [
       {
         id: 'bitcoin',
-        img: 'bitcoinlightning',
+        img: 'bitcoinlightning_simple',
         next: {
           page: 'hw-wallet',
           tiles: ['bitbox', 'ledger'],
@@ -1327,7 +1327,7 @@ export const FeatureTree: Page[] = [
       },
       {
         id: 'marcsteiner-buy-erc20',
-        img: 'ethereumarbitrumoptimismpolygon',
+        img: 'ethereumarbitrumoptimismpolygon_simple',
         next: {
           page: 'marcsteiner-buy-erc20',
         },
@@ -1524,7 +1524,7 @@ export const FeatureTree: Page[] = [
     tiles: [
       {
         id: 'bitcoin',
-        img: 'bitcoinlightning',
+        img: 'bitcoinlightning_simple',
         next: {
           page: 'wallets',
           tiles: ['dfx-wallet', 'alby'],
@@ -1536,7 +1536,7 @@ export const FeatureTree: Page[] = [
       },
       {
         id: 'erc20',
-        img: 'ethereumarbitrumoptimismpolygon',
+        img: 'ethereumarbitrumoptimismpolygon_simple',
         next: {
           page: 'sell-erc20',
         },
