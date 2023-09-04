@@ -967,7 +967,7 @@ export const FeatureTree: Page[] = [
         id: 'bitcoin',
         img: 'bitcoinlightning',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1017,7 +1017,7 @@ export const FeatureTree: Page[] = [
         id: 'eth',
         img: 'eth',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1029,7 +1029,7 @@ export const FeatureTree: Page[] = [
         id: 'wbtc',
         img: 'wbtc',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1048,7 +1048,7 @@ export const FeatureTree: Page[] = [
         id: 'other',
         img: 'othersethereum',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1065,7 +1065,7 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1077,7 +1077,7 @@ export const FeatureTree: Page[] = [
         id: 'usdc',
         img: 'usdc',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1089,7 +1089,7 @@ export const FeatureTree: Page[] = [
         id: 'dai',
         img: 'dai',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1101,7 +1101,7 @@ export const FeatureTree: Page[] = [
         id: 'other',
         img: 'othersethereum',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1118,7 +1118,7 @@ export const FeatureTree: Page[] = [
         id: 'eth',
         img: 'eth',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1130,7 +1130,7 @@ export const FeatureTree: Page[] = [
         id: 'wbtc',
         img: 'wbtc',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1149,7 +1149,7 @@ export const FeatureTree: Page[] = [
         id: 'other',
         img: 'othersarbitrum',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1166,7 +1166,7 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1178,7 +1178,7 @@ export const FeatureTree: Page[] = [
         id: 'usdc',
         img: 'usdc',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1190,7 +1190,7 @@ export const FeatureTree: Page[] = [
         id: 'dai',
         img: 'dai',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1202,7 +1202,7 @@ export const FeatureTree: Page[] = [
         id: 'other',
         img: 'othersarbitrum',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1219,7 +1219,7 @@ export const FeatureTree: Page[] = [
         id: 'eth',
         img: 'eth',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1238,7 +1238,7 @@ export const FeatureTree: Page[] = [
         id: 'other',
         img: 'othersoptimism',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1255,7 +1255,7 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1267,7 +1267,7 @@ export const FeatureTree: Page[] = [
         id: 'xchf',
         img: 'xchf',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1279,7 +1279,7 @@ export const FeatureTree: Page[] = [
         id: 'other',
         img: 'othersoptimism',
         next: {
-          page: 'wallets',
+          page: 'hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
