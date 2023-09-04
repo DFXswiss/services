@@ -1317,8 +1317,8 @@ export const FeatureTree: Page[] = [
         id: 'bitcoin',
         img: 'bitcoinlightning',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet'],
+          page: 'hw-wallet',
+          tiles: ['bitbox', 'ledger'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
@@ -1357,11 +1357,6 @@ export const FeatureTree: Page[] = [
         next: {
           page: 'marcsteiner-buy-optimism',
         },
-      },
-      {
-        id: 'polygon',
-        img: 'polygon',
-        disabled: true,
       },
     ],
   },
