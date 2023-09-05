@@ -88,7 +88,7 @@ interface AppHandlingContextInterface {
   isEmbedded: boolean;
   params: AppParams;
   setParams: (params: Partial<AppParams>) => void;
-  closeServices: (params: CloseServicesParams) => void;
+  closeServices: (params: CloseServicesParams, navigate: boolean) => void;
   redirectPath?: string;
   setRedirectPath: (path?: string) => void;
 }
@@ -144,6 +144,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
     if (params.redirectUri) {
       setRedirectUri(params.redirectUri);
+      storeRedirectUri.set(params.redirectUri);
     }
 
     const hasSession = params.session || (params.address && params.signature);
@@ -195,17 +196,20 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   }
 
   // closing
-  function closeServices(params: CloseServicesParams) {
+  function closeServices(params: CloseServicesParams, navigate: boolean) {
     if (props.isWidget) {
       props.closeCallback?.(createCloseMessageData(params));
-      props.router.navigate('/');
     } else if (isUsedByIframe) {
       sendMessage(createCloseMessageData(params));
-      props.router.navigate('/');
     } else {
-      const win: Window = window;
-      win.location = getRedirectUri(params);
+      if (redirectUri) {
+        const uri = getRedirectUri(params);
+        storeRedirectUri.remove();
+        (window as Window).location = uri;
+      }
     }
+
+    if (navigate) props.router.navigate('/');
   }
 
   function getRedirectUri(params: CloseServicesParams): string {

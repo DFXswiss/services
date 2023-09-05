@@ -183,7 +183,7 @@ export function BuyScreen(): JSX.Element {
       scrollRef={scrollRef}
     >
       {showsCompletion && paymentInfo ? (
-        <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo.buy} />
+        <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo.buy} navigateOnClose />
       ) : (
         <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
           <StyledVerticalStack gap={8} full>

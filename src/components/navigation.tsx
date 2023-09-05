@@ -69,7 +69,7 @@ function BackButton({ title, backButton, onBack }: BackButtonProps): JSX.Element
 
   function onClick() {
     if (homePath === pathname) {
-      closeServices({ type: CloseType.CANCEL });
+      closeServices({ type: CloseType.CANCEL }, false);
     } else {
       navigate(-1);
     }

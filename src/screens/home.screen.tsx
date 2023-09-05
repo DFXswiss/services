@@ -195,7 +195,7 @@ export function HomeScreen(): JSX.Element {
   return (
     <Layout
       title={isEmbedded ? ' ' : undefined}
-      backButton={isEmbedded || currentPage != null}
+      backButton={currentPage != null && currentPage !== appParams.mode}
       onBack={currentPage ? handleBack : undefined}
     >
       {isProcessing || isUserLoading || !tiles ? (
