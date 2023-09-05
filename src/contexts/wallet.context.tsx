@@ -1,4 +1,5 @@
 import { Asset, Blockchain, Sell, Utils, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
+import { Router } from '@remix-run/router';
 import BigNumber from 'bignumber.js';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { GetInfoResponse } from 'webln';
@@ -41,13 +42,17 @@ interface WalletInterface {
   sendTransaction: (sell: Sell) => Promise<string>;
 }
 
+interface WalletContextProps extends PropsWithChildren {
+  router: Router;
+}
+
 const WalletContext = createContext<WalletInterface>(undefined as any);
 
 export function useWalletContext(): WalletInterface {
   return useContext(WalletContext);
 }
 
-export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
+export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const { isInitialized: isSessionInitialized, isLoggedIn, logout } = useSessionContext();
   const { updateSession } = useApiSession();
   const { session } = useApiSession();
@@ -57,7 +62,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const bitBox = useBitbox();
   const trezor = useTrezor();
   const api = useSessionContext();
-  const { isInitialized: isParamsInitialized, params: appParams } = useAppHandlingContext();
+  const { isInitialized: isParamsInitialized, params: appParams, redirectPath } = useAppHandlingContext();
   const { getSignMessage } = useAuth();
   const { hasBalance, getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
@@ -94,7 +99,10 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   useEffect(() => {
     if (isParamsInitialized)
       handleParamSession().then((hasSession) => {
-        hasSession && setWallet(appParams.type as WalletType);
+        if (hasSession) {
+          setWallet(appParams.type as WalletType);
+          appParams.redirect && props.router.navigate(appParams.redirect);
+        }
         setIsInitialized(true);
       });
   }, [isParamsInitialized]);
@@ -238,6 +246,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       const win: Window = window;
       const redirectUrl = new URL(win.location.href);
       redirectUrl.searchParams.set('type', WalletType.ALBY);
+      redirectPath && redirectUrl.searchParams.set('redirect', redirectPath);
 
       const params = new URLSearchParams({ redirectUri: redirectUrl.toString() });
       appParams.wallet && params.set('wallet', appParams.wallet);

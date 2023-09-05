@@ -15,6 +15,7 @@ const urlParams = [
   'wallet',
   'refcode',
   'session',
+  'redirect',
   'type',
   'redirect-uri',
   'mode',
@@ -35,6 +36,7 @@ export interface AppParams {
   wallet?: string;
   refcode?: string;
   session?: string;
+  redirect?: string;
   type?: string;
   redirectUri?: string;
   mode?: string;
@@ -87,6 +89,8 @@ interface AppHandlingContextInterface {
   params: AppParams;
   setParams: (params: Partial<AppParams>) => void;
   closeServices: (params: CloseServicesParams) => void;
+  redirectPath?: string;
+  setRedirectPath: (path?: string) => void;
 }
 
 interface AppHandlingContextProps extends PropsWithChildren {
@@ -111,6 +115,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const [isInitialized, setIsInitialized] = useState(false);
   const [redirectUri, setRedirectUri] = useState<string>();
   const [params, setParams] = useState<AppParams>({});
+  const [redirectPath, setRedirectPath] = useState<string>();
 
   const search = (window as Window).location.search;
   const query = new URLSearchParams(search);
@@ -133,7 +138,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   }
 
   async function init() {
-    const params = props.params ?? extractUrlParams();
+    const params = extractUrlParams(props.params);
 
     setParams(params);
 
@@ -151,34 +156,42 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     removeUrlParams(query);
   }
 
-  function extractUrlParams(): AppParams {
-    return {
-      lang: getParameter(query, 'lang'),
-      address: getParameter(query, 'address'),
-      signature: getParameter(query, 'signature'),
-      wallet: getParameter(query, 'wallet'),
-      refcode: getParameter(query, 'refcode'),
-      session: getParameter(query, 'session'),
-      type: getParameter(query, 'type'),
-      redirectUri: getParameter(query, 'redirect-uri'),
-      mode: getParameter(query, 'mode'),
-      blockchain: getParameter(query, 'blockchain'),
-      balances: getParameter(query, 'balances'),
-      amountIn: getParameter(query, 'amount-in'),
-      amountOut: getParameter(query, 'amount-out'),
-      assets: getParameter(query, 'assets'),
-      assetIn: getParameter(query, 'asset-in'),
-      assetOut: getParameter(query, 'asset-out'),
-      bankAccount: getParameter(query, 'bank-account'),
-    };
+  function extractUrlParams(params?: AppParams): AppParams {
+    return params
+      ? {
+          session: getParameter(query, 'session'),
+          redirect: getParameter(query, 'redirect'),
+          type: getParameter(query, 'type'),
+          ...params,
+        }
+      : {
+          lang: getParameter(query, 'lang'),
+          address: getParameter(query, 'address'),
+          signature: getParameter(query, 'signature'),
+          wallet: getParameter(query, 'wallet'),
+          refcode: getParameter(query, 'refcode'),
+          session: getParameter(query, 'session'),
+          redirect: getParameter(query, 'redirect'),
+          type: getParameter(query, 'type'),
+          redirectUri: getParameter(query, 'redirect-uri'),
+          mode: getParameter(query, 'mode'),
+          blockchain: getParameter(query, 'blockchain'),
+          balances: getParameter(query, 'balances'),
+          amountIn: getParameter(query, 'amount-in'),
+          amountOut: getParameter(query, 'amount-out'),
+          assets: getParameter(query, 'assets'),
+          assetIn: getParameter(query, 'asset-in'),
+          assetOut: getParameter(query, 'asset-out'),
+          bankAccount: getParameter(query, 'bank-account'),
+        };
   }
 
   function removeUrlParams(query: URLSearchParams) {
     if (urlParams.map((param) => query.has(param)).every((b) => !b)) return;
     urlParams.forEach((param) => query.delete(param));
 
-    const { location } = window;
-    props.router.navigate({ pathname: `${location.origin}${location.pathname}`, search: `?${query}` });
+    const { location, history } = window;
+    history.replaceState(undefined, '', url(`${location.origin}${location.pathname}`, query));
   }
 
   // closing
@@ -232,6 +245,8 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       isInitialized,
       params,
       setParams: setParameters,
+      redirectPath,
+      setRedirectPath,
     }),
     [props.home, props.isWidget, isUsedByIframe, redirectUri, isInitialized, params],
   );

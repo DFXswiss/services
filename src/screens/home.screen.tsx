@@ -12,7 +12,6 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
 import { ConnectHint } from '../components/home/connect-hint';
 import { InstallHint } from '../components/home/install-hint';
 import { Layout } from '../components/layout';
@@ -29,19 +28,18 @@ import { AbortError } from '../util/abort-error';
 import { Stack } from '../util/stack';
 
 export function HomeScreen(): JSX.Element {
-  const { translate } = useSettingsContext();
   const { isLoggedIn, isProcessing, logout } = useSessionContext();
   const { isUserLoading, user } = useUserContext();
-  const { isEmbedded } = useAppHandlingContext();
+  const { isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
   const { isInitialized, getInstalledWallets, login, switchBlockchain, activeWallet } = useWalletContext();
   const { showsSignatureInfo } = useStore();
   const { navigate } = useNavigation();
-  const { search } = useLocation();
   const { getTiles, getWallet, setOptions } = useFeatureTree();
   const appParams = useAppParams();
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectTo, setConnectTo] = useState<Wallet>();
+  const [loginSuccessful, setLoginSuccessful] = useState(false);
   const [connectError, setConnectError] = useState<string>();
   const [showInstallHint, setShowInstallHint] = useState<WalletType>();
   const [createSignHint, signHint] = useDeferredPromise<void>();
@@ -52,16 +50,15 @@ export function HomeScreen(): JSX.Element {
 
   const autoConnectWallets = [WalletType.META_MASK, WalletType.ALBY];
 
-  const redirectPath = new URLSearchParams(search).get('redirect-path');
   const currentPage = pages.current?.page;
   const allowedTiles = pages.current?.allowedTiles;
   const tiles = getTiles(currentPage, allowedTiles);
 
   useEffect(() => {
-    if (isInitialized && isLoggedIn && !activeWallet) {
-      openPage(redirectPath ?? '/buy');
+    if (isInitialized && isLoggedIn && user && (!activeWallet || loginSuccessful)) {
+      start(user.kycDataComplete);
     }
-  }, [isInitialized, isLoggedIn, activeWallet]);
+  }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful]);
 
   useEffect(() => {
     const { mode } = appParams;
@@ -160,10 +157,7 @@ export function HomeScreen(): JSX.Element {
       setConnectError(undefined);
 
       return doLogin(wallet.type, wallet.blockchain, address)
-        .then(() => {
-          // wait for the user to reload
-          if (redirectPath) setTimeout(() => openPage(redirectPath), 10);
-        })
+        .then(() => setLoginSuccessful(true))
         .catch((e) => {
           if (e instanceof AbortError) {
             setConnectTo(undefined);
@@ -191,9 +185,11 @@ export function HomeScreen(): JSX.Element {
       : logout().then(() => login(wallet, confirmSignHint, confirmPairing, selectedChain, address));
   }
 
-  function openPage(path: string) {
-    path = path.includes('sell') && !user?.kycDataComplete ? '/profile' : path;
-    navigate({ pathname: path }, { clearParams: ['redirect-path'] });
+  function start(kycComplete: boolean) {
+    const path = redirectPath ?? '/buy';
+    const targetPath = path.includes('sell') && !kycComplete ? '/profile' : path;
+    setRedirectPath(targetPath != path ? path : undefined);
+    navigate(targetPath);
   }
 
   return (

@@ -1,11 +1,10 @@
 import { Blockchain, Language } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import { FeatureTree } from '../config/feature-tree';
-import { AppParams } from '../contexts/app-handling.context';
+import { AppParams, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { WalletType } from '../contexts/wallet.context';
 import { useAppParams } from './app-params.hook';
-import { useNavigation } from './navigation.hook';
 
 // --- INTERFACES --- //
 export interface Page {
@@ -70,7 +69,7 @@ interface FeatureTreeInterface {
 export function useFeatureTree(): FeatureTreeInterface {
   const { language } = useSettingsContext();
   const { setParams } = useAppParams();
-  const { setParams: setUrlParams } = useNavigation();
+  const { setRedirectPath } = useAppHandlingContext();
 
   function getTiles(pageId?: string, allowed?: string[]): Tile[] | undefined {
     if (!language) return;
@@ -91,10 +90,7 @@ export function useFeatureTree(): FeatureTreeInterface {
 
   function setOptions(options: Options) {
     // service
-    if (options.service) {
-      const params = new URLSearchParams({ 'redirect-path': `/${options.service}` });
-      setUrlParams(params);
-    }
+    if (options.service) setRedirectPath(`/${options.service}`);
 
     // query
     if (options.query) {
