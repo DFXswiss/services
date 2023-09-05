@@ -194,7 +194,7 @@ export function HomeScreen(): JSX.Element {
 
   return (
     <Layout
-      title={isEmbedded ? translate('screens/home', 'DFX services') : undefined}
+      title={isEmbedded ? ' ' : undefined}
       backButton={isEmbedded || currentPage != null}
       onBack={currentPage ? handleBack : undefined}
     >
