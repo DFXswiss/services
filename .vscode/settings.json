@@ -29,5 +29,8 @@
   "workbench.colorCustomizations": {
     "titleBar.activeBackground": "#072440",
     "titleBar.activeForeground": "#FFF"
-  }
+  },
+  "githubPullRequests.ignoredPullRequestBranches": [
+    "develop"
+  ]
 }
