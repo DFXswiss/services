@@ -1142,7 +1142,7 @@ export const FeatureTree: Page[] = [
         id: 'stable',
         img: 'stablecoin',
         next: {
-          page: 'buy-arbitrum-stable',
+          page: 'bitboxonly-buy-arbitrum-stable',
         },
       },
       {
