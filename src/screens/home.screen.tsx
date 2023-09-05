@@ -28,13 +28,14 @@ import { AbortError } from '../util/abort-error';
 import { Stack } from '../util/stack';
 
 export function HomeScreen(): JSX.Element {
+  const { translate } = useSettingsContext();
   const { isLoggedIn, isProcessing, logout } = useSessionContext();
   const { isUserLoading, user } = useUserContext();
   const { isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
   const { isInitialized, getInstalledWallets, login, switchBlockchain, activeWallet } = useWalletContext();
   const { showsSignatureInfo } = useStore();
   const { navigate } = useNavigation();
-  const { getTiles, getWallet, setOptions } = useFeatureTree();
+  const { getPage, getWallet, setOptions } = useFeatureTree();
   const appParams = useAppParams();
 
   const [isConnecting, setIsConnecting] = useState(false);
@@ -50,9 +51,9 @@ export function HomeScreen(): JSX.Element {
 
   const autoConnectWallets = [WalletType.META_MASK, WalletType.ALBY];
 
-  const currentPage = pages.current?.page;
+  const currentPageId = pages.current?.page;
   const allowedTiles = pages.current?.allowedTiles;
-  const tiles = getTiles(currentPage, allowedTiles);
+  const currentPage = getPage(currentPageId, allowedTiles);
 
   useEffect(() => {
     if (isInitialized && isLoggedIn && user && (!activeWallet || loginSuccessful)) {
@@ -117,7 +118,7 @@ export function HomeScreen(): JSX.Element {
       const page = { page: tile.next.page, allowedTiles: tile.next.tiles };
       setPages((p) => p.push(page));
 
-      const tiles = getTiles(page.page, page.allowedTiles);
+      const tiles = getPage(page.page, page.allowedTiles)?.tiles;
       if (tiles?.length === 1 && tiles[0].next) handleNext(tiles[0]);
     }
   }
@@ -135,7 +136,7 @@ export function HomeScreen(): JSX.Element {
       setIsConnecting(false);
       setConnectTo(undefined);
     } else {
-      setPages((p) => p.pop((i) => getTiles(i.page, i.allowedTiles)?.length === 1));
+      setPages((p) => p.pop((i) => getPage(i.page, i.allowedTiles)?.tiles?.length === 1));
     }
   }
 
@@ -192,13 +193,18 @@ export function HomeScreen(): JSX.Element {
     navigate(targetPath);
   }
 
+  const title = translate('screens/home', currentPage?.header ?? (currentPage?.dfxStyle ? 'DFX services' : ' '));
+  const image =
+    currentPage?.bottomImage ??
+    (currentPage?.dfxStyle ? 'https://content.dfx.swiss/img/v1/services/berge.png' : undefined);
+
   return (
     <Layout
-      title={isEmbedded ? ' ' : undefined}
-      backButton={currentPage != null && currentPage !== appParams.mode}
-      onBack={currentPage ? handleBack : undefined}
+      title={isEmbedded ? title : undefined}
+      backButton={currentPageId != null && currentPageId !== appParams.mode}
+      onBack={currentPageId ? handleBack : undefined}
     >
-      {isProcessing || isUserLoading || !tiles ? (
+      {isProcessing || isUserLoading || !currentPage ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
@@ -221,17 +227,27 @@ export function HomeScreen(): JSX.Element {
           ) : (
             <>
               <div className="flex self-start mb-6">
-                <div className="bg-dfxRed-100" style={{ width: '11px', marginRight: '12px' }}></div>
-                <div className="text-xl text-dfxBlue-800 font-extrabold text-left">
-                  <Trans i18nKey={'screens/home.title'}>
-                    Access all <span className="text-dfxRed-100 uppercase">DFX Services</span>
-                    <br />
-                    with this easy <span className="text-dfxRed-100 uppercase">toolbox</span>
-                  </Trans>
-                </div>
+                {currentPage.description ? (
+                  <div className="text-xl text-dfxBlue-800 font-extrabold text-left">
+                    {translate('screens/home', currentPage.description)}
+                  </div>
+                ) : (
+                  currentPage.dfxStyle && (
+                    <>
+                      <div className="bg-dfxRed-100" style={{ width: '11px', marginRight: '12px' }}></div>
+                      <div className="text-xl text-dfxBlue-800 font-extrabold text-left">
+                        <Trans i18nKey={'screens/home.title'}>
+                          Access all <span className="text-dfxRed-100 uppercase">DFX Services</span>
+                          <br />
+                          with this easy <span className="text-dfxRed-100 uppercase">toolbox</span>
+                        </Trans>
+                      </div>
+                    </>
+                  )
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2.5 w-full mb-3">
-                {tiles.map((t) => (
+                {currentPage.tiles.map((t) => (
                   <TileComponent key={t.id} tile={t} onClick={handleNext} />
                 ))}
               </div>
@@ -239,9 +255,11 @@ export function HomeScreen(): JSX.Element {
           )}
         </div>
       )}
-      <div className="absolute bottom-0 w-full">
-        <img src="https://content.dfx.swiss/img/v1/services/berge.png" className="w-full" />
-      </div>
+      {image && (
+        <div className="absolute bottom-0 w-full">
+          <img src={image} className="w-full" />
+        </div>
+      )}
     </Layout>
   );
 }

@@ -6,6 +6,7 @@ export const FeatureTree: Page[] = [
   // --- DEFAULT CONFIG --- //
   {
     id: 'home',
+    dfxStyle: true,
     tiles: [
       {
         id: 'buy',
@@ -35,6 +36,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'buy',
+    dfxStyle: true,
     tiles: [
       {
         id: 'bitcoin',
@@ -71,6 +73,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'buy-erc20',
+    dfxStyle: true,
     tiles: [
       {
         id: 'ethereum',
@@ -102,6 +105,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'buy-ethereum',
+    dfxStyle: true,
     tiles: [
       {
         id: 'eth',
@@ -150,6 +154,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'buy-ethereum-stable',
+    dfxStyle: true,
     tiles: [
       {
         id: 'usdt',
@@ -203,6 +208,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'buy-arbitrum',
+    dfxStyle: true,
     tiles: [
       {
         id: 'eth',
@@ -251,6 +257,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'buy-arbitrum-stable',
+    dfxStyle: true,
     tiles: [
       {
         id: 'usdt',
@@ -304,6 +311,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'buy-optimism',
+    dfxStyle: true,
     tiles: [
       {
         id: 'eth',
@@ -340,6 +348,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'buy-optimism-stable',
+    dfxStyle: true,
     tiles: [
       {
         id: 'usdt',
@@ -381,6 +390,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'buy-bsc',
+    dfxStyle: true,
     tiles: [
       {
         id: 'bnb',
@@ -429,6 +439,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'buy-bsc-stable',
+    dfxStyle: true,
     tiles: [
       {
         id: 'usdt',
@@ -470,6 +481,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'sell',
+    dfxStyle: true,
     tiles: [
       {
         id: 'bitcoin',
@@ -506,6 +518,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'sell-erc20',
+    dfxStyle: true,
     tiles: [
       {
         id: 'ethereum',
@@ -537,6 +550,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'sell-ethereum',
+    dfxStyle: true,
     tiles: [
       {
         id: 'eth',
@@ -585,6 +599,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'sell-ethereum-stable',
+    dfxStyle: true,
     tiles: [
       {
         id: 'usdt',
@@ -638,6 +653,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'sell-arbitrum',
+    dfxStyle: true,
     tiles: [
       {
         id: 'eth',
@@ -686,6 +702,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'sell-arbitrum-stable',
+    dfxStyle: true,
     tiles: [
       {
         id: 'usdt',
@@ -739,6 +756,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'sell-optimism',
+    dfxStyle: true,
     tiles: [
       {
         id: 'eth',
@@ -775,6 +793,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'sell-optimism-stable',
+    dfxStyle: true,
     tiles: [
       {
         id: 'usdt',
@@ -816,6 +835,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'sell-bsc',
+    dfxStyle: true,
     tiles: [
       {
         id: 'bnb',
@@ -864,6 +884,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'sell-bsc-stable',
+    dfxStyle: true,
     tiles: [
       {
         id: 'usdt',
@@ -962,6 +983,9 @@ export const FeatureTree: Page[] = [
   // --- BitBox ONLY Buy --- //
   {
     id: 'bitboxonly-buy',
+    header: 'Buy Crypto',
+    description: 'Buy crypto directly on your BitBox!',
+    bottomImage: 'https://bitbox.shop/media/__sized__/products/email-image-thumbnail-540x540-70.jpg',
     tiles: [
       {
         id: 'bitcoin',
