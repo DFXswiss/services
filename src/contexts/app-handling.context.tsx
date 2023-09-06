@@ -1,4 +1,4 @@
-import { Buy, Sell, Utils, useApiSession, useSessionContext } from '@dfx.swiss/react';
+import { Buy, Sell } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useIframe } from '../hooks/iframe.hook';
@@ -15,6 +15,7 @@ const urlParams = [
   'wallet',
   'refcode',
   'session',
+  'type',
   'redirect-uri',
   'mode',
   'blockchain',
@@ -34,6 +35,7 @@ export interface AppParams {
   wallet?: string;
   refcode?: string;
   session?: string;
+  type?: string;
   redirectUri?: string;
   mode?: string;
   blockchain?: string;
@@ -104,8 +106,6 @@ export function useAppHandlingContext(): AppHandlingContextInterface {
 export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.Element {
   const { redirectUri: storeRedirectUri } = useStore();
   const { isUsedByIframe, sendMessage } = useIframe();
-  const { updateSession } = useApiSession();
-  const { login, signUp, logout } = useSessionContext();
   const { readBalances } = useBalanceContext();
 
   const [isInitialized, setIsInitialized] = useState(false);
@@ -137,12 +137,11 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
     setParams(params);
 
-    const hasSession = await checkSession(params);
-
     if (params.redirectUri) {
       setRedirectUri(params.redirectUri);
     }
 
+    const hasSession = params.session || (params.address && params.signature);
     if (params.balances || hasSession) {
       readBalances(params.balances);
     }
@@ -160,6 +159,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       wallet: getParameter(query, 'wallet'),
       refcode: getParameter(query, 'refcode'),
       session: getParameter(query, 'session'),
+      type: getParameter(query, 'type'),
       redirectUri: getParameter(query, 'redirect-uri'),
       mode: getParameter(query, 'mode'),
       blockchain: getParameter(query, 'blockchain'),
@@ -179,36 +179,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
     const { location } = window;
     props.router.navigate({ pathname: `${location.origin}${location.pathname}`, search: `?${query}` });
-  }
-
-  async function checkSession(params: AppParams): Promise<boolean> {
-    if (params.address && params.signature) {
-      const session = await createSession(params.address, params.signature, params.wallet, params.refcode);
-      if (session) {
-        return true;
-      } else {
-        logout();
-        return false;
-      }
-    } else if (params.session && Utils.isJwt(params.session)) {
-      updateSession(params.session);
-      return true;
-    }
-
-    return false;
-  }
-
-  async function createSession(
-    address: string,
-    signature: string,
-    wallet?: string,
-    refcode?: string,
-  ): Promise<string | undefined> {
-    try {
-      return (await login(address, signature)) ?? (await signUp(address, signature, wallet, refcode));
-    } catch (e) {
-      console.error('Failed to create session:', e);
-    }
   }
 
   // closing

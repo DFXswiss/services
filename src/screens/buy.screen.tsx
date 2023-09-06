@@ -56,6 +56,7 @@ export function BuyScreen(): JSX.Element {
   const { user } = useUserContext();
   const { blockchain: walletBlockchain } = useWalletContext();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<PaymentInformation>();
@@ -178,6 +179,7 @@ export function BuyScreen(): JSX.Element {
       title={showsCompletion ? translate('screens/buy', 'Done!') : translate('screens/buy', 'Buy')}
       backButton={!showsCompletion}
       textStart
+      rootRef={rootRef}
       scrollRef={scrollRef}
     >
       {showsCompletion && paymentInfo ? (
@@ -188,6 +190,7 @@ export function BuyScreen(): JSX.Element {
             {currencies && availableAssets && (
               <>
                 <StyledDropdown<Asset>
+                  rootRef={rootRef}
                   name="asset"
                   label={translate('screens/buy', 'I want to buy')}
                   placeholder={translate('general/actions', 'Please select...')}
@@ -198,6 +201,7 @@ export function BuyScreen(): JSX.Element {
                   full
                 />
                 <StyledDropdown<Fiat>
+                  rootRef={rootRef}
                   name="currency"
                   label={translate('screens/buy', 'with')}
                   placeholder={translate('general/actions', 'Please select...')}

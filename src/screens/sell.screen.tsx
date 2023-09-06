@@ -31,12 +31,11 @@ import {
   StyledHorizontalStack,
   StyledInput,
   StyledLink,
-  StyledModalDropdown,
-  StyledModalWidth,
+  StyledModalButton,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
-import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+import { useEffect, useRef, useState } from 'react';
+import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
@@ -77,6 +76,7 @@ export function SellScreen(): JSX.Element {
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [customAmountError, setCustomAmountError] = useState<string>();
@@ -86,6 +86,7 @@ export function SellScreen(): JSX.Element {
   const [balances, setBalances] = useState<AssetBalance[]>();
   const [isProcessing, setIsProcessing] = useState(false);
   const [sellTxId, setSellTxId] = useState<string>();
+  const [bankAccountSelection, setBankAccountSelection] = useState(false);
 
   useEffect(() => {
     availableAssets && getBalances(availableAssets).then(setBalances);
@@ -266,9 +267,16 @@ export function SellScreen(): JSX.Element {
     amount: Validations.Required,
   });
 
-  // TODO: (Krysh) add handling for sell screen to replace to profile is user.kycDataIsComplete is false
   return (
-    <Layout title={translate('general/services', 'Sell')}>
+    <Layout
+      title={
+        bankAccountSelection
+          ? translate('screens/sell', 'Select payment account')
+          : translate('general/services', 'Sell')
+      }
+      onBack={bankAccountSelection ? () => setBankAccountSelection(false) : undefined}
+      rootRef={rootRef}
+    >
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         {paymentInfo && sellTxId ? (
           <StyledVerticalStack gap={4} full>
@@ -301,9 +309,10 @@ export function SellScreen(): JSX.Element {
             />
           </StyledVerticalStack>
         ) : (
-          <StyledVerticalStack gap={8} full>
+          <StyledVerticalStack gap={8} full className="relative">
             {availableAssets && (
               <StyledDropdown<Asset>
+                rootRef={rootRef}
                 name="asset"
                 label={translate('screens/sell', 'Your Wallet')}
                 placeholder={translate('general/actions', 'Please select...')}
@@ -316,23 +325,59 @@ export function SellScreen(): JSX.Element {
               />
             )}
             {bankAccounts && !isCreatingAccount && (
-              <StyledModalDropdown<BankAccount>
+              <Controller
                 name="bankAccount"
-                labelFunc={(item) => Utils.formatIban(item.iban) ?? ''}
-                descriptionFunc={(item) => item.label}
-                label={translate('screens/sell', 'Cash out to my bank account')}
-                placeholder={translate('screens/sell', 'Add or select your IBAN')}
-                modal={{
-                  heading: translate('screens/sell', 'Select your payment account'),
-                  width: StyledModalWidth.NONE,
-                  items: bankAccounts,
-                  itemContent: (b) => <StyledBankAccountListItem bankAccount={b} />,
-                  form: (onFormSubmit: (item: BankAccount) => void) => <AddBankAccount onSubmit={onFormSubmit} />,
-                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <>
+                    <StyledModalButton
+                      onClick={() => setBankAccountSelection(true)}
+                      onBlur={onBlur}
+                      label={translate('screens/sell', 'Cash out to my bank account')}
+                      placeholder={translate('screens/sell', 'Add or select your IBAN')}
+                      value={Utils.formatIban(value?.iban) ?? undefined}
+                      description={value?.label}
+                    />
+
+                    {bankAccountSelection && (
+                      <>
+                        <div className="absolute h-full w-full z-1 bg-white">
+                          {bankAccounts.length && (
+                            <>
+                              <StyledVerticalStack gap={4}>
+                                {bankAccounts.map((account, i) => (
+                                  <button
+                                    key={i}
+                                    className="text-start"
+                                    onClick={() => {
+                                      onChange(account);
+                                      setBankAccountSelection(false);
+                                    }}
+                                  >
+                                    <StyledBankAccountListItem bankAccount={account} />
+                                  </button>
+                                ))}
+                              </StyledVerticalStack>
+
+                              <div className={`h-[1px] bg-dfxGray-400 w-full my-6`} />
+                            </>
+                          )}
+
+                          <AddBankAccount
+                            onSubmit={(account) => {
+                              onChange(account);
+                              setBankAccountSelection(false);
+                            }}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
               />
             )}
             {currencies && (
               <StyledDropdown<Fiat>
+                rootRef={rootRef}
                 name="currency"
                 label={translate('screens/sell', 'Your Currency')}
                 placeholder={translate('screens/sell', 'e.g. EUR')}
