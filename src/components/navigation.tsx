@@ -10,7 +10,7 @@ import {
   StyledButtonWidth,
   StyledDropdown,
 } from '@dfx.swiss/react-components';
-import { PropsWithChildren, SetStateAction, useEffect, useState } from 'react';
+import { PropsWithChildren, SetStateAction, forwardRef, useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
@@ -22,10 +22,15 @@ interface FormData {
   language: Language;
 }
 
-interface NavigationIframeProps extends PropsWithChildren {
+interface BackButtonProps extends PropsWithChildren {
   title?: string;
   backButton?: boolean;
   onBack?: () => void;
+}
+
+interface NavigationIframeProps extends BackButtonProps {
+  isOpen: boolean;
+  setIsOpen: (value: SetStateAction<boolean>) => void;
 }
 
 interface IconContentProps {
@@ -37,29 +42,27 @@ interface NavigationMenuContentProps {
   setIsNavigationOpen: (value: SetStateAction<boolean>) => void;
 }
 
-export function Navigation({ title, backButton = true, onBack }: NavigationIframeProps): JSX.Element {
-  const [isNavigationOpen, setIsNavigationOpen] = useState(false);
-  const { isEmbedded } = useAppHandlingContext();
+export const Navigation = forwardRef<HTMLDivElement, NavigationIframeProps>(
+  ({ title, backButton = true, onBack, isOpen, setIsOpen }: NavigationIframeProps, ref): JSX.Element => {
+    const { isEmbedded } = useAppHandlingContext();
 
-  return title || !isEmbedded ? (
-    <div className={`relative flex items-center justify-between h-12 px-4 py-5 bg-dfxGray-300`}>
-      <BackButton title={title} backButton={backButton} onBack={onBack} />
+    return title || !isEmbedded ? (
+      <div className={`relative flex items-center justify-between h-12 px-4 py-5 bg-dfxGray-300`} ref={ref}>
+        <BackButton title={title} backButton={backButton} onBack={onBack} />
 
-      <div className="absolute right-4">
-        <MenuIcon
-          icon={isNavigationOpen ? IconVariant.CLOSE : IconVariant.MENU}
-          setIsNavigationOpen={setIsNavigationOpen}
-        />
+        <div className="absolute right-4">
+          <MenuIcon icon={isOpen ? IconVariant.CLOSE : IconVariant.MENU} setIsNavigationOpen={setIsOpen} />
+        </div>
+
+        {isOpen && <NavigationMenu setIsNavigationOpen={setIsOpen} />}
       </div>
+    ) : (
+      <></>
+    );
+  },
+);
 
-      {isNavigationOpen && <NavigationMenu setIsNavigationOpen={setIsNavigationOpen} />}
-    </div>
-  ) : (
-    <></>
-  );
-}
-
-function BackButton({ title, backButton, onBack }: NavigationIframeProps): JSX.Element {
+function BackButton({ title, backButton, onBack }: BackButtonProps): JSX.Element {
   const { homePath, isEmbedded, closeServices } = useAppHandlingContext();
   const { pathname } = useLocation();
   const { navigate } = useNavigation();

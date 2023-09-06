@@ -59,6 +59,7 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
           isLoading={isAccountLoading}
           caps
           width={StyledButtonWidth.FULL}
+          className="mb-4"
         />
       </StyledVerticalStack>
     </Form>
