@@ -1,13 +1,22 @@
+import { Utils, Validations, useAuth } from '@dfx.swiss/react';
 import {
+  CopyButton,
+  Form,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
+  StyledHorizontalStack,
+  StyledInput,
+  StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useEffect, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
+import { useClipboard } from '../../hooks/clipboard.hook';
 
 export interface ConnectHintProps {
   type: WalletType;
@@ -16,7 +25,7 @@ export interface ConnectHintProps {
   onPairingConfirmed: () => void;
   error?: string;
   onBack: () => void;
-  onRetry: () => void;
+  onStart: (address?: string, signature?: string) => void;
 }
 
 export function ConnectHint(props: ConnectHintProps): JSX.Element {
@@ -43,6 +52,10 @@ export function ConnectHint(props: ConnectHintProps): JSX.Element {
     case WalletType.TREZOR_BTC:
     case WalletType.TREZOR_ETH:
       return <TrezorHint {...props} />;
+
+    case WalletType.CLI_BTC:
+    case WalletType.CLI_ETH:
+      return <CliHint {...props} />;
   }
 }
 
@@ -71,7 +84,7 @@ function AutoConnectHint({ error, onBack, message }: ConnectHintProps & { messag
   );
 }
 
-function LedgerHint({ app, error, onRetry, isLoading }: ConnectHintProps & { app: string }): JSX.Element {
+function LedgerHint({ app, error, onStart, isLoading }: ConnectHintProps & { app: string }): JSX.Element {
   const { translate } = useSettingsContext();
 
   const steps = [
@@ -94,7 +107,7 @@ function LedgerHint({ app, error, onRetry, isLoading }: ConnectHintProps & { app
 
         <StyledButton
           label={translate('general/actions', 'Connect')}
-          onClick={onRetry}
+          onClick={() => onStart()}
           width={StyledButtonWidth.MIN}
           className="self-center"
           isLoading={isLoading}
@@ -104,7 +117,7 @@ function LedgerHint({ app, error, onRetry, isLoading }: ConnectHintProps & { app
   );
 }
 
-function BitboxHint({ pairingCode, onPairingConfirmed, error, onRetry, isLoading }: ConnectHintProps): JSX.Element {
+function BitboxHint({ pairingCode, onPairingConfirmed, error, onStart, isLoading }: ConnectHintProps): JSX.Element {
   const { translate } = useSettingsContext();
 
   const connectSteps = [
@@ -143,7 +156,7 @@ function BitboxHint({ pairingCode, onPairingConfirmed, error, onRetry, isLoading
 
         <StyledButton
           label={translate('general/actions', pairingCode ? 'Next' : 'Connect')}
-          onClick={pairingCode ? onPairingConfirmed : onRetry}
+          onClick={pairingCode ? onPairingConfirmed : () => onStart()}
           width={StyledButtonWidth.MIN}
           className="self-center"
           isLoading={!pairingCode && isLoading}
@@ -153,7 +166,7 @@ function BitboxHint({ pairingCode, onPairingConfirmed, error, onRetry, isLoading
   );
 }
 
-function TrezorHint({ error, onRetry, isLoading }: ConnectHintProps): JSX.Element {
+function TrezorHint({ error, onStart, isLoading }: ConnectHintProps): JSX.Element {
   const { translate } = useSettingsContext();
 
   const steps = [
@@ -176,7 +189,7 @@ function TrezorHint({ error, onRetry, isLoading }: ConnectHintProps): JSX.Elemen
 
         <StyledButton
           label={translate('general/actions', 'Continue in Trezor Connect')}
-          onClick={onRetry}
+          onClick={() => onStart()}
           width={StyledButtonWidth.MIN}
           className="self-center"
           isLoading={isLoading}
@@ -218,5 +231,95 @@ function Error({ error }: { error: string }): JSX.Element {
       <h2 className="text-dfxGray-700">{translate('screens/home', 'Connection failed!')}</h2>
       <p className="text-dfxRed-150">{translate('screens/home', error)}</p>
     </div>
+  );
+}
+
+interface CliFormData {
+  address: string;
+  signature: string;
+}
+
+function CliHint({ type, error, isLoading, onStart }: ConnectHintProps): JSX.Element {
+  const { translate, language } = useSettingsContext();
+  const { copy } = useClipboard();
+  const { getSignMessage } = useAuth();
+
+  const addressRegex = type === WalletType.CLI_BTC ? /^([13]|bc1)[a-zA-HJ-NP-Z0-9]{25,62}$/ : /^0x\w{40}$/;
+  function validateAddress(address: string): true | string {
+    return addressRegex.test(address) ? true : 'Invalid format';
+  }
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<CliFormData>({ mode: 'onTouched' });
+  const address = useWatch({ control, name: 'address' });
+  const addressValid = validateAddress(address) === true;
+
+  const [signMessage, setSignMessage] = useState<string>();
+
+  useEffect(() => {
+    if (addressValid) getSignMessage(address).then(setSignMessage);
+  });
+
+  const rules = Utils.createRules({
+    address: [Validations.Required, Validations.Custom(validateAddress)],
+    signature: [Validations.Required],
+  });
+
+  async function onSubmit({ address, signature }: CliFormData): Promise<void> {
+    onStart(address, signature);
+  }
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
+      <StyledVerticalStack gap={6} full>
+        <StyledInput
+          name="address"
+          autocomplete="address"
+          label={translate('screens/home', 'Address')}
+          full
+          smallLabel
+        />
+
+        {addressValid && signMessage && (
+          <>
+            <div>
+              <p className="text-dfxBlue-800 font-semibold text-sm">{translate('screens/home', 'Sign message')}</p>
+              <StyledHorizontalStack gap={2} center>
+                <p className="text-dfxBlue-800 min-w-0 break-words">{signMessage}</p>
+                <CopyButton onCopy={() => copy(signMessage)} />
+              </StyledHorizontalStack>
+            </div>
+
+            <StyledInput
+              name="signature"
+              autocomplete="password"
+              label={translate('screens/home', 'Signature')}
+              full
+              smallLabel
+            />
+          </>
+        )}
+
+        {error && <Error error={error} />}
+
+        <StyledButton
+          disabled={!isValid}
+          label={translate('general/actions', 'Login')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.MIN}
+          className="self-center"
+          isLoading={isLoading}
+        />
+
+        <StyledLink
+          label={translate('screens/home', 'Instructions')}
+          url={`https://docs.dfx.swiss/${language?.symbol.toLowerCase() ?? 'en'}/faq`}
+          dark
+        />
+      </StyledVerticalStack>
+    </Form>
   );
 }
