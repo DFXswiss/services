@@ -1,6 +1,6 @@
 # DFX Services
 
-Reusable web widget to buy, sell and convert crypto assets
+Reusable web widget to buy, sell and convert crypto assets v2
 
 ![ ](https://content.dfx.swiss/img/v1/services/iframe.png)
 
