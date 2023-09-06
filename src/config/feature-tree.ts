@@ -980,6 +980,27 @@ export const FeatureTree: Page[] = [
     ],
   },
 
+// --- ALBY ONLY Buy --- //
+{
+  id: 'albyonly-buy',
+  header: 'Buy Bitcoin with Alby',
+  description: 'Buy Bitcoin directly on your Alby Account!',
+  bottomImage: 'https://getalby.com/assets/alby-f05c73aa695c103d93148384f00fee1373dca844974b29b02d8afeb873972b6f.svg',
+  tiles: [
+    {
+      id: 'bitcoin',
+      img: 'bitcoinlightning',
+      next: {
+        page: 'wallets',
+        tiles: ['alby'],
+        options: {
+          service: 'buy',
+          query: { blockchain: Blockchain.LIGHTNING, assetOut: 'BTC' },
+        },
+      },
+    },
+  ],
+},
   // --- BitBox ONLY Buy --- //
   {
     id: 'bitboxonly-buy',
