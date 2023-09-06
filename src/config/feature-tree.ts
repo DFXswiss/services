@@ -1044,6 +1044,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'bitboxonly-buy-erc20',
+    header: 'Buy Crypto',
+    description: 'Buy Bitcoin and crypto directly on your BitBox!',
+    bottomImage: 'https://bitbox.shop/media/__sized__/products/email-image-thumbnail-540x540-70.jpg',
     tiles: [
       {
         id: 'ethereum',
@@ -1070,6 +1073,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'bitboxonly-buy-ethereum',
+    header: 'Buy Crypto',
+    description: 'Buy Bitcoin and crypto directly on your BitBox!',
+    bottomImage: 'https://bitbox.shop/media/__sized__/products/email-image-thumbnail-540x540-70.jpg',
     tiles: [
       {
         id: 'eth',
@@ -1118,6 +1124,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'bitboxonly-buy-ethereum-stable',
+    header: 'Buy Crypto',
+    description: 'Buy Bitcoin and crypto directly on your BitBox!',
+    bottomImage: 'https://bitbox.shop/media/__sized__/products/email-image-thumbnail-540x540-70.jpg',
     tiles: [
       {
         id: 'usdt',
@@ -1171,6 +1180,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'bitboxonly-buy-arbitrum',
+    header: 'Buy Crypto',
+    description: 'Buy Bitcoin and crypto directly on your BitBox!',
+    bottomImage: 'https://bitbox.shop/media/__sized__/products/email-image-thumbnail-540x540-70.jpg',
     tiles: [
       {
         id: 'eth',
@@ -1219,6 +1231,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'bitboxonly-buy-arbitrum-stable',
+    header: 'Buy Crypto',
+    description: 'Buy Bitcoin and crypto directly on your BitBox!',
+    bottomImage: 'https://bitbox.shop/media/__sized__/products/email-image-thumbnail-540x540-70.jpg',
     tiles: [
       {
         id: 'usdt',
@@ -1272,6 +1287,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'bitboxonly-buy-optimism',
+    header: 'Buy Crypto',
+    description: 'Buy Bitcoin and crypto directly on your BitBox!',
+    bottomImage: 'https://bitbox.shop/media/__sized__/products/email-image-thumbnail-540x540-70.jpg',
     tiles: [
       {
         id: 'eth',
@@ -1308,6 +1326,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'bitboxonly-buy-optimism-stable',
+    header: 'Buy Crypto',
+    description: 'Buy Bitcoin and crypto directly on your BitBox!',
+    bottomImage: 'https://bitbox.shop/media/__sized__/products/email-image-thumbnail-540x540-70.jpg',
     tiles: [
       {
         id: 'usdt',
@@ -1373,6 +1394,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'marcsteiner-buy',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
+    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
     tiles: [
       {
         id: 'marcsteiner-buy-bitcoin',
@@ -1397,6 +1421,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'marcsteiner-buy-erc20',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
+    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
     tiles: [
       {
         id: 'ethereum',
@@ -1423,6 +1450,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'marcsteiner-buy-ethereum',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
+    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
     tiles: [
       {
         id: 'eth',
@@ -1476,6 +1506,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'marcsteiner-buy-arbitrum',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
+    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
     tiles: [
       {
         id: 'eth',
@@ -1529,6 +1562,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'marcsteiner-buy-optimism',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
+    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
     tiles: [
       {
         id: 'eth',
@@ -1582,6 +1618,9 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'marcsteiner-sell',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
+    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
     tiles: [
       {
         id: 'bitcoin',
