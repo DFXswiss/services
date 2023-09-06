@@ -9,13 +9,22 @@ import {
   StyledButtonWidth,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useState } from 'react';
 import { CloseType, useAppHandlingContext } from '../../contexts/app-handling.context';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { MailEdit } from '../edit/mail.edit';
 
-export function BuyCompletion({ showsSimple, paymentInfo }: { showsSimple: boolean; paymentInfo: Buy }): JSX.Element {
+interface BuyCompletionProps {
+  showsSimple: boolean;
+  paymentInfo: Buy;
+  navigateOnClose: boolean;
+}
+
+export function BuyCompletion({ showsSimple, paymentInfo, navigateOnClose }: BuyCompletionProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
+
+  const [isClosed, setIsClosed] = useState(false);
 
   function getHeader(): string {
     return showsSimple
@@ -27,10 +36,13 @@ export function BuyCompletion({ showsSimple, paymentInfo }: { showsSimple: boole
   }
 
   function close() {
-    closeServices({ type: CloseType.BUY, isComplete: true, buy: paymentInfo });
+    closeServices({ type: CloseType.BUY, isComplete: true, buy: paymentInfo }, navigateOnClose);
+    setIsClosed(true);
   }
 
-  return (
+  return isClosed ? (
+    <></>
+  ) : (
     <StyledVerticalStack gap={4}>
       <div className="mx-auto">
         <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />

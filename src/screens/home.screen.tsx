@@ -12,7 +12,6 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
 import { ConnectHint } from '../components/home/connect-hint';
 import { InstallHint } from '../components/home/install-hint';
 import { Layout } from '../components/layout';
@@ -30,18 +29,18 @@ import { Stack } from '../util/stack';
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
-  const { isLoggedIn, isInitialized, isProcessing, logout } = useSessionContext();
+  const { isLoggedIn, isProcessing, logout } = useSessionContext();
   const { isUserLoading, user } = useUserContext();
-  const { isEmbedded } = useAppHandlingContext();
-  const { getInstalledWallets, login, switchBlockchain, activeWallet } = useWalletContext();
+  const { isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
+  const { isInitialized, getInstalledWallets, login, switchBlockchain, activeWallet } = useWalletContext();
   const { showsSignatureInfo } = useStore();
   const { navigate } = useNavigation();
-  const { search } = useLocation();
-  const { getTiles, getWallet, setOptions } = useFeatureTree();
+  const { getPage, getWallet, setOptions } = useFeatureTree();
   const appParams = useAppParams();
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectTo, setConnectTo] = useState<Wallet>();
+  const [loginSuccessful, setLoginSuccessful] = useState(false);
   const [connectError, setConnectError] = useState<string>();
   const [showInstallHint, setShowInstallHint] = useState<WalletType>();
   const [createSignHint, signHint] = useDeferredPromise<void>();
@@ -52,16 +51,15 @@ export function HomeScreen(): JSX.Element {
 
   const autoConnectWallets = [WalletType.META_MASK, WalletType.ALBY, WalletType.WALLET_CONNECT];
 
-  const redirectPath = new URLSearchParams(search).get('redirect-path');
-  const currentPage = pages.current?.page;
+  const currentPageId = pages.current?.page;
   const allowedTiles = pages.current?.allowedTiles;
-  const tiles = getTiles(currentPage, allowedTiles);
+  const currentPage = getPage(currentPageId, allowedTiles);
 
   useEffect(() => {
-    if (isInitialized && isLoggedIn && !activeWallet) {
-      navigate('/buy');
+    if (isInitialized && isLoggedIn && user && (!activeWallet || loginSuccessful)) {
+      start(user.kycDataComplete);
     }
-  }, [isInitialized, isLoggedIn, activeWallet]);
+  }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful]);
 
   useEffect(() => {
     const { mode } = appParams;
@@ -120,7 +118,7 @@ export function HomeScreen(): JSX.Element {
       const page = { page: tile.next.page, allowedTiles: tile.next.tiles };
       setPages((p) => p.push(page));
 
-      const tiles = getTiles(page.page, page.allowedTiles);
+      const tiles = getPage(page.page, page.allowedTiles)?.tiles;
       if (tiles?.length === 1 && tiles[0].next) handleNext(tiles[0]);
     }
   }
@@ -138,7 +136,7 @@ export function HomeScreen(): JSX.Element {
       setIsConnecting(false);
       setConnectTo(undefined);
     } else {
-      setPages((p) => p.pop((i) => getTiles(i.page, i.allowedTiles)?.length === 1));
+      setPages((p) => p.pop((i) => getPage(i.page, i.allowedTiles)?.tiles?.length === 1));
     }
   }
 
@@ -160,13 +158,7 @@ export function HomeScreen(): JSX.Element {
       setConnectError(undefined);
 
       return doLogin(wallet.type, wallet.blockchain, address)
-        .then(() => {
-          if (redirectPath) {
-            const path = redirectPath.includes('sell') && !user?.kycDataComplete ? '/profile' : redirectPath;
-            // wait for the user to reload
-            setTimeout(() => navigate({ pathname: path }, { clearParams: ['redirect-path'] }), 10);
-          }
-        })
+        .then(() => setLoginSuccessful(true))
         .catch((e) => {
           if (e instanceof AbortError) {
             setConnectTo(undefined);
@@ -194,13 +186,25 @@ export function HomeScreen(): JSX.Element {
       : logout().then(() => login(wallet, confirmSignHint, confirmPairing, selectedChain, address));
   }
 
+  function start(kycComplete: boolean) {
+    const path = redirectPath ?? '/buy';
+    const targetPath = path.includes('sell') && !kycComplete ? '/profile' : path;
+    setRedirectPath(targetPath != path ? path : undefined);
+    navigate(targetPath);
+  }
+
+  const title = translate('screens/home', currentPage?.header ?? (currentPage?.dfxStyle ? 'DFX services' : ' '));
+  const image =
+    currentPage?.bottomImage ??
+    (currentPage?.dfxStyle ? 'https://content.dfx.swiss/img/v1/services/berge.png' : undefined);
+
   return (
     <Layout
-      title={isEmbedded ? translate('screens/home', 'DFX services') : undefined}
-      backButton={isEmbedded || currentPage != null}
-      onBack={currentPage ? handleBack : undefined}
+      title={isEmbedded ? title : undefined}
+      backButton={currentPageId != null && currentPageId !== appParams.mode}
+      onBack={currentPageId ? handleBack : undefined}
     >
-      {isProcessing || isUserLoading || !tiles ? (
+      {isProcessing || isUserLoading || !currentPage ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
@@ -223,17 +227,27 @@ export function HomeScreen(): JSX.Element {
           ) : (
             <>
               <div className="flex self-start mb-6">
-                <div className="bg-dfxRed-100" style={{ width: '11px', marginRight: '12px' }}></div>
-                <div className="text-xl text-dfxBlue-800 font-extrabold text-left">
-                  <Trans i18nKey={'screens/home.title'}>
-                    Access all <span className="text-dfxRed-100 uppercase">DFX Services</span>
-                    <br />
-                    with this easy <span className="text-dfxRed-100 uppercase">toolbox</span>
-                  </Trans>
-                </div>
+                {currentPage.description ? (
+                  <div className="text-xl text-dfxBlue-800 font-extrabold text-left">
+                    {translate('screens/home', currentPage.description)}
+                  </div>
+                ) : (
+                  currentPage.dfxStyle && (
+                    <>
+                      <div className="bg-dfxRed-100" style={{ width: '11px', marginRight: '12px' }}></div>
+                      <div className="text-xl text-dfxBlue-800 font-extrabold text-left">
+                        <Trans i18nKey={'screens/home.title'}>
+                          Access all <span className="text-dfxRed-100 uppercase">DFX Services</span>
+                          <br />
+                          with this easy <span className="text-dfxRed-100 uppercase">toolbox</span>
+                        </Trans>
+                      </div>
+                    </>
+                  )
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2.5 w-full mb-3">
-                {tiles.map((t) => (
+                {currentPage.tiles.map((t) => (
                   <TileComponent key={t.id} tile={t} onClick={handleNext} />
                 ))}
               </div>
@@ -241,9 +255,11 @@ export function HomeScreen(): JSX.Element {
           )}
         </div>
       )}
-      <div className="absolute bottom-0 w-full">
-        <img src="https://content.dfx.swiss/img/v1/services/berge.png" className="w-full" />
-      </div>
+      {image && (
+        <div className="absolute bottom-0 w-full">
+          <img src={image} className="w-full" />
+        </div>
+      )}
     </Layout>
   );
 }

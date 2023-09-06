@@ -49,7 +49,8 @@ export function useAlby(): AlbyInterface {
     }
   }
 
-  function sendPayment(request: string): Promise<SendPaymentResponse> {
+  async function sendPayment(request: string): Promise<SendPaymentResponse> {
+    if (!isEnabled) await enable();
     return webln().sendPayment(request);
   }
 

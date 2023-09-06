@@ -71,7 +71,7 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
         </StyledDataTableRow>
       </StyledDataTable>
 
-      <GiroCode info={info.buy} />
+      <GiroCode value={info.buy.paymentRequest} />
 
       <StyledDataTable label={translate('screens/buy', 'Recipient')} showBorder minWidth={false}>
         <StyledDataTableRow>{info.recipient}</StyledDataTableRow>
