@@ -1,4 +1,5 @@
-import { PropsWithChildren, Ref } from 'react';
+import { PropsWithChildren, Ref, useRef, useState } from 'react';
+import { isNode } from '../util/utils';
 import { Navigation } from './navigation';
 
 interface LayoutProps extends PropsWithChildren {
@@ -6,13 +7,38 @@ interface LayoutProps extends PropsWithChildren {
   backButton?: boolean;
   onBack?: () => void;
   textStart?: boolean;
+  rootRef?: Ref<HTMLDivElement>;
   scrollRef?: Ref<HTMLDivElement>;
 }
 
-export function Layout({ title, backButton, onBack, textStart, children, scrollRef }: LayoutProps): JSX.Element {
+export function Layout({
+  title,
+  backButton,
+  onBack,
+  textStart,
+  children,
+  rootRef,
+  scrollRef,
+}: LayoutProps): JSX.Element {
+  const navRef = useRef<HTMLDivElement>(null);
+  const [isNavigationOpen, setIsNavigationOpen] = useState(false);
+
+  function onClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    if (isNavigationOpen && isNode(e.target) && navRef.current && !navRef.current.contains(e.target)) {
+      setIsNavigationOpen(false);
+    }
+  }
+
   return (
-    <div id="app-root" className="h-full flex flex-col">
-      <Navigation title={title} backButton={backButton} onBack={onBack} />
+    <div id="app-root" className="h-full flex flex-col" ref={rootRef} onClick={onClick}>
+      <Navigation
+        ref={navRef}
+        title={title}
+        backButton={backButton}
+        onBack={onBack}
+        isOpen={isNavigationOpen}
+        setIsOpen={setIsNavigationOpen}
+      />
 
       <div className="flex flex-col flex-grow overflow-auto" ref={scrollRef}>
         <div className="flex flex-grow justify-center">
