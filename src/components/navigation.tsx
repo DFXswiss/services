@@ -69,7 +69,7 @@ function BackButton({ title, backButton, onBack }: BackButtonProps): JSX.Element
 
   function onClick() {
     if (homePath === pathname) {
-      closeServices({ type: CloseType.CANCEL });
+      closeServices({ type: CloseType.CANCEL }, false);
     } else {
       navigate(-1);
     }
@@ -139,11 +139,16 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
         <div className="mx-4 py-4 text-dfxGray-800">
           {authenticationToken && (
             <NavigationLink
-              icon={IconVariant.HOME}
+              icon={IconVariant.SETTINGS}
               label={translate('navigation/links', 'My DFX')}
               url={`${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`}
             />
           )}
+          <NavigationLink
+            icon={IconVariant.HOME}
+            label={translate('navigation/links', 'DFX.swiss')}
+            url={process.env.REACT_APP_DFX_URL}
+          />
           <NavigationLink
             icon={IconVariant.TELEGRAM}
             label={translate('navigation/links', 'Telegram')}

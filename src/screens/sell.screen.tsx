@@ -257,7 +257,7 @@ export function SellScreen(): JSX.Element {
   }
 
   function close(sell: Sell, isComplete: boolean) {
-    closeServices({ type: CloseType.SELL, isComplete, sell });
+    closeServices({ type: CloseType.SELL, isComplete, sell }, isComplete);
   }
 
   const rules = Utils.createRules({

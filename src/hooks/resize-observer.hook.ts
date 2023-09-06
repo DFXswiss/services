@@ -5,7 +5,6 @@ export function useResizeObserver<T extends HTMLElement>(callback: (target: T, e
 
   useLayoutEffect(() => {
     const element = ref?.current;
-
     if (!element) return;
 
     const observer = new ResizeObserver((entries) => callback(element, entries[0]));

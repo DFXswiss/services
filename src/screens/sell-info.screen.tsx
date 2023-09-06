@@ -130,7 +130,7 @@ export function SellInfoScreen(): JSX.Element {
   return (
     <Layout textStart backButton={false} scrollRef={scrollRef}>
       {showsCompletion && paymentInfo ? (
-        <SellCompletion paymentInfo={paymentInfo} />
+        <SellCompletion paymentInfo={paymentInfo} navigateOnClose={false} />
       ) : isLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -194,7 +194,7 @@ export function SellInfoScreen(): JSX.Element {
               <StyledButton
                 width={StyledButtonWidth.FULL}
                 label={translate('general/actions', 'Close')}
-                onClick={() => closeServices({ type: CloseType.CANCEL })}
+                onClick={() => closeServices({ type: CloseType.CANCEL }, false)}
               />
             </>
           )}

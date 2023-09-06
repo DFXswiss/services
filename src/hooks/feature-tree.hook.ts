@@ -1,15 +1,18 @@
 import { Blockchain, Language } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import { FeatureTree } from '../config/feature-tree';
-import { AppParams } from '../contexts/app-handling.context';
+import { AppParams, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { WalletType } from '../contexts/wallet.context';
 import { useAppParams } from './app-params.hook';
-import { useNavigation } from './navigation.hook';
 
 // --- INTERFACES --- //
 export interface Page {
   id: string;
+  dfxStyle?: boolean;
+  header?: string;
+  description?: string;
+  bottomImage?: string;
   tiles: Tile[];
 }
 
@@ -62,7 +65,7 @@ export function isWallet(tile: Tile): tile is WalletTile {
 // --- HOOK --- //
 
 interface FeatureTreeInterface {
-  getTiles: (pageId?: string, allowed?: string[]) => Tile[] | undefined;
+  getPage: (pageId?: string, allowedTiles?: string[]) => Page | undefined;
   getWallet: (tile: WalletTile, params: AppParams) => Wallet;
   setOptions: (options: Options) => void;
 }
@@ -70,15 +73,16 @@ interface FeatureTreeInterface {
 export function useFeatureTree(): FeatureTreeInterface {
   const { language } = useSettingsContext();
   const { setParams } = useAppParams();
-  const { setParams: setUrlParams } = useNavigation();
+  const { setRedirectPath } = useAppHandlingContext();
 
-  function getTiles(pageId?: string, allowed?: string[]): Tile[] | undefined {
+  function getPage(pageId?: string, allowedTiles?: string[]): Page | undefined {
     if (!language) return;
 
     const nextPage = FeatureTree.find((p) => p.id === pageId) ?? FeatureTree[0];
-    return nextPage.tiles
+    const tiles = nextPage.tiles
       .map((t) => ({ ...t, img: getImgUrl(t, language) }))
-      ?.filter((t) => !allowed || allowed.includes(t.id));
+      .filter((t) => !allowedTiles || allowedTiles.includes(t.id));
+    return { ...nextPage, tiles };
   }
 
   function getWallet(tile: WalletTile, params: AppParams): Wallet {
@@ -91,10 +95,7 @@ export function useFeatureTree(): FeatureTreeInterface {
 
   function setOptions(options: Options) {
     // service
-    if (options.service) {
-      const params = new URLSearchParams({ 'redirect-path': `/${options.service}` });
-      setUrlParams(params);
-    }
+    if (options.service) setRedirectPath(`/${options.service}`);
 
     // query
     if (options.query) {
@@ -102,5 +103,5 @@ export function useFeatureTree(): FeatureTreeInterface {
     }
   }
 
-  return useMemo(() => ({ getTiles, getWallet, setOptions }), [language, setParams]);
+  return useMemo(() => ({ getPage, getWallet, setOptions }), [language, setParams]);
 }
