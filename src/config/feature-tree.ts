@@ -1351,6 +1351,9 @@ export const FeatureTree: Page[] = [
   // --- MARC STEINER --- //
   {
     id: 'marcsteiner',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
+    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
     tiles: [
       {
         id: 'marcsteiner-buy',
@@ -1372,10 +1375,10 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-buy',
     tiles: [
       {
-        id: 'bitcoin',
+        id: 'marcsteiner-buy-bitcoin',
         img: 'bitcoinlightning_simple',
         next: {
-          page: 'hw-wallet',
+          page: 'hw-wallets',
           tiles: ['bitbox', 'ledger'],
           options: {
             service: 'buy',
