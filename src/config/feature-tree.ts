@@ -991,22 +991,6 @@ export const FeatureTree: Page[] = [
       id: 'albyonly-buy',
       img: 'kaufen_simple',
       next: {
-        page: 'marcsteiner-buy',
-      },
-    },
-    {
-      id: 'albyonly-sell',
-      img: 'verkaufen_simple',
-      next: {
-        page: 'marcsteiner-sell',
-      },
-    },
-  ],
-  tiles: [
-    {
-      id: 'bitcoin',
-      img: 'bitcoinlightning',
-      next: {
         page: 'wallets',
         tiles: ['alby'],
         options: {
@@ -1015,28 +999,20 @@ export const FeatureTree: Page[] = [
         },
       },
     },
-  ],
-},
-{
-  id: 'marcsteiner',
-  tiles: [
     {
-      id: 'marcsteiner-buy',
-      img: 'kaufen_simple',
-      next: {
-        page: 'marcsteiner-buy',
-      },
-    },
-    {
-      id: 'marcsteiner-sell',
+      id: 'albyonly-sell',
       img: 'verkaufen_simple',
       next: {
-        page: 'marcsteiner-sell',
+        page: 'wallets',
+        tiles: ['alby'],
+        options: {
+          service: 'sell',
+          query: { blockchain: Blockchain.LIGHTNING, assetOut: 'BTC' },
+        },
       },
     },
   ],
 },
-
 
   // --- BitBox ONLY Buy --- //
   {
