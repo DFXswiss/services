@@ -14,8 +14,8 @@ import {
 } from '@dfx.swiss/react-components';
 import { useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useLocation } from 'react-router-dom';
 import { Layout } from '../components/layout';
+import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -26,7 +26,8 @@ export function ProfileScreen(): JSX.Element {
   const { countries, reloadUser } = useUserContext();
   const { setKycData } = useKyc();
   const { navigate } = useNavigation();
-  const { search } = useLocation();
+  const { redirectPath, setRedirectPath } = useAppHandlingContext();
+
   const {
     control,
     handleSubmit,
@@ -38,14 +39,17 @@ export function ProfileScreen(): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
 
-  const redirectPath = new URLSearchParams(search).get('redirect-path') ?? '/';
-
   function onSubmit(data: KycData) {
     setIsSubmitting(true);
     setKycData(data)
       .then(() => reloadUser())
       // wait for the user to reload
-      .then(() => setTimeout(() => navigate({ pathname: redirectPath }, { clearParams: ['redirect-path'] }), 10))
+      .then(() =>
+        setTimeout(() => {
+          setRedirectPath(undefined);
+          navigate(redirectPath ?? '/');
+        }, 10),
+      )
       .catch((error: ApiError) => {
         setErrorMessage(error.message ?? 'Unknown error');
       })

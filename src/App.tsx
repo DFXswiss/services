@@ -81,7 +81,7 @@ function App({ routerFactory, params }: AppProps) {
           router={router}
         >
           <SettingsContextProvider>
-            <WalletContextProvider>
+            <WalletContextProvider router={router}>
               <RouterProvider router={router} />
             </WalletContextProvider>
           </SettingsContextProvider>

@@ -9,18 +9,29 @@ import {
   StyledButtonWidth,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useState } from 'react';
 import { CloseType, useAppHandlingContext } from '../../contexts/app-handling.context';
 import { useSettingsContext } from '../../contexts/settings.context';
 
-export function SellCompletion({ paymentInfo }: { paymentInfo: Sell }): JSX.Element {
+interface SellCompletionProps {
+  paymentInfo: Sell;
+  navigateOnClose: boolean;
+}
+
+export function SellCompletion({ paymentInfo, navigateOnClose }: SellCompletionProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
 
+  const [isClosed, setIsClosed] = useState(false);
+
   function close() {
-    closeServices({ type: CloseType.SELL, isComplete: true, sell: paymentInfo });
+    closeServices({ type: CloseType.SELL, isComplete: true, sell: paymentInfo }, navigateOnClose);
+    setIsClosed(true);
   }
 
-  return (
+  return isClosed ? (
+    <></>
+  ) : (
     <StyledVerticalStack gap={4}>
       <div className="mx-auto">
         <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />

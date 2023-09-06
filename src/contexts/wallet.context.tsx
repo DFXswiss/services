@@ -1,4 +1,5 @@
 import { Asset, Blockchain, Sell, Utils, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
+import { Router } from '@remix-run/router';
 import BigNumber from 'bignumber.js';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { GetInfoResponse } from 'webln';
@@ -25,6 +26,7 @@ export enum WalletType {
 }
 
 interface WalletInterface {
+  isInitialized: boolean;
   blockchain?: Blockchain;
   getInstalledWallets: () => Promise<WalletType[]>;
   login: (
@@ -40,14 +42,18 @@ interface WalletInterface {
   sendTransaction: (sell: Sell) => Promise<string>;
 }
 
+interface WalletContextProps extends PropsWithChildren {
+  router: Router;
+}
+
 const WalletContext = createContext<WalletInterface>(undefined as any);
 
 export function useWalletContext(): WalletInterface {
   return useContext(WalletContext);
 }
 
-export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
-  const { isInitialized, isLoggedIn, logout } = useSessionContext();
+export function WalletContextProvider(props: WalletContextProps): JSX.Element {
+  const { isInitialized: isSessionInitialized, isLoggedIn, logout } = useSessionContext();
   const { updateSession } = useApiSession();
   const { session } = useApiSession();
   const metaMask = useMetaMask();
@@ -56,11 +62,12 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
   const bitBox = useBitbox();
   const trezor = useTrezor();
   const api = useSessionContext();
-  const { isInitialized: isParamsInitialized, params: appParams } = useAppHandlingContext();
+  const { isInitialized: isParamsInitialized, params: appParams, redirectPath } = useAppHandlingContext();
   const { getSignMessage } = useAuth();
   const { hasBalance, getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
 
+  const [isInitialized, setIsInitialized] = useState(false);
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
 
   const [mmAddress, setMmAddress] = useState<string>();
@@ -82,15 +89,22 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
     }
   }, [session?.address, mmAddress, activeWallet]);
 
+  // initialize
   useEffect(() => {
-    if (isInitialized && !isLoggedIn) {
+    if (isSessionInitialized && !isLoggedIn) {
       setWallet();
     }
-  }, [isInitialized, isLoggedIn]);
+  }, [isSessionInitialized, isLoggedIn]);
 
   useEffect(() => {
     if (isParamsInitialized)
-      handleParamSession().then((hasSession) => hasSession && setWallet(appParams.type as WalletType));
+      handleParamSession().then((hasSession) => {
+        if (hasSession) {
+          setWallet(appParams.type as WalletType);
+          appParams.redirect && props.router.navigate(appParams.redirect);
+        }
+        setIsInitialized(true);
+      });
   }, [isParamsInitialized]);
 
   async function handleParamSession(): Promise<boolean> {
@@ -232,6 +246,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       const win: Window = window;
       const redirectUrl = new URL(win.location.href);
       redirectUrl.searchParams.set('type', WalletType.ALBY);
+      redirectPath && redirectUrl.searchParams.set('redirect', redirectPath);
 
       const params = new URLSearchParams({ redirectUri: redirectUrl.toString() });
       appParams.wallet && params.set('wallet', appParams.wallet);
@@ -394,6 +409,7 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
 
   const context: WalletInterface = useMemo(
     () => ({
+      isInitialized: isInitialized && isSessionInitialized && isParamsInitialized,
       blockchain: getBlockchain(),
       getInstalledWallets,
       login,
@@ -403,6 +419,9 @@ export function WalletContextProvider(props: PropsWithChildren): JSX.Element {
       sendTransaction,
     }),
     [
+      isInitialized,
+      isSessionInitialized,
+      isParamsInitialized,
       activeWallet,
       mmAddress,
       mmBlockchain,
