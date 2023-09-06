@@ -38,6 +38,13 @@ jobs:
         id: package_version
         uses: martinbeentjes/npm-get-version-action@v1.3.1
 
+      - name: Update WalletConnect PID
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: '{WC_PID}'
+          replace: ${{ secrets.PRD_WC_PID}}
+          regex: false
+
       - name: Build code
         run: |
           npm run build

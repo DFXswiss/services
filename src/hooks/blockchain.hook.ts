@@ -41,14 +41,12 @@ export function useBlockchain(): BlockchainInterface {
   function toChainHex(blockchain: Blockchain): string | undefined {
     const web3 = new Web3(Web3.givenProvider);
 
-    const id = Object.entries(chainIds).find(([_, b]) => b === blockchain)?.[0];
+    const id = toChainId(blockchain);
     return id && web3.utils.toHex(id);
   }
 
   function toChainId(blockchain: Blockchain): string | undefined {
-    const web3 = new Web3(Web3.givenProvider);
-    const id = Object.entries(chainIds).find(([_, b]) => b === blockchain)?.[0];
-    return id;
+    return Object.entries(chainIds).find(([_, b]) => b === blockchain)?.[0];
   }
 
   function toChainObject(blockchain: Blockchain): MetaMaskChainInterface | undefined {
