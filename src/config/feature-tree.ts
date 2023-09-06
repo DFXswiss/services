@@ -980,12 +980,28 @@ export const FeatureTree: Page[] = [
     ],
   },
 
-// --- ALBY ONLY Buy --- //
+// --- ALBY ONLY --- //
 {
-  id: 'albyonly-buy',
-  header: 'Buy Bitcoin with Alby',
-  description: 'Buy Bitcoin directly on your Alby Account!',
-  bottomImage: 'https://getalby.com/assets/alby-f05c73aa695c103d93148384f00fee1373dca844974b29b02d8afeb873972b6f.svg',
+  id: 'albyonly',
+  header: 'Buy and sell with Alby',
+  description: 'Buy and sell Bitcoin directly on your Alby Account!',
+  bottomImage: 'https://getalby.com/assets/alby-logo-head-da6c4355b69a3baac3fc306d47741c9394a825e54905ef67c5dd029146b89edf.svg',
+  tiles: [
+    {
+      id: 'albyonly-buy',
+      img: 'kaufen_simple',
+      next: {
+        page: 'marcsteiner-buy',
+      },
+    },
+    {
+      id: 'albyonly-sell',
+      img: 'verkaufen_simple',
+      next: {
+        page: 'marcsteiner-sell',
+      },
+    },
+  ],
   tiles: [
     {
       id: 'bitcoin',
@@ -1001,6 +1017,27 @@ export const FeatureTree: Page[] = [
     },
   ],
 },
+{
+  id: 'marcsteiner',
+  tiles: [
+    {
+      id: 'marcsteiner-buy',
+      img: 'kaufen_simple',
+      next: {
+        page: 'marcsteiner-buy',
+      },
+    },
+    {
+      id: 'marcsteiner-sell',
+      img: 'verkaufen_simple',
+      next: {
+        page: 'marcsteiner-sell',
+      },
+    },
+  ],
+},
+
+
   // --- BitBox ONLY Buy --- //
   {
     id: 'bitboxonly-buy',
