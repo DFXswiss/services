@@ -984,7 +984,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'bitboxonly-buy',
     header: 'Buy Crypto',
-    description: 'Buy crypto directly on your BitBox!',
+    description: 'Buy Bitcoin and crypto directly on your BitBox!',
     bottomImage: 'https://bitbox.shop/media/__sized__/products/email-image-thumbnail-540x540-70.jpg',
     tiles: [
       {
