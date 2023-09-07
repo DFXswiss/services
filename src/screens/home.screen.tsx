@@ -49,7 +49,7 @@ export function HomeScreen(): JSX.Element {
   const [pairingCode, setPairingCode] = useState<string>();
   const [pages, setPages] = useState(new Stack<{ page: string; allowedTiles: string[] | undefined }>());
 
-  const autoConnectWallets = [WalletType.META_MASK, WalletType.ALBY];
+  const autoConnectWallets = [WalletType.META_MASK, WalletType.ALBY, WalletType.WALLET_CONNECT];
 
   const currentPageId = pages.current?.page;
   const allowedTiles = pages.current?.allowedTiles;
