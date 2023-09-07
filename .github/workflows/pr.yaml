@@ -32,7 +32,7 @@ jobs:
         uses: jacobtomlinson/gha-find-replace@v3
         with:
           find: '{WC_PID}'
-          replace: ${{ secrets.PR_WC_PID}}
+          replace: ${{ secrets.PR_WC_PID }}
           regex: false
 
       - name: Build code

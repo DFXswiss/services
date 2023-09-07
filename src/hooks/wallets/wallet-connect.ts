@@ -2,7 +2,6 @@ import { Blockchain } from '@dfx.swiss/react/dist/definitions/blockchain';
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
 import { EthereumProvider as EthClient } from '@walletconnect/ethereum-provider/dist/types/EthereumProvider';
 import { useState } from 'react';
-import Secrets from '../../config/secrets';
 import { AbortError } from '../../util/abort-error';
 import { useBlockchain } from '../blockchain.hook';
 
@@ -19,7 +18,6 @@ export function useWalletConnect(): WalletConnectInterface {
     const client = walletConnectClient ?? (await setupConnection(blockchain));
     await client.connect();
     const result = await client.request<string[]>({ method: 'eth_requestAccounts' });
-    console.log(result);
     return result[0];
   }
 
@@ -29,14 +27,14 @@ export function useWalletConnect(): WalletConnectInterface {
     if (!process.env.REACT_APP_WC_PID) throw new Error();
 
     const provider = await EthereumProvider.init({
-      projectId: Secrets.WalletConnect.projectId,
+      projectId: process.env.REACT_APP_WC_PID,
       chains: [+(chainId ?? 1)],
       showQrModal: true,
       metadata: {
         name: document.title,
-        description: 'Buy coins and tokens on a blockchain simply by using DFX services. Your keys, your coins.',
+        description: 'Buy and sell crypto.',
         url: window.location.origin,
-        icons: ['https://content.dfx.swiss/img/v1/website/logo-dark.svg'],
+        icons: [`${window.location.origin}/favicon.ico`],
       },
     });
 
@@ -47,7 +45,11 @@ export function useWalletConnect(): WalletConnectInterface {
   async function signMessage(msg: string, address: string, blockchain: Blockchain): Promise<string> {
     try {
       const client = walletConnectClient ?? (await setupConnection(blockchain));
-      return await client.request<string>({ method: 'personal_sign', params: [address, msg] });
+
+      return await client.request<string>({
+        method: 'personal_sign',
+        params: [msg, address],
+      });
     } catch (e) {
       throw new AbortError('User cancelled');
     }
