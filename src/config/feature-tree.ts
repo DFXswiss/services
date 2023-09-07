@@ -980,39 +980,40 @@ export const FeatureTree: Page[] = [
     ],
   },
 
-// --- ALBY ONLY --- //
-{
-  id: 'albyonly',
-  header: 'Buy and sell with Alby',
-  description: 'Buy and sell Bitcoin directly on your Alby Account!',
-  bottomImage: 'https://getalby.com/assets/alby-logo-head-da6c4355b69a3baac3fc306d47741c9394a825e54905ef67c5dd029146b89edf.svg',
-  tiles: [
-    {
-      id: 'albyonly-buy',
-      img: 'kaufen_simple',
-      next: {
-        page: 'wallets',
-        tiles: ['alby'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.LIGHTNING, assetOut: 'BTC' },
+  // --- ALBY ONLY --- //
+  {
+    id: 'albyonly',
+    header: 'Buy and sell with Alby',
+    description: 'Buy and sell Bitcoin directly on your Alby Account!',
+    bottomImage:
+      'https://getalby.com/assets/alby-logo-head-da6c4355b69a3baac3fc306d47741c9394a825e54905ef67c5dd029146b89edf.svg',
+    tiles: [
+      {
+        id: 'albyonly-buy',
+        img: 'kaufen_simple',
+        next: {
+          page: 'wallets',
+          tiles: ['alby'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.LIGHTNING, assetOut: 'BTC' },
+          },
         },
       },
-    },
-    {
-      id: 'albyonly-sell',
-      img: 'verkaufen_simple',
-      next: {
-        page: 'wallets',
-        tiles: ['alby'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.LIGHTNING, assetOut: 'BTC' },
+      {
+        id: 'albyonly-sell',
+        img: 'verkaufen_simple',
+        next: {
+          page: 'wallets',
+          tiles: ['alby'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.LIGHTNING, assetOut: 'BTC' },
+          },
         },
       },
-    },
-  ],
-},
+    ],
+  },
 
   // --- BitBox ONLY Buy --- //
   {
@@ -2004,7 +2005,7 @@ export const FeatureTree: Page[] = [
       {
         id: 'walletconnect',
         img: 'walletconnect',
-        disabled: true,
+        wallet: { type: WalletType.WALLET_CONNECT },
       },
       {
         id: 'cli',

@@ -9,6 +9,7 @@ import { useBitbox } from '../hooks/wallets/bitbox.hook';
 import { useLedger } from '../hooks/wallets/ledger.hook';
 import { useMetaMask } from '../hooks/wallets/metamask.hook';
 import { useTrezor } from '../hooks/wallets/trezor.hook';
+import { useWalletConnect } from '../hooks/wallets/wallet-connect';
 import { AbortError } from '../util/abort-error';
 import { delay, url } from '../util/utils';
 import { useAppHandlingContext } from './app-handling.context';
@@ -23,6 +24,7 @@ export enum WalletType {
   BITBOX_ETH = 'BitBoxEth',
   TREZOR_BTC = 'TrezorBtc',
   TREZOR_ETH = 'TrezorEth',
+  WALLET_CONNECT = 'WalletConnect',
 }
 
 interface WalletInterface {
@@ -61,6 +63,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const ledger = useLedger();
   const bitBox = useBitbox();
   const trezor = useTrezor();
+  const walletConnect = useWalletConnect();
   const api = useSessionContext();
   const { isInitialized: isParamsInitialized, params: appParams, redirectPath } = useAppHandlingContext();
   const { getSignMessage } = useAuth();
@@ -76,6 +79,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const [ledgerBlockchain, setLedgerBlockchain] = useState<Blockchain>();
   const [bitboxBlockchain, setBitboxBlockchain] = useState<Blockchain>();
   const [trezorBlockchain, setTrezorBlockchain] = useState<Blockchain>();
+  const [walletConnectBlockchain, setWalletConnectBlockchain] = useState<Blockchain>();
 
   // listen to MM account switches
   useEffect(() => {
@@ -191,6 +195,10 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       case WalletType.TREZOR_ETH:
         setTrezorBlockchain(blockchain);
         break;
+
+      case WalletType.WALLET_CONNECT:
+        setWalletConnectBlockchain(blockchain);
+        break;
     }
 
     return address;
@@ -233,6 +241,10 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
         address ??= await trezor.connect(wallet);
+        return [address, blockchain];
+
+      case WalletType.WALLET_CONNECT:
+        address ??= await walletConnect.connect(blockchain ?? Blockchain.ETHEREUM);
         return [address, blockchain];
     }
   }
@@ -281,6 +293,9 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       case WalletType.TREZOR_ETH:
         return await trezor.signMessage(message, wallet);
 
+      case WalletType.WALLET_CONNECT:
+        return await walletConnect.signMessage(message, address, walletConnectBlockchain ?? Blockchain.ETHEREUM);
+
       default:
         throw new Error('No wallet active');
     }
@@ -294,6 +309,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     if (await ledger.isSupported()) wallets.push(WalletType.LEDGER_BTC, WalletType.LEDGER_ETH);
     if (await bitBox.isSupported()) wallets.push(WalletType.BITBOX_BTC, WalletType.BITBOX_ETH);
     if (trezor.isSupported()) wallets.push(WalletType.TREZOR_BTC, WalletType.TREZOR_ETH);
+    wallets.push(WalletType.WALLET_CONNECT);
 
     return wallets;
   }
@@ -322,6 +338,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       case WalletType.LEDGER_ETH:
       case WalletType.BITBOX_BTC:
       case WalletType.BITBOX_ETH:
+      case WalletType.WALLET_CONNECT:
         // no balance available
         return undefined;
 
@@ -355,6 +372,9 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       case WalletType.TREZOR_ETH:
         return trezorBlockchain;
 
+      case WalletType.WALLET_CONNECT:
+        return walletConnectBlockchain;
+
       default:
         return undefined;
     }
@@ -379,6 +399,10 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       case WalletType.TREZOR_ETH:
         setTrezorBlockchain(to);
         break;
+
+      case WalletType.WALLET_CONNECT:
+        setWalletConnectBlockchain(to);
+        break;
     }
   }
 
@@ -400,6 +424,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       case WalletType.BITBOX_ETH:
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
+      case WalletType.WALLET_CONNECT:
         throw new Error('Not supported yet');
 
       default:

@@ -24,10 +24,13 @@ export function ConnectHint(props: ConnectHintProps): JSX.Element {
   switch (type) {
     case WalletType.META_MASK:
     case WalletType.ALBY:
+    case WalletType.WALLET_CONNECT:
       const confirmMessage =
         type === WalletType.META_MASK
           ? 'Please confirm the connection in your MetaMask.'
-          : 'Please confirm the connection in the Alby browser extension.';
+          : type === WalletType.ALBY
+          ? 'Please confirm the connection in the Alby browser extension.'
+          : 'Please confirm the connection in your wallet.';
 
       return <AutoConnectHint {...props} message={confirmMessage} />;
 
