@@ -9,6 +9,7 @@ import { useBitbox } from '../hooks/wallets/bitbox.hook';
 import { useLedger } from '../hooks/wallets/ledger.hook';
 import { useMetaMask } from '../hooks/wallets/metamask.hook';
 import { useTrezor } from '../hooks/wallets/trezor.hook';
+import { useWalletConnect } from '../hooks/wallets/wallet-connect';
 import { AbortError } from '../util/abort-error';
 import { delay, url } from '../util/utils';
 import { useAppHandlingContext } from './app-handling.context';
@@ -23,6 +24,9 @@ export enum WalletType {
   BITBOX_ETH = 'BitBoxEth',
   TREZOR_BTC = 'TrezorBtc',
   TREZOR_ETH = 'TrezorEth',
+  CLI_BTC = 'CliBtc',
+  CLI_ETH = 'CliEth',
+  WALLET_CONNECT = 'WalletConnect',
 }
 
 interface WalletInterface {
@@ -35,6 +39,7 @@ interface WalletInterface {
     onPairing?: (code: string) => Promise<void>,
     blockchain?: Blockchain,
     address?: string,
+    signature?: string,
   ) => Promise<string | undefined>;
   switchBlockchain: (to: Blockchain) => Promise<void>;
   activeWallet: WalletType | undefined;
@@ -61,6 +66,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const ledger = useLedger();
   const bitBox = useBitbox();
   const trezor = useTrezor();
+  const walletConnect = useWalletConnect();
   const api = useSessionContext();
   const { isInitialized: isParamsInitialized, params: appParams, redirectPath } = useAppHandlingContext();
   const { getSignMessage } = useAuth();
@@ -69,13 +75,10 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
+  const [activeBlockchain, setActiveBlockchain] = useState<Blockchain>();
 
   const [mmAddress, setMmAddress] = useState<string>();
   const [mmBlockchain, setMmBlockchain] = useState<Blockchain>();
-
-  const [ledgerBlockchain, setLedgerBlockchain] = useState<Blockchain>();
-  const [bitboxBlockchain, setBitboxBlockchain] = useState<Blockchain>();
-  const [trezorBlockchain, setTrezorBlockchain] = useState<Blockchain>();
 
   // listen to MM account switches
   useEffect(() => {
@@ -135,16 +138,13 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     onPairing?: (code: string) => Promise<void>,
     blockchain?: Blockchain,
     usedAddress?: string,
+    usedSignature?: string,
   ): Promise<string> {
     const address = await connect(wallet, onPairing, blockchain, usedAddress);
 
     try {
       // show signature hint
-      await onSignHint?.();
-
-      // create session
-      const message = await getSignMessage(address);
-      const signature = await signMessage(wallet, message, address);
+      const signature = usedSignature ?? (await getSignature(wallet, address, onSignHint));
       await createSession(address, signature);
     } catch (e) {
       api.logout();
@@ -175,21 +175,16 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
         break;
 
       case WalletType.ALBY:
-        break;
-
       case WalletType.LEDGER_BTC:
       case WalletType.LEDGER_ETH:
-        setLedgerBlockchain(blockchain);
-        break;
-
       case WalletType.BITBOX_BTC:
       case WalletType.BITBOX_ETH:
-        setBitboxBlockchain(blockchain);
-        break;
-
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
-        setTrezorBlockchain(blockchain);
+      case WalletType.CLI_BTC:
+      case WalletType.CLI_ETH:
+      case WalletType.WALLET_CONNECT:
+        setActiveBlockchain(blockchain);
         break;
     }
 
@@ -234,6 +229,15 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       case WalletType.TREZOR_ETH:
         address ??= await trezor.connect(wallet);
         return [address, blockchain];
+
+      case WalletType.CLI_BTC:
+      case WalletType.CLI_ETH:
+        if (!address) throw new Error('Address is not defined');
+        return [address, blockchain];
+
+      case WalletType.WALLET_CONNECT:
+        address ??= await walletConnect.connect(blockchain ?? Blockchain.ETHEREUM);
+        return [address, blockchain];
     }
   }
 
@@ -261,6 +265,13 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     throw new Error('No login method found');
   }
 
+  async function getSignature(wallet: WalletType, address: string, onSignHint?: () => Promise<void>) {
+    await onSignHint?.();
+
+    const message = await getSignMessage(address);
+    return signMessage(wallet, message, address);
+  }
+
   async function signMessage(wallet: WalletType, message: string, address: string): Promise<string> {
     switch (wallet) {
       case WalletType.META_MASK:
@@ -281,6 +292,13 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       case WalletType.TREZOR_ETH:
         return await trezor.signMessage(message, wallet);
 
+      case WalletType.CLI_BTC:
+      case WalletType.CLI_ETH:
+        throw new Error('Not supported');
+
+      case WalletType.WALLET_CONNECT:
+        return await walletConnect.signMessage(message, address, activeBlockchain ?? Blockchain.ETHEREUM);
+
       default:
         throw new Error('No wallet active');
     }
@@ -294,6 +312,8 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     if (await ledger.isSupported()) wallets.push(WalletType.LEDGER_BTC, WalletType.LEDGER_ETH);
     if (await bitBox.isSupported()) wallets.push(WalletType.BITBOX_BTC, WalletType.BITBOX_ETH);
     if (trezor.isSupported()) wallets.push(WalletType.TREZOR_BTC, WalletType.TREZOR_ETH);
+    wallets.push(WalletType.CLI_BTC, WalletType.CLI_ETH);
+    wallets.push(WalletType.WALLET_CONNECT);
 
     return wallets;
   }
@@ -315,18 +335,15 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
         );
 
       case WalletType.ALBY:
-        // no balance available
-        return undefined;
-
       case WalletType.LEDGER_BTC:
       case WalletType.LEDGER_ETH:
       case WalletType.BITBOX_BTC:
       case WalletType.BITBOX_ETH:
-        // no balance available
-        return undefined;
-
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
+      case WalletType.CLI_BTC:
+      case WalletType.CLI_ETH:
+      case WalletType.WALLET_CONNECT:
         // no balance available
         return undefined;
 
@@ -341,19 +358,16 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
         return mmBlockchain;
 
       case WalletType.ALBY:
-        return Blockchain.LIGHTNING;
-
       case WalletType.LEDGER_BTC:
       case WalletType.LEDGER_ETH:
-        return ledgerBlockchain;
-
       case WalletType.BITBOX_BTC:
       case WalletType.BITBOX_ETH:
-        return bitboxBlockchain;
-
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
-        return trezorBlockchain;
+      case WalletType.CLI_BTC:
+      case WalletType.CLI_ETH:
+      case WalletType.WALLET_CONNECT:
+        return activeBlockchain;
 
       default:
         return undefined;
@@ -365,19 +379,17 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       case WalletType.META_MASK:
         return metaMask.requestChangeToBlockchain(to);
 
+      case WalletType.ALBY:
       case WalletType.LEDGER_BTC:
       case WalletType.LEDGER_ETH:
-        setLedgerBlockchain(to);
-        break;
-
       case WalletType.BITBOX_BTC:
       case WalletType.BITBOX_ETH:
-        setBitboxBlockchain(to);
-        break;
-
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
-        setTrezorBlockchain(to);
+      case WalletType.CLI_BTC:
+      case WalletType.CLI_ETH:
+      case WalletType.WALLET_CONNECT:
+        setActiveBlockchain(to);
         break;
     }
   }
@@ -400,6 +412,9 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       case WalletType.BITBOX_ETH:
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
+      case WalletType.CLI_BTC:
+      case WalletType.CLI_ETH:
+      case WalletType.WALLET_CONNECT:
         throw new Error('Not supported yet');
 
       default:
@@ -423,6 +438,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       isSessionInitialized,
       isParamsInitialized,
       activeWallet,
+      activeBlockchain,
       mmAddress,
       mmBlockchain,
       metaMask,

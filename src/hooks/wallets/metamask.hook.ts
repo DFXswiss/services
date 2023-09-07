@@ -47,7 +47,7 @@ export interface MetaMaskChainInterface {
 
 export function useMetaMask(): MetaMaskInterface {
   const web3 = new Web3(Web3.givenProvider);
-  const { toBlockchain, toChainId, toChainObject } = useBlockchain();
+  const { toBlockchain, toChainHex, toChainObject } = useBlockchain();
 
   function ethereum() {
     return (window as any).ethereum;
@@ -110,7 +110,7 @@ export function useMetaMask(): MetaMaskInterface {
   async function requestChangeToBlockchain(blockchain?: Blockchain): Promise<void> {
     if (!blockchain) return;
 
-    const chainId = toChainId(blockchain);
+    const chainId = toChainHex(blockchain);
     if (!chainId) return;
 
     return ethereum()

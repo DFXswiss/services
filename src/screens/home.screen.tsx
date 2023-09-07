@@ -49,7 +49,7 @@ export function HomeScreen(): JSX.Element {
   const [pairingCode, setPairingCode] = useState<string>();
   const [pages, setPages] = useState(new Stack<{ page: string; allowedTiles: string[] | undefined }>());
 
-  const autoConnectWallets = [WalletType.META_MASK, WalletType.ALBY];
+  const autoConnectWallets = [WalletType.META_MASK, WalletType.ALBY, WalletType.WALLET_CONNECT];
 
   const currentPageId = pages.current?.page;
   const allowedTiles = pages.current?.allowedTiles;
@@ -140,24 +140,24 @@ export function HomeScreen(): JSX.Element {
     }
   }
 
-  function handleRetry() {
-    connectTo && connectWallet(connectTo);
+  function handleStart(address?: string, signature?: string) {
+    connectTo && connectWallet(connectTo, address, signature);
   }
 
   // connect
-  async function connectWallet(wallet: Wallet) {
-    connect(wallet)
+  async function connectWallet(wallet: Wallet, address?: string, signature?: string) {
+    connect(wallet, address, signature)
       .then(() => setPages(new Stack()))
       .catch(console.error);
   }
 
-  async function connect(wallet: Wallet, address?: string) {
+  async function connect(wallet: Wallet, address?: string, signature?: string) {
     const installedWallets = await getInstalledWallets();
     if (installedWallets.some((w) => w === wallet.type)) {
       setIsConnecting(true);
       setConnectError(undefined);
 
-      return doLogin(wallet.type, wallet.blockchain, address)
+      return doLogin(wallet.type, wallet.blockchain, address, signature)
         .then(() => setLoginSuccessful(true))
         .catch((e) => {
           if (e instanceof AbortError) {
@@ -178,12 +178,12 @@ export function HomeScreen(): JSX.Element {
     }
   }
 
-  async function doLogin(wallet: WalletType, blockchain?: Blockchain, address?: string) {
+  async function doLogin(wallet: WalletType, blockchain?: Blockchain, address?: string, signature?: string) {
     const selectedChain = blockchain ?? (appParams.blockchain as Blockchain);
 
     return activeWallet === wallet
       ? selectedChain && switchBlockchain(selectedChain)
-      : logout().then(() => login(wallet, confirmSignHint, confirmPairing, selectedChain, address));
+      : logout().then(() => login(wallet, confirmSignHint, confirmPairing, selectedChain, address, signature));
   }
 
   function start(kycComplete: boolean) {
@@ -209,7 +209,7 @@ export function HomeScreen(): JSX.Element {
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
       ) : (
-        <div className="z-1 flex flex-grow flex-col items-center">
+        <div className="z-1 flex flex-grow flex-col items-center w-full">
           {showInstallHint ? (
             <InstallHint type={showInstallHint} onConfirm={onHintConfirmed} />
           ) : showSignHint ? (
@@ -221,8 +221,8 @@ export function HomeScreen(): JSX.Element {
               error={connectError}
               pairingCode={pairingCode}
               onPairingConfirmed={pairingConfirmed}
+              onStart={handleStart}
               onBack={handleBack}
-              onRetry={handleRetry}
             />
           ) : (
             <>
