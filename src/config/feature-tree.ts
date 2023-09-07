@@ -3,7 +3,7 @@ import { WalletType } from '../contexts/wallet.context';
 import { Page } from '../hooks/feature-tree.hook';
 
 export const FeatureTree: Page[] = [
-  // --- DEFAULT CONFIG --- //
+  // --- DEFAULT CONFIG do not use for iframe or widgets --- //
   {
     id: 'home',
     dfxStyle: true,
@@ -924,6 +924,927 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
+  // --- DEFAULT CONFIG for iframe or widgets --- //
+  {
+    id: 'iframe',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
+      },
+      {
+        id: 'iframe-sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
+      },
+      {
+        id: 'iframe-convert',
+        img: 'tauschen',
+        disabled: true,
+      },
+      {
+        id: 'iframe-send',
+        img: 'senden',
+        disabled: true,
+      },
+    ],
+  },
+  {
+    id: 'iframe-buy',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['dfx-wallet', 'iframe-hw-wallet', 'alby', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+          },
+        },
+      },
+      {
+        id: 'iframe-taproot',
+        img: 'taproot',
+        disabled: true,
+      },
+      {
+        id: 'iframe-erc20',
+        img: 'ethereumarbitrumoptimismpolygon',
+        next: {
+          page: 'iframe-buy-erc20',
+        },
+      },
+      {
+        id: 'iframe-bsc',
+        img: 'binancesmartchain',
+        next: {
+          page: 'iframe-buy-bsc',
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-buy-erc20',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-ethereum',
+        img: 'ethereum',
+        next: {
+          page: 'iframe-buy-ethereum',
+        },
+      },
+      {
+        id: 'iframe-arbitrum',
+        img: 'arbitrum',
+        next: {
+          page: 'iframe-buy-arbitrum',
+        },
+      },
+      {
+        id: 'iframe-optimism',
+        img: 'optimism',
+        next: {
+          page: 'iframe-buy-optimism',
+        },
+      },
+      {
+        id: 'iframe-polygon',
+        img: 'polygon',
+        disabled: true,
+      },
+    ],
+  },
+  {
+    id: 'iframe-buy-ethereum',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-eth',
+        img: 'eth',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'iframe-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'iframe-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'iframe-buy-ethereum-stable',
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersethereum',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-buy-ethereum-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-usdt',
+        img: 'usdt',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'iframe-usdc',
+        img: 'usdc',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'iframe-dai',
+        img: 'dai',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersethereum',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-buy-arbitrum',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-eth',
+        img: 'eth',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'iframe-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'iframe-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'iframe-buy-arbitrum-stable',
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersarbitrum',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-buy-arbitrum-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-usdt',
+        img: 'usdt',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'iframe-usdc',
+        img: 'usdc',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'iframe-dai',
+        img: 'dai',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersarbitrum',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-buy-optimism',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-eth',
+        img: 'eth',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'iframe-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'iframe-buy-optimism-stable',
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersoptimism',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-buy-optimism-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-usdt',
+        img: 'usdt',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'iframe-xchf',
+        img: 'xchf',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'XCHF' },
+          },
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersoptimism',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-buy-bsc',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-bnb',
+        img: 'bnb',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'BNB' },
+          },
+        },
+      },
+      {
+        id: 'iframe-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'iframe-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'iframe-buy-bsc-stable',
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersbinancesmartchain',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-buy-bsc-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-usdt',
+        img: 'usdt',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'iframe-dai',
+        img: 'dai',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersbinancesmartchain',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-sell',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['dfx-wallet', 'alby'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
+          },
+        },
+      },
+      {
+        id: 'iframe-taproot',
+        img: 'taproot',
+        disabled: true,
+      },
+      {
+        id: 'iframe-erc20',
+        img: 'ethereumarbitrumoptimismpolygon',
+        next: {
+          page: 'iframe-sell-erc20',
+        },
+      },
+      {
+        id: 'iframe-bsc',
+        img: 'binancesmartchain',
+        next: {
+          page: 'iframe-sell-bsc',
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-sell-erc20',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-ethereum',
+        img: 'ethereum',
+        next: {
+          page: 'iframe-sell-ethereum',
+        },
+      },
+      {
+        id: 'iframe-arbitrum',
+        img: 'arbitrum',
+        next: {
+          page: 'iframe-sell-arbitrum',
+        },
+      },
+      {
+        id: 'iframe-optimism',
+        img: 'optimism',
+        next: {
+          page: 'iframe-sell-optimism',
+        },
+      },
+      {
+        id: 'iframe-polygon',
+        img: 'polygon',
+        disabled: true,
+      },
+    ],
+  },
+  {
+    id: 'iframe-sell-ethereum',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-eth',
+        img: 'eth',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'iframe-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'iframe-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'iframe-sell-ethereum-stable',
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersethereum',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-sell-ethereum-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-usdt',
+        img: 'usdt',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'iframe-usdc',
+        img: 'usdc',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'iframe-dai',
+        img: 'dai',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersethereum',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-sell-arbitrum',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-eth',
+        img: 'eth',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'iframe-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'iframe-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'iframe-sell-arbitrum-stable',
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersarbitrum',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-sell-arbitrum-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-usdt',
+        img: 'usdt',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'iframe-usdc',
+        img: 'usdc',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'iframe-dai',
+        img: 'dai',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersarbitrum',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-sell-optimism',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-eth',
+        img: 'eth',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'iframe-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'iframe-sell-optimism-stable',
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersoptimism',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-sell-optimism-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-usdt',
+        img: 'usdt',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'iframe-xchf',
+        img: 'xchf',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'XCHF' },
+          },
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersoptimism',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-sell-bsc',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-bnb',
+        img: 'bnb',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'BNB' },
+          },
+        },
+      },
+      {
+        id: 'iframe-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'iframe-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'iframe-sell-bsc-stable',
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersbinancesmartchain',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'iframe-sell-bsc-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-usdt',
+        img: 'usdt',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'iframe-dai',
+        img: 'dai',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'iframe-other',
+        img: 'othersbinancesmartchain',
+        next: {
+          page: 'iframe-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
 
   // --- BITCOIN ONLY --- //
   {
@@ -952,8 +1873,8 @@ export const FeatureTree: Page[] = [
         id: 'bitcoin',
         img: 'bitcoinlightning',
         next: {
-          page: 'wallets',
-          tiles: ['dfx-wallet', 'hw-wallet', 'alby'],
+          page: 'iframe-wallets',
+          tiles: ['dfx-wallet', 'iframe-hw-wallet', 'alby'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
@@ -969,7 +1890,7 @@ export const FeatureTree: Page[] = [
         id: 'bitcoin',
         img: 'bitcoinlightning',
         next: {
-          page: 'wallets',
+          page: 'iframe-wallets',
           tiles: ['dfx-wallet', 'alby'],
           options: {
             service: 'sell',
@@ -985,14 +1906,13 @@ export const FeatureTree: Page[] = [
     id: 'albyonly',
     header: 'Buy and sell with Alby',
     description: 'Buy and sell Bitcoin directly on your Alby Account!',
-    bottomImage:
-      'https://getalby.com/assets/alby-logo-head-da6c4355b69a3baac3fc306d47741c9394a825e54905ef67c5dd029146b89edf.svg',
+    bottomImage: 'https://getalby.com/assets/alby-logo-head-da6c4355b69a3baac3fc306d47741c9394a825e54905ef67c5dd029146b89edf.svg',
     tiles: [
       {
         id: 'albyonly-buy',
         img: 'kaufen_simple',
         next: {
-          page: 'wallets',
+          page: 'iframe-wallets',
           tiles: ['alby'],
           options: {
             service: 'buy',
@@ -1004,7 +1924,7 @@ export const FeatureTree: Page[] = [
         id: 'albyonly-sell',
         img: 'verkaufen_simple',
         next: {
-          page: 'wallets',
+          page: 'iframe-wallets',
           tiles: ['alby'],
           options: {
             service: 'sell',
@@ -1026,7 +1946,7 @@ export const FeatureTree: Page[] = [
         id: 'bitcoin',
         img: 'bitcoinlightning',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1082,7 +2002,7 @@ export const FeatureTree: Page[] = [
         id: 'eth',
         img: 'eth',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1094,7 +2014,7 @@ export const FeatureTree: Page[] = [
         id: 'wbtc',
         img: 'wbtc',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1113,7 +2033,7 @@ export const FeatureTree: Page[] = [
         id: 'other',
         img: 'othersethereum',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1133,7 +2053,7 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1145,7 +2065,7 @@ export const FeatureTree: Page[] = [
         id: 'usdc',
         img: 'usdc',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1157,7 +2077,7 @@ export const FeatureTree: Page[] = [
         id: 'dai',
         img: 'dai',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1169,7 +2089,7 @@ export const FeatureTree: Page[] = [
         id: 'other',
         img: 'othersethereum',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1189,7 +2109,7 @@ export const FeatureTree: Page[] = [
         id: 'eth',
         img: 'eth',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1201,7 +2121,7 @@ export const FeatureTree: Page[] = [
         id: 'wbtc',
         img: 'wbtc',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1220,7 +2140,7 @@ export const FeatureTree: Page[] = [
         id: 'other',
         img: 'othersarbitrum',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1240,7 +2160,7 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1252,7 +2172,7 @@ export const FeatureTree: Page[] = [
         id: 'usdc',
         img: 'usdc',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1264,7 +2184,7 @@ export const FeatureTree: Page[] = [
         id: 'dai',
         img: 'dai',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1276,7 +2196,7 @@ export const FeatureTree: Page[] = [
         id: 'other',
         img: 'othersarbitrum',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1296,7 +2216,7 @@ export const FeatureTree: Page[] = [
         id: 'eth',
         img: 'eth',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1315,7 +2235,7 @@ export const FeatureTree: Page[] = [
         id: 'other',
         img: 'othersoptimism',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1335,7 +2255,7 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1347,7 +2267,7 @@ export const FeatureTree: Page[] = [
         id: 'xchf',
         img: 'xchf',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1359,7 +2279,7 @@ export const FeatureTree: Page[] = [
         id: 'other',
         img: 'othersoptimism',
         next: {
-          page: 'hw-wallets',
+          page: 'bitboxonly-hw-wallets',
           tiles: ['bitbox'],
           options: {
             service: 'buy',
@@ -1403,7 +2323,7 @@ export const FeatureTree: Page[] = [
         id: 'marcsteiner-buy-bitcoin',
         img: 'bitcoinlightning_simple',
         next: {
-          page: 'hw-wallets',
+          page: 'marcsteiner-hw-wallets',
           tiles: ['bitbox', 'ledger'],
           options: {
             service: 'buy',
@@ -1459,8 +2379,8 @@ export const FeatureTree: Page[] = [
         id: 'eth',
         img: 'eth',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
@@ -1471,8 +2391,8 @@ export const FeatureTree: Page[] = [
         id: 'wbtc',
         img: 'wbtc',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
@@ -1483,8 +2403,8 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
@@ -1495,8 +2415,8 @@ export const FeatureTree: Page[] = [
         id: 'usdc',
         img: 'usdc',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
@@ -1515,8 +2435,8 @@ export const FeatureTree: Page[] = [
         id: 'eth',
         img: 'eth',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
@@ -1527,8 +2447,8 @@ export const FeatureTree: Page[] = [
         id: 'wbtc',
         img: 'wbtc',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
@@ -1539,8 +2459,8 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
@@ -1551,8 +2471,8 @@ export const FeatureTree: Page[] = [
         id: 'usdc',
         img: 'usdc',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
@@ -1571,8 +2491,8 @@ export const FeatureTree: Page[] = [
         id: 'eth',
         img: 'eth',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
@@ -1583,8 +2503,8 @@ export const FeatureTree: Page[] = [
         id: 'wbtc',
         img: 'wbtc',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
@@ -1595,8 +2515,8 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
@@ -1607,8 +2527,8 @@ export const FeatureTree: Page[] = [
         id: 'usdc',
         img: 'usdc',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDC' },
@@ -1627,8 +2547,8 @@ export const FeatureTree: Page[] = [
         id: 'bitcoin',
         img: 'bitcoinlightning_simple',
         next: {
-          page: 'wallets',
-          tiles: ['dfx-wallet', 'alby'],
+          page: 'marcsteiner-wallets',
+          tiles: ['marcsteiner-dfx-wallet', 'alby'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
@@ -1639,7 +2559,7 @@ export const FeatureTree: Page[] = [
         id: 'erc20',
         img: 'ethereumarbitrumoptimismpolygon_simple',
         next: {
-          page: 'sell-erc20',
+          page: 'iframe-sell-erc20',
         },
       },
     ],
@@ -1677,8 +2597,8 @@ export const FeatureTree: Page[] = [
         id: 'bitcoin',
         img: 'bitcoinlightning',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
@@ -1727,8 +2647,8 @@ export const FeatureTree: Page[] = [
         id: 'eth',
         img: 'eth',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
@@ -1739,8 +2659,8 @@ export const FeatureTree: Page[] = [
         id: 'wbtc',
         img: 'wbtc',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
@@ -1763,8 +2683,8 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
@@ -1775,8 +2695,8 @@ export const FeatureTree: Page[] = [
         id: 'usdc',
         img: 'usdc',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
@@ -1787,8 +2707,8 @@ export const FeatureTree: Page[] = [
         id: 'dai',
         img: 'dai',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DAI' },
@@ -1804,8 +2724,8 @@ export const FeatureTree: Page[] = [
         id: 'eth',
         img: 'eth',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
@@ -1816,8 +2736,8 @@ export const FeatureTree: Page[] = [
         id: 'wbtc',
         img: 'wbtc',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
@@ -1840,8 +2760,8 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
@@ -1852,8 +2772,8 @@ export const FeatureTree: Page[] = [
         id: 'usdc',
         img: 'usdc',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
@@ -1864,8 +2784,8 @@ export const FeatureTree: Page[] = [
         id: 'dai',
         img: 'dai',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'DAI' },
@@ -1881,8 +2801,8 @@ export const FeatureTree: Page[] = [
         id: 'eth',
         img: 'eth',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
@@ -1893,8 +2813,8 @@ export const FeatureTree: Page[] = [
         id: 'wbtc',
         img: 'wbtc',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
@@ -1917,8 +2837,8 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
@@ -1929,8 +2849,8 @@ export const FeatureTree: Page[] = [
         id: 'usdc',
         img: 'usdc',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDC' },
@@ -1941,8 +2861,8 @@ export const FeatureTree: Page[] = [
         id: 'dai',
         img: 'dai',
         next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          page: 'iframe-wallets',
+          tiles: ['iframe-hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'DAI' },
@@ -1958,7 +2878,7 @@ export const FeatureTree: Page[] = [
         id: 'bitcoin',
         img: 'bitcoinlightning',
         next: {
-          page: 'wallets',
+          page: 'iframe-wallets',
           tiles: ['dfx-wallet', 'alby'],
           options: {
             service: 'sell',
@@ -1976,9 +2896,10 @@ export const FeatureTree: Page[] = [
     ],
   },
 
-  // --- WALLETS --- //
+  // --- WALLETS default--- //
   {
     id: 'wallets',
+    dfxStyle: true,
     tiles: [
       {
         id: 'dfx-wallet',
@@ -2018,6 +2939,7 @@ export const FeatureTree: Page[] = [
   },
   {
     id: 'hw-wallets',
+    dfxStyle: true,
     tiles: [
       {
         id: 'bitbox',
@@ -2042,4 +2964,180 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
+
+  // --- WALLETS IFRAME--- //
+  {
+    id: 'iframe-wallets',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-dfx-wallet',
+        img: 'bitcoinapp',
+        disabled: true,
+      },
+      {
+        id: 'iframe-metamask',
+        img: 'metamaskrabby',
+        wallet: { type: WalletType.META_MASK },
+      },
+      {
+        id: 'iframe-hw-wallet',
+        img: 'hardwarewallets',
+        next: {
+          page: 'iframe-hw-wallets',
+        },
+      },
+      {
+        id: 'iframe-alby',
+        img: 'alby',
+        wallet: { type: WalletType.ALBY, blockchain: Blockchain.LIGHTNING },
+      },
+      {
+        id: 'iframe-walletconnect',
+        img: 'walletconnect',
+        wallet: { type: WalletType.WALLET_CONNECT },
+        disabled: true,
+      },
+      {
+        id: 'iframe-cli',
+        img: 'command',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
+        }),
+      },
+    ],
+  },
+  {
+    id: 'iframe-hw-wallets',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'iframe-bitbox',
+        img: 'bitbox',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
+        }),
+      },
+      {
+        id: 'iframe-ledger',
+        img: 'ledger',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
+        }),
+      },
+      {
+        id: 'iframe-trezor',
+        img: 'trezor',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
+        }),
+      },
+    ],
+  },
+
+  // --- WALLETS MarcSteiner--- //
+  {
+    id: 'marcsteiner-wallets',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
+    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
+    tiles: [
+      {
+        id: 'marcsteiner-dfx-wallet',
+        img: 'bitcoinapp',
+        disabled: true,
+      },
+      {
+        id: 'marcsteiner-metamask',
+        img: 'metamaskrabby',
+        wallet: { type: WalletType.META_MASK },
+      },
+      {
+        id: 'marcsteiner-hw-wallet',
+        img: 'hardwarewallets',
+        next: {
+          page: 'marcsteiner-hw-wallets',
+        },
+      },
+      {
+        id: 'marcsteiner-alby',
+        img: 'alby',
+        wallet: { type: WalletType.ALBY, blockchain: Blockchain.LIGHTNING },
+      },
+      {
+        id: 'marcsteiner-walletconnect',
+        img: 'walletconnect',
+        wallet: { type: WalletType.WALLET_CONNECT },
+        disabled: true,
+      },
+      {
+        id: 'marcsteiner-cli',
+        img: 'command',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
+        }),
+      },
+    ],
+  },
+  {
+    id: 'marcsteiner-hw-wallets',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
+    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
+    tiles: [
+      {
+        id: 'marcsteiner-bitbox',
+        img: 'bitbox',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
+        }),
+      },
+      {
+        id: 'marcsteiner-ledger',
+        img: 'ledger',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
+        }),
+      },
+      {
+        id: 'marcsteiner-trezor',
+        img: 'trezor',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
+        }),
+      },
+    ],
+  },
+
+  // --- WALLETS BitBox--- //
+  {
+    id: 'bitboxonly-hw-wallets',
+    header: 'Buy Crypto',
+    description: 'Buy Bitcoin and crypto directly on your BitBox!',
+    bottomImage: 'https://bitbox.shop/media/__sized__/products/email-image-thumbnail-540x540-70.jpg',
+    tiles: [
+      {
+        id: 'bitbox',
+        img: 'bitbox',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
+        }),
+      },
+    ],
+  },
+
+  // --- WALLETS Alby Only--- //
+  {
+    id: 'wallets',
+    description: 'Buy and sell Bitcoin directly on your Alby Account!',
+    bottomImage: 'https://getalby.com/assets/alby-logo-head-da6c4355b69a3baac3fc306d47741c9394a825e54905ef67c5dd029146b89edf.svg',
+    tiles: [
+      {
+        id: 'alby',
+        img: 'alby',
+        wallet: { type: WalletType.ALBY, blockchain: Blockchain.LIGHTNING },
+      },
+    ],
+  },
+
 ];
