@@ -22,9 +22,9 @@ export function useWalletConnect(): WalletConnectInterface {
   }
 
   async function setupConnection(blockchain: Blockchain): Promise<EthClient> {
-    const chainId = toChainId(blockchain);
+    if (!process.env.REACT_APP_WC_PID) throw new Error('WalletConnect PID not defined');
 
-    if (!process.env.REACT_APP_WC_PID) throw new Error();
+    const chainId = toChainId(blockchain);
 
     const provider = await EthereumProvider.init({
       projectId: process.env.REACT_APP_WC_PID,

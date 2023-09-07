@@ -21,6 +21,8 @@ export function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: 
     case WalletType.TREZOR_ETH:
       return <TrezorHint onConfirm={onConfirm} />;
 
+    case WalletType.CLI_BTC:
+    case WalletType.CLI_ETH:
     case WalletType.WALLET_CONNECT:
       return <></>;
   }
