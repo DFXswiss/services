@@ -28,13 +28,6 @@ jobs:
         run: |
           npm ci
 
-      - name: Update WalletConnect PID
-        uses: jacobtomlinson/gha-find-replace@v3
-        with:
-          find: '{WC_PID}'
-          replace: ${{ secrets.PR_WC_PID }}
-          regex: false
-
       - name: Build code
         run: |
           npm run build:dev
