@@ -2926,7 +2926,8 @@ export const FeatureTree: Page[] = [
       {
         id: 'walletconnect',
         img: 'walletconnect',
-        wallet: { type: WalletType.WALLET_CONNECT },
+       // wallet: { type: WalletType.WALLET_CONNECT }, //
+        disabled: true,
       },
       {
         id: 'cli',
