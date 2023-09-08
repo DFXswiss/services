@@ -925,6 +925,74 @@ export const FeatureTree: Page[] = [
     ],
   },
 
+  // --- WALLETS --- //
+  {
+    id: 'wallets',
+    tiles: [
+      {
+        id: 'dfx-wallet',
+        img: 'bitcoinapp',
+        disabled: true,
+      },
+      {
+        id: 'metamask',
+        img: 'metamaskrabby',
+        wallet: { type: WalletType.META_MASK },
+      },
+      {
+        id: 'hw-wallet',
+        img: 'hardwarewallets',
+        next: {
+          page: 'hw-wallets',
+        },
+      },
+      {
+        id: 'alby',
+        img: 'alby',
+        wallet: { type: WalletType.ALBY, blockchain: Blockchain.LIGHTNING },
+      },
+      {
+        id: 'walletconnect',
+        img: 'walletconnect',
+       // wallet: { type: WalletType.WALLET_CONNECT }, //
+        disabled: true,
+      },
+      {
+        id: 'cli',
+        img: 'command',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
+        }),
+      },
+    ],
+  },
+  {
+    id: 'hw-wallets',
+    tiles: [
+      {
+        id: 'bitbox',
+        img: 'bitbox',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
+        }),
+      },
+      {
+        id: 'ledger',
+        img: 'ledger',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
+        }),
+      },
+      {
+        id: 'trezor',
+        img: 'trezor',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
+        }),
+      },
+    ],
+  },
+
   // --- BITCOIN ONLY --- //
   {
     id: 'bitcoinonly',
@@ -1972,74 +2040,6 @@ export const FeatureTree: Page[] = [
         next: {
           page: 'sell-erc20',
         },
-      },
-    ],
-  },
-
-  // --- WALLETS --- //
-  {
-    id: 'wallets',
-    tiles: [
-      {
-        id: 'dfx-wallet',
-        img: 'bitcoinapp',
-        disabled: true,
-      },
-      {
-        id: 'metamask',
-        img: 'metamaskrabby',
-        wallet: { type: WalletType.META_MASK },
-      },
-      {
-        id: 'hw-wallet',
-        img: 'hardwarewallets',
-        next: {
-          page: 'hw-wallets',
-        },
-      },
-      {
-        id: 'alby',
-        img: 'alby',
-        wallet: { type: WalletType.ALBY, blockchain: Blockchain.LIGHTNING },
-      },
-      {
-        id: 'walletconnect',
-        img: 'walletconnect',
-       // wallet: { type: WalletType.WALLET_CONNECT }, //
-        disabled: true,
-      },
-      {
-        id: 'cli',
-        img: 'command',
-        wallet: (params) => ({
-          type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
-        }),
-      },
-    ],
-  },
-  {
-    id: 'hw-wallets',
-    tiles: [
-      {
-        id: 'bitbox',
-        img: 'bitbox',
-        wallet: (params) => ({
-          type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
-        }),
-      },
-      {
-        id: 'ledger',
-        img: 'ledger',
-        wallet: (params) => ({
-          type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
-        }),
-      },
-      {
-        id: 'trezor',
-        img: 'trezor',
-        wallet: (params) => ({
-          type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
-        }),
       },
     ],
   },
