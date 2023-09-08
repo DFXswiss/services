@@ -1,0 +1,182 @@
+{
+  "general/actions": {
+    "Please select...": "Bitte auswählen...",
+    "Next": "Weiter",
+    "Continue": "Weiter",
+    "Close": "Schliessen",
+    "Ok": "Ok",
+    "Cancel": "Abbrechen",
+    "Finish": "Fertig",
+    "Save": "Speichern",
+    "Login": "Login",
+    "Logout": "Logout",
+    "Back": "Zurück",
+    "Connect": "Verbinden",
+    "Continue in Trezor Connect": "Weiter zu Trezor Connect"
+  },
+  "general/errors": {
+    "Something went wrong. Please try again later. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es später noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support."
+  },
+  "general/services": {
+    "Buy": "Kaufen",
+    "Sell": "Verkaufen",
+    "Convert": "Umtauschen"
+  },
+  "kyc": {
+    "per day": "pro Tag",
+    "per year": "pro Jahr",
+
+    "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Dein Konto muss verifiziert werden, sobald Dein tägliches Transaktionsvolumen {{limit}} überschreitet. Wenn Du Dein tägliches Handelslimit erhöhen möchtest, schliesse bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
+    "Complete KYC": "KYC vervollständigen"
+  },
+  "screens/error": {
+    "Oh sorry something went wrong": "Entschuldigung, irgendwas hat nicht funktioniert",
+
+    "Please return to your previous page. If this problem consists reach out to use via Telegram.": "Bitte kehre zur vorherigen Seite zurück. Wenn dieses Problem weiterhin besteht, erreichst Du uns über Telegram."
+  },
+  "screens/home": {
+    "DFX services": "DFX Services",
+    "title": "Eine einfache <1>Toolbox</1><2/>für alle <4>DFX Services</4>",
+    "Coming Soon": "Coming Soon",
+
+    "Please confirm the connection in your MetaMask.": "Bitte bestätige die Verbindung in Deiner MetaMask.",
+    "Please confirm the connection in the Alby browser extension.": "Bitte bestätige die Verbindung in der Alby Browsererweiterung.",
+    "Please confirm the connection in your wallet.":"Bitte bestätige die Verbindung in deiner Wallet.",
+    "Please confirm the connection with your Ledger.": "Bitte bestätige die Verbindung mit Deinem Ledger.",
+    "Connection failed!": "Verbindung fehlgeschlagen!",
+
+    "Connect your {{device}} with your computer": "Verbinde Deinen {{device}} mit Deinem Computer",
+    "Click on \"Connect\"": "Klicke auf \"Verbinden\"",
+    "Confirm \"Sign message\" on your {{device}}": "Bestätige \"Sign message\" auf Deinem {{device}}",
+
+    "Open the {{app}} app on your Ledger": "Öffne die {{app}} App auf Deinem Ledger",
+
+    "Enter your password on your BitBox": "Gib Dein Passwort auf Deinem BitBox ein",
+    "Confirm the pairing code": "Bestätige den Pairing-Code",
+    "Pairing code": "Pairing-Code",
+    "Check that the pairing code below matches the one displayed on your BitBox": "Prüfe, ob der untenstehende Pairing-Code mit dem auf Deinem BitBox angezeigten übereinstimmt",
+    "Confirm the pairing code on your BitBox": "Bestätige den Pairing-Code auf Deinem BitBox",
+    "Click on \"Continue\"": "Klicke auf \"Weiter\"",
+
+    "Click on \"Continue in Trezor Connect\"": "Klicke auf \"Weiter zu Trezor Connect\"",
+    "Follow the steps in the Trezor Connect website": "Führe die Schritte in der Trezor Connect Webseite aus",
+
+    "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Melde Dich bei Deinem DFX-Konto an, indem Du mit Deiner Unterschrift bestätigst, dass Du der alleinige Eigentümer der angegebenen Blockchain-Adresse bist.",
+    "Don't show this again.": "Nicht mehr anzeigen.",
+
+    "Please install MetaMask or Rabby!": "Bitte installiere MetaMask oder Rabby!",
+    "You need to install the MetaMask or Rabby browser extension to be able to use this service.": "Um diesen Dienst nutzen zu können, musst Du die Browsererweiterung MetaMask oder Rabby installieren.",
+    "Please install Alby!": "Bitte installiere Alby!",
+    "You need to install the Alby browser extension to be able to use this service.": "Um diesen Dienst nutzen zu können, musst Du die Browsererweiterung Alby installieren.",
+    "Browser not supported!": "Browser nicht unterstützt!",
+    "Please use a compatible browser (e.g. Chrome) to be able to use this service.": "Bitte verwende einen kompatiblen Browser (z.B. Chrome), um diesen Dienst nutzen zu können.",
+    "visit": "Siehe <1></1> für mehr Details.",
+
+    "Address": "Adresse",
+    "Signature": "Signatur",
+    "Sign message": "Nachricht zum Signieren",
+    "Instructions": "Anleitung"
+  },
+  "screens/buy": {
+    "Buy": "Kaufen",
+    "I want to buy": "Ich möchte folgendes kaufen",
+    "with": "mit",
+    "Buy Amount": "Kaufbetrag",
+    "Done!": "Fertig!",
+    "≈ {{estimatedAmount}} (incl. {{fee}} DFX fee - min. {{minFee}})": "≈ {{estimatedAmount}} (inkl. {{fee}} DFX Gebühr - min. {{minFee}})",
+    "≈ {{estimatedAmount}} (incl. {{fee}} DFX fee)": "≈ {{estimatedAmount}} (inkl. {{fee}} DFX Gebühr)",
+    "Click here once you have issued the transfer": "Klicke hier, sobald Du die Überweisung getätigt hast",
+
+    "Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!": "Bitte überweise den Kaufbetrag mit diesen Angaben über Deine Bankanwendung. Der Verwendungszweck ist wichtig!",
+
+    "The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders": "Der Verwendungszweck bleibt für die ausgewählte Anlage identisch und kann für wiederkehrende Zahlungen und Daueraufträge verwendet werden",
+
+    "Name": "Name",
+    "Address": "Adresse",
+
+    "DFX-Fee": "DFX-Gebühren",
+
+    "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
+
+    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir das Asset in Deine Wallet übertragen."
+  },
+  "screens/bank-accounts": {
+    "DFX bank accounts": "DFX Bankverbindungen",
+    "Todo list of bank accounts": "Todo list of bank accounts"
+  },
+  "screens/sell": {
+    "Your Wallet": "Deine Wallet",
+    "Please select...": "Bitte auswählen...",
+    "Cash out to my bank account": "Auszahlung auf mein Bankkonto",
+    "Add or select your IBAN": "Deine IBAN hinzufügen oder auswählen",
+    "Select payment account": "Bankkonto auswählen",
+    "Your Currency": "Deine Währung",
+    "e.g. EUR": "z.B. EUR",
+    "Enter your desired payout amount": "Gib den gewünschten Auszahlungsbetrag ein",
+    "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)": "≈ {{estimatedAmount}} {{currency}} (inkl. {{fee}} % DFX Gebühr)",
+    "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})": "≈ {{estimatedAmount}} {{currency}} (inkl. {{fee}} % DFX Gebühr - min. {{minFee}}{{minFeeCurrency}})",
+
+    "Click here once you have issued the transaction": "Klicke hier, sobald Du die Transaktion getätigt hast",
+    "Complete transaction in your wallet": "Schliesse die Transaktion in Deiner Wallet ab",
+    "Pay with your wallet": "Bezahle mit Deiner Wallet",
+    "Your transaction was executed successfully.": "Die Transaktion wurde erfolgreich ausgeführt.",
+    "Transaction hash": "Transaktions-Hash",
+
+    "Optional - Account Designation": "Optional - Kontobezeichnung",
+    "e.g. Deutsche Bank": "z.B. Deutsche Bank",
+    "Add Bank Account": "Bankverbindung hinzufügen",
+
+    "Entered amount is higher than available balance of {{amount}} {{asset}}": "Der eingegebene Betrag liegt über dem verfügbaren Guthaben von {{amount}} {{asset}}",
+
+    "As soon as the transaction arrives in our wallet, we will transfer your money to your bank account.": "Sobald die Transaktion in unserem Wallet eingegangen ist, werden wir Dein Guthaben auf Dein Bankkonto überweisen."
+  },
+  "screens/payment": {
+    "Payment Information": "Zahlungsinformation",
+    "Bank Transaction Details": "Angaben zur Banktransaktion",
+    "Recipient": "Empfänger",
+    "Amount": "Betrag",
+    "Currency": "Währung",
+    "IBAN": "IBAN",
+    "BIC": "BIC",
+    "Purpose of payment": "Verwendungszweck",
+
+    "Please not that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst.",
+    "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
+    "Nice! You are all set! Give us a minute to handle your transaction": "Sehr schön! Alles erledigt! Gib uns eine Minute, um Deine Transaktion zu bearbeiten",
+    "We will inform you about the progress of any purchase or sale via E-mail.": "Wir werden Dich per E-Mail über den Fortschritt Deiner Käufe oder Verkäufe informieren.",
+    "Enter your email address if you want to be informed about the progress of any purchase or sale": "Gebe Deine E-Mail Adresse ein, wenn Du über den Fortschritt Deiner Käufe oder Verkäufe informiert werden willst"
+  },
+  "screens/profile": {
+    "User details": "Benutzerdaten",
+    "Please fill in personal information to continue": "Bitte gib Deine persönlichen Daten ein, um fortzufahren",
+    "Account Type": "Kontotyp",
+    "Personal": "Privatkonto",
+    "Business": "Geschäftskonto",
+    "SoleProprietorship": "Einzelunternehmen",
+    "Personal Information": "Persönliche Daten",
+    "First name": "Vorname",
+    "John": "Max",
+    "Last name": "Nachname",
+    "Doe": "Mustermann",
+    "Street": "Strasse",
+    "House nr.": "Hausnummer",
+    "ZIP code": "PLZ",
+    "City": "Ort",
+    "Country": "Land",
+    "Email address": "E-Mail Adresse",
+    "example@mail.com": "beispiel@mail.de",
+    "Phone number": "Handynummer",
+    "Organization Information": "Organisation",
+    "Organization name": "Name der Organisation",
+    "Example inc.": "Beispiel GmbH & Co. KG",
+    "Contact information": "Kontaktdaten"
+  },
+  "navigation/links": {
+    "Powered by DFX": "Powered by DFX",
+    "My DFX": "My DFX",
+    "Telegram": "Telegram",
+    "Terms and conditions": "Geschäftsbedingungen",
+    "Privacy policy": "Datenschutzerklärung",
+    "Imprint": "Impressum"
+  }
+}
