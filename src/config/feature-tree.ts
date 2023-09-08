@@ -2092,5 +2092,52 @@ export const FeatureTree: Page[] = [
   ],
 },
 
+// Metamask //
+{
+  id: 'metamask',
+  header: 'Metamask x DFX',
+  description: 'Buy and sell Crypto directly on your Metamask Wallet!',
+  bottomImage: 'https://logowik.com/content/uploads/images/metamask4112.jpg',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
+      },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
+      },
+    },
+  ],
+},
+
+// Shapeshift //
+{
+  id: 'shapeshift',
+  header: 'Shapeshift x DFX',
+  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
+      },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
+      },
+    },
+  ],
+},
 
 ];
