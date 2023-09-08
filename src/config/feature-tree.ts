@@ -2140,4 +2140,53 @@ export const FeatureTree: Page[] = [
   ],
 },
 
+// Liquity //
+{
+  id: 'liquity',
+  header: 'Liquity x DFX',
+  description: 'Buy and sell Crypto directly on your Liquity Account!',
+  bottomImage: 'https://uploads-ssl.webflow.com/5fd883457ba5da4c3822b02c/606a462c6889a25d00ccd9c6_logo-text.svg',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
+      },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
+      },
+    },
+  ],
+},
+
+// Bitget //
+{
+  id: 'bitget',
+  header: 'Bitget x DFX',
+  description: 'Buy and sell Crypto directly on your Bitget Account!',
+  bottomImage: 'https://www.bitget.com/micro-runtime/images/logo-dark.svg',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
+      },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
+      },
+    },
+  ],
+},
+
+
 ];
