@@ -925,6 +925,74 @@ export const FeatureTree: Page[] = [
     ],
   },
 
+  // --- WALLETS --- //
+  {
+    id: 'wallets',
+    tiles: [
+      {
+        id: 'dfx-wallet',
+        img: 'bitcoinapp',
+        disabled: true,
+      },
+      {
+        id: 'metamask',
+        img: 'metamaskrabby',
+        wallet: { type: WalletType.META_MASK },
+      },
+      {
+        id: 'hw-wallet',
+        img: 'hardwarewallets',
+        next: {
+          page: 'hw-wallets',
+        },
+      },
+      {
+        id: 'alby',
+        img: 'alby',
+        wallet: { type: WalletType.ALBY, blockchain: Blockchain.LIGHTNING },
+      },
+      {
+        id: 'walletconnect',
+        img: 'walletconnect',
+       // wallet: { type: WalletType.WALLET_CONNECT }, //
+        disabled: true,
+      },
+      {
+        id: 'cli',
+        img: 'command',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
+        }),
+      },
+    ],
+  },
+  {
+    id: 'hw-wallets',
+    tiles: [
+      {
+        id: 'bitbox',
+        img: 'bitbox',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
+        }),
+      },
+      {
+        id: 'ledger',
+        img: 'ledger',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
+        }),
+      },
+      {
+        id: 'trezor',
+        img: 'trezor',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
+        }),
+      },
+    ],
+  },
+
   // --- BITCOIN ONLY --- //
   {
     id: 'bitcoinonly',
@@ -1976,71 +2044,149 @@ export const FeatureTree: Page[] = [
     ],
   },
 
-  // --- WALLETS --- //
-  {
-    id: 'wallets',
-    tiles: [
-      {
-        id: 'dfx-wallet',
-        img: 'bitcoinapp',
-        disabled: true,
+// zkfinance //
+{
+  id: 'zkfinance',
+  header: 'zkfinance x DFX',
+  description: 'Buy and sell Crypto directly on your zkfinance Account!',
+  bottomImage: 'https://uploads-ssl.webflow.com/639728e2c3052849296e109e/645e86ae7fc88f6bce87a001_assets%20ZKArtboard%205-p-500.png',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
       },
-      {
-        id: 'metamask',
-        img: 'metamaskrabby',
-        wallet: { type: WalletType.META_MASK },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
       },
-      {
-        id: 'hw-wallet',
-        img: 'hardwarewallets',
-        next: {
-          page: 'hw-wallets',
-        },
+    },
+  ],
+},
+
+// thorwallet //
+{
+  id: 'thorwallet',
+  header: 'thorwallet x DFX',
+  description: 'Buy and sell Crypto directly on your thorwallet Account!',
+  bottomImage: 'https://startup.network/upload/iblock/7dd/sys7hysmb92tmpe1fjgr55enva6xacub/Horizontal_logo_FullBlack_TWDEX.png',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
       },
-      {
-        id: 'alby',
-        img: 'alby',
-        wallet: { type: WalletType.ALBY, blockchain: Blockchain.LIGHTNING },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
       },
-      {
-        id: 'walletconnect',
-        img: 'walletconnect',
-       // wallet: { type: WalletType.WALLET_CONNECT }, //
-        disabled: true,
+    },
+  ],
+},
+
+// Metamask //
+{
+  id: 'metamask',
+  header: 'Metamask x DFX',
+  description: 'Buy and sell Crypto directly on your Metamask Wallet!',
+  bottomImage: 'https://logowik.com/content/uploads/images/metamask4112.jpg',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
       },
-      {
-        id: 'cli',
-        img: 'command',
-        wallet: (params) => ({
-          type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
-        }),
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
       },
-    ],
-  },
-  {
-    id: 'hw-wallets',
-    tiles: [
-      {
-        id: 'bitbox',
-        img: 'bitbox',
-        wallet: (params) => ({
-          type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
-        }),
+    },
+  ],
+},
+
+// Shapeshift //
+{
+  id: 'shapeshift',
+  header: 'Shapeshift x DFX',
+  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
       },
-      {
-        id: 'ledger',
-        img: 'ledger',
-        wallet: (params) => ({
-          type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
-        }),
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
       },
-      {
-        id: 'trezor',
-        img: 'trezor',
-        wallet: (params) => ({
-          type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
-        }),
+    },
+  ],
+},
+
+// Liquity //
+{
+  id: 'liquity',
+  header: 'Liquity x DFX',
+  description: 'Buy and sell Crypto directly on your Liquity Account!',
+  bottomImage: 'https://uploads-ssl.webflow.com/5fd883457ba5da4c3822b02c/606a462c6889a25d00ccd9c6_logo-text.svg',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
       },
-    ],
-  },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
+      },
+    },
+  ],
+},
+
+// Bitget //
+{
+  id: 'bitget',
+  header: 'Bitget x DFX',
+  description: 'Buy and sell Crypto directly on your Bitget Account!',
+  bottomImage: 'https://www.bitget.com/micro-runtime/images/logo-dark.svg',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
+      },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
+      },
+    },
+  ],
+},
+
+
 ];
