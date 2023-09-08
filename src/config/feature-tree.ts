@@ -2043,4 +2043,54 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
+
+// zkfinance //
+{
+  id: 'zkfinance',
+  header: 'zkfinance x DFX',
+  description: 'Buy and sell Crypto directly on your zkfinance Account!',
+  bottomImage: 'https://uploads-ssl.webflow.com/639728e2c3052849296e109e/645e86ae7fc88f6bce87a001_assets%20ZKArtboard%205-p-500.png',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
+      },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
+      },
+    },
+  ],
+},
+
+// thorwallet //
+{
+  id: 'thorwallet',
+  header: 'thorwallet x DFX',
+  description: 'Buy and sell Crypto directly on your thorwallet Account!',
+  bottomImage: 'https://startup.network/upload/iblock/7dd/sys7hysmb92tmpe1fjgr55enva6xacub/Horizontal_logo_FullBlack_TWDEX.png',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
+      },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
+      },
+    },
+  ],
+},
+
+
 ];
