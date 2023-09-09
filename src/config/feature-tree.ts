@@ -1442,8 +1442,8 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner',
     header: 'marcsteiner-consulting.ch',
-    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
-    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
         id: 'marcsteiner-buy',
@@ -1464,8 +1464,8 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-buy',
     header: 'marcsteiner-consulting.ch',
-    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
-    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
         id: 'marcsteiner-buy-bitcoin',
@@ -1491,8 +1491,8 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-buy-erc20',
     header: 'marcsteiner-consulting.ch',
-    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
-    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
         id: 'ethereum',
@@ -1520,8 +1520,8 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-buy-ethereum',
     header: 'marcsteiner-consulting.ch',
-    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
-    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
         id: 'eth',
@@ -1576,8 +1576,8 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-buy-arbitrum',
     header: 'marcsteiner-consulting.ch',
-    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
-    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
         id: 'eth',
@@ -1632,8 +1632,8 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-buy-optimism',
     header: 'marcsteiner-consulting.ch',
-    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
-    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
         id: 'eth',
@@ -1688,8 +1688,8 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-sell',
     header: 'marcsteiner-consulting.ch',
-    description: 'Buy and sell Bitcoin and Crypto directly on your Wallet!',
-    bottomImage: 'https://marcsteiner-consulting.ch/wp-content/uploads/2022/05/MS_Logo.svg',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
         id: 'bitcoin',
