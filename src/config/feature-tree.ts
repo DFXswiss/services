@@ -954,8 +954,7 @@ export const FeatureTree: Page[] = [
       {
         id: 'walletconnect',
         img: 'walletconnect',
-       // wallet: { type: WalletType.WALLET_CONNECT }, //
-        disabled: true,
+        wallet: { type: WalletType.WALLET_CONNECT },
       },
       {
         id: 'cli',
@@ -2170,6 +2169,54 @@ export const FeatureTree: Page[] = [
   header: 'Bitget x DFX',
   description: 'Buy and sell Crypto directly on your Bitget Account!',
   bottomImage: 'https://www.bitget.com/micro-runtime/images/logo-dark.svg',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
+      },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
+      },
+    },
+  ],
+},
+
+// GMX //
+{
+  id: 'gmx',
+  header: 'GMX x DFX',
+  description: 'Buy and sell Crypto directly on your GMX Account!',
+  bottomImage: 'https://altcoinsbox.com/wp-content/uploads/2023/03/full-gmx-logo.png',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
+      },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
+      },
+    },
+  ],
+},
+
+// Chainreport //
+{
+  id: 'chainreport',
+  header: 'Chainreport x DFX',
+  description: 'Buy and sell Crypto directly on your Account!',
+  bottomImage: 'https://content.dfx.swiss/img/v1/services/chainreport.png',
   tiles: [
     {
       id: 'buy',
