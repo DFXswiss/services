@@ -2235,5 +2235,30 @@ export const FeatureTree: Page[] = [
   ],
 },
 
+// LN Bits //
+{
+  id: 'lnbits',
+  header: 'LN Bits x DFX',
+  description: 'Buy and sell Crypto directly on your LN Bits Account!',
+  bottomImage: 'https://lnbits.com/assets/images/logo/logo.svg',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'buy',
+      },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sell',
+      },
+    },
+  ],
+},
+
+
 
 ];
