@@ -2232,6 +2232,20 @@ export const FeatureTree: Page[] = [
         page: 'sell',
       },
     },
+    {
+      id: 'chainreport',
+      img: 'chainreport',
+      next: {
+        page: 'buy',
+      },
+    },
+    {
+      id: 'csvexport',
+      img: 'csvexport',
+      next: {
+        page: 'buy',
+      },
+    },
   ],
 },
 
@@ -2258,7 +2272,5 @@ export const FeatureTree: Page[] = [
     },
   ],
 },
-
-
 
 ];
