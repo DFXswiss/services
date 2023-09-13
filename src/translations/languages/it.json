@@ -46,8 +46,8 @@
     "Connection failed!": "Connessione fallita!",
 
     "Connect your {{device}} with your computer": "Collegare il  {{device}} al computer",
-    "Click on \"Connect\"": "Fare clic su \"Connetti\"",
-    "Confirm \"Sign message\" on your {{device}}": "Confermare \"Messaggio di accesso\" sul {{device}}",
+    "Click on \"Connect\"": "Fare clic su \"Connect\"",
+    "Confirm \"Sign message\" on your {{device}}": "Confermare \"Sign message\" sul {{device}}",
 
     "Open the {{app}} app on your Ledger": "Aprire l'applicazione {{app}} sul proprio Ledger",
 
@@ -56,9 +56,9 @@
     "Pairing code": "Codice di accoppiamento",
     "Check that the pairing code below matches the one displayed on your BitBox": "Verificare che il codice di accoppiamento riportato di seguito corrisponda a quello visualizzato sul proprio BitBox",
     "Confirm the pairing code on your BitBox": "Confermare il codice di accoppiamento sul BitBox",
-    "Click on \"Continue\"": "Fare clic su \"Continua\"",
+    "Click on \"Continue\"": "Fare clic su \"Continue\"",
 
-    "Click on \"Continue in Trezor Connect\"": "Fare clic su \"Continua in Trezor Connect\"",
+    "Click on \"Continue in Trezor Connect\"": "Fare clic su \"Continue in Trezor Connect\"",
     "Follow the steps in the Trezor Connect website": "Seguire i passaggi del sito web Trezor Connect",
 
     "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Accedere al proprio conto DFX verificando con la propria firma di essere l'unico proprietario dell'indirizzo blockchain fornito.",
