@@ -186,7 +186,7 @@ export function BuyInfoScreen(): JSX.Element {
             <StyledLink
               label={translate(
                 'screens/payment',
-                'Please not that by using this service you automatically accept our terms and conditions.',
+                'Please note that by using this service you automatically accept our terms and conditions.',
               )}
               url={process.env.REACT_APP_TNC_URL}
               dark

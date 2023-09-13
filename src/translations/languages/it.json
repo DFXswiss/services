@@ -46,7 +46,7 @@
     "Connection failed!": "Connessione fallita!",
 
     "Connect your {{device}} with your computer": "Collegare il  {{device}} al computer",
-    "Click on \"Connect\"": "Fare clic su \"Connect\"",
+    "Click on \"Connect\"": "Fare clic su \"Collegare\"",
     "Confirm \"Sign message\" on your {{device}}": "Confermare \"Sign message\" sul {{device}}",
 
     "Open the {{app}} app on your Ledger": "Aprire l'applicazione {{app}} sul proprio Ledger",
@@ -56,9 +56,9 @@
     "Pairing code": "Codice di accoppiamento",
     "Check that the pairing code below matches the one displayed on your BitBox": "Verificare che il codice di accoppiamento riportato di seguito corrisponda a quello visualizzato sul proprio BitBox",
     "Confirm the pairing code on your BitBox": "Confermare il codice di accoppiamento sul BitBox",
-    "Click on \"Continue\"": "Fare clic su \"Continue\"",
+    "Click on \"Continue\"": "Fare clic su \"Continua\"",
 
-    "Click on \"Continue in Trezor Connect\"": "Fare clic su \"Continue in Trezor Connect\"",
+    "Click on \"Continue in Trezor Connect\"": "Fare clic su \"Continua in Trezor Connect\"",
     "Follow the steps in the Trezor Connect website": "Seguire i passaggi del sito web Trezor Connect",
 
     "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Accedere al proprio conto DFX verificando con la propria firma di essere l'unico proprietario dell'indirizzo blockchain fornito.",
@@ -140,7 +140,7 @@
     "BIC": "BIC",
     "Purpose of payment": "Scopo del pagamento",
 
-    "Please not that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
+    "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "L'importo inserito è inferiore al deposito minimo di {{amount}} {{currency}}",
     "Nice! You are all set! Give us a minute to handle your transaction": "Bello! Siete pronti! Dateci un minuto per gestire la vostra transazione",
     "We will inform you about the progress of any purchase or sale via E-mail.": "Vi informeremo sullo stato di avanzamento di qualsiasi acquisto o vendita via e-mail.",
