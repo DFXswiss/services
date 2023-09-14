@@ -75,6 +75,8 @@ export function useFeatureTree(): FeatureTreeInterface {
   const { setParams } = useAppParams();
   const { setRedirectPath } = useAppHandlingContext();
 
+  const supportedLanguages = ['EN', 'DE', 'IT', 'FR'];
+
   function getPage(pageId?: string, allowedTiles?: string[]): Page | undefined {
     if (!language) return;
 
@@ -90,7 +92,8 @@ export function useFeatureTree(): FeatureTreeInterface {
   }
 
   function getImgUrl(tile: BaseTile, lang: Language): string {
-    return `https://content.dfx.swiss/img/v1/services/${tile.img}_${lang.symbol.toLowerCase()}.png`;
+    const language = supportedLanguages.find((l) => l === lang.symbol) ?? supportedLanguages[0];
+    return `https://content.dfx.swiss/img/v1/services/${tile.img}_${language.toLowerCase()}.png`;
   }
 
   function setOptions(options: Options) {

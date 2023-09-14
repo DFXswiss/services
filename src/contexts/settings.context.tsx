@@ -28,7 +28,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const [language, setLanguage] = useState<Language>();
   const { t } = useTranslation();
 
-  const availableLanguages = languages?.filter((l) => ['DE', 'EN'].includes(l.symbol)) ?? [];
+  const availableLanguages = languages?.filter((l) => ['DE', 'EN', 'FR', 'IT'].includes(l.symbol)) ?? [];
 
   useEffect(() => {
     const customLanguage = user?.language.symbol ?? lang?.toUpperCase() ?? storedLanguage.get();
