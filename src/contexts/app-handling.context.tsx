@@ -203,7 +203,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       sendMessage(createCloseMessageData(params));
     } else {
       if (redirectUri) {
-        const uri = getRedirectUri(params);
+        const uri = getRedirectUri(redirectUri, params);
         storeRedirectUri.remove();
         (window as Window).location = uri;
       }
@@ -212,22 +212,43 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     if (navigate) props.router.navigate('/');
   }
 
-  function getRedirectUri(params: CloseServicesParams): string {
+  function getRedirectUri(baseUri: string, params: CloseServicesParams): string {
+    let uri = new URL(baseUri);
+
     switch (params.type) {
       case CloseType.BUY:
-        return `${redirectUri}${params.type}`;
+        uri = adaptUri(uri, params.type);
+        break;
 
       case CloseType.SELL:
-        const urlParams = new URLSearchParams({
+        uri = adaptUri(uri, params.type, {
           routeId: params.sell.routeId.toString(),
           amount: params.sell.amount.toString(),
           isComplete: params.isComplete.toString(),
         });
-        return url(`${redirectUri}${params.type}`, urlParams);
-
-      default:
-        return `${redirectUri}`;
+        break;
     }
+
+    return uri.toString();
+  }
+
+  function adaptUri(uri: URL, path: string, params?: object): URL {
+    params && Object.entries(params).forEach(([key, val]) => uri.searchParams.set(key, val));
+
+    if (uri.origin === 'null') {
+      // custom solution for deep link URIs
+      const pathname = uri.pathname ? uri.pathname : '//';
+      const newUrl = adaptPath(uri.protocol + pathname, path);
+      return new URL(url(newUrl, uri.searchParams));
+    } else {
+      uri.pathname = adaptPath(uri.pathname, path);
+
+      return uri;
+    }
+  }
+
+  function adaptPath(path: string, newElement: string): string {
+    return path + (path.endsWith('/') ? newElement : `/${newElement}`);
   }
 
   function createCloseMessageData(params: CloseServicesParams): CloseMessageData {

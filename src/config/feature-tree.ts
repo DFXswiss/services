@@ -2070,23 +2070,26 @@ export const FeatureTree: Page[] = [
 // thorwallet //
 {
   id: 'thorwallet',
-  header: 'thorwallet x DFX',
-  description: 'Buy and sell Crypto directly on your thorwallet Account!',
-  bottomImage: 'https://startup.network/upload/iblock/7dd/sys7hysmb92tmpe1fjgr55enva6xacub/Horizontal_logo_FullBlack_TWDEX.png',
+  header: 'Thorwallet x DFX',
+  description: 'Buy and sell Crypto directly on your Thorwallet Account!',
+  bottomImage: 'https://miro.medium.com/v2/resize:fit:3000/0*87PlPSH1ksnMtdb9',
   tiles: [
     {
-      id: 'buy',
-      img: 'kaufen',
-      next: {
-        page: 'buy',
-      },
+      id: 'metamask',
+      img: 'metamaskrabby',
+      wallet: { type: WalletType.META_MASK },
     },
     {
-      id: 'sell',
-      img: 'verkaufen',
-      next: {
-        page: 'sell',
-      },
+      id: 'walletconnect',
+      img: 'walletconnect',
+      wallet: { type: WalletType.WALLET_CONNECT },
+    },
+    {
+      id: 'ledger',
+      img: 'ledger',
+      wallet: (params) => ({
+        type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
+      }),
     },
   ],
 },
