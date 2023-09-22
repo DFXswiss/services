@@ -13,7 +13,7 @@ export async function timeout<T>(promise: Promise<T>, timeout: number): Promise<
 }
 
 export function url(url: string, params: URLSearchParams): string {
-  const search = (params as any).size > 0 ? `?${params}` : '';
+  const search = Array.from(params.entries()).length > 0 ? `?${params}` : '';
   return `${url}${search}`;
 }
 

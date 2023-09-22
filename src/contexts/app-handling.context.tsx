@@ -237,8 +237,9 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
     if (uri.origin === 'null') {
       // custom solution for deep link URIs
-      const pathname = adaptPath(uri.protocol + uri.pathname, path);
-      return new URL(url(pathname, uri.searchParams));
+      const pathname = uri.pathname ? uri.pathname : '//';
+      const newUrl = adaptPath(uri.protocol + pathname, path);
+      return new URL(url(newUrl, uri.searchParams));
     } else {
       uri.pathname = adaptPath(uri.pathname, path);
 
