@@ -273,7 +273,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       redirectPath,
       setRedirectPath,
     }),
-    [props.home, props.isWidget, isUsedByIframe, redirectUri, isInitialized, params],
+    [props.home, props.isWidget, isUsedByIframe, redirectUri, isInitialized, params, redirectPath],
   );
 
   return <AppHandlingContext.Provider value={context}>{props.children}</AppHandlingContext.Provider>;

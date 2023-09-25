@@ -70,7 +70,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const api = useSessionContext();
   const { isInitialized: isParamsInitialized, params: appParams, redirectPath } = useAppHandlingContext();
   const { getSignMessage } = useAuth();
-  const { hasBalance, getBalances: getParamBalances } = useBalanceContext();
+  const { hasBalance, getBalances: getParamBalances, readBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
 
   const [isInitialized, setIsInitialized] = useState(false);
@@ -96,8 +96,9 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   useEffect(() => {
     if (isSessionInitialized && !isLoggedIn) {
       setWallet();
+      if (isInitialized) readBalances(undefined);
     }
-  }, [isSessionInitialized, isLoggedIn]);
+  }, [isSessionInitialized, isLoggedIn, isInitialized]);
 
   useEffect(() => {
     if (isParamsInitialized)
