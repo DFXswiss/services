@@ -21,15 +21,16 @@ export function useSessionGuard(redirectPath = '/') {
 }
 
 export function useKycDataGuard(redirectPath = '/') {
+  const { isInitialized } = useWalletContext();
   const { user, isUserLoading } = useUserContext();
   const { navigate } = useNavigation();
   const { pathname } = useLocation();
   const { setRedirectPath } = useAppHandlingContext();
 
   useEffect(() => {
-    if (user && !isUserLoading && !user.kycDataComplete) {
+    if (user && !isUserLoading && !user.kycDataComplete && isInitialized) {
       setRedirectPath(pathname);
       navigate(redirectPath);
     }
-  }, [user, isUserLoading, navigate]);
+  }, [isInitialized, user, isUserLoading, navigate]);
 }
