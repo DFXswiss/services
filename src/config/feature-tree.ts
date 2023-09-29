@@ -2093,6 +2093,39 @@ export const FeatureTree: Page[] = [
     },
   ],
 },
+// OnRamper //
+{
+  id: 'onramper',
+  header: 'OnRamper x DFX',
+  description: 'Buy and sell Crypto directly on your Wallet!',
+  bottomImage: 'https://images.g2crowd.com/uploads/product/hd_favicon/9075565c5eac9f43df0f37f751e2a5e0/onramper-onramper-the-1-fiat-onramp-aggregator.svg',
+  tiles: [
+    {
+      id: 'metamask',
+      img: 'metamaskrabby',
+      wallet: { type: WalletType.META_MASK },
+    },
+    {
+      id: 'walletconnect',
+      img: 'walletconnect',
+      wallet: { type: WalletType.WALLET_CONNECT },
+    },
+    {
+      id: 'ledger',
+      img: 'ledger',
+      wallet: (params) => ({
+        type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
+      }),
+    },
+    {
+      id: 'trezor',
+      img: 'trezor',
+      wallet: (params) => ({
+        type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
+      }),
+    },
+  ],
+},
 
 // Metamask //
 {
