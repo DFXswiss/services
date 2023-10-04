@@ -1037,6 +1037,28 @@ export const FeatureTree: Page[] = [
     ],
   },
 
+  // --- ONLY BUY BITCOIN on HW --- //
+  {
+    id: 'bitcoin-hardwarewallets',
+    tiles: [
+      {
+        id: 'bitbox',
+        img: 'bitbox',
+        wallet: { type: WalletType.BITBOX_BTC, blockchain: Blockchain.BITCOIN },
+      },
+      {
+        id: 'ledger',
+        img: 'ledger',
+        wallet: { type: WalletType.LEDGER_BTC, blockchain: Blockchain.BITCOIN },
+      },
+      {
+        id: 'trezor',
+        img: 'trezor',
+        wallet: { type: WalletType.TREZOR_BTC, blockchain: Blockchain.BITCOIN },
+      },
+    ],
+  },
+
   // --- ALBY ONLY --- //
   {
     id: 'albyonly',
