@@ -22,16 +22,6 @@ export const FeatureTree: Page[] = [
           page: 'sell',
         },
       },
-      {
-        id: 'convert',
-        img: 'tauschen',
-        disabled: true,
-      },
-      {
-        id: 'send',
-        img: 'senden',
-        disabled: true,
-      },
     ],
   },
   {
