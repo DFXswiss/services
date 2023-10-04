@@ -22,16 +22,6 @@ export const FeatureTree: Page[] = [
           page: 'sell',
         },
       },
-      {
-        id: 'convert',
-        img: 'tauschen',
-        disabled: true,
-      },
-      {
-        id: 'send',
-        img: 'senden',
-        disabled: true,
-      },
     ],
   },
   {
@@ -1043,6 +1033,28 @@ export const FeatureTree: Page[] = [
             query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
           },
         },
+      },
+    ],
+  },
+
+  // --- ONLY BUY BITCOIN on HW --- //
+  {
+    id: 'bitcoin-hardwarewallets',
+    tiles: [
+      {
+        id: 'bitbox',
+        img: 'bitbox',
+        wallet: { type: WalletType.BITBOX_BTC, blockchain: Blockchain.BITCOIN },
+      },
+      {
+        id: 'ledger',
+        img: 'ledger',
+        wallet: { type: WalletType.LEDGER_BTC, blockchain: Blockchain.BITCOIN },
+      },
+      {
+        id: 'trezor',
+        img: 'trezor',
+        wallet: { type: WalletType.TREZOR_BTC, blockchain: Blockchain.BITCOIN },
       },
     ],
   },
