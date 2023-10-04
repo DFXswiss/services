@@ -16,7 +16,7 @@ import { MailEdit } from '../edit/mail.edit';
 
 interface BuyCompletionProps {
   showsSimple: boolean;
-  paymentInfo: Buy;
+  paymentInfo?: Buy;
   navigateOnClose: boolean;
 }
 

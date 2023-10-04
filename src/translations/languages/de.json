@@ -98,7 +98,11 @@
 
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
 
-    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir das Asset in Deine Wallet übertragen."
+    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir das Asset in Deine Wallet übertragen.",
+
+    "Payment method": "Zahlungsmethode",
+    "Bank transaction": "Banktransaktion",
+    "Credit card": "Kreditkarte"
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Bankverbindungen",

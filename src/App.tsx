@@ -7,6 +7,7 @@ import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyInfoScreen } from './screens/buy-info.screen';
+import { BuySuccessScreen } from './screens/buy-success.screen';
 import { BuyScreen } from './screens/buy.screen';
 import { ErrorScreen } from './screens/error.screen';
 import { HomeScreen } from './screens/home.screen';
@@ -30,6 +31,10 @@ const routes = [
   {
     path: '/buy/info',
     element: <BuyInfoScreen />,
+  },
+  {
+    path: '/buy/success',
+    element: <BuySuccessScreen />,
   },
   {
     path: '/sell',

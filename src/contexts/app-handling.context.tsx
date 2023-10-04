@@ -9,6 +9,7 @@ import { useBalanceContext } from './balance.context';
 // --- INTERFACES --- //
 // CAUTION: params need to be added to index-widget.tsx
 const urlParams = [
+  'flags',
   'lang',
   'address',
   'signature',
@@ -30,6 +31,7 @@ const urlParams = [
 ];
 
 export interface AppParams {
+  flags?: string;
   lang?: string;
   address?: string;
   signature?: string;
@@ -70,7 +72,7 @@ export interface CancelServicesParams extends CloseMessageData {
 export interface BuyServicesParams extends CloseMessageData {
   type: CloseType.BUY;
   isComplete: boolean;
-  buy: Buy;
+  buy?: Buy;
 }
 
 export interface SellServicesParams extends CloseMessageData {
@@ -166,6 +168,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           ...params,
         }
       : {
+          flags: getParameter(query, 'flags'),
           lang: getParameter(query, 'lang'),
           address: getParameter(query, 'address'),
           signature: getParameter(query, 'signature'),

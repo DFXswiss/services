@@ -180,7 +180,7 @@ export function BuyInfoScreen(): JSX.Element {
             </StyledDataTableRow>
           </StyledDataTable>
 
-          <GiroCode value={paymentInfo.paymentRequest} />
+          {paymentInfo.paymentRequest && <GiroCode value={paymentInfo.paymentRequest} />}
 
           <div className="pt-4">
             <StyledLink
