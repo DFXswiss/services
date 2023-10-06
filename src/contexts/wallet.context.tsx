@@ -1,19 +1,15 @@
-import { Asset, Blockchain, Sell, Utils, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
+import { Blockchain, Utils, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
-import BigNumber from 'bignumber.js';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { GetInfoResponse } from 'webln';
 import { useStore } from '../hooks/store.hook';
-import { useAlby } from '../hooks/wallets/alby.hook';
-import { useBitbox } from '../hooks/wallets/bitbox.hook';
-import { useLedger } from '../hooks/wallets/ledger.hook';
-import { useMetaMask } from '../hooks/wallets/metamask.hook';
-import { useTrezor } from '../hooks/wallets/trezor.hook';
-import { useWalletConnect } from '../hooks/wallets/wallet-connect';
-import { AbortError } from '../util/abort-error';
-import { delay, url } from '../util/utils';
 import { useAppHandlingContext } from './app-handling.context';
-import { AssetBalance, useBalanceContext } from './balance.context';
+import { useBalanceContext } from './balance.context';
+
+// TODO:
+// - Do install check on connect component
+// - Check address when connecting to MM (re-login if wrong)
+// - Switch blockchain on connect screen (if required)
+// - Do pairing on connect screen
 
 export enum WalletType {
   META_MASK = 'MetaMask',
@@ -32,19 +28,14 @@ export enum WalletType {
 interface WalletInterface {
   isInitialized: boolean;
   blockchain?: Blockchain;
-  getInstalledWallets: () => Promise<WalletType[]>;
+  switchBlockchain: (to: Blockchain) => Promise<void>;
   login: (
     wallet: WalletType,
-    onSignHint?: () => Promise<void>,
-    onPairing?: (code: string) => Promise<void>,
-    blockchain?: Blockchain,
-    address?: string,
-    signature?: string,
-  ) => Promise<string | undefined>;
-  switchBlockchain: (to: Blockchain) => Promise<void>;
+    address: string,
+    blockchain: Blockchain,
+    onSignMessage: (address: string, message: string) => Promise<string>,
+  ) => Promise<void>;
   activeWallet: WalletType | undefined;
-  getBalances: (assets: Asset[]) => Promise<AssetBalance[] | undefined>;
-  sendTransaction: (sell: Sell) => Promise<string>;
 }
 
 interface WalletContextProps extends PropsWithChildren {
@@ -60,15 +51,8 @@ export function useWalletContext(): WalletInterface {
 export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const { isInitialized: isSessionInitialized, isLoggedIn, logout } = useSessionContext();
   const { updateSession } = useApiSession();
-  const { session } = useApiSession();
-  const metaMask = useMetaMask();
-  const alby = useAlby();
-  const ledger = useLedger();
-  const bitBox = useBitbox();
-  const trezor = useTrezor();
-  const walletConnect = useWalletConnect();
   const api = useSessionContext();
-  const { isInitialized: isParamsInitialized, params: appParams, redirectPath } = useAppHandlingContext();
+  const { isInitialized: isParamsInitialized, params: appParams } = useAppHandlingContext();
   const { getSignMessage } = useAuth();
   const { hasBalance, getBalances: getParamBalances, readBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
@@ -77,20 +61,8 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
   const [activeBlockchain, setActiveBlockchain] = useState<Blockchain>();
 
-  const [mmAddress, setMmAddress] = useState<string>();
-  const [mmBlockchain, setMmBlockchain] = useState<Blockchain>();
-
-  // listen to MM account switches
-  useEffect(() => {
-    metaMask.register(setMmAddress, setMmBlockchain);
-  }, []);
-
-  useEffect(() => {
-    // logout on MetaMask account switch
-    if (activeWallet === WalletType.META_MASK && session?.address && mmAddress && session.address !== mmAddress) {
-      api.logout();
-    }
-  }, [session?.address, mmAddress, activeWallet]);
+  // const [mmAddress, setMmAddress] = useState<string>();
+  // const [mmBlockchain, setMmBlockchain] = useState<Blockchain>(); // TODO: is this still needed?
 
   // initialize
   useEffect(() => {
@@ -135,17 +107,16 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   // public API
   async function login(
     wallet: WalletType,
-    onSignHint?: () => Promise<void>,
-    onPairing?: (code: string) => Promise<void>,
-    blockchain?: Blockchain,
-    usedAddress?: string,
-    usedSignature?: string,
-  ): Promise<string> {
-    const address = await connect(wallet, onPairing, blockchain, usedAddress);
+    address: string,
+    blockchain: Blockchain,
+    onSignMessage: (address: string, message: string) => Promise<string>,
+  ): Promise<void> {
+    setWallet(wallet);
+    setActiveBlockchain(blockchain);
 
     try {
-      // show signature hint
-      const signature = usedSignature ?? (await getSignature(wallet, address, onSignHint));
+      const message = await getSignMessage(address);
+      const signature = await onSignMessage(address, message);
       await createSession(address, signature);
     } catch (e) {
       api.logout();
@@ -153,171 +124,116 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
 
       throw e;
     }
-
-    blockchain && (await switchBlockchain(blockchain, wallet));
-
-    return address;
   }
 
-  async function connect(
-    wallet: WalletType,
-    onPairing?: (code: string) => Promise<void>,
-    usedBlockchain?: Blockchain,
-    usedAddress?: string,
-  ): Promise<string> {
-    const [address, blockchain] = await readData(wallet, onPairing, usedBlockchain, usedAddress);
+  // TODO: move to connect screen
+  // async function readData(
+  //   wallet: WalletType,
+  //   onPairing?: (code: string) => Promise<void>,
+  //   blockchain?: Blockchain,
+  //   address?: string,
+  // ): Promise<[string, Blockchain | undefined]> {
+  //   switch (wallet) {
+  //     case WalletType.META_MASK:
+  //       address ??= await metaMask.requestAccount();
+  //       if (!address) throw new Error('Permission denied or account not verified');
 
-    setWallet(wallet);
+  //       blockchain = await metaMask.requestBlockchain();
 
-    switch (wallet) {
-      case WalletType.META_MASK:
-        setMmAddress(address);
-        setMmBlockchain(blockchain);
-        break;
+  //       return [address, blockchain];
 
-      case WalletType.ALBY:
-      case WalletType.LEDGER_BTC:
-      case WalletType.LEDGER_ETH:
-      case WalletType.BITBOX_BTC:
-      case WalletType.BITBOX_ETH:
-      case WalletType.TREZOR_BTC:
-      case WalletType.TREZOR_ETH:
-      case WalletType.CLI_BTC:
-      case WalletType.CLI_ETH:
-      case WalletType.WALLET_CONNECT:
-        setActiveBlockchain(blockchain);
-        break;
-    }
+  //     case WalletType.ALBY:
+  //       const account = await alby.enable();
 
-    return address;
-  }
+  //       address ??= await getAlbyAddress(account);
 
-  async function readData(
-    wallet: WalletType,
-    onPairing?: (code: string) => Promise<void>,
-    blockchain?: Blockchain,
-    address?: string,
-  ): Promise<[string, Blockchain | undefined]> {
-    switch (wallet) {
-      case WalletType.META_MASK:
-        address ??= await metaMask.requestAccount();
-        if (!address) throw new Error('Permission denied or account not verified');
+  //       return [address, Blockchain.LIGHTNING];
 
-        blockchain = await metaMask.requestBlockchain();
+  //     case WalletType.LEDGER_BTC:
+  //     case WalletType.LEDGER_ETH:
+  //       address ??= await ledger.connect(wallet);
+  //       return [address, blockchain];
 
-        return [address, blockchain];
+  //     case WalletType.BITBOX_BTC:
+  //     case WalletType.BITBOX_ETH:
+  //       if (!onPairing) throw new Error('Pairing callback not set');
 
-      case WalletType.ALBY:
-        const account = await alby.enable();
+  //       address ??= await bitBox.connect(wallet, onPairing);
+  //       return [address, blockchain];
 
-        address ??= await getAlbyAddress(account);
+  //     case WalletType.TREZOR_BTC:
+  //     case WalletType.TREZOR_ETH:
+  //       address ??= await trezor.connect(wallet);
+  //       return [address, blockchain];
 
-        return [address, Blockchain.LIGHTNING];
+  //     case WalletType.CLI_BTC:
+  //     case WalletType.CLI_ETH:
+  //       if (!address) throw new Error('Address is not defined');
+  //       return [address, blockchain];
 
-      case WalletType.LEDGER_BTC:
-      case WalletType.LEDGER_ETH:
-        address ??= await ledger.connect(wallet);
-        return [address, blockchain];
+  //     case WalletType.WALLET_CONNECT:
+  //       address ??= await walletConnect.connect(blockchain ?? Blockchain.ETHEREUM);
+  //       return [address, blockchain];
+  //   }
+  // }
 
-      case WalletType.BITBOX_BTC:
-      case WalletType.BITBOX_ETH:
-        if (!onPairing) throw new Error('Pairing callback not set');
+  // TODO: move to connect screen
+  // async function getAlbyAddress(account: GetInfoResponse): Promise<string> {
+  //   if (account?.node?.pubkey) {
+  //     // log in with pub key
+  //     return `LNNID${account.node.pubkey.toUpperCase()}`;
+  //   } else if (account?.node?.alias?.includes('getalby.com')) {
+  //     // log in with Alby
+  //     const win: Window = window;
+  //     const redirectUrl = new URL(win.location.href);
+  //     redirectUrl.searchParams.set('type', WalletType.ALBY);
+  //     redirectPath && redirectUrl.searchParams.set('redirect', redirectPath);
 
-        address ??= await bitBox.connect(wallet, onPairing);
-        return [address, blockchain];
+  //     const params = new URLSearchParams({ redirectUri: redirectUrl.toString() });
+  //     appParams.wallet && params.set('wallet', appParams.wallet);
+  //     appParams.refcode && params.set('usedRef', appParams.refcode);
 
-      case WalletType.TREZOR_BTC:
-      case WalletType.TREZOR_ETH:
-        address ??= await trezor.connect(wallet);
-        return [address, blockchain];
+  //     win.location = url(`${process.env.REACT_APP_API_URL}/auth/alby`, params);
 
-      case WalletType.CLI_BTC:
-      case WalletType.CLI_ETH:
-        if (!address) throw new Error('Address is not defined');
-        return [address, blockchain];
+  //     await delay(5);
+  //     throw new AbortError('Forwarded to Alby page');
+  //   }
 
-      case WalletType.WALLET_CONNECT:
-        address ??= await walletConnect.connect(blockchain ?? Blockchain.ETHEREUM);
-        return [address, blockchain];
-    }
-  }
+  //   throw new Error('No login method found');
+  // }
 
-  async function getAlbyAddress(account: GetInfoResponse): Promise<string> {
-    if (account?.node?.pubkey) {
-      // log in with pub key
-      return `LNNID${account.node.pubkey.toUpperCase()}`;
-    } else if (account?.node?.alias?.includes('getalby.com')) {
-      // log in with Alby
-      const win: Window = window;
-      const redirectUrl = new URL(win.location.href);
-      redirectUrl.searchParams.set('type', WalletType.ALBY);
-      redirectPath && redirectUrl.searchParams.set('redirect', redirectPath);
+  // TODO: move to connect components
+  // async function signMessage(wallet: WalletType, message: string, address: string): Promise<string> {
+  //   switch (wallet) {
+  //     case WalletType.META_MASK:
+  //       return metaMask.sign(address, message);
 
-      const params = new URLSearchParams({ redirectUri: redirectUrl.toString() });
-      appParams.wallet && params.set('wallet', appParams.wallet);
-      appParams.refcode && params.set('usedRef', appParams.refcode);
+  //     case WalletType.ALBY:
+  //       return alby.signMessage(message);
 
-      win.location = url(`${process.env.REACT_APP_API_URL}/auth/alby`, params);
+  //     case WalletType.LEDGER_BTC:
+  //     case WalletType.LEDGER_ETH:
+  //       return await ledger.signMessage(message, wallet);
 
-      await delay(5);
-      throw new AbortError('Forwarded to Alby page');
-    }
+  //     case WalletType.BITBOX_BTC:
+  //     case WalletType.BITBOX_ETH:
+  //       return await bitBox.signMessage(message, wallet);
 
-    throw new Error('No login method found');
-  }
+  //     case WalletType.TREZOR_BTC:
+  //     case WalletType.TREZOR_ETH:
+  //       return await trezor.signMessage(message, wallet);
 
-  async function getSignature(wallet: WalletType, address: string, onSignHint?: () => Promise<void>) {
-    await onSignHint?.();
+  //     case WalletType.CLI_BTC:
+  //     case WalletType.CLI_ETH:
+  //       throw new Error('Not supported');
 
-    const message = await getSignMessage(address);
-    return signMessage(wallet, message, address);
-  }
+  //     case WalletType.WALLET_CONNECT:
+  //       return await walletConnect.signMessage(message, address, activeBlockchain ?? Blockchain.ETHEREUM);
 
-  async function signMessage(wallet: WalletType, message: string, address: string): Promise<string> {
-    switch (wallet) {
-      case WalletType.META_MASK:
-        return metaMask.sign(address, message);
-
-      case WalletType.ALBY:
-        return alby.signMessage(message);
-
-      case WalletType.LEDGER_BTC:
-      case WalletType.LEDGER_ETH:
-        return await ledger.signMessage(message, wallet);
-
-      case WalletType.BITBOX_BTC:
-      case WalletType.BITBOX_ETH:
-        return await bitBox.signMessage(message, wallet);
-
-      case WalletType.TREZOR_BTC:
-      case WalletType.TREZOR_ETH:
-        return await trezor.signMessage(message, wallet);
-
-      case WalletType.CLI_BTC:
-      case WalletType.CLI_ETH:
-        throw new Error('Not supported');
-
-      case WalletType.WALLET_CONNECT:
-        return await walletConnect.signMessage(message, address, activeBlockchain ?? Blockchain.ETHEREUM);
-
-      default:
-        throw new Error('No wallet active');
-    }
-  }
-
-  async function getInstalledWallets(): Promise<WalletType[]> {
-    const wallets: WalletType[] = [];
-
-    if (metaMask.isInstalled()) wallets.push(WalletType.META_MASK);
-    if (alby.isInstalled()) wallets.push(WalletType.ALBY);
-    if (await ledger.isSupported()) wallets.push(WalletType.LEDGER_BTC, WalletType.LEDGER_ETH);
-    if (await bitBox.isSupported()) wallets.push(WalletType.BITBOX_BTC, WalletType.BITBOX_ETH);
-    if (trezor.isSupported()) wallets.push(WalletType.TREZOR_BTC, WalletType.TREZOR_ETH);
-    wallets.push(WalletType.CLI_BTC, WalletType.CLI_ETH);
-    wallets.push(WalletType.WALLET_CONNECT);
-
-    return wallets;
-  }
+  //     default:
+  //       throw new Error('No wallet active');
+  //   }
+  // }
 
   async function createSession(address: string, signature: string): Promise<string> {
     const session =
@@ -328,111 +244,76 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     return session;
   }
 
-  async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {
-    switch (activeWallet) {
-      case WalletType.META_MASK:
-        return (await Promise.all(assets.map((asset: Asset) => metaMask.readBalance(asset, mmAddress)))).filter(
-          (b) => b.amount > 0,
-        );
+  // TODO: move tho sell screen?
+  // async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {
+  //   switch (activeWallet) {
+  //     case WalletType.META_MASK:
+  //       return (await Promise.all(assets.map((asset: Asset) => metaMask.readBalance(asset, mmAddress)))).filter(
+  //         (b) => b.amount > 0,
+  //       );
 
-      case WalletType.ALBY:
-      case WalletType.LEDGER_BTC:
-      case WalletType.LEDGER_ETH:
-      case WalletType.BITBOX_BTC:
-      case WalletType.BITBOX_ETH:
-      case WalletType.TREZOR_BTC:
-      case WalletType.TREZOR_ETH:
-      case WalletType.CLI_BTC:
-      case WalletType.CLI_ETH:
-      case WalletType.WALLET_CONNECT:
-        // no balance available
-        return undefined;
+  //     case WalletType.ALBY:
+  //     case WalletType.LEDGER_BTC:
+  //     case WalletType.LEDGER_ETH:
+  //     case WalletType.BITBOX_BTC:
+  //     case WalletType.BITBOX_ETH:
+  //     case WalletType.TREZOR_BTC:
+  //     case WalletType.TREZOR_ETH:
+  //     case WalletType.CLI_BTC:
+  //     case WalletType.CLI_ETH:
+  //     case WalletType.WALLET_CONNECT:
+  //       // no balance available
+  //       return undefined;
 
-      default:
-        return getParamBalances(assets);
-    }
+  //     default:
+  //       return getParamBalances(assets);
+  //   }
+  // }
+
+  async function switchBlockchain(to: Blockchain): Promise<void> {
+    setActiveBlockchain(to);
+
+    // // TODO: move to connect screen
+    // case WalletType.META_MASK:
+    //   return metaMask.requestChangeToBlockchain(to);
   }
 
-  function getBlockchain(wallet?: WalletType): Blockchain | undefined {
-    switch (wallet ?? activeWallet) {
-      case WalletType.META_MASK:
-        return mmBlockchain;
+  // TODO: move to sell screen
+  // async function sendTransaction(sell: Sell): Promise<string> {
+  //   switch (activeWallet) {
+  //     case WalletType.META_MASK:
+  //       if (!mmAddress) throw new Error('Address is not defined');
 
-      case WalletType.ALBY:
-      case WalletType.LEDGER_BTC:
-      case WalletType.LEDGER_ETH:
-      case WalletType.BITBOX_BTC:
-      case WalletType.BITBOX_ETH:
-      case WalletType.TREZOR_BTC:
-      case WalletType.TREZOR_ETH:
-      case WalletType.CLI_BTC:
-      case WalletType.CLI_ETH:
-      case WalletType.WALLET_CONNECT:
-        return activeBlockchain;
+  //       return metaMask.createTransaction(new BigNumber(sell.amount), sell.asset, mmAddress, sell.depositAddress);
 
-      default:
-        return undefined;
-    }
-  }
+  //     case WalletType.ALBY:
+  //       if (!sell.paymentRequest) throw new Error('Payment request not defined');
 
-  async function switchBlockchain(to: Blockchain, wallet?: WalletType): Promise<void> {
-    switch (wallet ?? activeWallet) {
-      case WalletType.META_MASK:
-        return metaMask.requestChangeToBlockchain(to);
+  //       return alby.sendPayment(sell.paymentRequest).then((p) => p.preimage);
 
-      case WalletType.ALBY:
-      case WalletType.LEDGER_BTC:
-      case WalletType.LEDGER_ETH:
-      case WalletType.BITBOX_BTC:
-      case WalletType.BITBOX_ETH:
-      case WalletType.TREZOR_BTC:
-      case WalletType.TREZOR_ETH:
-      case WalletType.CLI_BTC:
-      case WalletType.CLI_ETH:
-      case WalletType.WALLET_CONNECT:
-        setActiveBlockchain(to);
-        break;
-    }
-  }
+  //     case WalletType.LEDGER_BTC:
+  //     case WalletType.LEDGER_ETH:
+  //     case WalletType.BITBOX_BTC:
+  //     case WalletType.BITBOX_ETH:
+  //     case WalletType.TREZOR_BTC:
+  //     case WalletType.TREZOR_ETH:
+  //     case WalletType.CLI_BTC:
+  //     case WalletType.CLI_ETH:
+  //     case WalletType.WALLET_CONNECT:
+  //       throw new Error('Not supported yet');
 
-  async function sendTransaction(sell: Sell): Promise<string> {
-    switch (activeWallet) {
-      case WalletType.META_MASK:
-        if (!mmAddress) throw new Error('Address is not defined');
-
-        return metaMask.createTransaction(new BigNumber(sell.amount), sell.asset, mmAddress, sell.depositAddress);
-
-      case WalletType.ALBY:
-        if (!sell.paymentRequest) throw new Error('Payment request not defined');
-
-        return alby.sendPayment(sell.paymentRequest).then((p) => p.preimage);
-
-      case WalletType.LEDGER_BTC:
-      case WalletType.LEDGER_ETH:
-      case WalletType.BITBOX_BTC:
-      case WalletType.BITBOX_ETH:
-      case WalletType.TREZOR_BTC:
-      case WalletType.TREZOR_ETH:
-      case WalletType.CLI_BTC:
-      case WalletType.CLI_ETH:
-      case WalletType.WALLET_CONNECT:
-        throw new Error('Not supported yet');
-
-      default:
-        throw new Error('No wallet connected');
-    }
-  }
+  //     default:
+  //       throw new Error('No wallet connected');
+  //   }
+  // }
 
   const context: WalletInterface = useMemo(
     () => ({
       isInitialized: isInitialized && isSessionInitialized && isParamsInitialized,
-      blockchain: getBlockchain(),
-      getInstalledWallets,
-      login,
+      blockchain: activeBlockchain,
       switchBlockchain,
+      login,
       activeWallet,
-      getBalances,
-      sendTransaction,
     }),
     [
       isInitialized,
@@ -440,12 +321,6 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       isParamsInitialized,
       activeWallet,
       activeBlockchain,
-      mmAddress,
-      mmBlockchain,
-      metaMask,
-      alby,
-      ledger,
-      trezor,
       api,
       hasBalance,
       getParamBalances,

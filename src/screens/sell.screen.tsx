@@ -66,7 +66,7 @@ export function SellScreen(): JSX.Element {
   const { closeServices } = useAppHandlingContext();
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
-  const { getBalances, blockchain: walletBlockchain, activeWallet, sendTransaction } = useWalletContext();
+  const { /*getBalances,*/ blockchain: walletBlockchain, activeWallet /*, sendTransaction*/ } = useWalletContext();
   const { availableBlockchains } = useSessionContext();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
@@ -88,9 +88,9 @@ export function SellScreen(): JSX.Element {
   const [sellTxId, setSellTxId] = useState<string>();
   const [bankAccountSelection, setBankAccountSelection] = useState(false);
 
-  useEffect(() => {
-    availableAssets && getBalances(availableAssets).then(setBalances);
-  }, [getBalances, availableAssets]);
+  // useEffect(() => {
+  //   availableAssets && getBalances(availableAssets).then(setBalances);
+  // }, [getBalances, availableAssets]);
 
   // form
   const {
@@ -248,9 +248,9 @@ export function SellScreen(): JSX.Element {
     await updateBankAccount();
 
     if (activeWallet) {
-      sendTransaction(paymentInfo)
-        .then(setSellTxId)
-        .finally(() => setIsProcessing(false));
+      // sendTransaction(paymentInfo)
+      //   .then(setSellTxId)
+      //   .finally(() => setIsProcessing(false));
     } else {
       close(paymentInfo, false);
     }
