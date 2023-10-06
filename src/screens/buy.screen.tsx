@@ -63,7 +63,7 @@ export function BuyScreen(): JSX.Element {
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assets, assetIn, assetOut, amountIn, blockchain, flags } = useAppParams();
+  const { assets, assetIn, assetOut, amountIn, blockchain, flags, paymentMethod } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isAllowedToBuy } = useKycHelper();
   const { user } = useUserContext();
@@ -81,6 +81,8 @@ export function BuyScreen(): JSX.Element {
 
   const availablePaymentMethods = [BuyPaymentMethod.BANK];
   flags?.includes(BuyPaymentMethod.CARD) && !isEmbedded && availablePaymentMethods.push(BuyPaymentMethod.CARD);
+  const defaultPaymentMethod =
+    availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
 
   // form
   const {
@@ -88,7 +90,7 @@ export function BuyScreen(): JSX.Element {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<FormData>({ defaultValues: { paymentMethod: BuyPaymentMethod.BANK } });
+  } = useForm<FormData>({ defaultValues: { paymentMethod: defaultPaymentMethod } });
 
   const data = useWatch({ control });
   const selectedCurrency = useWatch({ control, name: 'currency' });

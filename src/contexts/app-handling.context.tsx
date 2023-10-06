@@ -13,6 +13,7 @@ const urlParams = [
   'lang',
   'address',
   'signature',
+  'mail',
   'wallet',
   'refcode',
   'session',
@@ -27,6 +28,7 @@ const urlParams = [
   'assets',
   'asset-in',
   'asset-out',
+  'payment-method',
   'bank-account',
 ];
 
@@ -35,6 +37,7 @@ export interface AppParams {
   lang?: string;
   address?: string;
   signature?: string;
+  mail?: string;
   wallet?: string;
   refcode?: string;
   session?: string;
@@ -49,6 +52,7 @@ export interface AppParams {
   assets?: string;
   assetIn?: string;
   assetOut?: string;
+  paymentMethod?: string;
   bankAccount?: string;
 }
 
@@ -172,6 +176,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           lang: getParameter(query, 'lang'),
           address: getParameter(query, 'address'),
           signature: getParameter(query, 'signature'),
+          mail: getParameter(query, 'mail'),
           wallet: getParameter(query, 'wallet'),
           refcode: getParameter(query, 'refcode'),
           session: getParameter(query, 'session'),
@@ -186,6 +191,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           assets: getParameter(query, 'assets'),
           assetIn: getParameter(query, 'asset-in'),
           assetOut: getParameter(query, 'asset-out'),
+          paymentMethod: getParameter(query, 'payment-method'),
           bankAccount: getParameter(query, 'bank-account'),
         };
   }
