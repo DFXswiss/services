@@ -98,7 +98,11 @@
 
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Le montant saisi est inférieur au dépôt minimum de {{amount}} {{currency}}",
 
-    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Dès que le virement arrive sur notre compte bancaire, nous transférons votre avoir sur votre porte-monnaie."
+    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Dès que le virement arrive sur notre compte bancaire, nous transférons votre avoir sur votre porte-monnaie.",
+
+    "Payment method": "Mode de paiement",
+    "Bank transaction": "Transaction bancaire",
+    "Credit card": "Carte de crédit"
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Coordonnées bancaires",

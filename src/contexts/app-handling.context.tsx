@@ -9,9 +9,11 @@ import { useBalanceContext } from './balance.context';
 // --- INTERFACES --- //
 // CAUTION: params need to be added to index-widget.tsx
 const urlParams = [
+  'flags',
   'lang',
   'address',
   'signature',
+  'mail',
   'wallet',
   'refcode',
   'session',
@@ -26,13 +28,16 @@ const urlParams = [
   'assets',
   'asset-in',
   'asset-out',
+  'payment-method',
   'bank-account',
 ];
 
 export interface AppParams {
+  flags?: string;
   lang?: string;
   address?: string;
   signature?: string;
+  mail?: string;
   wallet?: string;
   refcode?: string;
   session?: string;
@@ -47,6 +52,7 @@ export interface AppParams {
   assets?: string;
   assetIn?: string;
   assetOut?: string;
+  paymentMethod?: string;
   bankAccount?: string;
 }
 
@@ -70,7 +76,7 @@ export interface CancelServicesParams extends CloseMessageData {
 export interface BuyServicesParams extends CloseMessageData {
   type: CloseType.BUY;
   isComplete: boolean;
-  buy: Buy;
+  buy?: Buy;
 }
 
 export interface SellServicesParams extends CloseMessageData {
@@ -166,9 +172,11 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           ...params,
         }
       : {
+          flags: getParameter(query, 'flags'),
           lang: getParameter(query, 'lang'),
           address: getParameter(query, 'address'),
           signature: getParameter(query, 'signature'),
+          mail: getParameter(query, 'mail'),
           wallet: getParameter(query, 'wallet'),
           refcode: getParameter(query, 'refcode'),
           session: getParameter(query, 'session'),
@@ -183,6 +191,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           assets: getParameter(query, 'assets'),
           assetIn: getParameter(query, 'asset-in'),
           assetOut: getParameter(query, 'asset-out'),
+          paymentMethod: getParameter(query, 'payment-method'),
           bankAccount: getParameter(query, 'bank-account'),
         };
   }
@@ -190,6 +199,9 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   function removeUrlParams(query: URLSearchParams) {
     if (urlParams.map((param) => query.has(param)).every((b) => !b)) return;
     urlParams.forEach((param) => query.delete(param));
+
+    const path = props.router.state.location.pathname;
+    props.router.navigate(path, { replace: true });
 
     const { location, history } = window;
     history.replaceState(undefined, '', url(`${location.origin}${location.pathname}`, query));

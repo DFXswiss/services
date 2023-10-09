@@ -22,6 +22,7 @@ import {
   StyledLink,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { BuyPaymentMethod } from '@dfx.swiss/react/dist/definitions/buy';
 import { useEffect, useRef, useState } from 'react';
 import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { KycHint } from '../components/kyc-hint';
@@ -40,7 +41,18 @@ interface FormData {
   currency: Fiat;
   asset: Asset;
   amount: string;
+  paymentMethod: BuyPaymentMethod;
 }
+
+const paymentLabels = {
+  [BuyPaymentMethod.BANK]: 'Bank transaction',
+  [BuyPaymentMethod.CARD]: 'Credit card',
+};
+
+const paymentDescriptions = {
+  [BuyPaymentMethod.BANK]: 'SEPA, SEPA instant',
+  [BuyPaymentMethod.CARD]: 'Mastercard, Visa, Google Pay, Apple Pay',
+};
 
 export function BuyScreen(): JSX.Element {
   useSessionGuard();
@@ -50,7 +62,7 @@ export function BuyScreen(): JSX.Element {
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assets, assetIn, assetOut, amountIn, blockchain } = useAppParams();
+  const { assets, assetIn, assetOut, amountIn, blockchain, flags, paymentMethod } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isAllowedToBuy } = useKycHelper();
   const { user } = useUserContext();
@@ -63,6 +75,12 @@ export function BuyScreen(): JSX.Element {
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [showsCompletion, setShowsCompletion] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isContinue, setIsContinue] = useState(false);
+
+  const availablePaymentMethods = [BuyPaymentMethod.BANK];
+  flags?.includes(BuyPaymentMethod.CARD) && availablePaymentMethods.push(BuyPaymentMethod.CARD);
+  const defaultPaymentMethod =
+    availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
 
   // form
   const {
@@ -70,10 +88,11 @@ export function BuyScreen(): JSX.Element {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<FormData>();
+  } = useForm<FormData>({ defaultValues: { paymentMethod: defaultPaymentMethod } });
 
   const data = useWatch({ control });
   const selectedCurrency = useWatch({ control, name: 'currency' });
+  const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
 
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
@@ -119,10 +138,10 @@ export function BuyScreen(): JSX.Element {
     }
 
     const amount = Number(validatedData.amount);
-    const { asset, currency } = validatedData;
+    const { asset, currency, paymentMethod } = validatedData;
 
     setIsLoading(true);
-    receiveFor({ currency, amount, asset })
+    receiveFor({ currency, amount, asset, paymentMethod })
       .then((value) => checkForMinDeposit(value, amount, currency.name))
       .then((value) => toPaymentInformation(value, currency))
       .then(setPaymentInfo)
@@ -200,6 +219,16 @@ export function BuyScreen(): JSX.Element {
                   descriptionFunc={(item) => item.blockchain}
                   full
                 />
+                <StyledDropdown<BuyPaymentMethod>
+                  rootRef={rootRef}
+                  name="paymentMethod"
+                  label={translate('screens/buy', 'Payment method')}
+                  placeholder={translate('general/actions', 'Please select...')}
+                  items={availablePaymentMethods}
+                  labelFunc={(item) => translate('screens/buy', paymentLabels[item])}
+                  descriptionFunc={(item) => translate('screens/buy', paymentDescriptions[item])}
+                  full
+                />
                 <StyledDropdown<Fiat>
                   rootRef={rootRef}
                   name="currency"
@@ -244,33 +273,61 @@ export function BuyScreen(): JSX.Element {
                   </div>
                 )}
 
-                {paymentInfo && dataValid && !kycRequired && (
-                  <div>
-                    <PaymentInformationContent info={paymentInfo} />
+                {paymentInfo &&
+                  dataValid &&
+                  !kycRequired &&
+                  (selectedPaymentMethod === BuyPaymentMethod.BANK ? (
+                    <div>
+                      <PaymentInformationContent info={paymentInfo} />
 
-                    <div className="pt-4">
-                      <StyledLink
-                        label={translate(
-                          'screens/payment',
-                          'Please note that by using this service you automatically accept our terms and conditions.',
-                        )}
-                        url={process.env.REACT_APP_TNC_URL}
-                        dark
+                      <div className="pt-4">
+                        <StyledLink
+                          label={translate(
+                            'screens/payment',
+                            'Please note that by using this service you automatically accept our terms and conditions.',
+                          )}
+                          url={process.env.REACT_APP_TNC_URL}
+                          dark
+                        />
+                      </div>
+
+                      <StyledButton
+                        width={StyledButtonWidth.FULL}
+                        label={translate('screens/buy', 'Click here once you have issued the transfer')}
+                        onClick={() => {
+                          setShowsCompletion(true);
+                          scrollRef.current?.scrollTo(0, 0);
+                        }}
+                        caps={false}
+                        className="my-4"
                       />
                     </div>
+                  ) : (
+                    paymentInfo.buy.paymentLink && (
+                      <div>
+                        <StyledLink
+                          label={translate(
+                            'screens/payment',
+                            'Please note that by using this service you automatically accept our terms and conditions.',
+                          )}
+                          url={process.env.REACT_APP_TNC_URL}
+                          dark
+                        />
 
-                    <StyledButton
-                      width={StyledButtonWidth.FULL}
-                      label={translate('screens/buy', 'Click here once you have issued the transfer')}
-                      onClick={() => {
-                        setShowsCompletion(true);
-                        scrollRef.current?.scrollTo(0, 0);
-                      }}
-                      caps={false}
-                      className="my-4"
-                    />
-                  </div>
-                )}
+                        <StyledButton
+                          width={StyledButtonWidth.FULL}
+                          label={translate('general/actions', 'Next')}
+                          onClick={() => {
+                            setIsContinue(true);
+                            window.location.href = paymentInfo.buy.paymentLink as string;
+                          }}
+                          isLoading={isContinue}
+                          caps={false}
+                          className="my-4"
+                        />
+                      </div>
+                    )
+                  ))}
               </>
             )}
           </StyledVerticalStack>

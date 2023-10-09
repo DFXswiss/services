@@ -21,9 +21,9 @@ export function useSettingsContext(): SettingsInterface {
 export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { languages } = useLanguageContext();
   const { getDefaultLanguage } = useLanguage();
-  const { user, changeLanguage: changeUserLanguage } = useUserContext();
+  const { user, changeLanguage: changeUserLanguage, changeMail: changeUserMail } = useUserContext();
   const { language: storedLanguage } = useStore();
-  const { lang } = useAppParams();
+  const { lang, mail } = useAppParams();
 
   const [language, setLanguage] = useState<Language>();
   const { t } = useTranslation();
@@ -37,6 +37,10 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
 
     newAppLanguage && newAppLanguage.id !== language?.id && changeAppLanguage(newAppLanguage);
   }, [user, lang, languages]);
+
+  useEffect(() => {
+    if (user && mail && user.mail !== mail) changeUserMail(mail);
+  }, [user, mail]);
 
   function changeAppLanguage(language: Language) {
     setLanguage(language);
