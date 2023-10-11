@@ -4,7 +4,7 @@ import KeyPath from '../../config/key-path';
 import { WalletType } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
 
-type TrezorWallet = WalletType.TREZOR_BTC | WalletType.TREZOR_ETH;
+export type TrezorWallet = WalletType.TREZOR_BTC | WalletType.TREZOR_ETH;
 
 export interface TrezorInterface {
   isSupported: () => boolean;

@@ -1,6 +1,6 @@
 import { BitBox02API, constants, getDevicePath, getKeypathFromString } from 'bitbox02-api';
-import { useState } from 'react';
 import KeyPath from '../../config/key-path';
+import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
@@ -11,7 +11,7 @@ interface BitboxError extends Error {
   Message: string;
 }
 
-type BitboxWallet = WalletType.BITBOX_BTC | WalletType.BITBOX_ETH;
+export type BitboxWallet = WalletType.BITBOX_BTC | WalletType.BITBOX_ETH;
 
 export interface BitboxInterface {
   isSupported: () => Promise<boolean>;
@@ -22,9 +22,10 @@ export interface BitboxInterface {
 export function useBitbox(): BitboxInterface {
   const coinBtc = constants.messages.BTCCoin.BTC;
   const addressTypeBtc = constants.messages.BTCScriptConfig_SimpleType.P2WPKH;
+  const storageKey = 'BitBoxClient';
+  const { get, put } = useSettingsContext();
 
   let tmpClient: BitBox02API;
-  const [client, setClient] = useState<BitBox02API>();
 
   async function isSupported(): Promise<boolean> {
     try {
@@ -36,10 +37,10 @@ export function useBitbox(): BitboxInterface {
   }
 
   async function connect(wallet: BitboxWallet, onPairing: (code: string) => Promise<void>): Promise<string> {
-    const bitBox = client ?? new BitBox02API('WEBHID');
+    const bitBox = get<BitBox02API>(storageKey) ?? new BitBox02API('WEBHID');
 
     tmpClient = bitBox;
-    setClient(bitBox);
+    put<BitBox02API>(storageKey, bitBox);
 
     let attestation = false;
 
@@ -118,7 +119,7 @@ export function useBitbox(): BitboxInterface {
   }
 
   async function signMessage(msg: string, wallet: BitboxWallet): Promise<string> {
-    const bitBox = tmpClient ?? client;
+    const bitBox = tmpClient ?? get<BitBox02API>(storageKey);
     if (!bitBox) throw new Error('Bitbox not connected');
 
     try {

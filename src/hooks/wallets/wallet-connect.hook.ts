@@ -1,7 +1,7 @@
 import { Blockchain } from '@dfx.swiss/react/dist/definitions/blockchain';
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
 import { EthereumProvider as EthClient } from '@walletconnect/ethereum-provider/dist/types/EthereumProvider';
-import { useState } from 'react';
+import { useSettingsContext } from '../../contexts/settings.context';
 import { AbortError } from '../../util/abort-error';
 import { useBlockchain } from '../blockchain.hook';
 
@@ -11,11 +11,12 @@ export interface WalletConnectInterface {
 }
 
 export function useWalletConnect(): WalletConnectInterface {
-  const [walletConnectClient, setWalletConnectClient] = useState<EthClient>();
   const { toChainId } = useBlockchain();
+  const storageKey = 'WalletConnectClient';
+  const { get, put } = useSettingsContext();
 
   async function connect(blockchain: Blockchain): Promise<string> {
-    const client = walletConnectClient ?? (await setupConnection(blockchain));
+    const client = get<EthClient>(storageKey) ?? (await setupConnection(blockchain));
     await client.connect();
     const result = await client.request<string[]>({ method: 'eth_requestAccounts' });
     return result[0];
@@ -38,13 +39,13 @@ export function useWalletConnect(): WalletConnectInterface {
       },
     });
 
-    setWalletConnectClient(provider);
+    put(storageKey, provider);
     return provider;
   }
 
   async function signMessage(msg: string, address: string, blockchain: Blockchain): Promise<string> {
     try {
-      const client = walletConnectClient ?? (await setupConnection(blockchain));
+      const client = get<EthClient>(storageKey) ?? (await setupConnection(blockchain));
 
       return await client.request<string>({
         method: 'personal_sign',

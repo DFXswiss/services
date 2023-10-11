@@ -10,6 +10,9 @@ interface SettingsInterface {
   language?: Language;
   changeLanguage: (language: Language) => void;
   translate: (key: string, defaultValue: string, interpolation?: Record<string, string | number>) => string;
+  // generic storage
+  get: <T>(key: string) => T | undefined;
+  put: <T>(key: string, value: T | undefined) => void;
 }
 
 const SettingsContext = createContext<SettingsInterface>(undefined as any);
@@ -24,9 +27,10 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { user, changeLanguage: changeUserLanguage } = useUserContext();
   const { language: storedLanguage } = useStore();
   const { lang } = useAppParams();
+  const { t } = useTranslation();
 
   const [language, setLanguage] = useState<Language>();
-  const { t } = useTranslation();
+  const [store, setStore] = useState<Record<string, any>>({});
 
   const availableLanguages = languages?.filter((l) => ['DE', 'EN', 'FR', 'IT'].includes(l.symbol)) ?? [];
 
@@ -49,6 +53,14 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     changeUserLanguage(language);
   }
 
+  function get<T>(key: string): T | undefined {
+    return store[key];
+  }
+
+  function put<T>(key: string, value: T): void {
+    setStore((s) => ({ ...s, [key]: value }));
+  }
+
   const context = useMemo(
     () => ({
       availableLanguages,
@@ -56,8 +68,10 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
       changeLanguage,
       translate: (key: string, defaultValue: string, interpolation?: Record<string, string | number>) =>
         t([key, defaultValue].join('.'), defaultValue, interpolation),
+      get,
+      put,
     }),
-    [availableLanguages, language, changeLanguage],
+    [availableLanguages, language, changeLanguage, store],
   );
 
   return <SettingsContext.Provider value={context}>{props.children}</SettingsContext.Provider>;
