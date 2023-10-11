@@ -4,7 +4,6 @@ import {
   Form,
   SpinnerSize,
   StyledButton,
-  StyledButtonColor,
   StyledButtonWidth,
   StyledHorizontalStack,
   StyledInput,
@@ -12,11 +11,13 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { LnurlAuth } from '@dfx.swiss/react/dist/definitions/auth';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
+import { QrCopy } from '../payment/qr-copy';
 
 export interface ConnectHintProps {
   type: WalletType;
@@ -59,10 +60,13 @@ export function ConnectHint(props: ConnectHintProps): JSX.Element {
     case WalletType.CLI_BTC:
     case WalletType.CLI_ETH:
       return <CliHint {...props} />;
+
+    case WalletType.DFX_BITCOIN:
+      return <DfxBitcoinHint {...props} />;
   }
 }
 
-function AutoConnectHint({ error, onBack, message }: ConnectHintProps & { message: string }): JSX.Element {
+function AutoConnectHint({ error, onStart, message }: ConnectHintProps & { message: string }): JSX.Element {
   const { translate } = useSettingsContext();
 
   return error ? (
@@ -71,9 +75,8 @@ function AutoConnectHint({ error, onBack, message }: ConnectHintProps & { messag
 
       <StyledButton
         className="mt-4"
-        label={translate('general/actions', 'Back')}
-        onClick={onBack}
-        color={StyledButtonColor.GRAY_OUTLINE}
+        label={translate('general/actions', 'Connect')}
+        onClick={() => onStart()}
         width={StyledButtonWidth.MIN}
       />
     </>
@@ -324,5 +327,77 @@ function CliHint({ type, error, isLoading, onStart }: ConnectHintProps): JSX.Ele
         />
       </StyledVerticalStack>
     </Form>
+  );
+}
+
+function DfxBitcoinHint({ onStart, error: connectError }: ConnectHintProps): JSX.Element {
+  const { translate } = useSettingsContext();
+  const { createLnurlAuth, getLnurlAuth } = useAuth();
+
+  const [auth, setAuth] = useState<LnurlAuth>();
+  const [authError, setAuthError] = useState<string>();
+
+  const link = auth && `bluewallet:lightning:${auth.lnurl}`;
+  const error = connectError ?? authError;
+
+  useEffect(() => {
+    create();
+  }, []);
+
+  useEffect(() => {
+    if (auth?.k1) {
+      // start polling
+      const poller = setInterval(
+        () =>
+          getLnurlAuth(auth.k1)
+            .then((r) => {
+              if (r.isComplete) {
+                clearInterval(poller);
+                onStart(r.accessToken);
+              }
+            })
+            .catch(() => {
+              clearInterval(poller);
+              setAuth(undefined);
+              setAuthError('Authentication failed');
+            }),
+        1000,
+      );
+
+      return () => clearInterval(poller);
+    }
+  }, [auth?.k1]);
+
+  async function create() {
+    setAuthError(undefined);
+    await createLnurlAuth().then(setAuth);
+  }
+
+  if (error)
+    return (
+      <>
+        <Error error={error} />
+        <StyledButton
+          className="mt-4"
+          label={translate('general/actions', 'Connect')}
+          onClick={() => create()}
+          width={StyledButtonWidth.MIN}
+        />
+      </>
+    );
+
+  if (link)
+    return (
+      <>
+        <h2 className="text-dfxGray-700 mb-4">{translate('screens/home', 'Login with your DFX App')}</h2>
+        <QrCopy data={link} />
+        <StyledLink label={translate('screens/home', 'Open app')} url={link} target="_self" dark />
+      </>
+    );
+
+  return (
+    <div className="mb-4">
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
+    </div>
   );
 }

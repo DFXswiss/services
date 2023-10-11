@@ -478,7 +478,7 @@ export const FeatureTree: Page[] = [
         img: 'bitcoinlightning',
         next: {
           page: 'wallets',
-          tiles: ['dfx-wallet', 'alby'],
+          tiles: ['alby'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
@@ -922,7 +922,7 @@ export const FeatureTree: Page[] = [
       {
         id: 'dfx-wallet',
         img: 'bitcoinapp',
-        disabled: true,
+        wallet: { type: WalletType.DFX_BITCOIN, blockchain: Blockchain.LIGHTNING },
       },
       {
         id: 'metamask',
@@ -1027,7 +1027,7 @@ export const FeatureTree: Page[] = [
         img: 'bitcoinlightning',
         next: {
           page: 'wallets',
-          tiles: ['dfx-wallet', 'alby'],
+          tiles: ['alby'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
@@ -1707,7 +1707,7 @@ export const FeatureTree: Page[] = [
         img: 'bitcoinlightning_simple',
         next: {
           page: 'wallets',
-          tiles: ['dfx-wallet', 'alby'],
+          tiles: ['alby'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
@@ -2038,7 +2038,7 @@ export const FeatureTree: Page[] = [
         img: 'bitcoinlightning',
         next: {
           page: 'wallets',
-          tiles: ['dfx-wallet', 'alby'],
+          tiles: ['alby'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
@@ -2055,1251 +2055,1207 @@ export const FeatureTree: Page[] = [
     ],
   },
 
-// zkfinance //
-{
-  id: 'zkfinance',
-  header: 'zkfinance x DFX',
-  description: 'Buy and sell Crypto directly on your zkfinance Account!',
-  bottomImage: 'https://uploads-ssl.webflow.com/639728e2c3052849296e109e/645e86ae7fc88f6bce87a001_assets%20ZKArtboard%205-p-500.png',
-  tiles: [
-    {
-      id: 'buy',
-      img: 'kaufen',
-      next: {
-        page: 'buy',
+  // --- zkfinance --- //
+  {
+    id: 'zkfinance',
+    header: 'zkfinance x DFX',
+    description: 'Buy and sell Crypto directly on your zkfinance Account!',
+    bottomImage:
+      'https://uploads-ssl.webflow.com/639728e2c3052849296e109e/645e86ae7fc88f6bce87a001_assets%20ZKArtboard%205-p-500.png',
+    tiles: [
+      {
+        id: 'buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
       },
-    },
-    {
-      id: 'sell',
-      img: 'verkaufen',
-      next: {
-        page: 'sell',
+      {
+        id: 'sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
       },
-    },
-  ],
-},
+    ],
+  },
 
-// thorwallet //
-{
-  id: 'thorwallet',
-  header: 'Thorwallet x DFX',
-  description: 'Buy and sell Crypto directly on your Thorwallet Account!',
-  bottomImage: 'https://miro.medium.com/v2/resize:fit:3000/0*87PlPSH1ksnMtdb9',
-  tiles: [
-    {
-      id: 'metamask',
-      img: 'metamaskrabby',
-      wallet: { type: WalletType.META_MASK },
-    },
-    {
-      id: 'walletconnect',
-      img: 'walletconnect',
-      wallet: { type: WalletType.WALLET_CONNECT },
-    },
-    {
-      id: 'ledger',
-      img: 'ledger',
-      wallet: (params) => ({
-        type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
-      }),
-    },
-  ],
-},
-// OnRamper //
-{
-  id: 'onramper',
-  header: 'OnRamper x DFX',
-  description: 'Buy and sell Crypto directly on your Wallet!',
-  bottomImage: 'https://images.g2crowd.com/uploads/product/hd_favicon/9075565c5eac9f43df0f37f751e2a5e0/onramper-onramper-the-1-fiat-onramp-aggregator.svg',
-  tiles: [
-    {
-      id: 'metamask',
-      img: 'metamaskrabby',
-      wallet: { type: WalletType.META_MASK },
-    },
-    {
-      id: 'walletconnect',
-      img: 'walletconnect',
-      wallet: { type: WalletType.WALLET_CONNECT },
-    },
-    {
-      id: 'ledger',
-      img: 'ledger',
-      wallet: (params) => ({
-        type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
-      }),
-    },
-    {
-      id: 'trezor',
-      img: 'trezor',
-      wallet: (params) => ({
-        type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
-      }),
-    },
-  ],
-},
+  // --- thorwallet --- //
+  {
+    id: 'thorwallet',
+    header: 'Thorwallet x DFX',
+    description: 'Buy and sell Crypto directly on your Thorwallet Account!',
+    bottomImage: 'https://miro.medium.com/v2/resize:fit:3000/0*87PlPSH1ksnMtdb9',
+    tiles: [
+      {
+        id: 'metamask',
+        img: 'metamaskrabby',
+        wallet: { type: WalletType.META_MASK },
+      },
+      {
+        id: 'walletconnect',
+        img: 'walletconnect',
+        wallet: { type: WalletType.WALLET_CONNECT },
+      },
+      {
+        id: 'ledger',
+        img: 'ledger',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
+        }),
+      },
+    ],
+  },
+  // --- OnRamper --- //
+  {
+    id: 'onramper',
+    header: 'OnRamper x DFX',
+    description: 'Buy and sell Crypto directly on your Wallet!',
+    bottomImage:
+      'https://images.g2crowd.com/uploads/product/hd_favicon/9075565c5eac9f43df0f37f751e2a5e0/onramper-onramper-the-1-fiat-onramp-aggregator.svg',
+    tiles: [
+      {
+        id: 'metamask',
+        img: 'metamaskrabby',
+        wallet: { type: WalletType.META_MASK },
+      },
+      {
+        id: 'walletconnect',
+        img: 'walletconnect',
+        wallet: { type: WalletType.WALLET_CONNECT },
+      },
+      {
+        id: 'ledger',
+        img: 'ledger',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
+        }),
+      },
+      {
+        id: 'trezor',
+        img: 'trezor',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
+        }),
+      },
+    ],
+  },
 
-// Metamask //
-{
-  id: 'metamask',
-  header: 'Metamask x DFX',
-  description: 'Buy and sell Crypto directly on your Metamask Wallet!',
-  bottomImage: 'https://logowik.com/content/uploads/images/metamask4112.jpg',
-  tiles: [
-    {
-      id: 'buy',
-      img: 'kaufen',
-      next: {
-        page: 'buy',
+  //  --- Metamask --- //
+  {
+    id: 'metamask',
+    header: 'Metamask x DFX',
+    description: 'Buy and sell Crypto directly on your Metamask Wallet!',
+    bottomImage: 'https://logowik.com/content/uploads/images/metamask4112.jpg',
+    tiles: [
+      {
+        id: 'buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
       },
-    },
-    {
-      id: 'sell',
-      img: 'verkaufen',
-      next: {
-        page: 'sell',
+      {
+        id: 'sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
       },
-    },
-  ],
-},
+    ],
+  },
 
-// Shapeshift //
-{
-  id: 'shapeshift',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-buy',
-      img: 'kaufen',
-      next: {
-        page: 'shapeshift-buy',
-      },
-    },
-    {
-      id: 'shapeshift-sell',
-      img: 'verkaufen',
-      next: {
-        page: 'shapeshift-sell',
-      },
-    },
-  ],
-},
-{
-  id: 'shapeshift-buy',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-erc20',
-      img: 'ethereumarbitrumoptimismpolygon',
-      next: {
-        page: 'shapeshift-buy-erc20',
-      },
-    },
-    {
-      id: 'shapeshift-bsc',
-      img: 'binancesmartchain',
-      next: {
-        page: 'shapeshift-buy-bsc',
-      },
-    },
-  ],
-},
-{
-  id: 'shapeshift-buy-erc20',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-ethereum',
-      img: 'ethereum',
-      next: {
-        page: 'shapeshift-buy-ethereum',
-      },
-    },
-    {
-      id: 'shapeshift-arbitrum',
-      img: 'arbitrum',
-      next: {
-        page: 'shapeshift-buy-arbitrum',
-      },
-    },
-    {
-      id: 'shapeshift-optimism',
-      img: 'optimism',
-      next: {
-        page: 'shapeshift-buy-optimism',
-      },
-    },
-    {
-      id: 'shapeshift-polygon',
-      img: 'polygon',
-      disabled: true,
-    },
-  ],
-},
-{
-  id: 'shapeshift-buy-ethereum',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-eth',
-      img: 'eth',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask', 'walletconnect'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+  // --- Shapeshift --- //
+  {
+    id: 'shapeshift',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-buy',
+        img: 'kaufen',
+        next: {
+          page: 'shapeshift-buy',
         },
       },
-    },
-    {
-      id: 'shapeshift-wbtc',
-      img: 'wbtc',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+      {
+        id: 'shapeshift-sell',
+        img: 'verkaufen',
+        next: {
+          page: 'shapeshift-sell',
         },
       },
-    },
-    {
-      id: 'shapeshift-stable',
-      img: 'stablecoin',
-      next: {
-        page: 'shapeshift-buy-ethereum-stable',
-      },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersethereum',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+    ],
+  },
+  {
+    id: 'shapeshift-buy',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-erc20',
+        img: 'ethereumarbitrumoptimismpolygon',
+        next: {
+          page: 'shapeshift-buy-erc20',
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-buy-ethereum-stable',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-usdt',
-      img: 'usdt',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
+      {
+        id: 'shapeshift-bsc',
+        img: 'binancesmartchain',
+        next: {
+          page: 'shapeshift-buy-bsc',
         },
       },
-    },
-    {
-      id: 'shapeshift-usdc',
-      img: 'usdc',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
+    ],
+  },
+  {
+    id: 'shapeshift-buy-erc20',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-ethereum',
+        img: 'ethereum',
+        next: {
+          page: 'shapeshift-buy-ethereum',
         },
       },
-    },
-    {
-      id: 'shapeshift-dai',
-      img: 'dai',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DAI' },
+      {
+        id: 'shapeshift-arbitrum',
+        img: 'arbitrum',
+        next: {
+          page: 'shapeshift-buy-arbitrum',
         },
       },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersethereum',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+      {
+        id: 'shapeshift-optimism',
+        img: 'optimism',
+        next: {
+          page: 'shapeshift-buy-optimism',
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-buy-arbitrum',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-eth',
-      img: 'eth',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
+      {
+        id: 'shapeshift-polygon',
+        img: 'polygon',
+        disabled: true,
+      },
+    ],
+  },
+  {
+    id: 'shapeshift-buy-ethereum',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-eth',
+        img: 'eth',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask', 'walletconnect'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-wbtc',
-      img: 'wbtc',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+      {
+        id: 'shapeshift-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-stable',
-      img: 'stablecoin',
-      next: {
-        page: 'shapeshift-buy-arbitrum-stable',
-      },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersarbitrum',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
+      {
+        id: 'shapeshift-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'shapeshift-buy-ethereum-stable',
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-buy-arbitrum-stable',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-usdt',
-      img: 'usdt',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
+      {
+        id: 'shapeshift-other',
+        img: 'othersethereum',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-usdc',
-      img: 'usdc',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
+    ],
+  },
+  {
+    id: 'shapeshift-buy-ethereum-stable',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-usdt',
+        img: 'usdt',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-dai',
-      img: 'dai',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ARBITRUM, assetOut: 'DAI' },
+      {
+        id: 'shapeshift-usdc',
+        img: 'usdc',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersarbitrum',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
+      {
+        id: 'shapeshift-dai',
+        img: 'dai',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DAI' },
+          },
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-buy-optimism',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-eth',
-      img: 'eth',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+      {
+        id: 'shapeshift-other',
+        img: 'othersethereum',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-stable',
-      img: 'stablecoin',
-      next: {
-        page: 'shapeshift-buy-optimism-stable',
-      },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersoptimism',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
+    ],
+  },
+  {
+    id: 'shapeshift-buy-arbitrum',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-eth',
+        img: 'eth',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
+          },
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-buy-optimism-stable',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-usdt',
-      img: 'usdt',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
+      {
+        id: 'shapeshift-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-xchf',
-      img: 'xchf',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.OPTIMISM, assetOut: 'XCHF' },
+      {
+        id: 'shapeshift-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'shapeshift-buy-arbitrum-stable',
         },
       },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersoptimism',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
+      {
+        id: 'shapeshift-other',
+        img: 'othersarbitrum',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
+          },
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-buy-bsc',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-bnb',
-      img: 'bnb',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'BNB' },
+    ],
+  },
+  {
+    id: 'shapeshift-buy-arbitrum-stable',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-usdt',
+        img: 'usdt',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-wbtc',
-      img: 'wbtc',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'WBTC' },
+      {
+        id: 'shapeshift-usdc',
+        img: 'usdc',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-stable',
-      img: 'stablecoin',
-      next: {
-        page: 'shapeshift-buy-bsc-stable',
-      },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersbinancesmartchain',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
+      {
+        id: 'shapeshift-dai',
+        img: 'dai',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'DAI' },
+          },
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-buy-bsc-stable',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-usdt',
-      img: 'usdt',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'USDT' },
+      {
+        id: 'shapeshift-other',
+        img: 'othersarbitrum',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: undefined },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-dai',
-      img: 'dai',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'DAI' },
+    ],
+  },
+  {
+    id: 'shapeshift-buy-optimism',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-eth',
+        img: 'eth',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersbinancesmartchain',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask', 'walletconnect', 'cli'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
+      {
+        id: 'shapeshift-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'shapeshift-buy-optimism-stable',
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-sell',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-erc20',
-      img: 'ethereumarbitrumoptimismpolygon',
-      next: {
-        page: 'shapeshift-sell-erc20',
-      },
-    },
-    {
-      id: 'shapeshift-bsc',
-      img: 'binancesmartchain',
-      next: {
-        page: 'shapeshift-sell-bsc',
-      },
-    },
-  ],
-},
-{
-  id: 'shapeshift-sell-erc20',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-ethereum',
-      img: 'ethereum',
-      next: {
-        page: 'shapeshift-sell-ethereum',
-      },
-    },
-    {
-      id: 'shapeshift-arbitrum',
-      img: 'arbitrum',
-      next: {
-        page: 'shapeshift-sell-arbitrum',
-      },
-    },
-    {
-      id: 'shapeshift-optimism',
-      img: 'optimism',
-      next: {
-        page: 'shapeshift-sell-optimism',
-      },
-    },
-    {
-      id: 'shapeshift-polygon',
-      img: 'polygon',
-      disabled: true,
-    },
-  ],
-},
-{
-  id: 'shapeshift-sell-ethereum',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-eth',
-      img: 'eth',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ETHEREUM, assetIn: 'ETH' },
+      {
+        id: 'shapeshift-other',
+        img: 'othersoptimism',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-wbtc',
-      img: 'wbtc',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ETHEREUM, assetIn: 'WBTC' },
+    ],
+  },
+  {
+    id: 'shapeshift-buy-optimism-stable',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-usdt',
+        img: 'usdt',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-stable',
-      img: 'stablecoin',
-      next: {
-        page: 'shapeshift-sell-ethereum-stable',
-      },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersethereum',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
+      {
+        id: 'shapeshift-xchf',
+        img: 'xchf',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'XCHF' },
+          },
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-sell-ethereum-stable',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-usdt',
-      img: 'usdt',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ETHEREUM, assetIn: 'USDT' },
+      {
+        id: 'shapeshift-other',
+        img: 'othersoptimism',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-usdc',
-      img: 'usdc',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ETHEREUM, assetIn: 'USDC' },
+    ],
+  },
+  {
+    id: 'shapeshift-buy-bsc',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-bnb',
+        img: 'bnb',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'BNB' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-dai',
-      img: 'dai',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ETHEREUM, assetIn: 'DAI' },
+      {
+        id: 'shapeshift-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'WBTC' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersethereum',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
+      {
+        id: 'shapeshift-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'shapeshift-buy-bsc-stable',
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-sell-arbitrum',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-eth',
-      img: 'eth',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ARBITRUM, assetIn: 'ETH' },
+      {
+        id: 'shapeshift-other',
+        img: 'othersbinancesmartchain',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-wbtc',
-      img: 'wbtc',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ARBITRUM, assetIn: 'WBTC' },
+    ],
+  },
+  {
+    id: 'shapeshift-buy-bsc-stable',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-usdt',
+        img: 'usdt',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'USDT' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-stable',
-      img: 'stablecoin',
-      next: {
-        page: 'sell-arbitrum-stable',
-      },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersarbitrum',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
+      {
+        id: 'shapeshift-dai',
+        img: 'dai',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'DAI' },
+          },
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-sell-arbitrum-stable',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-usdt',
-      img: 'usdt',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ARBITRUM, assetIn: 'USDT' },
+      {
+        id: 'shapeshift-other',
+        img: 'othersbinancesmartchain',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: undefined },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-usdc',
-      img: 'usdc',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ARBITRUM, assetIn: 'USDC' },
+    ],
+  },
+  {
+    id: 'shapeshift-sell',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-erc20',
+        img: 'ethereumarbitrumoptimismpolygon',
+        next: {
+          page: 'shapeshift-sell-erc20',
         },
       },
-    },
-    {
-      id: 'shapeshift-dai',
-      img: 'dai',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ARBITRUM, assetIn: 'DAI' },
+      {
+        id: 'shapeshift-bsc',
+        img: 'binancesmartchain',
+        next: {
+          page: 'shapeshift-sell-bsc',
         },
       },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersarbitrum',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
+    ],
+  },
+  {
+    id: 'shapeshift-sell-erc20',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-ethereum',
+        img: 'ethereum',
+        next: {
+          page: 'shapeshift-sell-ethereum',
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-sell-optimism',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-eth',
-      img: 'eth',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.OPTIMISM, assetIn: 'ETH' },
+      {
+        id: 'shapeshift-arbitrum',
+        img: 'arbitrum',
+        next: {
+          page: 'shapeshift-sell-arbitrum',
         },
       },
-    },
-    {
-      id: 'shapeshift-stable',
-      img: 'stablecoin',
-      next: {
-        page: 'shapeshift-sell-optimism-stable',
-      },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersoptimism',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
+      {
+        id: 'shapeshift-optimism',
+        img: 'optimism',
+        next: {
+          page: 'shapeshift-sell-optimism',
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-sell-optimism-stable',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-usdt',
-      img: 'usdt',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.OPTIMISM, assetIn: 'USDT' },
+      {
+        id: 'shapeshift-polygon',
+        img: 'polygon',
+        disabled: true,
+      },
+    ],
+  },
+  {
+    id: 'shapeshift-sell-ethereum',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-eth',
+        img: 'eth',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'ETH' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-xchf',
-      img: 'xchf',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.OPTIMISM, assetIn: 'XCHF' },
+      {
+        id: 'shapeshift-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'WBTC' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersoptimism',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
+      {
+        id: 'shapeshift-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'shapeshift-sell-ethereum-stable',
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-sell-bsc',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-bnb',
-      img: 'bnb',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'BNB' },
+      {
+        id: 'shapeshift-other',
+        img: 'othersethereum',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-wbtc',
-      img: 'wbtc',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'WBTC' },
+    ],
+  },
+  {
+    id: 'shapeshift-sell-ethereum-stable',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-usdt',
+        img: 'usdt',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'USDT' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-stable',
-      img: 'stablecoin',
-      next: {
-        page: 'shapeshift-sell-bsc-stable',
-      },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersbinancesmartchain',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
+      {
+        id: 'shapeshift-usdc',
+        img: 'usdc',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'USDC' },
+          },
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-sell-bsc-stable',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'shapeshift-usdt',
-      img: 'usdt',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'USDT' },
+      {
+        id: 'shapeshift-dai',
+        img: 'dai',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'DAI' },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-dai',
-      img: 'dai',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'DAI' },
+      {
+        id: 'shapeshift-other',
+        img: 'othersethereum',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
+          },
         },
       },
-    },
-    {
-      id: 'shapeshift-other',
-      img: 'othersbinancesmartchain',
-      next: {
-        page: 'shapeshift-wallets',
-        tiles: ['metamask'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
+    ],
+  },
+  {
+    id: 'shapeshift-sell-arbitrum',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-eth',
+        img: 'eth',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'ETH' },
+          },
         },
       },
-    },
-  ],
-},
-{
-  id: 'shapeshift-wallets',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Crypto directly on your Shapeshift Account!',
-  bottomImage: 'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'metamask',
-      img: 'metamaskrabby',
-      wallet: { type: WalletType.META_MASK },
-    },
-    {
-      id: 'walletconnect',
-      img: 'walletconnect',
-      wallet: { type: WalletType.WALLET_CONNECT },
-    },
-  ],
-},
+      {
+        id: 'shapeshift-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'shapeshift-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'sell-arbitrum-stable',
+        },
+      },
+      {
+        id: 'shapeshift-other',
+        img: 'othersarbitrum',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'shapeshift-sell-arbitrum-stable',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-usdt',
+        img: 'usdt',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'shapeshift-usdc',
+        img: 'usdc',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'shapeshift-dai',
+        img: 'dai',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'shapeshift-other',
+        img: 'othersarbitrum',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'shapeshift-sell-optimism',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-eth',
+        img: 'eth',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'shapeshift-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'shapeshift-sell-optimism-stable',
+        },
+      },
+      {
+        id: 'shapeshift-other',
+        img: 'othersoptimism',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'shapeshift-sell-optimism-stable',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-usdt',
+        img: 'usdt',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'shapeshift-xchf',
+        img: 'xchf',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'XCHF' },
+          },
+        },
+      },
+      {
+        id: 'shapeshift-other',
+        img: 'othersoptimism',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'shapeshift-sell-bsc',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-bnb',
+        img: 'bnb',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'BNB' },
+          },
+        },
+      },
+      {
+        id: 'shapeshift-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'shapeshift-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'shapeshift-sell-bsc-stable',
+        },
+      },
+      {
+        id: 'shapeshift-other',
+        img: 'othersbinancesmartchain',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'shapeshift-sell-bsc-stable',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'shapeshift-usdt',
+        img: 'usdt',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'shapeshift-dai',
+        img: 'dai',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'shapeshift-other',
+        img: 'othersbinancesmartchain',
+        next: {
+          page: 'shapeshift-wallets',
+          tiles: ['metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'shapeshift-wallets',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Crypto directly on your Shapeshift Account!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'metamask',
+        img: 'metamaskrabby',
+        wallet: { type: WalletType.META_MASK },
+      },
+      {
+        id: 'walletconnect',
+        img: 'walletconnect',
+        wallet: { type: WalletType.WALLET_CONNECT },
+      },
+    ],
+  },
 
-// --- WALLETS --- //
-{
-  id: 'wallets',
-  tiles: [
-    {
-      id: 'dfx-wallet',
-      img: 'bitcoinapp',
-      disabled: true,
-    },
-    {
-      id: 'metamask',
-      img: 'metamaskrabby',
-      wallet: { type: WalletType.META_MASK },
-    },
-    {
-      id: 'hw-wallet',
-      img: 'hardwarewallets',
-      next: {
-        page: 'hw-wallets',
+  // --- Liquity --- //
+  {
+    id: 'liquity',
+    header: 'Liquity x DFX',
+    description: 'Buy and sell Crypto directly on your Liquity Account!',
+    bottomImage: 'https://uploads-ssl.webflow.com/5fd883457ba5da4c3822b02c/606a462c6889a25d00ccd9c6_logo-text.svg',
+    tiles: [
+      {
+        id: 'buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
       },
-    },
-    {
-      id: 'alby',
-      img: 'alby',
-      wallet: { type: WalletType.ALBY, blockchain: Blockchain.LIGHTNING },
-    },
-    {
-      id: 'walletconnect',
-      img: 'walletconnect',
-      wallet: { type: WalletType.WALLET_CONNECT },
-    },
-    {
-      id: 'cli',
-      img: 'command',
-      wallet: (params) => ({
-        type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
-      }),
-    },
-  ],
-},
-{
-  id: 'hw-wallets',
-  tiles: [
-    {
-      id: 'bitbox',
-      img: 'bitbox',
-      wallet: (params) => ({
-        type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
-      }),
-    },
-    {
-      id: 'ledger',
-      img: 'ledger',
-      wallet: (params) => ({
-        type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
-      }),
-    },
-    {
-      id: 'trezor',
-      img: 'trezor',
-      wallet: (params) => ({
-        type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
-      }),
-    },
-  ],
-},
+      {
+        id: 'sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
+      },
+    ],
+  },
 
-// Liquity //
-{
-  id: 'liquity',
-  header: 'Liquity x DFX',
-  description: 'Buy and sell Crypto directly on your Liquity Account!',
-  bottomImage: 'https://uploads-ssl.webflow.com/5fd883457ba5da4c3822b02c/606a462c6889a25d00ccd9c6_logo-text.svg',
-  tiles: [
-    {
-      id: 'buy',
-      img: 'kaufen',
-      next: {
-        page: 'buy',
+  // --- Bitget --- //
+  {
+    id: 'bitget',
+    header: 'Bitget x DFX',
+    description: 'Buy and sell Crypto directly on your Bitget Account!',
+    bottomImage: 'https://www.bitget.com/micro-runtime/images/logo-dark.svg',
+    tiles: [
+      {
+        id: 'buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
       },
-    },
-    {
-      id: 'sell',
-      img: 'verkaufen',
-      next: {
-        page: 'sell',
+      {
+        id: 'sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
       },
-    },
-  ],
-},
+    ],
+  },
 
-// Bitget //
-{
-  id: 'bitget',
-  header: 'Bitget x DFX',
-  description: 'Buy and sell Crypto directly on your Bitget Account!',
-  bottomImage: 'https://www.bitget.com/micro-runtime/images/logo-dark.svg',
-  tiles: [
-    {
-      id: 'buy',
-      img: 'kaufen',
-      next: {
-        page: 'buy',
+  // --- GMX --- //
+  {
+    id: 'gmx',
+    header: 'GMX x DFX',
+    description: 'Buy and sell Crypto directly on your GMX Account!',
+    bottomImage: 'https://altcoinsbox.com/wp-content/uploads/2023/03/full-gmx-logo.png',
+    tiles: [
+      {
+        id: 'buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
       },
-    },
-    {
-      id: 'sell',
-      img: 'verkaufen',
-      next: {
-        page: 'sell',
+      {
+        id: 'sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
       },
-    },
-  ],
-},
+    ],
+  },
 
-// GMX //
-{
-  id: 'gmx',
-  header: 'GMX x DFX',
-  description: 'Buy and sell Crypto directly on your GMX Account!',
-  bottomImage: 'https://altcoinsbox.com/wp-content/uploads/2023/03/full-gmx-logo.png',
-  tiles: [
-    {
-      id: 'buy',
-      img: 'kaufen',
-      next: {
-        page: 'buy',
+  // --- Chainreport --- //
+  {
+    id: 'chainreport',
+    header: 'Chainreport x DFX',
+    description: 'Buy and sell Crypto directly on your Account!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/chainreport.png',
+    tiles: [
+      {
+        id: 'buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
       },
-    },
-    {
-      id: 'sell',
-      img: 'verkaufen',
-      next: {
-        page: 'sell',
+      {
+        id: 'sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
       },
-    },
-  ],
-},
+      {
+        id: 'chainreport',
+        img: 'chainreport',
+        next: {
+          page: 'buy',
+        },
+      },
+      {
+        id: 'csvexport',
+        img: 'csvexport',
+        next: {
+          page: 'buy',
+        },
+      },
+    ],
+  },
 
-// Chainreport //
-{
-  id: 'chainreport',
-  header: 'Chainreport x DFX',
-  description: 'Buy and sell Crypto directly on your Account!',
-  bottomImage: 'https://content.dfx.swiss/img/v1/services/chainreport.png',
-  tiles: [
-    {
-      id: 'buy',
-      img: 'kaufen',
-      next: {
-        page: 'buy',
+  // --- LN Bits --- //
+  {
+    id: 'lnbits',
+    header: 'LN Bits x DFX',
+    description: 'Buy and sell Crypto directly on your LN Bits Account!',
+    bottomImage: 'https://lnbits.com/assets/images/logo/logo.svg',
+    tiles: [
+      {
+        id: 'buy',
+        img: 'kaufen',
+        next: {
+          page: 'buy',
+        },
       },
-    },
-    {
-      id: 'sell',
-      img: 'verkaufen',
-      next: {
-        page: 'sell',
+      {
+        id: 'sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sell',
+        },
       },
-    },
-    {
-      id: 'chainreport',
-      img: 'chainreport',
-      next: {
-        page: 'buy',
-      },
-    },
-    {
-      id: 'csvexport',
-      img: 'csvexport',
-      next: {
-        page: 'buy',
-      },
-    },
-  ],
-},
-
-// LN Bits //
-{
-  id: 'lnbits',
-  header: 'LN Bits x DFX',
-  description: 'Buy and sell Crypto directly on your LN Bits Account!',
-  bottomImage: 'https://lnbits.com/assets/images/logo/logo.svg',
-  tiles: [
-    {
-      id: 'buy',
-      img: 'kaufen',
-      next: {
-        page: 'buy',
-      },
-    },
-    {
-      id: 'sell',
-      img: 'verkaufen',
-      next: {
-        page: 'sell',
-      },
-    },
-  ],
-},
-
+    ],
+  },
 ];
