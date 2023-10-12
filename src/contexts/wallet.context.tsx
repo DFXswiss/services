@@ -48,7 +48,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const api = useSessionContext();
   const { isInitialized: isParamsInitialized, params: appParams } = useAppHandlingContext();
   const { getSignMessage } = useAuth();
-  const { hasBalance, getBalances: getParamBalances, readBalances } = useBalanceContext();
+  const { readBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
 
   const [isInitialized, setIsInitialized] = useState(false);
@@ -126,61 +126,6 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     return session;
   }
 
-  // TODO: move tho sell screen?
-  // async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {
-  //   switch (activeWallet) {
-  //     case WalletType.META_MASK:
-  //       return (await Promise.all(assets.map((asset: Asset) => metaMask.readBalance(asset, mmAddress)))).filter(
-  //         (b) => b.amount > 0,
-  //       );
-
-  //     case WalletType.ALBY:
-  //     case WalletType.LEDGER_BTC:
-  //     case WalletType.LEDGER_ETH:
-  //     case WalletType.BITBOX_BTC:
-  //     case WalletType.BITBOX_ETH:
-  //     case WalletType.TREZOR_BTC:
-  //     case WalletType.TREZOR_ETH:
-  //     case WalletType.CLI_BTC:
-  //     case WalletType.CLI_ETH:
-  //     case WalletType.WALLET_CONNECT:
-  //       // no balance available
-  //       return undefined;
-
-  //     default:
-  //       return getParamBalances(assets);
-  //   }
-  // }
-
-  // TODO: move to sell screen
-  // async function sendTransaction(sell: Sell): Promise<string> {
-  //   switch (activeWallet) {
-  //     case WalletType.META_MASK:
-  //       if (!mmAddress) throw new Error('Address is not defined');
-
-  //       return metaMask.createTransaction(new BigNumber(sell.amount), sell.asset, mmAddress, sell.depositAddress);
-
-  //     case WalletType.ALBY:
-  //       if (!sell.paymentRequest) throw new Error('Payment request not defined');
-
-  //       return alby.sendPayment(sell.paymentRequest).then((p) => p.preimage);
-
-  //     case WalletType.LEDGER_BTC:
-  //     case WalletType.LEDGER_ETH:
-  //     case WalletType.BITBOX_BTC:
-  //     case WalletType.BITBOX_ETH:
-  //     case WalletType.TREZOR_BTC:
-  //     case WalletType.TREZOR_ETH:
-  //     case WalletType.CLI_BTC:
-  //     case WalletType.CLI_ETH:
-  //     case WalletType.WALLET_CONNECT:
-  //       throw new Error('Not supported yet');
-
-  //     default:
-  //       throw new Error('No wallet connected');
-  //   }
-  // }
-
   const context: WalletInterface = useMemo(
     () => ({
       isInitialized: isInitialized && isSessionInitialized && isParamsInitialized,
@@ -189,17 +134,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       login,
       activeWallet,
     }),
-    [
-      isInitialized,
-      isSessionInitialized,
-      isParamsInitialized,
-      activeWallet,
-      activeBlockchain,
-      api,
-      hasBalance,
-      getParamBalances,
-      appParams,
-    ],
+    [isInitialized, isSessionInitialized, isParamsInitialized, activeWallet, activeBlockchain, api, appParams],
   );
 
   return <WalletContext.Provider value={context}>{props.children}</WalletContext.Provider>;
