@@ -3,7 +3,6 @@ import { StyledButton, StyledButtonWidth, StyledVerticalStack } from '@dfx.swiss
 import { useState } from 'react';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { WalletType, useWalletContext } from '../../../contexts/wallet.context';
-import { useDeferredPromise } from '../../../hooks/deferred-promise.hook';
 import { BitboxWallet, useBitbox } from '../../../hooks/wallets/bitbox.hook';
 import { ConnectBase } from '../connect-base';
 import { Account, ConnectContentProps, ConnectError, ConnectInstructions, ConnectProps } from '../connect-shared';
@@ -23,27 +22,13 @@ export default function ConnectBitbox(props: Props): JSX.Element {
   const { activeWallet } = useWalletContext();
 
   const [pairingCode, setPairingCode] = useState<string>();
-  const [createPairingPromise, pairingPromise] = useDeferredPromise<void>();
 
-  async function getAccount(_: Blockchain, isReconnect: boolean): Promise<Account> {
+  async function getAccount(blockchain: Blockchain, isReconnect: boolean): Promise<Account> {
     const address =
       isReconnect && session?.address
         ? session.address
-        : await connect(props.wallet, onPairing).catch((e) => {
-            setPairingCode(undefined);
-            throw e;
-          });
+        : await connect(props.wallet, blockchain, setPairingCode).finally(() => setPairingCode(undefined));
     return { address };
-  }
-
-  async function onPairing(code: string) {
-    setPairingCode(code);
-    return createPairingPromise();
-  }
-
-  function onPairingConfirmed() {
-    pairingPromise?.resolve();
-    setPairingCode(undefined);
   }
 
   return (
@@ -51,8 +36,8 @@ export default function ConnectBitbox(props: Props): JSX.Element {
       isSupported={isSupported}
       supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
-      signMessage={(msg) => signMessage(msg, props.wallet)}
-      renderContent={(p) => <Content pairingCode={pairingCode} onPairingConfirmed={onPairingConfirmed} {...p} />}
+      signMessage={(msg, _, chain) => signMessage(props.wallet, chain, msg)}
+      renderContent={(p) => <Content pairingCode={pairingCode} {...p} />}
       autoConnect={activeWallet === props.wallet}
       {...props}
     />
@@ -64,8 +49,7 @@ function Content({
   isConnecting,
   error,
   pairingCode,
-  onPairingConfirmed,
-}: ConnectContentProps & { pairingCode?: string; onPairingConfirmed: () => void }): JSX.Element {
+}: ConnectContentProps & { pairingCode?: string }): JSX.Element {
   const { translate } = useSettingsContext();
 
   const connectSteps = [
@@ -79,7 +63,6 @@ function Content({
   const pairSteps = [
     'Check that the pairing code below matches the one displayed on your BitBox',
     'Confirm the pairing code on your BitBox',
-    'Click on "Continue"',
   ];
 
   const steps = pairingCode ? pairSteps : connectSteps;
@@ -93,22 +76,24 @@ function Content({
           img={pairingCode ? undefined : 'https://content.dfx.swiss/img/v1/services/bitboxready_en.png'}
         />
 
-        {pairingCode && (
+        {pairingCode ? (
           <div>
             <h2 className="text-dfxGray-700">{translate('screens/home', 'Pairing code')}:</h2>
             <p className="text-dfxGray-700">{pairingCode}</p>
           </div>
+        ) : (
+          <>
+            {error && <ConnectError error={error} />}
+
+            <StyledButton
+              label={translate('general/actions', pairingCode ? 'Next' : 'Connect')}
+              onClick={() => connect()}
+              width={StyledButtonWidth.MIN}
+              className="self-center"
+              isLoading={isConnecting}
+            />
+          </>
         )}
-
-        {error && <ConnectError error={error} />}
-
-        <StyledButton
-          label={translate('general/actions', pairingCode ? 'Next' : 'Connect')}
-          onClick={pairingCode ? onPairingConfirmed : () => connect()}
-          width={StyledButtonWidth.MIN}
-          className="self-center"
-          isLoading={!pairingCode && isConnecting}
-        />
       </StyledVerticalStack>
     </>
   );
