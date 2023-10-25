@@ -6,6 +6,7 @@ import {
   StyledButtonWidth,
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
+import { useState } from 'react';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { WalletType } from '../../../contexts/wallet.context';
 import { useWalletConnect } from '../../../hooks/wallets/wallet-connect.hook';
@@ -25,8 +26,13 @@ export default function ConnectWalletConnect(props: ConnectProps): JSX.Element {
   const { connect, signMessage } = useWalletConnect();
   const { session } = useAuthContext();
 
+  const [connectUri, setConnectUri] = useState<string>();
+
   async function getAccount(blockchain: Blockchain, isReconnect: boolean): Promise<Account> {
-    const address = isReconnect && session?.address ? session.address : await connect(blockchain);
+    const address =
+      isReconnect && session?.address
+        ? session.address
+        : await connect(blockchain, setConnectUri).finally(() => setConnectUri(undefined));
     return { address };
   }
 
@@ -36,19 +42,23 @@ export default function ConnectWalletConnect(props: ConnectProps): JSX.Element {
       supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
       signMessage={(msg, addr, chain) => signMessage(msg, addr, chain)}
-      renderContent={Content}
+      renderContent={(p) => <Content connectUri={connectUri} {...p} />}
       autoConnect
       {...props}
     />
   );
 }
 
-function Content({ back, error }: ConnectContentProps): JSX.Element {
+function Content({ back, error, connectUri }: ConnectContentProps & { connectUri?: string }): JSX.Element {
   const { translate } = useSettingsContext();
 
   const message = 'Please confirm the connection in your wallet.';
 
-  return error ? (
+  return connectUri ? (
+    <div>
+      <p className="text-dfxGray-700">{connectUri}</p>
+    </div>
+  ) : error ? (
     <>
       <ConnectError error={error} />
 
