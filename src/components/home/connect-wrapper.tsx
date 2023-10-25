@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import { WalletType } from '../../contexts/wallet.context';
 import { ConnectProps } from './connect-shared';
+import { ConnectTaro } from './wallet/connect-taro';
 
 const ConnectAlby = lazy(() => import('./wallet/connect-alby'));
 const ConnectBitbox = lazy(() => import('./wallet/connect-bitbox'));
@@ -33,6 +34,9 @@ export function ConnectWrapper(props: ConnectProps): JSX.Element {
     case WalletType.CLI_BTC:
     case WalletType.CLI_ETH:
       return <ConnectCli {...props} />;
+
+    case WalletType.DFX_TARO:
+      return <ConnectTaro {...props} />;
 
     case WalletType.WALLET_CONNECT:
       return <ConnectWalletConnect {...props} />;
