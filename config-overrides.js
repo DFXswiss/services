@@ -26,6 +26,7 @@ module.exports = function override(config, env) {
       ? {
           publicPath: process.env.PUBLIC_URL + process.env.CUSTOM_CHUNK_PATH,
           chunkFilename: config.output.chunkFilename.replace('static/js', `v${version}-chunks`),
+          webassemblyModuleFilename: `v${version}-chunks/[hash].module.wasm`,
         }
       : undefined),
   };
