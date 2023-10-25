@@ -16,6 +16,7 @@ export enum WalletType {
   TREZOR_ETH = 'TrezorEth',
   CLI_BTC = 'CliBtc',
   CLI_ETH = 'CliEth',
+  DFX_BITCOIN = 'DfxBitcoin',
   WALLET_CONNECT = 'WalletConnect',
 }
 

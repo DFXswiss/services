@@ -1,7 +1,6 @@
 import {
   Asset,
   BankAccount,
-  Blockchain,
   Fiat,
   Sell,
   SellPaymentInfo,
@@ -93,9 +92,7 @@ export function SellInfoScreen(): JSX.Element {
   }, [bankAccountParam, getAccount, bankAccounts, countries]);
 
   useEffect(() => {
-    // TODO: remove LN check with DEV-1679
-    if (!(asset && asset.blockchain === Blockchain.LIGHTNING && currency && bankAccount && (amountIn || amountOut)))
-      return;
+    if (!(asset && currency && bankAccount && (amountIn || amountOut))) return;
 
     const request: SellPaymentInfo = { asset, currency, iban: bankAccount?.iban };
     if (amountIn) {

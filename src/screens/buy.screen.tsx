@@ -29,7 +29,6 @@ import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PaymentInformation, PaymentInformationContent } from '../components/payment/payment-information';
-import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -63,12 +62,11 @@ export function BuyScreen(): JSX.Element {
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assets, assetIn, assetOut, amountIn, blockchain, flags } = useAppParams();
+  const { assets, assetIn, assetOut, amountIn, blockchain, flags, paymentMethod } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isAllowedToBuy } = useKycHelper();
   const { user } = useUserContext();
   const { blockchain: walletBlockchain } = useWalletContext();
-  const { isEmbedded } = useAppHandlingContext();
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -80,7 +78,9 @@ export function BuyScreen(): JSX.Element {
   const [isContinue, setIsContinue] = useState(false);
 
   const availablePaymentMethods = [BuyPaymentMethod.BANK];
-  flags?.includes(BuyPaymentMethod.CARD) && !isEmbedded && availablePaymentMethods.push(BuyPaymentMethod.CARD);
+  flags?.includes(BuyPaymentMethod.CARD) && availablePaymentMethods.push(BuyPaymentMethod.CARD);
+  const defaultPaymentMethod =
+    availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
 
   // form
   const {
@@ -88,7 +88,7 @@ export function BuyScreen(): JSX.Element {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<FormData>({ defaultValues: { paymentMethod: BuyPaymentMethod.BANK } });
+  } = useForm<FormData>({ defaultValues: { paymentMethod: defaultPaymentMethod } });
 
   const data = useWatch({ control });
   const selectedCurrency = useWatch({ control, name: 'currency' });
