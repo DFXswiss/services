@@ -3258,4 +3258,40 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
+
+  // --- Cake Wallet --- //
+  {
+    id: 'cakewallet',
+    header: 'Cake Wallet x DFX',
+    description: 'Buy and sell Crypto directly on your Cake Wallet!',
+    bottomImage: 'https://cakewallet.com/assets/image/cake_wallet_logo.png',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'cakewallet-wallets',
+          tiles: ['walletconnect_mit_nur_Cake_Wallet'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+          },
+        },
+      },
+    ],
+  },
+
+ {
+  id: 'cakewallet-wallets',
+  header: 'Cake Wallet x DFX',
+  description: 'Buy and sell Crypto directly on your Cake Wallet!',
+  bottomImage: 'https://cakewallet.com/assets/image/cake_wallet_logo.png',
+  tiles: [
+    {
+      id: 'walletconnect_mit_nur_Cake_Wallet',
+      img: 'cakewalletdraft',
+      wallet: { type: WalletType.WALLET_CONNECT },
+    },
+  ],
+},
 ];
