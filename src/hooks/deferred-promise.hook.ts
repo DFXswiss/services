@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { AbortError } from '../util/abort-error';
 
 type DeferredPromise<T> = {
   resolve: (value: T) => void;
@@ -8,6 +9,10 @@ type DeferredPromise<T> = {
 
 export function useDeferredPromise<T>(): [() => Promise<T>, DeferredPromise<T> | null] {
   const deferRef = useRef<DeferredPromise<T> | null>(null);
+
+  useEffect(() => {
+    return () => deferRef.current?.reject(new AbortError());
+  }, []);
 
   function defer(): Promise<T> {
     const deferred = {} as DeferredPromise<T>;

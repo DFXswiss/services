@@ -922,7 +922,7 @@ export const FeatureTree: Page[] = [
       {
         id: 'dfx-wallet',
         img: 'bitcoinapp',
-        wallet: { type: WalletType.DFX_BITCOIN, blockchain: Blockchain.LIGHTNING },
+        wallet: { type: WalletType.DFX_TARO, blockchain: Blockchain.LIGHTNING },
       },
       {
         id: 'metamask',

@@ -49,6 +49,7 @@ import useDebounce from '../hooks/debounce.hook';
 import { useKycDataGuard, useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
+import { useSellHelper } from '../hooks/sell-helper.hook';
 import { isDefined } from '../util/utils';
 
 interface FormData {
@@ -58,7 +59,7 @@ interface FormData {
   amount: string;
 }
 
-export function SellScreen(): JSX.Element {
+export default function SellScreen(): JSX.Element {
   useSessionGuard();
   useKycDataGuard('/profile');
   const { copy } = useClipboard();
@@ -66,7 +67,8 @@ export function SellScreen(): JSX.Element {
   const { closeServices } = useAppHandlingContext();
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
-  const { getBalances, blockchain: walletBlockchain, activeWallet, sendTransaction } = useWalletContext();
+  const { blockchain: walletBlockchain, activeWallet } = useWalletContext();
+  const { getBalances, sendTransaction } = useSellHelper();
   const { availableBlockchains } = useSessionContext();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();

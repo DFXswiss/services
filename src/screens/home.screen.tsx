@@ -1,59 +1,37 @@
 import { Blockchain, useSessionContext, useUserContext } from '@dfx.swiss/react';
-import {
-  DfxIcon,
-  IconVariant,
-  SpinnerSize,
-  StyledButton,
-  StyledButtonColor,
-  StyledButtonWidth,
-  StyledCheckboxRow,
-  StyledLoadingSpinner,
-  StyledVerticalStack,
-} from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import { Suspense, useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
-import { ConnectHint } from '../components/home/connect-hint';
-import { InstallHint } from '../components/home/install-hint';
+import { ConnectWrapper } from '../components/home/connect-wrapper';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
-import { WalletType, useWalletContext } from '../contexts/wallet.context';
+import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
-import { useDeferredPromise } from '../hooks/deferred-promise.hook';
 import { Tile, Wallet, isWallet, useFeatureTree } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useResizeObserver } from '../hooks/resize-observer.hook';
-import { useStore } from '../hooks/store.hook';
-import { AbortError } from '../util/abort-error';
 import { Stack } from '../util/stack';
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
-  const { isLoggedIn, isProcessing, logout } = useSessionContext();
-  const { isUserLoading, user } = useUserContext();
+  const { isLoggedIn } = useSessionContext();
+  const { user } = useUserContext();
   const { isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
-  const { isInitialized, getInstalledWallets, login, switchBlockchain, activeWallet } = useWalletContext();
-  const { showsSignatureInfo } = useStore();
+  const { isInitialized, activeWallet } = useWalletContext();
   const { navigate } = useNavigation();
   const { getPage, getWallet, setOptions } = useFeatureTree();
   const appParams = useAppParams();
 
-  const [isConnecting, setIsConnecting] = useState(false);
   const [connectTo, setConnectTo] = useState<Wallet>();
   const [loginSuccessful, setLoginSuccessful] = useState(false);
-  const [connectError, setConnectError] = useState<string>();
-  const [showInstallHint, setShowInstallHint] = useState<WalletType>();
-  const [createSignHint, signHint] = useDeferredPromise<void>();
-  const [showSignHint, setShowSignHint] = useState(false);
-  const [createPairing, pairing] = useDeferredPromise<void>();
-  const [pairingCode, setPairingCode] = useState<string>();
   const [pages, setPages] = useState(new Stack<{ page: string; allowedTiles: string[] | undefined }>());
-
-  const autoConnectWallets = [WalletType.META_MASK, WalletType.ALBY, WalletType.WALLET_CONNECT];
 
   const currentPageId = pages.current?.page;
   const allowedTiles = pages.current?.allowedTiles;
   const currentPage = getPage(currentPageId, allowedTiles);
+
+  const selectedBlockchain = (connectTo?.blockchain ?? appParams.blockchain) as Blockchain | undefined;
 
   useEffect(() => {
     if (isInitialized && isLoggedIn && user && (!activeWallet || loginSuccessful)) {
@@ -66,53 +44,11 @@ export function HomeScreen(): JSX.Element {
     mode && setPages((p) => p.push({ page: mode, allowedTiles: undefined }));
   }, [appParams.mode]);
 
-  // signature hint
-  async function confirmSignHint(): Promise<void> {
-    if (!showsSignatureInfo.get()) return;
-
-    setShowSignHint(true);
-    return createSignHint();
-  }
-
-  function signHintConfirmed(hide: boolean) {
-    showsSignatureInfo.set(!hide);
-    setShowSignHint(false);
-    signHint?.resolve();
-  }
-
-  function signHintRejected() {
-    setShowSignHint(false);
-    signHint?.reject(new AbortError('User cancelled'));
-  }
-
-  function onHintConfirmed() {
-    setShowInstallHint(undefined);
-    setConnectTo(undefined);
-  }
-
-  // pairing
-  async function confirmPairing(code: string): Promise<void> {
-    setPairingCode(code);
-    return createPairing();
-  }
-
-  function pairingConfirmed() {
-    pairing?.resolve();
-    setPairingCode(undefined);
-  }
-
-  function pairingRejected() {
-    setPairingCode(undefined);
-    pairing?.reject(new AbortError('User cancelled'));
-  }
-
   // tile handling
   function handleNext(tile: Tile) {
     if (isWallet(tile)) {
       const wallet = getWallet(tile, appParams);
       setConnectTo(wallet);
-
-      if (autoConnectWallets.includes(wallet.type) || activeWallet === wallet.type) connectWallet(wallet);
     } else if (tile.next) {
       if (tile.next.options) setOptions(tile.next.options);
       const page = { page: tile.next.page, allowedTiles: tile.next.tiles };
@@ -124,66 +60,11 @@ export function HomeScreen(): JSX.Element {
   }
 
   function handleBack() {
-    if (showInstallHint) {
-      onHintConfirmed();
-    } else if (showSignHint) {
-      signHintRejected();
-    } else if (pairingCode) {
-      pairingRejected();
-      setIsConnecting(false);
-    } else if (connectTo) {
-      setConnectError(undefined);
-      setIsConnecting(false);
+    if (connectTo) {
       setConnectTo(undefined);
     } else {
       setPages((p) => p.pop((i) => getPage(i.page, i.allowedTiles)?.tiles?.length === 1));
     }
-  }
-
-  function handleStart(address?: string, signature?: string) {
-    connectTo && connectWallet(connectTo, address, signature);
-  }
-
-  // connect
-  async function connectWallet(wallet: Wallet, address?: string, signature?: string) {
-    connect(wallet, address, signature)
-      .then(() => setPages(new Stack()))
-      .catch(console.error);
-  }
-
-  async function connect(wallet: Wallet, address?: string, signature?: string) {
-    const installedWallets = await getInstalledWallets();
-    if (installedWallets.some((w) => w === wallet.type)) {
-      setIsConnecting(true);
-      setConnectError(undefined);
-
-      return doLogin(wallet.type, wallet.blockchain, address, signature)
-        .then(() => setLoginSuccessful(true))
-        .catch((e) => {
-          if (e instanceof AbortError) {
-            setConnectTo(undefined);
-          } else {
-            setConnectError(e.message);
-          }
-
-          throw e;
-        })
-        .finally(() => {
-          setIsConnecting(false);
-          setPairingCode(undefined);
-        });
-    } else {
-      setShowInstallHint(wallet.type);
-      throw new Error('Wallet not installed');
-    }
-  }
-
-  async function doLogin(wallet: WalletType, blockchain?: Blockchain, address?: string, signature?: string) {
-    const selectedChain = blockchain ?? (appParams.blockchain as Blockchain);
-
-    return activeWallet === wallet
-      ? selectedChain && switchBlockchain(selectedChain)
-      : logout().then(() => login(wallet, confirmSignHint, confirmPairing, selectedChain, address, signature));
   }
 
   function start(kycComplete: boolean) {
@@ -204,26 +85,21 @@ export function HomeScreen(): JSX.Element {
       backButton={currentPageId != null && currentPageId !== appParams.mode}
       onBack={currentPageId ? handleBack : undefined}
     >
-      {isProcessing || isUserLoading || !currentPage ? (
+      {!isInitialized || !currentPage ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
       ) : (
         <div className="z-1 flex flex-grow flex-col items-center w-full">
-          {showInstallHint ? (
-            <InstallHint type={showInstallHint} onConfirm={onHintConfirmed} />
-          ) : showSignHint ? (
-            <SignHint onConfirm={signHintConfirmed} />
-          ) : connectTo ? (
-            <ConnectHint
-              type={connectTo.type}
-              isLoading={isConnecting}
-              error={connectError}
-              pairingCode={pairingCode}
-              onPairingConfirmed={pairingConfirmed}
-              onStart={handleStart}
-              onBack={handleBack}
-            />
+          {connectTo ? (
+            <Suspense fallback={<StyledLoadingSpinner size={SpinnerSize.LG} />}>
+              <ConnectWrapper
+                wallet={connectTo.type}
+                blockchain={selectedBlockchain}
+                onLogin={() => setLoginSuccessful(true)}
+                onCancel={() => setConnectTo(undefined)}
+              />
+            </Suspense>
           ) : (
             <>
               <div className="flex self-start mb-6">
@@ -286,35 +162,5 @@ function TileComponent({ tile, onClick }: { tile: Tile; onClick: (t: Tile) => vo
         </div>
       )}
     </div>
-  );
-}
-
-function SignHint({ onConfirm }: { onConfirm: (hide: boolean) => void }): JSX.Element {
-  const { translate } = useSettingsContext();
-
-  const [isChecked, setIsChecked] = useState(false);
-
-  return (
-    <StyledVerticalStack gap={5} center>
-      <StyledVerticalStack center>
-        <DfxIcon icon={IconVariant.SIGNATURE_POPUP} />
-        <h2 className="text-dfxGray-700">
-          {translate(
-            'screens/home',
-            'Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.',
-          )}
-        </h2>
-      </StyledVerticalStack>
-      <StyledCheckboxRow isChecked={isChecked} onChange={setIsChecked} centered>
-        {translate('screens/home', "Don't show this again.")}
-      </StyledCheckboxRow>
-
-      <StyledButton
-        width={StyledButtonWidth.MD}
-        color={StyledButtonColor.RED}
-        label="OK"
-        onClick={() => onConfirm(isChecked)}
-      />
-    </StyledVerticalStack>
   );
 }

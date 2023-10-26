@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { GetInfoResponse, SendPaymentResponse, WebLNProvider } from 'webln';
 import { AbortError } from '../../util/abort-error';
 import { delay } from '../../util/utils';
@@ -72,11 +72,14 @@ export function useAlby(): AlbyInterface {
     throw e;
   }
 
-  return {
-    isInstalled,
-    isEnabled,
-    enable,
-    signMessage,
-    sendPayment,
-  };
+  return useMemo(
+    () => ({
+      isInstalled,
+      isEnabled,
+      enable,
+      signMessage,
+      sendPayment,
+    }),
+    [],
+  );
 }
