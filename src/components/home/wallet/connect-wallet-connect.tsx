@@ -77,7 +77,7 @@ function Content({
             className={`grid ${size && size > 600 ? 'grid-cols-6' : 'grid-cols-4'} gap-5 w-full mb-3`}
           >
             {wallets.map((w) => (
-              <WalletComponent key={w.id} wallet={w} />
+              <WalletComponent key={w.id} wallet={w} connectUri={connectUri} />
             ))}
           </div>
         </>
@@ -105,7 +105,7 @@ function Content({
   );
 }
 
-function WalletComponent({ wallet }: { wallet: DeepWallet }): JSX.Element {
+function WalletComponent({ wallet, connectUri }: { wallet: DeepWallet; connectUri: string }): JSX.Element {
   return (
     <div>
       <div
@@ -115,7 +115,7 @@ function WalletComponent({ wallet }: { wallet: DeepWallet }): JSX.Element {
         <img
           src={wallet.imageUrl}
           className={'cursor-pointer h-full'}
-          onClick={() => window.open(wallet.deepLink, '_self')}
+          onClick={() => window.open(`${wallet.deepLink}wc?uri=${encodeURIComponent(connectUri)}`, '_self')}
         />
       </div>
       <div className="text-dfxGray-700 text-sm mt-1 text-ellipsis overflow-hidden whitespace-nowrap">{wallet.name}</div>
