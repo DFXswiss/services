@@ -60,17 +60,21 @@ function Content({
   const { translate } = useSettingsContext();
 
   return connectUri ? (
-    <div>
+    <>
       <h2 className="text-dfxGray-700 mb-4">{translate('screens/home', 'Scan with your wallet')}</h2>
       <QrCopy data={connectUri} />
 
-      <h2 className="text-dfxGray-700 my-4 ">{translate('screens/home', 'Connect your wallet')}</h2>
-      <div className="grid grid-cols-4 gap-5 w-full mb-3">
-        {wallets.map((w) => (
-          <WalletComponent key={w.id} wallet={w} />
-        ))}
-      </div>
-    </div>
+      {wallets.length && (
+        <>
+          <h2 className="text-dfxGray-700 mt-8 mb-4 ">{translate('screens/home', 'Connect your wallet')}</h2>
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-5 w-full mb-3">
+            {wallets.map((w) => (
+              <WalletComponent key={w.id} wallet={w} />
+            ))}
+          </div>
+        </>
+      )}
+    </>
   ) : error ? (
     <>
       <ConnectError error={error} />
