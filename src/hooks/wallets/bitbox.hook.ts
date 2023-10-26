@@ -1,6 +1,7 @@
 import { Blockchain } from '@dfx.swiss/react';
 import { PairedBitBox, bitbox02ConnectWebHID } from 'bitbox-api';
 import { hasWebHID } from 'bitbox-api/webhid';
+import { useMemo } from 'react';
 import KeyPath from '../../config/key-path';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
