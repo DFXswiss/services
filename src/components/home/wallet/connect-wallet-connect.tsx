@@ -51,39 +51,22 @@ export default function ConnectWalletConnect(props: ConnectProps): JSX.Element {
   );
 }
 
-function WalletComponent({ wallet }: { wallet: DeepWallet }): JSX.Element {
-  return (
-    <div>
-      <div
-        className="relative aspect-square overflow-hidden"
-        style={{ borderRadius: '20%', boxShadow: '0px 0px 5px 3px rgba(0, 0, 0, 0.25)' }}
-      >
-        <img
-          src={wallet.imageUrl}
-          className={'cursor-pointer h-full'}
-          onClick={() => window.open(wallet.deepLink, '_self')}
-        />
-      </div>
-      <div className="text-dfxGray-700 text-sm mt-1 text-ellipsis overflow-hidden whitespace-nowrap">{wallet.name}</div>
-    </div>
-  );
-}
-
 function Content({
   back,
   error,
   connectUri,
   wallets,
-}: ConnectContentProps & { connectUri?: string; wallets?: DeepWallet[] }): JSX.Element {
+}: ConnectContentProps & { connectUri?: string; wallets: DeepWallet[] }): JSX.Element {
   const { translate } = useSettingsContext();
 
   return connectUri ? (
     <div>
       <h2 className="text-dfxGray-700 mb-4">{translate('screens/home', 'Scan with your wallet')}</h2>
       <QrCopy data={connectUri} />
-      <h2 className="text-dfxGray-700 mb-4 mt-4 ">{translate('screens/home', 'Connect your wallet')}</h2>
+
+      <h2 className="text-dfxGray-700 my-4 ">{translate('screens/home', 'Connect your wallet')}</h2>
       <div className="grid grid-cols-4 gap-5 w-full mb-3">
-        {wallets?.map((w) => (
+        {wallets.map((w) => (
           <WalletComponent key={w.id} wallet={w} />
         ))}
       </div>
@@ -107,5 +90,23 @@ function Content({
       </div>
       <p className="text-dfxGray-700">{translate('screens/home', 'Please confirm the connection in your wallet.')}</p>
     </>
+  );
+}
+
+function WalletComponent({ wallet }: { wallet: DeepWallet }): JSX.Element {
+  return (
+    <div>
+      <div
+        className="relative aspect-square overflow-hidden"
+        style={{ borderRadius: '20%', boxShadow: '0px 0px 5px 3px rgba(0, 0, 0, 0.25)' }}
+      >
+        <img
+          src={wallet.imageUrl}
+          className={'cursor-pointer h-full'}
+          onClick={() => window.open(wallet.deepLink, '_self')}
+        />
+      </div>
+      <div className="text-dfxGray-700 text-sm mt-1 text-ellipsis overflow-hidden whitespace-nowrap">{wallet.name}</div>
+    </div>
   );
 }
