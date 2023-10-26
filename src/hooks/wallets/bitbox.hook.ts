@@ -1,6 +1,6 @@
 import { BitBox02API, constants, getDevicePath, getKeypathFromString } from 'bitbox02-api';
 import { useMemo } from 'react';
-import KeyPath from '../../config/key-path';
+import KeyPath, { BitcoinAddressType } from '../../config/key-path';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
@@ -111,12 +111,12 @@ export function useBitbox(): BitboxInterface {
   }
 
   async function getBtcAddress(bitBox: BitBox02API): Promise<string> {
-    const keyPath = getKeypathFromString(KeyPath.BTC.address);
+    const keyPath = getKeypathFromString(KeyPath.BTC(BitcoinAddressType.NATIVE_SEGWIT).address(0));
     return bitBox.btcDisplayAddressSimple(coinBtc, keyPath, addressTypeBtc, false);
   }
 
   async function getEthAddress(bitBox: BitBox02API): Promise<string> {
-    return bitBox.ethDisplayAddress(KeyPath.ETH.address, false);
+    return bitBox.ethDisplayAddress(KeyPath.ETH.address(0), false);
   }
 
   async function signMessage(msg: string, wallet: BitboxWallet): Promise<string> {
@@ -140,14 +140,14 @@ export function useBitbox(): BitboxInterface {
   }
 
   async function signBtcMessage(bitBox: BitBox02API, msg: string): Promise<string> {
-    const keyPath = getKeypathFromString(KeyPath.BTC.address);
+    const keyPath = getKeypathFromString(KeyPath.BTC(BitcoinAddressType.NATIVE_SEGWIT).address(0));
     const { electrumSignature } = await bitBox.btcSignMessage(coinBtc, addressTypeBtc, keyPath, Buffer.from(msg));
     return Buffer.from(electrumSignature).toString('base64');
   }
 
   async function signEthMessage(bitBox: BitBox02API, msg: string): Promise<string> {
     const { r, s, v } = await bitBox.ethSignMessage({
-      keypath: KeyPath.ETH.address,
+      keypath: KeyPath.ETH.address(0),
       message: Buffer.from(msg),
     });
     return `0x${Buffer.from([...Array.from(r), ...Array.from(s), ...Array.from(v)]).toString('hex')}`;

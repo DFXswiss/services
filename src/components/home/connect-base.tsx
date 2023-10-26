@@ -13,7 +13,7 @@ interface Props extends ConnectProps {
   isSupported: () => boolean | Promise<boolean>;
   supportedBlockchains: { [k in WalletType]?: Blockchain[] };
   getAccount: (blockchain: Blockchain, isReconnect: boolean) => Promise<Account>;
-  signMessage: (msg: string, address: string, blockchain: Blockchain) => Promise<string>;
+  signMessage: (msg: string, address: string, blockchain: Blockchain, index?: number) => Promise<string>;
   renderContent: (props: ConnectContentProps) => JSX.Element;
   autoConnect?: boolean;
 }
@@ -43,6 +43,7 @@ export function ConnectBase({
   const [addr, setAddr] = useState<string>();
   const [msg, setMsg] = useState<string>();
   const [chain, setChain] = useState<Blockchain>();
+  const [index, setIndex] = useState<number>();
 
   useEffect(() => {
     init();
@@ -84,17 +85,25 @@ export function ConnectBase({
           'session' in account
             ? setSession(wallet, account.blockchain, account.session)
             : login(wallet, account.address, account.blockchain, (a, m) =>
-                account.signature ? Promise.resolve(account.signature) : onSignMessage(a, account.blockchain, m),
+                account.signature
+                  ? Promise.resolve(account.signature)
+                  : onSignMessage(a, account.blockchain, m, account.index),
               ),
         );
   }
 
-  async function onSignMessage(address: string, blockchain: Blockchain, message: string): Promise<string> {
-    if (!showsSignatureInfo.get()) return signMessage(message, address, blockchain);
+  async function onSignMessage(
+    address: string,
+    blockchain: Blockchain,
+    message: string,
+    index?: number,
+  ): Promise<string> {
+    if (!showsSignatureInfo.get()) return signMessage(message, address, blockchain, index);
 
     setAddr(address);
     setChain(blockchain);
     setMsg(message);
+    setIndex(index);
     return createSignMessagePromise();
   }
 
@@ -103,14 +112,16 @@ export function ConnectBase({
     address: string,
     blockchain: Blockchain,
     message: string,
+    index?: number,
   ): Promise<void> {
     showsSignatureInfo.set(!hide);
     setAddr(undefined);
     setMsg(undefined);
     setChain(undefined);
+    setIndex(undefined);
 
     try {
-      const signature = await signMessage(message, address, blockchain);
+      const signature = await signMessage(message, address, blockchain, index);
       signMessagePromise?.resolve(signature);
     } catch (e) {
       signMessagePromise?.reject(e);
@@ -122,7 +133,7 @@ export function ConnectBase({
   ) : showInstallHint ? (
     <InstallHint type={wallet} onConfirm={onCancel} />
   ) : addr && msg && chain ? (
-    <SignHint onConfirm={(h) => onSignHintConfirmed(h, addr, chain, msg)} />
+    <SignHint onConfirm={(h) => onSignHintConfirmed(h, addr, chain, msg, index)} />
   ) : undefined;
 
   return (

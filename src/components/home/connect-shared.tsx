@@ -6,6 +6,7 @@ export type Account =
   | {
       address: string;
       signature?: string;
+      index?: number;
     }
   | { session: string };
 

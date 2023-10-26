@@ -1,6 +1,6 @@
 import TrezorConnect from '@trezor/connect-web';
 import { useEffect, useMemo, useState } from 'react';
-import KeyPath from '../../config/key-path';
+import KeyPath, { BitcoinAddressType } from '../../config/key-path';
 import { WalletType } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
 
@@ -45,8 +45,11 @@ export function useTrezor(): TrezorInterface {
   async function connect(wallet: TrezorWallet): Promise<string> {
     const result =
       wallet === WalletType.TREZOR_BTC
-        ? await TrezorConnect.getAddress({ path: KeyPath.BTC.address, showOnTrezor: false })
-        : await TrezorConnect.ethereumGetAddress({ path: KeyPath.ETH.address, showOnTrezor: false });
+        ? await TrezorConnect.getAddress({
+            path: KeyPath.BTC(BitcoinAddressType.NATIVE_SEGWIT).address(0),
+            showOnTrezor: false,
+          })
+        : await TrezorConnect.ethereumGetAddress({ path: KeyPath.ETH.address(0), showOnTrezor: false });
 
     if (result.success) {
       return result.payload.address;
@@ -58,8 +61,12 @@ export function useTrezor(): TrezorInterface {
   async function signMessage(msg: string, wallet: TrezorWallet): Promise<string> {
     const result =
       wallet === WalletType.TREZOR_BTC
-        ? await TrezorConnect.signMessage({ path: KeyPath.BTC.address, message: msg, coin: 'btc' })
-        : await TrezorConnect.ethereumSignMessage({ path: KeyPath.ETH.address, message: msg });
+        ? await TrezorConnect.signMessage({
+            path: KeyPath.BTC(BitcoinAddressType.NATIVE_SEGWIT).address(0),
+            message: msg,
+            coin: 'btc',
+          })
+        : await TrezorConnect.ethereumSignMessage({ path: KeyPath.ETH.address(0), message: msg });
 
     if (result.success) {
       return result.payload.signature;
