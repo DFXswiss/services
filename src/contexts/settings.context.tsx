@@ -1,4 +1,5 @@
 import { Language, useLanguage, useLanguageContext, useUserContext } from '@dfx.swiss/react';
+import browserLang from 'browser-lang';
 import i18n from 'i18next';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,10 +29,13 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const [language, setLanguage] = useState<Language>();
   const { t } = useTranslation();
 
-  const availableLanguages = languages?.filter((l) => ['DE', 'EN', 'FR', 'IT'].includes(l.symbol)) ?? [];
+  const appLanguages = ['DE', 'EN', 'FR', 'IT'];
+  const availableLanguages = languages?.filter((l) => appLanguages.includes(l.symbol)) ?? [];
 
   useEffect(() => {
-    const customLanguage = user?.language.symbol ?? lang?.toUpperCase() ?? storedLanguage.get();
+    const browserLanguage = browserLang({ languages: appLanguages.map((l) => l.toLowerCase()), fallback: 'en' });
+    const customLanguage =
+      user?.language.symbol ?? lang?.toUpperCase() ?? storedLanguage.get() ?? browserLanguage.toUpperCase();
     const newAppLanguage =
       availableLanguages?.find((l) => l.symbol === customLanguage) ?? getDefaultLanguage(availableLanguages);
 
