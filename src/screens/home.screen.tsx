@@ -1,7 +1,8 @@
-import { Blockchain, useSessionContext, useUserContext } from '@dfx.swiss/react';
+import { Blockchain, useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Suspense, useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import { ConnectWrapper } from '../components/home/connect-wrapper';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -13,13 +14,31 @@ import { useNavigation } from '../hooks/navigation.hook';
 import { useResizeObserver } from '../hooks/resize-observer.hook';
 import { Stack } from '../util/stack';
 
+enum SpecialMode {
+  LOGIN = 'Login',
+  MY_DFX = 'MyDfx',
+}
+
+function getMode(pathName: string): SpecialMode | undefined {
+  switch (pathName) {
+    case '/my-dfx':
+      return SpecialMode.MY_DFX;
+    case '/login':
+      return SpecialMode.LOGIN;
+    default:
+      return undefined;
+  }
+}
+
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isLoggedIn } = useSessionContext();
+  const { authenticationToken } = useAuthContext();
   const { user } = useUserContext();
   const { isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
   const { navigate } = useNavigation();
+  const { pathname } = useLocation();
   const { getPage, getWallet, setOptions } = useFeatureTree();
   const appParams = useAppParams();
 
@@ -32,6 +51,7 @@ export function HomeScreen(): JSX.Element {
   const currentPage = getPage(currentPageId, allowedTiles);
 
   const selectedBlockchain = (connectTo?.blockchain ?? appParams.blockchain) as Blockchain | undefined;
+  const specialMode = getMode(pathname);
 
   useEffect(() => {
     if (isInitialized && isLoggedIn && user && (!activeWallet || loginSuccessful)) {
@@ -40,9 +60,9 @@ export function HomeScreen(): JSX.Element {
   }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful]);
 
   useEffect(() => {
-    const { mode } = appParams;
-    mode && setPages((p) => p.push({ page: mode, allowedTiles: undefined }));
-  }, [appParams.mode]);
+    const mode = specialMode ? 'wallets' : appParams.mode;
+    mode && setPages(new Stack([{ page: mode, allowedTiles: undefined }]));
+  }, [appParams.mode, specialMode]);
 
   // tile handling
   function handleNext(tile: Tile) {
@@ -68,10 +88,27 @@ export function HomeScreen(): JSX.Element {
   }
 
   function start(kycComplete: boolean) {
-    const path = redirectPath ?? '/buy';
-    const targetPath = path.includes('sell') && !kycComplete ? '/profile' : path;
-    setRedirectPath(targetPath != path ? path : undefined);
-    navigate(targetPath);
+    switch (specialMode) {
+      case SpecialMode.LOGIN:
+        setLoginSuccessful(false);
+        setPages(new Stack());
+        setConnectTo(undefined);
+
+        navigate('/');
+        break;
+
+      case SpecialMode.MY_DFX:
+        const url = `${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`;
+        window.open(url, '_self');
+        break;
+
+      default:
+        const path = redirectPath ?? '/buy';
+        const targetPath = path.includes('sell') && !kycComplete ? '/profile' : path;
+        setRedirectPath(targetPath != path ? path : undefined);
+        navigate(targetPath);
+        break;
+    }
   }
 
   const title = translate('screens/home', currentPage?.header ?? (currentPage?.dfxStyle ? 'DFX services' : ' '));
@@ -82,8 +119,8 @@ export function HomeScreen(): JSX.Element {
   return (
     <Layout
       title={isEmbedded ? title : undefined}
-      backButton={currentPageId != null && currentPageId !== appParams.mode}
-      onBack={currentPageId ? handleBack : undefined}
+      backButton={connectTo != null || (currentPageId != null && currentPageId !== appParams.mode)}
+      onBack={connectTo || currentPageId ? handleBack : undefined}
     >
       {!isInitialized || !currentPage ? (
         <div className="mt-4">

@@ -65,11 +65,12 @@ export function ConnectBase({
     setIsConnecting(true);
     setConnectError(undefined);
 
-    if (!blockchain) throw new Error('No blockchain');
-    if (!supportedBlockchains[wallet]?.includes(blockchain)) throw new Error('Invalid blockchain');
+    const usedChain = blockchain ?? supportedBlockchains[wallet]?.[0];
+    if (!usedChain) throw new Error('No blockchain');
+    if (!supportedBlockchains[wallet]?.includes(usedChain)) throw new Error('Invalid blockchain');
 
-    await getAccount(blockchain, activeWallet === wallet)
-      .then((a) => doLogin({ ...a, blockchain }))
+    await getAccount(usedChain, activeWallet === wallet)
+      .then((a) => doLogin({ ...a, blockchain: usedChain }))
       .then(onLogin)
       .catch((e) => {
         setIsConnecting(false);
