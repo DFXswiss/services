@@ -23,6 +23,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { BuyPaymentMethod } from '@dfx.swiss/react/dist/definitions/buy';
+import { TransactionError } from '@dfx.swiss/react/dist/definitions/transaction';
 import { useEffect, useRef, useState } from 'react';
 import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { KycHint } from '../components/kyc-hint';
@@ -64,7 +65,7 @@ export function BuyScreen(): JSX.Element {
   const { getAsset } = useAsset();
   const { assets, assetIn, assetOut, amountIn, blockchain, flags, paymentMethod } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
-  const { isAllowedToBuy } = useKycHelper();
+  const { isComplete } = useKycHelper();
   const { user } = useUserContext();
   const { blockchain: walletBlockchain } = useWalletContext();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -73,6 +74,7 @@ export function BuyScreen(): JSX.Element {
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<PaymentInformation>();
   const [customAmountError, setCustomAmountError] = useState<string>();
+  const [kycRequired, setKycRequired] = useState<boolean>(false);
   const [showsCompletion, setShowsCompletion] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isContinue, setIsContinue] = useState(false);
@@ -127,7 +129,6 @@ export function BuyScreen(): JSX.Element {
   // data validation
   const validatedData = validateData(useDebounce(data, 500));
   const dataValid = validatedData != null;
-  const kycRequired = paymentInfo && !isAllowedToBuy(paymentInfo.amount);
 
   const showsSimple = user?.mail != null;
 
@@ -142,36 +143,45 @@ export function BuyScreen(): JSX.Element {
 
     setIsLoading(true);
     receiveFor({ currency, amount, asset, paymentMethod })
-      .then((value) => checkForMinDeposit(value, amount, currency.name))
-      .then((value) => toPaymentInformation(value, currency))
+      .then(validateBuy)
+      .then(toPaymentInformation)
       .then(setPaymentInfo)
       .finally(() => setIsLoading(false));
   }, [validatedData]);
 
-  function checkForMinDeposit(buy: Buy, amount: number, currency: string): Buy | undefined {
-    if (buy.minVolume > amount) {
-      setCustomAmountError(
-        translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
-          amount: Utils.formatAmount(buy.minVolume),
-          currency,
-        }),
-      );
-      return undefined;
-    } else {
-      setCustomAmountError(undefined);
-      return buy;
+  function validateBuy(buy: Buy): Buy | undefined {
+    switch (buy.error) {
+      case TransactionError.AMOUNT_TOO_LOW:
+        setCustomAmountError(
+          translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+            amount: Utils.formatAmount(buy.minVolume),
+            currency: buy.currency.name,
+          }),
+        );
+        return undefined;
+
+      case TransactionError.AMOUNT_TOO_HIGH:
+        if (!isComplete) {
+          setKycRequired(true);
+          return undefined;
+        }
     }
+
+    setCustomAmountError(undefined);
+    setKycRequired(false);
+
+    return buy;
   }
 
-  function toPaymentInformation(buy: Buy | undefined, currency: Fiat): PaymentInformation | undefined {
+  function toPaymentInformation(buy: Buy | undefined): PaymentInformation | undefined {
     if (!buy) return undefined;
     return {
       buy: buy,
       recipient: `${buy.name}, ${buy.street} ${buy.number}, ${buy.zip} ${buy.city}, ${buy.country}`,
       estimatedAmount: `${buy.estimatedAmount} ${buy.asset.name}`,
       fee: `${buy.fee} %`,
-      minFee: buy.minFee > 0 ? `${buy.minFee}${currency ? toSymbol(currency) : ''}` : undefined,
-      currency,
+      minFee: buy.minFee > 0 ? `${buy.minFee}${buy.currency ? toSymbol(buy.currency) : ''}` : undefined,
+      currency: buy.currency,
       amount: Number(data.amount),
     };
   }

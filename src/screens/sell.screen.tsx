@@ -34,6 +34,7 @@ import {
   StyledModalButton,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { TransactionError } from '@dfx.swiss/react/dist/definitions/transaction';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { KycHint } from '../components/kyc-hint';
@@ -74,7 +75,7 @@ export default function SellScreen(): JSX.Element {
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
   const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain } = useAppParams();
-  const { isAllowedToSell } = useKycHelper();
+  const { isComplete } = useKycHelper();
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
@@ -82,6 +83,7 @@ export default function SellScreen(): JSX.Element {
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [customAmountError, setCustomAmountError] = useState<string>();
+  const [kycRequired, setKycRequired] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
@@ -184,7 +186,7 @@ export default function SellScreen(): JSX.Element {
 
     setIsLoading(true);
     receiveFor({ iban: bankAccount.iban, currency, amount, asset })
-      .then((value) => checkForMinDeposit(value, amount, asset.name))
+      .then(validateSell)
       .then(setPaymentInfo)
       .catch((error: ApiError) => {
         if (error.statusCode === 400 && error.message === 'Ident data incomplete') {
@@ -212,22 +214,29 @@ export default function SellScreen(): JSX.Element {
     }
   }
 
-  function checkForMinDeposit(sell: Sell, amount: number, currency: string): Sell | undefined {
-    if (sell.minVolume > amount) {
-      setCustomAmountError(
-        translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
-          amount: Utils.formatAmountCrypto(sell.minVolume),
-          currency,
-        }),
-      );
-      return undefined;
-    } else {
-      setCustomAmountError(undefined);
-      return sell;
-    }
-  }
+  function validateSell(sell: Sell): Sell | undefined {
+    switch (sell.error) {
+      case TransactionError.AMOUNT_TOO_LOW:
+        setCustomAmountError(
+          translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+            amount: Utils.formatAmountCrypto(sell.minVolume),
+            currency: sell.asset.name,
+          }),
+        );
+        return undefined;
 
-  const kycRequired = paymentInfo && !isAllowedToSell(paymentInfo.estimatedAmount);
+      case TransactionError.AMOUNT_TOO_HIGH:
+        if (!isComplete) {
+          setKycRequired(true);
+          return undefined;
+        }
+    }
+
+    setCustomAmountError(undefined);
+    setKycRequired(false);
+
+    return sell;
+  }
 
   function validateData(data?: DeepPartial<FormData>): FormData | undefined {
     if (data && Number(data.amount) > 0 && data.asset != null && data.bankAccount != null && data.currency != null) {
