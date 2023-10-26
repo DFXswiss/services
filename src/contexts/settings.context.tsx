@@ -1,4 +1,5 @@
 import { Language, useLanguage, useLanguageContext, useUserContext } from '@dfx.swiss/react';
+import browserLang from 'browser-lang';
 import i18n from 'i18next';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -24,23 +25,30 @@ export function useSettingsContext(): SettingsInterface {
 export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { languages } = useLanguageContext();
   const { getDefaultLanguage } = useLanguage();
-  const { user, changeLanguage: changeUserLanguage } = useUserContext();
+  const { user, changeLanguage: changeUserLanguage, changeMail: changeUserMail } = useUserContext();
   const { language: storedLanguage } = useStore();
-  const { lang } = useAppParams();
+  const { lang, mail } = useAppParams();
   const { t } = useTranslation();
 
   const [language, setLanguage] = useState<Language>();
   const [store, setStore] = useState<Record<string, any>>({});
 
-  const availableLanguages = languages?.filter((l) => ['DE', 'EN', 'FR', 'IT'].includes(l.symbol)) ?? [];
+  const appLanguages = ['DE', 'EN', 'FR', 'IT'];
+  const availableLanguages = languages?.filter((l) => appLanguages.includes(l.symbol)) ?? [];
 
   useEffect(() => {
-    const customLanguage = user?.language.symbol ?? lang?.toUpperCase() ?? storedLanguage.get();
+    const browserLanguage = browserLang({ languages: appLanguages.map((l) => l.toLowerCase()), fallback: 'en' });
+    const customLanguage =
+      user?.language.symbol ?? lang?.toUpperCase() ?? storedLanguage.get() ?? browserLanguage.toUpperCase();
     const newAppLanguage =
       availableLanguages?.find((l) => l.symbol === customLanguage) ?? getDefaultLanguage(availableLanguages);
 
     newAppLanguage && newAppLanguage.id !== language?.id && changeAppLanguage(newAppLanguage);
   }, [user, lang, languages]);
+
+  useEffect(() => {
+    if (user && mail && user.mail !== mail) changeUserMail(mail);
+  }, [user, mail]);
 
   function changeAppLanguage(language: Language) {
     setLanguage(language);

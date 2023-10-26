@@ -2,10 +2,12 @@ import { Blockchain } from '@dfx.swiss/react';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
 
-export interface Account {
-  address: string;
-  signature?: string;
-}
+export type Account =
+  | {
+      address: string;
+      signature?: string;
+    }
+  | { session: string };
 
 export interface ConnectProps {
   wallet: WalletType;

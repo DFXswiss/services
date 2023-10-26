@@ -1,4 +1,5 @@
 import { Blockchain } from '@dfx.swiss/react';
+import { useMemo } from 'react';
 import Web3 from 'web3';
 import { MetaMaskChainInterface } from './wallets/metamask.hook';
 
@@ -128,14 +129,17 @@ export function useBlockchain(): BlockchainInterface {
     },
   };
 
-  return {
-    toBlockchain,
-    toChainHex,
-    toChainId,
-    toChainObject,
-    toHeader: (blockchain: Blockchain) => definitions.headings[blockchain],
-    toProtocol: (blockchain: Blockchain) => definitions.protocols[blockchain],
-    toMainToken: (blockchain: Blockchain) => definitions.mainToken[blockchain],
-    toString: (blockchain: Blockchain) => definitions.stringValue[blockchain],
-  };
+  return useMemo(
+    () => ({
+      toBlockchain,
+      toChainHex,
+      toChainId,
+      toChainObject,
+      toHeader: (blockchain: Blockchain) => definitions.headings[blockchain],
+      toProtocol: (blockchain: Blockchain) => definitions.protocols[blockchain],
+      toMainToken: (blockchain: Blockchain) => definitions.mainToken[blockchain],
+      toString: (blockchain: Blockchain) => definitions.stringValue[blockchain],
+    }),
+    [],
+  );
 }

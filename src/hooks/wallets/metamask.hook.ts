@@ -1,12 +1,14 @@
 import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
+import { useMemo } from 'react';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
 import { AssetBalance } from '../../contexts/balance.context';
 import ERC20_ABI from '../../static/erc20.abi.json';
 import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
+import { timeout } from '../../util/utils';
 import { useBlockchain } from '../blockchain.hook';
 
 export enum WalletType {
@@ -215,12 +217,6 @@ export function useMetaMask(): MetaMaskInterface {
     return new web3.eth.Contract(ERC20_ABI as any, chainId);
   }
 
-  async function timeout<T>(promise: Promise<T>, timeout: number): Promise<T> {
-    const timeoutPromise = new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout));
-
-    return Promise.race([promise, timeoutPromise]);
-  }
-
   function handleError(e: MetaMaskError): never {
     switch (e.code) {
       case 4001:
@@ -233,18 +229,21 @@ export function useMetaMask(): MetaMaskInterface {
     throw e;
   }
 
-  return {
-    isInstalled,
-    getWalletType,
-    register,
-    getAccount,
-    requestAccount,
-    requestBlockchain,
-    requestChangeToBlockchain,
-    requestBalance,
-    sign,
-    addContract,
-    readBalance,
-    createTransaction,
-  };
+  return useMemo(
+    () => ({
+      isInstalled,
+      getWalletType,
+      register,
+      getAccount,
+      requestAccount,
+      requestBlockchain,
+      requestChangeToBlockchain,
+      requestBalance,
+      sign,
+      addContract,
+      readBalance,
+      createTransaction,
+    }),
+    [],
+  );
 }

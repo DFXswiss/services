@@ -2,6 +2,7 @@ import EthClient from '@ledgerhq/hw-app-eth';
 import Transport from '@ledgerhq/hw-transport';
 import TransportWebHID from '@ledgerhq/hw-transport-webhid';
 import BtcClient, { DefaultWalletPolicy } from 'ledger-bitcoin';
+import { useMemo } from 'react';
 import KeyPath from '../../config/key-path';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
@@ -157,9 +158,12 @@ export function useLedger(): LedgerInterface {
     return '0x' + signature.r + signature.s + signature.v.toString(16);
   }
 
-  return {
-    isSupported,
-    connect,
-    signMessage,
-  };
+  return useMemo(
+    () => ({
+      isSupported,
+      connect,
+      signMessage,
+    }),
+    [],
+  );
 }

@@ -30,7 +30,7 @@ export function ConnectBase({
   onCancel,
   autoConnect,
 }: Props): JSX.Element {
-  const { login, switchBlockchain, activeWallet } = useWalletContext();
+  const { login, setSession, switchBlockchain, activeWallet } = useWalletContext();
   const { showsSignatureInfo } = useStore();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
@@ -77,13 +77,15 @@ export function ConnectBase({
       });
   }
 
-  async function doLogin({ address, signature, blockchain }: Account & { blockchain: Blockchain }) {
-    return activeWallet === wallet && address === session?.address
-      ? switchBlockchain(blockchain)
+  async function doLogin(account: Account & { blockchain: Blockchain }) {
+    return activeWallet === wallet && 'address' in account && account.address === session?.address
+      ? switchBlockchain(account.blockchain)
       : logout().then(() =>
-          login(wallet, address, blockchain, (a, m) =>
-            signature ? Promise.resolve(signature) : onSignMessage(a, blockchain, m),
-          ),
+          'session' in account
+            ? setSession(wallet, account.blockchain, account.session)
+            : login(wallet, account.address, account.blockchain, (a, m) =>
+                account.signature ? Promise.resolve(account.signature) : onSignMessage(a, account.blockchain, m),
+              ),
         );
   }
 

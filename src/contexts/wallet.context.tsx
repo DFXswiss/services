@@ -16,6 +16,7 @@ export enum WalletType {
   TREZOR_ETH = 'TrezorEth',
   CLI_BTC = 'CliBtc',
   CLI_ETH = 'CliEth',
+  DFX_TARO = 'DfxTaro',
   WALLET_CONNECT = 'WalletConnect',
 }
 
@@ -29,6 +30,7 @@ interface WalletInterface {
     blockchain: Blockchain,
     onSignMessage: (address: string, message: string) => Promise<string>,
   ) => Promise<void>;
+  setSession: (wallet: WalletType, blockchain: Blockchain, session: string) => Promise<void>;
   activeWallet: WalletType | undefined;
 }
 
@@ -117,6 +119,13 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     setActiveBlockchain(blockchain);
   }
 
+  async function setSession(wallet: WalletType, blockchain: Blockchain, session: string): Promise<void> {
+    updateSession(session);
+
+    setWallet(wallet);
+    setActiveBlockchain(blockchain);
+  }
+
   async function createSession(address: string, signature: string): Promise<string> {
     const session =
       (await api.login(address, signature)) ??
@@ -132,6 +141,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       blockchain: activeBlockchain,
       switchBlockchain: setActiveBlockchain,
       login,
+      setSession,
       activeWallet,
     }),
     [isInitialized, isSessionInitialized, isParamsInitialized, activeWallet, activeBlockchain, api, appParams],
