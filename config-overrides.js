@@ -19,7 +19,6 @@ module.exports = function override(config, env) {
       Buffer: ['buffer', 'Buffer'],
     }),
   ];
-
   config.output = {
     ...config.output,
     ...(process.env.PUBLIC_URL && process.env.CUSTOM_CHUNK_PATH

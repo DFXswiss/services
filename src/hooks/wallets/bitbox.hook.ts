@@ -123,5 +123,5 @@ export function useBitbox(): BitboxInterface {
     return `0x${Buffer.from([...Array.from(r), ...Array.from(s), ...Array.from(v)]).toString('hex')}`;
   }
 
-  return { isSupported, connect, signMessage };
+  return useMemo(() => ({ isSupported, connect, signMessage }), []);
 }

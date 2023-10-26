@@ -83,7 +83,7 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
 
   useEffect(() => {
     if (addressValid) getSignMessage(address).then(setSignMessage);
-  });
+  }, [address]);
 
   const rules = Utils.createRules({
     address: [Validations.Required, Validations.Custom(validateAddress)],

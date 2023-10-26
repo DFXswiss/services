@@ -50,8 +50,6 @@ export default function ConnectMetaMask(props: ConnectProps): JSX.Element {
 function Content({ back, error }: ConnectContentProps): JSX.Element {
   const { translate } = useSettingsContext();
 
-  const message = 'Please confirm the connection in your MetaMask.';
-
   return error ? (
     <>
       <ConnectError error={error} />
@@ -69,7 +67,7 @@ function Content({ back, error }: ConnectContentProps): JSX.Element {
       <div className="mb-4">
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       </div>
-      <p className="text-dfxGray-700">{translate('screens/home', message)}</p>
+      <p className="text-dfxGray-700">{translate('screens/home', 'Please confirm the connection in your MetaMask.')}</p>
     </>
   );
 }
