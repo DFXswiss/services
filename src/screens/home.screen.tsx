@@ -98,6 +98,7 @@ export function HomeScreen(): JSX.Element {
                 blockchain={selectedBlockchain}
                 onLogin={() => setLoginSuccessful(true)}
                 onCancel={() => setConnectTo(undefined)}
+                onSwitch={(type) => setConnectTo((c) => ({ ...c, type }))}
               />
             </Suspense>
           ) : (

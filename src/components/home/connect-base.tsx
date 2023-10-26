@@ -11,6 +11,7 @@ import { SignHint } from './sign-hint';
 
 interface Props extends ConnectProps {
   isSupported: () => boolean | Promise<boolean>;
+  fallback?: WalletType;
   supportedBlockchains: { [k in WalletType]?: Blockchain[] };
   getAccount: (blockchain: Blockchain, isReconnect: boolean) => Promise<Account>;
   signMessage: (msg: string, address: string, blockchain: Blockchain) => Promise<string>;
@@ -22,12 +23,14 @@ export function ConnectBase({
   wallet,
   blockchain,
   isSupported,
+  fallback,
   supportedBlockchains,
   getAccount,
   signMessage,
   renderContent,
   onLogin,
   onCancel,
+  onSwitch,
   autoConnect,
 }: Props): JSX.Element {
   const { login, setSession, switchBlockchain, activeWallet } = useWalletContext();
@@ -50,6 +53,8 @@ export function ConnectBase({
 
   async function init() {
     const supported = await isSupported();
+    if (!supported && fallback) onSwitch(fallback);
+
     setShowInstallHint(!supported);
     setIsLoading(false);
 

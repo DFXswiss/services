@@ -6,6 +6,7 @@ import {
   StyledButtonWidth,
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
+import { isMobile } from 'react-device-detect';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { WalletType } from '../../../contexts/wallet.context';
 import { useMetaMask } from '../../../hooks/wallets/metamask.hook';
@@ -37,6 +38,7 @@ export default function ConnectMetaMask(props: ConnectProps): JSX.Element {
   return (
     <ConnectBase
       isSupported={isInstalled}
+      fallback={isMobile ? WalletType.WALLET_CONNECT : undefined}
       supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
       signMessage={(msg, addr) => sign(addr, msg)}
