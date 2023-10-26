@@ -39,6 +39,9 @@
     "title": "Una semplice <1>cassetta degli attrezzi</1><2/> per tutti i <4>servizi DFX</4>",
     "Coming Soon": "Prossimamente",
 
+    "Scan with your wallet": "Scansione con il portafoglio",
+    "Connect your wallet": "Collegare il portafoglio",
+
     "Please confirm the connection in your MetaMask.": "Confermare la connessione nella MetaMask.",
     "Please confirm the connection in the Alby browser extension.": "Confermare la connessione nell'estensione del browser Alby.",
     "Please confirm the connection in your wallet.": "Confermare la connessione nel portafoglio.",
