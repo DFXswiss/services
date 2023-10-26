@@ -9,6 +9,7 @@ import {
 import { useState } from 'react';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { WalletType } from '../../../contexts/wallet.context';
+import { useResizeObserver } from '../../../hooks/resize-observer.hook';
 import { DeepWallet, useWalletConnect } from '../../../hooks/wallets/wallet-connect.hook';
 import { QrCopy } from '../../payment/qr-copy';
 import { ConnectBase } from '../connect-base';
@@ -59,6 +60,10 @@ function Content({
 }: ConnectContentProps & { connectUri?: string; wallets: DeepWallet[] }): JSX.Element {
   const { translate } = useSettingsContext();
 
+  const containerRef = useResizeObserver<HTMLDivElement>((el) => setSize(el.offsetWidth));
+
+  const [size, setSize] = useState<number>();
+
   return connectUri ? (
     <>
       <h2 className="text-dfxGray-700 mb-4">{translate('screens/home', 'Scan with your wallet')}</h2>
@@ -67,7 +72,10 @@ function Content({
       {wallets.length && (
         <>
           <h2 className="text-dfxGray-700 mt-8 mb-4 ">{translate('screens/home', 'Connect your wallet')}</h2>
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-5 w-full mb-3">
+          <div
+            ref={containerRef}
+            className={`grid ${size && size > 600 ? 'grid-cols-6' : 'grid-cols-4'} gap-5 w-full mb-3`}
+          >
             {wallets.map((w) => (
               <WalletComponent key={w.id} wallet={w} />
             ))}
