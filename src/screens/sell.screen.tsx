@@ -107,6 +107,8 @@ export default function SellScreen(): JSX.Element {
   const selectedAsset = useWatch({ control, name: 'asset' });
   const enteredAmount = useWatch({ control, name: 'amount' });
 
+  const availableBalance = selectedAsset && findBalance(selectedAsset);
+
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
     setValue(field, value, { shouldValidate: true });
@@ -396,6 +398,8 @@ export default function SellScreen(): JSX.Element {
                   label={translate('screens/sell', 'Enter your desired payout amount')}
                   placeholder="0.00"
                   prefix={selectedAsset.name}
+                  buttonLabel={availableBalance ? 'MAX' : undefined}
+                  buttonClick={() => availableBalance && setVal('amount', `${availableBalance}`)}
                   name="amount"
                   forceError={kycRequired || customAmountError != null}
                   forceErrorMessage={customAmountError}
