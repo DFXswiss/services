@@ -1,6 +1,7 @@
 import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
+import { useMemo } from 'react';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
 import { AssetBalance } from '../../contexts/balance.context';
@@ -233,18 +234,21 @@ export function useMetaMask(): MetaMaskInterface {
     throw e;
   }
 
-  return {
-    isInstalled,
-    getWalletType,
-    register,
-    getAccount,
-    requestAccount,
-    requestBlockchain,
-    requestChangeToBlockchain,
-    requestBalance,
-    sign,
-    addContract,
-    readBalance,
-    createTransaction,
-  };
+  return useMemo(
+    () => ({
+      isInstalled,
+      getWalletType,
+      register,
+      getAccount,
+      requestAccount,
+      requestBlockchain,
+      requestChangeToBlockchain,
+      requestBalance,
+      sign,
+      addContract,
+      readBalance,
+      createTransaction,
+    }),
+    [],
+  );
 }
