@@ -10,20 +10,20 @@ const BitcoinAddressStandard = {
   [BitcoinAddressType.LEGACY]: 'pkh(@0/**)',
 };
 
-const BitcoinAddressPrefix = {
+export const BitcoinAddressPrefix = {
   [BitcoinAddressType.NATIVE_SEGWIT]: 84,
   [BitcoinAddressType.SEGWIT]: 49,
   [BitcoinAddressType.LEGACY]: 44,
 };
 
-const btcRootPath = "'/0'/0'";
+const btcRootPath = "/0'/0'";
 const ethRootPath = "44'/60'/0'";
 
 const KeyPath = {
   BTC: (type: BitcoinAddressType) => ({
     root: `${BitcoinAddressPrefix[type]}${btcRootPath}`,
     xPub: `m/${BitcoinAddressPrefix[type]}${btcRootPath}`,
-    address: (index: number) => `m/${BitcoinAddressPrefix[type]}${btcRootPath}/0/${index}`,
+    address: (index: number) => `m/${BitcoinAddressPrefix[type]}'${btcRootPath}/0/${index}`,
     addressStandard: BitcoinAddressStandard[type],
   }),
   ETH: {

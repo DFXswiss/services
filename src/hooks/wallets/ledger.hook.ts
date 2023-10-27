@@ -145,6 +145,8 @@ export function useLedger(): LedgerInterface {
       `[${fpr}/${KeyPath.BTC(addressType).root}]${pubKey}`,
     );
 
+    console.log(KeyPath.BTC(addressType).root);
+
     const addresses = [];
     for (let i = startIndex; i < startIndex + count; i++) {
       addresses.push(await client.getWalletAddress(policy, null, 0, i, false));

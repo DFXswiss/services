@@ -9,7 +9,7 @@ export type TrezorWallet = WalletType.TREZOR_BTC | WalletType.TREZOR_ETH;
 export interface TrezorInterface {
   isSupported: () => boolean;
   connect: (wallet: TrezorWallet) => Promise<string>;
-  signMessage: (msg: string, wallet: TrezorWallet) => Promise<string>;
+  signMessage: (msg: string, wallet: TrezorWallet, addressIndex: number) => Promise<string>;
 }
 
 export function useTrezor(): TrezorInterface {
@@ -58,11 +58,11 @@ export function useTrezor(): TrezorInterface {
     handlePayloadError('Trezor not connected', result.payload.error);
   }
 
-  async function signMessage(msg: string, wallet: TrezorWallet): Promise<string> {
+  async function signMessage(msg: string, wallet: TrezorWallet, addressIndex: number): Promise<string> {
     const result =
       wallet === WalletType.TREZOR_BTC
         ? await TrezorConnect.signMessage({
-            path: KeyPath.BTC(BitcoinAddressType.NATIVE_SEGWIT).address(0),
+            path: KeyPath.BTC(BitcoinAddressType.NATIVE_SEGWIT).address(addressIndex),
             message: msg,
             coin: 'btc',
           })

@@ -7,7 +7,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Control, useForm, useWatch } from 'react-hook-form';
 import { BitcoinAddressType } from '../../../config/key-path';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { WalletType, useWalletContext } from '../../../contexts/wallet.context';
@@ -35,16 +35,19 @@ export default function ConnectLedger(props: Props): JSX.Element {
   const { session } = useAuthContext();
   const { activeWallet } = useWalletContext();
   const [addresses, setAddresses] = useState<string[]>();
+  const [addressLoading, setAddressLoading] = useState(false);
 
-  const [bitcoinAddressType, setBitcoinAddressType] = useState<BitcoinAddressType>(BitcoinAddressType.NATIVE_SEGWIT);
+  const { control: typeControl } = useForm<{ type: BitcoinAddressType }>({
+    defaultValues: { type: BitcoinAddressType.NATIVE_SEGWIT },
+  });
+  const selectedType = useWatch({ control: typeControl, name: 'type' });
+
   const [createAddressPromise, addressPromise] = useDeferredPromise<Address>();
-
-  const app = props.wallet === WalletType.LEDGER_BTC ? 'Bitcoin' : 'Ethereum';
 
   async function getAccount(_: Blockchain, isReconnect: boolean): Promise<Account> {
     if (isReconnect && session?.address) return { address: session.address };
 
-    const address = await connect(props.wallet, bitcoinAddressType);
+    const address = await connect(props.wallet, selectedType);
     setAddresses([address]);
 
     return createAddressPromise();
@@ -56,13 +59,10 @@ export default function ConnectLedger(props: Props): JSX.Element {
   }
 
   async function onLoadAddresses() {
-    const loadAddresses = await fetchAddresses(
-      props.wallet,
-      addresses ? addresses.length + 1 : 0,
-      1,
-      bitcoinAddressType,
-    );
+    setAddressLoading(true);
+    const loadAddresses = await fetchAddresses(props.wallet, addresses?.length ?? 0, 5, selectedType);
     setAddresses(addresses?.concat(...loadAddresses));
+    setAddressLoading(false);
   }
 
   return (
@@ -70,13 +70,15 @@ export default function ConnectLedger(props: Props): JSX.Element {
       isSupported={isSupported}
       supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
-      signMessage={(msg, _a, _b, index) => signMessage(msg, props.wallet, index ?? 0, bitcoinAddressType)}
+      signMessage={(msg, _a, _b, index) => signMessage(msg, props.wallet, index ?? 0, selectedType)}
       renderContent={(p) => (
         <Content
           addresses={addresses}
           onLoadAddresses={onLoadAddresses}
           onAddressSelect={onAddressSelect}
-          app={app}
+          addressLoading={addressLoading}
+          wallet={props.wallet}
+          typeControl={typeControl}
           {...p}
         />
       )}
@@ -92,31 +94,37 @@ function Content({
   addresses,
   onAddressSelect,
   onLoadAddresses,
+  addressLoading,
   error,
-  app,
-}: ConnectContentProps & { app: string } & {
+  wallet,
+  typeControl,
+}: ConnectContentProps & {
+  addressLoading: boolean;
+  wallet: WalletType;
+  typeControl: Control<{ type: BitcoinAddressType }>;
+} & {
   addresses?: string[];
   onAddressSelect: (address: Address) => void;
   onLoadAddresses: () => void;
 }): JSX.Element {
+  const app = wallet === WalletType.LEDGER_BTC ? 'Bitcoin' : 'Ethereum';
+
   const { translate } = useSettingsContext();
 
   // form
   const { control, setValue } = useForm<{ address: Address }>();
-  const { control: typeControl } = useForm<{ type: BitcoinAddressType }>({
-    defaultValues: { type: BitcoinAddressType.NATIVE_SEGWIT },
-  });
 
   const selectedAddress = useWatch({ control, name: 'address' });
 
   useEffect(() => {
     if (addresses?.length == 1) setValue('address', { address: addresses[0], index: 0 });
-  });
+  }, [addresses]);
 
   const steps = [
     'Connect your {{device}} with your computer',
     'Open the {{app}} app on your Ledger',
     'Click on "Connect"',
+    'Choose address',
     'Confirm "Sign message" on your {{device}}',
   ];
 
@@ -124,7 +132,7 @@ function Content({
     <>
       <StyledVerticalStack gap={5} center>
         {addresses ? (
-          <div>
+          <>
             <h2 className="text-dfxGray-700">{translate('screens/home', 'Your address')}</h2>
             <Form control={control} errors={{}}>
               <StyledDropdown<Address>
@@ -134,15 +142,16 @@ function Content({
                 descriptionFunc={(item) => `Index ${item.index}`}
                 full
               />
-              <StyledButton
-                width={StyledButtonWidth.MD}
-                label={translate('screens/buy', 'Load more addresses')}
-                onClick={() => onLoadAddresses()}
-                caps={false}
-                className="my-4 hidden"
-              />
             </Form>
-          </div>
+            <StyledButton
+              width={StyledButtonWidth.MD}
+              label={translate('screens/home', 'Load more addresses')}
+              onClick={() => onLoadAddresses()}
+              caps={false}
+              className="my-4 "
+              isLoading={addressLoading}
+            />
+          </>
         ) : (
           <ConnectInstructions
             steps={steps}
@@ -153,24 +162,26 @@ function Content({
           />
         )}
         {error && <ConnectError error={error} />}
-        <Form control={typeControl} errors={{}}>
-          <StyledDropdown<BitcoinAddressType>
-            label={translate('general/actions', 'Address type')}
-            name="type"
-            items={Object.values(BitcoinAddressType)}
-            labelFunc={(item) => item}
-            full
-          />
-        </Form>
-        {app === WalletType.LEDGER_BTC ?? (
-          <StyledButton
-            label={translate('general/actions', addresses ? 'Next' : 'Connect')}
-            onClick={addresses ? () => onAddressSelect(selectedAddress) : () => connect()}
-            width={StyledButtonWidth.MIN}
-            className="self-center"
-            isLoading={!addresses && isConnecting}
-          />
+        {wallet === WalletType.LEDGER_BTC && !addresses && (
+          <Form control={typeControl} errors={{}}>
+            <StyledDropdown<BitcoinAddressType>
+              label={translate('screen/home', 'Address type')}
+              name="type"
+              items={Object.values(BitcoinAddressType)}
+              labelFunc={(item) => item}
+              descriptionFunc={() => selectedAddress?.address}
+              full
+              disabled={isConnecting}
+            />
+          </Form>
         )}
+        <StyledButton
+          label={translate('general/actions', addresses ? 'Next' : 'Connect')}
+          onClick={addresses ? () => onAddressSelect(selectedAddress) : () => connect()}
+          width={StyledButtonWidth.MIN}
+          className="self-center"
+          isLoading={!addresses && isConnecting}
+        />
       </StyledVerticalStack>
     </>
   );

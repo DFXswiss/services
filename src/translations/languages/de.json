@@ -41,6 +41,9 @@
 
     "Scan with your wallet": "Scanne mit Deiner Wallet",
     "Connect your wallet": "Verbinde Deine Wallet",
+    "Address type":"Adresstyp",
+    "Choose address":"Adresse wählen",
+    "Load more addresses":"Lade mehr Adressen",
 
     "Please confirm the connection in your MetaMask.": "Bitte bestätige die Verbindung in Deiner MetaMask.",
     "Please confirm the connection in the Alby browser extension.": "Bitte bestätige die Verbindung in der Alby Browsererweiterung.",
