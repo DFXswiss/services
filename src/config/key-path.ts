@@ -16,14 +16,14 @@ export const BitcoinAddressPrefix = {
   [BitcoinAddressType.LEGACY]: 44,
 };
 
-const btcRootPath = "/0'/0'";
+const btcRootPath = "'/0'/0'";
 const ethRootPath = "44'/60'/0'";
 
 const KeyPath = {
   BTC: (type: BitcoinAddressType) => ({
     root: `${BitcoinAddressPrefix[type]}${btcRootPath}`,
     xPub: `m/${BitcoinAddressPrefix[type]}${btcRootPath}`,
-    address: (index: number) => `m/${BitcoinAddressPrefix[type]}'${btcRootPath}/0/${index}`,
+    address: (index: number) => `m/${BitcoinAddressPrefix[type]}${btcRootPath}/0/${index}`,
     addressStandard: BitcoinAddressStandard[type],
   }),
   ETH: {

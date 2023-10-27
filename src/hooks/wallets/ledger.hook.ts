@@ -140,12 +140,11 @@ export function useLedger(): LedgerInterface {
 
     const fpr = await client.getMasterFingerprint();
     const pubKey = await client.getExtendedPubkey(KeyPath.BTC(addressType).xPub);
+
     const policy = new DefaultWalletPolicy(
       KeyPath.BTC(addressType).addressStandard as DefaultDescriptorTemplate,
       `[${fpr}/${KeyPath.BTC(addressType).root}]${pubKey}`,
     );
-
-    console.log(KeyPath.BTC(addressType).root);
 
     const addresses = [];
     for (let i = startIndex; i < startIndex + count; i++) {

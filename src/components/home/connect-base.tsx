@@ -1,6 +1,7 @@
 import { Blockchain, useAuthContext, useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
+import { BitcoinAddressType } from '../../config/key-path';
 import { WalletType, useWalletContext } from '../../contexts/wallet.context';
 import { useDeferredPromise } from '../../hooks/deferred-promise.hook';
 import { useStore } from '../../hooks/store.hook';
@@ -13,7 +14,13 @@ interface Props extends ConnectProps {
   isSupported: () => boolean | Promise<boolean>;
   supportedBlockchains: { [k in WalletType]?: Blockchain[] };
   getAccount: (blockchain: Blockchain, isReconnect: boolean) => Promise<Account>;
-  signMessage: (msg: string, address: string, blockchain: Blockchain, index?: number) => Promise<string>;
+  signMessage: (
+    msg: string,
+    address: string,
+    blockchain: Blockchain,
+    index?: number,
+    type?: BitcoinAddressType,
+  ) => Promise<string>;
   renderContent: (props: ConnectContentProps) => JSX.Element;
   autoConnect?: boolean;
 }
@@ -87,7 +94,7 @@ export function ConnectBase({
             : login(wallet, account.address, account.blockchain, (a, m) =>
                 account.signature
                   ? Promise.resolve(account.signature)
-                  : onSignMessage(a, account.blockchain, m, account.index),
+                  : onSignMessage(a, account.blockchain, m, account.index, account.type),
               ),
         );
   }
@@ -97,8 +104,9 @@ export function ConnectBase({
     blockchain: Blockchain,
     message: string,
     index?: number,
+    type?: BitcoinAddressType,
   ): Promise<string> {
-    if (!showsSignatureInfo.get()) return signMessage(message, address, blockchain, index);
+    if (!showsSignatureInfo.get()) return signMessage(message, address, blockchain, index, type);
 
     setAddr(address);
     setChain(blockchain);

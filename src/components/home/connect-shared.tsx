@@ -1,4 +1,5 @@
 import { Blockchain } from '@dfx.swiss/react';
+import { BitcoinAddressType } from '../../config/key-path';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
 
@@ -7,6 +8,7 @@ export type Account =
       address: string;
       signature?: string;
       index?: number;
+      type?: BitcoinAddressType;
     }
   | { session: string };
 
