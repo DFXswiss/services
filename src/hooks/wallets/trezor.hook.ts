@@ -1,26 +1,26 @@
 import TrezorConnect from '@trezor/connect-web';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import KeyPath, { BitcoinAddressType } from '../../config/key-path';
+import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
 
 export type TrezorWallet = WalletType.TREZOR_BTC | WalletType.TREZOR_ETH;
 
 export interface TrezorInterface {
-  isSupported: () => boolean;
+  isSupported: () => Promise<boolean>;
   connect: (wallet: TrezorWallet) => Promise<string>;
   signMessage: (msg: string, wallet: TrezorWallet, addressIndex: number) => Promise<string>;
 }
 
 export function useTrezor(): TrezorInterface {
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const storageKey = 'TrezorInitialized';
+  const { get, put } = useSettingsContext();
 
-  useEffect(() => {
-    if (!isInitialized) init();
-  }, [isInitialized]);
+  const [isInitialized, setIsInitialized] = useState<boolean | undefined>(get(storageKey));
 
-  async function init() {
-    await TrezorConnect.init({
+  async function init(): Promise<boolean> {
+    return TrezorConnect.init({
       popup: true,
       debug: false,
       lazyLoad: false,
@@ -30,16 +30,21 @@ export function useTrezor(): TrezorInterface {
       },
       transports: ['WebUsbTransport'],
     })
-      .then(() => {
-        setIsInitialized(true);
-      })
-      .catch(() => {
-        setIsInitialized(false);
-      });
+      .then(() => initialized(true))
+      .catch(() => initialized(false));
   }
 
-  function isSupported(): boolean {
-    return isInitialized;
+  function initialized(supported: boolean): boolean {
+    put(storageKey, supported);
+    setIsInitialized(supported);
+
+    return supported;
+  }
+
+  async function isSupported(): Promise<boolean> {
+    if (isInitialized != null) return isInitialized;
+
+    return init();
   }
 
   async function connect(wallet: TrezorWallet): Promise<string> {
