@@ -1,6 +1,7 @@
 import { Asset, Sell, useAuthContext } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
+import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance, useBalanceContext } from '../contexts/balance.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { useAlby } from './wallets/alby.hook';
@@ -9,6 +10,7 @@ import { useMetaMask } from './wallets/metamask.hook';
 export interface SellHelperInterface {
   getBalances: (assets: Asset[]) => Promise<AssetBalance[] | undefined>;
   sendTransaction: (sell: Sell) => Promise<string>;
+  canSendTransaction: () => boolean;
 }
 
 // CAUTION: This is a helper hook for all sell functionalities. Think about lazy loading, as soon as it gets bigger.
@@ -18,6 +20,7 @@ export function useSellHelper(): SellHelperInterface {
   const { getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet } = useWalletContext();
   const { session } = useAuthContext();
+  const { redirectPath } = useAppHandlingContext();
 
   async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {
     switch (activeWallet) {
@@ -71,5 +74,30 @@ export function useSellHelper(): SellHelperInterface {
         throw new Error('No wallet connected');
     }
   }
-  return useMemo(() => ({ getBalances, sendTransaction }), [readBalance, createTransaction, sendPayment]);
+
+  function canSendTransaction(): boolean {
+    switch (activeWallet) {
+      case WalletType.META_MASK:
+      case WalletType.ALBY:
+        return true;
+
+      case WalletType.LEDGER_BTC:
+      case WalletType.LEDGER_ETH:
+      case WalletType.BITBOX_BTC:
+      case WalletType.BITBOX_ETH:
+      case WalletType.TREZOR_BTC:
+      case WalletType.TREZOR_ETH:
+      case WalletType.CLI_BTC:
+      case WalletType.CLI_ETH:
+      case WalletType.WALLET_CONNECT:
+        return false;
+
+      default:
+        return redirectPath != null;
+    }
+  }
+  return useMemo(
+    () => ({ getBalances, sendTransaction, canSendTransaction }),
+    [readBalance, createTransaction, sendPayment],
+  );
 }

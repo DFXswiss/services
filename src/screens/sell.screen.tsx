@@ -26,7 +26,6 @@ import {
   IconVariant,
   StyledBankAccountListItem,
   StyledButton,
-  StyledButtonColor,
   StyledButtonWidth,
   StyledDropdown,
   StyledHorizontalStack,
@@ -71,7 +70,7 @@ export default function SellScreen(): JSX.Element {
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
   const { blockchain: walletBlockchain, activeWallet } = useWalletContext();
-  const { getBalances, sendTransaction } = useSellHelper();
+  const { getBalances, sendTransaction, canSendTransaction } = useSellHelper();
   const { availableBlockchains } = useSessionContext();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
@@ -91,6 +90,7 @@ export default function SellScreen(): JSX.Element {
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [balances, setBalances] = useState<AssetBalance[]>();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isTxDone, setTxDone] = useState<boolean>();
   const [sellTxId, setSellTxId] = useState<string>();
   const [bankAccountSelection, setBankAccountSelection] = useState(false);
 
@@ -260,15 +260,15 @@ export default function SellScreen(): JSX.Element {
 
   async function handleNext(paymentInfo: Sell): Promise<void> {
     setIsProcessing(true);
+    setTxDone(true);
     await updateBankAccount();
 
     if (activeWallet) {
-      sendTransaction(paymentInfo)
-        .then(setSellTxId)
-        .finally(() => setIsProcessing(false));
+      canSendTransaction() && sendTransaction(paymentInfo).then(setSellTxId);
     } else {
       close(paymentInfo, false);
     }
+    setIsProcessing(false);
   }
 
   function close(sell: Sell, isComplete: boolean) {
@@ -293,26 +293,32 @@ export default function SellScreen(): JSX.Element {
       rootRef={rootRef}
     >
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
-        {paymentInfo && sellTxId ? (
+        {paymentInfo && isTxDone ? (
           <StyledVerticalStack gap={4} full>
             <div className="mx-auto">
               <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />
             </div>
             <p className="text-dfxBlue-800 text-center px-20">
-              {translate('screens/sell', 'Your transaction was executed successfully.')}
-              <br />
+              {canSendTransaction() && (
+                <>
+                  {translate('screens/sell', 'Your transaction was executed successfully.')}
+                  <br />
+                </>
+              )}
               {translate(
                 'screens/payment',
                 'We will inform you about the progress of any purchase or sale via E-mail.',
               )}
             </p>
-            <StyledHorizontalStack gap={2} center>
-              <p className="text-dfxBlue-800">{translate('screens/sell', 'Transaction hash')}:</p>
-              <span className="text-dfxBlue-800 font-bold">{`${sellTxId.substring(0, 5)}...${sellTxId.substring(
-                sellTxId.length - 5,
-              )}`}</span>
-              <CopyButton onCopy={() => copy(sellTxId)} />
-            </StyledHorizontalStack>
+            {sellTxId && (
+              <StyledHorizontalStack gap={2} center>
+                <p className="text-dfxBlue-800">{translate('screens/sell', 'Transaction hash')}:</p>
+                <span className="text-dfxBlue-800 font-bold">{`${sellTxId.substring(0, 5)}...${sellTxId.substring(
+                  sellTxId.length - 5,
+                )}`}</span>
+                <CopyButton onCopy={() => copy(sellTxId)} />
+              </StyledHorizontalStack>
+            )}
 
             <StyledButton
               width={StyledButtonWidth.FULL}
@@ -324,7 +330,7 @@ export default function SellScreen(): JSX.Element {
             />
           </StyledVerticalStack>
         ) : (
-          <StyledVerticalStack gap={8} full className="relative">
+          <StyledVerticalStack center gap={8} full className="relative">
             {availableAssets && (
               <StyledDropdown<Asset>
                 rootRef={rootRef}
@@ -337,6 +343,7 @@ export default function SellScreen(): JSX.Element {
                 balanceFunc={(item) => findBalance(item)?.toString() ?? ''}
                 assetIconFunc={(item) => item.name as AssetIconVariant}
                 descriptionFunc={(item) => item.blockchain}
+                full
               />
             )}
             {bankAccounts && !isCreatingAccount && (
@@ -344,14 +351,16 @@ export default function SellScreen(): JSX.Element {
                 name="bankAccount"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <>
-                    <StyledModalButton
-                      onClick={() => setBankAccountSelection(true)}
-                      onBlur={onBlur}
-                      label={translate('screens/sell', 'Cash out to my bank account')}
-                      placeholder={translate('screens/sell', 'Add or select your IBAN')}
-                      value={Utils.formatIban(value?.iban) ?? undefined}
-                      description={value?.label}
-                    />
+                    <div className="w-full">
+                      <StyledModalButton
+                        onClick={() => setBankAccountSelection(true)}
+                        onBlur={onBlur}
+                        label={translate('screens/sell', 'Cash out to my bank account')}
+                        placeholder={translate('screens/sell', 'Add or select your IBAN')}
+                        value={Utils.formatIban(value?.iban) ?? undefined}
+                        description={value?.label}
+                      />
+                    </div>
 
                     {bankAccountSelection && (
                       <>
@@ -400,6 +409,7 @@ export default function SellScreen(): JSX.Element {
                 items={currencies}
                 labelFunc={(item) => item.name}
                 descriptionFunc={(item) => toDescription(item)}
+                full
               />
             )}
             {selectedAsset && (
@@ -437,41 +447,36 @@ export default function SellScreen(): JSX.Element {
               </div>
             )}
             {paymentInfo && !kycRequired && (
-              <StyledVerticalStack center>
-                <StyledLink
-                  label={translate(
-                    'screens/payment',
-                    'Please note that by using this service you automatically accept our terms and conditions.',
-                  )}
-                  url={process.env.REACT_APP_TNC_URL}
-                  dark
-                />
-                {paymentInfo.paymentRequest && (
-                  <>
-                    {paymentInfo.paymentRequest && <QrCopy data={paymentInfo.paymentRequest} />}
-                    <StyledButton
-                      width={StyledButtonWidth.FULL}
-                      label={translate(
-                        'screens/sell',
-                        'Pay with your wallet and click here once you have issued the transfer',
-                      )}
-                      onClick={() => handleNext(paymentInfo)}
-                      caps={false}
-                      className="my-4"
-                      isLoading={isProcessing}
-                      color={StyledButtonColor.STURDY_WHITE}
-                    />
-                  </>
+              <>
+                {paymentInfo.paymentRequest && canSendTransaction() && (
+                  <>{paymentInfo.paymentRequest && <QrCopy data={paymentInfo.paymentRequest} />}</>
                 )}
-                <StyledButton
-                  width={StyledButtonWidth.FULL}
-                  label={translate('screens/sell', 'Complete transaction in your wallet')}
-                  onClick={() => handleNext(paymentInfo)}
-                  caps={false}
-                  className="my-4"
-                  isLoading={isProcessing}
-                />
-              </StyledVerticalStack>
+                <div>
+                  <div className="pt-4 w-full text-left">
+                    <StyledLink
+                      label={translate(
+                        'screens/payment',
+                        'Please note that by using this service you automatically accept our terms and conditions.',
+                      )}
+                      url={process.env.REACT_APP_TNC_URL}
+                      dark
+                    />
+                  </div>
+                  <StyledButton
+                    width={StyledButtonWidth.FULL}
+                    label={translate(
+                      'screens/sell',
+                      canSendTransaction()
+                        ? 'Pay with your wallet and click here once you have issued the transfer'
+                        : 'Complete transaction in your wallet',
+                    )}
+                    onClick={() => handleNext(paymentInfo)}
+                    caps={false}
+                    className="my-4"
+                    isLoading={isProcessing}
+                  />
+                </div>
+              </>
             )}
           </StyledVerticalStack>
         )}
