@@ -52,6 +52,11 @@
     "Click on \"Connect\"": "Fare clic su \"Collegare\"",
     "Confirm \"Sign message\" on your {{device}}": "Confermare \"Sign message\" sul {{device}}",
 
+    "Choose an address": "Selezionare un indirizzo",
+    "Load more addresses": "Carica altri indirizzi",
+    "Address type": "Tipo di indirizzo",
+    "Address index": "Indice dell'indirizzo",
+
     "Open the {{app}} app on your Ledger": "Aprire l'applicazione {{app}} sul proprio Ledger",
 
     "Enter your password on your BitBox": "Inserire la password sul BitBox",
@@ -64,7 +69,8 @@
     "Click on \"Continue in Trezor Connect\"": "Fare clic su \"Continua in Trezor Connect\"",
     "Follow the steps in the Trezor Connect website": "Seguire i passaggi del sito web Trezor Connect",
 
-    "Login with your DFX App": "Login con l'app DFX",
+    "Login with your BTC Taro Wallet": "Login con l'app BTC Taro",
+    "Install BTC Taro": "Installare BTC Taro",
     "Open app": "Aprire l'app",
 
     "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Accedere al proprio conto DFX verificando con la propria firma di essere l'unico proprietario dell'indirizzo blockchain fornito.",
