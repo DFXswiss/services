@@ -26,6 +26,7 @@ import {
   IconVariant,
   StyledBankAccountListItem,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
   StyledDropdown,
   StyledHorizontalStack,
@@ -40,6 +41,7 @@ import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch }
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
+import { QrCopy } from '../components/payment/qr-copy';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance } from '../contexts/balance.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -435,18 +437,32 @@ export default function SellScreen(): JSX.Element {
               </div>
             )}
             {paymentInfo && !kycRequired && (
-              <div>
-                <div className="pt-4 w-full text-left">
-                  <StyledLink
-                    label={translate(
-                      'screens/payment',
-                      'Please note that by using this service you automatically accept our terms and conditions.',
-                    )}
-                    url={process.env.REACT_APP_TNC_URL}
-                    dark
-                  />
-                </div>
-
+              <StyledVerticalStack center>
+                <StyledLink
+                  label={translate(
+                    'screens/payment',
+                    'Please note that by using this service you automatically accept our terms and conditions.',
+                  )}
+                  url={process.env.REACT_APP_TNC_URL}
+                  dark
+                />
+                {paymentInfo.paymentRequest && (
+                  <>
+                    {paymentInfo.paymentRequest && <QrCopy data={paymentInfo.paymentRequest} />}
+                    <StyledButton
+                      width={StyledButtonWidth.FULL}
+                      label={translate(
+                        'screens/sell',
+                        'Pay with your wallet and click here once you have issued the transfer',
+                      )}
+                      onClick={() => handleNext(paymentInfo)}
+                      caps={false}
+                      className="my-4"
+                      isLoading={isProcessing}
+                      color={StyledButtonColor.STURDY_WHITE}
+                    />
+                  </>
+                )}
                 <StyledButton
                   width={StyledButtonWidth.FULL}
                   label={translate('screens/sell', 'Complete transaction in your wallet')}
@@ -455,7 +471,7 @@ export default function SellScreen(): JSX.Element {
                   className="my-4"
                   isLoading={isProcessing}
                 />
-              </div>
+              </StyledVerticalStack>
             )}
           </StyledVerticalStack>
         )}
