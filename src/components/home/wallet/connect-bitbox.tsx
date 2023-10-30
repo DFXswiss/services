@@ -15,17 +15,19 @@ import { WalletType, useWalletContext } from '../../../contexts/wallet.context';
 import { useDeferredPromise } from '../../../hooks/deferred-promise.hook';
 import { BitboxWallet, useBitbox } from '../../../hooks/wallets/bitbox.hook';
 import { ConnectBase } from '../connect-base';
-import { Account, ConnectContentProps, ConnectError, ConnectInstructions, ConnectProps } from '../connect-shared';
+import {
+  Account,
+  Address,
+  ConnectContentProps,
+  ConnectError,
+  ConnectInstructions,
+  ConnectProps,
+} from '../connect-shared';
 
 const SupportedBlockchains = {
   [WalletType.BITBOX_BTC]: [Blockchain.BITCOIN],
   [WalletType.BITBOX_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM],
 };
-
-interface Address {
-  address: string;
-  index: number;
-}
 
 interface Props extends ConnectProps {
   wallet: BitboxWallet;
@@ -35,13 +37,11 @@ export default function ConnectBitbox(props: Props): JSX.Element {
   const { isSupported, defaultAddressType, connect, signMessage, fetchAddresses } = useBitbox();
   const { session } = useAuthContext();
   const { activeWallet } = useWalletContext();
+
   const [addresses, setAddresses] = useState<string[]>();
   const [addressLoading, setAddressLoading] = useState(false);
-
-  const [selectedType, setSelectedType] = useState<BitcoinAddressType>();
-
   const [createAddressPromise, addressPromise] = useDeferredPromise<Account>();
-
+  const [selectedType, setSelectedType] = useState<BitcoinAddressType>();
   const [pairingCode, setPairingCode] = useState<string>();
   const [createPairingPromise, pairingPromise] = useDeferredPromise<void>();
 
@@ -157,6 +157,7 @@ function Content({
       onLoadAddresses(selectedType);
     }
   }, [selectedType]);
+
   const connectSteps = [
     'Connect your {{device}} with your computer',
     'Click on "Connect"',
@@ -205,7 +206,7 @@ function Content({
               />
             </Form>
             <StyledButton
-              width={StyledButtonWidth.SM}
+              width={StyledButtonWidth.MIN}
               label={translate('screens/home', 'Load more addresses')}
               onClick={() => onLoadAddresses(selectedType)}
               caps={false}

@@ -15,17 +15,19 @@ import { WalletType, useWalletContext } from '../../../contexts/wallet.context';
 import { useDeferredPromise } from '../../../hooks/deferred-promise.hook';
 import { LedgerWallet, useLedger } from '../../../hooks/wallets/ledger.hook';
 import { ConnectBase } from '../connect-base';
-import { Account, ConnectContentProps, ConnectError, ConnectInstructions, ConnectProps } from '../connect-shared';
+import {
+  Account,
+  Address,
+  ConnectContentProps,
+  ConnectError,
+  ConnectInstructions,
+  ConnectProps,
+} from '../connect-shared';
 
 const SupportedBlockchains = {
   [WalletType.LEDGER_BTC]: [Blockchain.BITCOIN],
   [WalletType.LEDGER_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM],
 };
-
-interface Address {
-  address: string;
-  index: number;
-}
 
 interface Props extends ConnectProps {
   wallet: LedgerWallet;
@@ -35,12 +37,11 @@ export default function ConnectLedger(props: Props): JSX.Element {
   const { isSupported, defaultAddressType, connect, signMessage, fetchAddresses } = useLedger();
   const { session } = useAuthContext();
   const { activeWallet } = useWalletContext();
+
   const [addresses, setAddresses] = useState<string[]>();
   const [addressLoading, setAddressLoading] = useState(false);
-
-  const [selectedType, setSelectedType] = useState<BitcoinAddressType>();
-
   const [createAddressPromise, addressPromise] = useDeferredPromise<Account>();
+  const [selectedType, setSelectedType] = useState<BitcoinAddressType>();
 
   async function getAccount(_: Blockchain, isReconnect: boolean): Promise<Account> {
     if (isReconnect && session?.address) return { address: session.address };
@@ -136,6 +137,7 @@ function Content({
       onLoadAddresses(selectedType);
     }
   }, [selectedType]);
+
   const steps = [
     'Connect your {{device}} with your computer',
     'Open the {{app}} app on your Ledger',
@@ -175,7 +177,7 @@ function Content({
               />
             </Form>
             <StyledButton
-              width={StyledButtonWidth.SM}
+              width={StyledButtonWidth.MIN}
               label={translate('screens/home', 'Load more addresses')}
               onClick={() => onLoadAddresses(selectedType)}
               caps={false}

@@ -51,11 +51,10 @@ export function useLedger(): LedgerInterface {
   }
 
   async function connect(wallet: LedgerWallet, bitcoinAddressType: BitcoinAddressType): Promise<string> {
-    const addresses = wallet === WalletType.LEDGER_BTC ? await connectBtc(bitcoinAddressType) : await connectEth();
-    return addresses[0];
+    return wallet === WalletType.LEDGER_BTC ? await connectBtc(bitcoinAddressType) : await connectEth();
   }
 
-  async function connectBtc(bitcoinAddressType: BitcoinAddressType): Promise<string[]> {
+  async function connectBtc(bitcoinAddressType: BitcoinAddressType): Promise<string> {
     const client = get<BtcClient>(btcStorageKey) ?? (await setupBtcConnection());
 
     tmpBtcClient = client;
@@ -64,10 +63,10 @@ export function useLedger(): LedgerInterface {
     return fetchAddress(fetchBtcAddress(bitcoinAddressType, 0, 1), () => {
       client.transport.close();
       put(btcStorageKey, undefined);
-    });
+    }).then((a) => a[0]);
   }
 
-  async function connectEth(): Promise<string[]> {
+  async function connectEth(): Promise<string> {
     const client = get<EthClient>(ethStorageKey) ?? (await setupEthConnection());
 
     tmpEthClient = client;
@@ -76,7 +75,7 @@ export function useLedger(): LedgerInterface {
     return fetchAddress(fetchEthAddress(0, 1), () => {
       client.transport.close();
       put(ethStorageKey, undefined);
-    });
+    }).then((a) => a[0]);
   }
 
   async function fetchAddress(addressFetch: Promise<string[]>, onTimeout: () => void): Promise<string[]> {
@@ -123,7 +122,6 @@ export function useLedger(): LedgerInterface {
 
   async function setupBtcConnection(): Promise<BtcClient> {
     const tmpTransport = await setupTransport();
-
     return new BtcClient(tmpTransport);
   }
 

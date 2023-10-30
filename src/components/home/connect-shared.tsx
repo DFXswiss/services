@@ -13,6 +13,11 @@ export type Account =
     }
   | { session: string };
 
+export interface Address {
+  address: string;
+  index: number;
+}
+
 export interface ConnectProps {
   rootRef: RefObject<HTMLDivElement>;
   wallet: WalletType;
