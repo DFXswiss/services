@@ -29,6 +29,16 @@ const routes = [
     errorElement: <ErrorScreen />,
   },
   {
+    path: '/login',
+    element: <HomeScreen />,
+    errorElement: <ErrorScreen />,
+  },
+  {
+    path: '/my-dfx',
+    element: <HomeScreen />,
+    errorElement: <ErrorScreen />,
+  },
+  {
     path: '/buy',
     element: <BuyScreen />,
   },

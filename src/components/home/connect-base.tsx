@@ -12,6 +12,7 @@ import { SignHint } from './sign-hint';
 
 interface Props extends ConnectProps {
   isSupported: () => boolean | Promise<boolean>;
+  fallback?: WalletType;
   supportedBlockchains: { [k in WalletType]?: Blockchain[] };
   getAccount: (blockchain: Blockchain, isReconnect: boolean) => Promise<Account>;
   signMessage: (
@@ -30,12 +31,14 @@ export function ConnectBase({
   wallet,
   blockchain,
   isSupported,
+  fallback,
   supportedBlockchains,
   getAccount,
   signMessage,
   renderContent,
   onLogin,
   onCancel,
+  onSwitch,
   autoConnect,
 }: Props): JSX.Element {
   const { login, setSession, switchBlockchain, activeWallet } = useWalletContext();
@@ -60,6 +63,8 @@ export function ConnectBase({
 
   async function init() {
     const supported = await isSupported();
+    if (!supported && fallback) onSwitch(fallback);
+
     setShowInstallHint(!supported);
     setIsLoading(false);
 
@@ -70,11 +75,12 @@ export function ConnectBase({
     setIsConnecting(true);
     setConnectError(undefined);
 
-    if (!blockchain) throw new Error('No blockchain');
-    if (!supportedBlockchains[wallet]?.includes(blockchain)) throw new Error('Invalid blockchain');
+    const usedChain = blockchain ?? supportedBlockchains[wallet]?.[0];
+    if (!usedChain) throw new Error('No blockchain');
+    if (!supportedBlockchains[wallet]?.includes(usedChain)) throw new Error('Invalid blockchain');
 
-    await getAccount(blockchain, activeWallet === wallet)
-      .then((a) => doLogin({ ...a, blockchain }))
+    await getAccount(usedChain, activeWallet === wallet)
+      .then((a) => doLogin({ ...a, blockchain: usedChain }))
       .then(onLogin)
       .catch((e) => {
         setIsConnecting(false);

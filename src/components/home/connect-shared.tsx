@@ -24,6 +24,7 @@ export interface ConnectProps {
   blockchain?: Blockchain;
   onLogin: () => void;
   onCancel: () => void;
+  onSwitch: (wallet: WalletType) => void;
 }
 
 export interface ConnectContentProps {

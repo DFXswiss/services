@@ -2165,6 +2165,27 @@ export const FeatureTree: Page[] = [
     ],
   },
 
+ // --- Buy Fox Only --- //
+ {
+  id: 'buy-fox',
+  header: 'Shapeshift x DFX',
+  description: 'Buy and sell Fox Token directly on your Wallet!',
+  bottomImage:
+    'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+  tiles: [
+    {
+      id: 'metamask',
+      img: 'metamaskrabby',
+      wallet: { type: WalletType.META_MASK, blockchain: Blockchain.ETHEREUM, assetOut: 'ETH'  },
+    },
+    {
+      id: 'walletconnect',
+      img: 'walletconnect',
+      wallet: { type: WalletType.WALLET_CONNECT, blockchain: Blockchain.ETHEREUM, assetOut: 'ETH'  },
+    },
+  ],
+},
+
   // --- Shapeshift --- //
   {
     id: 'shapeshift',

@@ -26,6 +26,7 @@ import {
   StyledLink,
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
+import { TransactionError } from '@dfx.swiss/react/dist/definitions/transaction';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { KycHint } from '../components/kyc-hint';
@@ -47,7 +48,7 @@ export function BuyInfoScreen(): JSX.Element {
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
-  const { isAllowedToBuy } = useKycHelper();
+  const { isComplete } = useKycHelper();
   const { currencies, receiveFor } = useBuy();
   const { closeServices } = useAppHandlingContext();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -58,6 +59,7 @@ export function BuyInfoScreen(): JSX.Element {
   const [asset, setAsset] = useState<Asset>();
   const [currency, setCurrency] = useState<Fiat>();
   const [customAmountError, setCustomAmountError] = useState<string>();
+  const [kycRequired, setKycRequired] = useState<boolean>(false);
 
   // default params
   useEffect(() => {
@@ -82,27 +84,35 @@ export function BuyInfoScreen(): JSX.Element {
     }
 
     receiveFor(request)
-      .then(checkForMinDeposit)
+      .then(validateBuy)
       .then(setPaymentInfo)
       .finally(() => setIsLoading(false));
   }, [asset, currency, amountIn, amountOut]);
 
-  function checkForMinDeposit(buy: Buy): Buy | undefined {
-    if (buy.minVolume > buy.amount) {
-      setCustomAmountError(
-        translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
-          amount: Utils.formatAmount(buy.minVolume),
-          currency: buy.currency.name,
-        }),
-      );
-      return undefined;
-    } else {
-      setCustomAmountError(undefined);
-      return buy;
+  function validateBuy(buy: Buy): Buy | undefined {
+    switch (buy.error) {
+      case TransactionError.AMOUNT_TOO_LOW:
+        setCustomAmountError(
+          translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+            amount: Utils.formatAmount(buy.minVolume),
+            currency: buy.currency.name,
+          }),
+        );
+        return undefined;
+
+      case TransactionError.AMOUNT_TOO_HIGH:
+        if (!isComplete) {
+          setKycRequired(true);
+          return undefined;
+        }
     }
+
+    setCustomAmountError(undefined);
+    setKycRequired(false);
+
+    return buy;
   }
 
-  const kycRequired = paymentInfo && !isAllowedToBuy(paymentInfo.amount);
   const showsSimple = user?.mail != null;
 
   return (
