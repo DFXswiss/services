@@ -1,6 +1,7 @@
 import { Blockchain, useAuthContext, useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
+import { BitcoinAddressType } from '../../config/key-path';
 import { WalletType, useWalletContext } from '../../contexts/wallet.context';
 import { useDeferredPromise } from '../../hooks/deferred-promise.hook';
 import { useStore } from '../../hooks/store.hook';
@@ -14,12 +15,19 @@ interface Props extends ConnectProps {
   fallback?: WalletType;
   supportedBlockchains: { [k in WalletType]?: Blockchain[] };
   getAccount: (blockchain: Blockchain, isReconnect: boolean) => Promise<Account>;
-  signMessage: (msg: string, address: string, blockchain: Blockchain) => Promise<string>;
+  signMessage: (
+    msg: string,
+    address: string,
+    blockchain: Blockchain,
+    index?: number,
+    type?: BitcoinAddressType,
+  ) => Promise<string>;
   renderContent: (props: ConnectContentProps) => JSX.Element;
   autoConnect?: boolean;
 }
 
 export function ConnectBase({
+  rootRef,
   wallet,
   blockchain,
   isSupported,
@@ -46,6 +54,8 @@ export function ConnectBase({
   const [addr, setAddr] = useState<string>();
   const [msg, setMsg] = useState<string>();
   const [chain, setChain] = useState<Blockchain>();
+  const [index, setIndex] = useState<number>();
+  const [type, setType] = useState<BitcoinAddressType>();
 
   useEffect(() => {
     init();
@@ -90,17 +100,27 @@ export function ConnectBase({
           'session' in account
             ? setSession(wallet, account.blockchain, account.session)
             : login(wallet, account.address, account.blockchain, (a, m) =>
-                account.signature ? Promise.resolve(account.signature) : onSignMessage(a, account.blockchain, m),
+                account.signature
+                  ? Promise.resolve(account.signature)
+                  : onSignMessage(a, account.blockchain, m, account.index, account.type),
               ),
         );
   }
 
-  async function onSignMessage(address: string, blockchain: Blockchain, message: string): Promise<string> {
-    if (!showsSignatureInfo.get()) return signMessage(message, address, blockchain);
+  async function onSignMessage(
+    address: string,
+    blockchain: Blockchain,
+    message: string,
+    index?: number,
+    addressType?: BitcoinAddressType,
+  ): Promise<string> {
+    if (!showsSignatureInfo.get()) return signMessage(message, address, blockchain, index, addressType);
 
     setAddr(address);
     setChain(blockchain);
     setMsg(message);
+    setIndex(index);
+    setType(addressType);
     return createSignMessagePromise();
   }
 
@@ -109,14 +129,18 @@ export function ConnectBase({
     address: string,
     blockchain: Blockchain,
     message: string,
+    index?: number,
+    addressType?: BitcoinAddressType,
   ): Promise<void> {
     showsSignatureInfo.set(!hide);
     setAddr(undefined);
     setMsg(undefined);
     setChain(undefined);
+    setIndex(undefined);
+    setType(undefined);
 
     try {
-      const signature = await signMessage(message, address, blockchain);
+      const signature = await signMessage(message, address, blockchain, index, addressType);
       signMessagePromise?.resolve(signature);
     } catch (e) {
       signMessagePromise?.reject(e);
@@ -128,14 +152,14 @@ export function ConnectBase({
   ) : showInstallHint ? (
     <InstallHint type={wallet} onConfirm={onCancel} />
   ) : addr && msg && chain ? (
-    <SignHint onConfirm={(h) => onSignHintConfirmed(h, addr, chain, msg)} />
+    <SignHint onConfirm={(h) => onSignHintConfirmed(h, addr, chain, msg, index, type)} />
   ) : undefined;
 
   return (
     <>
       {contentOverride}
       <span className={'w-full flex flex-col items-center' + (contentOverride ? ' hidden' : '')}>
-        {renderContent({ back: onCancel, connect, isConnecting, error: connectError })}
+        {renderContent({ rootRef, back: onCancel, connect, isConnecting, error: connectError })}
       </span>
     </>
   );

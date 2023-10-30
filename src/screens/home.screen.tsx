@@ -1,6 +1,6 @@
 import { Blockchain, useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { ConnectWrapper } from '../components/home/connect-wrapper';
@@ -41,6 +41,7 @@ export function HomeScreen(): JSX.Element {
   const { pathname } = useLocation();
   const { getPage, getWallet, setOptions } = useFeatureTree();
   const appParams = useAppParams();
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const [connectTo, setConnectTo] = useState<Wallet>();
   const [loginSuccessful, setLoginSuccessful] = useState(false);
@@ -121,6 +122,7 @@ export function HomeScreen(): JSX.Element {
       title={isEmbedded ? title : undefined}
       backButton={connectTo != null || (currentPageId != null && currentPageId !== appParams.mode)}
       onBack={connectTo || currentPageId ? handleBack : undefined}
+      rootRef={rootRef}
     >
       {!isInitialized || !currentPage ? (
         <div className="mt-4">
@@ -131,6 +133,7 @@ export function HomeScreen(): JSX.Element {
           {connectTo ? (
             <Suspense fallback={<StyledLoadingSpinner size={SpinnerSize.LG} />}>
               <ConnectWrapper
+                rootRef={rootRef}
                 wallet={connectTo.type}
                 blockchain={selectedBlockchain}
                 onLogin={() => setLoginSuccessful(true)}

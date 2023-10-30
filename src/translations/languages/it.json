@@ -52,6 +52,11 @@
     "Click on \"Connect\"": "Fare clic su \"Collegare\"",
     "Confirm \"Sign message\" on your {{device}}": "Confermare \"Sign message\" sul {{device}}",
 
+    "Choose an address": "Selezionare un indirizzo",
+    "Load more addresses": "Carica altri indirizzi",
+    "Address type": "Tipo di indirizzo",
+    "Address index": "Indice dell'indirizzo",
+
     "Open the {{app}} app on your Ledger": "Aprire l'applicazione {{app}} sul proprio Ledger",
 
     "Enter your password on your BitBox": "Inserire la password sul BitBox",
