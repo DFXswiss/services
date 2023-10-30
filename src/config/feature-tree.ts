@@ -2176,12 +2176,12 @@ export const FeatureTree: Page[] = [
     {
       id: 'metamask',
       img: 'metamaskrabby',
-      wallet: { type: WalletType.META_MASK, blockchain: Blockchain.ETHEREUM, assetOut: 'ETH'  },
+      wallet: { type: WalletType.META_MASK, blockchain: Blockchain.ETHEREUM },
     },
     {
       id: 'walletconnect',
       img: 'walletconnect',
-      wallet: { type: WalletType.WALLET_CONNECT, blockchain: Blockchain.ETHEREUM, assetOut: 'ETH'  },
+      wallet: { type: WalletType.WALLET_CONNECT, blockchain: Blockchain.ETHEREUM },
     },
   ],
 },
