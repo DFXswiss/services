@@ -104,7 +104,7 @@ function Content({ connect, link, error }: ContentProps): JSX.Element {
         <QrCopy data={link} />
         <StyledLink label={translate('screens/home', 'Open app')} url={link} target="_self" dark />
 
-        <h2 className="text-dfxGray-700 mb-4 mt-8">{translate('screens/home', 'Install BTC Taro')}</h2>
+        <h2 className="text-dfxGray-700 mt-8">{translate('screens/home', 'Install BTC Taro')}</h2>
         <a href="https://dfx.swiss/app/btc" target="_blank">
           <img src="https://content.dfx.swiss/img/v1/services/btc-app.png" className="w-full max-w-sm" />
         </a>
