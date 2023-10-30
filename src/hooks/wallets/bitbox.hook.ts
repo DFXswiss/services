@@ -14,8 +14,16 @@ interface BitboxError extends Error {
 
 export type BitboxWallet = WalletType.BITBOX_BTC | WalletType.BITBOX_ETH;
 
+const ScriptTypes: { [t in BitcoinAddressType]?: number } = {
+  [BitcoinAddressType.TAPROOT]: constants.messages.BTCScriptConfig_SimpleType.P2TR,
+  [BitcoinAddressType.NATIVE_SEGWIT]: constants.messages.BTCScriptConfig_SimpleType.P2WPKH,
+  [BitcoinAddressType.SEGWIT]: constants.messages.BTCScriptConfig_SimpleType.P2WPKH_P2SH,
+};
+
 export interface BitboxInterface {
   isSupported: () => Promise<boolean>;
+  addressTypes: BitcoinAddressType[];
+  defaultAddressType: BitcoinAddressType;
   connect: (
     wallet: BitboxWallet,
     onPairing: (code: string) => Promise<void>,
@@ -109,7 +117,7 @@ export function useBitbox(): BitboxInterface {
 
       // fetch address
       return wallet === WalletType.BITBOX_BTC
-        ? (await getBtcAddress(bitcoinAddressType, 0, 2))[0]
+        ? (await getBtcAddress(bitcoinAddressType, 0, 1))[0]
         : (await getEthAddress(0, 1))[0];
     } catch (e) {
       bitBox.close();
@@ -158,12 +166,7 @@ export function useBitbox(): BitboxInterface {
     for (let i = startIndex; i < startIndex + count; i++) {
       const keyPath = getKeypathFromString(KeyPath.BTC(bitcoinAddressType).address(i));
       addresses.push(
-        await bitBox.btcDisplayAddressSimple(
-          coinBtc,
-          keyPath,
-          bitcoinAddressType == BitcoinAddressType.SEGWIT ? 0 : 1,
-          false,
-        ),
+        await bitBox.btcDisplayAddressSimple(coinBtc, keyPath, ScriptTypes[bitcoinAddressType] ?? 0, false),
       );
     }
     return addresses;
@@ -216,7 +219,7 @@ export function useBitbox(): BitboxInterface {
     const keyPath = getKeypathFromString(KeyPath.BTC(bitcoinAddressType).address(addressIndex));
     const { electrumSignature } = await bitBox.btcSignMessage(
       coinBtc,
-      bitcoinAddressType == BitcoinAddressType.SEGWIT ? 0 : 1,
+      ScriptTypes[bitcoinAddressType] ?? 0,
       keyPath,
       Buffer.from(msg),
     );
@@ -231,5 +234,15 @@ export function useBitbox(): BitboxInterface {
     return `0x${Buffer.from([...Array.from(r), ...Array.from(s), ...Array.from(v)]).toString('hex')}`;
   }
 
-  return useMemo(() => ({ isSupported, connect, signMessage, fetchAddresses }), []);
+  return useMemo(
+    () => ({
+      isSupported,
+      addressTypes: [BitcoinAddressType.NATIVE_SEGWIT, BitcoinAddressType.SEGWIT],
+      defaultAddressType: BitcoinAddressType.NATIVE_SEGWIT,
+      connect,
+      signMessage,
+      fetchAddresses,
+    }),
+    [],
+  );
 }

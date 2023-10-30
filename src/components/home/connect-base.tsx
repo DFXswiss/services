@@ -26,6 +26,7 @@ interface Props extends ConnectProps {
 }
 
 export function ConnectBase({
+  rootRef,
   wallet,
   blockchain,
   isSupported,
@@ -51,6 +52,7 @@ export function ConnectBase({
   const [msg, setMsg] = useState<string>();
   const [chain, setChain] = useState<Blockchain>();
   const [index, setIndex] = useState<number>();
+  const [type, setType] = useState<BitcoinAddressType>();
 
   useEffect(() => {
     init();
@@ -104,14 +106,15 @@ export function ConnectBase({
     blockchain: Blockchain,
     message: string,
     index?: number,
-    type?: BitcoinAddressType,
+    addressType?: BitcoinAddressType,
   ): Promise<string> {
-    if (!showsSignatureInfo.get()) return signMessage(message, address, blockchain, index, type);
+    if (!showsSignatureInfo.get()) return signMessage(message, address, blockchain, index, addressType);
 
     setAddr(address);
     setChain(blockchain);
     setMsg(message);
     setIndex(index);
+    setType(addressType);
     return createSignMessagePromise();
   }
 
@@ -121,15 +124,17 @@ export function ConnectBase({
     blockchain: Blockchain,
     message: string,
     index?: number,
+    addressType?: BitcoinAddressType,
   ): Promise<void> {
     showsSignatureInfo.set(!hide);
     setAddr(undefined);
     setMsg(undefined);
     setChain(undefined);
     setIndex(undefined);
+    setType(undefined);
 
     try {
-      const signature = await signMessage(message, address, blockchain, index);
+      const signature = await signMessage(message, address, blockchain, index, addressType);
       signMessagePromise?.resolve(signature);
     } catch (e) {
       signMessagePromise?.reject(e);
@@ -141,14 +146,14 @@ export function ConnectBase({
   ) : showInstallHint ? (
     <InstallHint type={wallet} onConfirm={onCancel} />
   ) : addr && msg && chain ? (
-    <SignHint onConfirm={(h) => onSignHintConfirmed(h, addr, chain, msg, index)} />
+    <SignHint onConfirm={(h) => onSignHintConfirmed(h, addr, chain, msg, index, type)} />
   ) : undefined;
 
   return (
     <>
       {contentOverride}
       <span className={'w-full flex flex-col items-center' + (contentOverride ? ' hidden' : '')}>
-        {renderContent({ back: onCancel, connect, isConnecting, error: connectError })}
+        {renderContent({ rootRef, back: onCancel, connect, isConnecting, error: connectError })}
       </span>
     </>
   );

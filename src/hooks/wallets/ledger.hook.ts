@@ -19,6 +19,8 @@ export type LedgerWallet = WalletType.LEDGER_BTC | WalletType.LEDGER_ETH;
 
 export interface LedgerInterface {
   isSupported: () => Promise<boolean>;
+  addressTypes: BitcoinAddressType[];
+  defaultAddressType: BitcoinAddressType;
   connect: (wallet: LedgerWallet, bitcoinAddressType: BitcoinAddressType) => Promise<string>;
   fetchAddresses: (
     wallet: LedgerWallet,
@@ -230,6 +232,8 @@ export function useLedger(): LedgerInterface {
   return useMemo(
     () => ({
       isSupported,
+      addressTypes: [BitcoinAddressType.NATIVE_SEGWIT, BitcoinAddressType.SEGWIT, BitcoinAddressType.LEGACY],
+      defaultAddressType: BitcoinAddressType.NATIVE_SEGWIT,
       connect,
       fetchAddresses,
       signMessage,

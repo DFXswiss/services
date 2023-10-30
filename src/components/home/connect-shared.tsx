@@ -1,4 +1,5 @@
 import { Blockchain } from '@dfx.swiss/react';
+import { RefObject } from 'react';
 import { BitcoinAddressType } from '../../config/key-path';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
@@ -13,6 +14,7 @@ export type Account =
   | { session: string };
 
 export interface ConnectProps {
+  rootRef: RefObject<HTMLDivElement>;
   wallet: WalletType;
   blockchain?: Blockchain;
   onLogin: () => void;
@@ -20,6 +22,7 @@ export interface ConnectProps {
 }
 
 export interface ConnectContentProps {
+  rootRef: RefObject<HTMLDivElement>;
   back: () => void;
   connect: () => Promise<void>;
   isConnecting: boolean;

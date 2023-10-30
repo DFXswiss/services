@@ -41,9 +41,6 @@
 
     "Scan with your wallet": "Scansione con il portafoglio",
     "Connect your wallet": "Collegare il portafoglio",
-    "Address type":"Tipo di indirizzo",
-    "Choose address":"Scegliere l'indirizzo",
-    "Load more addresses":"Carica altri indirizzi",
 
     "Please confirm the connection in your MetaMask.": "Confermare la connessione nella MetaMask.",
     "Please confirm the connection in the Alby browser extension.": "Confermare la connessione nell'estensione del browser Alby.",
@@ -54,6 +51,11 @@
     "Connect your {{device}} with your computer": "Collegare il  {{device}} al computer",
     "Click on \"Connect\"": "Fare clic su \"Collegare\"",
     "Confirm \"Sign message\" on your {{device}}": "Confermare \"Sign message\" sul {{device}}",
+
+    "Choose an address": "Selezionare un indirizzo",
+    "Load more addresses": "Carica altri indirizzi",
+    "Address type": "Tipo di indirizzo",
+    "Address index": "Indice dell'indirizzo",
 
     "Open the {{app}} app on your Ledger": "Aprire l'applicazione {{app}} sul proprio Ledger",
 
