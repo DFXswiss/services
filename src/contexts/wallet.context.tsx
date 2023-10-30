@@ -128,8 +128,8 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
 
   async function createSession(address: string, signature: string): Promise<string> {
     const session =
-      (await api.login(address, signature)) ??
-      (await api.signUp(address, signature, appParams.wallet, appParams.refcode));
+      (await api.login(address, signature, appParams.discountCode)) ??
+      (await api.signUp(address, signature, appParams.wallet, appParams.refcode, appParams.discountCode));
     if (!session) throw new Error('Failed to create session');
 
     return session;
