@@ -90,7 +90,7 @@ export default function SellScreen(): JSX.Element {
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [balances, setBalances] = useState<AssetBalance[]>();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isTxDone, setTxDone] = useState<boolean>();
+  const [isTxDone, setTxDone] = useState<boolean>(false);
   const [sellTxId, setSellTxId] = useState<string>();
   const [bankAccountSelection, setBankAccountSelection] = useState(false);
 
@@ -260,14 +260,18 @@ export default function SellScreen(): JSX.Element {
 
   async function handleNext(paymentInfo: Sell): Promise<void> {
     setIsProcessing(true);
-    setTxDone(true);
+
     await updateBankAccount();
 
-    if (activeWallet) {
-      canSendTransaction() && sendTransaction(paymentInfo).then(setSellTxId);
-    } else {
-      close(paymentInfo, false);
+    if (canSendTransaction()) {
+      if (activeWallet) {
+        await sendTransaction(paymentInfo).then(setSellTxId);
+      } else {
+        return close(paymentInfo, false);
+      }
     }
+
+    setTxDone(true);
     setIsProcessing(false);
   }
 
@@ -448,11 +452,20 @@ export default function SellScreen(): JSX.Element {
             )}
             {paymentInfo && !kycRequired && (
               <>
-                {paymentInfo.paymentRequest && canSendTransaction() && (
-                  <>{paymentInfo.paymentRequest && <QrCopy data={paymentInfo.paymentRequest} />}</>
+                {paymentInfo.paymentRequest && !canSendTransaction() && (
+                  <>
+                    {paymentInfo.paymentRequest && (
+                      <div>
+                        <p className="font-semibold text-sm text-dfxBlue-800">
+                          {translate('screens/sell', 'Pay with your wallet')}
+                        </p>
+                        <QrCopy data={paymentInfo.paymentRequest} />
+                      </div>
+                    )}
+                  </>
                 )}
                 <div>
-                  <div className="pt-4 w-full text-left">
+                  <div className="pt-4 w-full">
                     <StyledLink
                       label={translate(
                         'screens/payment',
@@ -467,8 +480,8 @@ export default function SellScreen(): JSX.Element {
                     label={translate(
                       'screens/sell',
                       canSendTransaction()
-                        ? 'Pay with your wallet and click here once you have issued the transfer'
-                        : 'Complete transaction in your wallet',
+                        ? 'Complete transaction in your wallet'
+                        : 'Click here once you have issued the transaction',
                     )}
                     onClick={() => handleNext(paymentInfo)}
                     caps={false}
