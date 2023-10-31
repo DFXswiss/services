@@ -39,6 +39,7 @@ export function useSellHelper(): SellHelperInterface {
       case WalletType.CLI_BTC:
       case WalletType.CLI_ETH:
       case WalletType.WALLET_CONNECT:
+      case WalletType.DFX_TARO:
         // no balance available
         return undefined;
 
@@ -68,6 +69,7 @@ export function useSellHelper(): SellHelperInterface {
       case WalletType.CLI_BTC:
       case WalletType.CLI_ETH:
       case WalletType.WALLET_CONNECT:
+      case WalletType.DFX_TARO:
         throw new Error('Not supported yet');
 
       default:
@@ -90,6 +92,7 @@ export function useSellHelper(): SellHelperInterface {
       case WalletType.CLI_BTC:
       case WalletType.CLI_ETH:
       case WalletType.WALLET_CONNECT:
+      case WalletType.DFX_TARO:
         return false;
 
       default:

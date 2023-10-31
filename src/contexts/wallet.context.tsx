@@ -1,4 +1,4 @@
-import { Blockchain, Utils, useApiSession, useAuth, useSessionContext } from '@dfx.swiss/react';
+import { Blockchain, Utils, useApiSession, useAuth, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../hooks/store.hook';
@@ -52,6 +52,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const { getSignMessage } = useAuth();
   const { readBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
+  const { addDiscountCode } = useUserContext();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
@@ -62,6 +63,10 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     if (isSessionInitialized && !isLoggedIn) {
       setWallet();
       if (isInitialized) readBalances(undefined);
+    }
+
+    if (isSessionInitialized && isInitialized && isLoggedIn && appParams.discountCode) {
+      addDiscountCode(appParams.discountCode).catch(() => undefined);
     }
   }, [isSessionInitialized, isLoggedIn, isInitialized]);
 
