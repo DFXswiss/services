@@ -111,6 +111,7 @@ function MenuIcon({ icon, setIsNavigationOpen }: IconContentProps): JSX.Element 
 }
 
 function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JSX.Element {
+  const { navigate } = useNavigation();
   const { authenticationToken } = useAuthContext();
   const { translate, language, availableLanguages, changeLanguage } = useSettingsContext();
   const { isLoggedIn, logout: apiLogout } = useSessionContext();
@@ -128,6 +129,11 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
     }
   }, [selectedLanguage]);
 
+  async function login() {
+    navigate('/login');
+    setIsNavigationOpen(false);
+  }
+
   async function logout() {
     await apiLogout();
     setIsNavigationOpen(false);
@@ -137,13 +143,12 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
     <nav>
       <div className="absolute top-14 right-2 border-1 drop-shadow-md w-64 z-20 flex flex-col bg-dfxGray-300">
         <div className="mx-4 py-4 text-dfxGray-800">
-          {authenticationToken && (
-            <NavigationLink
-              icon={IconVariant.SETTINGS}
-              label={translate('navigation/links', 'My DFX')}
-              url={`${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`}
-            />
-          )}
+          <NavigationLink
+            icon={IconVariant.SETTINGS}
+            label={translate('navigation/links', 'My DFX')}
+            url={authenticationToken ? `${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}` : '/my-dfx'}
+            target={authenticationToken ? '_blank' : '_self'}
+          />
           <NavigationLink
             icon={IconVariant.HOME}
             label={translate('navigation/links', 'DFX.swiss')}
@@ -181,15 +186,13 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             />
           </Form>
 
-          {isLoggedIn && (
-            <StyledButton
-              className="mt-4"
-              label={translate('general/actions', 'Logout')}
-              onClick={logout}
-              color={StyledButtonColor.STURDY_WHITE}
-              width={StyledButtonWidth.FULL}
-            />
-          )}
+          <StyledButton
+            className="mt-4"
+            label={translate('general/actions', isLoggedIn ? 'Logout' : 'Login')}
+            onClick={isLoggedIn ? logout : login}
+            color={StyledButtonColor.STURDY_WHITE}
+            width={StyledButtonWidth.FULL}
+          />
         </div>
       </div>
     </nav>

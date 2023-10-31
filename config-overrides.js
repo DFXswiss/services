@@ -1,4 +1,5 @@
 const webpack = require('webpack');
+const version = require('./package.json').version;
 
 module.exports = function override(config, env) {
   config.resolve.fallback = {
@@ -17,5 +18,14 @@ module.exports = function override(config, env) {
       Buffer: ['buffer', 'Buffer'],
     }),
   ];
+  config.output = {
+    ...config.output,
+    ...(process.env.PUBLIC_URL && process.env.CUSTOM_CHUNK_PATH
+      ? {
+          publicPath: process.env.PUBLIC_URL + process.env.CUSTOM_CHUNK_PATH,
+          chunkFilename: config.output.chunkFilename.replace('static/js', `v${version}-chunks`),
+        }
+      : undefined),
+  };
   return config;
 };

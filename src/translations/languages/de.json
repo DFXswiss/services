@@ -39,6 +39,9 @@
     "title": "Eine einfache <1>Toolbox</1><2/>für alle <4>DFX Services</4>",
     "Coming Soon": "Coming Soon",
 
+    "Scan with your wallet": "Scanne mit Deiner Wallet",
+    "Connect your wallet": "Verbinde Deine Wallet",
+
     "Please confirm the connection in your MetaMask.": "Bitte bestätige die Verbindung in Deiner MetaMask.",
     "Please confirm the connection in the Alby browser extension.": "Bitte bestätige die Verbindung in der Alby Browsererweiterung.",
     "Please confirm the connection in your wallet.": "Bitte bestätige die Verbindung in deiner Wallet.",
@@ -48,6 +51,11 @@
     "Connect your {{device}} with your computer": "Verbinde Deinen {{device}} mit Deinem Computer",
     "Click on \"Connect\"": "Klicke auf \"Verbinden\"",
     "Confirm \"Sign message\" on your {{device}}": "Bestätige \"Sign message\" auf Deinem {{device}}",
+
+    "Choose an address": "Wähle eine Adresse",
+    "Load more addresses": "Lade mehr Adressen",
+    "Address type": "Adresstyp",
+    "Address index": "Adressindex",
 
     "Open the {{app}} app on your Ledger": "Öffne die {{app}} App auf Deinem Ledger",
 
@@ -61,7 +69,8 @@
     "Click on \"Continue in Trezor Connect\"": "Klicke auf \"Weiter zu Trezor Connect\"",
     "Follow the steps in the Trezor Connect website": "Führe die Schritte in der Trezor Connect Webseite aus",
 
-    "Login with your DFX App": "Anmeldung mit Deiner DFX-App",
+    "Login with your BTC Taro Wallet": "Anmeldung mit Deiner BTC Taro Wallet",
+    "Install BTC Taro": "BTC Taro installieren",
     "Open app": "App öffnen",
 
     "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Melde Dich bei Deinem DFX-Konto an, indem Du mit Deiner Unterschrift bestätigst, dass Du der alleinige Eigentümer der angegebenen Blockchain-Adresse bist.",

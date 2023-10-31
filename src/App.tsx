@@ -1,6 +1,9 @@
 import { DfxContextProvider } from '@dfx.swiss/react';
+import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
+import { Suspense, lazy } from 'react';
 import { RouteObject, RouterProvider } from 'react-router-dom';
+import { Layout } from './components/layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
 import { SettingsContextProvider } from './contexts/settings.context';
@@ -13,14 +16,25 @@ import { ErrorScreen } from './screens/error.screen';
 import { HomeScreen } from './screens/home.screen';
 import { ProfileScreen } from './screens/profile.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
-import { SellScreen } from './screens/sell.screen';
 import { setupLanguages } from './translations';
+
+const SellScreen = lazy(() => import('./screens/sell.screen'));
 
 setupLanguages();
 
 const routes = [
   {
     path: '/',
+    element: <HomeScreen />,
+    errorElement: <ErrorScreen />,
+  },
+  {
+    path: '/login',
+    element: <HomeScreen />,
+    errorElement: <ErrorScreen />,
+  },
+  {
+    path: '/my-dfx',
     element: <HomeScreen />,
     errorElement: <ErrorScreen />,
   },
@@ -38,7 +52,7 @@ const routes = [
   },
   {
     path: '/sell',
-    element: <SellScreen />,
+    element: withSuspense(<SellScreen />),
   },
   {
     path: '/sell/info',
@@ -93,6 +107,18 @@ function App({ routerFactory, params }: AppProps) {
         </AppHandlingContextProvider>
       </BalanceContextProvider>
     </DfxContextProvider>
+  );
+}
+
+function withSuspense(WrappedComponent: JSX.Element): JSX.Element {
+  return <Suspense fallback={<SuspenseFallback />}>{WrappedComponent}</Suspense>;
+}
+
+function SuspenseFallback(): JSX.Element {
+  return (
+    <Layout>
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
+    </Layout>
   );
 }
 

@@ -1,9 +1,10 @@
 import EthClient from '@ledgerhq/hw-app-eth';
 import Transport from '@ledgerhq/hw-transport';
 import TransportWebHID from '@ledgerhq/hw-transport-webhid';
-import BtcClient, { DefaultWalletPolicy } from 'ledger-bitcoin';
-import { useState } from 'react';
-import KeyPath from '../../config/key-path';
+import BtcClient, { DefaultDescriptorTemplate, DefaultWalletPolicy } from 'ledger-bitcoin';
+import { useMemo } from 'react';
+import KeyPath, { BitcoinAddressType } from '../../config/key-path';
+import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
@@ -14,56 +15,70 @@ interface LedgerError extends Error {
   statusText: string;
 }
 
-type LedgerWallet = WalletType.LEDGER_BTC | WalletType.LEDGER_ETH;
+export type LedgerWallet = WalletType.LEDGER_BTC | WalletType.LEDGER_ETH;
 
 export interface LedgerInterface {
   isSupported: () => Promise<boolean>;
-  connect: (wallet: LedgerWallet) => Promise<string>;
-  signMessage: (msg: string, wallet: LedgerWallet) => Promise<string>;
+  addressTypes: BitcoinAddressType[];
+  defaultAddressType: BitcoinAddressType;
+  connect: (wallet: LedgerWallet, bitcoinAddressType: BitcoinAddressType) => Promise<string>;
+  fetchAddresses: (
+    wallet: LedgerWallet,
+    startIndex: number,
+    count: number,
+    bitcoinAddressType: BitcoinAddressType,
+  ) => Promise<string[]>;
+  signMessage: (
+    msg: string,
+    wallet: LedgerWallet,
+    addressIndex: number,
+    bitcoinAddressType: BitcoinAddressType,
+  ) => Promise<string>;
 }
 
 export function useLedger(): LedgerInterface {
-  const [transport, setTransport] = useState<Transport>();
+  const { get, put } = useSettingsContext();
+
+  const transportStorageKey = 'LedgerTransport';
+  const btcStorageKey = 'LedgerBtc';
+  const ethStorageKey = 'LedgerEth';
 
   let tmpBtcClient: BtcClient;
-  const [btcClient, setBtcClient] = useState<BtcClient>();
-
   let tmpEthClient: EthClient;
-  const [ethClient, setEthClient] = useState<EthClient>();
 
   async function isSupported(): Promise<boolean> {
     return TransportWebHID.isSupported();
   }
 
-  async function connect(wallet: LedgerWallet): Promise<string> {
-    return wallet === WalletType.LEDGER_BTC ? connectBtc() : connectEth();
+  async function connect(wallet: LedgerWallet, bitcoinAddressType: BitcoinAddressType): Promise<string> {
+    return wallet === WalletType.LEDGER_BTC ? await connectBtc(bitcoinAddressType) : await connectEth();
   }
 
-  async function connectBtc(): Promise<string> {
-    const client = btcClient ?? (await setupBtcConnection());
+  async function connectBtc(bitcoinAddressType: BitcoinAddressType): Promise<string> {
+    const client = get<BtcClient>(btcStorageKey) ?? (await setupBtcConnection());
 
     tmpBtcClient = client;
-    setBtcClient(client);
+    put(btcStorageKey, client);
 
-    return fetchAddress(fetchBtcAddress(client), () => {
+    return fetchAddress(fetchBtcAddress(bitcoinAddressType, 0, 1), () => {
       client.transport.close();
-      setBtcClient(undefined);
-    });
+      put(btcStorageKey, undefined);
+    }).then((a) => a[0]);
   }
 
   async function connectEth(): Promise<string> {
-    const client = ethClient ?? (await setupEthConnection());
+    const client = get<EthClient>(ethStorageKey) ?? (await setupEthConnection());
 
     tmpEthClient = client;
-    setEthClient(client);
+    put(ethStorageKey, client);
 
-    return fetchAddress(fetchEthAddress(client), () => {
+    return fetchAddress(fetchEthAddress(0, 1), () => {
       client.transport.close();
-      setEthClient(undefined);
-    });
+      put(ethStorageKey, undefined);
+    }).then((a) => a[0]);
   }
 
-  async function fetchAddress(addressFetch: Promise<string>, onTimeout: () => void): Promise<string> {
+  async function fetchAddress(addressFetch: Promise<string[]>, onTimeout: () => void): Promise<string[]> {
     try {
       return await timeout(addressFetch, 10000);
     } catch (e) {
@@ -90,8 +105,8 @@ export function useLedger(): LedgerInterface {
 
   async function setupTransport(): Promise<Transport> {
     try {
-      const tmpTransport = transport ?? (await TransportWebHID.create());
-      setTransport(tmpTransport);
+      const tmpTransport = get<Transport>(transportStorageKey) ?? (await TransportWebHID.create());
+      put(transportStorageKey, tmpTransport);
 
       return tmpTransport;
     } catch (e) {
@@ -115,21 +130,50 @@ export function useLedger(): LedgerInterface {
     return new EthClient(tmpTransport);
   }
 
-  async function fetchBtcAddress(client: BtcClient): Promise<string> {
+  async function fetchBtcAddress(
+    addressType: BitcoinAddressType,
+    startIndex: number,
+    count: number,
+  ): Promise<string[]> {
+    const client = tmpBtcClient ?? get(btcStorageKey);
+    if (!client) throw new Error('Ledger not connected');
+
     const fpr = await client.getMasterFingerprint();
-    const pubKey = await client.getExtendedPubkey(KeyPath.BTC.xPub);
-    const policy = new DefaultWalletPolicy('wpkh(@0/**)', `[${fpr}/${KeyPath.BTC.root}]${pubKey}`);
+    const pubKey = await client.getExtendedPubkey(KeyPath.BTC(addressType).xPub);
 
-    return client.getWalletAddress(policy, null, 0, 0, false);
+    const policy = new DefaultWalletPolicy(
+      KeyPath.BTC(addressType).addressStandard as DefaultDescriptorTemplate,
+      `[${fpr}/${KeyPath.BTC(addressType).root}]${pubKey}`,
+    );
+
+    const addresses = [];
+    for (let i = startIndex; i < startIndex + count; i++) {
+      addresses.push(await client.getWalletAddress(policy, null, 0, i, false));
+    }
+    return addresses;
   }
 
-  async function fetchEthAddress(client: EthClient): Promise<string> {
-    return client.getAddress(KeyPath.ETH.address, false, false).then((r) => r.address);
+  async function fetchEthAddress(startIndex: number, count: number): Promise<string[]> {
+    const client = tmpEthClient ?? get(ethStorageKey);
+    if (!client) throw new Error('Ledger not connected');
+
+    const addresses = [];
+    for (let i = startIndex; i < startIndex + count; i++) {
+      addresses.push(await client.getAddress(KeyPath.ETH.address(i), false, false).then((r) => r.address));
+    }
+    return addresses;
   }
 
-  async function signMessage(msg: string, wallet: LedgerWallet): Promise<string> {
+  async function fetchAddresses(
+    wallet: LedgerWallet,
+    startIndex: number,
+    count: number,
+    bitcoinAddressType: BitcoinAddressType,
+  ): Promise<string[]> {
     try {
-      return wallet === WalletType.LEDGER_BTC ? await signBtcMessage(msg) : await signEthMessage(msg);
+      return wallet === WalletType.LEDGER_BTC
+        ? await fetchBtcAddress(bitcoinAddressType, startIndex, count)
+        : await fetchEthAddress(startIndex, count);
     } catch (e) {
       const { statusText } = e as LedgerError;
 
@@ -141,24 +185,57 @@ export function useLedger(): LedgerInterface {
     }
   }
 
-  async function signBtcMessage(msg: string): Promise<string> {
-    const client = tmpBtcClient ?? btcClient;
-    if (!client) throw new Error('Ledger not connected');
+  async function signMessage(
+    msg: string,
+    wallet: LedgerWallet,
+    addressIndex: number,
+    bitcoinAddressType: BitcoinAddressType,
+  ): Promise<string> {
+    try {
+      return wallet === WalletType.LEDGER_BTC
+        ? await signBtcMessage(msg, bitcoinAddressType, addressIndex)
+        : await signEthMessage(msg, addressIndex);
+    } catch (e) {
+      const { statusText } = e as LedgerError;
 
-    return client.signMessage(Buffer.from(msg), KeyPath.BTC.address);
+      if (statusText === 'CONDITIONS_OF_USE_NOT_SATISFIED') {
+        throw new AbortError('User cancelled');
+      }
+
+      throw e;
+    }
   }
 
-  async function signEthMessage(msg: string): Promise<string> {
-    const client = tmpEthClient ?? ethClient;
+  async function signBtcMessage(
+    msg: string,
+    bitcoinAddressType: BitcoinAddressType,
+    addressIndex: number,
+  ): Promise<string> {
+    const client = tmpBtcClient ?? get(btcStorageKey);
+    if (!client) throw new Error('Ledger not connected');
+    return client.signMessage(Buffer.from(msg), KeyPath.BTC(bitcoinAddressType).address(addressIndex));
+  }
+
+  async function signEthMessage(msg: string, addressIndex: number): Promise<string> {
+    const client = tmpEthClient ?? get(ethStorageKey);
     if (!client) throw new Error('Ledger not connected');
 
-    const signature = await client.signPersonalMessage(KeyPath.ETH.address, Buffer.from(msg).toString('hex'));
+    const signature = await client.signPersonalMessage(
+      KeyPath.ETH.address(addressIndex),
+      Buffer.from(msg).toString('hex'),
+    );
     return '0x' + signature.r + signature.s + signature.v.toString(16);
   }
 
-  return {
-    isSupported,
-    connect,
-    signMessage,
-  };
+  return useMemo(
+    () => ({
+      isSupported,
+      addressTypes: [BitcoinAddressType.NATIVE_SEGWIT, BitcoinAddressType.SEGWIT, BitcoinAddressType.LEGACY],
+      defaultAddressType: BitcoinAddressType.NATIVE_SEGWIT,
+      connect,
+      fetchAddresses,
+      signMessage,
+    }),
+    [],
+  );
 }

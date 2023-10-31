@@ -1,7 +1,6 @@
 import {
   Asset,
   BankAccount,
-  Blockchain,
   Fiat,
   Sell,
   SellPaymentInfo,
@@ -28,6 +27,7 @@ import {
   StyledLink,
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
+import { TransactionError } from '@dfx.swiss/react/dist/definitions/transaction';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { KycHint } from '../components/kyc-hint';
@@ -51,7 +51,7 @@ export function SellInfoScreen(): JSX.Element {
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
-  const { isAllowedToSell } = useKycHelper();
+  const { isComplete } = useKycHelper();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
   const { closeServices } = useAppHandlingContext();
@@ -65,6 +65,7 @@ export function SellInfoScreen(): JSX.Element {
   const [bankAccount, setBankAccount] = useState<BankAccount>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [customAmountError, setCustomAmountError] = useState<string>();
+  const [kycRequired, setKycRequired] = useState<boolean>(false);
 
   // default params
   useEffect(() => {
@@ -93,9 +94,7 @@ export function SellInfoScreen(): JSX.Element {
   }, [bankAccountParam, getAccount, bankAccounts, countries]);
 
   useEffect(() => {
-    // TODO: remove LN check with DEV-1679
-    if (!(asset && asset.blockchain === Blockchain.LIGHTNING && currency && bankAccount && (amountIn || amountOut)))
-      return;
+    if (!(asset && currency && bankAccount && (amountIn || amountOut))) return;
 
     const request: SellPaymentInfo = { asset, currency, iban: bankAccount?.iban };
     if (amountIn) {
@@ -105,27 +104,34 @@ export function SellInfoScreen(): JSX.Element {
     }
 
     receiveFor(request)
-      .then(checkForMinDeposit)
+      .then(validateSell)
       .then(setPaymentInfo)
       .finally(() => setIsLoading(false));
   }, [asset, currency, bankAccount, amountIn, amountOut]);
 
-  function checkForMinDeposit(sell: Sell): Sell | undefined {
-    if (sell.minVolume > sell.amount) {
-      setCustomAmountError(
-        translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
-          amount: Utils.formatAmount(sell.minVolumeTarget),
-          currency: sell.currency.name,
-        }),
-      );
-      return undefined;
-    } else {
-      setCustomAmountError(undefined);
-      return sell;
-    }
-  }
+  function validateSell(sell: Sell): Sell | undefined {
+    switch (sell.error) {
+      case TransactionError.AMOUNT_TOO_LOW:
+        setCustomAmountError(
+          translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+            amount: Utils.formatAmountCrypto(sell.minVolume),
+            currency: sell.asset.name,
+          }),
+        );
+        return undefined;
 
-  const kycRequired = paymentInfo && !isAllowedToSell(paymentInfo.estimatedAmount);
+      case TransactionError.AMOUNT_TOO_HIGH:
+        if (!isComplete) {
+          setKycRequired(true);
+          return undefined;
+        }
+    }
+
+    setCustomAmountError(undefined);
+    setKycRequired(false);
+
+    return sell;
+  }
 
   return (
     <Layout textStart backButton={false} scrollRef={scrollRef}>
