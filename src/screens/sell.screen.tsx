@@ -453,16 +453,12 @@ export default function SellScreen(): JSX.Element {
             {paymentInfo && !kycRequired && (
               <>
                 {paymentInfo.paymentRequest && !canSendTransaction() && (
-                  <>
-                    {paymentInfo.paymentRequest && (
-                      <div>
-                        <p className="font-semibold text-sm text-dfxBlue-800">
-                          {translate('screens/sell', 'Pay with your wallet')}
-                        </p>
-                        <QrCopy data={paymentInfo.paymentRequest} />
-                      </div>
-                    )}
-                  </>
+                  <div>
+                    <p className="font-semibold text-sm text-dfxBlue-800">
+                      {translate('screens/sell', 'Pay with your wallet')}
+                    </p>
+                    <QrCopy data={paymentInfo.paymentRequest} />
+                  </div>
                 )}
                 <div>
                   <div className="pt-4 w-full">
