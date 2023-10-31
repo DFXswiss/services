@@ -88,7 +88,7 @@ export function ProfileScreen(): JSX.Element {
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack marginY={4} gap={2} full>
           <div>
-            <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-4 -mb-1">
+            <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-4 mb-1">
               {translate('screens/profile', 'Account Type')}
             </p>
             <StyledDropdown
