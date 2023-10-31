@@ -172,7 +172,7 @@ export function HomeScreen(): JSX.Element {
           )}
         </div>
       )}
-      {image && (
+      {!connectTo && image && (
         <div className="absolute bottom-0 w-full">
           <img src={image} className="w-full" />
         </div>
