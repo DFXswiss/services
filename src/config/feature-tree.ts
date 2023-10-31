@@ -36,7 +36,7 @@ export const FeatureTree: Page[] = [
           tiles: ['dfx-wallet', 'hw-wallet', 'alby', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.BITCOIN },
+            query: { blockchain: Blockchain.BITCOIN, assetOut: 'ETH' },
           },
         },
       },
