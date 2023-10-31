@@ -5,6 +5,7 @@ import {
   Blockchain,
   Fiat,
   Sell,
+  TransactionError,
   Utils,
   Validations,
   useAsset,
@@ -34,7 +35,6 @@ import {
   StyledModalButton,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { TransactionError } from '@dfx.swiss/react/dist/definitions/transaction';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { KycHint } from '../components/kyc-hint';

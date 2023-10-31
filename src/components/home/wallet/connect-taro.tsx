@@ -1,4 +1,4 @@
-import { Blockchain, useAuth, useAuthContext } from '@dfx.swiss/react';
+import { Blockchain, LnurlAuth, useAuth, useAuthContext } from '@dfx.swiss/react';
 import {
   SpinnerSize,
   StyledButton,
@@ -6,7 +6,6 @@ import {
   StyledLink,
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
-import { LnurlAuth } from '@dfx.swiss/react/dist/definitions/auth'; // TODO: export
 import { useEffect, useState } from 'react';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { WalletType } from '../../../contexts/wallet.context';
