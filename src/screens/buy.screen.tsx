@@ -2,7 +2,10 @@ import {
   Asset,
   Blockchain,
   Buy,
+  BuyPaymentMethod,
   Fiat,
+  TransactionError,
+  UserStatus,
   Utils,
   Validations,
   useAsset,
@@ -22,8 +25,6 @@ import {
   StyledLink,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { BuyPaymentMethod } from '@dfx.swiss/react/dist/definitions/buy';
-import { TransactionError } from '@dfx.swiss/react/dist/definitions/transaction';
 import { useEffect, useRef, useState } from 'react';
 import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { KycHint } from '../components/kyc-hint';
@@ -80,7 +81,8 @@ export function BuyScreen(): JSX.Element {
   const [isContinue, setIsContinue] = useState(false);
 
   const availablePaymentMethods = [BuyPaymentMethod.BANK];
-  flags?.includes(BuyPaymentMethod.CARD) && availablePaymentMethods.push(BuyPaymentMethod.CARD);
+  (user?.status === UserStatus.ACTIVE || flags?.includes(BuyPaymentMethod.CARD)) &&
+    availablePaymentMethods.push(BuyPaymentMethod.CARD);
   const defaultPaymentMethod =
     availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
 

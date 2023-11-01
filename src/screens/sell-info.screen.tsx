@@ -4,6 +4,7 @@ import {
   Fiat,
   Sell,
   SellPaymentInfo,
+  TransactionError,
   Utils,
   Validations,
   useAsset,
@@ -27,7 +28,6 @@ import {
   StyledLink,
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
-import { TransactionError } from '@dfx.swiss/react/dist/definitions/transaction';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { KycHint } from '../components/kyc-hint';
