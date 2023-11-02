@@ -45,6 +45,7 @@ export interface BitboxInterface {
 }
 
 export function useBitbox(): BitboxInterface {
+  const btcCoin = 'btc';
   const storageKey = 'BitBoxClient';
   const { get, put } = useSettingsContext();
   const { toChainId } = useBlockchain();
@@ -110,13 +111,9 @@ export function useBitbox(): BitboxInterface {
     startIndex: number,
     count: number,
   ): Promise<string[]> {
-    try {
-      return wallet === WalletType.BITBOX_BTC
-        ? await getBtcAddress(addressType, startIndex, count)
-        : await getEthAddress(blockchain, startIndex, count);
-    } catch (e) {
-      throw e;
-    }
+    return wallet === WalletType.BITBOX_BTC
+      ? await getBtcAddress(addressType, startIndex, count)
+      : await getEthAddress(blockchain, startIndex, count);
   }
 
   async function getBtcAddress(addressType: BitcoinAddressType, startIndex: number, count: number): Promise<string[]> {
@@ -127,7 +124,7 @@ export function useBitbox(): BitboxInterface {
     for (let i = startIndex; i < startIndex + count; i++) {
       addresses.push(
         await bitBox.btcAddress(
-          'btc',
+          btcCoin,
           KeyPath.BTC(addressType).address(i),
           { simpleType: KeyPath.BTC(addressType).simpleType as BtcSimpleType },
           false,
@@ -173,7 +170,7 @@ export function useBitbox(): BitboxInterface {
         }
       }
 
-      throw new Error(message);
+      throw e;
     }
   }
 
@@ -184,7 +181,7 @@ export function useBitbox(): BitboxInterface {
     addressIndex: number,
   ): Promise<string> {
     const { electrumSig65 } = await bitBox.btcSignMessage(
-      'btc',
+      btcCoin,
       {
         keypath: KeyPath.BTC(addressType).address(addressIndex),
         scriptConfig: { simpleType: KeyPath.BTC(addressType).simpleType as BtcSimpleType },
