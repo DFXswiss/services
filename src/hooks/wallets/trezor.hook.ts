@@ -11,18 +11,18 @@ export interface TrezorInterface {
   isSupported: () => Promise<boolean>;
   addressTypes: BitcoinAddressType[];
   defaultAddressType: BitcoinAddressType;
-  connect: (wallet: TrezorWallet, bitcoinAddressType: BitcoinAddressType) => Promise<string>;
+  connect: (wallet: TrezorWallet, addressType: BitcoinAddressType) => Promise<string>;
   fetchAddresses: (
     wallet: TrezorWallet,
     startIndex: number,
     count: number,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
   ) => Promise<string[]>;
   signMessage: (
     msg: string,
     wallet: TrezorWallet,
     addressIndex: number,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
   ) => Promise<string>;
 }
 
@@ -60,11 +60,11 @@ export function useTrezor(): TrezorInterface {
     return init();
   }
 
-  async function connect(wallet: TrezorWallet, bitcoinAddressType: BitcoinAddressType): Promise<string> {
+  async function connect(wallet: TrezorWallet, addressType: BitcoinAddressType): Promise<string> {
     const result =
       wallet === WalletType.TREZOR_BTC
         ? await TrezorConnect.getAddress({
-            path: KeyPath.BTC(bitcoinAddressType).address(0),
+            path: KeyPath.BTC(addressType).address(0),
             showOnTrezor: false,
           })
         : await TrezorConnect.ethereumGetAddress({ path: KeyPath.ETH.address(0), showOnTrezor: false });
@@ -80,14 +80,14 @@ export function useTrezor(): TrezorInterface {
     wallet: TrezorWallet,
     startIndex: number,
     count: number,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
   ): Promise<string[]> {
     const addresses = [];
     for (let i = startIndex; i < startIndex + count; i++) {
       const result =
         wallet === WalletType.TREZOR_BTC
           ? await TrezorConnect.getAddress({
-              path: KeyPath.BTC(bitcoinAddressType).address(i),
+              path: KeyPath.BTC(addressType).address(i),
               showOnTrezor: false,
             })
           : await TrezorConnect.ethereumGetAddress({ path: KeyPath.ETH.address(i), showOnTrezor: false });
@@ -104,12 +104,12 @@ export function useTrezor(): TrezorInterface {
     msg: string,
     wallet: TrezorWallet,
     addressIndex: number,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
   ): Promise<string> {
     const result =
       wallet === WalletType.TREZOR_BTC
         ? await TrezorConnect.signMessage({
-            path: KeyPath.BTC(bitcoinAddressType).address(addressIndex),
+            path: KeyPath.BTC(addressType).address(addressIndex),
             message: msg,
             coin: 'btc',
           })
