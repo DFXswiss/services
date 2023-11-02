@@ -18,7 +18,12 @@ export interface TrezorInterface {
     count: number,
     bitcoinAddressType: BitcoinAddressType,
   ) => Promise<string[]>;
-  signMessage: (msg: string, wallet: TrezorWallet, addressIndex: number) => Promise<string>;
+  signMessage: (
+    msg: string,
+    wallet: TrezorWallet,
+    addressIndex: number,
+    bitcoinAddressType: BitcoinAddressType,
+  ) => Promise<string>;
 }
 
 export function useTrezor(): TrezorInterface {
@@ -95,15 +100,20 @@ export function useTrezor(): TrezorInterface {
     }
   }
 
-  async function signMessage(msg: string, wallet: TrezorWallet, addressIndex: number): Promise<string> {
+  async function signMessage(
+    msg: string,
+    wallet: TrezorWallet,
+    addressIndex: number,
+    bitcoinAddressType: BitcoinAddressType,
+  ): Promise<string> {
     const result =
       wallet === WalletType.TREZOR_BTC
         ? await TrezorConnect.signMessage({
-            path: KeyPath.BTC(BitcoinAddressType.NATIVE_SEGWIT).address(addressIndex),
+            path: KeyPath.BTC(bitcoinAddressType).address(addressIndex),
             message: msg,
             coin: 'btc',
           })
-        : await TrezorConnect.ethereumSignMessage({ path: KeyPath.ETH.address(0), message: msg });
+        : await TrezorConnect.ethereumSignMessage({ path: KeyPath.ETH.address(addressIndex), message: msg });
 
     if (result.success) {
       return result.payload.signature;

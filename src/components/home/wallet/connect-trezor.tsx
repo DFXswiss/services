@@ -78,7 +78,7 @@ export default function ConnectTrezor(props: Props): JSX.Element {
       isSupported={isSupported}
       supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
-      signMessage={(msg) => signMessage(msg, props.wallet, 0)}
+      signMessage={(msg, _a, _b, index, type) => signMessage(msg, props.wallet, index ?? 0, type ?? defaultAddressType)}
       renderContent={(p) => (
         <Content
           addresses={addresses}
