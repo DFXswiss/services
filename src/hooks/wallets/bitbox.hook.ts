@@ -110,14 +110,13 @@ export function useBitbox(): BitboxInterface {
   }
 
   async function signBtcMessage(bitBox: PairedBitBox, msg: string): Promise<string> {
-    // TODO: fix type after update
-    const { electrum_sig65 }: any = await bitBox.btcSignMessage(
+    const { electrumSig65 } = await bitBox.btcSignMessage(
       'btc',
       { keypath: KeyPath.BTC.address, scriptConfig: { simpleType: 'p2wpkh' } },
       Buffer.from(msg),
     );
 
-    return Buffer.from(electrum_sig65).toString('base64');
+    return Buffer.from(electrumSig65).toString('base64');
   }
 
   async function signEthMessage(bitBox: PairedBitBox, blockchain: Blockchain, msg: string): Promise<string> {
