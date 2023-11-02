@@ -25,13 +25,13 @@ export interface BitboxInterface {
   connect: (
     wallet: BitboxWallet,
     blockchain: Blockchain,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
     onPairing: (code: string) => void,
   ) => Promise<string>;
   fetchAddresses: (
     wallet: BitboxWallet,
     blockchain: Blockchain,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
     startIndex: number,
     count: number,
   ) => Promise<string[]>;
@@ -39,7 +39,7 @@ export interface BitboxInterface {
     msg: string,
     wallet: BitboxWallet,
     blockchain: Blockchain,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
     addressIndex: number,
   ) => Promise<string>;
 }
@@ -58,7 +58,7 @@ export function useBitbox(): BitboxInterface {
   async function connect(
     wallet: BitboxWallet,
     blockchain: Blockchain,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
     onPairing: (code: string) => void,
   ): Promise<string> {
     let bitBox: PairedBitBox | undefined = tmpClient ?? get<PairedBitBox>(storageKey);
@@ -83,7 +83,7 @@ export function useBitbox(): BitboxInterface {
 
       // fetch address
       return wallet === WalletType.BITBOX_BTC
-        ? (await getBtcAddress(bitcoinAddressType, 0, 1))[0]
+        ? (await getBtcAddress(addressType, 0, 1))[0]
         : (await getEthAddress(blockchain, 0, 1))[0];
     } catch (e) {
       const { code, message } = e as BitboxError;
@@ -106,24 +106,20 @@ export function useBitbox(): BitboxInterface {
   async function fetchAddresses(
     wallet: BitboxWallet,
     blockchain: Blockchain,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
     startIndex: number,
     count: number,
   ): Promise<string[]> {
     try {
       return wallet === WalletType.BITBOX_BTC
-        ? await getBtcAddress(bitcoinAddressType, startIndex, count)
+        ? await getBtcAddress(addressType, startIndex, count)
         : await getEthAddress(blockchain, startIndex, count);
     } catch (e) {
       throw e;
     }
   }
 
-  async function getBtcAddress(
-    bitcoinAddressType: BitcoinAddressType,
-    startIndex: number,
-    count: number,
-  ): Promise<string[]> {
+  async function getBtcAddress(addressType: BitcoinAddressType, startIndex: number, count: number): Promise<string[]> {
     const bitBox = tmpClient ?? get<PairedBitBox>(storageKey);
     if (!bitBox) throw new Error('Bitbox not connected');
 
@@ -132,8 +128,8 @@ export function useBitbox(): BitboxInterface {
       addresses.push(
         await bitBox.btcAddress(
           'btc',
-          KeyPath.BTC(bitcoinAddressType).address(i),
-          { simpleType: KeyPath.BTC(bitcoinAddressType).simpleType as BtcSimpleType },
+          KeyPath.BTC(addressType).address(i),
+          { simpleType: KeyPath.BTC(addressType).simpleType as BtcSimpleType },
           false,
         ),
       );
@@ -159,7 +155,7 @@ export function useBitbox(): BitboxInterface {
     msg: string,
     wallet: BitboxWallet,
     blockchain: Blockchain,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
     addressIndex: number,
   ): Promise<string> {
     const bitBox = tmpClient ?? get<PairedBitBox>(storageKey);
@@ -167,7 +163,7 @@ export function useBitbox(): BitboxInterface {
 
     try {
       return wallet === WalletType.BITBOX_BTC
-        ? await signBtcMessage(bitBox, msg, bitcoinAddressType, addressIndex)
+        ? await signBtcMessage(bitBox, msg, addressType, addressIndex)
         : await signEthMessage(bitBox, msg, blockchain, addressIndex);
     } catch (e) {
       const { code, message } = e as BitboxError;
@@ -184,14 +180,14 @@ export function useBitbox(): BitboxInterface {
   async function signBtcMessage(
     bitBox: PairedBitBox,
     msg: string,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
     addressIndex: number,
   ): Promise<string> {
     const { electrumSig65 } = await bitBox.btcSignMessage(
       'btc',
       {
-        keypath: KeyPath.BTC(bitcoinAddressType).address(addressIndex),
-        scriptConfig: { simpleType: KeyPath.BTC(bitcoinAddressType).simpleType as BtcSimpleType },
+        keypath: KeyPath.BTC(addressType).address(addressIndex),
+        scriptConfig: { simpleType: KeyPath.BTC(addressType).simpleType as BtcSimpleType },
       },
       Buffer.from(msg),
     );

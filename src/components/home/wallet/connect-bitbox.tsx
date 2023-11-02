@@ -38,6 +38,7 @@ export default function ConnectBitbox(props: Props): JSX.Element {
   const { session } = useAuthContext();
   const { activeWallet } = useWalletContext();
 
+  const [chain, setChain] = useState<Blockchain>();
   const [addresses, setAddresses] = useState<string[]>();
   const [addressLoading, setAddressLoading] = useState(false);
   const [createAddressPromise, addressPromise] = useDeferredPromise<Account>();
@@ -52,6 +53,7 @@ export default function ConnectBitbox(props: Props): JSX.Element {
       throw e;
     });
 
+    setChain(blockchain);
     setAddresses([address]);
 
     return createAddressPromise();
@@ -63,16 +65,21 @@ export default function ConnectBitbox(props: Props): JSX.Element {
   }
 
   async function onLoadAddresses(type: BitcoinAddressType) {
+    if (!chain) throw new Error('Blockchain not defined');
+
     setAddressLoading(true);
     if (type !== selectedType) setAddresses([]);
 
     const loadAddresses = await fetchAddresses(
       props.wallet,
-      Blockchain.BITCOIN, // TODO
+      chain,
       type,
       type !== selectedType || !addresses ? 0 : addresses.length,
       10,
-    );
+    ).catch((e) => {
+      addressPromise?.reject(e);
+      return [];
+    });
 
     setSelectedType(type);
     setAddresses((a) => a?.concat(...loadAddresses));
@@ -221,32 +228,20 @@ function Content({
             {error && <ConnectError error={error} />}
 
             <StyledButton
-              label={translate('general/actions', pairingCode ? 'Next' : 'Connect')}
-              onClick={() => connect()}
+              label={translate('general/actions', addresses ? 'Continue' : 'Connect')}
+              onClick={
+                addresses
+                  ? selectedAddress
+                    ? () => onAddressSelect(selectedType, selectedAddress)
+                    : () => undefined
+                  : () => connect()
+              }
               width={StyledButtonWidth.MIN}
               className="self-center"
-              isLoading={isConnecting}
+              isLoading={isConnecting && !addresses}
+              disabled={addresses && !selectedAddress}
             />
           </>
-        )}
-
-        {error && <ConnectError error={error} />}
-
-        {!pairingCode && (
-          <StyledButton
-            label={translate('general/actions', pairingCode || addresses ? 'Continue' : 'Connect')}
-            onClick={
-              addresses
-                ? selectedAddress
-                  ? () => onAddressSelect(selectedType, selectedAddress)
-                  : () => undefined
-                : () => connect()
-            }
-            width={StyledButtonWidth.MIN}
-            className="self-center"
-            isLoading={isConnecting && !pairingCode && !addresses}
-            disabled={addresses && !selectedAddress}
-          />
         )}
       </StyledVerticalStack>
     </>

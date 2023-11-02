@@ -21,18 +21,18 @@ export interface LedgerInterface {
   isSupported: () => Promise<boolean>;
   addressTypes: BitcoinAddressType[];
   defaultAddressType: BitcoinAddressType;
-  connect: (wallet: LedgerWallet, bitcoinAddressType: BitcoinAddressType) => Promise<string>;
+  connect: (wallet: LedgerWallet, addressType: BitcoinAddressType) => Promise<string>;
   fetchAddresses: (
     wallet: LedgerWallet,
     startIndex: number,
     count: number,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
   ) => Promise<string[]>;
   signMessage: (
     msg: string,
     wallet: LedgerWallet,
     addressIndex: number,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
   ) => Promise<string>;
 }
 
@@ -50,17 +50,17 @@ export function useLedger(): LedgerInterface {
     return TransportWebHID.isSupported();
   }
 
-  async function connect(wallet: LedgerWallet, bitcoinAddressType: BitcoinAddressType): Promise<string> {
-    return wallet === WalletType.LEDGER_BTC ? await connectBtc(bitcoinAddressType) : await connectEth();
+  async function connect(wallet: LedgerWallet, addressType: BitcoinAddressType): Promise<string> {
+    return wallet === WalletType.LEDGER_BTC ? await connectBtc(addressType) : await connectEth();
   }
 
-  async function connectBtc(bitcoinAddressType: BitcoinAddressType): Promise<string> {
+  async function connectBtc(addressType: BitcoinAddressType): Promise<string> {
     const client = get<BtcClient>(btcStorageKey) ?? (await setupBtcConnection());
 
     tmpBtcClient = client;
     put(btcStorageKey, client);
 
-    return fetchAddress(fetchBtcAddress(bitcoinAddressType, 0, 1), () => {
+    return fetchAddress(fetchBtcAddress(addressType, 0, 1), () => {
       client.transport.close();
       put(btcStorageKey, undefined);
     }).then((a) => a[0]);
@@ -168,11 +168,11 @@ export function useLedger(): LedgerInterface {
     wallet: LedgerWallet,
     startIndex: number,
     count: number,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
   ): Promise<string[]> {
     try {
       return wallet === WalletType.LEDGER_BTC
-        ? await fetchBtcAddress(bitcoinAddressType, startIndex, count)
+        ? await fetchBtcAddress(addressType, startIndex, count)
         : await fetchEthAddress(startIndex, count);
     } catch (e) {
       const { statusText } = e as LedgerError;
@@ -189,11 +189,11 @@ export function useLedger(): LedgerInterface {
     msg: string,
     wallet: LedgerWallet,
     addressIndex: number,
-    bitcoinAddressType: BitcoinAddressType,
+    addressType: BitcoinAddressType,
   ): Promise<string> {
     try {
       return wallet === WalletType.LEDGER_BTC
-        ? await signBtcMessage(msg, bitcoinAddressType, addressIndex)
+        ? await signBtcMessage(msg, addressType, addressIndex)
         : await signEthMessage(msg, addressIndex);
     } catch (e) {
       const { statusText } = e as LedgerError;
@@ -206,14 +206,10 @@ export function useLedger(): LedgerInterface {
     }
   }
 
-  async function signBtcMessage(
-    msg: string,
-    bitcoinAddressType: BitcoinAddressType,
-    addressIndex: number,
-  ): Promise<string> {
+  async function signBtcMessage(msg: string, addressType: BitcoinAddressType, addressIndex: number): Promise<string> {
     const client = tmpBtcClient ?? get(btcStorageKey);
     if (!client) throw new Error('Ledger not connected');
-    return client.signMessage(Buffer.from(msg), KeyPath.BTC(bitcoinAddressType).address(addressIndex));
+    return client.signMessage(Buffer.from(msg), KeyPath.BTC(addressType).address(addressIndex));
   }
 
   async function signEthMessage(msg: string, addressIndex: number): Promise<string> {
