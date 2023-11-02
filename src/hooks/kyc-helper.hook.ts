@@ -1,4 +1,5 @@
 import { KycStatus, Utils, useUserContext } from '@dfx.swiss/react';
+import { useMemo } from 'react';
 import { useSettingsContext } from '../contexts/settings.context';
 
 interface KycHelperInterface {
@@ -6,8 +7,6 @@ interface KycHelperInterface {
   limit: string;
   isComplete: boolean;
   start: () => Promise<void>;
-  isAllowedToBuy: (amount: number) => boolean;
-  isAllowedToSell: (amount: number) => boolean;
 }
 
 export function useKycHelper(): KycHelperInterface {
@@ -34,7 +33,7 @@ export function useKycHelper(): KycHelperInterface {
 
   const limit =
     user?.tradingLimit != null
-      ? `${Utils.formatAmount(user.tradingLimit.limit)} € ${translate('kyc', periodMap[user.tradingLimit.period])}`
+      ? `${Utils.formatAmount(user.tradingLimit.limit)} CHF ${translate('kyc', periodMap[user.tradingLimit.period])}`
       : '';
 
   const isInProgress = [KycStatus.CHATBOT, KycStatus.ONLINE_ID, KycStatus.VIDEO_ID].includes(
@@ -59,15 +58,5 @@ export function useKycHelper(): KycHelperInterface {
     if (popUpBlocked) console.error('popUp blocked'); // TODO: (Krysh) use correct error handling here
   }
 
-  function isAllowedToBuy(amount: number): boolean {
-    if (isComplete) return true;
-    return (user?.tradingLimit.limit ?? 0) >= amount;
-  }
-
-  function isAllowedToSell(amount: number): boolean {
-    if (isComplete) return true;
-    return (user?.tradingLimit.limit ?? 0) >= amount;
-  }
-
-  return { start, status: buildKycStatusString(), isComplete, limit, isAllowedToBuy, isAllowedToSell };
+  return useMemo(() => ({ start, status: buildKycStatusString(), isComplete, limit }), [user]);
 }

@@ -2,7 +2,7 @@ import { Blockchain } from '@dfx.swiss/react';
 import { PairedBitBox, bitbox02ConnectWebHID } from 'bitbox-api';
 import { hasWebHID } from 'bitbox-api/webhid';
 import { useMemo } from 'react';
-import KeyPath from '../../config/key-path';
+import KeyPath, { BitcoinAddressType } from '../../config/key-path';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
@@ -14,12 +14,34 @@ interface BitboxError {
   message: string;
 }
 
+type BtcSimpleType = 'p2tr' | 'p2wpkh' | 'p2wpkhP2sh';
+
 export type BitboxWallet = WalletType.BITBOX_BTC | WalletType.BITBOX_ETH;
 
 export interface BitboxInterface {
   isSupported: () => Promise<boolean>;
-  connect: (wallet: BitboxWallet, blockchain: Blockchain, onPairing: (code: string) => void) => Promise<string>;
-  signMessage: (wallet: BitboxWallet, blockchain: Blockchain, msg: string) => Promise<string>;
+  addressTypes: BitcoinAddressType[];
+  defaultAddressType: BitcoinAddressType;
+  connect: (
+    wallet: BitboxWallet,
+    blockchain: Blockchain,
+    bitcoinAddressType: BitcoinAddressType,
+    onPairing: (code: string) => void,
+  ) => Promise<string>;
+  fetchAddresses: (
+    wallet: BitboxWallet,
+    blockchain: Blockchain,
+    bitcoinAddressType: BitcoinAddressType,
+    startIndex: number,
+    count: number,
+  ) => Promise<string[]>;
+  signMessage: (
+    msg: string,
+    wallet: BitboxWallet,
+    blockchain: Blockchain,
+    bitcoinAddressType: BitcoinAddressType,
+    addressIndex: number,
+  ) => Promise<string>;
 }
 
 export function useBitbox(): BitboxInterface {
@@ -36,6 +58,7 @@ export function useBitbox(): BitboxInterface {
   async function connect(
     wallet: BitboxWallet,
     blockchain: Blockchain,
+    bitcoinAddressType: BitcoinAddressType,
     onPairing: (code: string) => void,
   ): Promise<string> {
     let bitBox: PairedBitBox | undefined = tmpClient ?? get<PairedBitBox>(storageKey);
@@ -59,7 +82,9 @@ export function useBitbox(): BitboxInterface {
         throw new TranslatedError('Your BitBox only supports Bitcoin');
 
       // fetch address
-      return wallet === WalletType.BITBOX_BTC ? await getBtcAddress(bitBox) : await getEthAddress(bitBox, blockchain);
+      return wallet === WalletType.BITBOX_BTC
+        ? (await getBtcAddress(bitcoinAddressType, 0, 1))[0]
+        : (await getEthAddress(blockchain, 0, 1))[0];
     } catch (e) {
       const { code, message } = e as BitboxError;
       if (code && message) {
@@ -78,25 +103,72 @@ export function useBitbox(): BitboxInterface {
     }
   }
 
-  async function getBtcAddress(bitBox: PairedBitBox): Promise<string> {
-    return bitBox.btcAddress('btc', KeyPath.BTC.address, { simpleType: 'p2wpkh' }, false);
+  async function fetchAddresses(
+    wallet: BitboxWallet,
+    blockchain: Blockchain,
+    bitcoinAddressType: BitcoinAddressType,
+    startIndex: number,
+    count: number,
+  ): Promise<string[]> {
+    try {
+      return wallet === WalletType.BITBOX_BTC
+        ? await getBtcAddress(bitcoinAddressType, startIndex, count)
+        : await getEthAddress(blockchain, startIndex, count);
+    } catch (e) {
+      throw e;
+    }
   }
 
-  async function getEthAddress(bitBox: PairedBitBox, blockchain: Blockchain): Promise<string> {
+  async function getBtcAddress(
+    bitcoinAddressType: BitcoinAddressType,
+    startIndex: number,
+    count: number,
+  ): Promise<string[]> {
+    const bitBox = tmpClient ?? get<PairedBitBox>(storageKey);
+    if (!bitBox) throw new Error('Bitbox not connected');
+
+    const addresses = [];
+    for (let i = startIndex; i < startIndex + count; i++) {
+      addresses.push(
+        await bitBox.btcAddress(
+          'btc',
+          KeyPath.BTC(bitcoinAddressType).address(i),
+          { simpleType: KeyPath.BTC(bitcoinAddressType).simpleType as BtcSimpleType },
+          false,
+        ),
+      );
+    }
+    return addresses;
+  }
+
+  async function getEthAddress(blockchain: Blockchain, startIndex: number, count: number): Promise<string[]> {
+    const bitBox = tmpClient ?? get<PairedBitBox>(storageKey);
+    if (!bitBox) throw new Error('Bitbox not connected');
+
     const chainId = toChainId(blockchain);
     if (!chainId) throw new Error('Invalid blockchain');
 
-    return bitBox.ethAddress(BigInt(chainId), KeyPath.ETH.address, false);
+    const addresses = [];
+    for (let i = startIndex; i < startIndex + count; i++) {
+      addresses.push(await bitBox.ethAddress(BigInt(chainId), KeyPath.ETH.address(i), false));
+    }
+    return addresses;
   }
 
-  async function signMessage(wallet: BitboxWallet, blockchain: Blockchain, msg: string): Promise<string> {
+  async function signMessage(
+    msg: string,
+    wallet: BitboxWallet,
+    blockchain: Blockchain,
+    bitcoinAddressType: BitcoinAddressType,
+    addressIndex: number,
+  ): Promise<string> {
     const bitBox = tmpClient ?? get<PairedBitBox>(storageKey);
     if (!bitBox) throw new Error('Bitbox not connected');
 
     try {
       return wallet === WalletType.BITBOX_BTC
-        ? await signBtcMessage(bitBox, msg)
-        : await signEthMessage(bitBox, blockchain, msg);
+        ? await signBtcMessage(bitBox, msg, bitcoinAddressType, addressIndex)
+        : await signEthMessage(bitBox, msg, blockchain, addressIndex);
     } catch (e) {
       const { code, message } = e as BitboxError;
       if (code && message) {
@@ -109,23 +181,50 @@ export function useBitbox(): BitboxInterface {
     }
   }
 
-  async function signBtcMessage(bitBox: PairedBitBox, msg: string): Promise<string> {
+  async function signBtcMessage(
+    bitBox: PairedBitBox,
+    msg: string,
+    bitcoinAddressType: BitcoinAddressType,
+    addressIndex: number,
+  ): Promise<string> {
     const { electrumSig65 } = await bitBox.btcSignMessage(
       'btc',
-      { keypath: KeyPath.BTC.address, scriptConfig: { simpleType: 'p2wpkh' } },
+      {
+        keypath: KeyPath.BTC(bitcoinAddressType).address(addressIndex),
+        scriptConfig: { simpleType: KeyPath.BTC(bitcoinAddressType).simpleType as BtcSimpleType },
+      },
       Buffer.from(msg),
     );
 
     return Buffer.from(electrumSig65).toString('base64');
   }
 
-  async function signEthMessage(bitBox: PairedBitBox, blockchain: Blockchain, msg: string): Promise<string> {
+  async function signEthMessage(
+    bitBox: PairedBitBox,
+    msg: string,
+    blockchain: Blockchain,
+    addressIndex: number,
+  ): Promise<string> {
     const chainId = toChainId(blockchain);
     if (!chainId) throw new Error('Invalid blockchain');
 
-    const { r, s, v } = await bitBox.ethSignMessage(BigInt(chainId), KeyPath.ETH.address, Buffer.from(msg));
+    const { r, s, v } = await bitBox.ethSignMessage(
+      BigInt(chainId),
+      KeyPath.ETH.address(addressIndex),
+      Buffer.from(msg),
+    );
     return `0x${Buffer.from([...Array.from(r), ...Array.from(s), ...Array.from(v)]).toString('hex')}`;
   }
 
-  return useMemo(() => ({ isSupported, connect, signMessage }), []);
+  return useMemo(
+    () => ({
+      isSupported,
+      addressTypes: [BitcoinAddressType.NATIVE_SEGWIT, BitcoinAddressType.SEGWIT],
+      defaultAddressType: BitcoinAddressType.NATIVE_SEGWIT,
+      connect,
+      signMessage,
+      fetchAddresses,
+    }),
+    [],
+  );
 }

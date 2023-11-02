@@ -5,6 +5,7 @@ import {
   Blockchain,
   Fiat,
   Sell,
+  TransactionError,
   Utils,
   Validations,
   useAsset,
@@ -39,6 +40,7 @@ import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch }
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
+import { QrCopy } from '../components/payment/qr-copy';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance } from '../contexts/balance.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -68,13 +70,13 @@ export default function SellScreen(): JSX.Element {
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
   const { blockchain: walletBlockchain, activeWallet } = useWalletContext();
-  const { getBalances, sendTransaction } = useSellHelper();
+  const { getBalances, sendTransaction, canSendTransaction } = useSellHelper();
   const { availableBlockchains } = useSessionContext();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
   const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain } = useAppParams();
-  const { isAllowedToSell } = useKycHelper();
+  const { isComplete } = useKycHelper();
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
@@ -82,11 +84,13 @@ export default function SellScreen(): JSX.Element {
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [customAmountError, setCustomAmountError] = useState<string>();
+  const [kycRequired, setKycRequired] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [balances, setBalances] = useState<AssetBalance[]>();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isTxDone, setTxDone] = useState<boolean>(false);
   const [sellTxId, setSellTxId] = useState<string>();
   const [bankAccountSelection, setBankAccountSelection] = useState(false);
 
@@ -106,6 +110,8 @@ export default function SellScreen(): JSX.Element {
   const selectedBankAccount = useWatch({ control, name: 'bankAccount' });
   const selectedAsset = useWatch({ control, name: 'asset' });
   const enteredAmount = useWatch({ control, name: 'amount' });
+
+  const availableBalance = selectedAsset && findBalance(selectedAsset);
 
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
@@ -182,7 +188,7 @@ export default function SellScreen(): JSX.Element {
 
     setIsLoading(true);
     receiveFor({ iban: bankAccount.iban, currency, amount, asset })
-      .then((value) => checkForMinDeposit(value, amount, asset.name))
+      .then(validateSell)
       .then(setPaymentInfo)
       .catch((error: ApiError) => {
         if (error.statusCode === 400 && error.message === 'Ident data incomplete') {
@@ -210,22 +216,29 @@ export default function SellScreen(): JSX.Element {
     }
   }
 
-  function checkForMinDeposit(sell: Sell, amount: number, currency: string): Sell | undefined {
-    if (sell.minVolume > amount) {
-      setCustomAmountError(
-        translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
-          amount: Utils.formatAmountCrypto(sell.minVolume),
-          currency,
-        }),
-      );
-      return undefined;
-    } else {
-      setCustomAmountError(undefined);
-      return sell;
-    }
-  }
+  function validateSell(sell: Sell): Sell | undefined {
+    switch (sell.error) {
+      case TransactionError.AMOUNT_TOO_LOW:
+        setCustomAmountError(
+          translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+            amount: Utils.formatAmountCrypto(sell.minVolume),
+            currency: sell.asset.name,
+          }),
+        );
+        return undefined;
 
-  const kycRequired = paymentInfo && !isAllowedToSell(paymentInfo.estimatedAmount);
+      case TransactionError.AMOUNT_TOO_HIGH:
+        if (!isComplete) {
+          setKycRequired(true);
+          return undefined;
+        }
+    }
+
+    setCustomAmountError(undefined);
+    setKycRequired(false);
+
+    return sell;
+  }
 
   function validateData(data?: DeepPartial<FormData>): FormData | undefined {
     if (data && Number(data.amount) > 0 && data.asset != null && data.bankAccount != null && data.currency != null) {
@@ -247,15 +260,19 @@ export default function SellScreen(): JSX.Element {
 
   async function handleNext(paymentInfo: Sell): Promise<void> {
     setIsProcessing(true);
+
     await updateBankAccount();
 
-    if (activeWallet) {
-      sendTransaction(paymentInfo)
-        .then(setSellTxId)
-        .finally(() => setIsProcessing(false));
-    } else {
-      close(paymentInfo, false);
+    if (canSendTransaction()) {
+      if (activeWallet) {
+        await sendTransaction(paymentInfo).then(setSellTxId);
+      } else {
+        return close(paymentInfo, false);
+      }
     }
+
+    setTxDone(true);
+    setIsProcessing(false);
   }
 
   function close(sell: Sell, isComplete: boolean) {
@@ -280,26 +297,32 @@ export default function SellScreen(): JSX.Element {
       rootRef={rootRef}
     >
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
-        {paymentInfo && sellTxId ? (
+        {paymentInfo && isTxDone ? (
           <StyledVerticalStack gap={4} full>
             <div className="mx-auto">
               <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />
             </div>
             <p className="text-dfxBlue-800 text-center px-20">
-              {translate('screens/sell', 'Your transaction was executed successfully.')}
-              <br />
+              {canSendTransaction() && (
+                <>
+                  {translate('screens/sell', 'Your transaction was executed successfully.')}
+                  <br />
+                </>
+              )}
               {translate(
                 'screens/payment',
                 'We will inform you about the progress of any purchase or sale via E-mail.',
               )}
             </p>
-            <StyledHorizontalStack gap={2} center>
-              <p className="text-dfxBlue-800">{translate('screens/sell', 'Transaction hash')}:</p>
-              <span className="text-dfxBlue-800 font-bold">{`${sellTxId.substring(0, 5)}...${sellTxId.substring(
-                sellTxId.length - 5,
-              )}`}</span>
-              <CopyButton onCopy={() => copy(sellTxId)} />
-            </StyledHorizontalStack>
+            {sellTxId && (
+              <StyledHorizontalStack gap={2} center>
+                <p className="text-dfxBlue-800">{translate('screens/sell', 'Transaction hash')}:</p>
+                <span className="text-dfxBlue-800 font-bold">{`${sellTxId.substring(0, 5)}...${sellTxId.substring(
+                  sellTxId.length - 5,
+                )}`}</span>
+                <CopyButton onCopy={() => copy(sellTxId)} />
+              </StyledHorizontalStack>
+            )}
 
             <StyledButton
               width={StyledButtonWidth.FULL}
@@ -311,7 +334,7 @@ export default function SellScreen(): JSX.Element {
             />
           </StyledVerticalStack>
         ) : (
-          <StyledVerticalStack gap={8} full className="relative">
+          <StyledVerticalStack center gap={8} full className="relative">
             {availableAssets && (
               <StyledDropdown<Asset>
                 rootRef={rootRef}
@@ -324,6 +347,7 @@ export default function SellScreen(): JSX.Element {
                 balanceFunc={(item) => findBalance(item)?.toString() ?? ''}
                 assetIconFunc={(item) => item.name as AssetIconVariant}
                 descriptionFunc={(item) => item.blockchain}
+                full
               />
             )}
             {bankAccounts && !isCreatingAccount && (
@@ -331,14 +355,16 @@ export default function SellScreen(): JSX.Element {
                 name="bankAccount"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <>
-                    <StyledModalButton
-                      onClick={() => setBankAccountSelection(true)}
-                      onBlur={onBlur}
-                      label={translate('screens/sell', 'Cash out to my bank account')}
-                      placeholder={translate('screens/sell', 'Add or select your IBAN')}
-                      value={Utils.formatIban(value?.iban) ?? undefined}
-                      description={value?.label}
-                    />
+                    <div className="w-full">
+                      <StyledModalButton
+                        onClick={() => setBankAccountSelection(true)}
+                        onBlur={onBlur}
+                        label={translate('screens/sell', 'Cash out to my bank account')}
+                        placeholder={translate('screens/sell', 'Add or select your IBAN')}
+                        value={Utils.formatIban(value?.iban) ?? undefined}
+                        description={value?.label}
+                      />
+                    </div>
 
                     {bankAccountSelection && (
                       <>
@@ -387,6 +413,7 @@ export default function SellScreen(): JSX.Element {
                 items={currencies}
                 labelFunc={(item) => item.name}
                 descriptionFunc={(item) => toDescription(item)}
+                full
               />
             )}
             {selectedAsset && (
@@ -396,6 +423,8 @@ export default function SellScreen(): JSX.Element {
                   label={translate('screens/sell', 'Enter your desired payout amount')}
                   placeholder="0.00"
                   prefix={selectedAsset.name}
+                  buttonLabel={availableBalance ? 'MAX' : undefined}
+                  buttonClick={() => availableBalance && setVal('amount', `${availableBalance}`)}
                   name="amount"
                   forceError={kycRequired || customAmountError != null}
                   forceErrorMessage={customAmountError}
@@ -422,27 +451,41 @@ export default function SellScreen(): JSX.Element {
               </div>
             )}
             {paymentInfo && !kycRequired && (
-              <div>
-                <div className="pt-4 w-full text-left">
-                  <StyledLink
+              <>
+                {paymentInfo.paymentRequest && !canSendTransaction() && (
+                  <div>
+                    <p className="font-semibold text-sm text-dfxBlue-800">
+                      {translate('screens/sell', 'Pay with your wallet')}
+                    </p>
+                    <QrCopy data={paymentInfo.paymentRequest} />
+                  </div>
+                )}
+                <div>
+                  <div className="pt-4 w-full">
+                    <StyledLink
+                      label={translate(
+                        'screens/payment',
+                        'Please note that by using this service you automatically accept our terms and conditions.',
+                      )}
+                      url={process.env.REACT_APP_TNC_URL}
+                      dark
+                    />
+                  </div>
+                  <StyledButton
+                    width={StyledButtonWidth.FULL}
                     label={translate(
-                      'screens/payment',
-                      'Please note that by using this service you automatically accept our terms and conditions.',
+                      'screens/sell',
+                      canSendTransaction()
+                        ? 'Complete transaction in your wallet'
+                        : 'Click here once you have issued the transaction',
                     )}
-                    url={process.env.REACT_APP_TNC_URL}
-                    dark
+                    onClick={() => handleNext(paymentInfo)}
+                    caps={false}
+                    className="my-4"
+                    isLoading={isProcessing}
                   />
                 </div>
-
-                <StyledButton
-                  width={StyledButtonWidth.FULL}
-                  label={translate('screens/sell', 'Complete transaction in your wallet')}
-                  onClick={() => handleNext(paymentInfo)}
-                  caps={false}
-                  className="my-4"
-                  isLoading={isProcessing}
-                />
-              </div>
+              </>
             )}
           </StyledVerticalStack>
         )}

@@ -1,4 +1,4 @@
-import { Blockchain } from '@dfx.swiss/react/dist/definitions/blockchain';
+import { Blockchain } from '@dfx.swiss/react';
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
 import { EthereumProvider as EthClient } from '@walletconnect/ethereum-provider/dist/types/EthereumProvider';
 import { useEffect, useState } from 'react';
