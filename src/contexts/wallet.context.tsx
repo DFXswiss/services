@@ -65,8 +65,8 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       if (isInitialized) readBalances(undefined);
     }
 
-    if (isSessionInitialized && isInitialized && isLoggedIn && appParams.discountCode) {
-      addDiscountCode(appParams.discountCode).catch(() => undefined);
+    if (isSessionInitialized && isInitialized && isLoggedIn && appParams.specialCode) {
+      addDiscountCode(appParams.specialCode).catch(() => undefined);
     }
   }, [isSessionInitialized, isLoggedIn, isInitialized]);
 
@@ -133,8 +133,8 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
 
   async function createSession(address: string, signature: string): Promise<string> {
     const session =
-      (await api.login(address, signature, appParams.discountCode)) ??
-      (await api.signUp(address, signature, appParams.wallet, appParams.refcode, appParams.discountCode));
+      (await api.login(address, signature, appParams.specialCode)) ??
+      (await api.signUp(address, signature, appParams.wallet, appParams.refcode, appParams.specialCode));
     if (!session) throw new Error('Failed to create session');
 
     return session;

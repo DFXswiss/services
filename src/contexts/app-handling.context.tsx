@@ -16,7 +16,7 @@ const urlParams = [
   'mail',
   'wallet',
   'refcode',
-  'discount-code',
+  'special-code',
   'session',
   'redirect',
   'type',
@@ -41,7 +41,7 @@ export interface AppParams {
   mail?: string;
   wallet?: string;
   refcode?: string;
-  discountCode?: string;
+  specialCode?: string;
   session?: string;
   redirect?: string;
   type?: string;
@@ -181,7 +181,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           mail: getParameter(query, 'mail'),
           wallet: getParameter(query, 'wallet'),
           refcode: getParameter(query, 'refcode'),
-          discountCode: getParameter(query, 'discount-code'),
+          specialCode: getParameter(query, 'special-code'),
           session: getParameter(query, 'session'),
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),
