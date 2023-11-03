@@ -320,7 +320,7 @@ export function BuyScreen(): JSX.Element {
                         <StyledLink
                           label={translate(
                             'screens/payment',
-                            'Please note that by using this service you automatically accept our terms and conditions.',
+                            'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
                           )}
                           url={process.env.REACT_APP_TNC_URL}
                           dark

@@ -156,6 +156,7 @@
     "Purpose of payment": "Scopo del pagamento",
 
     "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
+    "Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.":"Si prega di notare che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni e si autorizza DFX.swiss a riscuotere l'importo di cui sopra tramite il metodo di pagamento scelto e si accetta che tale importo non possa essere annullato, richiamato o rimborsato.",
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "L'importo inserito è inferiore al deposito minimo di {{amount}} {{currency}}",
     "Nice! You are all set! Give us a minute to handle your transaction": "Bello! Siete pronti! Dateci un minuto per gestire la vostra transazione",
     "We will inform you about the progress of any purchase or sale via E-mail.": "Vi informeremo sullo stato di avanzamento di qualsiasi acquisto o vendita via e-mail.",
