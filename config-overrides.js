@@ -1,3 +1,4 @@
+const path = require('path');
 const webpack = require('webpack');
 const version = require('./package.json').version;
 
@@ -24,8 +25,29 @@ module.exports = function override(config, env) {
       ? {
           publicPath: process.env.PUBLIC_URL + process.env.CUSTOM_CHUNK_PATH,
           chunkFilename: config.output.chunkFilename.replace('static/js', `v${version}-chunks`),
+          webassemblyModuleFilename: `v${version}-chunks/[hash].module.wasm`,
         }
       : undefined),
   };
+
+  // add support for WASM
+  const wasmExtensionRegExp = /\.wasm$/;
+  config.resolve.extensions.push('.wasm');
+  config.module.rules.forEach((rule) => {
+    (rule.oneOf || []).forEach((oneOf) => {
+      if (oneOf.type === 'asset/resource') {
+        oneOf.exclude.push(wasmExtensionRegExp);
+      }
+    });
+  });
+  config.module.rules.push({
+    test: wasmExtensionRegExp,
+    include: path.resolve(__dirname, 'src'),
+    use: [{ loader: require.resolve('wasm-loader'), options: {} }],
+  });
+  config.experiments = {
+    asyncWebAssembly: true,
+  };
+
   return config;
 };

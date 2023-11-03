@@ -20,7 +20,7 @@ export function useSellHelper(): SellHelperInterface {
   const { getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet } = useWalletContext();
   const { session } = useAuthContext();
-  const { redirectPath } = useAppHandlingContext();
+  const { canClose } = useAppHandlingContext();
 
   async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {
     switch (activeWallet) {
@@ -96,7 +96,7 @@ export function useSellHelper(): SellHelperInterface {
         return false;
 
       default:
-        return redirectPath != null;
+        return canClose;
     }
   }
   return useMemo(

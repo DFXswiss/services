@@ -38,21 +38,21 @@ export default function ConnectBitbox(props: Props): JSX.Element {
   const { session } = useAuthContext();
   const { activeWallet } = useWalletContext();
 
+  const [chain, setChain] = useState<Blockchain>();
   const [addresses, setAddresses] = useState<string[]>();
   const [addressLoading, setAddressLoading] = useState(false);
   const [createAddressPromise, addressPromise] = useDeferredPromise<Account>();
   const [selectedType, setSelectedType] = useState<BitcoinAddressType>();
   const [pairingCode, setPairingCode] = useState<string>();
-  const [createPairingPromise, pairingPromise] = useDeferredPromise<void>();
 
-  async function getAccount(_: Blockchain, isReconnect: boolean): Promise<Account> {
+  async function getAccount(blockchain: Blockchain, isReconnect: boolean): Promise<Account> {
     if (isReconnect && session?.address) return { address: session.address };
 
-    const address = await connect(props.wallet, onPairing, defaultAddressType).catch((e) => {
-      setPairingCode(undefined);
-      throw e;
-    });
+    const address = await connect(props.wallet, blockchain, defaultAddressType, setPairingCode).finally(() =>
+      setPairingCode(undefined),
+    );
 
+    setChain(blockchain);
     setAddresses([address]);
 
     return createAddressPromise();
@@ -64,29 +64,25 @@ export default function ConnectBitbox(props: Props): JSX.Element {
   }
 
   async function onLoadAddresses(type: BitcoinAddressType) {
+    if (!chain) throw new Error('Blockchain not defined');
+
     setAddressLoading(true);
     if (type !== selectedType) setAddresses([]);
 
     const loadAddresses = await fetchAddresses(
       props.wallet,
+      chain,
+      type,
       type !== selectedType || !addresses ? 0 : addresses.length,
       10,
-      type,
-    );
+    ).catch((e) => {
+      addressPromise?.reject(e);
+      return [];
+    });
 
     setSelectedType(type);
     setAddresses((a) => a?.concat(...loadAddresses));
     setAddressLoading(false);
-  }
-
-  async function onPairing(code: string) {
-    setPairingCode(code);
-    return createPairingPromise();
-  }
-
-  function onPairingConfirmed() {
-    pairingPromise?.resolve();
-    setPairingCode(undefined);
   }
 
   return (
@@ -94,11 +90,12 @@ export default function ConnectBitbox(props: Props): JSX.Element {
       isSupported={isSupported}
       supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
-      signMessage={(msg, _a, _b, index, type) => signMessage(msg, props.wallet, index ?? 0, type ?? defaultAddressType)}
+      signMessage={(msg, _a, chain, index, type) =>
+        signMessage(msg, props.wallet, chain, type ?? defaultAddressType, index ?? 0)
+      }
       renderContent={(p) => (
         <Content
           pairingCode={pairingCode}
-          onPairingConfirmed={onPairingConfirmed}
           addresses={addresses}
           onLoadAddresses={onLoadAddresses}
           onAddressSelect={onAddressSelect}
@@ -114,7 +111,6 @@ export default function ConnectBitbox(props: Props): JSX.Element {
 }
 
 interface ContentProps extends ConnectContentProps {
-  onPairingConfirmed: () => void;
   pairingCode?: string;
   wallet: WalletType;
   addressLoading: boolean;
@@ -130,7 +126,6 @@ function Content({
   addresses,
   error,
   pairingCode,
-  onPairingConfirmed,
   wallet,
   onAddressSelect,
   onLoadAddresses,
@@ -170,7 +165,6 @@ function Content({
   const pairSteps = [
     'Check that the pairing code below matches the one displayed on your BitBox',
     'Confirm the pairing code on your BitBox',
-    'Click on "Continue"',
   ];
 
   const steps = pairingCode ? pairSteps : connectSteps;
@@ -223,31 +217,31 @@ function Content({
           />
         )}
 
-        {pairingCode && (
+        {pairingCode ? (
           <div>
             <h2 className="text-dfxGray-700">{translate('screens/home', 'Pairing code')}:</h2>
             <p className="text-dfxGray-700">{pairingCode}</p>
           </div>
+        ) : (
+          <>
+            {error && <ConnectError error={error} />}
+
+            <StyledButton
+              label={translate('general/actions', addresses ? 'Continue' : 'Connect')}
+              onClick={
+                addresses
+                  ? selectedAddress
+                    ? () => onAddressSelect(selectedType, selectedAddress)
+                    : () => undefined
+                  : () => connect()
+              }
+              width={StyledButtonWidth.MIN}
+              className="self-center"
+              isLoading={isConnecting && !addresses}
+              disabled={addresses && !selectedAddress}
+            />
+          </>
         )}
-
-        {error && <ConnectError error={error} />}
-
-        <StyledButton
-          label={translate('general/actions', pairingCode || addresses ? 'Continue' : 'Connect')}
-          onClick={
-            pairingCode
-              ? onPairingConfirmed
-              : addresses
-              ? selectedAddress
-                ? () => onAddressSelect(selectedType, selectedAddress)
-                : () => undefined
-              : () => connect()
-          }
-          width={StyledButtonWidth.MIN}
-          className="self-center"
-          isLoading={isConnecting && !pairingCode && !addresses}
-          disabled={addresses && !selectedAddress}
-        />
       </StyledVerticalStack>
     </>
   );

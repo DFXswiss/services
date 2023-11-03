@@ -16,7 +16,7 @@ const urlParams = [
   'mail',
   'wallet',
   'refcode',
-  'discount-code',
+  'special-code',
   'session',
   'redirect',
   'type',
@@ -41,7 +41,7 @@ export interface AppParams {
   mail?: string;
   wallet?: string;
   refcode?: string;
-  discountCode?: string;
+  specialCode?: string;
   session?: string;
   redirect?: string;
   type?: string;
@@ -91,7 +91,6 @@ export type CloseServicesParams = CancelServicesParams | BuyServicesParams | Sel
 
 // --- CONTEXT --- //
 interface AppHandlingContextInterface {
-  homePath: string;
   isInitialized: boolean;
   isEmbedded: boolean;
   params: AppParams;
@@ -99,10 +98,10 @@ interface AppHandlingContextInterface {
   closeServices: (params: CloseServicesParams, navigate: boolean) => void;
   redirectPath?: string;
   setRedirectPath: (path?: string) => void;
+  canClose: boolean;
 }
 
 interface AppHandlingContextProps extends PropsWithChildren {
-  home: string;
   isWidget: boolean;
   params?: AppParams;
   router: Router;
@@ -181,7 +180,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           mail: getParameter(query, 'mail'),
           wallet: getParameter(query, 'wallet'),
           refcode: getParameter(query, 'refcode'),
-          discountCode: getParameter(query, 'discount-code'),
+          specialCode: getParameter(query, 'special-code'),
           session: getParameter(query, 'session'),
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),
@@ -279,7 +278,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
   const context = useMemo(
     () => ({
-      homePath: props.home,
       isEmbedded: props.isWidget || isUsedByIframe,
       closeServices,
       isInitialized,
@@ -287,8 +285,9 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       setParams: setParameters,
       redirectPath,
       setRedirectPath,
+      canClose: redirectUri != null,
     }),
-    [props.home, props.isWidget, isUsedByIframe, redirectUri, isInitialized, params, redirectPath],
+    [props.isWidget, isUsedByIframe, redirectUri, isInitialized, params, redirectPath],
   );
 
   return <AppHandlingContext.Provider value={context}>{props.children}</AppHandlingContext.Provider>;

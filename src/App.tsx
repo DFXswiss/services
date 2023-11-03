@@ -93,7 +93,6 @@ function App({ routerFactory, params }: AppProps) {
     <DfxContextProvider api={{}} data={{}}>
       <BalanceContextProvider>
         <AppHandlingContextProvider
-          home={router.state.location.pathname}
           isWidget={params != null}
           closeCallback={params?.onClose}
           params={params}

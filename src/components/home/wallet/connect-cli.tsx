@@ -80,9 +80,15 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
   const addressValid = validateAddress(address) === true;
 
   const [signMessage, setSignMessage] = useState<string>();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (addressValid) getSignMessage(address).then(setSignMessage);
+    if (addressValid) {
+      setIsLoading(true);
+      getSignMessage(address)
+        .then(setSignMessage)
+        .finally(() => setIsLoading(false));
+    }
   }, [address]);
 
   const rules = Utils.createRules({
@@ -135,7 +141,7 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
           onClick={handleSubmit(submit)}
           width={StyledButtonWidth.MIN}
           className="self-center"
-          isLoading={isConnecting}
+          isLoading={isConnecting || isLoading}
         />
 
         <StyledLink

@@ -11,7 +11,7 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   mail: 'string',
   wallet: 'string',
   refcode: 'string',
-  discountCode: 'string',
+  specialCode: 'string',
   session: 'string',
   redirectUri: 'string',
   mode: 'string',
