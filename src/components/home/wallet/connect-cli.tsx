@@ -136,12 +136,12 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
         {error && <ConnectError error={error} />}
 
         <StyledButton
-          disabled={!isValid || isLoading}
+          disabled={!isValid}
           label={translate('general/actions', 'Login')}
           onClick={handleSubmit(submit)}
           width={StyledButtonWidth.MIN}
           className="self-center"
-          isLoading={isConnecting}
+          isLoading={isConnecting || isLoading}
         />
 
         <StyledLink
