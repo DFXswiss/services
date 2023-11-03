@@ -35,7 +35,7 @@ export function HomeScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { authenticationToken } = useAuthContext();
   const { user } = useUserContext();
-  const { isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
+  const { canClose, isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
   const { navigate } = useNavigation();
   const { pathname } = useLocation();
@@ -117,10 +117,13 @@ export function HomeScreen(): JSX.Element {
     currentPage?.bottomImage ??
     (currentPage?.dfxStyle ? 'https://content.dfx.swiss/img/v1/services/berge.png' : undefined);
 
+  const hasBackButton =
+    (canClose && !isEmbedded) || connectTo != null || (currentPageId != null && currentPageId !== appParams.mode);
+
   return (
     <Layout
       title={isEmbedded ? title : undefined}
-      backButton={connectTo != null || (currentPageId != null && currentPageId !== appParams.mode)}
+      backButton={hasBackButton}
       onBack={connectTo || currentPageId ? handleBack : undefined}
       rootRef={rootRef}
     >

@@ -63,12 +63,12 @@ export const Navigation = forwardRef<HTMLDivElement, NavigationIframeProps>(
 );
 
 function BackButton({ title, backButton, onBack }: BackButtonProps): JSX.Element {
-  const { homePath, isEmbedded, closeServices } = useAppHandlingContext();
+  const { isEmbedded, closeServices } = useAppHandlingContext();
   const { pathname } = useLocation();
   const { navigate } = useNavigation();
 
   function onClick() {
-    if (homePath === pathname) {
+    if (pathname === '/') {
       closeServices({ type: CloseType.CANCEL }, false);
     } else {
       navigate(-1);
