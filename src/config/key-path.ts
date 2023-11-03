@@ -12,6 +12,13 @@ const BitcoinAddressStandard = {
   [BitcoinAddressType.LEGACY]: 'pkh(@0/**)',
 };
 
+const BitcoinSimpleType = {
+  [BitcoinAddressType.TAPROOT]: 'p2tr',
+  [BitcoinAddressType.NATIVE_SEGWIT]: 'p2wpkh',
+  [BitcoinAddressType.SEGWIT]: 'p2wpkhP2sh',
+  [BitcoinAddressType.LEGACY]: 'p2pkh',
+};
+
 export const BitcoinAddressPrefix = {
   [BitcoinAddressType.TAPROOT]: 86,
   [BitcoinAddressType.NATIVE_SEGWIT]: 84,
@@ -28,6 +35,7 @@ const KeyPath = {
     xPub: `m/${BitcoinAddressPrefix[type]}${btcRootPath}`,
     address: (index: number) => `m/${BitcoinAddressPrefix[type]}${btcRootPath}/0/${index}`,
     addressStandard: BitcoinAddressStandard[type],
+    simpleType: BitcoinSimpleType[type],
   }),
   ETH: {
     root: ethRootPath,
