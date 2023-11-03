@@ -48,10 +48,9 @@ export default function ConnectBitbox(props: Props): JSX.Element {
   async function getAccount(blockchain: Blockchain, isReconnect: boolean): Promise<Account> {
     if (isReconnect && session?.address) return { address: session.address };
 
-    const address = await connect(props.wallet, blockchain, defaultAddressType, setPairingCode).catch((e) => {
-      setPairingCode(undefined);
-      throw e;
-    });
+    const address = await connect(props.wallet, blockchain, defaultAddressType, setPairingCode).finally(() =>
+      setPairingCode(undefined),
+    );
 
     setChain(blockchain);
     setAddresses([address]);
