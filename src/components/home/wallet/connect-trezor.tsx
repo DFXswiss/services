@@ -64,7 +64,7 @@ export default function ConnectTrezor(props: Props): JSX.Element {
     const loadAddresses = await fetchAddresses(
       props.wallet,
       type !== selectedType || !addresses ? 0 : addresses.length,
-      3,
+      10,
       type,
     );
 
