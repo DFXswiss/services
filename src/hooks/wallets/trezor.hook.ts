@@ -82,22 +82,25 @@ export function useTrezor(): TrezorInterface {
     count: number,
     addressType: BitcoinAddressType,
   ): Promise<string[]> {
-    const addresses = [];
+    const addressBundle = [];
+
     for (let i = startIndex; i < startIndex + count; i++) {
-      const result =
-        wallet === WalletType.TREZOR_BTC
-          ? await TrezorConnect.getAddress({
-              path: KeyPath.BTC(addressType).address(i),
-              showOnTrezor: false,
-            })
-          : await TrezorConnect.ethereumGetAddress({ path: KeyPath.ETH.address(i), showOnTrezor: false });
-      if (result.success) {
-        addresses.push(result.payload.address);
-      } else {
-        handlePayloadError('Trezor not connected', result.payload.error);
-      }
+      addressBundle.push({
+        path: wallet === WalletType.TREZOR_BTC ? KeyPath.BTC(addressType).address(i) : KeyPath.ETH.address(i),
+        showOnTrezor: false,
+      });
     }
-    return addresses;
+
+    const result =
+      wallet === WalletType.TREZOR_BTC
+        ? await TrezorConnect.getAddress({ bundle: addressBundle })
+        : await TrezorConnect.ethereumGetAddress({ bundle: addressBundle });
+
+    if (result.success) {
+      return result.payload.map((p) => p.address);
+    }
+
+    handlePayloadError('Trezor not connected', result.payload.error);
   }
 
   async function signMessage(
