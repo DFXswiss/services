@@ -461,7 +461,7 @@ export default function SellScreen(): JSX.Element {
                   </StyledVerticalStack>
                 )}
                 <div>
-                  <div className="pt-4 w-full">
+                  <div className="pt-4 w-full text-left">
                     <StyledLink
                       label={translate(
                         'screens/payment',

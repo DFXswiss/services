@@ -1,4 +1,4 @@
-import { Buy, Fiat } from '@dfx.swiss/react';
+import { Buy } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -14,19 +14,8 @@ import { useSettingsContext } from '../../contexts/settings.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
 import { GiroCode } from './giro-code';
 
-export interface PaymentInformation {
-  buy: Buy;
-  recipient: string;
-  estimatedAmount: string;
-  fee: string;
-  minFee?: string;
-  currency?: Fiat;
-  amount: number;
-  giroCode?: string;
-}
-
 interface PaymentInformationContentProps {
-  info: PaymentInformation;
+  info: Buy;
 }
 
 export function PaymentInformationContent({ info }: PaymentInformationContentProps): JSX.Element {
@@ -46,18 +35,18 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
           <div>
-            <p>{info.buy.iban}</p>
-            {info.buy.sepaInstant && (
+            <p>{info.iban}</p>
+            {info.sepaInstant && (
               <div className="text-white">
                 <DfxIcon icon={IconVariant.SEPA_INSTANT} color={IconColor.RED} />
               </div>
             )}
           </div>
-          <CopyButton onCopy={() => copy(info.buy.iban)} />
+          <CopyButton onCopy={() => copy(info.iban)} />
         </StyledDataTableRow>
         <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
-          {info.buy.bic}
-          <CopyButton onCopy={() => copy(info.buy.bic)} />
+          {info.bic}
+          <CopyButton onCopy={() => copy(info.bic)} />
         </StyledDataTableRow>
         <StyledDataTableRow
           label={translate('screens/payment', 'Purpose of payment')}
@@ -66,15 +55,19 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
             'The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders',
           )}
         >
-          {info.buy.remittanceInfo}
-          <CopyButton onCopy={() => copy(info.buy.remittanceInfo)} />
+          {info.remittanceInfo}
+          <CopyButton onCopy={() => copy(info.remittanceInfo)} />
         </StyledDataTableRow>
       </StyledDataTable>
 
-      {info.buy.paymentRequest && <GiroCode value={info.buy.paymentRequest} />}
+      {info.paymentRequest && (
+        <div className="mt-4">
+          <GiroCode value={info.paymentRequest} />
+        </div>
+      )}
 
       <StyledDataTable label={translate('screens/buy', 'Recipient')} showBorder minWidth={false}>
-        <StyledDataTableRow>{info.recipient}</StyledDataTableRow>
+        <StyledDataTableRow>{`${info.name}, ${info.street} ${info.number}, ${info.zip} ${info.city}, ${info.country}`}</StyledDataTableRow>
       </StyledDataTable>
     </>
   );

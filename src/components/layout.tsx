@@ -43,7 +43,7 @@ export function Layout({
       <div className="flex flex-col flex-grow overflow-auto" ref={scrollRef}>
         <div className="flex flex-grow justify-center">
           <div
-            className={`relative max-w-screen-md flex flex-grow flex-col items-center ${
+            className={`relative w-full max-w-screen-md flex flex-grow flex-col items-center ${
               textStart ? 'text-start' : 'text-center'
             } px-5 py-2 mt-4 gap-2`}
           >

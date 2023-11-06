@@ -20,3 +20,7 @@ export function url(url: string, params: URLSearchParams): string {
 export function isNode(e: EventTarget | null): e is Node {
   return e != null && 'nodeType' in e;
 }
+
+export function blankedAddress(address: string): string {
+  return `${address?.slice(0, 10)}...${address?.slice(address?.length - 9)}`;
+}
