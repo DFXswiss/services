@@ -2179,6 +2179,13 @@ export const FeatureTree: Page[] = [
       wallet: { type: WalletType.META_MASK, blockchain: Blockchain.ETHEREUM },
     },
     {
+      id: 'hw-wallet',
+      img: 'hardwarewallets',
+      next: {
+        page: 'hw-wallets',
+      },
+    },
+    {
       id: 'walletconnect',
       img: 'walletconnect',
       wallet: { type: WalletType.WALLET_CONNECT, blockchain: Blockchain.ETHEREUM },
