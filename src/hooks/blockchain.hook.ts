@@ -126,6 +126,10 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.ARBITRUM]: 'Arbitrum',
       [Blockchain.OPTIMISM]: 'Optimism',
       [Blockchain.POLYGON]: 'Polygon',
+      [Blockchain.BITCOIN]: 'Bitcoin',
+      [Blockchain.LIGHTNING]: 'Lightning',
+      [Blockchain.DEFICHAIN]: 'DeFiChain',
+      [Blockchain.CARDANO]: 'Cardano',
     },
   };
 
