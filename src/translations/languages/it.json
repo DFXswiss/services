@@ -12,7 +12,9 @@
     "Logout": "Logout",
     "Back": "Indietro",
     "Connect": "Collegare",
-    "Continue in Trezor Connect": "Continua in Trezor Connect"
+    "Continue in Trezor Connect": "Continua in Trezor Connect",
+    "Yes": "Sì",
+    "No": "No"
   },
   "general/errors": {
     "Something went wrong. Please try again later. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare più tardi. Se il problema persiste, contattate il nostro supporto."
@@ -90,12 +92,19 @@
   },
   "screens/buy": {
     "Buy": "Acquista",
-    "I want to buy": "Voglio comprare",
-    "with": "con",
-    "Buy Amount": "Importo di acquisto",
+    "You spend": "Si spende",
+    "You get (estimate)": "Si ottiene (stima)",
+
+    "Target address": "Indirizzo di destinazione",
+    "Switch address": "Cambiamento dell'indirizzo",
+    "Login with a different address": "Accesso con un altro indirizzo",
+    "Are you sure you want to send to a different address?": "Sei sicuro di voler trasmettere a un altro indirizzo?",
+
+    "Exchange rate": "Tasso di cambio",
+    "Base rate": "Tasso base",
+    "DFX fee": "Commissioni DFX",
+
     "Done!": "Fatto!",
-    "≈ {{estimatedAmount}} (incl. {{fee}} DFX fee - min. {{minFee}})": "≈ {{estimatedAmount}} (inkl. {{fee}} Tassa DFX - min. {{minFee}})",
-    "≈ {{estimatedAmount}} (incl. {{fee}} DFX fee)": "≈ {{estimatedAmount}} (inkl. {{fee}} Tassa DFX)",
     "Click here once you have issued the transfer": "Fare clic qui una volta emesso il trasferimento",
 
     "Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!": "Si prega di trasferire l'importo dell'acquisto utilizzando queste informazioni tramite la propria applicazione bancaria. Lo scopo del pagamento è importante!",
@@ -105,13 +114,10 @@
     "Name": "Nome",
     "Address": "Indirizzo",
 
-    "DFX-Fee": "DFX-Fee",
-
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "L'importo inserito è inferiore al deposito minimo di {{amount}} {{currency}}",
 
     "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Non appena il bonifico arriverà sul nostro conto bancario, trasferiremo il vostro bene nel vostro portafoglio.",
 
-    "Payment method": "Metodo di pagamento",
     "Bank transaction": "Transazione bancaria",
     "Credit card": "Carta di credito"
   },

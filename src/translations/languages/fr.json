@@ -12,7 +12,9 @@
     "Logout": "Logout",
     "Back": "Retour",
     "Connect": "Connecter",
-    "Continue in Trezor Connect": "Continuer dans Trezor Connect"
+    "Continue in Trezor Connect": "Continuer dans Trezor Connect",
+    "Yes": "Oui",
+    "No": "Non"
   },
   "general/errors": {
     "Something went wrong. Please try again later. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer plus tard. Si le problème persiste, veuillez contacter notre service d'assistance."
@@ -90,12 +92,19 @@
   },
   "screens/buy": {
     "Buy": "Acheter",
-    "I want to buy": "Je souhaite acheter",
-    "with": "avec",
-    "Buy Amount": "Montant de l'achat",
+    "You spend": "Vous dépensez",
+    "You get (estimate)": "Vous obtenez (estimation)",
+
+    "Target address": "Adresse de destination",
+    "Switch address": "Changer l'adresse",
+    "Login with a different address": "Se connecter avec une autre adresse",
+    "Are you sure you want to send to a different address?": "Êtes-vous sûr de vouloir envoyer à une autre adresse ?",
+
+    "Exchange rate": "Taux de change",
+    "Base rate": "Taux de base",
+    "DFX fee": "Frais DFX",
+
     "Done!": "Fait!",
-    "≈ {{estimatedAmount}} (incl. {{fee}} DFX fee - min. {{minFee}})": "≈ {{estimatedAmount}} (y compris {{fee}} Taxe DFX - min. {{minFee}})",
-    "≈ {{estimatedAmount}} (incl. {{fee}} DFX fee)": "≈ {{estimatedAmount}} (y compris {{fee}} Taxe DFX)",
     "Click here once you have issued the transfer": "Cliquez ici une fois que vous avez émis le virement",
 
     "Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!": "Veuillez transférer le montant de l'achat à l'aide de ces informations via votre application bancaire. L'objet du paiement est important !",
@@ -105,13 +114,10 @@
     "Name": "Nom",
     "Address": "Adresse",
 
-    "DFX-Fee": "Frais DFX",
-
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Le montant saisi est inférieur au dépôt minimum de {{amount}} {{currency}}",
 
     "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Dès que le virement arrive sur notre compte bancaire, nous transférons votre avoir sur votre porte-monnaie.",
 
-    "Payment method": "Mode de paiement",
     "Bank transaction": "Transaction bancaire",
     "Credit card": "Carte de crédit"
   },
