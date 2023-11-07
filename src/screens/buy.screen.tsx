@@ -32,6 +32,7 @@ import {
   StyledInput,
   StyledLink,
   StyledLoadingSpinner,
+  StyledTextBox,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
@@ -55,7 +56,6 @@ interface FormData {
   amount: string;
   currency: Fiat;
   paymentMethod: BuyPaymentMethod;
-  estimatedAmount: string;
   asset: Asset;
   address: { address: string; label: string; type: string };
 }
@@ -105,14 +105,6 @@ export function BuyScreen(): JSX.Element {
     availablePaymentMethods.push(BuyPaymentMethod.CARD);
   const defaultPaymentMethod =
     availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
-
-  const baseRate = paymentInfo && `${paymentInfo.exchangeRate} ${paymentInfo.currency.name}/${paymentInfo.asset.name}`;
-  const feeAmount =
-    paymentInfo && Math.max((paymentInfo.fee * paymentInfo.amount) / 100, paymentInfo.minFee ?? 0).toFixed(2);
-  const minFee = paymentInfo && `, min. ${paymentInfo.minFee}${toSymbol(paymentInfo.currency)}`;
-  const dfxFee =
-    paymentInfo &&
-    `${feeAmount}${toSymbol(paymentInfo.currency)} (${paymentInfo.fee}%${paymentInfo.minFee ? minFee : ''})`;
 
   // form
   const {
@@ -192,10 +184,7 @@ export function BuyScreen(): JSX.Element {
     setIsLoading(true);
     receiveFor(validatedData)
       .then(validateBuy)
-      .then((buy) => {
-        buy && setValue('estimatedAmount', `≈ ${buy.estimatedAmount}`);
-        setPaymentInfo(buy);
-      })
+      .then(setPaymentInfo)
       .finally(() => setIsLoading(false));
   }, [useDebounce(validatedData, 500)]);
 
@@ -243,7 +232,7 @@ export function BuyScreen(): JSX.Element {
     if (session?.address)
       setVal('address', {
         address: blankedAddress(session.address),
-        label: translate('screens/buy', 'DFX address'),
+        label: translate('screens/buy', 'Target address'),
         type: 'Address',
       });
   }
@@ -261,11 +250,22 @@ export function BuyScreen(): JSX.Element {
   });
 
   const showsSimple = user?.mail != null;
+
   const title = showsCompletion
     ? translate('screens/buy', 'Done!')
     : showsSwitchScreen
     ? translate('screens/buy', 'Switch address')
     : translate('screens/buy', 'Buy');
+
+  const baseRate =
+    paymentInfo &&
+    `${Utils.formatAmount(paymentInfo.exchangeRate)} ${paymentInfo.currency.name}/${paymentInfo.asset.name}`;
+  const feeAmount =
+    paymentInfo && Math.max((paymentInfo.fee * paymentInfo.amount) / 100, paymentInfo.minFee ?? 0).toFixed(2);
+  const minFee = paymentInfo && `, min. ${paymentInfo.minFee}${toSymbol(paymentInfo.currency)}`;
+  const dfxFee =
+    paymentInfo &&
+    `${feeAmount}${toSymbol(paymentInfo.currency)} (${paymentInfo.fee}%${paymentInfo.minFee ? minFee : ''})`;
 
   return (
     <Layout title={title} backButton={!showsCompletion} textStart rootRef={rootRef} scrollRef={scrollRef}>
@@ -335,7 +335,12 @@ export function BuyScreen(): JSX.Element {
                   <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get (estimate)')}</h2>
                   <StyledHorizontalStack gap={1}>
                     <div className="flex-1">
-                      <StyledInput name="estimatedAmount" loading={isLoading} disabled full />
+                      <StyledTextBox
+                        text={
+                          paymentInfo && !isLoading ? `≈ ${Utils.formatAmountCrypto(paymentInfo.estimatedAmount)}` : ' '
+                        }
+                        full
+                      />
                     </div>
                     <div style={{ flex: '0 0 13rem' }}>
                       <StyledDropdown<Asset>
@@ -380,7 +385,9 @@ export function BuyScreen(): JSX.Element {
                     <StyledCollapsible
                       full
                       label={translate('screens/buy', 'Exchange rate')}
-                      title={`${paymentInfo.rate} ${paymentInfo.currency.name}/${paymentInfo.asset.name}`}
+                      title={`${Utils.formatAmount(paymentInfo.rate)} ${paymentInfo.currency.name}/${
+                        paymentInfo.asset.name
+                      }`}
                     >
                       <StyledDataTable showBorder={false}>
                         <StyledDataTableRow noPadding label={translate('screens/buy', 'Base rate')}>
