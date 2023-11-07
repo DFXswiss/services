@@ -64,7 +64,7 @@ export default function ConnectTrezor(props: Props): JSX.Element {
     const loadAddresses = await fetchAddresses(
       props.wallet,
       type !== selectedType || !addresses ? 0 : addresses.length,
-      3,
+      10,
       type,
     );
 
@@ -112,6 +112,7 @@ function Content({
   onLoadAddresses,
   addressLoading,
   error,
+  wallet,
 }: ContentProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { addressTypes, defaultAddressType } = useTrezor();
@@ -148,16 +149,17 @@ function Content({
           <>
             <h2 className="text-dfxGray-700">{translate('screens/home', 'Choose an address')}</h2>
             <Form control={control} errors={{}}>
-              <StyledDropdown<BitcoinAddressType>
-                rootRef={rootRef}
-                label={translate('screens/home', 'Address type')}
-                name="type"
-                items={addressTypes}
-                labelFunc={(item) => item}
-                full
-                disabled={addressLoading}
-              />
-
+              {wallet === WalletType.TREZOR_BTC && (
+                <StyledDropdown<BitcoinAddressType>
+                  rootRef={rootRef}
+                  label={translate('screens/home', 'Address type')}
+                  name="type"
+                  items={addressTypes}
+                  labelFunc={(item) => item}
+                  full
+                  disabled={addressLoading}
+                />
+              )}
               <StyledDropdown<Address>
                 rootRef={rootRef}
                 name="address"
@@ -166,7 +168,7 @@ function Content({
                 descriptionFunc={(item) => `Index ${item.index}`}
                 full
                 disabled={addressLoading}
-                placeholder={translate('general/actions', 'Please select...')}
+                placeholder={translate('general/actions', 'Select...')}
                 label={translate('screens/home', 'Address index')}
               />
             </Form>

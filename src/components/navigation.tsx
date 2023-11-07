@@ -175,16 +175,18 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             url={process.env.REACT_APP_IMP_URL}
           />
 
-          <Form control={control} errors={errors}>
-            <StyledDropdown
-              name="language"
-              label=""
-              placeholder={translate('general/actions', 'Please select...')}
-              items={Object.values(availableLanguages)}
-              labelFunc={(item) => item.name}
-              descriptionFunc={(item) => item.foreignName}
-            />
-          </Form>
+          <div className="mt-4">
+            <Form control={control} errors={errors}>
+              <StyledDropdown
+                name="language"
+                label=""
+                placeholder={translate('general/actions', 'Select...')}
+                items={Object.values(availableLanguages)}
+                labelFunc={(item) => item.name}
+                descriptionFunc={(item) => item.foreignName}
+              />
+            </Form>
+          </div>
 
           <StyledButton
             className="mt-4"

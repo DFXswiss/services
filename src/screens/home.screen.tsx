@@ -90,18 +90,14 @@ export function HomeScreen(): JSX.Element {
 
   function start(kycComplete: boolean) {
     switch (specialMode) {
-      case SpecialMode.LOGIN:
-        setLoginSuccessful(false);
-        setPages(new Stack());
-        setConnectTo(undefined);
-
-        navigate('/');
-        break;
-
       case SpecialMode.MY_DFX:
         const url = `${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`;
         window.open(url, '_self');
         break;
+
+      // @ts-expect-error fall through to default option
+      case SpecialMode.LOGIN:
+        navigate('/');
 
       default:
         const path = redirectPath ?? '/buy';

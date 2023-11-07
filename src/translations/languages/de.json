@@ -1,6 +1,6 @@
 {
   "general/actions": {
-    "Please select...": "Bitte auswählen...",
+    "Select...": "Auswählen...",
     "Next": "Weiter",
     "Continue": "Weiter",
     "Close": "Schliessen",
@@ -12,7 +12,9 @@
     "Logout": "Logout",
     "Back": "Zurück",
     "Connect": "Verbinden",
-    "Continue in Trezor Connect": "Weiter zu Trezor Connect"
+    "Continue in Trezor Connect": "Weiter zu Trezor Connect",
+    "Yes": "Ja",
+    "No": "Nein"
   },
   "general/errors": {
     "Something went wrong. Please try again later. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es später noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support."
@@ -90,12 +92,19 @@
   },
   "screens/buy": {
     "Buy": "Kaufen",
-    "I want to buy": "Ich möchte folgendes kaufen",
-    "with": "mit",
-    "Buy Amount": "Kaufbetrag",
+    "You spend": "Du zahlst",
+    "You get (estimate)": "Du erhälst (ungefähr)",
+
+    "Target address": "Ziel-Adresse",
+    "Switch address": "Adresse wechseln",
+    "Login with a different address": "Mit einer anderen Adresse anmelden",
+    "Are you sure you want to send to a different address?": "Bist Du sicher, dass Du auf eine andere Adresse senden willst?",
+
+    "Exchange rate": "Wechselkurs",
+    "Base rate": "Basiskurs",
+    "DFX fee": "DFX-Gebühren",
+
     "Done!": "Fertig!",
-    "≈ {{estimatedAmount}} (incl. {{fee}} DFX fee - min. {{minFee}})": "≈ {{estimatedAmount}} (inkl. {{fee}} DFX Gebühr - min. {{minFee}})",
-    "≈ {{estimatedAmount}} (incl. {{fee}} DFX fee)": "≈ {{estimatedAmount}} (inkl. {{fee}} DFX Gebühr)",
     "Click here once you have issued the transfer": "Klicke hier, sobald Du die Überweisung getätigt hast",
 
     "Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!": "Bitte überweise den Kaufbetrag mit diesen Angaben über Deine Bankanwendung. Der Verwendungszweck ist wichtig!",
@@ -105,13 +114,10 @@
     "Name": "Name",
     "Address": "Adresse",
 
-    "DFX-Fee": "DFX-Gebühren",
-
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
 
     "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir das Asset in Deine Wallet übertragen.",
 
-    "Payment method": "Zahlungsmethode",
     "Bank transaction": "Banktransaktion",
     "Credit card": "Kreditkarte"
   },
@@ -121,7 +127,6 @@
   },
   "screens/sell": {
     "Your Wallet": "Deine Wallet",
-    "Please select...": "Bitte auswählen...",
     "Cash out to my bank account": "Auszahlung auf mein Bankkonto",
     "Add or select your IBAN": "Deine IBAN hinzufügen oder auswählen",
     "Select payment account": "Bankkonto auswählen",

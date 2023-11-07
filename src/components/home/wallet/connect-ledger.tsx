@@ -172,7 +172,7 @@ function Content({
                 descriptionFunc={(item) => `Index ${item.index}`}
                 full
                 disabled={addressLoading}
-                placeholder={translate('general/actions', 'Please select...')}
+                placeholder={translate('general/actions', 'Select...')}
                 label={translate('screens/home', 'Address index')}
               />
             </Form>
