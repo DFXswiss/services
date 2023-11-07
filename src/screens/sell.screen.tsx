@@ -46,6 +46,7 @@ import { AssetBalance } from '../contexts/balance.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
+import { useBlockchain } from '../hooks/blockchain.hook';
 import { useClipboard } from '../hooks/clipboard.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycDataGuard, useSessionGuard } from '../hooks/guard.hook';
@@ -80,6 +81,7 @@ export default function SellScreen(): JSX.Element {
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
+  const { toString } = useBlockchain();
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
@@ -346,7 +348,7 @@ export default function SellScreen(): JSX.Element {
                 labelFunc={(item) => item.name}
                 balanceFunc={(item) => findBalance(item)?.toString() ?? ''}
                 assetIconFunc={(item) => item.name as AssetIconVariant}
-                descriptionFunc={(item) => item.blockchain}
+                descriptionFunc={(item) => toString(item.blockchain)}
                 full
               />
             )}

@@ -46,6 +46,7 @@ import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
+import { useBlockchain } from '../hooks/blockchain.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
@@ -89,6 +90,7 @@ export function BuyScreen(): JSX.Element {
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const { setRedirectPath } = useAppHandlingContext();
+  const { toString } = useBlockchain();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
@@ -298,7 +300,7 @@ export function BuyScreen(): JSX.Element {
                 <StyledVerticalStack gap={2} full>
                   <h2 className="text-dfxGray-700">{translate('screens/buy', 'You spend')}</h2>
                   <StyledHorizontalStack gap={1}>
-                    <div className="flex-1">
+                    <div style={{ flex: '3 1 9rem' }}>
                       <StyledInput
                         type={'number'}
                         placeholder="0.00"
@@ -309,7 +311,7 @@ export function BuyScreen(): JSX.Element {
                         full
                       />
                     </div>
-                    <div style={{ flex: '0 0 13rem' }}>
+                    <div style={{ flex: '1 0 9rem' }}>
                       <StyledDropdown<Fiat>
                         rootRef={rootRef}
                         name="currency"
@@ -334,7 +336,7 @@ export function BuyScreen(): JSX.Element {
                 <StyledVerticalStack gap={2} full>
                   <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get (estimate)')}</h2>
                   <StyledHorizontalStack gap={1}>
-                    <div className="flex-1">
+                    <div style={{ flex: '3 1 9rem' }}>
                       <StyledTextBox
                         text={
                           paymentInfo && !isLoading ? `≈ ${Utils.formatAmountCrypto(paymentInfo.estimatedAmount)}` : ' '
@@ -342,7 +344,7 @@ export function BuyScreen(): JSX.Element {
                         full
                       />
                     </div>
-                    <div style={{ flex: '0 0 13rem' }}>
+                    <div style={{ flex: '1 0 9rem' }}>
                       <StyledDropdown<Asset>
                         rootRef={rootRef}
                         name="asset"
@@ -350,7 +352,7 @@ export function BuyScreen(): JSX.Element {
                         items={availableAssets}
                         labelFunc={(item) => item.name}
                         assetIconFunc={(item) => item.name as AssetIconVariant}
-                        descriptionFunc={(item) => item.blockchain}
+                        descriptionFunc={(item) => toString(item.blockchain)}
                         full
                       />
                     </div>
