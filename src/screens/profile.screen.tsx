@@ -95,7 +95,7 @@ export function ProfileScreen(): JSX.Element {
               rootRef={rootRef}
               name="accountType"
               label=""
-              placeholder={translate('general/actions', 'Please select...')}
+              placeholder={translate('general/actions', 'Select...')}
               items={Object.values(AccountType)}
               labelFunc={(item) => translate('screens/profile', item)}
             />
@@ -164,7 +164,7 @@ export function ProfileScreen(): JSX.Element {
                 rootRef={rootRef}
                 name="country"
                 label={translate('screens/profile', 'Country')}
-                placeholder={translate('general/actions', 'Please select...')}
+                placeholder={translate('general/actions', 'Select...')}
                 items={countries}
                 labelFunc={(item) => item.name}
                 smallLabel
@@ -239,7 +239,7 @@ export function ProfileScreen(): JSX.Element {
                     rootRef={rootRef}
                     name="organizationCountry"
                     label={translate('screens/profile', 'Country')}
-                    placeholder={translate('general/actions', 'Please select...')}
+                    placeholder={translate('general/actions', 'Select...')}
                     items={countries}
                     labelFunc={(item) => item.name}
                     smallLabel

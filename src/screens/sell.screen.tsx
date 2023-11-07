@@ -342,7 +342,7 @@ export default function SellScreen(): JSX.Element {
                 rootRef={rootRef}
                 name="asset"
                 label={translate('screens/sell', 'Your Wallet')}
-                placeholder={translate('general/actions', 'Please select...')}
+                placeholder={translate('general/actions', 'Select...')}
                 labelIcon={IconVariant.WALLET}
                 items={availableAssets}
                 labelFunc={(item) => item.name}

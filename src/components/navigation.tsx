@@ -180,7 +180,7 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
               <StyledDropdown
                 name="language"
                 label=""
-                placeholder={translate('general/actions', 'Please select...')}
+                placeholder={translate('general/actions', 'Select...')}
                 items={Object.values(availableLanguages)}
                 labelFunc={(item) => item.name}
                 descriptionFunc={(item) => item.foreignName}

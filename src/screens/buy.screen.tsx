@@ -315,7 +315,7 @@ export function BuyScreen(): JSX.Element {
                       <StyledDropdown<Fiat>
                         rootRef={rootRef}
                         name="currency"
-                        placeholder={translate('general/actions', 'Please select...')}
+                        placeholder={translate('general/actions', 'Select...')}
                         items={currencies}
                         labelFunc={(item) => item.name}
                         descriptionFunc={(item) => toDescription(item)}
@@ -326,7 +326,7 @@ export function BuyScreen(): JSX.Element {
                   <StyledDropdown<BuyPaymentMethod>
                     rootRef={rootRef}
                     name="paymentMethod"
-                    placeholder={translate('general/actions', 'Please select...')}
+                    placeholder={translate('general/actions', 'Select...')}
                     items={availablePaymentMethods}
                     labelFunc={(item) => translate('screens/buy', paymentLabels[item])}
                     descriptionFunc={(item) => translate('screens/buy', paymentDescriptions[item])}
@@ -348,7 +348,7 @@ export function BuyScreen(): JSX.Element {
                       <StyledDropdown<Asset>
                         rootRef={rootRef}
                         name="asset"
-                        placeholder={translate('general/actions', 'Please select...')}
+                        placeholder={translate('general/actions', 'Select...')}
                         items={availableAssets}
                         labelFunc={(item) => item.name}
                         assetIconFunc={(item) => item.name as AssetIconVariant}

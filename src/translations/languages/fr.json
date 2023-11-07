@@ -1,6 +1,6 @@
 {
   "general/actions": {
-    "Please select...": "Veuillez choisir...",
+    "Select...": "Choisir...",
     "Next": "Suivant",
     "Continue": "Continuer",
     "Close": "Fermer",
@@ -127,7 +127,6 @@
   },
   "screens/sell": {
     "Your Wallet": "Votre portefeuille",
-    "Please select...": "Veuillez sélectionner...",
     "Cash out to my bank account": "Versement de l'argent sur mon compte bancaire",
     "Add or select your IBAN": "Ajouter ou sélectionner votre IBAN",
     "Select payment account": "Sélectionner le compte de paiement",
