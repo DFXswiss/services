@@ -25,8 +25,6 @@ import {
   StyledButtonColor,
   StyledButtonWidth,
   StyledCollapsible,
-  StyledDataTable,
-  StyledDataTableRow,
   StyledDropdown,
   StyledHorizontalStack,
   StyledInput,
@@ -269,6 +267,13 @@ export function BuyScreen(): JSX.Element {
     paymentInfo &&
     `${feeAmount}${toSymbol(paymentInfo.currency)} (${paymentInfo.fee}%${paymentInfo.minFee ? minFee : ''})`;
 
+  const l1Replacement =
+    paymentInfo?.asset.blockchain === Blockchain.BITCOIN
+      ? 'Lightning'
+      : paymentInfo?.asset.blockchain === Blockchain.ETHEREUM
+      ? 'Arbitrum / Optimism'
+      : undefined;
+
   return (
     <Layout title={title} backButton={!showsCompletion} textStart rootRef={rootRef} scrollRef={scrollRef}>
       {showsSwitchScreen ? (
@@ -391,26 +396,37 @@ export function BuyScreen(): JSX.Element {
                         paymentInfo.asset.name
                       }`}
                     >
-                      <StyledDataTable showBorder={false}>
-                        <StyledDataTableRow noPadding label={translate('screens/buy', 'Base rate')}>
-                          {baseRate}
-                        </StyledDataTableRow>
-                        <StyledDataTableRow noPadding label={translate('screens/buy', 'DFX fee')}>
-                          {dfxFee}
-                        </StyledDataTableRow>
-                      </StyledDataTable>
+                      <div className="grid gap-1 w-full text-sm" style={{ gridTemplateColumns: '8rem 1fr' }}>
+                        <div className="text-dfxGray-800">{translate('screens/buy', 'Base rate')}</div>
+                        <div>{baseRate}</div>
+
+                        <div className="text-dfxGray-800">{translate('screens/buy', 'DFX fee')}</div>
+                        <StyledVerticalStack>
+                          <div>{dfxFee}</div>
+                          {l1Replacement && (
+                            <div className="mt-1 text-xs text-dfxGray-700 leading-tight">
+                              {translate(
+                                'screens/buy',
+                                'Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees.',
+                                { chain: l1Replacement },
+                              )}
+                            </div>
+                          )}
+                        </StyledVerticalStack>
+                      </div>
                     </StyledCollapsible>
 
                     {selectedPaymentMethod === BuyPaymentMethod.BANK ? (
                       <div>
                         <PaymentInformationContent info={paymentInfo} />
-                        <div className="pt-4 w-full">
+                        <div className="pt-4 w-full leading-none">
                           <StyledLink
                             label={translate(
                               'screens/payment',
                               'Please note that by using this service you automatically accept our terms and conditions.',
                             )}
                             url={process.env.REACT_APP_TNC_URL}
+                            small
                             dark
                           />
                         </div>
@@ -427,13 +443,14 @@ export function BuyScreen(): JSX.Element {
                       </div>
                     ) : (
                       paymentInfo.paymentLink && (
-                        <div>
+                        <div className="leading-none">
                           <StyledLink
                             label={translate(
                               'screens/payment',
                               'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
                             )}
                             url={process.env.REACT_APP_TNC_URL}
+                            small
                             dark
                           />
                           <StyledButton

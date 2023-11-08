@@ -170,13 +170,14 @@ export function SellInfoScreen(): JSX.Element {
           <p className="font-semibold text-sm text-dfxBlue-800">{translate('screens/sell', 'Pay with your wallet')}</p>
           {paymentInfo.paymentRequest && <QrCopy data={paymentInfo.paymentRequest} />}
 
-          <div className="pt-4">
+          <div className="pt-4 leading-none">
             <StyledLink
               label={translate(
                 'screens/payment',
                 'Please note that by using this service you automatically accept our terms and conditions.',
               )}
               url={process.env.REACT_APP_TNC_URL}
+              small
               dark
             />
           </div>
