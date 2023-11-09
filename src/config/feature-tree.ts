@@ -1059,6 +1059,31 @@ export const FeatureTree: Page[] = [
     ],
   },
 
+  // --- BITCOIN Lightning --- //
+  
+  {
+    id: 'lightning-wallets',
+    tiles: [
+      {
+        id: 'dfx-wallet',
+        img: 'bitcoinapp',
+        wallet: { type: WalletType.DFX_TARO, blockchain: Blockchain.LIGHTNING },
+      },
+      {
+        id: 'alby',
+        img: 'alby',
+        wallet: { type: WalletType.ALBY, blockchain: Blockchain.LIGHTNING },
+      },
+      {
+        id: 'cli',
+        img: 'command',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
+        }),
+      },
+    ],
+  },
+
   // --- ALBY ONLY --- //
   {
     id: 'albyonly',
