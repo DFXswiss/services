@@ -192,13 +192,14 @@ export function BuyInfoScreen(): JSX.Element {
 
           {paymentInfo.paymentRequest && <GiroCode value={paymentInfo.paymentRequest} />}
 
-          <div className="pt-4">
+          <div className="pt-4 leading-none">
             <StyledLink
               label={translate(
                 'screens/payment',
                 'Please note that by using this service you automatically accept our terms and conditions.',
               )}
               url={process.env.REACT_APP_TNC_URL}
+              small
               dark
             />
           </div>

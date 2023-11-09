@@ -103,6 +103,7 @@
     "Exchange rate": "Wechselkurs",
     "Base rate": "Basiskurs",
     "DFX fee": "DFX-Gebühren",
+    "Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees": "Verwende {{chain}} als Layer-2-Lösung, um von niedrigeren Transaktionsgebühren zu profitieren",
 
     "Done!": "Fertig!",
     "Click here once you have issued the transfer": "Klicke hier, sobald Du die Überweisung getätigt hast",

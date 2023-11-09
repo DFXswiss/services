@@ -463,13 +463,14 @@ export default function SellScreen(): JSX.Element {
                   </StyledVerticalStack>
                 )}
                 <div>
-                  <div className="pt-4 w-full text-left">
+                  <div className="pt-4 w-full text-left leading-none">
                     <StyledLink
                       label={translate(
                         'screens/payment',
                         'Please note that by using this service you automatically accept our terms and conditions.',
                       )}
                       url={process.env.REACT_APP_TNC_URL}
+                      small
                       dark
                     />
                   </div>

@@ -21,6 +21,8 @@ export function isNode(e: EventTarget | null): e is Node {
   return e != null && 'nodeType' in e;
 }
 
-export function blankedAddress(address: string): string {
-  return `${address?.slice(0, 10)}...${address?.slice(address?.length - 9)}`;
+export function blankedAddress(address: string, displayLength = 24): string {
+  return address.length > displayLength
+    ? `${address.slice(0, displayLength / 2)}...${address.slice(address.length - displayLength / 2)}`
+    : address;
 }
