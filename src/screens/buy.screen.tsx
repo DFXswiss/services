@@ -407,7 +407,7 @@ export function BuyScreen(): JSX.Element {
                             <div className="mt-1 text-xs text-dfxGray-700 leading-tight">
                               {translate(
                                 'screens/buy',
-                                'Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees.',
+                                'Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees',
                                 { chain: l1Replacement },
                               )}
                             </div>
