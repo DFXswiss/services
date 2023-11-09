@@ -7,7 +7,7 @@ import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
-import { useBlockchain } from '../blockchain.hook';
+import { useWeb3 } from '../web3.hook';
 
 interface BitboxError {
   code: string;
@@ -48,7 +48,7 @@ export function useBitbox(): BitboxInterface {
   const btcCoin = 'btc';
   const storageKey = 'BitBoxClient';
   const { get, put } = useSettingsContext();
-  const { toChainId } = useBlockchain();
+  const { toChainId } = useWeb3();
 
   let tmpClient: PairedBitBox;
 

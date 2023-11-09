@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { AbortError } from '../../util/abort-error';
-import { useBlockchain } from '../blockchain.hook';
+import { useWeb3 } from '../web3.hook';
 
 export interface WalletConnectInterface {
   connect: (blockchain: Blockchain, onConnectUri: (uri: string) => void) => Promise<string>;
@@ -33,7 +33,7 @@ export interface DeepWallet {
 }
 
 export function useWalletConnect(): WalletConnectInterface {
-  const { toChainId } = useBlockchain();
+  const { toChainId } = useWeb3();
   const storageKey = 'WalletConnectClient';
   const { get, put } = useSettingsContext();
 

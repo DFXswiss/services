@@ -9,7 +9,7 @@ import ERC20_ABI from '../../static/erc20.abi.json';
 import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
 import { timeout } from '../../util/utils';
-import { useBlockchain } from '../blockchain.hook';
+import { useWeb3 } from '../web3.hook';
 
 export enum WalletType {
   META_MASK = 'MetaMask',
@@ -39,17 +39,9 @@ interface MetaMaskError {
   message: string;
 }
 
-export interface MetaMaskChainInterface {
-  chainId: string;
-  chainName: string;
-  nativeCurrency: { name: string; symbol: string; decimals: number };
-  rpcUrls: string[];
-  blockExplorerUrls: string[];
-}
-
 export function useMetaMask(): MetaMaskInterface {
   const web3 = new Web3(Web3.givenProvider);
-  const { toBlockchain, toChainHex, toChainObject } = useBlockchain();
+  const { toBlockchain, toChainHex, toChainObject } = useWeb3();
 
   function ethereum() {
     return (window as any).ethereum;
