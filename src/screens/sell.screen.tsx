@@ -27,6 +27,7 @@ import {
   IconVariant,
   StyledBankAccountListItem,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
   StyledDropdown,
   StyledHorizontalStack,
@@ -86,6 +87,7 @@ export default function SellScreen(): JSX.Element {
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [customAmountError, setCustomAmountError] = useState<string>();
+  const [errorMessage, setErrorMessage] = useState<string>();
   const [kycRequired, setKycRequired] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
@@ -146,7 +148,7 @@ export default function SellScreen(): JSX.Element {
   }, [amountIn]);
 
   useEffect(() => {
-    if (bankAccount && bankAccounts?.length) {
+    if (bankAccount && bankAccounts) {
       const account = getAccount(bankAccounts, bankAccount);
       if (account) {
         setVal('bankAccount', account);
@@ -174,7 +176,11 @@ export default function SellScreen(): JSX.Element {
     }
   }, [enteredAmount]);
 
-  useEffect(() => {
+  useEffect(() => fetchData(), [validatedData]);
+
+  function fetchData() {
+    setErrorMessage(undefined);
+
     if (!dataValid) {
       setPaymentInfo(undefined);
       return;
@@ -195,12 +201,13 @@ export default function SellScreen(): JSX.Element {
       .catch((error: ApiError) => {
         if (error.statusCode === 400 && error.message === 'Ident data incomplete') {
           navigate('/profile');
+        } else {
+          setPaymentInfo(undefined);
+          setErrorMessage(error.message ?? 'Unknown error');
         }
       })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, [validatedData]);
+      .finally(() => setIsLoading(false));
+  }
 
   function checkForAmountAvailable(amount: number, asset: Asset): boolean {
     const balance = findBalance(asset) ?? 0;
@@ -449,10 +456,32 @@ export default function SellScreen(): JSX.Element {
                     )}
                   </p>
                 )}
-                {kycRequired && !customAmountError && <KycHint />}
               </div>
             )}
-            {paymentInfo && !kycRequired && (
+
+            {kycRequired && !customAmountError && <KycHint />}
+
+            {!isLoading && errorMessage && (
+              <StyledVerticalStack center className="text-center">
+                <p className="text-dfxRed-100">
+                  {translate(
+                    'general/errors',
+                    'Something went wrong. Please try again. If the issue persists please reach out to our support.',
+                  )}
+                </p>
+                <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
+
+                <StyledButton
+                  width={StyledButtonWidth.MIN}
+                  label={translate('general/actions', 'Retry')}
+                  onClick={fetchData}
+                  className="my-4"
+                  color={StyledButtonColor.STURDY_WHITE}
+                />
+              </StyledVerticalStack>
+            )}
+
+            {paymentInfo && !kycRequired && !errorMessage && (
               <>
                 {paymentInfo.paymentRequest && !canSendTransaction() && (
                   <StyledVerticalStack full center>

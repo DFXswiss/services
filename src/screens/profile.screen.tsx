@@ -253,7 +253,7 @@ export function ProfileScreen(): JSX.Element {
                   <p className="text-dfxRed-100">
                     {translate(
                       'general/errors',
-                      'Something went wrong. Please try again later. If the issue persists please reach out to our support.',
+                      'Something went wrong. Please try again. If the issue persists please reach out to our support.',
                     )}
                   </p>
                   <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
