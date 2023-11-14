@@ -1,4 +1,5 @@
 import {
+  ApiError,
   Asset,
   Blockchain,
   Buy,
@@ -93,6 +94,7 @@ export function BuyScreen(): JSX.Element {
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
   const [customAmountError, setCustomAmountError] = useState<string>();
+  const [errorMessage, setErrorMessage] = useState<string>();
   const [kycRequired, setKycRequired] = useState<boolean>(false);
   const [showsCompletion, setShowsCompletion] = useState(false);
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
@@ -175,7 +177,11 @@ export function BuyScreen(): JSX.Element {
     setValidatedData(data);
   }, [selectedAmount, selectedCurrency, selectedAsset, selectedPaymentMethod]);
 
-  useEffect(() => {
+  useEffect(() => fetchData(), [useDebounce(validatedData, 500)]);
+
+  function fetchData() {
+    setErrorMessage(undefined);
+
     if (!validatedData) {
       setPaymentInfo(undefined);
       return;
@@ -185,8 +191,12 @@ export function BuyScreen(): JSX.Element {
     receiveFor(validatedData)
       .then(validateBuy)
       .then(setPaymentInfo)
+      .catch((error: ApiError) => {
+        setPaymentInfo(undefined);
+        setErrorMessage(error.message ?? 'Unknown error');
+      })
       .finally(() => setIsLoading(false));
-  }, [useDebounce(validatedData, 500)]);
+  }
 
   function validateBuy(buy: Buy): Buy | undefined {
     switch (buy.error) {
@@ -387,7 +397,27 @@ export function BuyScreen(): JSX.Element {
 
                 {!isLoading && kycRequired && <KycHint />}
 
-                {!isLoading && paymentInfo && !kycRequired && (
+                {!isLoading && errorMessage && (
+                  <StyledVerticalStack center className="text-center">
+                    <p className="text-dfxRed-100">
+                      {translate(
+                        'general/errors',
+                        'Something went wrong. Please try again. If the issue persists please reach out to our support.',
+                      )}
+                    </p>
+                    <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
+
+                    <StyledButton
+                      width={StyledButtonWidth.MIN}
+                      label={translate('general/actions', 'Retry')}
+                      onClick={fetchData}
+                      className="my-4"
+                      color={StyledButtonColor.STURDY_WHITE}
+                    />
+                  </StyledVerticalStack>
+                )}
+
+                {!isLoading && paymentInfo && !kycRequired && !errorMessage && (
                   <>
                     <StyledCollapsible
                       full

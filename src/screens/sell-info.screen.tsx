@@ -1,4 +1,5 @@
 import {
+  ApiError,
   Asset,
   BankAccount,
   Fiat,
@@ -21,12 +22,14 @@ import {
   CopyButton,
   SpinnerSize,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
   StyledDataTable,
   StyledDataTableRow,
   StyledInfoText,
   StyledLink,
   StyledLoadingSpinner,
+  StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
@@ -65,6 +68,7 @@ export function SellInfoScreen(): JSX.Element {
   const [bankAccount, setBankAccount] = useState<BankAccount>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [customAmountError, setCustomAmountError] = useState<string>();
+  const [errorMessage, setErrorMessage] = useState<string>();
   const [kycRequired, setKycRequired] = useState<boolean>(false);
 
   // default params
@@ -80,7 +84,7 @@ export function SellInfoScreen(): JSX.Element {
   }, [assetOut, getCurrency, currencies]);
 
   useEffect(() => {
-    if (bankAccountParam && bankAccounts?.length) {
+    if (bankAccountParam && bankAccounts) {
       const account = getAccount(bankAccounts, bankAccountParam);
       if (account) {
         setBankAccount(account);
@@ -93,8 +97,12 @@ export function SellInfoScreen(): JSX.Element {
     }
   }, [bankAccountParam, getAccount, bankAccounts, countries]);
 
-  useEffect(() => {
+  useEffect(() => fetchData(), [asset, currency, bankAccount, amountIn, amountOut]);
+
+  function fetchData() {
     if (!(asset && currency && bankAccount && (amountIn || amountOut))) return;
+
+    setErrorMessage(undefined);
 
     const request: SellPaymentInfo = { asset, currency, iban: bankAccount?.iban };
     if (amountIn) {
@@ -103,11 +111,16 @@ export function SellInfoScreen(): JSX.Element {
       request.targetAmount = +amountOut;
     }
 
+    setIsLoading(true);
     receiveFor(request)
       .then(validateSell)
       .then(setPaymentInfo)
+      .catch((error: ApiError) => {
+        setPaymentInfo(undefined);
+        setErrorMessage(error.message ?? 'Unknown error');
+      })
       .finally(() => setIsLoading(false));
-  }, [asset, currency, bankAccount, amountIn, amountOut]);
+  }
 
   function validateSell(sell: Sell): Sell | undefined {
     switch (sell.error) {
@@ -141,72 +154,92 @@ export function SellInfoScreen(): JSX.Element {
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
-      ) : bankAccount && paymentInfo && !kycRequired ? (
-        <>
-          <h2 className="text-dfxBlue-800 text-center">{translate('screens/payment', 'Payment Information')}</h2>
-
-          <StyledDataTable
-            label={translate('screens/payment', 'Bank Transaction Details')}
-            alignContent={AlignContent.RIGHT}
-            showBorder
-            minWidth={false}
-          >
-            <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-              {paymentInfo.estimatedAmount}
-              <CopyButton onCopy={() => copy(`${paymentInfo.estimatedAmount}`)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/payment', 'Currency')}>
-              {paymentInfo.currency.name}
-              <CopyButton onCopy={() => copy(paymentInfo.currency.name)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
-              <div>
-                <p>{bankAccount.iban}</p>
-              </div>
-              <CopyButton onCopy={() => copy(bankAccount.iban)} />
-            </StyledDataTableRow>
-          </StyledDataTable>
-
-          <p className="font-semibold text-sm text-dfxBlue-800">{translate('screens/sell', 'Pay with your wallet')}</p>
-          {paymentInfo.paymentRequest && <QrCopy data={paymentInfo.paymentRequest} />}
-
-          <div className="pt-4 leading-none">
-            <StyledLink
-              label={translate(
-                'screens/payment',
-                'Please note that by using this service you automatically accept our terms and conditions.',
-              )}
-              url={process.env.REACT_APP_TNC_URL}
-              small
-              dark
-            />
-          </div>
+      ) : errorMessage ? (
+        <StyledVerticalStack center className="text-center">
+          <p className="text-dfxRed-100">
+            {translate(
+              'general/errors',
+              'Something went wrong. Please try again. If the issue persists please reach out to our support.',
+            )}
+          </p>
+          <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
 
           <StyledButton
-            width={StyledButtonWidth.FULL}
-            label={translate('screens/sell', 'Click here once you have issued the transaction')}
-            onClick={() => {
-              setShowsCompletion(true);
-              scrollRef.current?.scrollTo(0, 0);
-            }}
-            caps={false}
+            width={StyledButtonWidth.MIN}
+            label={translate('general/actions', 'Retry')}
+            onClick={fetchData}
             className="my-4"
+            color={StyledButtonColor.STURDY_WHITE}
+          />
+        </StyledVerticalStack>
+      ) : customAmountError ? (
+        <>
+          <StyledInfoText invertedIcon>{customAmountError}</StyledInfoText>
+          <StyledButton
+            width={StyledButtonWidth.FULL}
+            label={translate('general/actions', 'Close')}
+            onClick={() => closeServices({ type: CloseType.CANCEL }, false)}
           />
         </>
+      ) : kycRequired ? (
+        <KycHint />
       ) : (
-        <>
-          {customAmountError && (
-            <>
-              <StyledInfoText invertedIcon>{customAmountError}</StyledInfoText>
-              <StyledButton
-                width={StyledButtonWidth.FULL}
-                label={translate('general/actions', 'Close')}
-                onClick={() => closeServices({ type: CloseType.CANCEL }, false)}
+        bankAccount &&
+        paymentInfo && (
+          <>
+            <h2 className="text-dfxBlue-800 text-center">{translate('screens/payment', 'Payment Information')}</h2>
+
+            <StyledDataTable
+              label={translate('screens/payment', 'Bank Transaction Details')}
+              alignContent={AlignContent.RIGHT}
+              showBorder
+              minWidth={false}
+            >
+              <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
+                {paymentInfo.estimatedAmount}
+                <CopyButton onCopy={() => copy(`${paymentInfo.estimatedAmount}`)} />
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/payment', 'Currency')}>
+                {paymentInfo.currency.name}
+                <CopyButton onCopy={() => copy(paymentInfo.currency.name)} />
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
+                <div>
+                  <p>{bankAccount.iban}</p>
+                </div>
+                <CopyButton onCopy={() => copy(bankAccount.iban)} />
+              </StyledDataTableRow>
+            </StyledDataTable>
+
+            <p className="font-semibold text-sm text-dfxBlue-800">
+              {translate('screens/sell', 'Pay with your wallet')}
+            </p>
+            {paymentInfo.paymentRequest && <QrCopy data={paymentInfo.paymentRequest} />}
+
+            <div className="pt-4 leading-none">
+              <StyledLink
+                label={translate(
+                  'screens/payment',
+                  'Please note that by using this service you automatically accept our terms and conditions.',
+                )}
+                url={process.env.REACT_APP_TNC_URL}
+                small
+                dark
               />
-            </>
-          )}
-          {kycRequired && !customAmountError && <KycHint />}
-        </>
+            </div>
+
+            <StyledButton
+              width={StyledButtonWidth.FULL}
+              label={translate('screens/sell', 'Click here once you have issued the transaction')}
+              onClick={() => {
+                setShowsCompletion(true);
+                scrollRef.current?.scrollTo(0, 0);
+              }}
+              caps={false}
+              className="my-4"
+            />
+          </>
+        )
       )}
     </Layout>
   );

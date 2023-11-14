@@ -11,13 +11,14 @@
     "Login": "Login",
     "Logout": "Logout",
     "Back": "Indietro",
+    "Retry": "Riprovare",
     "Connect": "Collegare",
     "Continue in Trezor Connect": "Continua in Trezor Connect",
     "Yes": "Sì",
     "No": "No"
   },
   "general/errors": {
-    "Something went wrong. Please try again later. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare più tardi. Se il problema persiste, contattate il nostro supporto."
+    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto."
   },
   "general/services": {
     "Buy": "Acquista",

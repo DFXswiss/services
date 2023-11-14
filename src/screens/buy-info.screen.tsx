@@ -1,4 +1,5 @@
 import {
+  ApiError,
   Asset,
   Buy,
   BuyPaymentInfo,
@@ -20,12 +21,14 @@ import {
   IconVariant,
   SpinnerSize,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
   StyledDataTable,
   StyledDataTableRow,
   StyledInfoText,
   StyledLink,
   StyledLoadingSpinner,
+  StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
@@ -59,6 +62,7 @@ export function BuyInfoScreen(): JSX.Element {
   const [asset, setAsset] = useState<Asset>();
   const [currency, setCurrency] = useState<Fiat>();
   const [customAmountError, setCustomAmountError] = useState<string>();
+  const [errorMessage, setErrorMessage] = useState<string>();
   const [kycRequired, setKycRequired] = useState<boolean>(false);
 
   // default params
@@ -73,8 +77,12 @@ export function BuyInfoScreen(): JSX.Element {
     if (!currency) setCurrency(getCurrency(currencies, assetIn));
   }, [assetIn, getCurrency, currencies]);
 
-  useEffect(() => {
+  useEffect(() => fetchData(), [asset, currency, amountIn, amountOut]);
+
+  function fetchData() {
     if (!(asset && currency && (amountIn || amountOut))) return;
+
+    setErrorMessage(undefined);
 
     const request: BuyPaymentInfo = { asset, currency };
     if (amountIn) {
@@ -83,11 +91,16 @@ export function BuyInfoScreen(): JSX.Element {
       request.targetAmount = +amountOut;
     }
 
+    setIsLoading(true);
     receiveFor(request)
       .then(validateBuy)
       .then(setPaymentInfo)
+      .catch((error: ApiError) => {
+        setPaymentInfo(undefined);
+        setErrorMessage(error.message ?? 'Unknown error');
+      })
       .finally(() => setIsLoading(false));
-  }, [asset, currency, amountIn, amountOut]);
+  }
 
   function validateBuy(buy: Buy): Buy | undefined {
     switch (buy.error) {
@@ -123,112 +136,129 @@ export function BuyInfoScreen(): JSX.Element {
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
-      ) : paymentInfo && !kycRequired ? (
-        <>
-          <h2 className="text-dfxBlue-800 text-center">{translate('screens/payment', 'Payment Information')}</h2>
-
-          <StyledDataTable
-            label={translate('screens/payment', 'Recipient')}
-            alignContent={AlignContent.RIGHT}
-            showBorder
-            minWidth={false}
-          >
-            <StyledDataTableRow label={translate('screens/buy', 'Name')}>
-              {paymentInfo.name}
-              <CopyButton onCopy={() => copy(`${paymentInfo.name}`)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/buy', 'Address')}>
-              {`${paymentInfo.street} ${paymentInfo.number}`}
-              <CopyButton onCopy={() => copy(`${paymentInfo.street} ${paymentInfo.number}`)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/profile', 'ZIP code')}>
-              {paymentInfo.zip}
-              <CopyButton onCopy={() => copy(`${paymentInfo.zip}`)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/profile', 'City')}>
-              {paymentInfo.city}
-              <CopyButton onCopy={() => copy(`${paymentInfo.city}`)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/profile', 'Country')}>
-              {paymentInfo.country}
-              <CopyButton onCopy={() => copy(`${paymentInfo.country}`)} />
-            </StyledDataTableRow>
-          </StyledDataTable>
-
-          <StyledDataTable
-            label={translate('screens/payment', 'Bank Transaction Details')}
-            alignContent={AlignContent.RIGHT}
-            showBorder
-            minWidth={false}
-          >
-            <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-              {paymentInfo.amount}
-              <CopyButton onCopy={() => copy(`${paymentInfo.amount}`)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/payment', 'Currency')}>
-              {paymentInfo.currency.name}
-              <CopyButton onCopy={() => copy(paymentInfo.currency.name)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
-              <div>
-                <p>{paymentInfo.iban}</p>
-                {paymentInfo.sepaInstant && (
-                  <div className="text-white">
-                    <DfxIcon icon={IconVariant.SEPA_INSTANT} color={IconColor.RED} />
-                  </div>
-                )}
-              </div>
-              <CopyButton onCopy={() => copy(paymentInfo.iban)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
-              {paymentInfo.bic}
-              <CopyButton onCopy={() => copy(paymentInfo.bic)} />
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/payment', 'Purpose of payment')}>
-              {paymentInfo.remittanceInfo}
-              <CopyButton onCopy={() => copy(paymentInfo.remittanceInfo)} />
-            </StyledDataTableRow>
-          </StyledDataTable>
-
-          {paymentInfo.paymentRequest && <GiroCode value={paymentInfo.paymentRequest} />}
-
-          <div className="pt-4 leading-none">
-            <StyledLink
-              label={translate(
-                'screens/payment',
-                'Please note that by using this service you automatically accept our terms and conditions.',
-              )}
-              url={process.env.REACT_APP_TNC_URL}
-              small
-              dark
-            />
-          </div>
+      ) : errorMessage ? (
+        <StyledVerticalStack center className="text-center">
+          <p className="text-dfxRed-100">
+            {translate(
+              'general/errors',
+              'Something went wrong. Please try again. If the issue persists please reach out to our support.',
+            )}
+          </p>
+          <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
 
           <StyledButton
-            width={StyledButtonWidth.FULL}
-            label={translate('screens/buy', 'Click here once you have issued the transfer')}
-            onClick={() => {
-              setShowsCompletion(true);
-              scrollRef.current?.scrollTo(0, 0);
-            }}
-            caps={false}
+            width={StyledButtonWidth.MIN}
+            label={translate('general/actions', 'Retry')}
+            onClick={fetchData}
             className="my-4"
+            color={StyledButtonColor.STURDY_WHITE}
+          />
+        </StyledVerticalStack>
+      ) : customAmountError ? (
+        <>
+          <StyledInfoText invertedIcon>{customAmountError}</StyledInfoText>
+          <StyledButton
+            width={StyledButtonWidth.FULL}
+            label={translate('general/actions', 'Close')}
+            onClick={() => closeServices({ type: CloseType.CANCEL }, false)}
           />
         </>
+      ) : kycRequired ? (
+        <KycHint />
       ) : (
-        <>
-          {customAmountError && (
-            <>
-              <StyledInfoText invertedIcon>{customAmountError}</StyledInfoText>
-              <StyledButton
-                width={StyledButtonWidth.FULL}
-                label={translate('general/actions', 'Close')}
-                onClick={() => closeServices({ type: CloseType.CANCEL }, false)}
+        paymentInfo && (
+          <>
+            <h2 className="text-dfxBlue-800 text-center">{translate('screens/payment', 'Payment Information')}</h2>
+
+            <StyledDataTable
+              label={translate('screens/payment', 'Recipient')}
+              alignContent={AlignContent.RIGHT}
+              showBorder
+              minWidth={false}
+            >
+              <StyledDataTableRow label={translate('screens/buy', 'Name')}>
+                {paymentInfo.name}
+                <CopyButton onCopy={() => copy(`${paymentInfo.name}`)} />
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/buy', 'Address')}>
+                {`${paymentInfo.street} ${paymentInfo.number}`}
+                <CopyButton onCopy={() => copy(`${paymentInfo.street} ${paymentInfo.number}`)} />
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/profile', 'ZIP code')}>
+                {paymentInfo.zip}
+                <CopyButton onCopy={() => copy(`${paymentInfo.zip}`)} />
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/profile', 'City')}>
+                {paymentInfo.city}
+                <CopyButton onCopy={() => copy(`${paymentInfo.city}`)} />
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/profile', 'Country')}>
+                {paymentInfo.country}
+                <CopyButton onCopy={() => copy(`${paymentInfo.country}`)} />
+              </StyledDataTableRow>
+            </StyledDataTable>
+
+            <StyledDataTable
+              label={translate('screens/payment', 'Bank Transaction Details')}
+              alignContent={AlignContent.RIGHT}
+              showBorder
+              minWidth={false}
+            >
+              <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
+                {paymentInfo.amount}
+                <CopyButton onCopy={() => copy(`${paymentInfo.amount}`)} />
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/payment', 'Currency')}>
+                {paymentInfo.currency.name}
+                <CopyButton onCopy={() => copy(paymentInfo.currency.name)} />
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
+                <div>
+                  <p>{paymentInfo.iban}</p>
+                  {paymentInfo.sepaInstant && (
+                    <div className="text-white">
+                      <DfxIcon icon={IconVariant.SEPA_INSTANT} color={IconColor.RED} />
+                    </div>
+                  )}
+                </div>
+                <CopyButton onCopy={() => copy(paymentInfo.iban)} />
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
+                {paymentInfo.bic}
+                <CopyButton onCopy={() => copy(paymentInfo.bic)} />
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/payment', 'Purpose of payment')}>
+                {paymentInfo.remittanceInfo}
+                <CopyButton onCopy={() => copy(paymentInfo.remittanceInfo)} />
+              </StyledDataTableRow>
+            </StyledDataTable>
+
+            {paymentInfo.paymentRequest && <GiroCode value={paymentInfo.paymentRequest} />}
+
+            <div className="pt-4 leading-none">
+              <StyledLink
+                label={translate(
+                  'screens/payment',
+                  'Please note that by using this service you automatically accept our terms and conditions.',
+                )}
+                url={process.env.REACT_APP_TNC_URL}
+                small
+                dark
               />
-            </>
-          )}
-          {kycRequired && !customAmountError && <KycHint />}
-        </>
+            </div>
+
+            <StyledButton
+              width={StyledButtonWidth.FULL}
+              label={translate('screens/buy', 'Click here once you have issued the transfer')}
+              onClick={() => {
+                setShowsCompletion(true);
+                scrollRef.current?.scrollTo(0, 0);
+              }}
+              caps={false}
+              className="my-4"
+            />
+          </>
+        )
       )}
     </Layout>
   );
