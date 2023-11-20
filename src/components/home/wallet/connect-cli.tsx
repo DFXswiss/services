@@ -146,7 +146,7 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
 
         <StyledLink
           label={translate('screens/home', 'Instructions')}
-          url={`https://docs.dfx.swiss/${language?.symbol.toLowerCase() ?? 'en'}/faq`}
+          url={`https://docs.dfx.swiss/${language?.symbol.toLowerCase() ?? 'en'}/faq.html#command-line-login`}
           dark
         />
       </StyledVerticalStack>
