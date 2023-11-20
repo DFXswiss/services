@@ -15,6 +15,7 @@ export enum WalletType {
   TREZOR_BTC = 'TrezorBtc',
   TREZOR_ETH = 'TrezorEth',
   CLI_BTC = 'CliBtc',
+  CLI_XMR = 'CliXmr',
   CLI_ETH = 'CliEth',
   DFX_TARO = 'DfxTaro',
   WALLET_CONNECT = 'WalletConnect',
