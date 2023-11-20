@@ -43,7 +43,14 @@ export const FeatureTree: Page[] = [
       {
         id: 'monero',
         img: 'monero',
-        disabled: true,
+        next: {
+          page: 'monero-wallets',
+          tiles: ['cake', 'monerowallet', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+          },
+        },
       },
       {
         id: 'erc20',
@@ -972,7 +979,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'cli',
         img: 'command',
-        disabled: true,
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
+        }),
       },
     ],
   },
