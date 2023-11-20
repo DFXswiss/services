@@ -41,9 +41,16 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'taproot',
-        img: 'taproot',
-        disabled: true,
+        id: 'monero',
+        img: 'monero',
+        next: {
+          page: 'monero-wallets',
+          tiles: ['cake', 'monerowallet', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+          },
+        },
       },
       {
         id: 'erc20',
@@ -61,6 +68,7 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
+  
   {
     id: 'buy-erc20',
     dfxStyle: true,
@@ -945,6 +953,28 @@ export const FeatureTree: Page[] = [
         id: 'walletconnect',
         img: 'walletconnect',
         wallet: { type: WalletType.WALLET_CONNECT },
+      },
+      {
+        id: 'cli',
+        img: 'command',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
+        }),
+      },
+    ],
+  },
+  {
+    id: 'monero-wallets',
+    tiles: [
+      {
+        id: 'cake',
+        img: 'cake',
+        disabled: true,
+      },
+      {
+        id: 'monerowallet',
+        img: 'monerowallet',
+        disabled: true,
       },
       {
         id: 'cli',
