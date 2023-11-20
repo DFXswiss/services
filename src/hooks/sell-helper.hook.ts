@@ -37,6 +37,7 @@ export function useSellHelper(): SellHelperInterface {
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
       case WalletType.CLI_BTC:
+      case WalletType.CLI_XMR:
       case WalletType.CLI_ETH:
       case WalletType.WALLET_CONNECT:
       case WalletType.DFX_TARO:
@@ -67,6 +68,7 @@ export function useSellHelper(): SellHelperInterface {
       case WalletType.TREZOR_BTC:
       case WalletType.TREZOR_ETH:
       case WalletType.CLI_BTC:
+      case WalletType.CLI_XMR:
       case WalletType.CLI_ETH:
       case WalletType.WALLET_CONNECT:
       case WalletType.DFX_TARO:
@@ -91,6 +93,7 @@ export function useSellHelper(): SellHelperInterface {
       case WalletType.TREZOR_ETH:
       case WalletType.CLI_BTC:
       case WalletType.CLI_ETH:
+      case WalletType.CLI_XMR:
       case WalletType.WALLET_CONNECT:
       case WalletType.DFX_TARO:
         return false;
