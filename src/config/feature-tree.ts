@@ -967,6 +967,16 @@ export const FeatureTree: Page[] = [
     id: 'monero-wallets',
     tiles: [
       {
+        id: 'cake',
+        img: 'cake',
+        disabled: true,
+      },
+      {
+        id: 'monerowallet',
+        img: 'monerowallet',
+        disabled: true,
+      },
+      {
         id: 'cli',
         img: 'command',
         wallet: (params) => ({
