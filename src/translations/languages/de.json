@@ -83,7 +83,8 @@
     "Please install Alby!": "Bitte installiere Alby!",
     "You need to install the Alby browser extension to be able to use this service.": "Um diesen Dienst nutzen zu können, musst Du die Browsererweiterung Alby installieren.",
     "Browser not supported!": "Browser nicht unterstützt!",
-    "Please use a compatible browser (e.g. Chrome) to be able to use this service.": "Bitte verwende einen kompatiblen Browser (z.B. Chrome), um diesen Dienst nutzen zu können.",
+    "Mobile not supported!": "Mobile nicht unterstützt!",
+    "Please use a desktop device with a compatible browser (e.g. Chrome) to be able to use this service.": "Bitte verwende ein Desktop-Gerät mit einem kompatiblen Browser (z.B. Chrome), um diesen Dienst nutzen zu können.",
     "visit": "Siehe <1></1> für mehr Details.",
 
     "Address": "Adresse",
