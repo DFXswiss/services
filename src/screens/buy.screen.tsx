@@ -491,7 +491,6 @@ export function BuyScreen(): JSX.Element {
                               window.location.href = paymentInfo.paymentLink as string;
                             }}
                             isLoading={isContinue}
-                            caps={false}
                             className="my-4"
                           />
                         </div>
