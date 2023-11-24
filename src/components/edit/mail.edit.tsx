@@ -86,6 +86,7 @@ export function MailEdit({
             />
           )}
           <StyledButton
+            type="submit"
             disabled={!isValid}
             label={isOptional ? translate('general/actions', 'Finish') : translate('general/actions', 'Save')}
             onClick={handleSubmit(saveUser)}

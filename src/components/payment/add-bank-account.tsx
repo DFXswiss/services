@@ -52,6 +52,7 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
         />
         <StyledSpacer spacing={-1} />
         <StyledButton
+          type="submit"
           disabled={!isValid}
           color={StyledButtonColor.RED}
           label={translate('screens/sell', 'Add Bank Account')}

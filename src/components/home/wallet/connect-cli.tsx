@@ -143,6 +143,7 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
         {error && <ConnectError error={error} />}
 
         <StyledButton
+          type="submit"
           disabled={!isValid}
           label={translate('general/actions', 'Login')}
           onClick={handleSubmit(submit)}

@@ -14,6 +14,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -248,18 +249,7 @@ export function ProfileScreen(): JSX.Element {
               )}
               <StyledSpacer spacing={1} />
 
-              {errorMessage && (
-                <>
-                  <p className="text-dfxRed-100">
-                    {translate(
-                      'general/errors',
-                      'Something went wrong. Please try again. If the issue persists please reach out to our support.',
-                    )}
-                  </p>
-                  <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
-                  <StyledSpacer spacing={1} />
-                </>
-              )}
+              {errorMessage && <ErrorHint message={errorMessage} />}
 
               <StyledButton
                 label={translate('general/actions', 'Continue')}

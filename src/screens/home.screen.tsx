@@ -150,7 +150,7 @@ export function HomeScreen(): JSX.Element {
                 ) : (
                   currentPage.dfxStyle && (
                     <>
-                      <div className="bg-dfxRed-100" style={{ width: '11px', marginRight: '12px' }}></div>
+                      <div className="bg-dfxRed-100 w-[11px] mr-[12px]"></div>
                       <div className="text-xl text-dfxBlue-800 font-extrabold text-left">
                         <Trans i18nKey={'screens/home.title'}>
                           Access all <span className="text-dfxRed-100 uppercase">DFX Services</span>

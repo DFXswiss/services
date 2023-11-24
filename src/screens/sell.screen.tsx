@@ -38,6 +38,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
@@ -462,13 +463,7 @@ export default function SellScreen(): JSX.Element {
 
             {!isLoading && errorMessage && (
               <StyledVerticalStack center className="text-center">
-                <p className="text-dfxRed-100">
-                  {translate(
-                    'general/errors',
-                    'Something went wrong. Please try again. If the issue persists please reach out to our support.',
-                  )}
-                </p>
-                <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
+                <ErrorHint message={errorMessage} />
 
                 <StyledButton
                   width={StyledButtonWidth.MIN}

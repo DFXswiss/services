@@ -9,6 +9,7 @@ interface LayoutProps extends PropsWithChildren {
   textStart?: boolean;
   rootRef?: Ref<HTMLDivElement>;
   scrollRef?: Ref<HTMLDivElement>;
+  noPadding?: boolean;
 }
 
 export function Layout({
@@ -19,6 +20,7 @@ export function Layout({
   children,
   rootRef,
   scrollRef,
+  noPadding,
 }: LayoutProps): JSX.Element {
   const navRef = useRef<HTMLDivElement>(null);
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
@@ -45,7 +47,7 @@ export function Layout({
           <div
             className={`relative w-full max-w-screen-md flex flex-grow flex-col items-center ${
               textStart ? 'text-start' : 'text-center'
-            } px-5 py-2 mt-4 gap-2`}
+            } ${!noPadding && 'px-5 py-2 mt-4'} gap-2`}
           >
             {children}
           </div>
