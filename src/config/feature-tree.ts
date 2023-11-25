@@ -1172,6 +1172,13 @@ export const FeatureTree: Page[] = [
         img: 'alby',
         wallet: { type: WalletType.ALBY, blockchain: Blockchain.LIGHTNING },
       },
+      {
+        id: 'cli',
+        img: 'command',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
+        }),
+      },
     ],
   },
 
