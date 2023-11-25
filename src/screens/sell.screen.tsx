@@ -337,7 +337,6 @@ export default function SellScreen(): JSX.Element {
               width={StyledButtonWidth.FULL}
               label={translate('general/actions', 'Close')}
               onClick={() => close(paymentInfo, true)}
-              caps={false}
               className="my-4"
               isLoading={isProcessing}
             />

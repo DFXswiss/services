@@ -19,6 +19,7 @@ import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../con
 
 const SupportedBlockchains = {
   [WalletType.CLI_BTC]: [Blockchain.BITCOIN],
+  [WalletType.CLI_XMR]: [Blockchain.MONERO],
   [WalletType.CLI_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM, Blockchain.BINANCE_SMART_CHAIN],
 };
 
@@ -66,9 +67,15 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
   const { copy } = useClipboard();
   const { getSignMessage } = useAuth();
 
-  const addressRegex = wallet === WalletType.CLI_BTC ? /^([13]|bc1)[a-zA-HJ-NP-Z0-9]{25,62}$/ : /^0x\w{40}$/;
+  const addressRegex: { [wallet in WalletType]?: RegExp } = {
+    [WalletType.CLI_BTC]: /^([13]|bc1)[a-zA-HJ-NP-Z0-9]{25,62}$/,
+    [WalletType.CLI_XMR]: /^[48][0-9AB][1-9A-HJ-NP-Za-km-z]{93}$/,
+    [WalletType.CLI_ETH]: /^0x\w{40}$/,
+  };
+
   function validateAddress(address: string): true | string {
-    return addressRegex.test(address) ? true : 'Invalid format';
+    const regex = addressRegex[wallet];
+    return regex && regex.test(address) ? true : 'Invalid format';
   }
 
   const {
@@ -146,7 +153,7 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
 
         <StyledLink
           label={translate('screens/home', 'Instructions')}
-          url={`https://docs.dfx.swiss/${language?.symbol.toLowerCase() ?? 'en'}/faq`}
+          url={`https://docs.dfx.swiss/${language?.symbol.toLowerCase() ?? 'en'}/faq.html#command-line-login`}
           dark
         />
       </StyledVerticalStack>

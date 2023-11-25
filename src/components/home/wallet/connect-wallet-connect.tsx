@@ -5,6 +5,8 @@ import {
   StyledButtonColor,
   StyledButtonWidth,
   StyledLoadingSpinner,
+  StyledSearchInput,
+  StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useSettingsContext } from '../../../contexts/settings.context';
@@ -63,6 +65,16 @@ function Content({
   const containerRef = useResizeObserver<HTMLDivElement>((el) => setSize(el.offsetWidth));
 
   const [size, setSize] = useState<number>();
+  const [filter, setFilter] = useState<string>();
+
+  function walletFilter(wallet: DeepWallet): boolean {
+    if (!filter) return true;
+
+    const filters = filter.toLowerCase().split(' ');
+    const walletWords = wallet.name.toLowerCase().split(' ');
+
+    return filters.every((f) => walletWords.some((w) => w.includes(f)));
+  }
 
   return connectUri ? (
     <>
@@ -70,17 +82,20 @@ function Content({
       <QrCopy data={connectUri} />
 
       {wallets.length && (
-        <>
-          <h2 className="text-dfxGray-700 mt-8 mb-4 ">{translate('screens/home', 'Connect your wallet')}</h2>
+        <StyledVerticalStack gap={4} full>
+          <h2 className="text-dfxGray-700 mt-8">{translate('screens/home', 'Connect your wallet')}</h2>
+
+          <StyledSearchInput onChange={setFilter} placeholder={translate('general/actions', 'Search...')} />
+
           <div
             ref={containerRef}
             className={`grid ${size && size > 600 ? 'grid-cols-6' : 'grid-cols-4'} gap-5 w-full mb-3`}
           >
-            {wallets.map((w) => (
+            {wallets.filter(walletFilter).map((w) => (
               <WalletComponent key={w.id} wallet={w} connectUri={connectUri} />
             ))}
           </div>
-        </>
+        </StyledVerticalStack>
       )}
     </>
   ) : error ? (

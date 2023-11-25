@@ -45,10 +45,10 @@ export const FeatureTree: Page[] = [
         img: 'monero',
         next: {
           page: 'monero-wallets',
-          tiles: ['cake', 'monerowallet', 'cli'],
+          tiles: ['cake', 'monero-wallet', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+            query: { blockchain: Blockchain.MONERO, assetOut: 'XMR' },
           },
         },
       },
@@ -68,7 +68,7 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
-  
+
   {
     id: 'buy-erc20',
     dfxStyle: true,
@@ -957,9 +957,16 @@ export const FeatureTree: Page[] = [
       {
         id: 'cli',
         img: 'command',
-        wallet: (params) => ({
-          type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
-        }),
+        wallet: (params) => {
+          switch (params.blockchain) {
+            case Blockchain.BITCOIN:
+              return { type: WalletType.CLI_BTC };
+            case Blockchain.MONERO:
+              return { type: WalletType.CLI_XMR };
+            default:
+              return { type: WalletType.CLI_ETH };
+          }
+        },
       },
     ],
   },
@@ -969,9 +976,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'cli',
         img: 'command',
-        wallet: (params) => ({
-          type: params.blockchain === Blockchain.BITCOIN ? WalletType.CLI_BTC : WalletType.CLI_ETH,
-        }),
+        wallet: {
+          type: WalletType.CLI_XMR,
+        },
       },
     ],
   },
@@ -998,6 +1005,77 @@ export const FeatureTree: Page[] = [
         wallet: (params) => ({
           type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
         }),
+      },
+    ],
+  },
+
+  // --- Single Wallet Pages --- //
+  {
+    id: 'only-dfx-wallet',
+    tiles: [
+      {
+        id: 'dfx-wallet',
+        img: 'bitcoinapp',
+        wallet: { type: WalletType.DFX_TARO, blockchain: Blockchain.LIGHTNING },
+      },
+    ],
+  },
+  {
+    id: 'only-metamask-wallet',
+    tiles: [
+      {
+        id: 'metamask',
+        img: 'metamaskrabby',
+        wallet: { type: WalletType.META_MASK },
+      },
+    ],
+  },
+  {
+    id: 'only-walletconnect-wallet',
+    tiles: [
+      {
+        id: 'walletconnect',
+        img: 'walletconnect',
+        wallet: { type: WalletType.WALLET_CONNECT },
+      },
+    ],
+  },
+  {
+    id: 'only-cli-wallet',
+    tiles: [
+      {
+        id: 'cli',
+        img: 'command',
+        wallet: (params) => {
+          switch (params.blockchain) {
+            case Blockchain.BITCOIN:
+              return { type: WalletType.CLI_BTC };
+            case Blockchain.MONERO:
+              return { type: WalletType.CLI_XMR };
+            default:
+              return { type: WalletType.CLI_ETH };
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'only-cake-wallet',
+    tiles: [
+      {
+        id: 'cake',
+        img: 'cake',
+        disabled: true,
+      },
+    ],
+  },
+  {
+    id: 'only-monero-wallet',
+    tiles: [
+      {
+        id: 'monero-wallet',
+        img: 'monerowallet',
+        disabled: true,
       },
     ],
   },
@@ -1080,7 +1158,7 @@ export const FeatureTree: Page[] = [
   },
 
   // --- BITCOIN Lightning --- //
-  
+
   {
     id: 'lightning-wallets',
     tiles: [
@@ -2210,33 +2288,33 @@ export const FeatureTree: Page[] = [
     ],
   },
 
- // --- Buy Fox Only --- //
- {
-  id: 'buy-fox',
-  header: 'Shapeshift x DFX',
-  description: 'Buy and sell Fox Token directly on your Wallet!',
-  bottomImage:
-    'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
-  tiles: [
-    {
-      id: 'metamask',
-      img: 'metamaskrabby',
-      wallet: { type: WalletType.META_MASK, blockchain: Blockchain.ETHEREUM },
-    },
-    {
-      id: 'hw-wallet',
-      img: 'hardwarewallets',
-      next: {
-        page: 'hw-wallets',
+  // --- Buy Fox Only --- //
+  {
+    id: 'buy-fox',
+    header: 'Shapeshift x DFX',
+    description: 'Buy and sell Fox Token directly on your Wallet!',
+    bottomImage:
+      'https://assets.website-files.com/5cec55545d0f47cfe2a39a8e/5e9aacff05bf3ab1bb0f86b4_ss-horizontal-light.png',
+    tiles: [
+      {
+        id: 'metamask',
+        img: 'metamaskrabby',
+        wallet: { type: WalletType.META_MASK, blockchain: Blockchain.ETHEREUM },
       },
-    },
-    {
-      id: 'walletconnect',
-      img: 'walletconnect',
-      wallet: { type: WalletType.WALLET_CONNECT, blockchain: Blockchain.ETHEREUM },
-    },
-  ],
-},
+      {
+        id: 'hw-wallet',
+        img: 'hardwarewallets',
+        next: {
+          page: 'hw-wallets',
+        },
+      },
+      {
+        id: 'walletconnect',
+        img: 'walletconnect',
+        wallet: { type: WalletType.WALLET_CONNECT, blockchain: Blockchain.ETHEREUM },
+      },
+    ],
+  },
 
   // --- Shapeshift --- //
   {
@@ -3333,124 +3411,124 @@ export const FeatureTree: Page[] = [
   },
 
   // --- Cake Wallet --- //
-{
-  id: 'cakewallet',
-  header: 'Cake Wallet x DFX',
-  description: 'Buy and sell Crypto directly on your Cake Wallet!',
-  bottomImage: 'https://cakewallet.com/assets/image/cake_wallet_logo.png',
-  tiles: [
-    {
-      id: 'cakewallet-eth',
-      img: 'eth',
-      next: {
-        page: 'cakewallet-wallets',
-        tiles: ['walletconnect'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+  {
+    id: 'cakewallet',
+    header: 'Cake Wallet x DFX',
+    description: 'Buy and sell Crypto directly on your Cake Wallet!',
+    bottomImage: 'https://cakewallet.com/assets/image/cake_wallet_logo.png',
+    tiles: [
+      {
+        id: 'cakewallet-eth',
+        img: 'eth',
+        next: {
+          page: 'cakewallet-wallets',
+          tiles: ['walletconnect'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+          },
         },
       },
-    },
-    {
-      id: 'cakewallet-wbtc',
-      img: 'wbtc',
-      next: {
-        page: 'cakewallet-wallets',
-        tiles: ['walletconnect'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+      {
+        id: 'cakewallet-wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'cakewallet-wallets',
+          tiles: ['walletconnect'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+          },
         },
       },
-    },
-    {
-      id: 'cakewallet-stable',
-      img: 'stablecoin',
-      next: {
-        page: 'cakewallet-buy-ethereum-stable',
-      },
-    },
-    {
-      id: 'cakewallet-other',
-      img: 'othersethereum',
-      next: {
-        page: 'cakewallet-wallets',
-        tiles: ['walletconnect'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+      {
+        id: 'cakewallet-stable',
+        img: 'stablecoin',
+        next: {
+          page: 'cakewallet-buy-ethereum-stable',
         },
       },
-    },
-  ],
-},
-{
-  id: 'cakewallet-buy-ethereum-stable',
-  header: 'Cake Wallet x DFX',
-  description: 'Buy and sell Crypto directly on your Cake Wallet!',
-  bottomImage: 'https://cakewallet.com/assets/image/cake_wallet_logo.png',
-  tiles: [
-    {
-      id: 'cakewallet-usdt',
-      img: 'usdt',
-      next: {
-        page: 'cakewallet-wallets',
-        tiles: ['walletconnect'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
+      {
+        id: 'cakewallet-other',
+        img: 'othersethereum',
+        next: {
+          page: 'cakewallet-wallets',
+          tiles: ['walletconnect'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+          },
         },
       },
-    },
-    {
-      id: 'cakewallet-usdc',
-      img: 'usdc',
-      next: {
-        page: 'cakewallet-wallets',
-        tiles: ['walletconnect'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
+    ],
+  },
+  {
+    id: 'cakewallet-buy-ethereum-stable',
+    header: 'Cake Wallet x DFX',
+    description: 'Buy and sell Crypto directly on your Cake Wallet!',
+    bottomImage: 'https://cakewallet.com/assets/image/cake_wallet_logo.png',
+    tiles: [
+      {
+        id: 'cakewallet-usdt',
+        img: 'usdt',
+        next: {
+          page: 'cakewallet-wallets',
+          tiles: ['walletconnect'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
+          },
         },
       },
-    },
-    {
-      id: 'cakewallet-dai',
-      img: 'dai',
-      next: {
-        page: 'cakewallet-wallets',
-        tiles: ['walletconnect'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DAI' },
+      {
+        id: 'cakewallet-usdc',
+        img: 'usdc',
+        next: {
+          page: 'cakewallet-wallets',
+          tiles: ['walletconnect'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
+          },
         },
       },
-    },
-    {
-      id: 'cakewallet-other',
-      img: 'othersethereum',
-      next: {
-        page: 'cakewallet-wallets',
-        tiles: ['walletconnect'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+      {
+        id: 'cakewallet-dai',
+        img: 'dai',
+        next: {
+          page: 'cakewallet-wallets',
+          tiles: ['walletconnect'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DAI' },
+          },
         },
       },
-    },
-  ],
-},
-{
-  id: 'cakewallet-wallets',
-  header: 'Cake Wallet x DFX',
-  description: 'Buy and sell Crypto directly on your Cake Wallet!',
-  bottomImage: 'https://cakewallet.com/assets/image/cake_wallet_logo.png',
-  tiles: [
-    {
-      id: 'walletconnect',
-      img: 'walletconnect',
-      wallet: { type: WalletType.WALLET_CONNECT },
-    },
-  ],
-},
+      {
+        id: 'cakewallet-other',
+        img: 'othersethereum',
+        next: {
+          page: 'cakewallet-wallets',
+          tiles: ['walletconnect'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'cakewallet-wallets',
+    header: 'Cake Wallet x DFX',
+    description: 'Buy and sell Crypto directly on your Cake Wallet!',
+    bottomImage: 'https://cakewallet.com/assets/image/cake_wallet_logo.png',
+    tiles: [
+      {
+        id: 'walletconnect',
+        img: 'walletconnect',
+        wallet: { type: WalletType.WALLET_CONNECT },
+      },
+    ],
+  },
 ];

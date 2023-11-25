@@ -1,6 +1,7 @@
 {
   "general/actions": {
     "Select...": "Selezionare...",
+    "Search...": "Ricerca...",
     "Next": "Avanti",
     "Continue": "Continua",
     "Close": "Chiudere",
@@ -83,7 +84,8 @@
     "Please install Alby!": "Installare Alby!",
     "You need to install the Alby browser extension to be able to use this service.": "Per poter utilizzare questo servizio è necessario installare l'estensione del browser Alby.",
     "Browser not supported!": "Browser non supportato!",
-    "Please use a compatible browser (e.g. Chrome) to be able to use this service.": "Per poter utilizzare questo servizio, utilizzare un browser compatibile (ad esempio Chrome).",
+    "Mobile not supported!": "Mobile non supportato!",
+    "Please use a desktop device with a compatible browser (e.g. Chrome) to be able to use this service.": "Per poter utilizzare questo servizio, utilizzare un dispositivo desktop con un browser compatibile (ad esempio Chrome).",
     "visit": "Vedere <1></1> per maggiori dettagli.",
 
     "Address": "Indirizzo",

@@ -1,4 +1,5 @@
 import { StyledButton, StyledButtonWidth, StyledLink, StyledVerticalStack } from '@dfx.swiss/react-components';
+import { isMobile } from 'react-device-detect';
 import { Trans } from 'react-i18next';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
@@ -22,6 +23,7 @@ export function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: 
       return <TrezorHint onConfirm={onConfirm} />;
 
     case WalletType.CLI_BTC:
+    case WalletType.CLI_XMR:
     case WalletType.CLI_ETH:
     case WalletType.DFX_TARO:
     case WalletType.WALLET_CONNECT:
@@ -86,9 +88,14 @@ function WebHidHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
 
   return (
     <StyledVerticalStack gap={4}>
-      <h1 className="text-dfxGray-700">{translate('screens/home', 'Browser not supported!')}</h1>
+      <h1 className="text-dfxGray-700">
+        {translate('screens/home', isMobile ? 'Mobile not supported!' : 'Browser not supported!')}
+      </h1>
       <p className="text-dfxGray-700">
-        {translate('screens/home', 'Please use a compatible browser (e.g. Chrome) to be able to use this service.')}{' '}
+        {translate(
+          'screens/home',
+          'Please use a desktop device with a compatible browser (e.g. Chrome) to be able to use this service.',
+        )}{' '}
         <Trans i18nKey="screens/home.visit">
           Visit <StyledLink label="caniuse.com" url="https://caniuse.com/webhid" dark /> for more details.
         </Trans>
