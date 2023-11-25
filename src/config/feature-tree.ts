@@ -1051,7 +1051,7 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
-    id: 'only-metamask-wallet',
+    id: 'only-cli-wallet',
     tiles: [
       {
         id: 'cli',
