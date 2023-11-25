@@ -974,16 +974,6 @@ export const FeatureTree: Page[] = [
     id: 'monero-wallets',
     tiles: [
       {
-        id: 'cake',
-        img: 'cake',
-        disabled: true,
-      },
-      {
-        id: 'monero-wallet',
-        img: 'monerowallet',
-        disabled: true,
-      },
-      {
         id: 'cli',
         img: 'command',
         wallet: {
@@ -1015,6 +1005,77 @@ export const FeatureTree: Page[] = [
         wallet: (params) => ({
           type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
         }),
+      },
+    ],
+  },
+
+  // --- Single Wallet Pages --- //
+  {
+    id: 'only-dfx-wallet',
+    tiles: [
+      {
+        id: 'dfx-wallet',
+        img: 'bitcoinapp',
+        wallet: { type: WalletType.DFX_TARO, blockchain: Blockchain.LIGHTNING },
+      },
+    ],
+  },
+  {
+    id: 'only-metamask-wallet',
+    tiles: [
+      {
+        id: 'metamask',
+        img: 'metamaskrabby',
+        wallet: { type: WalletType.META_MASK },
+      },
+    ],
+  },
+  {
+    id: 'only-walletconnect-wallet',
+    tiles: [
+      {
+        id: 'walletconnect',
+        img: 'walletconnect',
+        wallet: { type: WalletType.WALLET_CONNECT },
+      },
+    ],
+  },
+  {
+    id: 'only-cli-wallet',
+    tiles: [
+      {
+        id: 'cli',
+        img: 'command',
+        wallet: (params) => {
+          switch (params.blockchain) {
+            case Blockchain.BITCOIN:
+              return { type: WalletType.CLI_BTC };
+            case Blockchain.MONERO:
+              return { type: WalletType.CLI_XMR };
+            default:
+              return { type: WalletType.CLI_ETH };
+          }
+        },
+      },
+    ],
+  },
+  {
+    id: 'only-cake-wallet',
+    tiles: [
+      {
+        id: 'cake',
+        img: 'cake',
+        disabled: true,
+      },
+    ],
+  },
+  {
+    id: 'only-monero-wallet',
+    tiles: [
+      {
+        id: 'monero-wallet',
+        img: 'monerowallet',
+        disabled: true,
       },
     ],
   },
