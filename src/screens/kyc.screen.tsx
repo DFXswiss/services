@@ -34,8 +34,10 @@ import {
   KycFinancialResponse,
   KycInfo,
   KycPersonalData,
+  KycSession,
   KycStep,
   KycStepName,
+  KycStepSession,
   KycStepStatus,
   QuestionType,
   UrlType,
@@ -48,9 +50,9 @@ export function KycScreen(): JSX.Element {
   const { user } = useUserContext();
   const { levelToString, limitToString, nameToString, typeToString, getKycInfo, continueKyc } = useKyc();
 
-  const [info, setInfo] = useState<KycInfo>();
+  const [info, setInfo] = useState<KycInfo | KycSession>();
   const [isLoading, setIsLoading] = useState(false);
-  const [stepInProgress, setStepInProgress] = useState<KycStep>();
+  const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -76,7 +78,7 @@ export function KycScreen(): JSX.Element {
       .finally(() => setIsLoading(false));
   }
 
-  function setData(info: KycInfo) {
+  function setData(info: KycSession) {
     setInfo(info);
     setStepInProgress(info.currentStep);
   }
@@ -115,8 +117,8 @@ export function KycScreen(): JSX.Element {
           code={kycCode}
           isLoading={isLoading}
           step={stepInProgress}
-          onDone={onLoad}
-          onBack={() => setStepInProgress(undefined)}
+          onDone={() => onLoad(true)}
+          onBack={() => onLoad(false)}
         />
       ) : (
         <StyledVerticalStack gap={6} full center>
@@ -129,6 +131,10 @@ export function KycScreen(): JSX.Element {
               <p>{limitToString(info.tradingLimit)}</p>
             </StyledDataTableRow>
 
+            <StyledDataTableRow label={translate('screens/kyc', 'Two-factor authentication')}>
+              <p>{translate('general/actions', info.twoFactorEnabled ? 'Yes' : 'No')}</p>
+            </StyledDataTableRow>
+
             <StyledDataTableRow label={translate('screens/kyc', 'KYC progress')}>
               <div className="grid gap-1 items-center grid-cols-[1.2rem_1fr]">
                 {info.kycSteps.map((step) => {
@@ -136,7 +142,7 @@ export function KycScreen(): JSX.Element {
                   return (
                     <Fragment key={`${step.name}-${step.type}`}>
                       {icon ? <DfxIcon {...icon} /> : <div />}
-                      <div className={`text-left ${info.currentStep?.name === step.name && 'font-bold'}`}>
+                      <div className={`text-left ${step.isCurrent && 'font-bold'}`}>
                         {nameToString(step.name)}
                         {step.type && ` (${typeToString(step.type)})`}
                       </div>
@@ -171,8 +177,8 @@ interface EditProps {
   rootRef: RefObject<HTMLDivElement>;
   code: string;
   isLoading: boolean;
-  step: KycStep;
-  onDone: (next: boolean) => void;
+  step: KycStepSession;
+  onDone: () => void;
   onBack: () => void;
 }
 
@@ -201,6 +207,7 @@ function ContactData({ code, isLoading, step, onDone, onBack }: EditProps): JSX.
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
+  const [showLinkHint, setShowLinkHint] = useState(false);
 
   const {
     control,
@@ -214,7 +221,7 @@ function ContactData({ code, isLoading, step, onDone, onBack }: EditProps): JSX.
     setIsUpdating(true);
     setError(undefined);
     setContactData(code, step.session.url, data)
-      .then((r) => onDone(isStepDone(r)))
+      .then((r) => (isStepDone(r) ? onDone() : setShowLinkHint(true)))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
   }
@@ -223,7 +230,7 @@ function ContactData({ code, isLoading, step, onDone, onBack }: EditProps): JSX.
     mail: [Validations.Required, Validations.Mail],
   });
 
-  return step.status === KycStepStatus.FAILED ? (
+  return showLinkHint ? (
     <StyledVerticalStack gap={6} full>
       <p className="text-dfxGray-700">
         {translate(
@@ -292,7 +299,7 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
     setIsUpdating(true);
     setError(undefined);
     setPersonalData(code, step.session.url, data)
-      .then(() => onDone(true))
+      .then(() => onDone())
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
   }
@@ -500,7 +507,7 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
   );
 }
 
-function Ident({ step, onDone }: EditProps): JSX.Element {
+function Ident({ step, onDone, onBack }: EditProps): JSX.Element {
   // listen to close events
   useEffect(() => {
     window.addEventListener('message', onMessage);
@@ -509,7 +516,7 @@ function Ident({ step, onDone }: EditProps): JSX.Element {
 
   function onMessage(e: Event) {
     const message = (e as MessageEvent<{ type: string; status: KycStepStatus }>).data;
-    if (message.type === IframeMessageType) onDone(isStepDone(message));
+    if (message.type === IframeMessageType) isStepDone(message) ? onDone() : onBack();
   }
 
   return step.session ? (
@@ -567,7 +574,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
 
     responses.length &&
       setFinancialData(code, step.session.url, { responses })
-        .then((r) => isStepDone(r) && onDone(true))
+        .then((r) => isStepDone(r) && onDone())
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   }, [responses]);
 

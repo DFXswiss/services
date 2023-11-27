@@ -16,8 +16,12 @@ export interface TradingLimit {
 export interface KycInfo {
   kycLevel: number;
   tradingLimit: TradingLimit;
+  twoFactorEnabled: boolean;
   kycSteps: KycStep[];
-  currentStep?: KycStep;
+}
+
+export interface KycSession extends KycInfo {
+  currentStep?: KycStepSession;
 }
 
 // steps
@@ -51,17 +55,24 @@ export enum UrlType {
   API = 'API',
 }
 
-export interface KycSession {
+export interface KycSessionInfo {
   url: string;
   type: UrlType;
 }
 
-export interface KycStep {
+export interface KycStepBase {
   name: KycStepName;
   type?: KycStepType;
   status: KycStepStatus;
   sequenceNumber: number;
-  session?: KycSession;
+}
+
+export interface KycStep extends KycStepBase {
+  isCurrent: boolean;
+}
+
+export interface KycStepSession extends KycStepBase {
+  session?: KycSessionInfo;
 }
 
 // personal data
@@ -158,7 +169,7 @@ interface KycInterface {
 
   // process
   getKycInfo: (code: string) => Promise<KycInfo>;
-  continueKyc: (code: string) => Promise<KycInfo>;
+  continueKyc: (code: string) => Promise<KycSession>;
   getCountries: (code: string) => Promise<Country[]>;
 
   // updates
@@ -221,7 +232,7 @@ export function useKyc(): KycInterface {
     return call({ url: kycUrl, code, method: 'GET' });
   }
 
-  async function continueKyc(code: string): Promise<KycInfo> {
+  async function continueKyc(code: string): Promise<KycSession> {
     return call({ url: kycUrl, code, method: 'PUT' });
   }
 
