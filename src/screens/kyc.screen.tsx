@@ -207,7 +207,7 @@ function ContactData({ code, isLoading, step, onDone, onBack }: EditProps): JSX.
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
-  const [showLinkHint, setShowLinkHint] = useState(false);
+  const [showLinkHint, setShowLinkHint] = useState(step.status === KycStepStatus.FAILED);
 
   const {
     control,
