@@ -96,7 +96,7 @@
   "screens/buy": {
     "Buy": "Acheter",
     "You spend": "Vous dépensez",
-    "You get (estimate)": "Vous obtenez (estimation)",
+    "You get about": "Vous obtenez environ",
 
     "Target address": "Adresse de destination",
     "Switch address": "Changer l'adresse",
