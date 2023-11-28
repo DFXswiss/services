@@ -1,6 +1,5 @@
-import { Country, Utils } from '@dfx.swiss/react';
+import { Country } from '@dfx.swiss/react';
 import { useMemo } from 'react';
-import { useSettingsContext } from '../../contexts/settings.context';
 
 // info
 export enum LimitPeriod {
@@ -161,12 +160,6 @@ export interface CallConfig {
 // --- //
 
 interface KycInterface {
-  // helpers
-  levelToString: (level: number) => string;
-  limitToString: (limit: TradingLimit) => string;
-  nameToString: (stepName: KycStepName) => string;
-  typeToString: (stepType: KycStepType) => string;
-
   // process
   getKycInfo: (code: string) => Promise<KycInfo>;
   continueKyc: (code: string) => Promise<KycSession>;
@@ -180,54 +173,6 @@ interface KycInterface {
 }
 
 export function useKyc(): KycInterface {
-  const { translate } = useSettingsContext();
-
-  function levelToString(level: number): string {
-    switch (level) {
-      case -10:
-        return 'Terminated';
-      case -20:
-        return 'Rejected';
-      default:
-        return `Level ${level}`;
-    }
-  }
-
-  // --- //
-
-  function limitToString({ limit, period }: TradingLimit): string {
-    return `${Utils.formatAmount(limit)} CHF ${translate('kyc', periodMap[period])}`;
-  }
-
-  const periodMap: Record<LimitPeriod, string> = {
-    [LimitPeriod.DAY]: 'per 24h',
-    [LimitPeriod.YEAR]: 'per year',
-  };
-
-  function nameToString(stepName: KycStepName): string {
-    return translate('kyc', stepMap[stepName]);
-  }
-
-  const stepMap: Record<KycStepName, string> = {
-    [KycStepName.CONTACT_DATA]: 'Contact data',
-    [KycStepName.PERSONAL_DATA]: 'Personal data',
-    [KycStepName.IDENT]: 'Identification',
-    [KycStepName.FINANCIAL_DATA]: 'Additional data',
-    [KycStepName.DOCUMENT_UPLOAD]: 'Document upload',
-  };
-
-  function typeToString(stepType: KycStepType): string {
-    return translate('kyc', typeMap[stepType]);
-  }
-
-  const typeMap: Record<KycStepType, string> = {
-    [KycStepType.AUTO]: 'auto',
-    [KycStepType.VIDEO]: 'video',
-    [KycStepType.MANUAL]: 'manual',
-  };
-
-  // --- //
-
   async function getKycInfo(code: string): Promise<KycInfo> {
     return call({ url: kycUrl, code, method: 'GET' });
   }
@@ -282,10 +227,6 @@ export function useKyc(): KycInterface {
 
   return useMemo(
     () => ({
-      levelToString,
-      limitToString,
-      nameToString,
-      typeToString,
       getKycInfo,
       continueKyc,
       getCountries,
@@ -294,6 +235,6 @@ export function useKyc(): KycInterface {
       getFinancialData,
       setFinancialData,
     }),
-    [translate],
+    [],
   );
 }

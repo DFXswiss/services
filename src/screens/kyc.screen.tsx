@@ -17,6 +17,7 @@ import {
   StyledIconButton,
   StyledInput,
   StyledLoadingSpinner,
+  StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { Fragment, RefObject, useEffect, useRef, useState } from 'react';
@@ -26,6 +27,7 @@ import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useGeoLocation } from '../hooks/geo-location.hook';
+import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { IframeMessageType } from './iframe-message.screen';
 import {
   AccountType,
@@ -49,7 +51,8 @@ import {
 export function KycScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
-  const { levelToString, limitToString, nameToString, typeToString, getKycInfo, continueKyc } = useKyc();
+  const { getKycInfo, continueKyc } = useKyc();
+  const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
 
   const [info, setInfo] = useState<KycInfo | KycSession>();
   const [isLoading, setIsLoading] = useState(false);
@@ -416,13 +419,16 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
                     smallLabel
                   />
                 </StyledHorizontalStack>
-                <StyledDropdown
+                <StyledSearchDropdown
                   rootRef={rootRef}
                   name="address.country"
+                  autocomplete="country"
                   label={translate('screens/profile', 'Country')}
                   placeholder={translate('general/actions', 'Select...')}
                   items={countries}
                   labelFunc={(item) => item.name}
+                  filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+                  matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
                   smallLabel
                 />
                 <StyledInput
@@ -485,13 +491,18 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
                       smallLabel
                     />
                   </StyledHorizontalStack>
-                  <StyledDropdown
+                  <StyledSearchDropdown
                     rootRef={rootRef}
                     name="organizationAddress.country"
+                    autocomplete="country"
                     label={translate('screens/profile', 'Country')}
                     placeholder={translate('general/actions', 'Select...')}
                     items={countries}
                     labelFunc={(item) => item.name}
+                    filterFunc={(i, s) =>
+                      !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))
+                    }
+                    matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
                     smallLabel
                   />
                 </StyledVerticalStack>
