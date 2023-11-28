@@ -53,6 +53,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.LIGHTNING]: 'Lightning',
       [Blockchain.DEFICHAIN]: 'DeFiChain',
       [Blockchain.CARDANO]: 'Cardano',
+      [Blockchain.MONERO]: 'Monero',
     },
   };
 

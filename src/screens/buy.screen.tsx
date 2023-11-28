@@ -350,7 +350,7 @@ export function BuyScreen(): JSX.Element {
                   />
                 </StyledVerticalStack>
                 <StyledVerticalStack gap={2} full>
-                  <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get (estimate)')}</h2>
+                  <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
                   <StyledHorizontalStack gap={1}>
                     <div className="flex-[3_1_9rem]">
                       <StyledTextBox
