@@ -25,6 +25,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useGeoLocation } from '../hooks/geo-location.hook';
 import { IframeMessageType } from './iframe-message.screen';
 import {
   AccountType,
@@ -111,7 +112,7 @@ export function KycScreen(): JSX.Element {
     >
       {!kycCode || !info ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
-      ) : stepInProgress ? (
+      ) : stepInProgress && !error ? (
         <KycEdit
           rootRef={rootRef}
           code={kycCode}
@@ -273,6 +274,7 @@ function ContactData({ code, isLoading, step, onDone, onBack }: EditProps): JSX.
 function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { getCountries, setPersonalData } = useKyc();
+  const { countryCode } = useGeoLocation();
 
   const [isCountryLoading, setIsCountryLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -286,10 +288,19 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
       .finally(() => setIsCountryLoading(false));
   }, []);
 
+  useEffect(() => {
+    const ipCountry = countries.find((c) => c.symbol === countryCode);
+    if (ipCountry && !isDirty) {
+      setValue('address.country', ipCountry);
+      setValue('organizationAddress.country', ipCountry);
+    }
+  }, [countries, countryCode]);
+
   const {
     control,
     handleSubmit,
-    formState: { isValid, errors },
+    setValue,
+    formState: { isValid, isDirty, errors },
   } = useForm<KycPersonalData>({ mode: 'onTouched' });
   const selectedAccountType = useWatch({ control, name: 'accountType' });
 
