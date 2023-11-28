@@ -42,7 +42,10 @@ export function useKycHelper(): KycHelperInterface {
 
   const limit =
     user?.tradingLimit != null
-      ? `${Utils.formatAmount(user.tradingLimit.limit)} CHF ${translate('kyc', periodMap[user.tradingLimit.period])}`
+      ? `${Utils.formatAmount(user.tradingLimit.limit)} CHF ${translate(
+          'screens/kyc',
+          periodMap[user.tradingLimit.period],
+        )}`
       : '';
 
   const isComplete = [KycStatus.COMPLETED].includes(user?.kycStatus ?? KycStatus.NA);
@@ -59,24 +62,24 @@ export function useKycHelper(): KycHelperInterface {
   function levelToString(level: number): string {
     switch (level) {
       case -10:
-        return translate('kyc', 'Terminated');
+        return translate('screens/kyc', 'Terminated');
       case -20:
-        return translate('kyc', 'Rejected');
+        return translate('screens/kyc', 'Rejected');
       default:
-        return translate('kyc', `Level {{level}}`, { level });
+        return translate('screens/kyc', `Level {{level}}`, { level });
     }
   }
 
   function limitToString({ limit, period }: TradingLimit): string {
-    return `${Utils.formatAmount(limit)} CHF ${translate('kyc', periodMap[period])}`;
+    return `${Utils.formatAmount(limit)} CHF ${translate('screens/kyc', periodMap[period])}`;
   }
 
   function nameToString(stepName: KycStepName): string {
-    return translate('kyc', stepMap[stepName]);
+    return translate('screens/kyc', stepMap[stepName]);
   }
 
   function typeToString(stepType: KycStepType): string {
-    return translate('kyc', typeMap[stepType]);
+    return translate('screens/kyc', typeMap[stepType]);
   }
 
   return useMemo(

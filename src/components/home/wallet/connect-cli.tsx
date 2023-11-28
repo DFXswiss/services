@@ -63,7 +63,7 @@ interface ContentProps extends ConnectContentProps {
 }
 
 function Content({ wallet, isConnecting, connect, error, form }: ContentProps): JSX.Element {
-  const { translate, language } = useSettingsContext();
+  const { translate, translateError, language } = useSettingsContext();
   const { copy } = useClipboard();
   const { getSignMessage } = useAuth();
 
@@ -75,7 +75,7 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
 
   function validateAddress(address: string): true | string {
     const regex = addressRegex[wallet];
-    return regex && regex.test(address) ? true : 'Invalid format';
+    return regex && regex.test(address) ? true : 'pattern';
   }
 
   const {
@@ -108,7 +108,7 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
   }
 
   return (
-    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(submit)}>
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(submit)} translate={translateError}>
       <StyledVerticalStack gap={6} full>
         <StyledInput
           name="address"

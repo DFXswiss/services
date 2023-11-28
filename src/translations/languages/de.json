@@ -2,6 +2,7 @@
   "general/actions": {
     "Select...": "Auswählen...",
     "Search...": "Suchen...",
+    "Start": "Starten",
     "Next": "Weiter",
     "Continue": "Weiter",
     "Close": "Schliessen",
@@ -19,6 +20,12 @@
     "No": "Nein"
   },
   "general/errors": {
+    "Mandatory field": "Pflichtfeld",
+    "Invalid pattern": "Ungültiges Format",
+    "Area code and number required": "Vorwahl und Nummer erforderlich",
+    "IBAN not allowed": "IBAN nicht erlaubt",
+    "IBAN country not allowed": "IBAN Land nicht erlaubt",
+
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support."
   },
   "general/services": {
@@ -26,9 +33,31 @@
     "Sell": "Verkaufen",
     "Convert": "Umtauschen"
   },
-  "kyc": {
-    "per day": "pro Tag",
+  "screens/kyc": {
+    "DFX KYC": "DFX KYC",
+    "KYC level": "KYC-Level",
+    "Trading limit": "Trading-Limit",
+    "Two-factor authentication": "Zwei-Faktor-Authentifizierung",
+    "KYC progress": "KYC-Fortschritt",
+
+    "per 24h": "pro 24h",
     "per year": "pro Jahr",
+
+    "Terminated": "Beendet",
+    "Rejected": "Abgelehnt",
+    "Level {{level}}": "Level {{level}}",
+
+    "Contact data": "Kontaktdaten",
+    "Personal data": "Persönliche Daten",
+    "Identification": "Identifikation",
+    "Additional data": "Zusätzliche Daten",
+    "Document upload": "Dokument-Upload",
+
+    "auto": "auto",
+    "video": "video",
+    "manual": "manuell",
+
+    "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.": "Wie es aussieht, hast Du bereits ein Konto bei DFX. Wir haben Dir gerade eine E-Mail geschickt. Klicke auf den gesendeten Link, um die aktuelle Adresse zu Deinem Konto hinzuzufügen.",
 
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Dein Konto muss verifiziert werden, sobald Dein tägliches Transaktionsvolumen {{limit}} überschreitet. Wenn Du Dein tägliches Handelslimit erhöhen möchtest, schliesse bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
     "Complete KYC": "KYC vervollständigen"
@@ -169,7 +198,7 @@
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
     "Nice! You are all set! Give us a minute to handle your transaction": "Sehr schön! Alles erledigt! Gib uns eine Minute, um Deine Transaktion zu bearbeiten",
     "We will inform you about the progress of any purchase or sale via E-mail.": "Wir werden Dich per E-Mail über den Fortschritt Deiner Käufe oder Verkäufe informieren.",
-    "Enter your email address if you want to be informed about the progress of any purchase or sale": "Gebe Deine E-Mail Adresse ein, wenn Du über den Fortschritt Deiner Käufe oder Verkäufe informiert werden willst"
+    "Enter your email address if you want to be informed about the progress of any purchase or sale": "Gib Deine E-Mail Adresse ein, wenn Du über den Fortschritt Deiner Käufe oder Verkäufe informiert werden willst"
   },
   "screens/profile": {
     "User details": "Benutzerdaten",

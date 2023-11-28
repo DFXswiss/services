@@ -306,7 +306,7 @@ export default function SellScreen(): JSX.Element {
       onBack={bankAccountSelection ? () => setBankAccountSelection(false) : undefined}
       rootRef={rootRef}
     >
-      <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
+      <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} hasFormElement={false}>
         {paymentInfo && isTxDone ? (
           <StyledVerticalStack gap={4} full>
             <div className="mx-auto">

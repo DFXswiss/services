@@ -73,7 +73,7 @@ const paymentDescriptions = {
 
 export function BuyScreen(): JSX.Element {
   useSessionGuard();
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
   const { availableBlockchains, logout } = useSessionContext();
   const { session } = useAuthContext();
   const { currencies, receiveFor } = useBuy();
@@ -309,7 +309,13 @@ export function BuyScreen(): JSX.Element {
       ) : showsCompletion && paymentInfo ? (
         <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo} navigateOnClose />
       ) : (
-        <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
+        <Form
+          control={control}
+          rules={rules}
+          errors={errors}
+          onSubmit={handleSubmit(onSubmit)}
+          translate={translateError}
+        >
           <StyledVerticalStack gap={8} full center>
             {currencies && availableAssets && (
               <>

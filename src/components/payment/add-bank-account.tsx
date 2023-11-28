@@ -23,13 +23,13 @@ interface AddBankAccountProps {
 }
 
 export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
 
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<CreateBankAccount>();
+  } = useForm<CreateBankAccount>({ mode: 'onTouched' });
   const { createAccount, isAccountLoading } = useBankAccountContext();
   const { countries } = useUserContext();
 
@@ -42,7 +42,13 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
   });
 
   return (
-    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(createBankAccount)}>
+    <Form
+      control={control}
+      rules={rules}
+      errors={errors}
+      onSubmit={handleSubmit(createBankAccount)}
+      translate={translateError}
+    >
       <StyledVerticalStack gap={4}>
         <StyledInput name="iban" label={translate('screens/payment', 'IBAN')} placeholder="XX XXXX XXXX XXXX XXXX X" />
         <StyledInput

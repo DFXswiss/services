@@ -2,6 +2,7 @@
   "general/actions": {
     "Select...": "Selezionare...",
     "Search...": "Ricerca...",
+    "Start": "Iniziare",
     "Next": "Avanti",
     "Continue": "Continua",
     "Close": "Chiudere",
@@ -19,6 +20,12 @@
     "No": "No"
   },
   "general/errors": {
+    "Mandatory field": "",
+    "Invalid pattern": "",
+    "Area code and number required": "",
+    "IBAN not allowed": "",
+    "IBAN country not allowed": "",
+
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto."
   },
   "general/services": {
@@ -26,9 +33,31 @@
     "Sell": "Vendere",
     "Convert": "Convertire"
   },
-  "kyc": {
-    "per day": "al giorno",
+  "screens/kyc": {
+    "DFX KYC": "",
+    "KYC level": "",
+    "Trading limit": "",
+    "Two-factor authentication": "",
+    "KYC progress": "",
+
+    "per 24h": "per 24h",
     "per year": "all'anno",
+
+    "Terminated": "",
+    "Rejected": "",
+    "Level {{level}}": "",
+
+    "Contact data": "",
+    "Personal data": "",
+    "Identification": "",
+    "Additional data": "",
+    "Document upload": "",
+
+    "auto": "",
+    "video": "",
+    "manual": "",
+
+    "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.": "",
 
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Il conto deve essere verificato quando il volume delle transazioni giornaliere supera il {{limit}}. Se volete aumentare il vostro limite di trading giornaliero, completate il nostro processo KYC (Know-Your-Customer).",
     "Complete KYC": "Completare il KYC"

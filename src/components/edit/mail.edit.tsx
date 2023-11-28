@@ -47,9 +47,9 @@ export function MailEdit({
     control,
     handleSubmit,
     formState: { isValid, errors },
-  } = useForm<FormData>();
+  } = useForm<FormData>({ mode: 'onTouched' });
   const { changeMail, isUserUpdating } = useUserContext();
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
 
   async function saveUser({ email }: FormData): Promise<void> {
     if (!email || email.length === 0) return onSubmit(email);
@@ -61,7 +61,7 @@ export function MailEdit({
   });
 
   return (
-    <Form control={control} errors={errors} rules={rules} onSubmit={handleSubmit(saveUser)}>
+    <Form control={control} errors={errors} rules={rules} onSubmit={handleSubmit(saveUser)} translate={translateError}>
       <StyledVerticalStack gap={6}>
         {infoText && infoTextPlacement === MailEditInfoTextPlacement.ABOVE_INPUT && (
           <InfoTextElement text={infoText} iconColor={infoTextIconColor} />

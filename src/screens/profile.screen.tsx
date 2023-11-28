@@ -23,7 +23,7 @@ import { useNavigation } from '../hooks/navigation.hook';
 
 export function ProfileScreen(): JSX.Element {
   useSessionGuard();
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
   const { countries, reloadUser } = useUserContext();
   const { setKycData } = useKyc();
   const { navigate } = useNavigation();
@@ -86,7 +86,13 @@ export function ProfileScreen(): JSX.Element {
       <p className="text-base font-bold text-dfxBlue-800">
         {translate('screens/profile', 'Please fill in personal information to continue')}
       </p>
-      <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
+      <Form
+        control={control}
+        rules={rules}
+        errors={errors}
+        onSubmit={handleSubmit(onSubmit)}
+        translate={translateError}
+      >
         <StyledVerticalStack marginY={4} gap={2} full>
           <div>
             <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-4 mb-1">

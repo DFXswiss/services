@@ -226,7 +226,7 @@ function KycEdit(props: EditProps): JSX.Element {
 }
 
 function ContactData({ code, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
   const { setContactData } = useKyc();
 
   const [isUpdating, setIsUpdating] = useState(false);
@@ -265,14 +265,14 @@ function ContactData({ code, isLoading, step, onDone, onBack }: EditProps): JSX.
       <StyledButton width={StyledButtonWidth.MIN} label={translate('general/actions', 'OK')} onClick={onBack} />
     </StyledVerticalStack>
   ) : (
-    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
       <StyledVerticalStack gap={6} full>
         <StyledInput
           name="mail"
           autocomplete="email"
           type="email"
-          label={translate('screens/kyc', 'Email address')}
-          placeholder={translate('screens/kyc', 'example@mail.com')}
+          label={translate('screens/profile', 'Email address')}
+          placeholder={translate('screens/profile', 'example@mail.com')}
         />
 
         {error && (
@@ -295,7 +295,7 @@ function ContactData({ code, isLoading, step, onDone, onBack }: EditProps): JSX.
 }
 
 function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
   const { getCountries, setPersonalData } = useKyc();
   const { countryCode } = useGeoLocation();
 
@@ -346,21 +346,19 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
     phone: [Validations.Required, Validations.Phone],
 
     ['address.street']: Validations.Required,
-    ['address.houseNumber']: Validations.Required,
     ['address.zip']: Validations.Required,
     ['address.city']: Validations.Required,
     ['address.country']: Validations.Required,
 
     organizationName: Validations.Required,
     ['organizationAddress.street']: Validations.Required,
-    ['organizationAddress.houseNumber']: Validations.Required,
     ['organizationAddress.city']: Validations.Required,
     ['organizationAddress.zip']: Validations.Required,
     ['organizationAddress.country']: Validations.Required,
   });
 
   return (
-    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
       <StyledVerticalStack gap={6} full center>
         <StyledVerticalStack gap={2} full>
           <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
