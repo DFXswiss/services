@@ -163,6 +163,7 @@ interface KycInterface {
   // process
   getKycInfo: (code: string) => Promise<KycInfo>;
   continueKyc: (code: string) => Promise<KycSession>;
+  startStep: (code: string, name: KycStepName, type?: KycStepType) => Promise<KycSession>;
   getCountries: (code: string) => Promise<Country[]>;
 
   // updates
@@ -179,6 +180,13 @@ export function useKyc(): KycInterface {
 
   async function continueKyc(code: string): Promise<KycSession> {
     return call({ url: kycUrl, code, method: 'PUT' });
+  }
+
+  async function startStep(code: string, name: KycStepName, type?: KycStepType): Promise<KycSession> {
+    let url = `${kycUrl}/${name}`;
+    type && (url += `?type=${type}`);
+
+    return call({ url, code, method: 'GET' });
   }
 
   async function getCountries(code: string): Promise<Country[]> {
@@ -229,6 +237,7 @@ export function useKyc(): KycInterface {
     () => ({
       getKycInfo,
       continueKyc,
+      startStep,
       getCountries,
       setContactData,
       setPersonalData,

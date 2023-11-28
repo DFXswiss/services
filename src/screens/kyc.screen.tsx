@@ -30,6 +30,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useGeoLocation } from '../hooks/geo-location.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
+import { useNavigation } from '../hooks/navigation.hook';
 import { IframeMessageType } from './iframe-message.screen';
 import {
   AccountType,
@@ -44,6 +45,7 @@ import {
   KycStepName,
   KycStepSession,
   KycStepStatus,
+  KycStepType,
   QuestionType,
   UrlType,
   isStepDone,
@@ -51,9 +53,10 @@ import {
 } from './tmp/kyc.hook';
 
 export function KycScreen(): JSX.Element {
+  const { clearParams } = useNavigation();
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
-  const { getKycInfo, continueKyc } = useKyc();
+  const { getKycInfo, continueKyc, startStep } = useKyc();
   const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
   const { search } = useLocation();
 
@@ -64,19 +67,26 @@ export function KycScreen(): JSX.Element {
   const [error, setError] = useState<string>();
 
   const rootRef = useRef<HTMLDivElement>(null);
-  const kycCode = new URLSearchParams(search).get('code') ?? user?.kycHash;
+  const params = new URLSearchParams(search);
+  const [stepName, stepType] = params.get('step')?.split('/') ?? [];
+  const kycCode = params.get('code') ?? user?.kycHash;
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
   const kycCompleted = info?.kycSteps.every((s) => isStepDone(s));
 
   useSessionGuard('/login', !kycCode);
 
   useEffect(() => {
-    if (kycCode)
-      getKycInfo(kycCode)
-        .then(setInfo)
-        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-        .finally(() => setIsLoading(false));
-  }, [kycCode]);
+    if (!kycCode) return;
+
+    const request = stepName
+      ? startStep(kycCode, stepName as KycStepName, stepType as KycStepType).then(setData)
+      : getKycInfo(kycCode).then(setInfo);
+
+    request
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsLoading(false))
+      .finally(() => clearParams(['step']));
+  }, [kycCode, stepName, stepType]);
 
   function onLoad(next: boolean) {
     if (!kycCode) return;
