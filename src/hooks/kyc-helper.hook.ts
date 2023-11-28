@@ -63,7 +63,7 @@ export function useKycHelper(): KycHelperInterface {
       case -20:
         return translate('kyc', 'Rejected');
       default:
-        return translate('kyc', `Level {level}`, { level });
+        return translate('kyc', `Level {{level}}`, { level });
     }
   }
 

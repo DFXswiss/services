@@ -23,10 +23,12 @@ import {
 import { Fragment, RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
+import { useLocation } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useGeoLocation } from '../hooks/geo-location.hook';
+import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { IframeMessageType } from './iframe-message.screen';
 import {
@@ -53,33 +55,38 @@ export function KycScreen(): JSX.Element {
   const { user } = useUserContext();
   const { getKycInfo, continueKyc } = useKyc();
   const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
+  const { search } = useLocation();
 
   const [info, setInfo] = useState<KycInfo | KycSession>();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
 
   const rootRef = useRef<HTMLDivElement>(null);
-  const kycCode = user?.kycHash ?? undefined;
+  const kycCode = new URLSearchParams(search).get('code') ?? user?.kycHash;
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
   const kycCompleted = info?.kycSteps.every((s) => isStepDone(s));
+
+  useSessionGuard('/login', !kycCode);
 
   useEffect(() => {
     if (kycCode)
       getKycInfo(kycCode)
         .then(setInfo)
-        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+        .finally(() => setIsLoading(false));
   }, [kycCode]);
 
   function onLoad(next: boolean) {
     if (!kycCode) return;
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     setError(undefined);
     (next ? continueKyc(kycCode) : getKycInfo(kycCode))
       .then(setData)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsLoading(false));
+      .finally(() => setIsSubmitting(false));
   }
 
   function setData(info: KycSession) {
@@ -113,63 +120,66 @@ export function KycScreen(): JSX.Element {
       onBack={stepInProgress ? () => setStepInProgress(undefined) : undefined}
       noPadding={isMobile && stepInProgress?.session?.type === UrlType.BROWSER}
     >
-      {!kycCode || !info ? (
+      {isLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
-      ) : stepInProgress && !error ? (
+      ) : stepInProgress && kycCode && !error ? (
         <KycEdit
           rootRef={rootRef}
           code={kycCode}
-          isLoading={isLoading}
+          isLoading={isSubmitting}
           step={stepInProgress}
           onDone={() => onLoad(true)}
           onBack={() => onLoad(false)}
         />
       ) : (
         <StyledVerticalStack gap={6} full center>
-          <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-            <StyledDataTableRow label={translate('screens/kyc', 'KYC level')}>
-              <p>{levelToString(info.kycLevel)}</p>
-            </StyledDataTableRow>
+          {info && (
+            <>
+              <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                <StyledDataTableRow label={translate('screens/kyc', 'KYC level')}>
+                  <p>{levelToString(info.kycLevel)}</p>
+                </StyledDataTableRow>
 
-            <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
-              <p>{limitToString(info.tradingLimit)}</p>
-            </StyledDataTableRow>
+                <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
+                  <p>{limitToString(info.tradingLimit)}</p>
+                </StyledDataTableRow>
 
-            <StyledDataTableRow label={translate('screens/kyc', 'Two-factor authentication')}>
-              <p>{translate('general/actions', info.twoFactorEnabled ? 'Yes' : 'No')}</p>
-            </StyledDataTableRow>
+                <StyledDataTableRow label={translate('screens/kyc', 'Two-factor authentication')}>
+                  <p>{translate('general/actions', info.twoFactorEnabled ? 'Yes' : 'No')}</p>
+                </StyledDataTableRow>
 
-            <StyledDataTableRow label={translate('screens/kyc', 'KYC progress')}>
-              <div className="grid gap-1 items-center grid-cols-[1.2rem_1fr]">
-                {info.kycSteps.map((step) => {
-                  const icon = stepIcon(step);
-                  return (
-                    <Fragment key={`${step.name}-${step.type}`}>
-                      {icon ? <DfxIcon {...icon} /> : <div />}
-                      <div className={`text-left ${step.isCurrent && 'font-bold'}`}>
-                        {nameToString(step.name)}
-                        {step.type && ` (${typeToString(step.type)})`}
-                      </div>
-                    </Fragment>
-                  );
-                })}
-              </div>
-            </StyledDataTableRow>
-          </StyledDataTable>
+                <StyledDataTableRow label={translate('screens/kyc', 'KYC progress')}>
+                  <div className="grid gap-1 items-center grid-cols-[1.2rem_1fr]">
+                    {info.kycSteps.map((step) => {
+                      const icon = stepIcon(step);
+                      return (
+                        <Fragment key={`${step.name}-${step.type}`}>
+                          {icon ? <DfxIcon {...icon} /> : <div />}
+                          <div className={`text-left ${step.isCurrent && 'font-bold'}`}>
+                            {nameToString(step.name)}
+                            {step.type && ` (${typeToString(step.type)})`}
+                          </div>
+                        </Fragment>
+                      );
+                    })}
+                  </div>
+                </StyledDataTableRow>
+              </StyledDataTable>
 
+              {!kycCompleted && (
+                <StyledButton
+                  width={StyledButtonWidth.MIN}
+                  label={translate('general/actions', kycStarted ? 'Continue' : 'Start')}
+                  isLoading={isSubmitting}
+                  onClick={() => onLoad(true)}
+                />
+              )}
+            </>
+          )}
           {error && (
             <div>
               <ErrorHint message={error} />
             </div>
-          )}
-
-          {!kycCompleted && (
-            <StyledButton
-              width={StyledButtonWidth.MIN}
-              label={translate('general/actions', kycStarted ? 'Continue' : 'Start')}
-              isLoading={isLoading}
-              onClick={() => onLoad(true)}
-            />
           )}
         </StyledVerticalStack>
       )}

@@ -5,7 +5,7 @@ import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useNavigation } from './navigation.hook';
 
-export function useSessionGuard(redirectPath = '/') {
+export function useSessionGuard(redirectPath = '/', isActive = true) {
   const { isLoggedIn } = useSessionContext();
   const { isInitialized } = useWalletContext();
   const { navigate } = useNavigation();
@@ -13,11 +13,11 @@ export function useSessionGuard(redirectPath = '/') {
   const { setRedirectPath } = useAppHandlingContext();
 
   useEffect(() => {
-    if (isInitialized && !isLoggedIn) {
+    if (isInitialized && !isLoggedIn && isActive) {
       setRedirectPath(pathname);
       navigate(redirectPath);
     }
-  }, [isInitialized, isLoggedIn, navigate]);
+  }, [isInitialized, isLoggedIn, navigate, isActive]);
 }
 
 export function useKycDataGuard(redirectPath = '/') {
