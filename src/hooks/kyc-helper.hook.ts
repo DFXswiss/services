@@ -1,7 +1,14 @@
-import { KycStatus, Utils, useUserContext } from '@dfx.swiss/react';
+import {
+  KycStatus,
+  KycStepName,
+  KycStepType,
+  LimitPeriod,
+  TradingLimit,
+  Utils,
+  useUserContext,
+} from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import { useSettingsContext } from '../contexts/settings.context';
-import { KycStepName, KycStepType, LimitPeriod, TradingLimit } from '../screens/tmp/kyc.hook';
 
 interface KycHelperInterface {
   // legacy

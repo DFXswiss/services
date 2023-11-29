@@ -1,4 +1,27 @@
-import { ApiError, Country, Utils, Validations, useUserContext } from '@dfx.swiss/react';
+import {
+  AccountType,
+  ApiError,
+  Country,
+  KycContactData,
+  KycFinancialOption,
+  KycFinancialQuestion,
+  KycFinancialResponse,
+  KycInfo,
+  KycPersonalData,
+  KycSession,
+  KycStep,
+  KycStepName,
+  KycStepSession,
+  KycStepStatus,
+  KycStepType,
+  QuestionType,
+  UrlType,
+  Utils,
+  Validations,
+  isStepDone,
+  useKyc,
+  useUserContext,
+} from '@dfx.swiss/react';
 import {
   AlignContent,
   DfxIcon,
@@ -32,25 +55,6 @@ import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { IframeMessageType } from './iframe-message.screen';
-import {
-  AccountType,
-  KycContactData,
-  KycFinancialOption,
-  KycFinancialQuestion,
-  KycFinancialResponse,
-  KycInfo,
-  KycPersonalData,
-  KycSession,
-  KycStep,
-  KycStepName,
-  KycStepSession,
-  KycStepStatus,
-  KycStepType,
-  QuestionType,
-  UrlType,
-  isStepDone,
-  useKyc,
-} from './tmp/kyc.hook';
 
 export function KycScreen(): JSX.Element {
   const { clearParams } = useNavigation();
