@@ -20,11 +20,11 @@
     "No": "Non"
   },
   "general/errors": {
-    "Mandatory field": "",
-    "Invalid pattern": "",
-    "Area code and number required": "",
-    "IBAN not allowed": "",
-    "IBAN country not allowed": "",
+    "Mandatory field": "Champ obligatoire",
+    "Invalid pattern": "Format non valide",
+    "Area code and number required": "Indicatif régional et numéro requis",
+    "IBAN not allowed": "IBAN non autorisé",
+    "IBAN country not allowed": "Code pays de l'IBAN non autorisé",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer. Si le problème persiste, veuillez contacter notre service d'assistance."
   },
