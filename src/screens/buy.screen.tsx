@@ -37,6 +37,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
+import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
@@ -72,7 +73,7 @@ const paymentDescriptions = {
 
 export function BuyScreen(): JSX.Element {
   useSessionGuard();
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
   const { availableBlockchains, logout } = useSessionContext();
   const { session } = useAuthContext();
   const { currencies, receiveFor } = useBuy();
@@ -308,14 +309,20 @@ export function BuyScreen(): JSX.Element {
       ) : showsCompletion && paymentInfo ? (
         <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo} navigateOnClose />
       ) : (
-        <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
+        <Form
+          control={control}
+          rules={rules}
+          errors={errors}
+          onSubmit={handleSubmit(onSubmit)}
+          translate={translateError}
+        >
           <StyledVerticalStack gap={8} full center>
             {currencies && availableAssets && (
               <>
                 <StyledVerticalStack gap={2} full>
                   <h2 className="text-dfxGray-700">{translate('screens/buy', 'You spend')}</h2>
                   <StyledHorizontalStack gap={1}>
-                    <div style={{ flex: '3 1 9rem' }}>
+                    <div className="flex-[3_1_9rem]">
                       <StyledInput
                         type={'number'}
                         placeholder="0.00"
@@ -326,7 +333,7 @@ export function BuyScreen(): JSX.Element {
                         full
                       />
                     </div>
-                    <div style={{ flex: '1 0 9rem' }}>
+                    <div className="flex-[1_0_9rem]">
                       <StyledDropdown<Fiat>
                         rootRef={rootRef}
                         name="currency"
@@ -349,9 +356,9 @@ export function BuyScreen(): JSX.Element {
                   />
                 </StyledVerticalStack>
                 <StyledVerticalStack gap={2} full>
-                  <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get (estimate)')}</h2>
+                  <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
                   <StyledHorizontalStack gap={1}>
-                    <div style={{ flex: '3 1 9rem' }}>
+                    <div className="flex-[3_1_9rem]">
                       <StyledTextBox
                         text={
                           paymentInfo && !isLoading ? `≈ ${Utils.formatAmountCrypto(paymentInfo.estimatedAmount)}` : ' '
@@ -359,7 +366,7 @@ export function BuyScreen(): JSX.Element {
                         full
                       />
                     </div>
-                    <div style={{ flex: '1 0 9rem' }}>
+                    <div className="flex-[1_0_9rem]">
                       <StyledDropdown<Asset>
                         rootRef={rootRef}
                         name="asset"
@@ -399,13 +406,7 @@ export function BuyScreen(): JSX.Element {
 
                 {!isLoading && errorMessage && (
                   <StyledVerticalStack center className="text-center">
-                    <p className="text-dfxRed-100">
-                      {translate(
-                        'general/errors',
-                        'Something went wrong. Please try again. If the issue persists please reach out to our support.',
-                      )}
-                    </p>
-                    <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
+                    <ErrorHint message={errorMessage} />
 
                     <StyledButton
                       width={StyledButtonWidth.MIN}
@@ -426,7 +427,7 @@ export function BuyScreen(): JSX.Element {
                         paymentInfo.asset.name
                       }`}
                     >
-                      <div className="grid gap-1 w-full text-sm" style={{ gridTemplateColumns: '8rem 1fr' }}>
+                      <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">
                         <div className="text-dfxGray-800">{translate('screens/buy', 'Base rate')}</div>
                         <div>{baseRate}</div>
 

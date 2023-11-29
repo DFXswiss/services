@@ -16,7 +16,7 @@ export function useIframe(): IframeInterface {
 
   function sendMessage(messageData: any) {
     const win: Window = window;
-    win.parent.postMessage(JSON.stringify(messageData), '*');
+    win.parent.postMessage(messageData, '*');
   }
 
   return { isUsedByIframe, sendMessage };

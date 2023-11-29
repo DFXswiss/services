@@ -6,11 +6,20 @@ import { useTranslation } from 'react-i18next';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
 
+const ValidationErrors: Record<string, string> = {
+  required: 'Mandatory field',
+  pattern: 'Invalid pattern',
+  code_and_number: 'Area code and number required',
+  iban_blocked: 'IBAN not allowed',
+  iban_country_blocked: 'IBAN country not allowed',
+};
+
 interface SettingsInterface {
   availableLanguages: Language[];
   language?: Language;
   changeLanguage: (language: Language) => void;
   translate: (key: string, defaultValue: string, interpolation?: Record<string, string | number>) => string;
+  translateError: (key: string) => string;
   // generic storage
   get: <T>(key: string) => T | undefined;
   put: <T>(key: string, value: T | undefined) => void;
@@ -61,6 +70,14 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     changeUserLanguage(language);
   }
 
+  function translate(key: string, defaultValue: string, interpolation?: Record<string, string | number>): string {
+    return t([key, defaultValue].join('.'), defaultValue, interpolation);
+  }
+
+  function translateError(key: string): string {
+    return translate('general/errors', ValidationErrors[key]);
+  }
+
   function get<T>(key: string): T | undefined {
     return store[key];
   }
@@ -74,8 +91,8 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
       availableLanguages,
       language,
       changeLanguage,
-      translate: (key: string, defaultValue: string, interpolation?: Record<string, string | number>) =>
-        t([key, defaultValue].join('.'), defaultValue, interpolation),
+      translate,
+      translateError,
       get,
       put,
     }),
