@@ -14,6 +14,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -22,7 +23,7 @@ import { useNavigation } from '../hooks/navigation.hook';
 
 export function ProfileScreen(): JSX.Element {
   useSessionGuard();
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
   const { countries, reloadUser } = useUserContext();
   const { setKycData } = useKyc();
   const { navigate } = useNavigation();
@@ -85,7 +86,13 @@ export function ProfileScreen(): JSX.Element {
       <p className="text-base font-bold text-dfxBlue-800">
         {translate('screens/profile', 'Please fill in personal information to continue')}
       </p>
-      <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
+      <Form
+        control={control}
+        rules={rules}
+        errors={errors}
+        onSubmit={handleSubmit(onSubmit)}
+        translate={translateError}
+      >
         <StyledVerticalStack marginY={4} gap={2} full>
           <div>
             <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-4 mb-1">
@@ -248,18 +255,7 @@ export function ProfileScreen(): JSX.Element {
               )}
               <StyledSpacer spacing={1} />
 
-              {errorMessage && (
-                <>
-                  <p className="text-dfxRed-100">
-                    {translate(
-                      'general/errors',
-                      'Something went wrong. Please try again. If the issue persists please reach out to our support.',
-                    )}
-                  </p>
-                  <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
-                  <StyledSpacer spacing={1} />
-                </>
-              )}
+              {errorMessage && <ErrorHint message={errorMessage} />}
 
               <StyledButton
                 label={translate('general/actions', 'Continue')}

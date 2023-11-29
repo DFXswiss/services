@@ -14,6 +14,8 @@ import { BuySuccessScreen } from './screens/buy-success.screen';
 import { BuyScreen } from './screens/buy.screen';
 import { ErrorScreen } from './screens/error.screen';
 import { HomeScreen } from './screens/home.screen';
+import { IframeMessageScreen } from './screens/iframe-message.screen';
+import { KycScreen } from './screens/kyc.screen';
 import { ProfileScreen } from './screens/profile.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
 import { setupLanguages } from './translations';
@@ -65,6 +67,14 @@ const routes = [
   {
     path: '/profile',
     element: <ProfileScreen />,
+  },
+  {
+    path: '/kyc',
+    element: <KycScreen />,
+  },
+  {
+    path: 'iframe-message',
+    element: <IframeMessageScreen />,
   },
 ];
 

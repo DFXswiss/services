@@ -33,6 +33,7 @@ import {
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
+import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { QrCopy } from '../components/payment/qr-copy';
@@ -156,13 +157,7 @@ export function SellInfoScreen(): JSX.Element {
         </div>
       ) : errorMessage ? (
         <StyledVerticalStack center className="text-center">
-          <p className="text-dfxRed-100">
-            {translate(
-              'general/errors',
-              'Something went wrong. Please try again. If the issue persists please reach out to our support.',
-            )}
-          </p>
-          <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
+          <ErrorHint message={errorMessage} />
 
           <StyledButton
             width={StyledButtonWidth.MIN}

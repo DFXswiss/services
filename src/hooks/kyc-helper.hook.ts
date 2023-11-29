@@ -1,55 +1,61 @@
-import { KycStatus, Utils, useUserContext } from '@dfx.swiss/react';
+import {
+  KycStatus,
+  KycStepName,
+  KycStepType,
+  LimitPeriod,
+  TradingLimit,
+  Utils,
+  useUserContext,
+} from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import { useSettingsContext } from '../contexts/settings.context';
 
 interface KycHelperInterface {
-  status: string;
+  // legacy
   limit: string;
   isComplete: boolean;
   start: () => Promise<void>;
+  // new
+  levelToString: (level: number) => string;
+  limitToString: (limit: TradingLimit) => string;
+  nameToString: (stepName: KycStepName) => string;
+  typeToString: (stepType: KycStepType) => string;
 }
 
 export function useKycHelper(): KycHelperInterface {
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
 
-  const kycMap: Record<string, string> = {
-    ['chatbot']: 'chatbot onboarding',
-    ['onlineid']: 'online identification',
-    ['videoid']: 'video identification',
-    ['check']: 'Data in review',
-    ['completed']: 'Verification completed',
-    ['rejected']: 'Verification rejected',
-    ['na']: 'In progress',
-    ['reminded']: 'In progress',
-    ['failed']: 'Failed',
-    ['review']: 'In review',
+  const periodMap: Record<LimitPeriod, string> = {
+    [LimitPeriod.DAY]: 'per 24h',
+    [LimitPeriod.YEAR]: 'per year',
   };
 
-  const periodMap: Record<string, string> = {
-    ['Day']: 'per day',
-    ['Year']: 'per year',
+  const stepMap: Record<KycStepName, string> = {
+    [KycStepName.CONTACT_DATA]: 'Contact data',
+    [KycStepName.PERSONAL_DATA]: 'Personal data',
+    [KycStepName.IDENT]: 'Identification',
+    [KycStepName.FINANCIAL_DATA]: 'Additional data',
+    [KycStepName.DOCUMENT_UPLOAD]: 'Document upload',
   };
+
+  const typeMap: Record<KycStepType, string> = {
+    [KycStepType.AUTO]: 'auto',
+    [KycStepType.VIDEO]: 'video',
+    [KycStepType.MANUAL]: 'manual',
+  };
+
+  // --- LEGACY KYC --- //
 
   const limit =
     user?.tradingLimit != null
-      ? `${Utils.formatAmount(user.tradingLimit.limit)} CHF ${translate('kyc', periodMap[user.tradingLimit.period])}`
+      ? `${Utils.formatAmount(user.tradingLimit.limit)} CHF ${translate(
+          'screens/kyc',
+          periodMap[user.tradingLimit.period],
+        )}`
       : '';
 
-  const isInProgress = [KycStatus.CHATBOT, KycStatus.ONLINE_ID, KycStatus.VIDEO_ID].includes(
-    user?.kycStatus ?? KycStatus.NA,
-  );
-
   const isComplete = [KycStatus.COMPLETED].includes(user?.kycStatus ?? KycStatus.NA);
-
-  function buildKycStatusString(): string {
-    if (!user) return kycMap[KycStatus.NA.toLowerCase()];
-    if (isInProgress) {
-      return `${kycMap[user.kycState.toLowerCase()]} (${kycMap[user.kycStatus.toLowerCase()]})`;
-    } else {
-      return kycMap[user.kycStatus.toLowerCase()];
-    }
-  }
 
   async function start(): Promise<void> {
     if (!user) return;
@@ -58,5 +64,33 @@ export function useKycHelper(): KycHelperInterface {
     if (popUpBlocked) console.error('popUp blocked'); // TODO: (Krysh) use correct error handling here
   }
 
-  return useMemo(() => ({ start, status: buildKycStatusString(), isComplete, limit }), [user]);
+  // --- NEW KYC --- //
+
+  function levelToString(level: number): string {
+    switch (level) {
+      case -10:
+        return translate('screens/kyc', 'Terminated');
+      case -20:
+        return translate('screens/kyc', 'Rejected');
+      default:
+        return translate('screens/kyc', `Level {{level}}`, { level });
+    }
+  }
+
+  function limitToString({ limit, period }: TradingLimit): string {
+    return `${Utils.formatAmount(limit)} CHF ${translate('screens/kyc', periodMap[period])}`;
+  }
+
+  function nameToString(stepName: KycStepName): string {
+    return translate('screens/kyc', stepMap[stepName]);
+  }
+
+  function typeToString(stepType: KycStepType): string {
+    return translate('screens/kyc', typeMap[stepType]);
+  }
+
+  return useMemo(
+    () => ({ start, isComplete, limit, levelToString, limitToString, nameToString, typeToString }),
+    [user, translate],
+  );
 }

@@ -4,7 +4,7 @@ import QRCode from 'react-qr-code';
 
 export function QrCopy({ data }: { data: string }): JSX.Element {
   return (
-    <div className="relative w-full" style={{ maxWidth: '20rem' }}>
+    <div className="relative w-full max-w-[20rem]">
       <div
         className="absolute bg-white border p-1 rounded-sm top-1/2 left-1/2"
         style={{ transform: 'translate(-50%, -50%)' }}

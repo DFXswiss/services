@@ -9,6 +9,7 @@ interface NavigationOptions extends NavigateOptions {
 interface NavigationInterface {
   navigate: (to: To | number, options?: NavigationOptions) => void;
   setParams: (params: URLSearchParams) => void;
+  clearParams: (params: string[]) => void;
 }
 
 export function useNavigation(): NavigationInterface {
@@ -45,5 +46,9 @@ export function useNavigation(): NavigationInterface {
     return params;
   }
 
-  return useMemo(() => ({ navigate, setParams }), [navigateTo, search, pathname]);
+  function clearParams(params: string[]) {
+    navigate({ pathname }, { replace: true, clearParams: params });
+  }
+
+  return useMemo(() => ({ navigate, setParams, clearParams }), [navigateTo, search, pathname]);
 }
