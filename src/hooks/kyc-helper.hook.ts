@@ -22,6 +22,8 @@ interface KycHelperInterface {
   typeToString: (stepType: KycStepType) => string;
 }
 
+export const MinLevelSell = 20;
+
 export function useKycHelper(): KycHelperInterface {
   const { translate } = useSettingsContext();
   const { user } = useUserContext();

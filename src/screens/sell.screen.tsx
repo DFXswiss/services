@@ -51,8 +51,8 @@ import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import { useClipboard } from '../hooks/clipboard.hook';
 import useDebounce from '../hooks/debounce.hook';
-import { useKycDataGuard, useSessionGuard } from '../hooks/guard.hook';
-import { useKycHelper } from '../hooks/kyc-helper.hook';
+import { useKycLevelGuard, useSessionGuard } from '../hooks/guard.hook';
+import { MinLevelSell, useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useSellHelper } from '../hooks/sell-helper.hook';
 import { isDefined } from '../util/utils';
@@ -66,7 +66,7 @@ interface FormData {
 
 export default function SellScreen(): JSX.Element {
   useSessionGuard();
-  useKycDataGuard('/profile');
+  useKycLevelGuard(MinLevelSell, '/profile');
   const { copy } = useClipboard();
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();

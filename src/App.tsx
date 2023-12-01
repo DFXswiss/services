@@ -16,8 +16,8 @@ import { ErrorScreen } from './screens/error.screen';
 import { HomeScreen } from './screens/home.screen';
 import { IframeMessageScreen } from './screens/iframe-message.screen';
 import { KycScreen } from './screens/kyc.screen';
-import { ProfileScreen } from './screens/profile.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
+import { TfaScreen } from './screens/tfa.screen';
 import { setupLanguages } from './translations';
 
 const SellScreen = lazy(() => import('./screens/sell.screen'));
@@ -65,11 +65,11 @@ const routes = [
     element: <BankAccountsScreen />,
   },
   {
-    path: '/profile',
-    element: <ProfileScreen />,
+    path: '/kyc',
+    element: <KycScreen />,
   },
   {
-    path: '/kyc',
+    path: '/profile',
     element: <KycScreen />,
   },
   {

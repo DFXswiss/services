@@ -20,7 +20,7 @@ export function useSessionGuard(redirectPath = '/', isActive = true) {
   }, [isInitialized, isLoggedIn, navigate, isActive]);
 }
 
-export function useKycDataGuard(redirectPath = '/') {
+export function useKycLevelGuard(minLevel: number, redirectPath = '/') {
   const { isInitialized } = useWalletContext();
   const { user, isUserLoading } = useUserContext();
   const { navigate } = useNavigation();
@@ -28,7 +28,7 @@ export function useKycDataGuard(redirectPath = '/') {
   const { setRedirectPath } = useAppHandlingContext();
 
   useEffect(() => {
-    if (user && !isUserLoading && !user.kycDataComplete && isInitialized) {
+    if (user && !isUserLoading && isInitialized && user.kycLevel < minLevel) {
       setRedirectPath(pathname);
       navigate(redirectPath);
     }
