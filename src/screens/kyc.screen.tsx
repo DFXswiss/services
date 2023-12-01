@@ -54,7 +54,7 @@ import { useGeoLocation } from '../hooks/geo-location.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { IframeMessageType } from './iframe-message.screen';
+import { IframeMessageType } from './kyc-redirect.screen';
 
 export function KycScreen(): JSX.Element {
   const { clearParams } = useNavigation();
