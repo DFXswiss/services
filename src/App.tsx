@@ -73,6 +73,10 @@ const routes = [
     element: <KycScreen />,
   },
   {
+    path: '/2fa',
+    element: <TfaScreen />,
+  },
+  {
     path: 'iframe-message',
     element: <IframeMessageScreen />,
   },
