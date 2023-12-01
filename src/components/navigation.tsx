@@ -144,6 +144,12 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
       <div className="absolute top-14 right-2 border-1 drop-shadow-md w-64 z-20 flex flex-col bg-dfxGray-300">
         <div className="mx-4 py-4 text-dfxGray-800">
           <NavigationLink
+            icon={IconVariant.SELL}
+            label={translate('navigation/links', 'Buy & sell')}
+            url="/"
+            target="_self"
+          />
+          <NavigationLink
             icon={IconVariant.SETTINGS}
             label={translate('navigation/links', 'My DFX')}
             url={authenticationToken ? `${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}` : '/my-dfx'}

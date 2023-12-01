@@ -17,6 +17,10 @@ export function url(url: string, params: URLSearchParams): string {
   return `${url}${search}`;
 }
 
+export function isAbsoluteUrl(url: string): boolean {
+  return /^(?:[a-z]+:)?\/\//.test(url);
+}
+
 export function isNode(e: EventTarget | null): e is Node {
   return e != null && 'nodeType' in e;
 }

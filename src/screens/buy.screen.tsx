@@ -118,7 +118,6 @@ export function BuyScreen(): JSX.Element {
   } = useForm<FormData>({
     defaultValues: {
       amount: '100',
-      paymentMethod: defaultPaymentMethod,
     },
   });
 
@@ -128,10 +127,12 @@ export function BuyScreen(): JSX.Element {
   const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
   const selectedAddress = useWatch({ control, name: 'address' });
 
-  // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
     setValue(field, value, { shouldValidate: true });
   }
+
+  const availableCurrencies =
+    selectedPaymentMethod === BuyPaymentMethod.CARD ? currencies?.filter((c) => c.name === 'EUR') : currencies;
 
   useEffect(() => {
     const activeBlockchain = walletBlockchain ?? blockchain;
@@ -150,9 +151,13 @@ export function BuyScreen(): JSX.Element {
   }, [assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
-    const currency = getCurrency(currencies, assetIn) ?? getDefaultCurrency(currencies);
+    const currency = getCurrency(availableCurrencies, assetIn) ?? getDefaultCurrency(availableCurrencies);
     if (currency) setVal('currency', currency);
-  }, [assetIn, getCurrency, currencies]);
+  }, [assetIn, getCurrency, currencies, selectedPaymentMethod]);
+
+  useEffect(() => {
+    if (defaultPaymentMethod) setVal('paymentMethod', defaultPaymentMethod);
+  }, [defaultPaymentMethod]);
 
   useEffect(() => {
     if (amountIn) setVal('amount', amountIn);
@@ -317,7 +322,7 @@ export function BuyScreen(): JSX.Element {
           translate={translateError}
         >
           <StyledVerticalStack gap={8} full center>
-            {currencies && availableAssets && (
+            {availableCurrencies && availableAssets && (
               <>
                 <StyledVerticalStack gap={2} full>
                   <h2 className="text-dfxGray-700">{translate('screens/buy', 'You spend')}</h2>
@@ -338,7 +343,7 @@ export function BuyScreen(): JSX.Element {
                         rootRef={rootRef}
                         name="currency"
                         placeholder={translate('general/actions', 'Select...')}
-                        items={currencies}
+                        items={availableCurrencies}
                         labelFunc={(item) => item.name}
                         descriptionFunc={(item) => toDescription(item)}
                         full
