@@ -118,7 +118,6 @@ export function BuyScreen(): JSX.Element {
   } = useForm<FormData>({
     defaultValues: {
       amount: '100',
-      paymentMethod: defaultPaymentMethod,
     },
   });
 
@@ -155,6 +154,10 @@ export function BuyScreen(): JSX.Element {
     const currency = getCurrency(availableCurrencies, assetIn) ?? getDefaultCurrency(availableCurrencies);
     if (currency) setVal('currency', currency);
   }, [assetIn, getCurrency, currencies, selectedPaymentMethod]);
+
+  useEffect(() => {
+    if (defaultPaymentMethod) setVal('paymentMethod', defaultPaymentMethod);
+  }, [defaultPaymentMethod]);
 
   useEffect(() => {
     if (amountIn) setVal('amount', amountIn);
