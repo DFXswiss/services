@@ -57,7 +57,7 @@ import { useSessionGuard } from '../hooks/guard.hook';
 import { MinLevelSell, useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { delay } from '../util/utils';
-import { IframeMessageType } from './iframe-message.screen';
+import { IframeMessageType } from './kyc-redirect.screen';
 
 enum Mode {
   KYC = 'KYC',
@@ -613,7 +613,7 @@ function Ident({ step, onDone, onBack }: EditProps): JSX.Element {
       <iframe
         src={step.session?.url}
         allow="camera *; microphone *"
-        allowFullScreen={false}
+        allowFullScreen={true}
         className="w-full h-full max-h-[900px]"
       ></iframe>
     </>
