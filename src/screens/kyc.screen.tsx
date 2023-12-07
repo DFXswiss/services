@@ -7,6 +7,7 @@ import {
   KycFinancialQuestion,
   KycFinancialResponse,
   KycInfo,
+  KycLevel,
   KycPersonalData,
   KycSession,
   KycStep,
@@ -50,11 +51,10 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
-import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useGeoLocation } from '../hooks/geo-location.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
-import { MinLevelSell, useKycHelper } from '../hooks/kyc-helper.hook';
+import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { delay } from '../util/utils';
 import { IframeMessageType } from './kyc-redirect.screen';
@@ -71,8 +71,7 @@ export function KycScreen(): JSX.Element {
   const { getKycInfo, continueKyc, startStep } = useKyc();
   const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
   const { pathname, search } = useLocation();
-  const { navigate } = useNavigation();
-  const { redirectPath, setRedirectPath } = useAppHandlingContext();
+  const { navigate, goBack } = useNavigation();
 
   const [info, setInfo] = useState<KycInfo | KycSession>();
   const [isLoading, setIsLoading] = useState(true);
@@ -80,11 +79,12 @@ export function KycScreen(): JSX.Element {
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
 
-  const mode = pathname.includes('profile') ? Mode.PROFILE : Mode.KYC;
+  const mode = pathname.includes('/profile') ? Mode.PROFILE : Mode.KYC;
   const rootRef = useRef<HTMLDivElement>(null);
   const params = new URLSearchParams(search);
   const [stepName, stepType] = params.get('step')?.split('/') ?? [];
-  const kycCode = params.get('code') ?? user?.kycHash;
+  const paramKycCode = params.get('code');
+  const kycCode = paramKycCode ?? user?.kycHash;
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
   const kycCompleted = info?.kycSteps.every((s) => isStepDone(s));
 
@@ -94,12 +94,15 @@ export function KycScreen(): JSX.Element {
     if (!kycCode) return;
 
     const request = stepName
-      ? startStep(kycCode, stepName as KycStepName, stepType as KycStepType)
-          .then(handleSession)
+      ? callKyc(() => startStep(kycCode, stepName as KycStepName, stepType as KycStepType))
+          .then(handleReload)
           .then(() => clearParams(['step']))
-      : getKycInfo(kycCode).then(handleInfo);
+      : callKyc(() => getKycInfo(kycCode)).then(handleInitial);
 
-    request.catch((error: ApiError) => setError(error.message ?? 'Unknown error')).finally(() => setIsLoading(false));
+    request
+      .then(() => setError(undefined))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsLoading(false));
   }, [kycCode, stepName, stepType]);
 
   function onLoad(next: boolean) {
@@ -107,26 +110,26 @@ export function KycScreen(): JSX.Element {
 
     setIsSubmitting(true);
     setError(undefined);
-    (next ? continueKyc(kycCode) : getKycInfo(kycCode))
-      .then(handleSession)
+    (next ? callKyc(() => continueKyc(kycCode)) : callKyc(() => getKycInfo(kycCode)))
+      .then(handleReload)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsSubmitting(false));
   }
 
-  async function handleInfo(info: KycInfo): Promise<void> {
+  async function handleInitial(info: KycInfo): Promise<void> {
     if (mode === Mode.PROFILE) {
-      if (info.kycLevel >= MinLevelSell || !kycCode) {
+      if (info.kycLevel >= KycLevel.Sell || !kycCode) {
         goBack();
       } else {
-        return continueKyc(kycCode).then(handleSession);
+        return callKyc(() => continueKyc(kycCode)).then(handleReload);
       }
     } else {
       setInfo(info);
     }
   }
 
-  async function handleSession(info: KycSession): Promise<void> {
-    if (mode === Mode.PROFILE && info.kycLevel >= MinLevelSell) {
+  async function handleReload(info: KycSession): Promise<void> {
+    if (mode === Mode.PROFILE && info.kycLevel >= KycLevel.Sell) {
       return reloadUser()
         .then(() => delay(0.01))
         .then(() => goBack());
@@ -136,9 +139,19 @@ export function KycScreen(): JSX.Element {
     }
   }
 
-  function goBack() {
-    setRedirectPath(undefined);
-    navigate(redirectPath ?? '/');
+  function callKyc<T>(call: () => Promise<T>): Promise<T> {
+    return call().catch((e: ApiError) => {
+      if (e.statusCode === 409 && 'switchToCode' in e) {
+        setIsLoading(true);
+        if (paramKycCode) {
+          navigate({ search: `?code=${e.switchToCode}` });
+        } else {
+          reloadUser();
+        }
+      }
+
+      throw e;
+    });
   }
 
   function stepIcon(step: KycStep): { icon: IconVariant; size: IconSize } | undefined {
@@ -293,53 +306,68 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack }: EditProps)
     mail: [Validations.Required, Validations.Mail],
   });
 
-  return showLinkHint ? (
+  return (
     <StyledVerticalStack gap={6} full>
-      <p className="text-dfxGray-700">
-        {translate(
-          'screens/kyc',
-          'It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.',
-        )}
-      </p>
-      <StyledButton width={StyledButtonWidth.MIN} label={translate('general/actions', 'OK')} onClick={onBack} />
+      {showLinkHint ? (
+        <StyledVerticalStack gap={6} full>
+          <p className="text-dfxGray-700">
+            {translate(
+              'screens/kyc',
+              'It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.',
+            )}
+          </p>
+          <StyledButton
+            width={StyledButtonWidth.MIN}
+            label={translate('general/actions', 'OK')}
+            onClick={onBack}
+            isLoading={isUpdating || isLoading}
+          />
+        </StyledVerticalStack>
+      ) : (
+        <Form
+          control={control}
+          rules={rules}
+          errors={errors}
+          onSubmit={handleSubmit(onSubmit)}
+          translate={translateError}
+        >
+          <StyledVerticalStack gap={6} full center>
+            {mode === Mode.PROFILE && (
+              <>
+                <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
+                <p className="text-base font-bold text-dfxBlue-800">
+                  {translate('screens/kyc', 'Please fill in personal information to continue')}
+                </p>
+              </>
+            )}
+
+            <StyledInput
+              name="mail"
+              autocomplete="email"
+              type="email"
+              label={translate('screens/kyc', 'Email address')}
+              placeholder={translate('screens/kyc', 'example@mail.com')}
+              full
+            />
+
+            <StyledButton
+              type="submit"
+              label={translate('general/actions', 'Next')}
+              onClick={handleSubmit(onSubmit)}
+              width={StyledButtonWidth.FULL}
+              disabled={!isValid}
+              isLoading={isUpdating || isLoading}
+            />
+          </StyledVerticalStack>
+        </Form>
+      )}
+
+      {error && (
+        <div>
+          <ErrorHint message={error} />
+        </div>
+      )}
     </StyledVerticalStack>
-  ) : (
-    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
-      <StyledVerticalStack gap={6} full center>
-        {mode === Mode.PROFILE && (
-          <>
-            <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
-            <p className="text-base font-bold text-dfxBlue-800">
-              {translate('screens/kyc', 'Please fill in personal information to continue')}
-            </p>
-          </>
-        )}
-
-        <StyledInput
-          name="mail"
-          autocomplete="email"
-          type="email"
-          label={translate('screens/kyc', 'Email address')}
-          placeholder={translate('screens/kyc', 'example@mail.com')}
-          full
-        />
-
-        {error && (
-          <div>
-            <ErrorHint message={error} />
-          </div>
-        )}
-
-        <StyledButton
-          type="submit"
-          label={translate('general/actions', 'Next')}
-          onClick={handleSubmit(onSubmit)}
-          width={StyledButtonWidth.FULL}
-          disabled={!isValid}
-          isLoading={isUpdating || isLoading}
-        />
-      </StyledVerticalStack>
-    </Form>
   );
 }
 

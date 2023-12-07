@@ -57,7 +57,6 @@
     "video": "",
     "manual": "",
 
-    "Please fill in personal information to continue": "Compilare i dati personali per continuare",
     "Account Type": "Tipo di conto",
     "Personal": "Personale",
     "Business": "Affari",
@@ -80,9 +79,14 @@
     "Example inc.": "Esempio inc.",
     "Contact information": "Informazioni di contatto",
 
-    "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.": "",
+    "Please fill in personal information to continue": "Compilare i dati personali per continuare",
+    "Please enter your contact information so that we can add the current address to your account": "Inserisci i tuoi dati di contatto in modo che possiamo aggiungere l'indirizzo attuale al tuo account.",
+
+    "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.": "Sembra che tu abbia già un account con DFX. Le abbiamo appena inviato un'e-mail. Fare clic sul link inviato per aggiungere l'indirizzo corrente al proprio account.",
+    "No matching account was found.": "Non è stato trovato alcun account corrispondente.",
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Il conto deve essere verificato quando il volume delle transazioni giornaliere supera il {{limit}}. Se volete aumentare il vostro limite di trading giornaliero, completate il nostro processo KYC (Know-Your-Customer).",
-    "Complete KYC": "Completare il KYC"
+    "Complete KYC": "Completare il KYC",
+    "I am already verified with DFX": "Sono già verificato con DFX"
   },
   "screens/error": {
     "Oh sorry something went wrong": "Oh, scusate, qualcosa è andato storto",

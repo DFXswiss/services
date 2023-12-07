@@ -1,13 +1,16 @@
 import { useMemo } from 'react';
 import { NavigateOptions, To, useLocation, useNavigate } from 'react-router-dom';
+import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { url } from '../util/utils';
 
 interface NavigationOptions extends NavigateOptions {
   clearParams?: string[];
+  setRedirect?: boolean;
 }
 
 interface NavigationInterface {
   navigate: (to: To | number, options?: NavigationOptions) => void;
+  goBack: () => void;
   setParams: (params: URLSearchParams) => void;
   clearParams: (params: string[]) => void;
 }
@@ -15,8 +18,11 @@ interface NavigationInterface {
 export function useNavigation(): NavigationInterface {
   const navigateTo = useNavigate();
   const { search, pathname } = useLocation();
+  const { redirectPath, setRedirectPath } = useAppHandlingContext();
 
   function navigate(to: To | number, options?: NavigationOptions) {
+    if (options?.setRedirect) setRedirectPath(pathname);
+
     switch (typeof to) {
       case 'number':
         return navigateTo(to);
@@ -30,6 +36,11 @@ export function useNavigation(): NavigationInterface {
         to.search = `?${params}`;
         return navigateTo(to, options);
     }
+  }
+
+  function goBack() {
+    setRedirectPath(undefined);
+    navigate(redirectPath ?? '/');
   }
 
   function setParams(newParams: URLSearchParams) {
@@ -50,5 +61,5 @@ export function useNavigation(): NavigationInterface {
     navigate({ pathname }, { replace: true, clearParams: params });
   }
 
-  return useMemo(() => ({ navigate, setParams, clearParams }), [navigateTo, search, pathname]);
+  return useMemo(() => ({ navigate, goBack, setParams, clearParams }), [navigateTo, search, pathname]);
 }

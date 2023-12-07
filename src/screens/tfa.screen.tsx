@@ -14,7 +14,6 @@ import QRCode from 'react-qr-code';
 import { useLocation } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
-import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -24,8 +23,7 @@ export function TfaScreen(): JSX.Element {
   const { user } = useUserContext();
   const { getKycInfo } = useKyc();
   const { search } = useLocation();
-  const { navigate } = useNavigation();
-  const { redirectPath, setRedirectPath } = useAppHandlingContext();
+  const { goBack } = useNavigation();
 
   const [info, setInfo] = useState<KycInfo>();
   const [isLoading, setIsLoading] = useState(true);
@@ -94,11 +92,6 @@ export function TfaScreen(): JSX.Element {
   async function submitCode(_code: string) {
     setIsSubmitting(true);
     setIsSubmitting(false);
-  }
-
-  function goBack() {
-    setRedirectPath(undefined);
-    navigate(redirectPath ?? '/');
   }
 
   function title(info: KycInfo): [boolean, string] {

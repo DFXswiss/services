@@ -4,6 +4,7 @@ import {
   BankAccount,
   Blockchain,
   Fiat,
+  KycLevel,
   Sell,
   TransactionError,
   Utils,
@@ -52,7 +53,7 @@ import { useBlockchain } from '../hooks/blockchain.hook';
 import { useClipboard } from '../hooks/clipboard.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycLevelGuard, useSessionGuard } from '../hooks/guard.hook';
-import { MinLevelSell, useKycHelper } from '../hooks/kyc-helper.hook';
+import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useSellHelper } from '../hooks/sell-helper.hook';
 import { isDefined } from '../util/utils';
@@ -66,7 +67,7 @@ interface FormData {
 
 export default function SellScreen(): JSX.Element {
   useSessionGuard();
-  useKycLevelGuard(MinLevelSell, '/profile');
+  useKycLevelGuard(KycLevel.Link, '/profile');
   const { copy } = useClipboard();
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
