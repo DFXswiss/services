@@ -34,30 +34,30 @@
     "Convert": "Convertire"
   },
   "screens/kyc": {
-    "DFX KYC": "",
-    "KYC level": "",
-    "Trading limit": "",
-    "Two-factor authentication": "",
-    "KYC progress": "",
+    "DFX KYC": "DFX KYC",
+    "KYC level": "KYC level",
+    "Trading limit": "Limite delle transazioni",
+    "Two-factor authentication": "Autenticazione a due fattori",
+    "KYC progress": "Progressi KYC",
 
     "per 24h": "per 24h",
     "per year": "all'anno",
 
-    "Terminated": "",
-    "Rejected": "",
-    "Level {{level}}": "",
+    "Terminated": "Terminato",
+    "Rejected": "Rifiutato",
+    "Level {{level}}": "Level {{level}}",
 
-    "Contact data": "",
-    "Personal data": "",
-    "Identification": "",
-    "Additional data": "",
-    "Document upload": "",
+    "Contact data": "Dati di contatto",
+    "Personal data": "Dati personali",
+    "Identification": "Identificazione",
+    "Additional data": "Dati aggiuntivi",
+    "Document upload": "Caricamento del documento",
 
-    "auto": "",
-    "video": "",
-    "manual": "",
+    "auto": "auto",
+    "video": "video",
+    "manual": "manuale",
 
-    "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.": "",
+    "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.": "Sembra che tu abbia già un account con DFX. Le abbiamo appena inviato un'e-mail. Fare clic sul link inviato per aggiungere l'indirizzo attuale al proprio account.",
 
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Il conto deve essere verificato quando il volume delle transazioni giornaliere supera il {{limit}}. Se volete aumentare il vostro limite di trading giornaliero, completate il nostro processo KYC (Know-Your-Customer).",
     "Complete KYC": "Completare il KYC"
@@ -227,6 +227,7 @@
   },
   "navigation/links": {
     "Buy & sell": "Acquista & vendere",
+    "KYC": "KYC",
     "My DFX": "My DFX",
     "Telegram": "Telegram",
     "Terms and conditions": "Termini e condizioni",
