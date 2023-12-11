@@ -66,7 +66,7 @@ enum Mode {
 
 export function KycScreen(): JSX.Element {
   const { clearParams } = useNavigation();
-  const { translate } = useSettingsContext();
+  const { translate, changeLanguage } = useSettingsContext();
   const { user, reloadUser } = useUserContext();
   const { getKycInfo, continueKyc, startStep } = useKyc();
   const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
@@ -89,6 +89,10 @@ export function KycScreen(): JSX.Element {
   const kycCompleted = info?.kycSteps.every((s) => isStepDone(s));
 
   useSessionGuard('/login', !kycCode);
+
+  useEffect(() => {
+    if (info) changeLanguage(info.language);
+  }, [info, changeLanguage]);
 
   useEffect(() => {
     if (!kycCode) return;
