@@ -34,30 +34,30 @@
     "Convert": "Convertir"
   },
   "screens/kyc": {
-    "DFX KYC": "",
-    "KYC level": "",
-    "Trading limit": "",
-    "Two-factor authentication": "",
-    "KYC progress": "",
+    "DFX KYC": "DFX KYC",
+    "KYC level": "KYC level",
+    "Trading limit": "Trading limit",
+    "Two-factor authentication": "Two-factor authentication",
+    "KYC progress": "KYC progress",
 
     "per 24h": "par 24h",
     "per year": "par an",
 
-    "Terminated": "",
-    "Rejected": "",
-    "Level {{level}}": "",
+    "Terminated": "Terminated",
+    "Rejected": "Rejected",
+    "Level {{level}}": "Level {{level}}",
 
-    "Contact data": "",
-    "Personal data": "",
-    "Identification": "",
-    "Additional data": "",
-    "Document upload": "",
+    "Contact data": "Contact data",
+    "Personal data": "Personal data",
+    "Identification": "Identification",
+    "Additional data": "Additional data",
+    "Document upload": "Document upload",
 
-    "auto": "",
-    "video": "",
-    "manual": "",
+    "auto": "auto",
+    "video": "video",
+    "manual": "manual",
 
-    "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.": "",
+    "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.": "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.",
 
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Votre compte doit être vérifié dès que votre volume de transactions quotidiennes dépasse {{limit}}. Si vous souhaitez augmenter votre limite quotidienne de transactions, veuillez compléter notre processus KYC (Know-Your-Customer).",
     "Complete KYC": "Compléter le KYC"
