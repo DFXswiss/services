@@ -34,28 +34,28 @@
     "Convert": "Convertire"
   },
   "screens/kyc": {
-    "DFX KYC": "",
-    "KYC level": "",
-    "Trading limit": "",
-    "Two-factor authentication": "",
-    "KYC progress": "",
+    "DFX KYC": "DFX KYC",
+    "KYC level": "KYC level",
+    "Trading limit": "Trading limit",
+    "Two-factor authentication": "Two-factor authentication",
+    "KYC progress": "KYC progress",
 
     "per 24h": "per 24h",
     "per year": "all'anno",
 
-    "Terminated": "",
-    "Rejected": "",
-    "Level {{level}}": "",
+    "Terminated": "Terminated",
+    "Rejected": "Rejected",
+    "Level {{level}}": "Level {{level}}",
 
-    "Contact data": "",
-    "Personal data": "",
-    "Identification": "",
-    "Additional data": "",
-    "Document upload": "",
+    "Contact data": "Contact data",
+    "Personal data": "Personal data",
+    "Identification": "Identification",
+    "Additional data": "Additional data",
+    "Document upload": "Document upload",
 
-    "auto": "",
-    "video": "",
-    "manual": "",
+    "auto": "auto",
+    "video": "video",
+    "manual": "manual",
 
     "Account Type": "Tipo di conto",
     "Personal": "Personale",
@@ -228,6 +228,7 @@
   },
   "navigation/links": {
     "Buy & sell": "Acquista & vendere",
+    "KYC": "KYC",
     "My DFX": "My DFX",
     "Telegram": "Telegram",
     "Terms and conditions": "Termini e condizioni",

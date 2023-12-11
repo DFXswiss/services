@@ -150,6 +150,12 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             target="_self"
           />
           <NavigationLink
+            icon={IconVariant.KYC}
+            label={translate('navigation/links', 'KYC')}
+            url="/kyc"
+            target="_self"
+          />
+          <NavigationLink
             icon={IconVariant.SETTINGS}
             label={translate('navigation/links', 'My DFX')}
             url={authenticationToken ? `${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}` : '/my-dfx'}
