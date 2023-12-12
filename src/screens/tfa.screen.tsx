@@ -1,10 +1,13 @@
-import { ApiError, KycInfo, Utils, Validations, useKyc, useUserContext } from '@dfx.swiss/react';
+import { ApiError, KycInfo, TfaSetup, Utils, Validations, useKyc, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
   SpinnerSize,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
+  StyledHorizontalStack,
   StyledInput,
+  StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -21,7 +24,7 @@ import { useNavigation } from '../hooks/navigation.hook';
 export function TfaScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { user } = useUserContext();
-  const { getKycInfo } = useKyc();
+  const { getKycInfo, setup2fa, delete2fa, verify2fa } = useKyc();
   const { search } = useLocation();
   const { goBack } = useNavigation();
 
@@ -29,9 +32,11 @@ export function TfaScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>();
+  const [tokenInvalid, setTokenInvalid] = useState(false);
   const [step, setStep] = useState(0);
+  const [showDeleteMessage, setShowDeleteMessage] = useState(false);
 
-  const [setupInfo, setSetupInfo] = useState<{ link: string; code: string }>();
+  const [setupInfo, setSetupInfo] = useState<TfaSetup>();
 
   const lastStep = 3;
   const params = new URLSearchParams(search);
@@ -40,58 +45,75 @@ export function TfaScreen(): JSX.Element {
   useSessionGuard('/login', !kycCode);
 
   useEffect(() => {
-    if (!kycCode) return;
-
-    getKycInfo(kycCode)
-      .then(setInfo)
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsLoading(false));
+    load();
   }, [kycCode]);
 
   const {
     control,
     handleSubmit,
     formState: { isValid, errors },
-  } = useForm<{ code: string }>({ mode: 'onTouched' });
+    reset,
+  } = useForm<{ token: string }>({ mode: 'onTouched' });
 
   const rules = Utils.createRules({
-    code: [Validations.Required, Validations.Custom((v: string) => (v?.length === 6 ? true : 'pattern'))],
+    token: [Validations.Required, Validations.Custom((v: string) => (v?.length === 6 ? true : 'pattern'))],
   });
 
-  async function onNext(data?: { code: string }) {
+  async function load(): Promise<void> {
+    if (!kycCode) return;
+
+    return getKycInfo(kycCode)
+      .then(setInfo)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsLoading(false));
+  }
+
+  async function onNext(data?: { token: string }) {
+    setError(undefined);
+    setTokenInvalid(false);
+    setIsSubmitting(true);
+    next(data?.token)
+      .then(() => setStep((s) => s + 1))
+      .catch((e: ApiError) => {
+        e.statusCode === 401 ? setTokenInvalid(true) : setError(e.message ?? 'Unknown error');
+      })
+      .finally(() => setIsSubmitting(false));
+  }
+
+  async function next(token?: string): Promise<void> {
+    if (!kycCode) return;
+
     if (info?.twoFactorEnabled) {
-      if (!data) return;
-      await submitCode(data.code);
+      if (!token) return;
+      await verify2fa(kycCode, token);
       return goBack();
     }
 
     switch (step) {
       case 0:
-        await fetchSetupInfo();
+        await setup2fa(kycCode).then(setSetupInfo);
         break;
 
       case 2:
-        if (!data) return;
-        await submitCode(data.code);
+        if (!token) return;
+        await verify2fa(kycCode, token);
         break;
 
       case 3:
         goBack();
         break;
     }
-
-    setStep((s) => s + 1);
   }
 
-  async function fetchSetupInfo() {
-    setIsSubmitting(true);
-    setSetupInfo({ link: 'TODO', code: 'EFIE EF3I DF02 02OF' });
-    setIsSubmitting(false);
-  }
-
-  async function submitCode(_code: string) {
-    setIsSubmitting(true);
-    setIsSubmitting(false);
+  function onDelete() {
+    if (!kycCode) return;
+    delete2fa(kycCode)
+      .then(() => load())
+      .then(() => {
+        reset();
+        setShowDeleteMessage(false);
+      })
+      .catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
   }
 
   function title(info: KycInfo): [boolean, string] {
@@ -135,67 +157,101 @@ export function TfaScreen(): JSX.Element {
           translate={translateError}
         >
           <StyledVerticalStack gap={6} full center>
-            {info && (
+            {showDeleteMessage ? (
               <>
-                <h2 className="text-dfxGray-700">{titleString(info)}</h2>
-                {info.twoFactorEnabled || step === 2 ? (
-                  <>
-                    <p className="text-dfxGray-700">
-                      {translate('screens/kyc', 'Enter the 6-digit code from your authenticator app.')}
-                    </p>
-                    <StyledInput
-                      name="code"
-                      type="number"
-                      placeholder={translate('screens/kyc', 'Authenticator code')}
-                      full
-                    />
-                  </>
-                ) : step === 0 ? (
-                  <p className="text-dfxGray-700">
-                    {translate(
-                      'screens/kyc',
-                      'Install a compatible authenticator app (e.g. Google Authenticator) on your mobile device.',
-                    )}
-                  </p>
-                ) : step === 1 ? (
-                  setupInfo && (
-                    <>
-                      <QRCode
-                        className="mx-auto h-auto w-full max-w-[15rem]"
-                        value={setupInfo.link}
-                        size={128}
-                        fgColor={'#072440'}
-                      />
-                      <div>
-                        <p className="text-dfxGray-700">
-                          {translate(
-                            'screens/kyc',
-                            'Scan the QR code with your app or enter the following code manually.',
-                          )}
-                        </p>
-                        <p className="text-dfxGray-800 italic">{setupInfo.code}</p>
-                      </div>
-                    </>
-                  )
-                ) : (
-                  step === 3 && (
+                <p className="text-dfxBlue-800">
+                  {translate('screens/buy', 'Are you sure you want to delete your 2FA method?')}
+                </p>
+                <StyledHorizontalStack>
+                  <StyledButton
+                    type="button"
+                    color={StyledButtonColor.STURDY_WHITE}
+                    width={StyledButtonWidth.MIN}
+                    label={translate('general/actions', 'No')}
+                    onClick={() => setShowDeleteMessage(false)}
+                  />
+                  <StyledButton
+                    type="button"
+                    width={StyledButtonWidth.MIN}
+                    label={translate('general/actions', 'Yes')}
+                    onClick={onDelete}
+                  />
+                </StyledHorizontalStack>
+              </>
+            ) : (
+              info && (
+                <>
+                  <h2 className="text-dfxGray-700">{titleString(info)}</h2>
+                  {info.twoFactorEnabled || step === 2 ? (
                     <>
                       <p className="text-dfxGray-700">
-                        {translate('screens/kyc', 'You  have successfully activated two-factor authentication.')}
+                        {translate('screens/kyc', 'Please enter the 6-digit code from your authenticator app')}
                       </p>
+                      <StyledInput
+                        name="token"
+                        type="number"
+                        placeholder={translate('screens/kyc', 'Authenticator code')}
+                        forceError={tokenInvalid}
+                        forceErrorMessage={
+                          tokenInvalid ? translate('screens/kyc', 'Invalid or expired code') : undefined
+                        }
+                        full
+                      />
                     </>
-                  )
-                )}
+                  ) : step === 0 ? (
+                    <p className="text-dfxGray-700">
+                      {translate(
+                        'screens/kyc',
+                        'Please install a compatible authenticator app (e.g. Google Authenticator) on your mobile device',
+                      )}
+                    </p>
+                  ) : step === 1 ? (
+                    setupInfo && (
+                      <>
+                        <QRCode
+                          className="mx-auto h-auto w-full max-w-[15rem]"
+                          value={setupInfo.uri}
+                          size={128}
+                          fgColor={'#072440'}
+                        />
+                        <div>
+                          <p className="text-dfxGray-700">
+                            {translate(
+                              'screens/kyc',
+                              'Please scan the QR code with your app or enter the following code manually',
+                            )}
+                          </p>
+                          <p className="text-dfxGray-800 italic">{setupInfo.secret}</p>
+                        </div>
+                      </>
+                    )
+                  ) : (
+                    step === 3 && (
+                      <p className="text-dfxGray-700">
+                        {translate('screens/kyc', 'You have successfully activated two-factor authentication')}
+                      </p>
+                    )
+                  )}
 
-                <StyledButton
-                  type={info.twoFactorEnabled || step === 2 ? 'submit' : 'button'}
-                  width={StyledButtonWidth.MIN}
-                  label={translate('general/actions', step === lastStep ? 'Finish' : 'Next')}
-                  onClick={onNext}
-                  isLoading={isSubmitting}
-                  disabled={!isValid}
-                />
-              </>
+                  <StyledVerticalStack gap={2} full center>
+                    <StyledButton
+                      type={info.twoFactorEnabled || step === 2 ? 'submit' : 'button'}
+                      width={StyledButtonWidth.MIN}
+                      label={translate('general/actions', step === lastStep ? 'Finish' : 'Next')}
+                      onClick={handleSubmit(onNext)}
+                      isLoading={isSubmitting}
+                      disabled={!isValid}
+                    />
+                    {info.twoFactorEnabled && (
+                      <StyledLink
+                        label={translate('screens/kyc', 'Delete 2FA method')}
+                        onClick={() => setShowDeleteMessage(true)}
+                        dark
+                      />
+                    )}
+                  </StyledVerticalStack>
+                </>
+              )
             )}
             {error && (
               <div>

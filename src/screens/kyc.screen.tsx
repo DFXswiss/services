@@ -152,6 +152,8 @@ export function KycScreen(): JSX.Element {
         } else {
           reloadUser();
         }
+      } else if (e.statusCode === 401 && e.message?.includes('2FA')) {
+        navigate('/2fa', { setRedirect: true });
       }
 
       throw e;

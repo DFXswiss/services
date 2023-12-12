@@ -61,5 +61,5 @@ export function useNavigation(): NavigationInterface {
     navigate({ pathname }, { replace: true, clearParams: params });
   }
 
-  return useMemo(() => ({ navigate, goBack, setParams, clearParams }), [navigateTo, search, pathname]);
+  return useMemo(() => ({ navigate, goBack, setParams, clearParams }), [navigateTo, search, pathname, redirectPath]);
 }
