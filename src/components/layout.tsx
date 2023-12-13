@@ -1,6 +1,7 @@
 import { PropsWithChildren, Ref, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Routes } from '../App';
+import { useAppParams } from '../hooks/app-params.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { isNode } from '../util/utils';
 import { Navigation } from './navigation';
@@ -29,6 +30,7 @@ export function Layout({
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const { pathname } = useLocation();
   const { clearParams } = useNavigation();
+  const { headless } = useAppParams();
 
   useEffect(() => {
     const kycRoutes = Routes.filter((r) => r.isKycScreen);
@@ -43,21 +45,23 @@ export function Layout({
 
   return (
     <div id="app-root" className="h-full flex flex-col" ref={rootRef} onClick={onClick}>
-      <Navigation
-        ref={navRef}
-        title={title}
-        backButton={backButton}
-        onBack={onBack}
-        isOpen={isNavigationOpen}
-        setIsOpen={setIsNavigationOpen}
-      />
+      {!headless && (
+        <Navigation
+          ref={navRef}
+          title={title}
+          backButton={backButton}
+          onBack={onBack}
+          isOpen={isNavigationOpen}
+          setIsOpen={setIsNavigationOpen}
+        />
+      )}
 
       <div className="flex flex-col flex-grow overflow-auto" ref={scrollRef}>
         <div className="flex flex-grow justify-center">
           <div
             className={`relative w-full max-w-screen-md flex flex-grow flex-col items-center ${
               textStart ? 'text-start' : 'text-center'
-            } ${!noPadding && 'px-5 py-2 mt-4'} gap-2`}
+            } ${!noPadding && 'p-5'} gap-2`}
           >
             {children}
           </div>

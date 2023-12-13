@@ -41,6 +41,7 @@ import {
   StyledHorizontalStack,
   StyledIconButton,
   StyledInput,
+  StyledLink,
   StyledLoadingSpinner,
   StyledSearchDropdown,
   StyledVerticalStack,
@@ -771,7 +772,11 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
             isChecked={currentSelection === currentOptions[0].key}
             onChange={(checked) => setValue(checked ? currentOptions[0].key : undefined)}
           >
-            {currentQuestion.description}
+            {currentQuestion.key === 'tnc' ? (
+              <StyledLink label={currentQuestion.description} url={process.env.REACT_APP_TNC_URL} dark />
+            ) : (
+              currentQuestion.description
+            )}
           </StyledCheckboxRow>
         ) : currentQuestion.type === QuestionType.SINGLE_CHOICE ? (
           <>
