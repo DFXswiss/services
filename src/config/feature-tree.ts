@@ -923,6 +923,27 @@ export const FeatureTree: Page[] = [
     ],
   },
 
+// --- LOGIN  --- //
+{
+  id: 'login',
+  dfxStyle: true,
+  tiles: [
+    {
+      id: 'login-with-crypto-wallet',
+      img: 'cryptowallet',
+      next: {
+        page: 'wallets',
+      },
+    },
+
+    {
+      id: 'login-with-mail',
+      img: 'mail',
+        disabled: true,
+    },
+  ],
+},
+
   // --- WALLETS --- //
   {
     id: 'wallets',
