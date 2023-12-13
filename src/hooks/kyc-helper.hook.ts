@@ -1,21 +1,13 @@
-import {
-  KycStatus,
-  KycStepName,
-  KycStepType,
-  LimitPeriod,
-  TradingLimit,
-  Utils,
-  useUserContext,
-} from '@dfx.swiss/react';
+import { KycLevel, KycStepName, KycStepType, LimitPeriod, TradingLimit, Utils, useUserContext } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useNavigation } from './navigation.hook';
 
 interface KycHelperInterface {
-  // legacy
-  limit: string;
-  isComplete: boolean;
-  start: () => Promise<void>;
-  // new
+  limit: string | undefined;
+  isComplete: boolean | undefined;
+  start: () => void;
+
   levelToString: (level: number) => string;
   limitToString: (limit: TradingLimit) => string;
   nameToString: (stepName: KycStepName) => string;
@@ -25,6 +17,7 @@ interface KycHelperInterface {
 export function useKycHelper(): KycHelperInterface {
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
+  const { navigate } = useNavigation();
 
   const periodMap: Record<LimitPeriod, string> = {
     [LimitPeriod.DAY]: 'per 24h',
@@ -45,27 +38,15 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepType.MANUAL]: 'manual',
   };
 
-  // --- LEGACY KYC --- //
+  const limit = user && limitToString(user.tradingLimit);
 
-  const limit =
-    user?.tradingLimit != null
-      ? `${Utils.formatAmount(user.tradingLimit.limit)} CHF ${translate(
-          'screens/kyc',
-          periodMap[user.tradingLimit.period],
-        )}`
-      : '';
+  const isComplete = user && user.kycLevel >= KycLevel.Completed;
 
-  const isComplete = [KycStatus.COMPLETED].includes(user?.kycStatus ?? KycStatus.NA);
-
-  async function start(): Promise<void> {
-    if (!user) return;
-    const newTab = window.open(`${process.env.REACT_APP_KYC_URL}?code=${user.kycHash}`, '_blank', 'noreferrer');
-    const popUpBlocked = newTab == null || newTab.closed || typeof newTab.closed == 'undefined';
-    if (popUpBlocked) console.error('popUp blocked'); // TODO: (Krysh) use correct error handling here
+  function start() {
+    navigate('/kyc');
   }
 
-  // --- NEW KYC --- //
-
+  // formatting
   function levelToString(level: number): string {
     switch (level) {
       case -10:
