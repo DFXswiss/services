@@ -9,6 +9,7 @@ import { useBalanceContext } from './balance.context';
 // --- INTERFACES --- //
 // CAUTION: params need to be added to index-widget.tsx
 const urlParams = [
+  'headless',
   'flags',
   'lang',
   'address',
@@ -34,6 +35,7 @@ const urlParams = [
 ];
 
 export interface AppParams {
+  headless?: string;
   flags?: string;
   lang?: string;
   address?: string;
@@ -173,6 +175,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           ...params,
         }
       : {
+          headless: getParameter(query, 'headless'),
           flags: getParameter(query, 'flags'),
           lang: getParameter(query, 'lang'),
           address: getParameter(query, 'address'),
