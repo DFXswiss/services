@@ -30,6 +30,8 @@ function getMode(pathName: string): SpecialMode | undefined {
   }
 }
 
+type Page = { page: string; allowedTiles: string[] | undefined };
+
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isLoggedIn } = useSessionContext();
@@ -45,7 +47,7 @@ export function HomeScreen(): JSX.Element {
 
   const [connectTo, setConnectTo] = useState<Wallet>();
   const [loginSuccessful, setLoginSuccessful] = useState(false);
-  const [pages, setPages] = useState(new Stack<{ page: string; allowedTiles: string[] | undefined }>());
+  const [pages, setPages] = useState(new Stack<Page>());
 
   const currentPageId = pages.current?.page;
   const allowedTiles = pages.current?.allowedTiles;
@@ -61,8 +63,9 @@ export function HomeScreen(): JSX.Element {
   }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful]);
 
   useEffect(() => {
-    const mode = specialMode ? 'wallets' : appParams.mode;
-    mode && setPages(new Stack([{ page: mode, allowedTiles: undefined }]));
+    const mode = specialMode ? 'login' : appParams.mode;
+    const stack = mode ? new Stack([{ page: mode, allowedTiles: undefined }]) : new Stack<Page>();
+    setPages(stack);
   }, [appParams.mode, specialMode]);
 
   // tile handling

@@ -1,6 +1,8 @@
 import { ApiError, KycInfo, TfaSetup, Utils, Validations, useKyc, useUserContext } from '@dfx.swiss/react';
 import {
+  CopyButton,
   Form,
+  IconVariant,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
@@ -18,6 +20,7 @@ import { useLocation } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useClipboard } from '../hooks/clipboard.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
@@ -26,6 +29,7 @@ export function TfaScreen(): JSX.Element {
   const { user } = useUserContext();
   const { getKycInfo, setup2fa, delete2fa, verify2fa } = useKyc();
   const { search } = useLocation();
+  const { copy } = useClipboard();
   const { goBack } = useNavigation();
 
   const [info, setInfo] = useState<KycInfo>();
@@ -33,12 +37,10 @@ export function TfaScreen(): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>();
   const [tokenInvalid, setTokenInvalid] = useState(false);
-  const [step, setStep] = useState(0);
   const [showDeleteMessage, setShowDeleteMessage] = useState(false);
 
   const [setupInfo, setSetupInfo] = useState<TfaSetup>();
 
-  const lastStep = 3;
   const params = new URLSearchParams(search);
   const kycCode = params.get('code') ?? user?.kycHash;
 
@@ -63,89 +65,45 @@ export function TfaScreen(): JSX.Element {
     if (!kycCode) return;
 
     return getKycInfo(kycCode)
-      .then(setInfo)
+      .then((i) => {
+        setInfo(i);
+        if (!i.twoFactorEnabled) return setup2fa(kycCode).then(setSetupInfo);
+      })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
   }
 
-  async function onNext(data?: { token: string }) {
+  async function onSubmit(data: { token: string }) {
+    if (!kycCode) return;
+
     setError(undefined);
     setTokenInvalid(false);
     setIsSubmitting(true);
-    next(data?.token)
-      .then(() => setStep((s) => s + 1))
-      .catch((e: ApiError) => {
-        e.statusCode === 401 ? setTokenInvalid(true) : setError(e.message ?? 'Unknown error');
-      })
+
+    verify2fa(kycCode, data.token)
+      .then(() => goBack())
+      .catch((e: ApiError) => (e.statusCode === 401 ? setTokenInvalid(true) : setError(e.message ?? 'Unknown error')))
       .finally(() => setIsSubmitting(false));
   }
 
-  async function next(token?: string): Promise<void> {
-    if (!kycCode) return;
-
-    if (info?.twoFactorEnabled) {
-      if (!token) return;
-      await verify2fa(kycCode, token);
-      return goBack();
-    }
-
-    switch (step) {
-      case 0:
-        await setup2fa(kycCode).then(setSetupInfo);
-        break;
-
-      case 2:
-        if (!token) return;
-        await verify2fa(kycCode, token);
-        break;
-
-      case 3:
-        goBack();
-        break;
-    }
+  function openAppStore(url: string) {
+    window.open(url, '_blank', 'noreferrer');
   }
 
   function onDelete() {
     if (!kycCode) return;
+
+    setIsLoading(true);
+
     delete2fa(kycCode)
       .then(() => load())
-      .then(() => {
-        reset();
-        setShowDeleteMessage(false);
-      })
+      .then(() => reset())
+      .then(() => setShowDeleteMessage(false))
       .catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
   }
 
-  function title(info: KycInfo): [boolean, string] {
-    if (info.twoFactorEnabled) return [false, 'Two-factor authentication required'];
-
-    switch (step) {
-      case 0:
-        return [true, 'Install authenticator app'];
-      case 1:
-        return [true, 'Scan the QR code'];
-      case 2:
-        return [true, 'Verify setup'];
-      case 3:
-        return [false, 'Done!'];
-    }
-
-    return [false, ''];
-  }
-
-  function titleString(info: KycInfo): string {
-    const [hasStepIndicator, text] = title(info);
-    return (
-      (hasStepIndicator ? translate('screens/kyc', 'Step {{step}}: ', { step: step + 1 }) : '') +
-      translate('screens/kyc', text)
-    );
-  }
-
   return (
-    <Layout
-      title={translate('screens/kyc', '2FA')}
-      onBack={step > 0 && step !== lastStep ? () => setStep((s) => s - 1) : undefined}
-    >
+    <Layout title={translate('screens/kyc', '2FA')}>
       {isLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
@@ -153,40 +111,119 @@ export function TfaScreen(): JSX.Element {
           control={control}
           rules={rules}
           errors={errors}
-          onSubmit={handleSubmit(onNext)}
+          onSubmit={handleSubmit(onSubmit)}
           translate={translateError}
         >
-          <StyledVerticalStack gap={6} full center>
-            {showDeleteMessage ? (
-              <>
-                <p className="text-dfxBlue-800">
-                  {translate('screens/buy', 'Are you sure you want to delete your 2FA method?')}
-                </p>
-                <StyledHorizontalStack>
-                  <StyledButton
-                    type="button"
-                    color={StyledButtonColor.STURDY_WHITE}
-                    width={StyledButtonWidth.MIN}
-                    label={translate('general/actions', 'No')}
-                    onClick={() => setShowDeleteMessage(false)}
-                  />
-                  <StyledButton
-                    type="button"
-                    width={StyledButtonWidth.MIN}
-                    label={translate('general/actions', 'Yes')}
-                    onClick={onDelete}
-                  />
-                </StyledHorizontalStack>
-              </>
-            ) : (
-              info && (
-                <>
-                  <h2 className="text-dfxGray-700">{titleString(info)}</h2>
-                  {info.twoFactorEnabled || step === 2 ? (
-                    <>
-                      <p className="text-dfxGray-700">
-                        {translate('screens/kyc', 'Please enter the 6-digit code from your authenticator app')}
-                      </p>
+          <div className="text-left">
+            <StyledVerticalStack gap={10} full>
+              {showDeleteMessage ? (
+                <StyledVerticalStack gap={6} full center>
+                  <p className="text-dfxBlue-800">
+                    {translate('screens/buy', 'Are you sure you want to delete your 2FA method?')}
+                  </p>
+                  <StyledHorizontalStack>
+                    <StyledButton
+                      type="button"
+                      color={StyledButtonColor.STURDY_WHITE}
+                      width={StyledButtonWidth.MIN}
+                      label={translate('general/actions', 'No')}
+                      onClick={() => setShowDeleteMessage(false)}
+                    />
+                    <StyledButton
+                      type="button"
+                      width={StyledButtonWidth.MIN}
+                      label={translate('general/actions', 'Yes')}
+                      onClick={onDelete}
+                    />
+                  </StyledHorizontalStack>
+                </StyledVerticalStack>
+              ) : (
+                info && (
+                  <>
+                    {setupInfo && (
+                      <>
+                        {/* step 1 */}
+                        <StyledVerticalStack gap={4} full>
+                          <h2 className="text-dfxGray-700">
+                            {translate('screens/kyc', 'Step {{step}}', { step: 1 })}
+                            {': '}
+                            {translate(
+                              'screens/kyc',
+                              'Install Google Authenticator or another 2FA app on your smartphone',
+                            )}
+                          </h2>
+                          <div className="flex flex-row flex-wrap gap-2">
+                            <StyledButton
+                              type="button"
+                              icon={IconVariant.APPLE}
+                              label="App Store"
+                              color={StyledButtonColor.STURDY_WHITE}
+                              width={StyledButtonWidth.MIN}
+                              onClick={() =>
+                                openAppStore('https://apps.apple.com/de/app/google-authenticator/id388497605')
+                              }
+                              deactivateMargin
+                            />
+                            <StyledButton
+                              type="button"
+                              icon={IconVariant.GOOGLE_PLAY}
+                              label="Google Play"
+                              color={StyledButtonColor.STURDY_WHITE}
+                              width={StyledButtonWidth.MIN}
+                              onClick={() =>
+                                openAppStore(
+                                  'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2',
+                                )
+                              }
+                              deactivateMargin
+                            />
+                          </div>
+                          {/* TODO: store links */}
+                        </StyledVerticalStack>
+
+                        {/* step 2 */}
+                        <StyledVerticalStack gap={4} full>
+                          <h2 className="text-dfxGray-700">
+                            {translate('screens/kyc', 'Step {{step}}', { step: 2 })}
+                            {': '}
+                            {translate('screens/kyc', 'Set up the 2FA authenticator')}
+                          </h2>
+                          <QRCode
+                            className="mx-auto h-auto w-full max-w-[15rem]"
+                            value={setupInfo.uri}
+                            size={128}
+                            fgColor={'#072440'}
+                          />
+                          <StyledVerticalStack full center>
+                            <p className="text-dfxGray-800 italic">{translate('screens/kyc', 'Secret')}:</p>
+                            <div className="flex flex-row items-center gap-2 px-4">
+                              <p className="text-dfxGray-800 italic break-all">{setupInfo.secret}</p>
+                              <CopyButton onCopy={() => copy(setupInfo.secret)} />
+                            </div>
+                          </StyledVerticalStack>
+                        </StyledVerticalStack>
+                      </>
+                    )}
+
+                    {/* step 3 */}
+                    <StyledVerticalStack gap={4} full>
+                      <h2 className="text-dfxGray-700">
+                        {setupInfo && (
+                          <>
+                            {translate('screens/kyc', 'Step {{step}}', { step: 3 })}
+                            {': '}
+                          </>
+                        )}
+                        {translate('screens/kyc', 'Enter the 6-digit dynamic code from your authenticator app')}
+                      </h2>
+                      {setupInfo && (
+                        <p className="text-dfxGray-700">
+                          {translate(
+                            'screens/kyc',
+                            'Click + in Google Authenticator to add a new account. You can scan the QR code or enter the secret provided to create your account in Google Authenticator.',
+                          )}
+                        </p>
+                      )}
                       <StyledInput
                         name="token"
                         type="number"
@@ -197,68 +234,35 @@ export function TfaScreen(): JSX.Element {
                         }
                         full
                       />
-                    </>
-                  ) : step === 0 ? (
-                    <p className="text-dfxGray-700">
-                      {translate(
-                        'screens/kyc',
-                        'Please install a compatible authenticator app (e.g. Google Authenticator) on your mobile device',
-                      )}
-                    </p>
-                  ) : step === 1 ? (
-                    setupInfo && (
-                      <>
-                        <QRCode
-                          className="mx-auto h-auto w-full max-w-[15rem]"
-                          value={setupInfo.uri}
-                          size={128}
-                          fgColor={'#072440'}
-                        />
-                        <div>
-                          <p className="text-dfxGray-700">
-                            {translate(
-                              'screens/kyc',
-                              'Please scan the QR code with your app or enter the following code manually',
-                            )}
-                          </p>
-                          <p className="text-dfxGray-800 italic">{setupInfo.secret}</p>
-                        </div>
-                      </>
-                    )
-                  ) : (
-                    step === 3 && (
-                      <p className="text-dfxGray-700">
-                        {translate('screens/kyc', 'You have successfully activated two-factor authentication')}
-                      </p>
-                    )
-                  )}
 
-                  <StyledVerticalStack gap={2} full center>
-                    <StyledButton
-                      type={info.twoFactorEnabled || step === 2 ? 'submit' : 'button'}
-                      width={StyledButtonWidth.MIN}
-                      label={translate('general/actions', step === lastStep ? 'Finish' : 'Next')}
-                      onClick={handleSubmit(onNext)}
-                      isLoading={isSubmitting}
-                      disabled={!isValid}
-                    />
-                    {info.twoFactorEnabled && (
-                      <StyledLink
-                        label={translate('screens/kyc', 'Delete 2FA method')}
-                        onClick={() => setShowDeleteMessage(true)}
-                        dark
-                      />
-                    )}
-                  </StyledVerticalStack>
-                </>
-              )
-            )}
-            {error && (
-              <div>
-                <ErrorHint message={error} />
-              </div>
-            )}
-          </StyledVerticalStack>
+                      <StyledVerticalStack gap={2} full center>
+                        <StyledButton
+                          type="submit"
+                          width={StyledButtonWidth.MIN}
+                          label={translate('general/actions', 'Next')}
+                          onClick={handleSubmit(onSubmit)}
+                          isLoading={isSubmitting}
+                          disabled={!isValid}
+                        />
+                        {info.twoFactorEnabled && (
+                          <StyledLink
+                            label={translate('screens/kyc', 'Delete 2FA method')}
+                            onClick={() => setShowDeleteMessage(true)}
+                            dark
+                          />
+                        )}
+                      </StyledVerticalStack>
+                    </StyledVerticalStack>
+                  </>
+                )
+              )}
+              {error && (
+                <div>
+                  <ErrorHint message={error} />
+                </div>
+              )}
+            </StyledVerticalStack>
+          </div>
         </Form>
       )}
     </Layout>
