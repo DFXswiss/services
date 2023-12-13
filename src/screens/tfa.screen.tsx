@@ -123,14 +123,12 @@ export function TfaScreen(): JSX.Element {
                   </p>
                   <StyledHorizontalStack>
                     <StyledButton
-                      type="button"
                       color={StyledButtonColor.STURDY_WHITE}
                       width={StyledButtonWidth.MIN}
                       label={translate('general/actions', 'No')}
                       onClick={() => setShowDeleteMessage(false)}
                     />
                     <StyledButton
-                      type="button"
                       width={StyledButtonWidth.MIN}
                       label={translate('general/actions', 'Yes')}
                       onClick={onDelete}
@@ -154,7 +152,6 @@ export function TfaScreen(): JSX.Element {
                           </h2>
                           <div className="flex flex-row flex-wrap gap-2">
                             <StyledButton
-                              type="button"
                               icon={IconVariant.APPLE}
                               label="App Store"
                               color={StyledButtonColor.STURDY_WHITE}
@@ -165,7 +162,6 @@ export function TfaScreen(): JSX.Element {
                               deactivateMargin
                             />
                             <StyledButton
-                              type="button"
                               icon={IconVariant.GOOGLE_PLAY}
                               label="Google Play"
                               color={StyledButtonColor.STURDY_WHITE}
