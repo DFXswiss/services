@@ -88,6 +88,19 @@
     "Complete KYC": "Completare il KYC",
     "I am already verified with DFX": "Sono già verificato con DFX"
   },
+  "screens/2fa": {
+    "2FA": "2FA",
+    "Step {{step}}": "Passo {{step}}",
+    "Install Google Authenticator or another 2FA app on your smartphone": "Installare Google Authenticator o un'altra applicazione 2FA sul proprio smartphone.",
+    "Set up the 2FA authenticator": "Impostare l'autenticatore 2FA",
+    "Click + in Google Authenticator to add a new account. You can scan the QR code or enter the secret provided to create your account in Google Authenticator.": "Fare clic su + in Google Authenticator per aggiungere un nuovo account. È possibile scansionare il codice QR o inserire il segreto fornito per creare il proprio account in Google Authenticator.",
+    "Secret": "Segreto",
+    "Enter the 6-digit dynamic code from your authenticator app": "Immettere il codice dinamico a 6 cifre dall'app Authenticator.",
+    "Authenticator code": "Codice autenticatore",
+    "Invalid or expired code": "Codice non valido o scaduto",
+    "Delete 2FA method": "Eliminare il metodo 2FA",
+    "Are you sure you want to delete your 2FA method?": "Siete sicuri di voler eliminare il metodo 2FA?"
+  },
   "screens/error": {
     "Oh sorry something went wrong": "Oh, scusate, qualcosa è andato storto",
 

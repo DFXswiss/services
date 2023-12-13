@@ -103,7 +103,7 @@ export function TfaScreen(): JSX.Element {
   }
 
   return (
-    <Layout title={translate('screens/kyc', '2FA')}>
+    <Layout title={translate('screens/2fa', '2FA')}>
       {isLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
@@ -119,7 +119,7 @@ export function TfaScreen(): JSX.Element {
               {showDeleteMessage ? (
                 <StyledVerticalStack gap={6} full center>
                   <p className="text-dfxBlue-800">
-                    {translate('screens/buy', 'Are you sure you want to delete your 2FA method?')}
+                    {translate('screens/2fa', 'Are you sure you want to delete the 2FA method?')}
                   </p>
                   <StyledHorizontalStack>
                     <StyledButton
@@ -143,12 +143,16 @@ export function TfaScreen(): JSX.Element {
                         {/* step 1 */}
                         <StyledVerticalStack gap={4} full>
                           <h2 className="text-dfxGray-700">
-                            {translate('screens/kyc', 'Step {{step}}', { step: 1 })}
-                            {': '}
-                            {translate(
-                              'screens/kyc',
-                              'Install Google Authenticator or another 2FA app on your smartphone',
-                            )}
+                            <span className="text-dfxGray-800">
+                              {translate('screens/2fa', 'Step {{step}}', { step: 1 })}
+                              {': '}
+                            </span>
+                            <span className="font-medium">
+                              {translate(
+                                'screens/2fa',
+                                'Install Google Authenticator or another 2FA app on your smartphone',
+                              )}
+                            </span>
                           </h2>
                           <div className="flex flex-row flex-wrap gap-2">
                             <StyledButton
@@ -180,10 +184,20 @@ export function TfaScreen(): JSX.Element {
                         {/* step 2 */}
                         <StyledVerticalStack gap={4} full>
                           <h2 className="text-dfxGray-700">
-                            {translate('screens/kyc', 'Step {{step}}', { step: 2 })}
-                            {': '}
-                            {translate('screens/kyc', 'Set up the 2FA authenticator')}
+                            <span className="text-dfxGray-800">
+                              {translate('screens/2fa', 'Step {{step}}', { step: 2 })}
+                              {': '}
+                            </span>
+                            <span className="font-medium">
+                              {translate('screens/2fa', 'Set up the 2FA authenticator')}
+                            </span>
                           </h2>
+                          <p className="text-dfxGray-700">
+                            {translate(
+                              'screens/2fa',
+                              'Click + in Google Authenticator to add a new account. You can scan the QR code or enter the secret provided to create your account in Google Authenticator.',
+                            )}
+                          </p>
                           <QRCode
                             className="mx-auto h-auto w-full max-w-[15rem]"
                             value={setupInfo.uri}
@@ -191,7 +205,7 @@ export function TfaScreen(): JSX.Element {
                             fgColor={'#072440'}
                           />
                           <StyledVerticalStack full center>
-                            <p className="text-dfxGray-800 italic">{translate('screens/kyc', 'Secret')}:</p>
+                            <p className="text-dfxGray-800 italic">{translate('screens/2fa', 'Secret')}:</p>
                             <div className="flex flex-row items-center gap-2 px-4">
                               <p className="text-dfxGray-800 italic break-all">{setupInfo.secret}</p>
                               <CopyButton onCopy={() => copy(setupInfo.secret)} />
@@ -205,28 +219,22 @@ export function TfaScreen(): JSX.Element {
                     <StyledVerticalStack gap={4} full>
                       <h2 className="text-dfxGray-700">
                         {setupInfo && (
-                          <>
-                            {translate('screens/kyc', 'Step {{step}}', { step: 3 })}
+                          <span className="text-dfxGray-800">
+                            {translate('screens/2fa', 'Step {{step}}', { step: 3 })}
                             {': '}
-                          </>
+                          </span>
                         )}
-                        {translate('screens/kyc', 'Enter the 6-digit dynamic code from your authenticator app')}
+                        <span className="font-medium">
+                          {translate('screens/2fa', 'Enter the 6-digit dynamic code from your authenticator app')}
+                        </span>
                       </h2>
-                      {setupInfo && (
-                        <p className="text-dfxGray-700">
-                          {translate(
-                            'screens/kyc',
-                            'Click + in Google Authenticator to add a new account. You can scan the QR code or enter the secret provided to create your account in Google Authenticator.',
-                          )}
-                        </p>
-                      )}
                       <StyledInput
                         name="token"
                         type="number"
-                        placeholder={translate('screens/kyc', 'Authenticator code')}
+                        placeholder={translate('screens/2fa', 'Authenticator code')}
                         forceError={tokenInvalid}
                         forceErrorMessage={
-                          tokenInvalid ? translate('screens/kyc', 'Invalid or expired code') : undefined
+                          tokenInvalid ? translate('screens/2fa', 'Invalid or expired code') : undefined
                         }
                         full
                       />
@@ -242,7 +250,7 @@ export function TfaScreen(): JSX.Element {
                         />
                         {info.twoFactorEnabled && (
                           <StyledLink
-                            label={translate('screens/kyc', 'Delete 2FA method')}
+                            label={translate('screens/2fa', 'Delete 2FA method')}
                             onClick={() => setShowDeleteMessage(true)}
                             dark
                           />
