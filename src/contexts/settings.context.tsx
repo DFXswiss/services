@@ -50,7 +50,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     const customLanguage =
       user?.language.symbol ?? lang?.toUpperCase() ?? storedLanguage.get() ?? browserLanguage.toUpperCase();
     const newAppLanguage =
-      availableLanguages?.find((l) => l.symbol === customLanguage) ?? getDefaultLanguage(availableLanguages);
+      availableLanguages.find((l) => l.symbol === customLanguage) ?? getDefaultLanguage(availableLanguages);
 
     newAppLanguage && newAppLanguage.id !== language?.id && changeAppLanguage(newAppLanguage);
   }, [user, lang, languages]);
@@ -59,15 +59,17 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     if (user && mail && user.mail !== mail) changeUserMail(mail);
   }, [user, mail]);
 
-  function changeAppLanguage(language: Language) {
-    setLanguage(language);
-    i18n.changeLanguage(language.symbol.toLowerCase());
-    storedLanguage.set(language.symbol);
+  function changeAppLanguage(lang: Language) {
+    setLanguage(lang);
+    i18n.changeLanguage(lang.symbol.toLowerCase());
+    storedLanguage.set(lang.symbol);
   }
 
-  function changeLanguage(language: Language) {
-    changeAppLanguage(language);
-    changeUserLanguage(language);
+  function changeLanguage(lang: Language) {
+    if (!availableLanguages.some((l) => l.id === lang.id) || language?.id === lang.id) return;
+
+    changeAppLanguage(lang);
+    changeUserLanguage(lang);
   }
 
   function translate(key: string, defaultValue: string, interpolation?: Record<string, string | number>): string {
@@ -96,7 +98,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
       get,
       put,
     }),
-    [availableLanguages, language, changeLanguage, store],
+    [availableLanguages, language, store],
   );
 
   return <SettingsContext.Provider value={context}>{props.children}</SettingsContext.Provider>;

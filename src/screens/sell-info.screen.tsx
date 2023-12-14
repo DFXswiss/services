@@ -3,6 +3,7 @@ import {
   Asset,
   BankAccount,
   Fiat,
+  KycLevel,
   Sell,
   SellPaymentInfo,
   TransactionError,
@@ -41,12 +42,12 @@ import { SellCompletion } from '../components/payment/sell-completion';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
-import { useKycDataGuard, useSessionGuard } from '../hooks/guard.hook';
+import { useKycLevelGuard, useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 
 export function SellInfoScreen(): JSX.Element {
   useSessionGuard();
-  useKycDataGuard('/profile');
+  useKycLevelGuard(KycLevel.Sell, '/profile');
   const { translate } = useSettingsContext();
   const { availableBlockchains } = useSessionContext();
   const { bankAccounts, createAccount } = useBankAccountContext();

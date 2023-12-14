@@ -1,5 +1,8 @@
-import { PropsWithChildren, Ref, useRef, useState } from 'react';
+import { PropsWithChildren, Ref, useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Routes } from '../App';
 import { useAppParams } from '../hooks/app-params.hook';
+import { useNavigation } from '../hooks/navigation.hook';
 import { isNode } from '../util/utils';
 import { Navigation } from './navigation';
 
@@ -25,7 +28,14 @@ export function Layout({
 }: LayoutProps): JSX.Element {
   const navRef = useRef<HTMLDivElement>(null);
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
+  const { pathname } = useLocation();
+  const { clearParams } = useNavigation();
   const { headless } = useAppParams();
+
+  useEffect(() => {
+    const kycRoutes = Routes.filter((r) => r.isKycScreen);
+    if (!kycRoutes.some((r) => pathname === r.path)) clearParams(['code']);
+  }, [pathname]);
 
   function onClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
     if (isNavigationOpen && isNode(e.target) && navRef.current && !navRef.current.contains(e.target)) {

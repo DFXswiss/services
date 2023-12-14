@@ -36,13 +36,11 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
-import { useLocation } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PaymentInformationContent } from '../components/payment/payment-information';
-import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -83,13 +81,11 @@ export function BuyScreen(): JSX.Element {
   const { assets, assetIn, assetOut, amountIn, blockchain, flags, paymentMethod } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isComplete } = useKycHelper();
-  const { pathname } = useLocation();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
   const { blockchain: walletBlockchain } = useWalletContext();
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  const { setRedirectPath } = useAppHandlingContext();
   const { toString } = useBlockchain();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
@@ -254,9 +250,8 @@ export function BuyScreen(): JSX.Element {
   }
 
   function onAddressSwitch() {
-    setRedirectPath(pathname);
     logout();
-    navigate('/login');
+    navigate('/login', { setRedirect: true });
   }
 
   const rules = Utils.createRules({
