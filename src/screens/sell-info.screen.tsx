@@ -48,6 +48,7 @@ import { useKycHelper } from '../hooks/kyc-helper.hook';
 export function SellInfoScreen(): JSX.Element {
   useSessionGuard();
   useKycLevelGuard(KycLevel.Sell, '/profile');
+
   const { translate } = useSettingsContext();
   const { availableBlockchains } = useSessionContext();
   const { bankAccounts, createAccount } = useBankAccountContext();

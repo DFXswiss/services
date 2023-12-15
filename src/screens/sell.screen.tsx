@@ -67,7 +67,8 @@ interface FormData {
 
 export default function SellScreen(): JSX.Element {
   useSessionGuard();
-  useKycLevelGuard(KycLevel.Link, '/profile');
+  useKycLevelGuard(KycLevel.Sell, '/profile');
+
   const { copy } = useClipboard();
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();

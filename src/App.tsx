@@ -34,12 +34,14 @@ export const Routes = [
   {
     path: '/login',
     element: <HomeScreen />,
-    errorElement: <ErrorScreen />,
+  },
+  {
+    path: '/switch',
+    element: <HomeScreen />,
   },
   {
     path: '/my-dfx',
     element: <HomeScreen />,
-    errorElement: <ErrorScreen />,
   },
   {
     path: '/buy',

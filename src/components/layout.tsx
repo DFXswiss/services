@@ -45,7 +45,7 @@ export function Layout({
 
   return (
     <div id="app-root" className="h-full flex flex-col" ref={rootRef} onClick={onClick}>
-      {!headless && (
+      {headless !== 'true' && (
         <Navigation
           ref={navRef}
           title={title}

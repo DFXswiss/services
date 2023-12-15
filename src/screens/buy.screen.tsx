@@ -251,7 +251,7 @@ export function BuyScreen(): JSX.Element {
 
   function onAddressSwitch() {
     logout();
-    navigate('/login', { setRedirect: true });
+    navigate('/switch', { setRedirect: true });
   }
 
   const rules = Utils.createRules({
