@@ -77,7 +77,6 @@ function BackButton({ title, backButton, onBack }: BackButtonProps): JSX.Element
 
   return (
     <button
-      type="button"
       className="text-dfxBlue-800 font-bold text-lg flex flex-row flex-grow flex-shrink-0 items-center justify-center"
       onClick={onBack ?? onClick}
       disabled={!backButton}

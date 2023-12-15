@@ -16,15 +16,16 @@ import { ErrorScreen } from './screens/error.screen';
 import { HomeScreen } from './screens/home.screen';
 import { KycRedirectScreen } from './screens/kyc-redirect.screen';
 import { KycScreen } from './screens/kyc.screen';
-import { ProfileScreen } from './screens/profile.screen';
+import { LinkScreen } from './screens/link.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
+import { TfaScreen } from './screens/tfa.screen';
 import { setupLanguages } from './translations';
 
 const SellScreen = lazy(() => import('./screens/sell.screen'));
 
 setupLanguages();
 
-const routes = [
+export const Routes = [
   {
     path: '/',
     element: <HomeScreen />,
@@ -33,12 +34,14 @@ const routes = [
   {
     path: '/login',
     element: <HomeScreen />,
-    errorElement: <ErrorScreen />,
+  },
+  {
+    path: '/switch',
+    element: <HomeScreen />,
   },
   {
     path: '/my-dfx',
     element: <HomeScreen />,
-    errorElement: <ErrorScreen />,
   },
   {
     path: '/buy',
@@ -65,16 +68,29 @@ const routes = [
     element: <BankAccountsScreen />,
   },
   {
-    path: '/profile',
-    element: <ProfileScreen />,
-  },
-  {
     path: '/kyc',
     element: <KycScreen />,
+    isKycScreen: true,
   },
   {
     path: '/kyc/redirect',
     element: <KycRedirectScreen />,
+    isKycScreen: true,
+  },
+  {
+    path: '/profile',
+    element: <KycScreen />,
+    isKycScreen: true,
+  },
+  {
+    path: '/link',
+    element: <LinkScreen />,
+    isKycScreen: true,
+  },
+  {
+    path: '/2fa',
+    element: <TfaScreen />,
+    isKycScreen: true,
   },
 ];
 
@@ -94,7 +110,7 @@ interface AppProps {
 }
 
 function App({ routerFactory, params }: AppProps) {
-  const router = routerFactory(routes);
+  const router = routerFactory(Routes);
 
   const home = params?.service && `/${params.service}`;
   if (home) router.navigate(home);

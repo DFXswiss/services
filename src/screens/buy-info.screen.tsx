@@ -179,15 +179,15 @@ export function BuyInfoScreen(): JSX.Element {
                 {`${paymentInfo.street} ${paymentInfo.number}`}
                 <CopyButton onCopy={() => copy(`${paymentInfo.street} ${paymentInfo.number}`)} />
               </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/profile', 'ZIP code')}>
+              <StyledDataTableRow label={translate('screens/kyc', 'ZIP code')}>
                 {paymentInfo.zip}
                 <CopyButton onCopy={() => copy(`${paymentInfo.zip}`)} />
               </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/profile', 'City')}>
+              <StyledDataTableRow label={translate('screens/kyc', 'City')}>
                 {paymentInfo.city}
                 <CopyButton onCopy={() => copy(`${paymentInfo.city}`)} />
               </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/profile', 'Country')}>
+              <StyledDataTableRow label={translate('screens/kyc', 'Country')}>
                 {paymentInfo.country}
                 <CopyButton onCopy={() => copy(`${paymentInfo.country}`)} />
               </StyledDataTableRow>

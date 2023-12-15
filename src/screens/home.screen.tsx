@@ -15,8 +15,9 @@ import { useResizeObserver } from '../hooks/resize-observer.hook';
 import { Stack } from '../util/stack';
 
 enum SpecialMode {
-  LOGIN = 'Login',
-  MY_DFX = 'MyDfx',
+  LOGIN = 'login',
+  SWITCH = 'wallets',
+  MY_DFX = 'login',
 }
 
 function getMode(pathName: string): SpecialMode | undefined {
@@ -25,10 +26,14 @@ function getMode(pathName: string): SpecialMode | undefined {
       return SpecialMode.MY_DFX;
     case '/login':
       return SpecialMode.LOGIN;
+    case '/switch':
+      return SpecialMode.SWITCH;
     default:
       return undefined;
   }
 }
+
+type Page = { page: string; allowedTiles: string[] | undefined };
 
 export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -45,7 +50,7 @@ export function HomeScreen(): JSX.Element {
 
   const [connectTo, setConnectTo] = useState<Wallet>();
   const [loginSuccessful, setLoginSuccessful] = useState(false);
-  const [pages, setPages] = useState(new Stack<{ page: string; allowedTiles: string[] | undefined }>());
+  const [pages, setPages] = useState(new Stack<Page>());
 
   const currentPageId = pages.current?.page;
   const allowedTiles = pages.current?.allowedTiles;
@@ -61,8 +66,9 @@ export function HomeScreen(): JSX.Element {
   }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful]);
 
   useEffect(() => {
-    const mode = specialMode ? 'wallets' : appParams.mode;
-    mode && setPages(new Stack([{ page: mode, allowedTiles: undefined }]));
+    const mode = specialMode ?? appParams.mode;
+    const stack = mode ? new Stack([{ page: mode, allowedTiles: undefined }]) : new Stack<Page>();
+    setPages(stack);
   }, [appParams.mode, specialMode]);
 
   // tile handling

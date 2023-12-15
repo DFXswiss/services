@@ -923,26 +923,28 @@ export const FeatureTree: Page[] = [
     ],
   },
 
-// --- LOGIN  --- //
-{
-  id: 'login',
-  dfxStyle: true,
-  tiles: [
-    {
-      id: 'login-with-crypto-wallet',
-      img: 'cryptowallet',
-      next: {
-        page: 'wallets',
+  // --- LOGIN  --- //
+  {
+    id: 'login',
+    header: 'Login',
+    dfxStyle: true,
+    description: 'Login to DFX Services',
+    tiles: [
+      {
+        id: 'login-with-crypto-wallet',
+        img: 'cryptowallet',
+        next: {
+          page: 'wallets',
+        },
       },
-    },
 
-    {
-      id: 'login-with-mail',
-      img: 'mail',
+      {
+        id: 'login-with-mail',
+        img: 'mail',
         disabled: true,
-    },
-  ],
-},
+      },
+    ],
+  },
 
   // --- WALLETS --- //
   {

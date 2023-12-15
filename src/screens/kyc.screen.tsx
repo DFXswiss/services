@@ -7,6 +7,7 @@ import {
   KycFinancialQuestion,
   KycFinancialResponse,
   KycInfo,
+  KycLevel,
   KycPersonalData,
   KycSession,
   KycStep,
@@ -26,6 +27,7 @@ import {
   AlignContent,
   DfxIcon,
   Form,
+  IconColor,
   IconSize,
   IconVariant,
   SpinnerSize,
@@ -55,15 +57,22 @@ import { useGeoLocation } from '../hooks/geo-location.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
+import { delay } from '../util/utils';
 import { IframeMessageType } from './kyc-redirect.screen';
+
+enum Mode {
+  KYC = 'KYC',
+  PROFILE = 'Profile',
+}
 
 export function KycScreen(): JSX.Element {
   const { clearParams } = useNavigation();
-  const { translate } = useSettingsContext();
-  const { user } = useUserContext();
+  const { translate, changeLanguage } = useSettingsContext();
+  const { user, reloadUser } = useUserContext();
   const { getKycInfo, continueKyc, startStep } = useKyc();
   const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
-  const { search } = useLocation();
+  const { pathname, search } = useLocation();
+  const { navigate, goBack } = useNavigation();
 
   const [info, setInfo] = useState<KycInfo | KycSession>();
   const [isLoading, setIsLoading] = useState(true);
@@ -71,26 +80,34 @@ export function KycScreen(): JSX.Element {
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
 
+  const mode = pathname.includes('/profile') ? Mode.PROFILE : Mode.KYC;
   const rootRef = useRef<HTMLDivElement>(null);
   const params = new URLSearchParams(search);
   const [stepName, stepType] = params.get('step')?.split('/') ?? [];
-  const kycCode = params.get('code') ?? user?.kycHash;
+  const paramKycCode = params.get('code');
+  const kycCode = paramKycCode ?? user?.kycHash;
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
   const kycCompleted = info?.kycSteps.every((s) => isStepDone(s));
 
   useSessionGuard('/login', !kycCode);
 
   useEffect(() => {
+    if (info) changeLanguage(info.language);
+  }, [info, changeLanguage]);
+
+  useEffect(() => {
     if (!kycCode) return;
 
     const request = stepName
-      ? startStep(kycCode, stepName as KycStepName, stepType as KycStepType).then(setData)
-      : getKycInfo(kycCode).then(setInfo);
+      ? callKyc(() => startStep(kycCode, stepName as KycStepName, stepType as KycStepType))
+          .then(handleReload)
+          .then(() => clearParams(['step']))
+      : callKyc(() => getKycInfo(kycCode)).then(handleInitial);
 
     request
+      .then(() => setError(undefined))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsLoading(false))
-      .finally(() => clearParams(['step']));
+      .finally(() => setIsLoading(false));
   }, [kycCode, stepName, stepType]);
 
   function onLoad(next: boolean) {
@@ -98,15 +115,50 @@ export function KycScreen(): JSX.Element {
 
     setIsSubmitting(true);
     setError(undefined);
-    (next ? continueKyc(kycCode) : getKycInfo(kycCode))
-      .then(setData)
+    (next ? callKyc(() => continueKyc(kycCode)) : callKyc(() => getKycInfo(kycCode)))
+      .then(handleReload)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsSubmitting(false));
   }
 
-  function setData(info: KycSession) {
-    setInfo(info);
-    setStepInProgress(info.currentStep);
+  async function handleInitial(info: KycInfo): Promise<void> {
+    if (mode === Mode.PROFILE) {
+      if (info.kycLevel >= KycLevel.Sell || !kycCode) {
+        goBack();
+      } else {
+        return callKyc(() => continueKyc(kycCode)).then(handleReload);
+      }
+    } else {
+      setInfo(info);
+    }
+  }
+
+  async function handleReload(info: KycSession): Promise<void> {
+    if (mode === Mode.PROFILE && info.kycLevel >= KycLevel.Sell) {
+      return reloadUser()
+        .then(() => delay(0.01))
+        .then(() => goBack());
+    } else {
+      setInfo(info);
+      setStepInProgress(info.currentStep);
+    }
+  }
+
+  function callKyc<T>(call: () => Promise<T>): Promise<T> {
+    return call().catch((e: ApiError) => {
+      if (e.statusCode === 409 && 'switchToCode' in e) {
+        setIsLoading(true);
+        if (paramKycCode) {
+          navigate({ search: `?code=${e.switchToCode}` });
+        } else {
+          reloadUser();
+        }
+      } else if (e.statusCode === 401 && e.message?.includes('2FA')) {
+        navigate('/2fa', { setRedirect: true });
+      }
+
+      throw e;
+    });
   }
 
   function stepIcon(step: KycStep): { icon: IconVariant; size: IconSize } | undefined {
@@ -140,6 +192,7 @@ export function KycScreen(): JSX.Element {
       ) : stepInProgress && kycCode && !error ? (
         <KycEdit
           rootRef={rootRef}
+          mode={mode}
           code={kycCode}
           isLoading={isSubmitting}
           step={stepInProgress}
@@ -204,6 +257,7 @@ export function KycScreen(): JSX.Element {
 
 interface EditProps {
   rootRef: RefObject<HTMLDivElement>;
+  mode: Mode;
   code: string;
   isLoading: boolean;
   step: KycStepSession;
@@ -230,7 +284,7 @@ function KycEdit(props: EditProps): JSX.Element {
   }
 }
 
-function ContactData({ code, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
+function ContactData({ code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setContactData } = useKyc();
 
@@ -259,47 +313,72 @@ function ContactData({ code, isLoading, step, onDone, onBack }: EditProps): JSX.
     mail: [Validations.Required, Validations.Mail],
   });
 
-  return showLinkHint ? (
+  return (
     <StyledVerticalStack gap={6} full>
-      <p className="text-dfxGray-700">
-        {translate(
-          'screens/kyc',
-          'It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.',
-        )}
-      </p>
-      <StyledButton width={StyledButtonWidth.MIN} label={translate('general/actions', 'OK')} onClick={onBack} />
+      {showLinkHint ? (
+        <StyledVerticalStack gap={6} full>
+          <p className="text-dfxGray-700">
+            {translate(
+              'screens/kyc',
+              'It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.',
+            )}
+          </p>
+          <StyledButton
+            width={StyledButtonWidth.MIN}
+            label={translate('general/actions', 'OK')}
+            onClick={onBack}
+            isLoading={isUpdating || isLoading}
+          />
+        </StyledVerticalStack>
+      ) : (
+        <Form
+          control={control}
+          rules={rules}
+          errors={errors}
+          onSubmit={handleSubmit(onSubmit)}
+          translate={translateError}
+        >
+          <StyledVerticalStack gap={6} full center>
+            {mode === Mode.PROFILE && (
+              <>
+                <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
+                <p className="text-base font-bold text-dfxBlue-800">
+                  {translate('screens/kyc', 'Please fill in personal information to continue')}
+                </p>
+              </>
+            )}
+
+            <StyledInput
+              name="mail"
+              autocomplete="email"
+              type="email"
+              label={translate('screens/kyc', 'Email address')}
+              placeholder={translate('screens/kyc', 'example@mail.com')}
+              full
+            />
+
+            <StyledButton
+              type="submit"
+              label={translate('general/actions', 'Next')}
+              onClick={handleSubmit(onSubmit)}
+              width={StyledButtonWidth.FULL}
+              disabled={!isValid}
+              isLoading={isUpdating || isLoading}
+            />
+          </StyledVerticalStack>
+        </Form>
+      )}
+
+      {error && (
+        <div>
+          <ErrorHint message={error} />
+        </div>
+      )}
     </StyledVerticalStack>
-  ) : (
-    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
-      <StyledVerticalStack gap={6} full>
-        <StyledInput
-          name="mail"
-          autocomplete="email"
-          type="email"
-          label={translate('screens/profile', 'Email address')}
-          placeholder={translate('screens/profile', 'example@mail.com')}
-        />
-
-        {error && (
-          <div>
-            <ErrorHint message={error} />
-          </div>
-        )}
-
-        <StyledButton
-          type="submit"
-          label={translate('general/actions', 'Next')}
-          onClick={handleSubmit(onSubmit)}
-          width={StyledButtonWidth.FULL}
-          disabled={!isValid}
-          isLoading={isUpdating || isLoading}
-        />
-      </StyledVerticalStack>
-    </Form>
   );
 }
 
-function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
+function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { getCountries, setPersonalData } = useKyc();
   const { countryCode } = useGeoLocation();
@@ -338,7 +417,7 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
     setIsUpdating(true);
     setError(undefined);
     setPersonalData(code, step.session.url, data)
-      .then(() => onDone())
+      .then(() => (mode === Mode.KYC ? onDone() : onBack()))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
   }
@@ -367,7 +446,7 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
       <StyledVerticalStack gap={6} full center>
         <StyledVerticalStack gap={2} full>
           <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-            {translate('screens/profile', 'Account Type')}
+            {translate('screens/kyc', 'Account Type')}
           </p>
           <StyledDropdown
             rootRef={rootRef}
@@ -375,7 +454,7 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
             label=""
             placeholder={translate('general/actions', 'Select...')}
             items={Object.values(AccountType)}
-            labelFunc={(item) => translate('screens/profile', item)}
+            labelFunc={(item) => translate('screens/kyc', item)}
           />
         </StyledVerticalStack>
         {selectedAccountType &&
@@ -385,22 +464,22 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
             <>
               <StyledVerticalStack gap={2} full>
                 <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-                  {translate('screens/profile', 'Personal Information')}
+                  {translate('screens/kyc', 'Personal Information')}
                 </p>
                 <StyledHorizontalStack gap={2}>
                   <StyledInput
                     name="firstName"
                     autocomplete="firstname"
-                    label={translate('screens/profile', 'First name')}
-                    placeholder={translate('screens/profile', 'John')}
+                    label={translate('screens/kyc', 'First name')}
+                    placeholder={translate('screens/kyc', 'John')}
                     full
                     smallLabel
                   />
                   <StyledInput
                     name="lastName"
                     autocomplete="lastname"
-                    label={translate('screens/profile', 'Last name')}
-                    placeholder={translate('screens/profile', 'Doe')}
+                    label={translate('screens/kyc', 'Last name')}
+                    placeholder={translate('screens/kyc', 'Doe')}
                     full
                     smallLabel
                   />
@@ -409,15 +488,15 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
                   <StyledInput
                     name="address.street"
                     autocomplete="street"
-                    label={translate('screens/profile', 'Street')}
-                    placeholder={translate('screens/profile', 'Street')}
+                    label={translate('screens/kyc', 'Street')}
+                    placeholder={translate('screens/kyc', 'Street')}
                     full
                     smallLabel
                   />
                   <StyledInput
                     name="address.houseNumber"
                     autocomplete="house-number"
-                    label={translate('screens/profile', 'House nr.')}
+                    label={translate('screens/kyc', 'House nr.')}
                     placeholder="xx"
                     small
                     smallLabel
@@ -428,7 +507,7 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
                     name="address.zip"
                     autocomplete="zip"
                     type="number"
-                    label={translate('screens/profile', 'ZIP code')}
+                    label={translate('screens/kyc', 'ZIP code')}
                     placeholder="12345"
                     small
                     smallLabel
@@ -436,7 +515,7 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
                   <StyledInput
                     name="address.city"
                     autocomplete="city"
-                    label={translate('screens/profile', 'City')}
+                    label={translate('screens/kyc', 'City')}
                     placeholder="Berlin"
                     full
                     smallLabel
@@ -446,7 +525,7 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
                   rootRef={rootRef}
                   name="address.country"
                   autocomplete="country"
-                  label={translate('screens/profile', 'Country')}
+                  label={translate('screens/kyc', 'Country')}
                   placeholder={translate('general/actions', 'Select...')}
                   items={countries}
                   labelFunc={(item) => item.name}
@@ -458,7 +537,7 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
                   name="phone"
                   autocomplete="phone"
                   type="tel"
-                  label={translate('screens/profile', 'Phone number')}
+                  label={translate('screens/kyc', 'Phone number')}
                   placeholder="+49 12345678"
                   smallLabel
                 />
@@ -467,13 +546,13 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
               {selectedAccountType !== AccountType.PERSONAL && (
                 <StyledVerticalStack gap={2} full>
                   <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-                    {translate('screens/profile', 'Organization Information')}
+                    {translate('screens/kyc', 'Organization Information')}
                   </p>
                   <StyledInput
                     name="organizationName"
                     autocomplete="organization-name"
-                    label={translate('screens/profile', 'Organization name')}
-                    placeholder={translate('screens/profile', 'Example inc.')}
+                    label={translate('screens/kyc', 'Organization name')}
+                    placeholder={translate('screens/kyc', 'Example inc.')}
                     full
                     smallLabel
                   />
@@ -481,15 +560,15 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
                     <StyledInput
                       name="organizationAddress.street"
                       autocomplete="street"
-                      label={translate('screens/profile', 'Street')}
-                      placeholder={translate('screens/profile', 'Street')}
+                      label={translate('screens/kyc', 'Street')}
+                      placeholder={translate('screens/kyc', 'Street')}
                       full
                       smallLabel
                     />
                     <StyledInput
                       name="organizationAddress.houseNumber"
                       autocomplete="houseNumber"
-                      label={translate('screens/profile', 'House nr.')}
+                      label={translate('screens/kyc', 'House nr.')}
                       placeholder="xx"
                       small
                       smallLabel
@@ -500,7 +579,7 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
                       name="organizationAddress.zip"
                       autocomplete="zip"
                       type="number"
-                      label={translate('screens/profile', 'ZIP code')}
+                      label={translate('screens/kyc', 'ZIP code')}
                       placeholder="12345"
                       small
                       smallLabel
@@ -508,7 +587,7 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
                     <StyledInput
                       name="organizationAddress.city"
                       autocomplete="city"
-                      label={translate('screens/profile', 'City')}
+                      label={translate('screens/kyc', 'City')}
                       placeholder="Berlin"
                       full
                       smallLabel
@@ -518,7 +597,7 @@ function PersonalData({ rootRef, code, isLoading, step, onDone }: EditProps): JS
                     rootRef={rootRef}
                     name="organizationAddress.country"
                     autocomplete="country"
-                    label={translate('screens/profile', 'Country')}
+                    label={translate('screens/kyc', 'Country')}
                     placeholder={translate('general/actions', 'Select...')}
                     items={countries}
                     labelFunc={(item) => item.name}

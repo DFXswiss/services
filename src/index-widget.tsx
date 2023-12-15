@@ -4,6 +4,7 @@ import MainWidget from './Main.widget';
 import './index.css';
 
 const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'function' | 'json' } = {
+  headless: 'string',
   flags: 'string',
   lang: 'string',
   address: 'string',

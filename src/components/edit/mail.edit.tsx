@@ -67,8 +67,8 @@ export function MailEdit({
           <InfoTextElement text={infoText} iconColor={infoTextIconColor} />
         )}
         <StyledInput
-          label={translate('screens/profile', 'Contact information')}
-          placeholder={translate('screens/profile', 'Email address')}
+          label={translate('screens/kyc', 'Contact information')}
+          placeholder={translate('screens/kyc', 'Email address')}
           name="email"
           hideLabel={hideLabels}
         />
