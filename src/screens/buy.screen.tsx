@@ -127,8 +127,9 @@ export function BuyScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
-  const availableCurrencies =
-    selectedPaymentMethod === BuyPaymentMethod.CARD ? currencies?.filter((c) => c.name === 'EUR') : currencies;
+  const availableCurrencies = currencies?.filter((c) =>
+    selectedPaymentMethod === BuyPaymentMethod.CARD ? c.cardSellable : c.sellable,
+  );
 
   useEffect(() => {
     const activeBlockchain = walletBlockchain ?? blockchain;
