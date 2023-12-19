@@ -95,6 +95,7 @@ export type CloseServicesParams = CancelServicesParams | BuyServicesParams | Sel
 interface AppHandlingContextInterface {
   isInitialized: boolean;
   isEmbedded: boolean;
+  isDfxHosted: boolean;
   params: AppParams;
   setParams: (params: Partial<AppParams>) => void;
   closeServices: (params: CloseServicesParams, navigate: boolean) => void;
@@ -282,6 +283,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const context = useMemo(
     () => ({
       isEmbedded: props.isWidget || isUsedByIframe,
+      isDfxHosted: window.location.hostname?.split('.').slice(-2).join('.') === 'dfx.swiss',
       closeServices,
       isInitialized,
       params,
