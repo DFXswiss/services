@@ -83,7 +83,8 @@ export function KycScreen(): JSX.Element {
   const mode = pathname.includes('/profile') ? Mode.PROFILE : Mode.KYC;
   const rootRef = useRef<HTMLDivElement>(null);
   const params = new URLSearchParams(search);
-  const [stepName, stepType] = params.get('step')?.split('/') ?? [];
+  const [step, stepSequence] = params.get('step')?.split(':') ?? [];
+  const [stepName, stepType] = step?.split('/') ?? [];
   const paramKycCode = params.get('code');
   const kycCode = paramKycCode ?? user?.kycHash;
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
@@ -99,7 +100,14 @@ export function KycScreen(): JSX.Element {
     if (!kycCode) return;
 
     const request = stepName
-      ? callKyc(() => startStep(kycCode, stepName as KycStepName, stepType as KycStepType))
+      ? callKyc(() =>
+          startStep(
+            kycCode,
+            stepName as KycStepName,
+            stepType as KycStepType,
+            stepSequence ? +stepSequence : undefined,
+          ),
+        )
           .then(handleReload)
           .then(() => clearParams(['step']))
       : callKyc(() => getKycInfo(kycCode)).then(handleInitial);
@@ -190,15 +198,28 @@ export function KycScreen(): JSX.Element {
       {isLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : stepInProgress && kycCode && !error ? (
-        <KycEdit
-          rootRef={rootRef}
-          mode={mode}
-          code={kycCode}
-          isLoading={isSubmitting}
-          step={stepInProgress}
-          onDone={() => onLoad(true)}
-          onBack={() => onLoad(false)}
-        />
+        [KycStepStatus.NOT_STARTED, KycStepStatus.IN_PROGRESS].includes(stepInProgress.status) ? (
+          <KycEdit
+            rootRef={rootRef}
+            mode={mode}
+            code={kycCode}
+            isLoading={isSubmitting}
+            step={stepInProgress}
+            onDone={() => onLoad(true)}
+            onBack={() => onLoad(false)}
+          />
+        ) : (
+          <StyledVerticalStack gap={6} full center>
+            <p className="text-dfxGray-700">{translate('screens/kyc', 'This step has already been finished.')}</p>
+
+            <StyledButton
+              width={StyledButtonWidth.MIN}
+              label={translate('general/actions', 'Continue')}
+              isLoading={isSubmitting}
+              onClick={() => onLoad(false)}
+            />
+          </StyledVerticalStack>
+        )
       ) : (
         <StyledVerticalStack gap={6} full center>
           {info && (
