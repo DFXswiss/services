@@ -159,7 +159,7 @@ export function ConnectBase({
     <>
       {contentOverride}
       <span className={'w-full flex flex-col items-center' + (contentOverride ? ' hidden' : '')}>
-        {renderContent({ rootRef, back: onCancel, connect, isConnecting, error: connectError })}
+        {renderContent({ rootRef, back: onCancel, connect, isConnecting, error: connectError, onSwitch })}
       </span>
     </>
   );

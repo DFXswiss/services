@@ -33,6 +33,7 @@ export interface ConnectContentProps {
   connect: () => Promise<void>;
   isConnecting: boolean;
   error?: string;
+  onSwitch: (wallet: WalletType) => void;
 }
 
 export function ConnectError({ error }: { error: string }): JSX.Element {
