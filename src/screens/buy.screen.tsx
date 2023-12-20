@@ -151,7 +151,10 @@ export function BuyScreen(): JSX.Element {
   }, [assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
-    const currency = getCurrency(availableCurrencies, assetIn) ?? getDefaultCurrency(availableCurrencies);
+    const currency =
+      getCurrency(availableCurrencies, selectedCurrency?.name) ??
+      getCurrency(availableCurrencies, assetIn) ??
+      getDefaultCurrency(availableCurrencies);
     if (currency) setVal('currency', currency);
   }, [assetIn, getCurrency, currencies, selectedPaymentMethod]);
 
