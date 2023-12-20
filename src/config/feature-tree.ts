@@ -941,7 +941,7 @@ export const FeatureTree: Page[] = [
       {
         id: 'login-with-mail',
         img: 'mail',
-        disabled: true,
+        wallet: { type: WalletType.MAIL },
       },
     ],
   },

@@ -10,6 +10,7 @@ const ConnectLedger = lazy(() => import('./wallet/connect-ledger'));
 const ConnectMetaMask = lazy(() => import('./wallet/connect-metamask'));
 const ConnectTrezor = lazy(() => import('./wallet/connect-trezor'));
 const ConnectWalletConnect = lazy(() => import('./wallet/connect-wallet-connect'));
+const ConnectMail = lazy(() => import('./wallet/connect-mail'));
 
 export function ConnectWrapper(props: ConnectProps): JSX.Element {
   switch (props.wallet) {
@@ -41,5 +42,8 @@ export function ConnectWrapper(props: ConnectProps): JSX.Element {
 
     case WalletType.WALLET_CONNECT:
       return <ConnectWalletConnect {...props} />;
+
+    case WalletType.MAIL:
+      return <ConnectMail {...props} />;
   }
 }

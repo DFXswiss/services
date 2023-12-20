@@ -27,6 +27,7 @@ export function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: 
     case WalletType.CLI_ETH:
     case WalletType.DFX_TARO:
     case WalletType.WALLET_CONNECT:
+    case WalletType.MAIL:
       return <></>;
   }
 }

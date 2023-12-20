@@ -23,33 +23,23 @@ export function useSellHelper(): SellHelperInterface {
   const { canClose } = useAppHandlingContext();
 
   async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {
+    if (!activeWallet) return getParamBalances(assets);
+
     switch (activeWallet) {
       case WalletType.META_MASK:
         return (await Promise.all(assets.map((asset: Asset) => readBalance(asset, session?.address)))).filter(
           (b) => b.amount > 0,
         );
 
-      case WalletType.ALBY:
-      case WalletType.LEDGER_BTC:
-      case WalletType.LEDGER_ETH:
-      case WalletType.BITBOX_BTC:
-      case WalletType.BITBOX_ETH:
-      case WalletType.TREZOR_BTC:
-      case WalletType.TREZOR_ETH:
-      case WalletType.CLI_BTC:
-      case WalletType.CLI_XMR:
-      case WalletType.CLI_ETH:
-      case WalletType.WALLET_CONNECT:
-      case WalletType.DFX_TARO:
+      default:
         // no balance available
         return undefined;
-
-      default:
-        return getParamBalances(assets);
     }
   }
 
   async function sendTransaction(sell: Sell): Promise<string> {
+    if (!activeWallet) throw new Error('No wallet connected');
+
     switch (activeWallet) {
       case WalletType.META_MASK:
         if (!session?.address) throw new Error('Address is not defined');
@@ -61,45 +51,21 @@ export function useSellHelper(): SellHelperInterface {
 
         return sendPayment(sell.paymentRequest).then((p) => p.preimage);
 
-      case WalletType.LEDGER_BTC:
-      case WalletType.LEDGER_ETH:
-      case WalletType.BITBOX_BTC:
-      case WalletType.BITBOX_ETH:
-      case WalletType.TREZOR_BTC:
-      case WalletType.TREZOR_ETH:
-      case WalletType.CLI_BTC:
-      case WalletType.CLI_XMR:
-      case WalletType.CLI_ETH:
-      case WalletType.WALLET_CONNECT:
-      case WalletType.DFX_TARO:
-        throw new Error('Not supported yet');
-
       default:
-        throw new Error('No wallet connected');
+        throw new Error('Not supported yet');
     }
   }
 
   function canSendTransaction(): boolean {
+    if (!activeWallet) return canClose;
+
     switch (activeWallet) {
       case WalletType.META_MASK:
       case WalletType.ALBY:
         return true;
 
-      case WalletType.LEDGER_BTC:
-      case WalletType.LEDGER_ETH:
-      case WalletType.BITBOX_BTC:
-      case WalletType.BITBOX_ETH:
-      case WalletType.TREZOR_BTC:
-      case WalletType.TREZOR_ETH:
-      case WalletType.CLI_BTC:
-      case WalletType.CLI_ETH:
-      case WalletType.CLI_XMR:
-      case WalletType.WALLET_CONNECT:
-      case WalletType.DFX_TARO:
-        return false;
-
       default:
-        return canClose;
+        return false;
     }
   }
   return useMemo(
