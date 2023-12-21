@@ -4,6 +4,7 @@ import {
   Form,
   StyledButton,
   StyledButtonWidth,
+  StyledDropdown,
   StyledHorizontalStack,
   StyledInput,
   StyledLink,
@@ -13,17 +14,19 @@ import { useEffect, useState } from 'react';
 import { UseFormReturn, useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { WalletType, useWalletContext } from '../../../contexts/wallet.context';
+import { useBlockchain } from '../../../hooks/blockchain.hook';
 import { useClipboard } from '../../../hooks/clipboard.hook';
 import { ConnectBase } from '../connect-base';
 import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../connect-shared';
 
-const SupportedBlockchains = {
+const SupportedBlockchains: { [w in WalletType]?: Blockchain[] } = {
   [WalletType.CLI_BTC]: [Blockchain.BITCOIN],
   [WalletType.CLI_XMR]: [Blockchain.MONERO],
   [WalletType.CLI_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM, Blockchain.BINANCE_SMART_CHAIN],
 };
 
 interface FormData {
+  blockchain: Blockchain;
   address: string;
   signature: string;
 }
@@ -32,7 +35,10 @@ export default function ConnectCli(props: ConnectProps): JSX.Element {
   const { session } = useAuthContext();
   const { activeWallet } = useWalletContext();
 
-  const form = useForm<FormData>({ mode: 'onTouched' });
+  const form = useForm<FormData>({
+    mode: 'onTouched',
+    defaultValues: { blockchain: props.blockchain ?? SupportedBlockchains[props.wallet]?.[0] },
+  });
 
   async function getAccount(_: Blockchain, isReconnect: boolean): Promise<Account> {
     if (isReconnect && session?.address) return { address: session.address };
@@ -62,10 +68,11 @@ interface ContentProps extends ConnectContentProps {
   form: UseFormReturn<FormData, any>;
 }
 
-function Content({ wallet, isConnecting, connect, error, form }: ContentProps): JSX.Element {
+function Content({ wallet, isConnecting, connect, error, form, onSwitch }: ContentProps): JSX.Element {
   const { translate, translateError, language } = useSettingsContext();
   const { copy } = useClipboard();
   const { getSignMessage } = useAuth();
+  const { toString } = useBlockchain();
 
   const addressRegex: { [wallet in WalletType]?: RegExp } = {
     [WalletType.CLI_BTC]: /^([13]|bc1)[a-zA-HJ-NP-Z0-9]{25,62}$/,
@@ -81,8 +88,10 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
   const {
     control,
     handleSubmit,
+    trigger,
     formState: { isValid, errors },
   } = form;
+  const blockchain = useWatch({ control, name: 'blockchain' });
   const address = useWatch({ control, name: 'address' });
   const addressValid = validateAddress(address) === true;
 
@@ -90,15 +99,25 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    const newWallet = Object.entries(SupportedBlockchains).find(([_, chains]) => chains.includes(blockchain))?.[0] as
+      | WalletType
+      | undefined;
+    newWallet && onSwitch(newWallet);
+  }, [blockchain]);
+
+  useEffect(() => {
+    address && trigger();
+
     if (addressValid) {
       setIsLoading(true);
       getSignMessage(address)
         .then(setSignMessage)
         .finally(() => setIsLoading(false));
     }
-  }, [address]);
+  }, [address, wallet]);
 
   const rules = Utils.createRules({
+    blockchain: [Validations.Required],
     address: [Validations.Required, Validations.Custom(validateAddress)],
     signature: [Validations.Required],
   });
@@ -110,6 +129,16 @@ function Content({ wallet, isConnecting, connect, error, form }: ContentProps): 
   return (
     <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(submit)} translate={translateError}>
       <StyledVerticalStack gap={6} full>
+        <StyledDropdown
+          name="blockchain"
+          label={translate('screens/home', 'Blockchain')}
+          disabled={isConnecting}
+          full
+          smallLabel
+          items={Object.values(SupportedBlockchains).flat()}
+          labelFunc={toString}
+        />
+
         <StyledInput
           name="address"
           autocomplete="address"

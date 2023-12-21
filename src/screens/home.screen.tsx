@@ -15,10 +15,16 @@ import { useResizeObserver } from '../hooks/resize-observer.hook';
 import { Stack } from '../util/stack';
 
 enum SpecialMode {
-  LOGIN = 'login',
-  SWITCH = 'wallets',
-  MY_DFX = 'login',
+  LOGIN = 'Login',
+  SWITCH = 'Switch',
+  MY_DFX = 'MyDfx',
 }
+
+const SpecialModes: { [m in SpecialMode]: string } = {
+  [SpecialMode.LOGIN]: 'login',
+  [SpecialMode.SWITCH]: 'wallets',
+  [SpecialMode.MY_DFX]: 'login',
+};
 
 function getMode(pathName: string): SpecialMode | undefined {
   switch (pathName) {
@@ -66,7 +72,7 @@ export function HomeScreen(): JSX.Element {
   }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful]);
 
   useEffect(() => {
-    const mode = specialMode ?? appParams.mode;
+    const mode = specialMode ? SpecialModes[specialMode] : appParams.mode;
     const stack = mode ? new Stack([{ page: mode, allowedTiles: undefined }]) : new Stack<Page>();
     setPages(stack);
   }, [appParams.mode, specialMode]);

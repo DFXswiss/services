@@ -39,6 +39,7 @@
     "Trading limit": "Limite delle transazioni",
     "Two-factor authentication": "Autenticazione a due fattori",
     "KYC progress": "Progressi KYC",
+    "This step has already been finished.": "Questo passo è già stato completato.",
 
     "per 24h": "per 24h",
     "per year": "all'anno",
@@ -111,6 +112,7 @@
     "title": "Una semplice <1>cassetta degli attrezzi</1><2/> per tutti i <4>servizi DFX</4>",
     "Coming Soon": "Prossimamente",
     "Login to DFX Services": "Login ai servizi DFX",
+    "We have sent an email with further instructions to the address provided if an account exists for this email address.": "Abbiamo inviato un'e-mail con ulteriori istruzioni all'indirizzo fornito, se esiste un account per questo indirizzo e-mail.",
 
     "Scan with your wallet": "Scansione con il portafoglio",
     "Connect your wallet": "Collegare il portafoglio",
@@ -157,6 +159,7 @@
     "Please use a desktop device with a compatible browser (e.g. Chrome) to be able to use this service.": "Per poter utilizzare questo servizio, utilizzare un dispositivo desktop con un browser compatibile (ad esempio Chrome).",
     "visit": "Vedere <1></1> per maggiori dettagli.",
 
+    "Blockchain": "Blockchain",
     "Address": "Indirizzo",
     "Signature": "Firma",
     "Sign message": "Messaggio del cartello",
