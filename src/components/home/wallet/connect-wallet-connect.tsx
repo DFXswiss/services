@@ -22,6 +22,7 @@ const SupportedBlockchains = {
     Blockchain.ETHEREUM,
     Blockchain.ARBITRUM,
     Blockchain.OPTIMISM,
+    Blockchain.POLYGON,
     Blockchain.BINANCE_SMART_CHAIN,
   ],
 };

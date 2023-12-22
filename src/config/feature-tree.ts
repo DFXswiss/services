@@ -97,7 +97,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'polygon',
         img: 'polygon',
-        disabled: true,
+        next: {
+          page: 'buy-polygon',
+        },
       },
     ],
   },
@@ -392,6 +394,97 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
+    id: 'buy-polygon',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'matic',
+        img: 'matic',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'MATIC' },
+          },
+        },
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'buy-polygon-stable',
+        },
+      },
+      {
+        id: 'other',
+        img: 'otherspolygon',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'buy-polygon-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'other',
+        img: 'otherspolygon',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
     id: 'buy-bsc',
     dfxStyle: true,
     tiles: [
@@ -535,7 +628,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'polygon',
         img: 'polygon',
-        disabled: true,
+        next: {
+          page: 'sell-polygon',
+        },
       },
     ],
   },
@@ -824,6 +919,97 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-polygon',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'sell-polygon-stable',
+        },
+      },
+      {
+        id: 'other',
+        img: 'otherspolygon',
+        next: {
+          page: 'wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-polygon-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'other',
+        img: 'otherspolygon',
+        next: {
+          page: 'wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetIn: undefined },
           },
         },
       },

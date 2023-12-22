@@ -26,7 +26,7 @@ import {
 
 const SupportedBlockchains = {
   [WalletType.TREZOR_BTC]: [Blockchain.BITCOIN],
-  [WalletType.TREZOR_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM],
+  [WalletType.TREZOR_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM, Blockchain.POLYGON],
 };
 
 interface Props extends ConnectProps {
