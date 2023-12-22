@@ -223,14 +223,7 @@ export const FeatureTree: Page[] = [
       {
         id: 'wbtc',
         img: 'wbtc',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
-          },
-        },
+        disabled: true,
       },
       {
         id: 'stable',
@@ -282,14 +275,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'dai',
-        img: 'dai',
+        id: 'xchf',
+        img: 'xchf',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'DAI' },
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'XCHF' },
           },
         },
       },
@@ -361,6 +354,18 @@ export const FeatureTree: Page[] = [
         },
       },
       {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDC' },
+          },
+        },
+      },
+      {
         id: 'xchf',
         img: 'xchf',
         next: {
@@ -399,18 +404,6 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'BNB' },
-          },
-        },
-      },
-      {
-        id: 'wbtc',
-        img: 'wbtc',
-        next: {
-          page: 'wallets',
-          tiles: ['metamask', 'walletconnect', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'WBTC' },
           },
         },
       },
@@ -806,6 +799,11 @@ export const FeatureTree: Page[] = [
         },
       },
       {
+        id: 'usdc',
+        img: 'usdc',
+        disabled: true,
+      },
+      {
         id: 'xchf',
         img: 'xchf',
         next: {
@@ -844,18 +842,6 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'BNB' },
-          },
-        },
-      },
-      {
-        id: 'wbtc',
-        img: 'wbtc',
-        next: {
-          page: 'wallets',
-          tiles: ['metamask'],
-          options: {
-            service: 'sell',
-            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: 'WBTC' },
           },
         },
       },
