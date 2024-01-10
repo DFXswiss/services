@@ -58,10 +58,7 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
         {mailSent ? (
           <>
             <p className="text-dfxGray-700">
-              {translate(
-                'screens/home',
-                'We have sent an email with further instructions to the address provided if an account exists for this email address.',
-              )}
+              {translate('screens/home', 'We have sent an email with further instructions to the address provided.')}
             </p>
 
             <StyledButton
