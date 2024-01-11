@@ -22,7 +22,13 @@ import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../con
 const SupportedBlockchains: { [w in WalletType]?: Blockchain[] } = {
   [WalletType.CLI_BTC]: [Blockchain.BITCOIN],
   [WalletType.CLI_XMR]: [Blockchain.MONERO],
-  [WalletType.CLI_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM, Blockchain.BINANCE_SMART_CHAIN],
+  [WalletType.CLI_ETH]: [
+    Blockchain.ETHEREUM,
+    Blockchain.ARBITRUM,
+    Blockchain.OPTIMISM,
+    Blockchain.POLYGON,
+    Blockchain.BINANCE_SMART_CHAIN,
+  ],
 };
 
 interface FormData {
