@@ -417,14 +417,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'other',
-        img: 'otherspolygon',
+        id: 'sand',
+        img: 'sand',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.POLYGON, assetOut: undefined },
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'SAND' },
           },
         },
       },
@@ -467,18 +467,6 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.POLYGON, assetOut: 'DAI' },
-          },
-        },
-      },
-      {
-        id: 'other',
-        img: 'otherspolygon',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.POLYGON, assetOut: undefined },
           },
         },
       },
@@ -929,14 +917,14 @@ export const FeatureTree: Page[] = [
     dfxStyle: true,
     tiles: [
       {
-        id: 'eth',
-        img: 'eth',
+        id: 'matic',
+        img: 'matic',
         next: {
           page: 'wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.POLYGON, assetIn: 'ETH' },
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'MATIC' },
           },
         },
       },
@@ -948,14 +936,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'other',
-        img: 'otherspolygon',
+        id: 'sand',
+        img: 'sand',
         next: {
           page: 'wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.POLYGON, assetIn: undefined },
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'SAND' },
           },
         },
       },
@@ -998,18 +986,6 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.POLYGON, assetIn: 'DAI' },
-          },
-        },
-      },
-      {
-        id: 'other',
-        img: 'otherspolygon',
-        next: {
-          page: 'wallets',
-          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
-          options: {
-            service: 'sell',
-            query: { blockchain: Blockchain.POLYGON, assetIn: undefined },
           },
         },
       },
