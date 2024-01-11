@@ -207,7 +207,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     urlParams.forEach((param) => query.delete(param));
 
     const path = props.router.state.location.pathname;
-    props.router.navigate(path, { replace: true });
+    props.router.navigate(url(path, query), { replace: true });
 
     const { location, history } = window;
     history.replaceState(undefined, '', url(`${location.origin}${location.pathname}`, query));
