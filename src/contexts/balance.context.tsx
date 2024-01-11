@@ -14,7 +14,7 @@ interface Balance {
 }
 
 interface BalanceContextInterface {
-  getBalances: (assets: Asset[]) => AssetBalance[];
+  getBalances: (assets: Asset[]) => AssetBalance[] | undefined;
   readBalances: (param?: string) => void;
   hasBalance: boolean;
 }
@@ -49,10 +49,12 @@ export function BalanceContextProvider(props: PropsWithChildren): JSX.Element {
     );
   }
 
-  function getBalances(assets: Asset[]): AssetBalance[] {
+  function getBalances(assets: Asset[]): AssetBalance[] | undefined {
+    if (!balances) return undefined;
+
     return assets
       .map((asset) => {
-        const amount = balances?.find((b) => getAsset(assets, b.asset)?.id === asset.id)?.amount;
+        const amount = balances.find((b) => getAsset(assets, b.asset)?.id === asset.id)?.amount;
         return amount ? { asset, amount } : undefined;
       })
       .filter(isDefined);

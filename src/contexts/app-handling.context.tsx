@@ -207,7 +207,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     urlParams.forEach((param) => query.delete(param));
 
     const path = props.router.state.location.pathname;
-    props.router.navigate(path, { replace: true });
+    props.router.navigate(url(path, query), { replace: true });
 
     const { location, history } = window;
     history.replaceState(undefined, '', url(`${location.origin}${location.pathname}`, query));
@@ -242,6 +242,8 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
         uri = adaptUri(uri, params.type, {
           routeId: params.sell.routeId.toString(),
           amount: params.sell.amount.toString(),
+          asset: params.sell.asset.name,
+          blockchain: params.sell.asset.blockchain,
           isComplete: params.isComplete.toString(),
         });
         break;

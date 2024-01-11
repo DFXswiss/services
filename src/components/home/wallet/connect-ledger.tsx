@@ -26,7 +26,7 @@ import {
 
 const SupportedBlockchains = {
   [WalletType.LEDGER_BTC]: [Blockchain.BITCOIN],
-  [WalletType.LEDGER_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM],
+  [WalletType.LEDGER_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM, Blockchain.POLYGON],
 };
 
 interface Props extends ConnectProps {

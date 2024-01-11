@@ -24,6 +24,7 @@ const chainIds: { [id: number]: Blockchain } = {
   [56]: Blockchain.BINANCE_SMART_CHAIN,
   [42161]: Blockchain.ARBITRUM,
   [10]: Blockchain.OPTIMISM,
+  [137]: Blockchain.POLYGON,
 };
 
 export function useWeb3(): Web3Interface {
@@ -85,6 +86,18 @@ export function useWeb3(): Web3Interface {
           },
           rpcUrls: ['https://mainnet.optimism.io'],
           blockExplorerUrls: ['https://optimistic.etherscan.io/'],
+        };
+      case Blockchain.POLYGON:
+        return {
+          chainId,
+          chainName,
+          nativeCurrency: {
+            name: 'Matic Token',
+            symbol: 'MATIC',
+            decimals: 18,
+          },
+          rpcUrls: ['https://polygon-rpc.com'],
+          blockExplorerUrls: ['https://polygonscan.com/'],
         };
       case Blockchain.ETHEREUM:
       default:
