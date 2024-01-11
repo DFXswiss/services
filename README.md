@@ -39,6 +39,8 @@ On cancel or completion (see [closing](#closing)), the user will be redirected t
 
   - `routeId`: sell route ID (get details from [route endpoint](https://api.dfx.swiss/swagger#/Sell/SellController_getSell), authentication required)
   - `amount`: amount to sell
+  - `asset`: asset to sell
+  - `blockchain`: transfer blockchain
   - `isComplete`: is `true`, if blockchain transaction is already executed
 
 #### Iframe

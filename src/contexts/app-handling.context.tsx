@@ -242,6 +242,8 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
         uri = adaptUri(uri, params.type, {
           routeId: params.sell.routeId.toString(),
           amount: params.sell.amount.toString(),
+          asset: params.sell.asset.name,
+          blockchain: params.sell.asset.blockchain,
           isComplete: params.isComplete.toString(),
         });
         break;
