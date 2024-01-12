@@ -1328,6 +1328,42 @@ export const FeatureTree: Page[] = [
     ],
   },
 
+   // --- ONLY BUY BITCOIN with Trezor --- //
+   {
+    id: 'only-trezor',
+    tiles: [
+      {
+        id: 'trezor',
+        img: 'trezor',
+        wallet: { type: WalletType.TREZOR_BTC, blockchain: Blockchain.BITCOIN },
+      },
+    ],
+  },
+
+   // --- ONLY BUY BITCOIN with Ledger --- //
+   {
+    id: 'only-ledger',
+    tiles: [
+      {
+        id: 'ledger',
+        img: 'ledger',
+        wallet: { type: WalletType.LEDGER_BTC, blockchain: Blockchain.BITCOIN },
+      },
+    ],
+  },
+
+   // --- ONLY BUY BITCOIN with BitBox --- //
+   {
+    id: 'only-bitbox',
+    tiles: [
+      {
+        id: 'bitbox',
+        img: 'bitbox',
+        wallet: { type: WalletType.BITBOX_BTC, blockchain: Blockchain.BITCOIN },
+      },
+    ],
+  },
+
   // --- BITCOIN Lightning --- //
 
   {
