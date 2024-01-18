@@ -28,7 +28,7 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
         <StyledInfoText iconColor={IconColor.BLUE}>
           {translate(
             'screens/buy',
-            'Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!',
+            'Please transfer the purchase amount using this information via your banking application. The reference is important!',
           )}
         </StyledInfoText>
       </StyledVerticalStack>
@@ -49,10 +49,10 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
           <CopyButton onCopy={() => copy(info.bic)} />
         </StyledDataTableRow>
         <StyledDataTableRow
-          label={translate('screens/payment', 'Purpose of payment')}
+          label={translate('screens/payment', 'Reference')}
           infoText={translate(
             'screens/buy',
-            'The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders',
+            'The reference remains identical for the selected asset and can be used for recurring payments and standing orders',
           )}
         >
           {info.remittanceInfo}

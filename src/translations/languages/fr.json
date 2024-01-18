@@ -183,9 +183,9 @@
     "Done!": "Fait!",
     "Click here once you have issued the transfer": "Cliquez ici une fois que vous avez émis le virement",
 
-    "Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!": "Veuillez transférer le montant de l'achat à l'aide de ces informations via votre application bancaire. L'objet du paiement est important !",
+    "Please transfer the purchase amount using this information via your banking application. The reference is important!": "Veuillez transférer le montant de l'achat à l'aide de ces informations via votre application bancaire. L'objet du paiement est important !",
 
-    "The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders": "L'objet du paiement reste identique pour l'immobilisation sélectionnée et peut être utilisé pour les paiements récurrents et les ordres permanents.",
+    "The reference remains identical for the selected asset and can be used for recurring payments and standing orders": "L'objet du paiement reste identique pour l'immobilisation sélectionnée et peut être utilisé pour les paiements récurrents et les ordres permanents.",
 
     "Name": "Nom",
     "Address": "Adresse",
@@ -234,7 +234,7 @@
     "Currency": "Devise",
     "IBAN": "IBAN",
     "BIC": "BIC",
-    "Purpose of payment": "Objet du paiement",
+    "Reference": "Objet du paiement",
 
     "Please note that by using this service you automatically accept our terms and conditions.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales.",
     "Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales et autorisez DFX.swiss à collecter le montant ci-dessus via la méthode de paiement choisie et acceptez que ce montant ne puisse pas être annulé, rappelé ou remboursé.",

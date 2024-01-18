@@ -183,9 +183,9 @@
     "Done!": "Fertig!",
     "Click here once you have issued the transfer": "Klicke hier, sobald Du die Überweisung getätigt hast",
 
-    "Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!": "Bitte überweise den Kaufbetrag mit diesen Angaben über Deine Bankanwendung. Der Verwendungszweck ist wichtig!",
+    "Please transfer the purchase amount using this information via your banking application. The reference is important!": "Bitte überweise den Kaufbetrag mit diesen Angaben über Deine Bankanwendung. Der Verwendungszweck ist wichtig!",
 
-    "The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders": "Der Verwendungszweck bleibt für die ausgewählte Anlage identisch und kann für wiederkehrende Zahlungen und Daueraufträge verwendet werden",
+    "The reference remains identical for the selected asset and can be used for recurring payments and standing orders": "Der Verwendungszweck bleibt für die ausgewählte Anlage identisch und kann für wiederkehrende Zahlungen und Daueraufträge verwendet werden",
 
     "Name": "Name",
     "Address": "Adresse",
@@ -234,7 +234,7 @@
     "Currency": "Währung",
     "IBAN": "IBAN",
     "BIC": "BIC",
-    "Purpose of payment": "Verwendungszweck",
+    "Reference": "Verwendungszweck",
 
     "Please note that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst.",
     "Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst und DFX.swiss ermächtigst, den oben genannten Betrag über die von Dir gewählte Zahlungsmethode einzuziehen. Du erklärst Dich damit einverstanden, dass dieser Betrag nicht storniert, zurückgerufen oder zurückerstattet werden kann.",
