@@ -35,6 +35,7 @@ import {
   StyledInput,
   StyledLink,
   StyledModalButton,
+  StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
@@ -106,12 +107,7 @@ export default function SellScreen(): JSX.Element {
   }, [getBalances, availableAssets]);
 
   // form
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<FormData>({ mode: 'onTouched' });
+  const { control, handleSubmit, setValue } = useForm<FormData>({ mode: 'onTouched' });
 
   const data = useWatch({ control });
   const selectedBankAccount = useWatch({ control, name: 'bankAccount' });
@@ -308,7 +304,7 @@ export default function SellScreen(): JSX.Element {
       onBack={bankAccountSelection ? () => setBankAccountSelection(false) : undefined}
       rootRef={rootRef}
     >
-      <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} hasFormElement={false}>
+      <Form control={control} rules={rules} errors={{}} onSubmit={handleSubmit(onSubmit)} hasFormElement={false}>
         {paymentInfo && isTxDone ? (
           <StyledVerticalStack gap={4} full>
             <div className="mx-auto">
@@ -347,17 +343,19 @@ export default function SellScreen(): JSX.Element {
         ) : (
           <StyledVerticalStack center gap={8} full className="relative">
             {availableAssets && (
-              <StyledDropdown<Asset>
+              <StyledSearchDropdown<Asset>
                 rootRef={rootRef}
                 name="asset"
                 label={translate('screens/sell', 'Your Wallet')}
                 placeholder={translate('general/actions', 'Select...')}
-                labelIcon={IconVariant.WALLET}
                 items={availableAssets}
                 labelFunc={(item) => item.name}
                 balanceFunc={(item) => findBalance(item)?.toString() ?? ''}
                 assetIconFunc={(item) => item.name as AssetIconVariant}
                 descriptionFunc={(item) => toString(item.blockchain)}
+                filterFunc={(item: Asset, search?: string | undefined) =>
+                  !search || item.name.toLowerCase().includes(search.toLowerCase())
+                }
                 full
               />
             )}
@@ -420,7 +418,6 @@ export default function SellScreen(): JSX.Element {
                 name="currency"
                 label={translate('screens/sell', 'Your Currency')}
                 placeholder={translate('screens/sell', 'e.g. EUR')}
-                labelIcon={IconVariant.BANK}
                 items={currencies}
                 labelFunc={(item) => item.name}
                 descriptionFunc={(item) => toDescription(item)}
