@@ -237,22 +237,24 @@ export function KycScreen(): JSX.Element {
                   <p>{translate('general/actions', info.twoFactorEnabled ? 'Yes' : 'No')}</p>
                 </StyledDataTableRow>
 
-                <StyledDataTableRow label={translate('screens/kyc', 'KYC progress')}>
-                  <div className="grid gap-1 items-center grid-cols-[1.2rem_1fr]">
-                    {info.kycSteps.map((step) => {
-                      const icon = stepIcon(step);
-                      return (
-                        <Fragment key={`${step.name}-${step.type}`}>
-                          {icon ? <DfxIcon {...icon} /> : <div />}
-                          <div className={`text-left ${step.isCurrent && 'font-bold'}`}>
-                            {nameToString(step.name)}
-                            {step.type && ` (${typeToString(step.type)})`}
-                          </div>
-                        </Fragment>
-                      );
-                    })}
-                  </div>
-                </StyledDataTableRow>
+                {info.kycSteps.length && (
+                  <StyledDataTableRow label={translate('screens/kyc', 'KYC progress')}>
+                    <div className="grid gap-1 items-center grid-cols-[1.2rem_1fr]">
+                      {info.kycSteps.map((step) => {
+                        const icon = stepIcon(step);
+                        return (
+                          <Fragment key={`${step.name}-${step.type}`}>
+                            {icon ? <DfxIcon {...icon} /> : <div />}
+                            <div className={`text-left ${step.isCurrent && 'font-bold'}`}>
+                              {nameToString(step.name)}
+                              {step.type && ` (${typeToString(step.type)})`}
+                            </div>
+                          </Fragment>
+                        );
+                      })}
+                    </div>
+                  </StyledDataTableRow>
+                )}
               </StyledDataTable>
 
               {!kycCompleted && (
