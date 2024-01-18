@@ -166,9 +166,9 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             url={process.env.REACT_APP_DFX_URL}
           />
           <NavigationLink
-            icon={IconVariant.TELEGRAM}
-            label={translate('navigation/links', 'Telegram')}
-            url={language?.symbol === 'DE' ? process.env.REACT_APP_TG_URL_DE : process.env.REACT_APP_TG_URL_EN}
+            icon={IconVariant.HELP}
+            label={translate('navigation/links', 'Help')}
+            url={process.env.REACT_APP_HELP_URL}
           />
           <NavigationLink
             icon={IconVariant.FILE}

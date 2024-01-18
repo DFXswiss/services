@@ -105,7 +105,7 @@
   "screens/error": {
     "Oh sorry something went wrong": "Entschuldigung, irgendwas hat nicht funktioniert",
 
-    "Please return to your previous page. If this problem consists reach out to use via Telegram.": "Bitte kehre zur vorherigen Seite zurück. Wenn dieses Problem weiterhin besteht, erreichst Du uns über Telegram."
+    "Please return to the previous page. If this problem persists, please contact our support.": "Bitte kehre zur vorherigen Seite zurück. Wenn dieses Problem weiterhin besteht, wende Dich bitte an unseren Support."
   },
   "screens/home": {
     "DFX services": "DFX Services",
@@ -247,7 +247,7 @@
     "Buy & sell": "Kaufen & Verkaufen",
     "KYC": "KYC",
     "My DFX": "My DFX",
-    "Telegram": "Telegram",
+    "Help": "Hilfe",
     "Terms and conditions": "Geschäftsbedingungen",
     "Privacy policy": "Datenschutzerklärung",
     "Imprint": "Impressum"
