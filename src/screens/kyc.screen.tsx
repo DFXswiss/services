@@ -88,6 +88,7 @@ export function KycScreen(): JSX.Element {
   const [stepName, stepType] = step?.split('/') ?? [];
   const paramKycCode = params.get('code');
   const kycCode = paramKycCode ?? user?.kycHash;
+  const redirectUri = params.get('kyc-redirect');
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
   const kycCompleted = info?.kycSteps.every((s) => isStepDone(s));
 
@@ -96,6 +97,13 @@ export function KycScreen(): JSX.Element {
   useEffect(() => {
     if (info) changeLanguage(info.language);
   }, [info, changeLanguage]);
+
+  useEffect(() => {
+    if (redirectUri && kycCompleted) {
+      setIsLoading(true);
+      window.open(redirectUri, '_self');
+    }
+  }, [redirectUri, kycCompleted]);
 
   useEffect(() => {
     if (!kycCode) return;
