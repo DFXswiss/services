@@ -79,6 +79,7 @@ export function KycScreen(): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
+  const [showLinkHint, setShowLinkHint] = useState(false);
 
   const mode = pathname.includes('/profile') ? Mode.PROFILE : Mode.KYC;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -123,6 +124,7 @@ export function KycScreen(): JSX.Element {
 
     setIsSubmitting(true);
     setError(undefined);
+    setShowLinkHint(false);
     (next ? callKyc(() => continueKyc(kycCode)) : callKyc(() => getKycInfo(kycCode)))
       .then(handleReload)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
@@ -148,25 +150,36 @@ export function KycScreen(): JSX.Element {
         .then(() => goBack());
     } else {
       setInfo(info);
-      setStepInProgress(info.currentStep);
+      if (info.currentStep?.name === KycStepName.CONTACT_DATA && info.currentStep?.status === KycStepStatus.FAILED) {
+        onLink();
+      } else {
+        setStepInProgress(info.currentStep);
+      }
     }
   }
 
   function callKyc<T>(call: () => Promise<T>): Promise<T> {
     return call().catch((e: ApiError) => {
-      if (e.statusCode === 409 && 'switchToCode' in e) {
+      if (e.statusCode === 401 && 'switchToCode' in e) {
         setIsLoading(true);
         if (paramKycCode) {
           navigate({ search: `?code=${e.switchToCode}` });
         } else {
           reloadUser();
         }
-      } else if (e.statusCode === 401 && e.message?.includes('2FA')) {
+      } else if (e.statusCode === 403 && e.message?.includes('2FA')) {
         navigate('/2fa', { setRedirect: true });
+      } else if (e.statusCode === 409 && e.message?.includes('exists')) {
+        onLink();
       }
 
       throw e;
     });
+  }
+
+  function onLink() {
+    setStepInProgress(undefined);
+    setShowLinkHint(true);
   }
 
   function stepIcon(step: KycStep): { icon: IconVariant; size: IconSize } | undefined {
@@ -192,11 +205,26 @@ export function KycScreen(): JSX.Element {
     <Layout
       title={stepInProgress ? nameToString(stepInProgress.name) : translate('screens/kyc', 'DFX KYC')}
       rootRef={rootRef}
-      onBack={stepInProgress ? () => setStepInProgress(undefined) : undefined}
+      onBack={stepInProgress ? () => setStepInProgress(undefined) : showLinkHint ? () => onLoad(false) : undefined}
       noPadding={isMobile && stepInProgress?.session?.type === UrlType.BROWSER}
     >
       {isLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
+      ) : showLinkHint ? (
+        <StyledVerticalStack gap={6} full>
+          <p className="text-dfxGray-700">
+            {translate(
+              'screens/kyc',
+              'It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.',
+            )}
+          </p>
+          <StyledButton
+            width={StyledButtonWidth.MIN}
+            label={translate('general/actions', 'OK')}
+            onClick={() => onLoad(false)}
+            isLoading={isLoading}
+          />
+        </StyledVerticalStack>
       ) : stepInProgress && kycCode && !error ? (
         [KycStepStatus.NOT_STARTED, KycStepStatus.IN_PROGRESS].includes(stepInProgress.status) ? (
           <KycEdit
@@ -207,6 +235,7 @@ export function KycScreen(): JSX.Element {
             step={stepInProgress}
             onDone={() => onLoad(true)}
             onBack={() => onLoad(false)}
+            showLinkHint={onLink}
           />
         ) : (
           <StyledVerticalStack gap={6} full center>
@@ -286,6 +315,7 @@ interface EditProps {
   step: KycStepSession;
   onDone: () => void;
   onBack: () => void;
+  showLinkHint: () => void;
 }
 
 function KycEdit(props: EditProps): JSX.Element {
@@ -307,13 +337,12 @@ function KycEdit(props: EditProps): JSX.Element {
   }
 }
 
-function ContactData({ code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
+function ContactData({ code, mode, isLoading, step, onDone, showLinkHint }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setContactData } = useKyc();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
-  const [showLinkHint, setShowLinkHint] = useState(step.status === KycStepStatus.FAILED);
 
   const {
     control,
@@ -327,7 +356,7 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack }: EditProps)
     setIsUpdating(true);
     setError(undefined);
     setContactData(code, step.session.url, data)
-      .then((r) => (isStepDone(r) ? onDone() : setShowLinkHint(true)))
+      .then((r) => (isStepDone(r) ? onDone() : showLinkHint()))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
   }
@@ -338,59 +367,42 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack }: EditProps)
 
   return (
     <StyledVerticalStack gap={6} full>
-      {showLinkHint ? (
-        <StyledVerticalStack gap={6} full>
-          <p className="text-dfxGray-700">
-            {translate(
-              'screens/kyc',
-              'It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.',
-            )}
-          </p>
+      <Form
+        control={control}
+        rules={rules}
+        errors={errors}
+        onSubmit={handleSubmit(onSubmit)}
+        translate={translateError}
+      >
+        <StyledVerticalStack gap={6} full center>
+          {mode === Mode.PROFILE && (
+            <>
+              <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
+              <p className="text-base font-bold text-dfxBlue-800">
+                {translate('screens/kyc', 'Please fill in personal information to continue')}
+              </p>
+            </>
+          )}
+
+          <StyledInput
+            name="mail"
+            autocomplete="email"
+            type="email"
+            label={translate('screens/kyc', 'Email address')}
+            placeholder={translate('screens/kyc', 'example@mail.com')}
+            full
+          />
+
           <StyledButton
-            width={StyledButtonWidth.MIN}
-            label={translate('general/actions', 'OK')}
-            onClick={onBack}
+            type="submit"
+            label={translate('general/actions', 'Next')}
+            onClick={handleSubmit(onSubmit)}
+            width={StyledButtonWidth.FULL}
+            disabled={!isValid}
             isLoading={isUpdating || isLoading}
           />
         </StyledVerticalStack>
-      ) : (
-        <Form
-          control={control}
-          rules={rules}
-          errors={errors}
-          onSubmit={handleSubmit(onSubmit)}
-          translate={translateError}
-        >
-          <StyledVerticalStack gap={6} full center>
-            {mode === Mode.PROFILE && (
-              <>
-                <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
-                <p className="text-base font-bold text-dfxBlue-800">
-                  {translate('screens/kyc', 'Please fill in personal information to continue')}
-                </p>
-              </>
-            )}
-
-            <StyledInput
-              name="mail"
-              autocomplete="email"
-              type="email"
-              label={translate('screens/kyc', 'Email address')}
-              placeholder={translate('screens/kyc', 'example@mail.com')}
-              full
-            />
-
-            <StyledButton
-              type="submit"
-              label={translate('general/actions', 'Next')}
-              onClick={handleSubmit(onSubmit)}
-              width={StyledButtonWidth.FULL}
-              disabled={!isValid}
-              isLoading={isUpdating || isLoading}
-            />
-          </StyledVerticalStack>
-        </Form>
-      )}
+      </Form>
 
       {error && (
         <div>
