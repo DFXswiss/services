@@ -46,7 +46,6 @@ export function useWeb3(): Web3Interface {
   }
 
   function toChainObject(blockchain: Blockchain): MetaMaskChainInterface | undefined {
-    const chainName = toString(blockchain);
     const chainId = toChainHex(blockchain);
     if (!chainId) return undefined;
 
@@ -54,7 +53,7 @@ export function useWeb3(): Web3Interface {
       case Blockchain.BINANCE_SMART_CHAIN:
         return {
           chainId,
-          chainName,
+          chainName: 'BNB Smart Chain Mainnet',
           nativeCurrency: {
             name: 'BNB',
             symbol: 'BNB',
@@ -63,22 +62,24 @@ export function useWeb3(): Web3Interface {
           rpcUrls: ['https://bsc-dataseed.binance.org/'],
           blockExplorerUrls: ['https://bscscan.com/'],
         };
+
       case Blockchain.ARBITRUM:
         return {
           chainId,
-          chainName,
+          chainName: 'Arbitrum One',
           nativeCurrency: {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
           },
           rpcUrls: ['https://arb1.arbitrum.io/rpc'],
-          blockExplorerUrls: ['https://arbiscan.io/'],
+          blockExplorerUrls: ['https://arbiscan.io'],
         };
+
       case Blockchain.OPTIMISM:
         return {
           chainId,
-          chainName,
+          chainName: 'OP Mainnet',
           nativeCurrency: {
             name: 'Ether',
             symbol: 'ETH',
@@ -87,18 +88,20 @@ export function useWeb3(): Web3Interface {
           rpcUrls: ['https://mainnet.optimism.io'],
           blockExplorerUrls: ['https://optimistic.etherscan.io/'],
         };
+
       case Blockchain.POLYGON:
         return {
           chainId,
-          chainName,
+          chainName: 'Polygon Mainnet',
           nativeCurrency: {
             name: 'Matic Token',
             symbol: 'MATIC',
             decimals: 18,
           },
-          rpcUrls: ['https://polygon-rpc.com'],
+          rpcUrls: ['https://polygon-rpc.com/'],
           blockExplorerUrls: ['https://polygonscan.com/'],
         };
+
       case Blockchain.ETHEREUM:
       default:
         return undefined;

@@ -28,7 +28,7 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
         <StyledInfoText iconColor={IconColor.BLUE}>
           {translate(
             'screens/buy',
-            'Please transfer the purchase amount using this information via your banking application. The purpose of payment is important!',
+            'Please transfer the purchase amount using this information via your banking application. The reference is important!',
           )}
         </StyledInfoText>
       </StyledVerticalStack>
@@ -49,10 +49,10 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
           <CopyButton onCopy={() => copy(info.bic)} />
         </StyledDataTableRow>
         <StyledDataTableRow
-          label={translate('screens/payment', 'Purpose of payment')}
+          label={translate('screens/payment', 'Reference')}
           infoText={translate(
             'screens/buy',
-            'The purpose of payment remains identical for the selected asset and can be used for recurring payments and standing orders',
+            'The reference remains identical for the selected asset and can be used for recurring payments and standing orders',
           )}
         >
           {info.remittanceInfo}
@@ -66,8 +66,32 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
         </div>
       )}
 
-      <StyledDataTable label={translate('screens/buy', 'Recipient')} showBorder minWidth={false}>
-        <StyledDataTableRow>{`${info.name}, ${info.street} ${info.number}, ${info.zip} ${info.city}, ${info.country}`}</StyledDataTableRow>
+      <StyledDataTable
+        label={translate('screens/payment', 'Recipient')}
+        alignContent={AlignContent.RIGHT}
+        showBorder
+        minWidth={false}
+      >
+        <StyledDataTableRow label={translate('screens/buy', 'Name')}>
+          {info.name}
+          <CopyButton onCopy={() => copy(`${info.name}`)} />
+        </StyledDataTableRow>
+        <StyledDataTableRow label={translate('screens/buy', 'Address')}>
+          {`${info.street} ${info.number}`}
+          <CopyButton onCopy={() => copy(`${info.street} ${info.number}`)} />
+        </StyledDataTableRow>
+        <StyledDataTableRow label={translate('screens/kyc', 'ZIP code')}>
+          {info.zip}
+          <CopyButton onCopy={() => copy(`${info.zip}`)} />
+        </StyledDataTableRow>
+        <StyledDataTableRow label={translate('screens/kyc', 'City')}>
+          {info.city}
+          <CopyButton onCopy={() => copy(`${info.city}`)} />
+        </StyledDataTableRow>
+        <StyledDataTableRow label={translate('screens/kyc', 'Country')}>
+          {info.country}
+          <CopyButton onCopy={() => copy(`${info.country}`)} />
+        </StyledDataTableRow>
       </StyledDataTable>
     </>
   );

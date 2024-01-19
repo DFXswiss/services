@@ -31,6 +31,7 @@ import {
   StyledInput,
   StyledLink,
   StyledLoadingSpinner,
+  StyledSearchDropdown,
   StyledTextBox,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -109,12 +110,7 @@ export function BuyScreen(): JSX.Element {
     availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
 
   // form
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<FormData>({
+  const { control, handleSubmit, setValue } = useForm<FormData>({
     defaultValues: {
       amount: '100',
     },
@@ -316,13 +312,7 @@ export function BuyScreen(): JSX.Element {
       ) : showsCompletion && paymentInfo ? (
         <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo} navigateOnClose />
       ) : (
-        <Form
-          control={control}
-          rules={rules}
-          errors={errors}
-          onSubmit={handleSubmit(onSubmit)}
-          translate={translateError}
-        >
+        <Form control={control} rules={rules} errors={{}} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
           <StyledVerticalStack gap={8} full center>
             {availableCurrencies && availableAssets && (
               <>
@@ -374,7 +364,7 @@ export function BuyScreen(): JSX.Element {
                       />
                     </div>
                     <div className="flex-[1_0_9rem]">
-                      <StyledDropdown<Asset>
+                      <StyledSearchDropdown<Asset>
                         rootRef={rootRef}
                         name="asset"
                         placeholder={translate('general/actions', 'Select...')}
@@ -382,6 +372,9 @@ export function BuyScreen(): JSX.Element {
                         labelFunc={(item) => item.name}
                         assetIconFunc={(item) => item.name as AssetIconVariant}
                         descriptionFunc={(item) => toString(item.blockchain)}
+                        filterFunc={(item: Asset, search?: string | undefined) =>
+                          !search || item.name.toLowerCase().includes(search.toLowerCase())
+                        }
                         full
                       />
                     </div>

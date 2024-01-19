@@ -222,7 +222,7 @@ export function BuyInfoScreen(): JSX.Element {
                 {paymentInfo.bic}
                 <CopyButton onCopy={() => copy(paymentInfo.bic)} />
               </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/payment', 'Purpose of payment')}>
+              <StyledDataTableRow label={translate('screens/payment', 'Reference')}>
                 {paymentInfo.remittanceInfo}
                 <CopyButton onCopy={() => copy(paymentInfo.remittanceInfo)} />
               </StyledDataTableRow>
