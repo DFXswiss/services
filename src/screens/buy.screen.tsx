@@ -102,13 +102,6 @@ export function BuyScreen(): JSX.Element {
   const [isContinue, setIsContinue] = useState(false);
   const [validatedData, setValidatedData] = useState<BuyPaymentInfo>();
 
-  const availablePaymentMethods = [BuyPaymentMethod.BANK];
-  (isDfxHosted || !isEmbedded) &&
-    (user?.status === UserStatus.ACTIVE || flags?.includes(BuyPaymentMethod.CARD)) &&
-    availablePaymentMethods.push(BuyPaymentMethod.CARD);
-  const defaultPaymentMethod =
-    availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
-
   // form
   const { control, handleSubmit, setValue } = useForm<FormData>({
     defaultValues: {
@@ -126,6 +119,13 @@ export function BuyScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
+  const availablePaymentMethods = [BuyPaymentMethod.BANK];
+  (isDfxHosted || !isEmbedded) &&
+    (user?.status === UserStatus.ACTIVE || flags?.includes(BuyPaymentMethod.CARD)) &&
+    selectedAsset.blockchain !== Blockchain.MONERO &&
+    availablePaymentMethods.push(BuyPaymentMethod.CARD);
+  const defaultPaymentMethod =
+    availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
   const availableCurrencies = currencies?.filter((c) =>
     selectedPaymentMethod === BuyPaymentMethod.CARD ? c.cardSellable : c.sellable,
   );

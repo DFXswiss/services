@@ -1,7 +1,6 @@
 import { Blockchain } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import Web3 from 'web3';
-import { useBlockchain } from './blockchain.hook';
 
 export interface Web3Interface {
   toBlockchain: (chainId: string | number) => Blockchain | undefined;
@@ -28,8 +27,6 @@ const chainIds: { [id: number]: Blockchain } = {
 };
 
 export function useWeb3(): Web3Interface {
-  const { toString } = useBlockchain();
-
   function toBlockchain(chainId: string | number): Blockchain | undefined {
     return chainIds[+chainId];
   }
