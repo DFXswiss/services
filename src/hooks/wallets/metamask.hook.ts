@@ -192,15 +192,22 @@ export function useMetaMask(): MetaMaskInterface {
 
   async function createTransaction(amount: BigNumber, asset: Asset, from: string, to: string): Promise<string> {
     if (asset.type === AssetType.COIN) {
-      const transactionData = { from, to, value: web3.utils.toWei(amount.toString(), 'ether') };
+      const transactionData = {
+        from,
+        to,
+        value: web3.utils.toWei(amount.toString(), 'ether'),
+        maxPriorityFeePerGas: null as any,
+        maxFeePerGas: null as any,
+      };
       return web3.eth.sendTransaction(transactionData).then((value) => value.transactionHash);
     } else {
       const tokenContract = createContract(asset.chainId);
       const decimals = await tokenContract.methods.decimals().call();
       const adjustedAmount = amount.multipliedBy(Math.pow(10, decimals)).toFixed();
+
       return tokenContract.methods
         .transfer(to, adjustedAmount)
-        .send({ from })
+        .send({ from, maxPriorityFeePerGas: null, maxFeePerGas: null })
         .then((value: any) => value.transactionHash);
     }
   }
