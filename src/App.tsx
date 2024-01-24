@@ -16,6 +16,7 @@ import { ErrorScreen } from './screens/error.screen';
 import { HomeScreen } from './screens/home.screen';
 import { KycRedirectScreen } from './screens/kyc-redirect.screen';
 import { KycScreen } from './screens/kyc.screen';
+import { LimitScreen } from './screens/limit.screen';
 import { LinkScreen } from './screens/link.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
 import { TfaScreen } from './screens/tfa.screen';
@@ -90,6 +91,11 @@ export const Routes = [
   {
     path: '/2fa',
     element: <TfaScreen />,
+    isKycScreen: true,
+  },
+  {
+    path: '/limit',
+    element: <LimitScreen />,
     isKycScreen: true,
   },
 ];

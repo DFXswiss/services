@@ -17,7 +17,9 @@
     "Connect": "Verbinden",
     "Continue in Trezor Connect": "Weiter zu Trezor Connect",
     "Yes": "Ja",
-    "No": "Nein"
+    "No": "Nein",
+    "Drop files here": "Dateien hier ablegen",
+    "Browse": "Durchsuchen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -101,6 +103,28 @@
     "Invalid or expired code": "Ungültiger oder abgelaufener Code",
     "Delete 2FA method": "2FA-Methode löschen",
     "Are you sure you want to delete the 2FA method?": "Bist Du sicher, dass Du die 2FA-Methode löschen möchtest?"
+  },
+  "screens/limit": {
+    "Limit increase": "Limite erhöhen",
+    "The request has been successfully submitted. You will be contacted by email as soon as the data has been verified.": "Die Anfrage wurde erfolgreich abgesetzt. Du wirst von uns per E-Mail kontaktiert, sobald die Daten geprüft wurden.",
+    "Investment volume": "Investitionsvolumen",
+    "Investment date": "Investitionszeitpunkt",
+    "Current assets": "Aktuelle Vermögenswerte",
+    "Future assets": "Zukünftige Vermögenswerte",
+    "Origin of funds": "Herkunft der Mittel",
+    "Savings": "Ersparnisse",
+    "Business profits": "Geschäftsgewinne",
+    "Stock price gains": "Aktien-Kursgewinne",
+    "Crypto price gains": "Krypto-Kursgewinne",
+    "Inheritance": "Erbschaft",
+    "Other": "Anderes",
+    "Future savings": "Zukünftige Ersparnisse",
+    "Future business profits": "Zukünftige Geschäftsgewinne",
+    "Future stock price gains": "Zukünftige Aktien-Kursgewinne",
+    "Future crypto price gains": "Zukünftige Krypto-Kursgewinne",
+    "Future inheritance": "Zukünftige Erbschaft",
+    "free text": "Freitext",
+    "Document proof": "Dokumentennachweis"
   },
   "screens/error": {
     "Oh sorry something went wrong": "Entschuldigung, irgendwas hat nicht funktioniert",
