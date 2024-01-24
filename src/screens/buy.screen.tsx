@@ -122,7 +122,7 @@ export function BuyScreen(): JSX.Element {
   const availablePaymentMethods = [BuyPaymentMethod.BANK];
   (isDfxHosted || !isEmbedded) &&
     (user?.status === UserStatus.ACTIVE || flags?.includes(BuyPaymentMethod.CARD)) &&
-    selectedAsset.blockchain !== Blockchain.MONERO &&
+    selectedAsset?.blockchain !== Blockchain.MONERO &&
     availablePaymentMethods.push(BuyPaymentMethod.CARD);
   const defaultPaymentMethod =
     availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
