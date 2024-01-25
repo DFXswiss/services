@@ -95,7 +95,7 @@ export function KycScreen(): JSX.Element {
 
   useEffect(() => {
     if (info) changeLanguage(info.language);
-  }, [info, changeLanguage]);
+  }, [info]);
 
   useEffect(() => {
     if (redirectUri && kycCompleted) {
