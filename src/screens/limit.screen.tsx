@@ -28,7 +28,6 @@ import { useSessionGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { toBase64 } from '../util/utils';
 
-// TODO: translations
 const LimitLabels = {
   [Limit.K_500]: "CHF 100'000 - 500'000",
   [Limit.M_1]: "CHF 500'000 - 1'000'000",
