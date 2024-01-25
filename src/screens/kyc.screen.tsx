@@ -89,14 +89,13 @@ export function KycScreen(): JSX.Element {
   const paramKycCode = params.get('code');
   const kycCode = paramKycCode ?? user?.kycHash;
   const redirectUri = params.get('kyc-redirect');
-  const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
   const kycCompleted = info?.kycSteps.every((s) => isStepDone(s));
 
   useSessionGuard('/login', !kycCode);
 
   useEffect(() => {
     if (info) changeLanguage(info.language);
-  }, [info, changeLanguage]);
+  }, [info]);
 
   useEffect(() => {
     if (redirectUri && kycCompleted) {
@@ -190,6 +189,10 @@ export function KycScreen(): JSX.Element {
     setShowLinkHint(true);
   }
 
+  function onContinue() {
+    return kycCompleted ? navigate('/limit') : onLoad(true);
+  }
+
   function stepIcon(step: KycStep): { icon: IconVariant; size: IconSize } | undefined {
     switch (step.status) {
       case KycStepStatus.NOT_STARTED:
@@ -267,7 +270,10 @@ export function KycScreen(): JSX.Element {
                 </StyledDataTableRow>
 
                 <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
-                  <p>{limitToString(info.tradingLimit)}</p>
+                  <div className="flex flex-row gap-1 items-center">
+                    <p>{limitToString(info.tradingLimit)}</p>
+                    <StyledIconButton icon={IconVariant.ARROW_UP} onClick={onContinue} isLoading={isSubmitting} />
+                  </div>
                 </StyledDataTableRow>
 
                 <StyledDataTableRow label={translate('screens/kyc', 'Two-factor authentication')}>
@@ -293,15 +299,6 @@ export function KycScreen(): JSX.Element {
                   </StyledDataTableRow>
                 )}
               </StyledDataTable>
-
-              {!kycCompleted && (
-                <StyledButton
-                  width={StyledButtonWidth.MIN}
-                  label={translate('general/actions', kycStarted ? 'Continue' : 'Start')}
-                  isLoading={isSubmitting}
-                  onClick={() => onLoad(true)}
-                />
-              )}
             </>
           )}
           {error && (

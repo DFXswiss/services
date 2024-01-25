@@ -178,7 +178,6 @@ export function TfaScreen(): JSX.Element {
                               deactivateMargin
                             />
                           </div>
-                          {/* TODO: store links */}
                         </StyledVerticalStack>
 
                         {/* step 2 */}
@@ -261,9 +260,9 @@ export function TfaScreen(): JSX.Element {
                 )
               )}
               {error && (
-                <div>
+                <StyledVerticalStack full center>
                   <ErrorHint message={error} />
-                </div>
+                </StyledVerticalStack>
               )}
             </StyledVerticalStack>
           </div>

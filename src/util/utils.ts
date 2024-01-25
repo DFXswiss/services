@@ -30,3 +30,12 @@ export function blankedAddress(address: string, displayLength = 24): string {
     ? `${address.slice(0, displayLength / 2)}...${address.slice(address.length - displayLength / 2)}`
     : address;
 }
+
+export function toBase64(file: File): Promise<string | undefined> {
+  return new Promise<string | undefined>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result ? (reader.result as string) : undefined);
+    reader.onerror = (e) => reject(e);
+  });
+}
