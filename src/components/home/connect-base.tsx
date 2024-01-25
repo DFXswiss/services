@@ -3,8 +3,6 @@ import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { BitcoinAddressType } from '../../config/key-path';
 import { WalletType, useWalletContext } from '../../contexts/wallet.context';
-import { useDeferredPromise } from '../../hooks/deferred-promise.hook';
-import { useStore } from '../../hooks/store.hook';
 import { AbortError } from '../../util/abort-error';
 import { Account, ConnectContentProps, ConnectProps } from './connect-shared';
 import { InstallHint } from './install-hint';
@@ -42,20 +40,14 @@ export function ConnectBase({
   autoConnect,
 }: Props): JSX.Element {
   const { login, setSession, switchBlockchain, activeWallet } = useWalletContext();
-  const { showsSignatureInfo } = useStore();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
 
   const [isLoading, setIsLoading] = useState(true);
   const [showInstallHint, setShowInstallHint] = useState(false);
+  const [showSignHint, setShowSignHint] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string>();
-  const [createSignMessagePromise, signMessagePromise] = useDeferredPromise<string>();
-  const [addr, setAddr] = useState<string>();
-  const [msg, setMsg] = useState<string>();
-  const [chain, setChain] = useState<Blockchain>();
-  const [index, setIndex] = useState<number>();
-  const [type, setType] = useState<BitcoinAddressType>();
 
   useEffect(() => {
     init();
@@ -114,45 +106,16 @@ export function ConnectBase({
     index?: number,
     addressType?: BitcoinAddressType,
   ): Promise<string> {
-    if (!showsSignatureInfo.get()) return signMessage(message, address, blockchain, index, addressType);
-
-    setAddr(address);
-    setChain(blockchain);
-    setMsg(message);
-    setIndex(index);
-    setType(addressType);
-    return createSignMessagePromise();
-  }
-
-  async function onSignHintConfirmed(
-    hide: boolean,
-    address: string,
-    blockchain: Blockchain,
-    message: string,
-    index?: number,
-    addressType?: BitcoinAddressType,
-  ): Promise<void> {
-    showsSignatureInfo.set(!hide);
-    setAddr(undefined);
-    setMsg(undefined);
-    setChain(undefined);
-    setIndex(undefined);
-    setType(undefined);
-
-    try {
-      const signature = await signMessage(message, address, blockchain, index, addressType);
-      signMessagePromise?.resolve(signature);
-    } catch (e) {
-      signMessagePromise?.reject(e);
-    }
+    setShowSignHint(true);
+    return signMessage(message, address, blockchain, index, addressType).finally(() => setShowSignHint(false));
   }
 
   const contentOverride = isLoading ? (
     <StyledLoadingSpinner size={SpinnerSize.LG} />
   ) : showInstallHint ? (
     <InstallHint type={wallet} onConfirm={onCancel} />
-  ) : addr && msg && chain ? (
-    <SignHint onConfirm={(h) => onSignHintConfirmed(h, addr, chain, msg, index, type)} />
+  ) : showSignHint ? (
+    <SignHint />
   ) : undefined;
 
   return (

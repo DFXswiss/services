@@ -10,7 +10,6 @@ export interface StoreInterface {
   redirectUri: StoreItem<string>;
   balances: StoreItem<string>;
   language: StoreItem<string>;
-  showsSignatureInfo: StoreItem<boolean>;
   activeWallet: StoreItem<WalletType>;
 }
 
@@ -19,7 +18,6 @@ enum StoreKey {
   REDIRECT_URI = 'dfx.srv.redirectUri',
   BALANCES = 'dfx.srv.balances',
   LANGUAGE = 'dfx.srv.language',
-  SHOWS_SIGNATURE_INFO = 'dfx.srv.showsSignatureInfo',
   ACTIVE_WALLET = 'dfx.srv.activeWallet',
 }
 
@@ -53,11 +51,6 @@ export function useStore(): StoreInterface {
       get: () => get(StoreKey.LANGUAGE),
       set: (value: string) => set(StoreKey.LANGUAGE, value),
       remove: () => remove(StoreKey.LANGUAGE),
-    },
-    showsSignatureInfo: {
-      get: () => (get(StoreKey.SHOWS_SIGNATURE_INFO) ?? 'true') === 'true',
-      set: (value: boolean) => set(StoreKey.SHOWS_SIGNATURE_INFO, value ? 'true' : 'false'),
-      remove: () => remove(StoreKey.SHOWS_SIGNATURE_INFO),
     },
     activeWallet: {
       get: () => get(StoreKey.ACTIVE_WALLET) as WalletType,
