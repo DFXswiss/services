@@ -7,9 +7,7 @@ import {
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
-  StyledHorizontalStack,
   StyledInput,
-  StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -27,7 +25,7 @@ import { useNavigation } from '../hooks/navigation.hook';
 export function TfaScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { user } = useUserContext();
-  const { getKycInfo, setup2fa, delete2fa, verify2fa } = useKyc();
+  const { getKycInfo, setup2fa, verify2fa } = useKyc();
   const { search } = useLocation();
   const { copy } = useClipboard();
   const { goBack } = useNavigation();
@@ -37,7 +35,6 @@ export function TfaScreen(): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>();
   const [tokenInvalid, setTokenInvalid] = useState(false);
-  const [showDeleteMessage, setShowDeleteMessage] = useState(false);
 
   const [setupInfo, setSetupInfo] = useState<TfaSetup>();
 
@@ -54,7 +51,6 @@ export function TfaScreen(): JSX.Element {
     control,
     handleSubmit,
     formState: { isValid, errors },
-    reset,
   } = useForm<{ token: string }>({ mode: 'onTouched' });
 
   const rules = Utils.createRules({
@@ -90,18 +86,6 @@ export function TfaScreen(): JSX.Element {
     window.open(url, '_blank', 'noreferrer');
   }
 
-  function onDelete() {
-    if (!kycCode) return;
-
-    setIsLoading(true);
-
-    delete2fa(kycCode)
-      .then(() => load())
-      .then(() => reset())
-      .then(() => setShowDeleteMessage(false))
-      .catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
-  }
-
   return (
     <Layout title={translate('screens/2fa', '2FA')}>
       {isLoading ? (
@@ -116,148 +100,118 @@ export function TfaScreen(): JSX.Element {
         >
           <div className="text-left">
             <StyledVerticalStack gap={10} full>
-              {showDeleteMessage ? (
-                <StyledVerticalStack gap={6} full center>
-                  <p className="text-dfxBlue-800">
-                    {translate('screens/2fa', 'Are you sure you want to delete the 2FA method?')}
-                  </p>
-                  <StyledHorizontalStack>
-                    <StyledButton
-                      color={StyledButtonColor.STURDY_WHITE}
-                      width={StyledButtonWidth.MIN}
-                      label={translate('general/actions', 'No')}
-                      onClick={() => setShowDeleteMessage(false)}
-                    />
-                    <StyledButton
-                      width={StyledButtonWidth.MIN}
-                      label={translate('general/actions', 'Yes')}
-                      onClick={onDelete}
-                    />
-                  </StyledHorizontalStack>
-                </StyledVerticalStack>
-              ) : (
-                info && (
-                  <>
-                    {setupInfo && (
-                      <>
-                        {/* step 1 */}
-                        <StyledVerticalStack gap={4} full>
-                          <h2 className="text-dfxGray-700">
-                            <span className="text-dfxGray-800">
-                              {translate('screens/2fa', 'Step {{step}}', { step: 1 })}
-                              {': '}
-                            </span>
-                            <span className="font-medium">
-                              {translate(
-                                'screens/2fa',
-                                'Install Google Authenticator or another 2FA app on your smartphone',
-                              )}
-                            </span>
-                          </h2>
-                          <div className="flex flex-row flex-wrap gap-2">
-                            <StyledButton
-                              icon={IconVariant.APPLE}
-                              label="App Store"
-                              color={StyledButtonColor.STURDY_WHITE}
-                              width={StyledButtonWidth.MIN}
-                              onClick={() =>
-                                openAppStore('https://apps.apple.com/de/app/google-authenticator/id388497605')
-                              }
-                              deactivateMargin
-                            />
-                            <StyledButton
-                              icon={IconVariant.GOOGLE_PLAY}
-                              label="Google Play"
-                              color={StyledButtonColor.STURDY_WHITE}
-                              width={StyledButtonWidth.MIN}
-                              onClick={() =>
-                                openAppStore(
-                                  'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2',
-                                )
-                              }
-                              deactivateMargin
-                            />
-                          </div>
-                        </StyledVerticalStack>
-
-                        {/* step 2 */}
-                        <StyledVerticalStack gap={4} full>
-                          <h2 className="text-dfxGray-700">
-                            <span className="text-dfxGray-800">
-                              {translate('screens/2fa', 'Step {{step}}', { step: 2 })}
-                              {': '}
-                            </span>
-                            <span className="font-medium">
-                              {translate('screens/2fa', 'Set up the 2FA authenticator')}
-                            </span>
-                          </h2>
-                          <p className="text-dfxGray-700">
-                            {translate(
-                              'screens/2fa',
-                              'Click + in Google Authenticator to add a new account. You can scan the QR code or enter the secret provided to create your account in Google Authenticator.',
-                            )}
-                          </p>
-                          <QRCode
-                            className="mx-auto h-auto w-full max-w-[15rem]"
-                            value={setupInfo.uri}
-                            size={128}
-                            fgColor={'#072440'}
-                          />
-                          <StyledVerticalStack full center>
-                            <p className="text-dfxGray-800 italic">{translate('screens/2fa', 'Secret')}:</p>
-                            <div className="flex flex-row items-center gap-2 px-4">
-                              <p className="text-dfxGray-800 italic break-all">{setupInfo.secret}</p>
-                              <CopyButton onCopy={() => copy(setupInfo.secret)} />
-                            </div>
-                          </StyledVerticalStack>
-                        </StyledVerticalStack>
-                      </>
-                    )}
-
-                    {/* step 3 */}
-                    <StyledVerticalStack gap={4} full>
-                      <h2 className="text-dfxGray-700">
-                        {setupInfo && (
+              {info && (
+                <>
+                  {setupInfo && (
+                    <>
+                      {/* step 1 */}
+                      <StyledVerticalStack gap={4} full>
+                        <h2 className="text-dfxGray-700">
                           <span className="text-dfxGray-800">
-                            {translate('screens/2fa', 'Step {{step}}', { step: 3 })}
+                            {translate('screens/2fa', 'Step {{step}}', { step: 1 })}
                             {': '}
                           </span>
-                        )}
-                        <span className="font-medium">
-                          {translate('screens/2fa', 'Enter the 6-digit dynamic code from your authenticator app')}
-                        </span>
-                      </h2>
-                      <StyledInput
-                        name="token"
-                        type="number"
-                        placeholder={translate('screens/2fa', 'Authenticator code')}
-                        forceError={tokenInvalid}
-                        forceErrorMessage={
-                          tokenInvalid ? translate('screens/2fa', 'Invalid or expired code') : undefined
-                        }
-                        full
-                      />
-
-                      <StyledVerticalStack gap={2} full center>
-                        <StyledButton
-                          type="submit"
-                          width={StyledButtonWidth.MIN}
-                          label={translate('general/actions', 'Next')}
-                          onClick={handleSubmit(onSubmit)}
-                          isLoading={isSubmitting}
-                          disabled={!isValid}
-                        />
-                        {info.twoFactorEnabled && (
-                          <StyledLink
-                            label={translate('screens/2fa', 'Delete 2FA method')}
-                            onClick={() => setShowDeleteMessage(true)}
-                            dark
+                          <span className="font-medium">
+                            {translate(
+                              'screens/2fa',
+                              'Install Google Authenticator or another 2FA app on your smartphone',
+                            )}
+                          </span>
+                        </h2>
+                        <div className="flex flex-row flex-wrap gap-2">
+                          <StyledButton
+                            icon={IconVariant.APPLE}
+                            label="App Store"
+                            color={StyledButtonColor.STURDY_WHITE}
+                            width={StyledButtonWidth.MIN}
+                            onClick={() =>
+                              openAppStore('https://apps.apple.com/de/app/google-authenticator/id388497605')
+                            }
+                            deactivateMargin
                           />
-                        )}
+                          <StyledButton
+                            icon={IconVariant.GOOGLE_PLAY}
+                            label="Google Play"
+                            color={StyledButtonColor.STURDY_WHITE}
+                            width={StyledButtonWidth.MIN}
+                            onClick={() =>
+                              openAppStore(
+                                'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2',
+                              )
+                            }
+                            deactivateMargin
+                          />
+                        </div>
                       </StyledVerticalStack>
+
+                      {/* step 2 */}
+                      <StyledVerticalStack gap={4} full>
+                        <h2 className="text-dfxGray-700">
+                          <span className="text-dfxGray-800">
+                            {translate('screens/2fa', 'Step {{step}}', { step: 2 })}
+                            {': '}
+                          </span>
+                          <span className="font-medium">
+                            {translate('screens/2fa', 'Set up the 2FA authenticator')}
+                          </span>
+                        </h2>
+                        <p className="text-dfxGray-700">
+                          {translate(
+                            'screens/2fa',
+                            'Click + in Google Authenticator to add a new account. You can scan the QR code or enter the secret provided to create your account in Google Authenticator.',
+                          )}
+                        </p>
+                        <QRCode
+                          className="mx-auto h-auto w-full max-w-[15rem]"
+                          value={setupInfo.uri}
+                          size={128}
+                          fgColor={'#072440'}
+                        />
+                        <StyledVerticalStack full center>
+                          <p className="text-dfxGray-800 italic">{translate('screens/2fa', 'Secret')}:</p>
+                          <div className="flex flex-row items-center gap-2 px-4">
+                            <p className="text-dfxGray-800 italic break-all">{setupInfo.secret}</p>
+                            <CopyButton onCopy={() => copy(setupInfo.secret)} />
+                          </div>
+                        </StyledVerticalStack>
+                      </StyledVerticalStack>
+                    </>
+                  )}
+
+                  {/* step 3 */}
+                  <StyledVerticalStack gap={4} full>
+                    <h2 className="text-dfxGray-700">
+                      {setupInfo && (
+                        <span className="text-dfxGray-800">
+                          {translate('screens/2fa', 'Step {{step}}', { step: 3 })}
+                          {': '}
+                        </span>
+                      )}
+                      <span className="font-medium">
+                        {translate('screens/2fa', 'Enter the 6-digit dynamic code from your authenticator app')}
+                      </span>
+                    </h2>
+                    <StyledInput
+                      name="token"
+                      type="number"
+                      placeholder={translate('screens/2fa', 'Authenticator code')}
+                      forceError={tokenInvalid}
+                      forceErrorMessage={tokenInvalid ? translate('screens/2fa', 'Invalid or expired code') : undefined}
+                      full
+                    />
+
+                    <StyledVerticalStack gap={2} full center>
+                      <StyledButton
+                        type="submit"
+                        width={StyledButtonWidth.MIN}
+                        label={translate('general/actions', 'Next')}
+                        onClick={handleSubmit(onSubmit)}
+                        isLoading={isSubmitting}
+                        disabled={!isValid}
+                      />
                     </StyledVerticalStack>
-                  </>
-                )
+                  </StyledVerticalStack>
+                </>
               )}
               {error && (
                 <StyledVerticalStack full center>
