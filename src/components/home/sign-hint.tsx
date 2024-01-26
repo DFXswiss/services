@@ -1,19 +1,14 @@
 import {
   DfxIcon,
   IconVariant,
-  StyledButton,
-  StyledButtonColor,
-  StyledButtonWidth,
-  StyledCheckboxRow,
+  SpinnerSize,
+  StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useState } from 'react';
 import { useSettingsContext } from '../../contexts/settings.context';
 
-export function SignHint({ onConfirm }: { onConfirm: (hide: boolean) => void }): JSX.Element {
+export function SignHint(): JSX.Element {
   const { translate } = useSettingsContext();
-
-  const [isChecked, setIsChecked] = useState(false);
 
   return (
     <StyledVerticalStack gap={5} center>
@@ -26,16 +21,8 @@ export function SignHint({ onConfirm }: { onConfirm: (hide: boolean) => void }):
           )}
         </h2>
       </StyledVerticalStack>
-      <StyledCheckboxRow isChecked={isChecked} onChange={setIsChecked} centered>
-        {translate('screens/home', "Don't show this again.")}
-      </StyledCheckboxRow>
 
-      <StyledButton
-        width={StyledButtonWidth.MD}
-        color={StyledButtonColor.RED}
-        label="OK"
-        onClick={() => onConfirm(isChecked)}
-      />
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
     </StyledVerticalStack>
   );
 }

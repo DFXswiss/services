@@ -271,16 +271,15 @@ export default function SellScreen(): JSX.Element {
 
     await updateBankAccount();
 
-    if (canSendTransaction()) {
-      if (activeWallet) {
-        await sendTransaction(paymentInfo).then(setSellTxId);
-      } else {
-        return close(paymentInfo, false);
-      }
-    }
+    if (canSendTransaction() && !activeWallet) return close(paymentInfo, false);
 
-    setTxDone(true);
-    setIsProcessing(false);
+    try {
+      if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSellTxId);
+
+      setTxDone(true);
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   function close(sell: Sell, isComplete: boolean) {

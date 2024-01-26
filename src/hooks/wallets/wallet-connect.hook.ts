@@ -102,7 +102,7 @@ export function useWalletConnect(): WalletConnectInterface {
 
       return await client.request<string>({
         method: 'personal_sign',
-        params: [msg, address],
+        params: [`0x${Buffer.from(msg, 'utf8').toString('hex')}`, address],
       });
     } catch (e) {
       throw new AbortError('User cancelled');

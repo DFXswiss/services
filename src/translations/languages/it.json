@@ -17,7 +17,9 @@
     "Connect": "Collegare",
     "Continue in Trezor Connect": "Continua in Trezor Connect",
     "Yes": "Sì",
-    "No": "No"
+    "No": "No",
+    "Drop files here": "Lasciare i file qui",
+    "Browse": "Sfogliare"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -101,6 +103,28 @@
     "Invalid or expired code": "Codice non valido o scaduto",
     "Delete 2FA method": "Eliminare il metodo 2FA",
     "Are you sure you want to delete your 2FA method?": "Siete sicuri di voler eliminare il metodo 2FA?"
+  },
+  "screens/limit": {
+    "Limit increase": "Aumenta il limite",
+    "The request has been successfully submitted. You will be contacted by email as soon as the data has been verified.": "La richiesta è stata inviata con successo. Sarai contattato via e-mail non appena i dati saranno verificati.",
+    "Investment volume": "Volume degli investimenti",
+    "Investment date": "Data dell'investimento",
+    "Current assets": "Attività correnti",
+    "Future assets": "Attività future",
+    "Origin of funds": "Origine dei fondi",
+    "free text": "testo libero",
+    "Savings": "Risparmi",
+    "Business profits": "Profitti d'impresa",
+    "Stock price gains": "Rendimento delle azioni",
+    "Crypto price gains": "Aumenti del prezzo delle criptovalute",
+    "Inheritance": "Eredità",
+    "Other": "Altro",
+    "Future savings": "Risparmi futuri",
+    "Future business profits": "Profitti aziendali futuri",
+    "Future stock price gains": "Futuri aumenti di prezzo delle azioni",
+    "Future crypto price gains": "Futuri aumenti di prezzo delle criptovalute",
+    "Future inheritance": "Eredità futura",
+    "Document proof": "Prova dei documenti"
   },
   "screens/error": {
     "Oh sorry something went wrong": "Oh, scusate, qualcosa è andato storto",
