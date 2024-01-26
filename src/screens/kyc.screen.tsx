@@ -209,6 +209,9 @@ export function KycScreen(): JSX.Element {
 
       case KycStepStatus.FAILED:
         return { icon: IconVariant.CLOSE, size: IconSize.MD };
+
+      case KycStepStatus.OUTDATED:
+        return { icon: IconVariant.REPEAT, size: IconSize.MD };
     }
   }
 
