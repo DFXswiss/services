@@ -133,7 +133,7 @@ export function LinkScreen(): JSX.Element {
           <p className="text-dfxGray-700">
             {translate(
               'screens/kyc',
-              'It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to add the current address to your account.',
+              'It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to confirm your mail address.',
             )}
           </p>
           <StyledButton width={StyledButtonWidth.MIN} label={translate('general/actions', 'OK')} onClick={goBack} />
@@ -149,10 +149,7 @@ export function LinkScreen(): JSX.Element {
           <StyledVerticalStack gap={6} full center>
             <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
             <p className="text-base font-bold text-dfxBlue-800">
-              {translate(
-                'screens/kyc',
-                'Please enter your contact information so that we can add the current address to your account',
-              )}
+              {translate('screens/kyc', 'Please enter your contact information so that we can find your account')}
             </p>
 
             <StyledInput
