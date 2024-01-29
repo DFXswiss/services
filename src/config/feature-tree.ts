@@ -1308,9 +1308,9 @@ export const FeatureTree: Page[] = [
 
 // --- FRANKENCOIN --- //
 {
-  id: 'frankencoin-home',
+  id: 'frankencoin',
   header: 'Frankencoin',
-  description: 'Buy and sell Frankencoin XCHF and FPS Token',
+  description: 'Buy and sell Frankencoin Assets',
   bottomImage: 'https://www.frankencoin.com/assets/logo.svg',
   tiles: [
     {
@@ -1333,13 +1333,15 @@ export const FeatureTree: Page[] = [
 {
   id: 'frankencoin-buy',
   header: 'Blockchain',
-  description: 'Select a blockchain to buy Frankencoin',
+  description: 'Select a blockchain to buy Frankencoin Assets',
   bottomImage:'https://www.frankencoin.com/assets/logo.svg',
   tiles: [
     {
       id: 'ethereum',
       img: 'ethereum',
-      disabled: true,
+      next: {
+        page: 'frankencoin-buy-ethereum',
+      },
     },
     {
       id: 'arbitrum',
@@ -1358,16 +1360,19 @@ export const FeatureTree: Page[] = [
     },
   ],
 },
+
 {
   id: 'frankencoin-sell',
   header: 'Blockchain',
-  description: 'Select a blockchain to sell Frankencoin',
+  description: 'Select a blockchain to sell Frankencoin Assets',
   bottomImage:'https://www.frankencoin.com/assets/logo.svg',
   tiles: [
     {
       id: 'ethereum',
       img: 'ethereum',
-      disabled: true,
+      next: {
+        page: 'frankencoin-sell-ethereum',
+      },
     },
     {
       id: 'arbitrum',
@@ -1385,7 +1390,44 @@ export const FeatureTree: Page[] = [
       disabled: true,
     },
   ],
+},
 
+{
+  id: 'frankencoin-buy-ethereum',
+  header: 'Buy Frankencoin Assets on Ethereum',
+  description: 'Buy Frankencoin Assets on Ethereum',
+  bottomImage:'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'ZCHF',
+      img: 'frankencoin',
+      disabled: true,
+    },
+    {
+      id: 'FPS',
+      img: 'fps',
+      disabled: true,
+    },
+  ],
+},
+
+{
+  id: 'frankencoin-sell-ethereum',
+  header: 'Sell Frankencoin Assets on Ethereum',
+  description: 'Sell Frankencoin Assets on Ethereum',
+  bottomImage:'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'ZCHF',
+      img: 'frankencoin',
+      disabled: true,
+    },
+    {
+      id: 'FPS',
+      img: 'fps',
+      disabled: true,
+    },
+  ],
 },
 
   // --- ONLY BUY BITCOIN on HW --- //
