@@ -1306,6 +1306,88 @@ export const FeatureTree: Page[] = [
     ],
   },
 
+// --- FRANKENCOIN --- //
+{
+  id: 'frankencoin-home',
+  header: 'Frankencoin',
+  description: 'Buy and sell Frankencoin XCHF and FPS Token',
+  bottomImage: 'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'frankencoin-buy',
+      },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'frankencoin-sell',
+      },
+    },
+  ],
+},
+
+{
+  id: 'frankencoin-buy',
+  header: 'Blockchain',
+  description: 'Select a blockchain to buy Frankencoin',
+  bottomImage:'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'ethereum',
+      img: 'ethereum',
+      disabled: true,
+    },
+    {
+      id: 'arbitrum',
+      img: 'arbitrum',
+      disabled: true,
+    },
+    {
+      id: 'optimism',
+      img: 'optimism',
+      disabled: true,
+    },
+    {
+      id: 'polygon',
+      img: 'polygon',
+      disabled: true,
+    },
+  ],
+},
+{
+  id: 'frankencoin-sell',
+  header: 'Blockchain',
+  description: 'Select a blockchain to sell Frankencoin',
+  bottomImage:'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'ethereum',
+      img: 'ethereum',
+      disabled: true,
+    },
+    {
+      id: 'arbitrum',
+      img: 'arbitrum',
+      disabled: true,
+    },
+    {
+      id: 'optimism',
+      img: 'optimism',
+      disabled: true,
+    },
+    {
+      id: 'polygon',
+      img: 'polygon',
+      disabled: true,
+    },
+  ],
+
+},
+
   // --- ONLY BUY BITCOIN on HW --- //
   {
     id: 'bitcoin-hardwarewallets',
@@ -2071,11 +2153,6 @@ export const FeatureTree: Page[] = [
         next: {
           page: 'kevinsoell-sell',
         },
-      },
-      {
-        id: 'convert',
-        img: 'tauschen',
-        disabled: true,
       },
     ],
   },
