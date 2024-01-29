@@ -1306,6 +1306,130 @@ export const FeatureTree: Page[] = [
     ],
   },
 
+// --- FRANKENCOIN --- //
+{
+  id: 'frankencoin',
+  header: 'Frankencoin',
+  description: 'Buy and sell Frankencoin Assets',
+  bottomImage: 'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'buy',
+      img: 'kaufen',
+      next: {
+        page: 'frankencoin-buy',
+      },
+    },
+    {
+      id: 'sell',
+      img: 'verkaufen',
+      next: {
+        page: 'frankencoin-sell',
+      },
+    },
+  ],
+},
+
+{
+  id: 'frankencoin-buy',
+  header: 'Blockchain',
+  description: 'Select a blockchain to buy Frankencoin Assets',
+  bottomImage:'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'ethereum',
+      img: 'ethereum',
+      next: {
+        page: 'frankencoin-buy-ethereum',
+      },
+    },
+    {
+      id: 'arbitrum',
+      img: 'arbitrum',
+      disabled: true,
+    },
+    {
+      id: 'optimism',
+      img: 'optimism',
+      disabled: true,
+    },
+    {
+      id: 'polygon',
+      img: 'polygon',
+      disabled: true,
+    },
+  ],
+},
+
+{
+  id: 'frankencoin-sell',
+  header: 'Blockchain',
+  description: 'Select a blockchain to sell Frankencoin Assets',
+  bottomImage:'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'ethereum',
+      img: 'ethereum',
+      next: {
+        page: 'frankencoin-sell-ethereum',
+      },
+    },
+    {
+      id: 'arbitrum',
+      img: 'arbitrum',
+      disabled: true,
+    },
+    {
+      id: 'optimism',
+      img: 'optimism',
+      disabled: true,
+    },
+    {
+      id: 'polygon',
+      img: 'polygon',
+      disabled: true,
+    },
+  ],
+},
+
+{
+  id: 'frankencoin-buy-ethereum',
+  header: 'Buy Frankencoin Assets on Ethereum',
+  description: 'Buy Frankencoin Assets on Ethereum',
+  bottomImage:'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'ZCHF',
+      img: 'frankencoin',
+      disabled: true,
+    },
+    {
+      id: 'FPS',
+      img: 'fps',
+      disabled: true,
+    },
+  ],
+},
+
+{
+  id: 'frankencoin-sell-ethereum',
+  header: 'Sell Frankencoin Assets on Ethereum',
+  description: 'Sell Frankencoin Assets on Ethereum',
+  bottomImage:'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'ZCHF',
+      img: 'frankencoin',
+      disabled: true,
+    },
+    {
+      id: 'FPS',
+      img: 'fps',
+      disabled: true,
+    },
+  ],
+},
+
   // --- ONLY BUY BITCOIN on HW --- //
   {
     id: 'bitcoin-hardwarewallets',
@@ -2071,11 +2195,6 @@ export const FeatureTree: Page[] = [
         next: {
           page: 'kevinsoell-sell',
         },
-      },
-      {
-        id: 'convert',
-        img: 'tauschen',
-        disabled: true,
       },
     ],
   },
