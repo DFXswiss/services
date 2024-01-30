@@ -1399,9 +1399,40 @@ export const FeatureTree: Page[] = [
   bottomImage:'https://www.frankencoin.com/assets/logo.svg',
   tiles: [
     {
+      id: 'eth',
+      img: 'eth',
+      next: {
+        page: 'frankencoin-wallets',
+        tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
+        options: {
+          service: 'buy',
+          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+        },
+      },
+    },
+    {
+      id: 'wbtc',
+      img: 'wbtc',
+      next: {
+        page: 'frankencoin-wallets',
+        tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
+        options: {
+          service: 'buy',
+          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+        },
+      },
+    },
+    {
       id: 'ZCHF',
       img: 'frankencoin',
-      disabled: true,
+      next: {
+        page: 'frankencoin-wallets',
+        tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
+        options: {
+          service: 'buy',
+          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+        },
+      },
     },
     {
       id: 'FPS',
@@ -1418,9 +1449,40 @@ export const FeatureTree: Page[] = [
   bottomImage:'https://www.frankencoin.com/assets/logo.svg',
   tiles: [
     {
+      id: 'eth',
+      img: 'eth',
+      next: {
+        page: 'frankencoin-wallets',
+        tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
+        options: {
+          service: 'sell',
+          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+        },
+      },
+    },
+    {
+      id: 'wbtc',
+      img: 'wbtc',
+      next: {
+        page: 'frankencoin-wallets',
+        tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
+        options: {
+          service: 'sell',
+          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+        },
+      },
+    },
+    {
       id: 'ZCHF',
       img: 'frankencoin',
-      disabled: true,
+      next: {
+        page: 'frankencoin-wallets',
+        tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
+        options: {
+          service: 'sell',
+          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+        },
+      },
     },
     {
       id: 'FPS',
@@ -1429,6 +1491,77 @@ export const FeatureTree: Page[] = [
     },
   ],
 },
+
+{
+  id: 'frankencoin-wallets',
+  header: 'Frankencoin Assets on Ethereum',
+  description: 'Buy and Sell Frankencoin Assets on Ethereum',
+  bottomImage:'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'metamask',
+      img: 'metamaskrabby',
+      wallet: { type: WalletType.META_MASK },
+    },
+    {
+      id: 'hw-wallet',
+      img: 'hardwarewallets',
+      next: {
+        page: 'frankencoin-hw-wallets',
+      },
+    },
+    {
+      id: 'walletconnect',
+      img: 'walletconnect',
+      wallet: { type: WalletType.WALLET_CONNECT },
+    },
+    {
+      id: 'cli',
+      img: 'command',
+      wallet: (params) => {
+        switch (params.blockchain) {
+          case Blockchain.BITCOIN:
+            return { type: WalletType.CLI_BTC };
+          case Blockchain.MONERO:
+            return { type: WalletType.CLI_XMR };
+          default:
+            return { type: WalletType.CLI_ETH };
+        }
+      },
+    },
+  ],
+},
+
+{
+  id: 'frankencoin-hw-wallets',
+  header: 'Frankencoin Assets on Ethereum',
+  description: 'Buy and Sell Frankencoin Assets on Ethereum',
+  bottomImage:'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'bitbox',
+      img: 'bitbox',
+      wallet: (params) => ({
+        type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
+      }),
+    },
+    {
+      id: 'ledger',
+      img: 'ledger',
+      wallet: (params) => ({
+        type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
+      }),
+    },
+    {
+      id: 'trezor',
+      img: 'trezor',
+      wallet: (params) => ({
+        type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
+      }),
+    },
+  ],
+},
+
 
   // --- ONLY BUY BITCOIN on HW --- //
   {
