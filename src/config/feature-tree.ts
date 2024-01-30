@@ -1418,7 +1418,7 @@ export const FeatureTree: Page[] = [
         tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
         options: {
           service: 'buy',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ZCHF' },
         },
       },
     },
@@ -1468,7 +1468,7 @@ export const FeatureTree: Page[] = [
         tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
         options: {
           service: 'sell',
-          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+          query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ZCHF' },
         },
       },
     },
