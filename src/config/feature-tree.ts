@@ -1411,8 +1411,8 @@ export const FeatureTree: Page[] = [
       },
     },
     {
-      id: 'wbtc',
-      img: 'wbtc',
+      id: 'ZCHF',
+      img: 'frankencoin',
       next: {
         page: 'frankencoin-wallets',
         tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
@@ -1423,8 +1423,8 @@ export const FeatureTree: Page[] = [
       },
     },
     {
-      id: 'ZCHF',
-      img: 'frankencoin',
+      id: 'wbtc',
+      img: 'wbtc',
       next: {
         page: 'frankencoin-wallets',
         tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
@@ -1461,8 +1461,8 @@ export const FeatureTree: Page[] = [
       },
     },
     {
-      id: 'wbtc',
-      img: 'wbtc',
+      id: 'ZCHF',
+      img: 'frankencoin',
       next: {
         page: 'frankencoin-wallets',
         tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
@@ -1473,8 +1473,8 @@ export const FeatureTree: Page[] = [
       },
     },
     {
-      id: 'ZCHF',
-      img: 'frankencoin',
+      id: 'wbtc',
+      img: 'wbtc',
       next: {
         page: 'frankencoin-wallets',
         tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
