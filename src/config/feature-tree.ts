@@ -1344,6 +1344,13 @@ export const FeatureTree: Page[] = [
       },
     },
     {
+      id: 'polygon',
+      img: 'polygon',
+      next: {
+        page: 'frankencoin-buy-polygon',
+      },
+    },
+    {
       id: 'arbitrum',
       img: 'arbitrum',
       disabled: true,
@@ -1351,11 +1358,6 @@ export const FeatureTree: Page[] = [
     {
       id: 'optimism',
       img: 'optimism',
-      disabled: true,
-    },
-    {
-      id: 'polygon',
-      img: 'polygon',
       disabled: true,
     },
   ],
@@ -1373,6 +1375,13 @@ export const FeatureTree: Page[] = [
       next: {
         page: 'frankencoin-sell-ethereum',
       },
+    }, 
+    {
+      id: 'polygon',
+      img: 'polygon',
+      next: {
+        page: 'frankencoin-sell-polygon',
+      },
     },
     {
       id: 'arbitrum',
@@ -1382,11 +1391,6 @@ export const FeatureTree: Page[] = [
     {
       id: 'optimism',
       img: 'optimism',
-      disabled: true,
-    },
-    {
-      id: 'polygon',
-      img: 'polygon',
       disabled: true,
     },
   ],
@@ -1443,6 +1447,56 @@ export const FeatureTree: Page[] = [
 },
 
 {
+  id: 'frankencoin-buy-polygon',
+  header: 'Buy Frankencoin Assets on Ethereum',
+  description: 'Buy Frankencoin Assets on Ethereum',
+  bottomImage:'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'matic',
+      img: 'matic',
+      next: {
+        page: 'frankencoin-wallets',
+        tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
+        options: {
+          service: 'buy',
+          query: { blockchain: Blockchain.POLYGON, assetOut: 'MATIC' },
+        },
+      },
+    },
+    {
+      id: 'ZCHF',
+      img: 'frankencoin',
+      next: {
+        page: 'frankencoin-wallets',
+        tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
+        options: {
+          service: 'buy',
+          query: { blockchain: Blockchain.POLYGON, assetOut: 'ZCHF' },
+        },
+      },
+    },
+    {
+      id: 'wbtc',
+      img: 'wbtc',
+      next: {
+        page: 'frankencoin-wallets',
+        tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
+        options: {
+          service: 'buy',
+          query: { blockchain: Blockchain.POLYGON, assetOut: 'WBTC' },
+        },
+      },
+    },
+    {
+      id: 'FPS',
+      img: 'fps',
+      disabled: true,
+    },
+  ],
+},
+
+{
   id: 'frankencoin-sell-ethereum',
   header: 'Sell Frankencoin Assets on Ethereum',
   description: 'Sell Frankencoin Assets on Ethereum',
@@ -1481,6 +1535,56 @@ export const FeatureTree: Page[] = [
         options: {
           service: 'sell',
           query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+        },
+      },
+    },
+    {
+      id: 'FPS',
+      img: 'fps',
+      disabled: true,
+    },
+  ],
+},
+
+{
+  id: 'frankencoin-sell-polygon',
+  header: 'Sell Frankencoin Assets on Ethereum',
+  description: 'Sell Frankencoin Assets on Ethereum',
+  bottomImage:'https://www.frankencoin.com/assets/logo.svg',
+  tiles: [
+    {
+      id: 'matic',
+      img: 'matic',
+      next: {
+        page: 'frankencoin-wallets',
+        tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
+        options: {
+          service: 'sell',
+          query: { blockchain: Blockchain.POLYGON, assetOut: 'MATIC' },
+        },
+      },
+    },
+    {
+      id: 'ZCHF',
+      img: 'frankencoin',
+      next: {
+        page: 'frankencoin-wallets',
+        tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
+        options: {
+          service: 'sell',
+          query: { blockchain: Blockchain.POLYGON, assetOut: 'ZCHF' },
+        },
+      },
+    },
+    {
+      id: 'wbtc',
+      img: 'wbtc',
+      next: {
+        page: 'frankencoin-wallets',
+        tiles: ['metamask','hw-wallet', 'walletconnect', 'cli'],
+        options: {
+          service: 'sell',
+          query: { blockchain: Blockchain.POLYGON, assetOut: 'WBTC' },
         },
       },
     },
