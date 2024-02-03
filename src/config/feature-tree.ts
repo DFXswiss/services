@@ -2217,6 +2217,13 @@ export const FeatureTree: Page[] = [
           page: 'marcsteiner-buy-optimism',
         },
       },
+      {
+        id: 'polygon',
+        img: 'polygon',
+        next: {
+          page: 'marcsteiner-buy-polygon',
+        },
+      },
     ],
   },
   {
@@ -2388,28 +2395,321 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
+    id: 'marcsteiner-buy-polygon',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    tiles: [
+      {
+        id: 'matic',
+        img: 'matic',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'MATIC' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'USDT' },
+          },
+        },
+      },
+    ],
+  },
+  
+  {
     id: 'marcsteiner-sell',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
-        id: 'bitcoin',
+        id: 'marcsteiner-sell-bitcoin',
         img: 'bitcoinlightning_simple',
         next: {
-          page: 'wallets',
-          tiles: ['alby'],
+          page: 'hw-wallets',
+          tiles: ['bitbox', 'ledger'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
+            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
           },
         },
       },
       {
-        id: 'erc20',
+        id: 'marcsteiner-sell-erc20',
         img: 'ethereumarbitrumoptimismpolygon_simple',
         next: {
-          page: 'sell-erc20',
+          page: 'marcsteiner-sell-erc20',
+        },
+      },
+    ],
+  },
+  {
+    id: 'marcsteiner-sell-erc20',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    tiles: [
+      {
+        id: 'ethereum',
+        img: 'ethereum',
+        next: {
+          page: 'marcsteiner-sell-ethereum',
+        },
+      },
+      {
+        id: 'arbitrum',
+        img: 'arbitrum',
+        next: {
+          page: 'marcsteiner-sell-arbitrum',
+        },
+      },
+      {
+        id: 'optimism',
+        img: 'optimism',
+        next: {
+          page: 'marcsteiner-sell-optimism',
+        },
+      },
+      {
+        id: 'polygon',
+        img: 'polygon',
+        next: {
+          page: 'marcsteiner-sell-polygon',
+        },
+      },
+    ],
+  },
+  {
+    id: 'marcsteiner-sell-ethereum',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'USDC' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'marcsteiner-sell-arbitrum',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'USDC' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'marcsteiner-sell-optimism',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'USDC' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'marcsteiner-sell-polygon',
+    header: 'marcsteiner-consulting.ch',
+    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    tiles: [
+      {
+        id: 'matic',
+        img: 'matic',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'MATIC' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'USDT' },
+          },
         },
       },
     ],
