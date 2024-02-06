@@ -19,6 +19,8 @@ export enum WalletType {
   CLI_ETH = 'CliEth',
   DFX_TARO = 'DfxTaro',
   WALLET_CONNECT = 'WalletConnect',
+  CAKE = 'Cake',
+  MONERO = 'Monero',
   MAIL = 'Mail',
 }
 

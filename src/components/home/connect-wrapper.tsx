@@ -1,7 +1,6 @@
 import { lazy } from 'react';
 import { WalletType } from '../../contexts/wallet.context';
 import { ConnectProps } from './connect-shared';
-import { ConnectTaro } from './wallet/connect-taro';
 
 const ConnectAlby = lazy(() => import('./wallet/connect-alby'));
 const ConnectBitbox = lazy(() => import('./wallet/connect-bitbox'));
@@ -9,7 +8,9 @@ const ConnectCli = lazy(() => import('./wallet/connect-cli'));
 const ConnectLedger = lazy(() => import('./wallet/connect-ledger'));
 const ConnectMetaMask = lazy(() => import('./wallet/connect-metamask'));
 const ConnectTrezor = lazy(() => import('./wallet/connect-trezor'));
+const ConnectTaro = lazy(() => import('./wallet/connect-taro'));
 const ConnectWalletConnect = lazy(() => import('./wallet/connect-wallet-connect'));
+const ConnectMonero = lazy(() => import('./wallet/connect-monero'));
 const ConnectMail = lazy(() => import('./wallet/connect-mail'));
 
 export function ConnectWrapper(props: ConnectProps): JSX.Element {
@@ -42,6 +43,10 @@ export function ConnectWrapper(props: ConnectProps): JSX.Element {
 
     case WalletType.WALLET_CONNECT:
       return <ConnectWalletConnect {...props} />;
+
+    case WalletType.CAKE:
+    case WalletType.MONERO:
+      return <ConnectMonero {...props} wallet={props.wallet} />;
 
     case WalletType.MAIL:
       return <ConnectMail {...props} />;
