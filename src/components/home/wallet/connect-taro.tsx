@@ -18,7 +18,7 @@ const SupportedBlockchains = {
   [WalletType.DFX_TARO]: [Blockchain.LIGHTNING],
 };
 
-export function ConnectTaro(props: ConnectProps): JSX.Element {
+export default function ConnectTaro(props: ConnectProps): JSX.Element {
   const { session } = useAuthContext();
   const { createLnurlAuth, getLnurlAuth } = useAuth();
 

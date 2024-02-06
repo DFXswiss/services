@@ -183,6 +183,9 @@
     "Please use a desktop device with a compatible browser (e.g. Chrome) to be able to use this service.": "Per poter utilizzare questo servizio, utilizzare un dispositivo desktop con un browser compatibile (ad esempio Chrome).",
     "visit": "Vedere <1></1> per maggiori dettagli.",
 
+    "Please install {{wallet}} from the wallet provider's website.": "Installare {{wallet}} dal sito web del fornitore del portafoglio.",
+    "Open website": "Aprire il sito web",
+
     "Blockchain": "Blockchain",
     "Address": "Indirizzo",
     "Signature": "Firma",
