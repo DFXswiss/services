@@ -67,7 +67,7 @@ const paymentLabels = {
 };
 
 const paymentDescriptions = {
-  [BuyPaymentMethod.BANK]: 'SEPA, SEPA instant',
+  [BuyPaymentMethod.BANK]: 'Bank transaction',
   [BuyPaymentMethod.CARD]: 'Mastercard, Visa, Google Pay, Apple Pay',
 };
 
