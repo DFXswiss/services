@@ -3110,8 +3110,7 @@ export const FeatureTree: Page[] = [
     id: 'onramper',
     header: 'OnRamper x DFX',
     description: 'Buy and sell Crypto directly on your Wallet!',
-    bottomImage:
-      'https://images.g2crowd.com/uploads/product/hd_favicon/9075565c5eac9f43df0f37f751e2a5e0/onramper-onramper-the-1-fiat-onramp-aggregator.svg',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/OnRamper.png',
     tiles: [
       {
         id: 'metamask',
