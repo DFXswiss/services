@@ -41,7 +41,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { ErrorHint } from '../components/error-hint';
-import { KycHint } from '../components/kyc-hint';
+import { KycHint, KycReason } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
 import { QrCopy } from '../components/payment/qr-copy';
@@ -457,7 +457,7 @@ export default function SellScreen(): JSX.Element {
               </div>
             )}
 
-            {kycRequired && !customAmountError && <KycHint />}
+            {kycRequired && !customAmountError && <KycHint reason={KycReason.LIMIT_EXCEEDED} />}
 
             {!isLoading && errorMessage && (
               <StyledVerticalStack center className="text-center">

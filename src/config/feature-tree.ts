@@ -2157,7 +2157,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
@@ -2179,7 +2179,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-buy',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
@@ -2206,7 +2206,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-buy-erc20',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
@@ -2242,7 +2242,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-buy-ethereum',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
@@ -2298,7 +2298,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-buy-arbitrum',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
@@ -2354,7 +2354,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-buy-optimism',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
@@ -2410,7 +2410,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-buy-polygon',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
@@ -2455,7 +2455,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-sell',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
@@ -2482,7 +2482,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-sell-erc20',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
@@ -2518,7 +2518,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-sell-ethereum',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
@@ -2574,7 +2574,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-sell-arbitrum',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
@@ -2630,7 +2630,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-sell-optimism',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
@@ -2686,7 +2686,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'marcsteiner-sell-polygon',
     header: 'marcsteiner-consulting.ch',
-    description: 'Kaufe und verkaufe Crypto direkt in deine Wallet!',
+    description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {

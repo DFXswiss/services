@@ -88,6 +88,7 @@
     "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to confirm your mail address.": "Sembra che tu abbia già un account con DFX. Le abbiamo appena inviato un'e-mail. Fare clic sul link inviato per confermare il tuo indirizzo e-mail.",
     "No matching account was found.": "Non è stato trovato alcun account corrispondente.",
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Il conto deve essere verificato quando il volume delle transazioni giornaliere supera il {{limit}}. Se volete aumentare il vostro limite di trading giornaliero, completate il nostro processo KYC (Know-Your-Customer).",
+    "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Le transazioni bancarie istantanee sono possibili solo con un conto verificato. Se desiderate utilizzare SEPA Instant, completate il nostro processo KYC (Know-Your-Customer).",
     "Complete KYC": "Completare il KYC",
     "I am already verified with DFX": "Sono già verificato con DFX"
   },
@@ -221,7 +222,8 @@
 
     "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Non appena il bonifico arriverà sul nostro conto bancario, trasferiremo il vostro bene nel vostro portafoglio.",
 
-    "Bank transaction": "Transazione bancaria",
+    "Standard bank transaction": "Transazione bancaria standard",
+    "Instant bank transaction": "Transazione bancaria istantanea",
     "Credit card": "Carta di credito"
   },
   "screens/bank-accounts": {

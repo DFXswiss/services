@@ -35,7 +35,7 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorHint } from '../components/error-hint';
-import { KycHint } from '../components/kyc-hint';
+import { KycHint, KycReason } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { QrCopy } from '../components/payment/qr-copy';
 import { SellCompletion } from '../components/payment/sell-completion';
@@ -179,7 +179,7 @@ export function SellInfoScreen(): JSX.Element {
           />
         </>
       ) : kycRequired ? (
-        <KycHint />
+        <KycHint reason={KycReason.LIMIT_EXCEEDED} />
       ) : (
         bankAccount &&
         paymentInfo && (
