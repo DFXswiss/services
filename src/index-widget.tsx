@@ -25,6 +25,7 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   assetOut: 'string',
   paymentMethod: 'string',
   bankAccount: 'string',
+  externalTransactionId: 'string',
   onClose: 'function',
   service: 'string',
 };

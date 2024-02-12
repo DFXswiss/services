@@ -33,7 +33,7 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorHint } from '../components/error-hint';
-import { KycHint } from '../components/kyc-hint';
+import { KycHint, KycReason } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { GiroCode } from '../components/payment/giro-code';
@@ -48,7 +48,7 @@ export function BuyInfoScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
   const { availableBlockchains } = useSessionContext();
-  const { assetIn, assetOut, amountIn, amountOut } = useAppParams();
+  const { assetIn, assetOut, amountIn, amountOut, externalTransactionId } = useAppParams();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
@@ -64,6 +64,7 @@ export function BuyInfoScreen(): JSX.Element {
   const [currency, setCurrency] = useState<Fiat>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [errorMessage, setErrorMessage] = useState<string>();
+  const [limitExceeded, setLimitExceeded] = useState<boolean>(false);
   const [kycRequired, setKycRequired] = useState<boolean>(false);
 
   // default params
@@ -85,7 +86,7 @@ export function BuyInfoScreen(): JSX.Element {
 
     setErrorMessage(undefined);
 
-    const request: BuyPaymentInfo = { asset, currency };
+    const request: BuyPaymentInfo = { asset, currency, externalTransactionId };
     if (amountIn) {
       request.amount = +amountIn;
     } else if (amountOut) {
@@ -104,6 +105,10 @@ export function BuyInfoScreen(): JSX.Element {
   }
 
   function validateBuy(buy: Buy): Buy | undefined {
+    setCustomAmountError(undefined);
+    setLimitExceeded(false);
+    setKycRequired(false);
+
     switch (buy.error) {
       case TransactionError.AMOUNT_TOO_LOW:
         setCustomAmountError(
@@ -116,13 +121,15 @@ export function BuyInfoScreen(): JSX.Element {
 
       case TransactionError.AMOUNT_TOO_HIGH:
         if (!isComplete) {
-          setKycRequired(true);
+          setLimitExceeded(true);
           return undefined;
         }
-    }
+        break;
 
-    setCustomAmountError(undefined);
-    setKycRequired(false);
+      case TransactionError.KYC_REQUIRED:
+        setKycRequired(true);
+        return undefined;
+    }
 
     return buy;
   }
@@ -158,8 +165,10 @@ export function BuyInfoScreen(): JSX.Element {
             onClick={() => closeServices({ type: CloseType.CANCEL }, false)}
           />
         </>
+      ) : limitExceeded ? (
+        <KycHint reason={KycReason.LIMIT_EXCEEDED} />
       ) : kycRequired ? (
-        <KycHint />
+        <KycHint reason={KycReason.SEPA_INSTANT} />
       ) : (
         paymentInfo && (
           <>

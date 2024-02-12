@@ -35,7 +35,7 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorHint } from '../components/error-hint';
-import { KycHint } from '../components/kyc-hint';
+import { KycHint, KycReason } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { QrCopy } from '../components/payment/qr-copy';
 import { SellCompletion } from '../components/payment/sell-completion';
@@ -53,7 +53,14 @@ export function SellInfoScreen(): JSX.Element {
   const { availableBlockchains } = useSessionContext();
   const { bankAccounts, createAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
-  const { assetIn, assetOut, amountIn, amountOut, bankAccount: bankAccountParam } = useAppParams();
+  const {
+    assetIn,
+    assetOut,
+    amountIn,
+    amountOut,
+    bankAccount: bankAccountParam,
+    externalTransactionId,
+  } = useAppParams();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
@@ -107,7 +114,7 @@ export function SellInfoScreen(): JSX.Element {
 
     setErrorMessage(undefined);
 
-    const request: SellPaymentInfo = { asset, currency, iban: bankAccount?.iban };
+    const request: SellPaymentInfo = { asset, currency, iban: bankAccount?.iban, externalTransactionId };
     if (amountIn) {
       request.amount = +amountIn;
     } else if (amountOut) {
@@ -179,7 +186,7 @@ export function SellInfoScreen(): JSX.Element {
           />
         </>
       ) : kycRequired ? (
-        <KycHint />
+        <KycHint reason={KycReason.LIMIT_EXCEEDED} />
       ) : (
         bankAccount &&
         paymentInfo && (

@@ -41,7 +41,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { ErrorHint } from '../components/error-hint';
-import { KycHint } from '../components/kyc-hint';
+import { KycHint, KycReason } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
 import { QrCopy } from '../components/payment/qr-copy';
@@ -81,7 +81,7 @@ export default function SellScreen(): JSX.Element {
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
-  const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain } = useAppParams();
+  const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain, externalTransactionId } = useAppParams();
   const { isComplete } = useKycHelper();
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
@@ -194,7 +194,7 @@ export default function SellScreen(): JSX.Element {
     }
 
     setIsLoading(true);
-    receiveFor({ iban: bankAccount.iban, currency, amount, asset })
+    receiveFor({ iban: bankAccount.iban, currency, amount, asset, externalTransactionId })
       .then(validateSell)
       .then(setPaymentInfo)
       .catch((error: ApiError) => {
@@ -457,7 +457,7 @@ export default function SellScreen(): JSX.Element {
               </div>
             )}
 
-            {kycRequired && !customAmountError && <KycHint />}
+            {kycRequired && !customAmountError && <KycHint reason={KycReason.LIMIT_EXCEEDED} />}
 
             {!isLoading && errorMessage && (
               <StyledVerticalStack center className="text-center">

@@ -38,7 +38,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { ErrorHint } from '../components/error-hint';
-import { KycHint } from '../components/kyc-hint';
+import { KycHint, KycReason } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PaymentInformationContent } from '../components/payment/payment-information';
@@ -62,12 +62,14 @@ interface FormData {
 }
 
 const paymentLabels = {
-  [BuyPaymentMethod.BANK]: 'Bank transaction',
+  [BuyPaymentMethod.BANK]: 'Standard bank transaction',
+  [BuyPaymentMethod.INSTANT]: 'Instant bank transaction',
   [BuyPaymentMethod.CARD]: 'Credit card',
 };
 
 const paymentDescriptions = {
-  [BuyPaymentMethod.BANK]: 'Bank transaction',
+  [BuyPaymentMethod.BANK]: 'SWIFT, SEPA, SIC, euroSIC',
+  [BuyPaymentMethod.INSTANT]: 'SEPA Instant',
   [BuyPaymentMethod.CARD]: 'Mastercard, Visa, Google Pay, Apple Pay',
 };
 
@@ -80,7 +82,8 @@ export function BuyScreen(): JSX.Element {
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assets, assetIn, assetOut, amountIn, blockchain, flags, paymentMethod } = useAppParams();
+  const { assets, assetIn, assetOut, amountIn, blockchain, flags, paymentMethod, externalTransactionId } =
+    useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isComplete } = useKycHelper();
   const { navigate } = useNavigation();
@@ -95,6 +98,7 @@ export function BuyScreen(): JSX.Element {
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [errorMessage, setErrorMessage] = useState<string>();
+  const [limitExceeded, setLimitExceeded] = useState<boolean>(false);
   const [kycRequired, setKycRequired] = useState<boolean>(false);
   const [showsCompletion, setShowsCompletion] = useState(false);
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
@@ -119,7 +123,7 @@ export function BuyScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
-  const availablePaymentMethods = [BuyPaymentMethod.BANK];
+  const availablePaymentMethods = [BuyPaymentMethod.BANK, BuyPaymentMethod.INSTANT];
   (isDfxHosted || !isEmbedded) &&
     (user?.status === UserStatus.ACTIVE || flags?.includes(BuyPaymentMethod.CARD)) &&
     selectedAsset?.blockchain !== Blockchain.MONERO &&
@@ -127,7 +131,11 @@ export function BuyScreen(): JSX.Element {
   const defaultPaymentMethod =
     availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
   const availableCurrencies = currencies?.filter((c) =>
-    selectedPaymentMethod === BuyPaymentMethod.CARD ? c.cardSellable : c.sellable,
+    selectedPaymentMethod === BuyPaymentMethod.CARD
+      ? c.cardSellable
+      : selectedPaymentMethod === BuyPaymentMethod.INSTANT
+      ? c.name === 'EUR'
+      : c.sellable,
   );
 
   useEffect(() => {
@@ -193,7 +201,7 @@ export function BuyScreen(): JSX.Element {
     }
 
     setIsLoading(true);
-    receiveFor(validatedData)
+    receiveFor({ ...validatedData, externalTransactionId })
       .then(validateBuy)
       .then(setPaymentInfo)
       .catch((error: ApiError) => {
@@ -204,6 +212,10 @@ export function BuyScreen(): JSX.Element {
   }
 
   function validateBuy(buy: Buy): Buy | undefined {
+    setCustomAmountError(undefined);
+    setLimitExceeded(false);
+    setKycRequired(false);
+
     switch (buy.error) {
       case TransactionError.AMOUNT_TOO_LOW:
         setCustomAmountError(
@@ -212,19 +224,19 @@ export function BuyScreen(): JSX.Element {
             currency: buy.currency.name,
           }),
         );
-        setKycRequired(false);
         return undefined;
 
       case TransactionError.AMOUNT_TOO_HIGH:
         if (!isComplete) {
-          setCustomAmountError(undefined);
-          setKycRequired(true);
+          setLimitExceeded(true);
           return undefined;
         }
-    }
+        break;
 
-    setCustomAmountError(undefined);
-    setKycRequired(false);
+      case TransactionError.KYC_REQUIRED:
+        setKycRequired(true);
+        return undefined;
+    }
 
     return buy;
   }
@@ -325,7 +337,7 @@ export function BuyScreen(): JSX.Element {
                         placeholder="0.00"
                         prefix={selectedCurrency && toSymbol(selectedCurrency)}
                         name="amount"
-                        forceError={kycRequired || customAmountError != null}
+                        forceError={limitExceeded || customAmountError != null}
                         forceErrorMessage={customAmountError}
                         full
                       />
@@ -402,7 +414,8 @@ export function BuyScreen(): JSX.Element {
                   </StyledVerticalStack>
                 )}
 
-                {!isLoading && kycRequired && <KycHint />}
+                {!isLoading && limitExceeded && <KycHint reason={KycReason.LIMIT_EXCEEDED} />}
+                {!isLoading && kycRequired && <KycHint reason={KycReason.SEPA_INSTANT} />}
 
                 {!isLoading && errorMessage && (
                   <StyledVerticalStack center className="text-center">
@@ -418,7 +431,7 @@ export function BuyScreen(): JSX.Element {
                   </StyledVerticalStack>
                 )}
 
-                {!isLoading && paymentInfo && !kycRequired && !errorMessage && (
+                {!isLoading && paymentInfo && !limitExceeded && !kycRequired && !errorMessage && (
                   <>
                     <StyledCollapsible
                       full
@@ -447,7 +460,7 @@ export function BuyScreen(): JSX.Element {
                       </div>
                     </StyledCollapsible>
 
-                    {selectedPaymentMethod === BuyPaymentMethod.BANK ? (
+                    {selectedPaymentMethod !== BuyPaymentMethod.CARD ? (
                       <div>
                         <PaymentInformationContent info={paymentInfo} />
                         <div className="pt-4 w-full leading-none">

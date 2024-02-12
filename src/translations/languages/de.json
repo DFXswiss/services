@@ -83,11 +83,12 @@
     "Contact information": "Kontaktdaten",
 
     "Please fill in personal information to continue": "Bitte gib Deine persönlichen Daten ein, um fortzufahren",
-    "Please enter your contact information so that we can find your account": "Bitte gib Deine Kontaktinformationen ein, damit wir dein Konto finden können",
+    "Please enter your contact information so that we can find your account": "Bitte gib Deine Kontaktinformationen ein, damit wir Dein Konto finden können",
 
     "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to confirm your mail address.": "Wie es aussieht, hast Du bereits ein Konto bei DFX. Wir haben Dir gerade eine E-Mail geschickt. Klicke auf den gesendeten Link, um Deine E-Mail-Adresse zu bestätigen.",
     "No matching account was found.": "Es wurde kein passendes Konto gefunden.",
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Dein Konto muss verifiziert werden, sobald Dein tägliches Transaktionsvolumen {{limit}} überschreitet. Wenn Du Dein tägliches Handelslimit erhöhen möchtest, schliesse bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
+    "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Sofort-Banktransaktionen sind nur mit einem verifizierten Konto möglich. Wenn Du SEPA Instant nutzen möchtest, schliesse bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
     "Complete KYC": "KYC vervollständigen",
     "I am already verified with DFX": "Ich bin bereits bei DFX verifiziert"
   },
@@ -143,7 +144,7 @@
 
     "Please confirm the connection in your MetaMask.": "Bitte bestätige die Verbindung in Deiner MetaMask.",
     "Please confirm the connection in the Alby browser extension.": "Bitte bestätige die Verbindung in der Alby Browsererweiterung.",
-    "Please confirm the connection in your wallet.": "Bitte bestätige die Verbindung in deiner Wallet.",
+    "Please confirm the connection in your wallet.": "Bitte bestätige die Verbindung in Deiner Wallet.",
     "Please confirm the connection with your Ledger.": "Bitte bestätige die Verbindung mit Deinem Ledger.",
     "Connection failed!": "Verbindung fehlgeschlagen!",
 
@@ -221,7 +222,8 @@
 
     "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir das Asset in Deine Wallet übertragen.",
 
-    "Bank transaction": "Banktransaktion",
+    "Standard bank transaction": "Standard-Banktransaktion",
+    "Instant bank transaction": "Sofort-Banktransaktion",
     "Credit card": "Kreditkarte"
   },
   "screens/bank-accounts": {
