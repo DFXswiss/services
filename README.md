@@ -114,6 +114,7 @@ DFX services supports the following parameters.
   - Assets: (`assets`): crypto asset filter
   - Input asset: (`asset-in`): the asset to sell or convert (crypto asset or currency)
   - Output asset (`asset-out`): the asset to receive (crypto asset or currency)
+  - External transaction ID (`external-transaction-id`): a custom ID to track the transaction
 
 _Hint: Asset selection parameters may be overwritten when using [wallet login](#wallet-login)_
 

@@ -82,7 +82,8 @@ export function BuyScreen(): JSX.Element {
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assets, assetIn, assetOut, amountIn, blockchain, flags, paymentMethod } = useAppParams();
+  const { assets, assetIn, assetOut, amountIn, blockchain, flags, paymentMethod, externalTransactionId } =
+    useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isComplete } = useKycHelper();
   const { navigate } = useNavigation();
@@ -196,7 +197,7 @@ export function BuyScreen(): JSX.Element {
     }
 
     setIsLoading(true);
-    receiveFor(validatedData)
+    receiveFor({ ...validatedData, externalTransactionId })
       .then(validateBuy)
       .then(setPaymentInfo)
       .catch((error: ApiError) => {

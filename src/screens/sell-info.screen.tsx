@@ -53,7 +53,14 @@ export function SellInfoScreen(): JSX.Element {
   const { availableBlockchains } = useSessionContext();
   const { bankAccounts, createAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
-  const { assetIn, assetOut, amountIn, amountOut, bankAccount: bankAccountParam } = useAppParams();
+  const {
+    assetIn,
+    assetOut,
+    amountIn,
+    amountOut,
+    bankAccount: bankAccountParam,
+    externalTransactionId,
+  } = useAppParams();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
@@ -107,7 +114,7 @@ export function SellInfoScreen(): JSX.Element {
 
     setErrorMessage(undefined);
 
-    const request: SellPaymentInfo = { asset, currency, iban: bankAccount?.iban };
+    const request: SellPaymentInfo = { asset, currency, iban: bankAccount?.iban, externalTransactionId };
     if (amountIn) {
       request.amount = +amountIn;
     } else if (amountOut) {

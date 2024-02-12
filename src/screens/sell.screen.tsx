@@ -81,7 +81,7 @@ export default function SellScreen(): JSX.Element {
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
-  const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain } = useAppParams();
+  const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain, externalTransactionId } = useAppParams();
   const { isComplete } = useKycHelper();
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
@@ -194,7 +194,7 @@ export default function SellScreen(): JSX.Element {
     }
 
     setIsLoading(true);
-    receiveFor({ iban: bankAccount.iban, currency, amount, asset })
+    receiveFor({ iban: bankAccount.iban, currency, amount, asset, externalTransactionId })
       .then(validateSell)
       .then(setPaymentInfo)
       .catch((error: ApiError) => {

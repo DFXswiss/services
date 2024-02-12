@@ -32,6 +32,7 @@ const urlParams = [
   'asset-out',
   'payment-method',
   'bank-account',
+  'external-transaction-id',
 ];
 
 export interface AppParams {
@@ -58,6 +59,7 @@ export interface AppParams {
   assetOut?: string;
   paymentMethod?: string;
   bankAccount?: string;
+  externalTransactionId?: string;
 }
 
 export enum CloseType {
@@ -199,6 +201,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           assetOut: getParameter(query, 'asset-out'),
           paymentMethod: getParameter(query, 'payment-method'),
           bankAccount: getParameter(query, 'bank-account'),
+          externalTransactionId: getParameter(query, 'external-transaction-id'),
         };
   }
 

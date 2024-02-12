@@ -48,7 +48,7 @@ export function BuyInfoScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
   const { availableBlockchains } = useSessionContext();
-  const { assetIn, assetOut, amountIn, amountOut } = useAppParams();
+  const { assetIn, assetOut, amountIn, amountOut, externalTransactionId } = useAppParams();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
@@ -86,7 +86,7 @@ export function BuyInfoScreen(): JSX.Element {
 
     setErrorMessage(undefined);
 
-    const request: BuyPaymentInfo = { asset, currency };
+    const request: BuyPaymentInfo = { asset, currency, externalTransactionId };
     if (amountIn) {
       request.amount = +amountIn;
     } else if (amountOut) {
