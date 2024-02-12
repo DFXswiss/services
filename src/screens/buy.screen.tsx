@@ -131,7 +131,11 @@ export function BuyScreen(): JSX.Element {
   const defaultPaymentMethod =
     availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
   const availableCurrencies = currencies?.filter((c) =>
-    selectedPaymentMethod === BuyPaymentMethod.CARD ? c.cardSellable : c.sellable,
+    selectedPaymentMethod === BuyPaymentMethod.CARD
+      ? c.cardSellable
+      : selectedPaymentMethod === BuyPaymentMethod.INSTANT
+      ? c.name === 'EUR'
+      : c.sellable,
   );
 
   useEffect(() => {
