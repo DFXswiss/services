@@ -134,7 +134,7 @@ export function BuyScreen(): JSX.Element {
     selectedPaymentMethod === BuyPaymentMethod.CARD
       ? c.cardSellable
       : selectedPaymentMethod === BuyPaymentMethod.INSTANT
-      ? c.name === 'EUR'
+      ? c.instantSellable
       : c.sellable,
   );
 
