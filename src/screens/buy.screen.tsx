@@ -7,7 +7,6 @@ import {
   BuyPaymentMethod,
   Fiat,
   TransactionError,
-  UserStatus,
   Utils,
   Validations,
   useAsset,
@@ -37,6 +36,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+import { NameEdit } from '../components/edit/name.edit';
 import { ErrorHint } from '../components/error-hint';
 import { KycHint, KycReason } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
@@ -82,8 +82,7 @@ export function BuyScreen(): JSX.Element {
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assets, assetIn, assetOut, amountIn, blockchain, flags, paymentMethod, externalTransactionId } =
-    useAppParams();
+  const { assets, assetIn, assetOut, amountIn, blockchain, paymentMethod, externalTransactionId } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isComplete } = useKycHelper();
   const { navigate } = useNavigation();
@@ -102,6 +101,7 @@ export function BuyScreen(): JSX.Element {
   const [kycRequired, setKycRequired] = useState<boolean>(false);
   const [showsCompletion, setShowsCompletion] = useState(false);
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
+  const [showsNameForm, setShowsNameForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isContinue, setIsContinue] = useState(false);
   const [validatedData, setValidatedData] = useState<BuyPaymentInfo>();
@@ -125,7 +125,6 @@ export function BuyScreen(): JSX.Element {
 
   const availablePaymentMethods = [BuyPaymentMethod.BANK, BuyPaymentMethod.INSTANT];
   (isDfxHosted || !isEmbedded) &&
-    (user?.status === UserStatus.ACTIVE || flags?.includes(BuyPaymentMethod.CARD)) &&
     selectedAsset?.blockchain !== Blockchain.MONERO &&
     availablePaymentMethods.push(BuyPaymentMethod.CARD);
   const defaultPaymentMethod =
@@ -269,6 +268,21 @@ export function BuyScreen(): JSX.Element {
     navigate('/switch', { setRedirect: true });
   }
 
+  function onCardBuy(info: Buy) {
+    if (info.nameRequired) {
+      setShowsNameForm(true);
+    } else {
+      openPaymentLink();
+    }
+  }
+
+  function openPaymentLink() {
+    if (!paymentInfo?.paymentLink) return;
+
+    setIsContinue(true);
+    window.location.href = paymentInfo.paymentLink;
+  }
+
   const rules = Utils.createRules({
     asset: Validations.Required,
     currency: Validations.Required,
@@ -301,7 +315,14 @@ export function BuyScreen(): JSX.Element {
       : undefined;
 
   return (
-    <Layout title={title} backButton={!showsCompletion} textStart rootRef={rootRef} scrollRef={scrollRef}>
+    <Layout
+      title={title}
+      backButton={!showsCompletion}
+      onBack={showsNameForm ? () => setShowsNameForm(false) : undefined}
+      textStart
+      rootRef={rootRef}
+      scrollRef={scrollRef}
+    >
       {showsSwitchScreen ? (
         <>
           <p className="text-dfxBlue-800 mb-2">
@@ -323,6 +344,8 @@ export function BuyScreen(): JSX.Element {
         </>
       ) : showsCompletion && paymentInfo ? (
         <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo} navigateOnClose />
+      ) : showsNameForm ? (
+        <NameEdit onSuccess={openPaymentLink} />
       ) : (
         <Form control={control} rules={rules} errors={{}} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
           <StyledVerticalStack gap={8} full center>
@@ -500,10 +523,7 @@ export function BuyScreen(): JSX.Element {
                           <StyledButton
                             width={StyledButtonWidth.FULL}
                             label={translate('general/actions', 'Next')}
-                            onClick={() => {
-                              setIsContinue(true);
-                              window.location.href = paymentInfo.paymentLink as string;
-                            }}
+                            onClick={() => onCardBuy(paymentInfo)}
                             isLoading={isContinue}
                             className="my-4"
                           />
