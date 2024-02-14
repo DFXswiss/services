@@ -107,7 +107,7 @@ DFX services supports the following parameters.
 
 - Transaction information
 
-  - Payment method (`payment-method)`: the payment method (buy only, `bank` or `card`)
+  - Payment method (`payment-method)`: the payment method (buy only, `bank`, `instant` or `card`)
   - Bank account (`bank-account`): the bank account to send the money to (sell only)
   - Input amount (`amount-in`): the amount to sell or convert (in input asset)
   - Output amount (`amount-out`): the amount to receive (in output asset) (_TBD_)
