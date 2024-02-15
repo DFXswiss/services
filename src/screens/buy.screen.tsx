@@ -42,7 +42,7 @@ import { KycHint, KycReason } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PaymentInformationContent } from '../components/payment/payment-information';
-import { useAppHandlingContext } from '../contexts/app-handling.context';
+// import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -91,7 +91,7 @@ export function BuyScreen(): JSX.Element {
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const { toString } = useBlockchain();
-  const { isEmbedded, isDfxHosted } = useAppHandlingContext();
+  // const { isEmbedded, isDfxHosted } = useAppHandlingContext();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
@@ -124,9 +124,9 @@ export function BuyScreen(): JSX.Element {
   }
 
   const availablePaymentMethods = [BuyPaymentMethod.BANK, BuyPaymentMethod.INSTANT];
-  (isDfxHosted || !isEmbedded) &&
-    selectedAsset?.blockchain !== Blockchain.MONERO &&
-    availablePaymentMethods.push(BuyPaymentMethod.CARD);
+  // (isDfxHosted || !isEmbedded) &&
+  //   selectedAsset?.blockchain !== Blockchain.MONERO &&
+  //   availablePaymentMethods.push(BuyPaymentMethod.CARD);
   const defaultPaymentMethod =
     availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
   const availableCurrencies = currencies?.filter((c) =>
