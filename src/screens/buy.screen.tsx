@@ -124,9 +124,11 @@ export function BuyScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
+  const selectedWallet = wallet?.toLowerCase();
   const availablePaymentMethods = [BuyPaymentMethod.BANK, BuyPaymentMethod.INSTANT];
   (isDfxHosted || !isEmbedded) &&
-    wallet !== 'CakeWallet' &&
+    selectedWallet !== 'cakewallet' &&
+    selectedWallet !== '30' &&
     selectedAsset?.blockchain !== Blockchain.MONERO &&
     availablePaymentMethods.push(BuyPaymentMethod.CARD);
   const defaultPaymentMethod =
