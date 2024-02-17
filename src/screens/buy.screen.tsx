@@ -73,6 +73,8 @@ const paymentDescriptions = {
   [BuyPaymentMethod.CARD]: 'Mastercard, Visa, Google Pay, Apple Pay',
 };
 
+const EmbeddedWallet = 'CakeWallet';
+
 export function BuyScreen(): JSX.Element {
   useSessionGuard();
   const { translate, translateError } = useSettingsContext();
@@ -124,11 +126,10 @@ export function BuyScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
-  const selectedWallet = wallet?.toLowerCase();
   const availablePaymentMethods = [BuyPaymentMethod.BANK, BuyPaymentMethod.INSTANT];
   (isDfxHosted || !isEmbedded) &&
-    selectedWallet !== 'cakewallet' &&
-    selectedWallet !== '30' &&
+    wallet !== EmbeddedWallet &&
+    user?.wallet !== EmbeddedWallet &&
     selectedAsset?.blockchain !== Blockchain.MONERO &&
     availablePaymentMethods.push(BuyPaymentMethod.CARD);
   const defaultPaymentMethod =
