@@ -220,9 +220,11 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   function closeServices(params: CloseServicesParams, navigate: boolean) {
     if (props.isWidget) {
       props.closeCallback?.(createCloseMessageData(params));
-    } else if (isUsedByIframe) {
-      sendMessage(createCloseMessageData(params));
     } else {
+      if (isUsedByIframe) {
+        sendMessage(createCloseMessageData(params));
+      }
+
       if (redirectUri) {
         const uri = getRedirectUri(redirectUri, params);
         storeRedirectUri.remove();

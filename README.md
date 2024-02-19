@@ -29,25 +29,13 @@ and supports two different login modes,
 
 #### Standalone
 
-DFX services can be integrated using a browser redirect to [services.dfx.swiss](https://services.dfx.swiss/) with the desired parameters (see [below](#query-parameters)). For standalone usage, the `redirect-uri` parameter should be provided.
-
-On cancel or completion (see [closing](#closing)), the user will be redirected to this URI. Depending on the type of closing, a suffix will be appended to the URI and parameters will be provided.
-
-- Cancel: redirected to `{redirect-url}`
-- Buy: redirected to `{redirect-url}/buy`
-- Sell: redirected to `{redirect-url}/sell` with the following parameters:
-
-  - `routeId`: sell route ID (get details from [route endpoint](https://api.dfx.swiss/swagger#/Sell/SellController_getSell), authentication required)
-  - `amount`: amount to sell
-  - `asset`: asset to sell
-  - `blockchain`: transfer blockchain
-  - `isComplete`: is `true`, if blockchain transaction is already executed
+DFX services can be integrated using a browser redirect to [services.dfx.swiss](https://services.dfx.swiss/) with the desired parameters (see [below](#query-parameters)). For standalone usage, the `redirect-uri` parameter should be provided. On cancel or completion, the user will be redirected to this URI (see [redirect](#redirect)).
 
 #### Iframe
 
 DFX services can be integrated by opening [services.dfx.swiss](https://services.dfx.swiss/) with the desired parameters (see [below](#query-parameters)) in an Iframe. See the [code example](#iframe-example) below.
 
-On cancel or completion, a message will be sent on the window object of the browser. See [below](#close-message) for details on the message format.
+On cancel or completion, a message will be sent on the window object of the browser. See [below](#close-message) for details on the message format. If a redirect URI is specified, the user will be redirected to this URI (see [redirect](#redirect)).
 
 #### Web Component
 
@@ -128,7 +116,7 @@ _Hint: Asset selection parameters may be overwritten when using [wallet login](#
 
 **Special parameters**
 
-- Redirect URI (`redirect-uri`): URI to redirect the user to after cancel or completion (only for [standalone integration](#standalone), see [closing](#closing))
+- Redirect URI (`redirect-uri`): URI to redirect the user to after cancel or completion (only for [standalone](#standalone) or [Iframe](#iframe) integration, see [closing](#closing))
 
 #### Hints
 
@@ -145,6 +133,20 @@ There are multiple types of closings.
 - Sell: user wants to sell crypto
 
 In case of a sell, the service returns the information (`isComplete`) as to whether the required blockchain transaction has already been executed or not. If `isComplete` is set to `false`, the integrator should initiate the corresponding transaction to complete the sell.
+
+#### Redirect
+
+If a redirect URI was provided (`redirect-uri` parameter), the user will be redirected to this URI on cancel or completion. Depending on the type of closing, a suffix will be appended to the URI and parameters will be provided.
+
+- Cancel: redirected to `{redirect-url}`
+- Buy: redirected to `{redirect-url}/buy`
+- Sell: redirected to `{redirect-url}/sell` with the following parameters:
+
+  - `routeId`: sell route ID (get details from [route endpoint](https://api.dfx.swiss/swagger#/Sell/SellController_getSell), authentication required)
+  - `amount`: amount to sell
+  - `asset`: asset to sell
+  - `blockchain`: transfer blockchain
+  - `isComplete`: is `true`, if blockchain transaction is already executed
 
 #### Close Message
 
