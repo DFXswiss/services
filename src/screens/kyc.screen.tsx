@@ -559,7 +559,6 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                   <StyledInput
                     name="address.zip"
                     autocomplete="zip"
-                    type="number"
                     label={translate('screens/kyc', 'ZIP code')}
                     placeholder="12345"
                     small
