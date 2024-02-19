@@ -326,13 +326,6 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'stable',
-        img: 'stablecoin',
-        next: {
-          page: 'buy-optimism-stable',
-        },
-      },
-      {
         id: 'wbtc',
         img: 'wbtc',
         next: {
@@ -342,6 +335,13 @@ export const FeatureTree: Page[] = [
             service: 'buy',
             query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
           },
+        },
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'buy-optimism-stable',
         },
       },
       {
@@ -429,13 +429,6 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'stable',
-        img: 'stablecoin',
-        next: {
-          page: 'buy-polygon-stable',
-        },
-      },
-      {
         id: 'wbtc',
         img: 'wbtc',
         next: {
@@ -445,6 +438,13 @@ export const FeatureTree: Page[] = [
             service: 'buy',
             query: { blockchain: Blockchain.POLYGON, assetOut: 'WBTC' },
           },
+        },
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'buy-polygon-stable',
         },
       },
       {
