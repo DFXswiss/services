@@ -106,6 +106,7 @@ export function BuyScreen(): JSX.Element {
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
   const [showsNameForm, setShowsNameForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPriceLoading, setIsPriceLoading] = useState(false);
   const [isContinue, setIsContinue] = useState(false);
   const [validatedData, setValidatedData] = useState<BuyPaymentInfo>();
 
@@ -184,7 +185,9 @@ export function BuyScreen(): JSX.Element {
   }, [selectedAddress]);
 
   // data validation/fetch
-  useEffect(() => {
+  useEffect(() => updateData(), [selectedAmount, selectedCurrency, selectedAsset, selectedPaymentMethod]);
+
+  function updateData() {
     const data = validateData({
       amount: selectedAmount,
       currency: selectedCurrency,
@@ -192,28 +195,61 @@ export function BuyScreen(): JSX.Element {
       paymentMethod: selectedPaymentMethod,
     });
     setValidatedData(data);
-  }, [selectedAmount, selectedCurrency, selectedAsset, selectedPaymentMethod]);
+  }
 
-  useEffect(() => fetchData(), [useDebounce(validatedData, 500)]);
+  useEffect(() => {
+    let isRunning = true;
 
-  function fetchData() {
     setErrorMessage(undefined);
 
     if (!validatedData) {
       setPaymentInfo(undefined);
+      setIsLoading(false);
+      setIsPriceLoading(false);
       return;
     }
 
+    const data: BuyPaymentInfo = { ...validatedData, externalTransactionId };
+
     setIsLoading(true);
-    receiveFor({ ...validatedData, externalTransactionId })
-      .then(validateBuy)
-      .then(setPaymentInfo)
-      .catch((error: ApiError) => {
-        setPaymentInfo(undefined);
-        setErrorMessage(error.message ?? 'Unknown error');
+    receiveFor(data)
+      .then((buy) => {
+        if (isRunning) {
+          const info = validateBuy(buy);
+          setPaymentInfo(info);
+
+          // load exact price
+          if (info && !info.exactPrice) {
+            setIsPriceLoading(true);
+            receiveFor({ ...data, exactPrice: true })
+              .then((info) => {
+                if (isRunning) {
+                  setPaymentInfo(info);
+                  setIsPriceLoading(false);
+                }
+              })
+              .catch((error: ApiError) => {
+                if (isRunning) {
+                  setPaymentInfo(undefined);
+                  setIsPriceLoading(false);
+                  setErrorMessage(error.message ?? 'Unknown error');
+                }
+              });
+          }
+        }
       })
-      .finally(() => setIsLoading(false));
-  }
+      .catch((error: ApiError) => {
+        if (isRunning) {
+          setPaymentInfo(undefined);
+          setErrorMessage(error.message ?? 'Unknown error');
+        }
+      })
+      .finally(() => isRunning && setIsLoading(false));
+
+    return () => {
+      isRunning = false;
+    };
+  }, [useDebounce(validatedData, 500)]);
 
   function validateBuy(buy: Buy): Buy | undefined {
     setCustomAmountError(undefined);
@@ -400,6 +436,7 @@ export function BuyScreen(): JSX.Element {
                         text={
                           paymentInfo && !isLoading ? `≈ ${Utils.formatAmountCrypto(paymentInfo.estimatedAmount)}` : ' '
                         }
+                        loading={!isLoading && isPriceLoading}
                         full
                       />
                     </div>
@@ -452,7 +489,7 @@ export function BuyScreen(): JSX.Element {
                     <StyledButton
                       width={StyledButtonWidth.MIN}
                       label={translate('general/actions', 'Retry')}
-                      onClick={fetchData}
+                      onClick={updateData}
                       className="my-4"
                       color={StyledButtonColor.STURDY_WHITE}
                     />

@@ -94,6 +94,7 @@ export default function SellScreen(): JSX.Element {
   const [errorMessage, setErrorMessage] = useState<string>();
   const [kycRequired, setKycRequired] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPriceLoading, setIsPriceLoading] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [balances, setBalances] = useState<AssetBalance[]>();
@@ -175,38 +176,65 @@ export default function SellScreen(): JSX.Element {
     }
   }, [enteredAmount]);
 
-  useEffect(() => fetchData(), [validatedData]);
+  useEffect(() => {
+    let isRunning = true;
 
-  function fetchData() {
     setErrorMessage(undefined);
 
-    if (!dataValid) {
+    if (!dataValid || !checkForAmountAvailable(Number(validatedData.amount), validatedData.asset)) {
       setPaymentInfo(undefined);
+      setIsLoading(false);
+      setIsPriceLoading(false);
       return;
     }
 
     const amount = Number(validatedData.amount);
     const { asset, currency, bankAccount } = validatedData;
-
-    if (!checkForAmountAvailable(amount, asset)) {
-      setPaymentInfo(undefined);
-      return;
-    }
+    const data = { iban: bankAccount.iban, currency, amount, asset, externalTransactionId };
 
     setIsLoading(true);
-    receiveFor({ iban: bankAccount.iban, currency, amount, asset, externalTransactionId })
-      .then(validateSell)
-      .then(setPaymentInfo)
-      .catch((error: ApiError) => {
-        if (error.statusCode === 400 && error.message === 'Ident data incomplete') {
-          navigate('/profile');
-        } else {
-          setPaymentInfo(undefined);
-          setErrorMessage(error.message ?? 'Unknown error');
+    receiveFor(data)
+      .then((sell) => {
+        if (isRunning) {
+          const info = validateSell(sell);
+          setPaymentInfo(info);
+
+          // load exact price
+          if (info && !info.exactPrice) {
+            setIsPriceLoading(true);
+            receiveFor({ ...data, exactPrice: true })
+              .then((info) => {
+                if (isRunning) {
+                  setPaymentInfo(info);
+                  setIsPriceLoading(false);
+                }
+              })
+              .catch((error: ApiError) => {
+                if (isRunning) {
+                  setPaymentInfo(undefined);
+                  setIsPriceLoading(false);
+                  setErrorMessage(error.message ?? 'Unknown error');
+                }
+              });
+          }
         }
       })
-      .finally(() => setIsLoading(false));
-  }
+      .catch((error: ApiError) => {
+        if (isRunning) {
+          if (error.statusCode === 400 && error.message === 'Ident data incomplete') {
+            navigate('/profile');
+          } else {
+            setPaymentInfo(undefined);
+            setErrorMessage(error.message ?? 'Unknown error');
+          }
+        }
+      })
+      .finally(() => isRunning && setIsLoading(false));
+
+    return () => {
+      isRunning = false;
+    };
+  }, [validatedData]);
 
   function checkForAmountAvailable(amount: number, asset: Asset): boolean {
     const balance = findBalance(asset) ?? 0;
@@ -435,9 +463,9 @@ export default function SellScreen(): JSX.Element {
                   name="amount"
                   forceError={kycRequired || customAmountError != null}
                   forceErrorMessage={customAmountError}
-                  loading={isLoading}
+                  loading={isLoading || isPriceLoading}
                 />
-                {paymentInfo && paymentInfo.estimatedAmount > 0 && (
+                {!isLoading && paymentInfo && paymentInfo.estimatedAmount > 0 && (
                   <p className="text-dfxBlue-800 text-start w-full text-xs pt-2 pl-7">
                     {translate(
                       'screens/sell',
@@ -466,14 +494,14 @@ export default function SellScreen(): JSX.Element {
                 <StyledButton
                   width={StyledButtonWidth.MIN}
                   label={translate('general/actions', 'Retry')}
-                  onClick={fetchData}
+                  onClick={() => setVal('amount', enteredAmount)} // re-trigger
                   className="my-4"
                   color={StyledButtonColor.STURDY_WHITE}
                 />
               </StyledVerticalStack>
             )}
 
-            {paymentInfo && !kycRequired && !errorMessage && (
+            {!isLoading && paymentInfo && !kycRequired && !errorMessage && (
               <>
                 {paymentInfo.paymentRequest && !canSendTransaction() && (
                   <StyledVerticalStack full center>
