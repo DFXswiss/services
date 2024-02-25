@@ -201,7 +201,7 @@ function TileComponent({ tile, onClick }: { tile: Tile; onClick: (t: Tile) => vo
   return (
     <div
       ref={tileRef}
-      className="relative aspect-square"
+      className="relative aspect-square overflow-hidden"
       style={{ borderRadius: '4%', boxShadow: '0px 0px 5px 3px rgba(0, 0, 0, 0.25)' }}
     >
       <img src={tile.img} className={tile.disabled ? 'opacity-60' : 'cursor-pointer'} onClick={() => onClick(tile)} />
