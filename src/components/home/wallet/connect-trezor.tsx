@@ -125,7 +125,7 @@ function Content({
 
   // form
   const { control, setValue } = useForm<{ type: BitcoinAddressType; address?: Address; accountIndex: number }>({
-    defaultValues: { type: defaultAddressType },
+    defaultValues: { type: defaultAddressType, accountIndex: 0 },
   });
 
   const selectedType = useWatch({ control, name: 'type' });

@@ -80,9 +80,9 @@ export function useTrezor(): TrezorInterface {
 
   async function fetchAddresses(
     wallet: TrezorWallet,
-    accountIndex: number,
     startIndex: number,
     count: number,
+    accountIndex: number,
     addressType: BitcoinAddressType,
   ): Promise<string[]> {
     const addressBundle = [];
