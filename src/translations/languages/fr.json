@@ -156,6 +156,8 @@
     "Load more addresses": "Charger d'autres adresses",
     "Address type": "Type d'adresse",
     "Address index": "Index de l'adresse",
+    "Account index": "Index de l'compte",
+
 
     "Open the {{app}} app on your Ledger": "Ouvrez l'application {{app}} sur votre Ledger",
 
