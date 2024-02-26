@@ -184,26 +184,28 @@ function Content({
               <h2 className="text-dfxGray-700">{translate('screens/home', 'Choose an address')}</h2>
 
               {wallet === WalletType.BITBOX_BTC && (
-                <StyledDropdown<BitcoinAddressType>
-                  rootRef={rootRef}
-                  label={translate('screens/home', 'Address type')}
-                  name="type"
-                  items={addressTypes}
-                  labelFunc={(item) => item}
-                  full
-                  disabled={addressLoading}
-                />
+                <>
+                  <StyledDropdown<BitcoinAddressType>
+                    rootRef={rootRef}
+                    label={translate('screens/home', 'Address type')}
+                    name="type"
+                    items={addressTypes}
+                    labelFunc={(item) => item}
+                    full
+                    disabled={addressLoading}
+                  />
+                  <StyledDropdown<number>
+                    rootRef={rootRef}
+                    name="accountIndex"
+                    items={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+                    labelFunc={(item) => item.toString()}
+                    full
+                    disabled={addressLoading}
+                    placeholder={translate('general/actions', 'Select...')}
+                    label={translate('screens/home', 'Account index')}
+                  />
+                </>
               )}
-              <StyledDropdown<number>
-                rootRef={rootRef}
-                name="accountIndex"
-                items={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
-                labelFunc={(item) => item.toString()}
-                full
-                disabled={addressLoading}
-                placeholder={translate('general/actions', 'Select...')}
-                label={translate('screens/home', 'Account index')}
-              />
               <StyledDropdown<Address>
                 rootRef={rootRef}
                 name="address"
