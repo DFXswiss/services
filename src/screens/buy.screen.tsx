@@ -20,6 +20,7 @@ import {
 import {
   AssetIconVariant,
   Form,
+  IconColor,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
@@ -27,6 +28,7 @@ import {
   StyledCollapsible,
   StyledDropdown,
   StyledHorizontalStack,
+  StyledInfoText,
   StyledInput,
   StyledLink,
   StyledLoadingSpinner,
@@ -506,24 +508,31 @@ export function BuyScreen(): JSX.Element {
                         paymentInfo.asset.name
                       }`}
                     >
-                      <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">
-                        <div className="text-dfxGray-800">{translate('screens/buy', 'Base rate')}</div>
-                        <div>{baseRate}</div>
-
-                        <div className="text-dfxGray-800">{translate('screens/buy', 'DFX fee')}</div>
-                        <StyledVerticalStack>
-                          <div>{dfxFee}</div>
-                          {l1Replacement && (
-                            <div className="mt-1 text-xs text-dfxGray-700 leading-tight">
-                              {translate(
-                                'screens/buy',
-                                'Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees',
-                                { chain: l1Replacement },
-                              )}
-                            </div>
+                      <StyledVerticalStack gap={2}>
+                        <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">
+                          <div className="text-dfxGray-800">{translate('screens/buy', 'Base rate')}</div>
+                          <div>{baseRate}</div>
+                          <div className="text-dfxGray-800">{translate('screens/buy', 'DFX fee')}</div>
+                          <StyledVerticalStack>
+                            <div>{dfxFee}</div>
+                            {l1Replacement && (
+                              <div className="mt-1 text-xs text-dfxGray-700 leading-tight">
+                                {translate(
+                                  'screens/buy',
+                                  'Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees',
+                                  { chain: l1Replacement },
+                                )}
+                              </div>
+                            )}
+                          </StyledVerticalStack>
+                        </div>
+                        <StyledInfoText iconColor={IconColor.GRAY} discreet>
+                          {translate(
+                            'screens/payment',
+                            'This exchange rate is not guaranteed. The effective rate is determined when the transactions are received and processed by DFX.',
                           )}
-                        </StyledVerticalStack>
-                      </div>
+                        </StyledInfoText>
+                      </StyledVerticalStack>
                     </StyledCollapsible>
 
                     {selectedPaymentMethod !== BuyPaymentMethod.CARD ? (
@@ -536,7 +545,7 @@ export function BuyScreen(): JSX.Element {
                           <StyledLink
                             label={translate(
                               'screens/payment',
-                              'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                              'Please note that by using this service you automatically accept our terms and conditions.',
                             )}
                             url={process.env.REACT_APP_TNC_URL}
                             small

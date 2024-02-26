@@ -32,6 +32,7 @@ import {
   StyledButtonWidth,
   StyledDropdown,
   StyledHorizontalStack,
+  StyledInfoText,
   StyledInput,
   StyledLink,
   StyledModalButton,
@@ -478,21 +479,32 @@ export default function SellScreen(): JSX.Element {
                   loading={isLoading || isPriceLoading}
                 />
                 {!isLoading && paymentInfo && paymentInfo.estimatedAmount > 0 && (
-                  <p className="text-dfxBlue-800 text-start w-full text-xs pt-2 pl-7">
-                    {translate(
-                      'screens/sell',
-                      paymentInfo.minFeeTarget && validatedData?.currency
-                        ? '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})'
-                        : '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)',
-                      {
-                        estimatedAmount: paymentInfo.estimatedAmount,
-                        currency: validatedData?.currency.name ?? '',
-                        fee: paymentInfo.fee,
-                        minFee: paymentInfo.minFeeTarget,
-                        minFeeCurrency: validatedData?.currency ? toSymbol(validatedData.currency) : '',
-                      },
-                    )}
-                  </p>
+                  <>
+                    <p className="text-dfxBlue-800 text-start w-full text-xs pt-2 pl-7">
+                      {translate(
+                        'screens/sell',
+                        paymentInfo.minFeeTarget && validatedData?.currency
+                          ? '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})'
+                          : '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)',
+                        {
+                          estimatedAmount: paymentInfo.estimatedAmount,
+                          currency: validatedData?.currency.name ?? '',
+                          fee: paymentInfo.fee,
+                          minFee: paymentInfo.minFeeTarget,
+                          minFeeCurrency: validatedData?.currency ? toSymbol(validatedData.currency) : '',
+                        },
+                      )}
+                    </p>
+
+                    <div className="mt-2">
+                      <StyledInfoText iconColor={IconColor.GRAY} discreet>
+                        {translate(
+                          'screens/payment',
+                          'This exchange rate is not guaranteed. The effective rate is determined when the transactions are received and processed by DFX.',
+                        )}
+                      </StyledInfoText>
+                    </div>
+                  </>
                 )}
               </div>
             )}
@@ -529,7 +541,7 @@ export default function SellScreen(): JSX.Element {
                     <StyledLink
                       label={translate(
                         'screens/payment',
-                        'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                        'Please note that by using this service you automatically accept our terms and conditions.',
                       )}
                       url={process.env.REACT_APP_TNC_URL}
                       small
