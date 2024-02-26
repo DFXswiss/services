@@ -26,22 +26,22 @@ export const BitcoinAddressPrefix = {
   [BitcoinAddressType.LEGACY]: 44,
 };
 
-const btcRootPath = "'/0'/0'";
-const ethRootPath = "44'/60'/0'";
+const btcRootPath = "'/0'";
+const ethRootPath = "44'/60'";
 
 const KeyPath = {
-  BTC: (type: BitcoinAddressType) => ({
-    root: `${BitcoinAddressPrefix[type]}${btcRootPath}`,
-    xPub: `m/${BitcoinAddressPrefix[type]}${btcRootPath}`,
-    address: (index: number) => `m/${BitcoinAddressPrefix[type]}${btcRootPath}/0/${index}`,
+  BTC: (account: number, type: BitcoinAddressType) => ({
+    root: `${BitcoinAddressPrefix[type]}${btcRootPath}/${account}'`,
+    xPub: `m/${BitcoinAddressPrefix[type]}${btcRootPath}/${account}'`,
+    address: (index: number) => `m/${BitcoinAddressPrefix[type]}${btcRootPath}/${account}'/0/${index}`,
     addressStandard: BitcoinAddressStandard[type],
     simpleType: BitcoinSimpleType[type],
   }),
-  ETH: {
-    root: ethRootPath,
-    xPub: `m/${ethRootPath}`,
-    address: (index: number) => `m/${ethRootPath}/0/${index}`,
-  },
+  ETH: (account: number) => ({
+    root: `${ethRootPath}/${account}'`,
+    xPub: `m/${ethRootPath}/${account}'`,
+    address: (index: number) => `m/${ethRootPath}/${account}'/0/${index}`,
+  }),
 };
 
 export default KeyPath;

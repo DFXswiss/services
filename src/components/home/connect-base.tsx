@@ -17,6 +17,7 @@ interface Props extends ConnectProps {
     msg: string,
     address: string,
     blockchain: Blockchain,
+    accountIndex?: number,
     index?: number,
     type?: BitcoinAddressType,
   ) => Promise<string>;
@@ -94,7 +95,7 @@ export function ConnectBase({
             : login(wallet, account.address, account.blockchain, (a, m) =>
                 account.signature
                   ? Promise.resolve(account.signature)
-                  : onSignMessage(a, account.blockchain, m, account.index, account.type),
+                  : onSignMessage(a, account.blockchain, m, account.accountIndex, account.index, account.type),
               ),
         );
   }
@@ -103,11 +104,14 @@ export function ConnectBase({
     address: string,
     blockchain: Blockchain,
     message: string,
+    accountIndex?: number,
     index?: number,
     addressType?: BitcoinAddressType,
   ): Promise<string> {
     setShowSignHint(true);
-    return signMessage(message, address, blockchain, index, addressType).finally(() => setShowSignHint(false));
+    return signMessage(message, address, blockchain, accountIndex, index, addressType).finally(() =>
+      setShowSignHint(false),
+    );
   }
 
   const contentOverride = isLoading ? (
