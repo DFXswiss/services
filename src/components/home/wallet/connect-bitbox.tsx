@@ -206,16 +206,6 @@ function Content({
                   />
                 </>
               )}
-              <StyledDropdown<number>
-                rootRef={rootRef}
-                name="accountIndex"
-                items={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
-                labelFunc={(item) => item.toString()}
-                full
-                disabled={addressLoading}
-                placeholder={translate('general/actions', 'Select...')}
-                label={translate('screens/home', 'Account index')}
-              />
               <StyledDropdown<Address>
                 rootRef={rootRef}
                 name="address"
