@@ -45,6 +45,7 @@ import { KycHint, KycReason } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
 import { QrCopy } from '../components/payment/qr-copy';
+import { SanctionHint } from '../components/sanction-hint';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance } from '../contexts/balance.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -511,8 +512,9 @@ export default function SellScreen(): JSX.Element {
                     <QrCopy data={paymentInfo.paymentRequest} />
                   </StyledVerticalStack>
                 )}
-                <div>
-                  <div className="pt-4 w-full text-left leading-none">
+                <div className="text-left">
+                  <SanctionHint />
+                  <div className="pt-4 w-full leading-none">
                     <StyledLink
                       label={translate(
                         'screens/payment',

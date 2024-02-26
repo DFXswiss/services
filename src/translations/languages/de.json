@@ -89,6 +89,7 @@
     "No matching account was found.": "Es wurde kein passendes Konto gefunden.",
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Dein Konto muss verifiziert werden, sobald Dein tägliches Transaktionsvolumen {{limit}} überschreitet. Wenn Du Dein tägliches Handelslimit erhöhen möchtest, schliesse bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
     "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Sofort-Banktransaktionen sind nur mit einem verifizierten Konto möglich. Wenn Du SEPA Instant nutzen möchtest, schliesse bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
+    "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Hinweis: Dein Konto ist nicht verifiziert. Deine Transaktion wird nur verarbeitet werden können, wenn Du nicht den gleichen Namen hast wie eine sanktionierte oder politisch exponierte Person.",
     "Complete KYC": "KYC vervollständigen",
     "I am already verified with DFX": "Ich bin bereits bei DFX verifiziert"
   },

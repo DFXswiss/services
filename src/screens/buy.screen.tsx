@@ -42,6 +42,7 @@ import { KycHint, KycReason } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PaymentInformationContent } from '../components/payment/payment-information';
+import { SanctionHint } from '../components/sanction-hint';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
@@ -526,9 +527,12 @@ export function BuyScreen(): JSX.Element {
                     </StyledCollapsible>
 
                     {selectedPaymentMethod !== BuyPaymentMethod.CARD ? (
-                      <div>
-                        <PaymentInformationContent info={paymentInfo} />
-                        <div className="pt-4 w-full leading-none">
+                      <>
+                        <div>
+                          <PaymentInformationContent info={paymentInfo} />
+                        </div>
+                        <SanctionHint />
+                        <div className="w-full leading-none">
                           <StyledLink
                             label={translate(
                               'screens/payment',
@@ -538,38 +542,41 @@ export function BuyScreen(): JSX.Element {
                             small
                             dark
                           />
-                        </div>
-                        <StyledButton
-                          width={StyledButtonWidth.FULL}
-                          label={translate('screens/buy', 'Click here once you have issued the transfer')}
-                          onClick={() => {
-                            setShowsCompletion(true);
-                            scrollRef.current?.scrollTo(0, 0);
-                          }}
-                          caps={false}
-                          className="my-4"
-                        />
-                      </div>
-                    ) : (
-                      paymentInfo.paymentLink && (
-                        <div className="leading-none">
-                          <StyledLink
-                            label={translate(
-                              'screens/payment',
-                              'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
-                            )}
-                            url={process.env.REACT_APP_TNC_URL}
-                            small
-                            dark
-                          />
                           <StyledButton
                             width={StyledButtonWidth.FULL}
-                            label={translate('general/actions', 'Next')}
-                            onClick={() => onCardBuy(paymentInfo)}
-                            isLoading={isContinue}
+                            label={translate('screens/buy', 'Click here once you have issued the transfer')}
+                            onClick={() => {
+                              setShowsCompletion(true);
+                              scrollRef.current?.scrollTo(0, 0);
+                            }}
+                            caps={false}
                             className="my-4"
                           />
                         </div>
+                      </>
+                    ) : (
+                      paymentInfo.paymentLink && (
+                        <>
+                          <SanctionHint />
+                          <div className="leading-none">
+                            <StyledLink
+                              label={translate(
+                                'screens/payment',
+                                'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
+                              )}
+                              url={process.env.REACT_APP_TNC_URL}
+                              small
+                              dark
+                            />
+                            <StyledButton
+                              width={StyledButtonWidth.FULL}
+                              label={translate('general/actions', 'Next')}
+                              onClick={() => onCardBuy(paymentInfo)}
+                              isLoading={isContinue}
+                              className="my-4"
+                            />
+                          </div>
+                        </>
                       )
                     )}
                   </>
