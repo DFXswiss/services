@@ -190,6 +190,9 @@
     "Please install {{wallet}} from the wallet provider's website.": "Veuillez installer {{wallet}} à partir du site web du fournisseur du portefeuille.",
     "Open website": "Ouvrir le site web",
 
+    "fps": "Malheureusement, DFX.swiss ne propose pas l'achat et la vente de tokens FPS. Si vous êtes toujours intéressé, vous pouvez visiter le site web <2>www.frankencoin.com/pool</2> en utilisant le bouton ci-dessous.",
+    "The website allows you to interact with the Frankencoin smart contract and trade FPS tokens. Please note that this is not an offer from DFX, it is not a recommendation and it is in no way a solicitation to trade. With this message DFX only points out that this technical possibility exists, nothing more. It is imperative that you inform yourself about all the details beforehand and always be aware that you are always trading on your own responsibility.": "Ce site vous permet d'interagir avec le contrat intelligent Frankencoin et d'échanger des tokens FPS. Veuillez noter qu'il ne s'agit pas d'une offre de DFX, ni d'une recommandation, ni d'une sollicitation à négocier. Avec ce message, DFX signale seulement que cette possibilité technique existe, rien de plus. Il est impératif que vous vous informiez de tous les détails au préalable et que vous soyez toujours conscient que vous négociez toujours sous votre propre responsabilité.",
+
     "Blockchain": "Blockchain",
     "Address": "Adresse",
     "Signature": "Signature",
