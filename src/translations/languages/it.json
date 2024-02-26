@@ -90,6 +90,7 @@
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Il conto deve essere verificato quando il volume delle transazioni giornaliere supera il {{limit}}. Se volete aumentare il vostro limite di trading giornaliero, completate il nostro processo KYC (Know-Your-Customer).",
     "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Le transazioni bancarie istantanee sono possibili solo con un conto verificato. Se desiderate utilizzare SEPA Instant, completate il nostro processo KYC (Know-Your-Customer).",
     "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Nota: il vostro conto non è verificato. La vostra transazione sarà elaborata solo se non avete lo stesso nome di una persona sanzionata o esposta politicamente.",
+    "A buy bank transaction is required once your daily sell transaction volume exceeds {{limit}}.": "Una transazione di acquisto viene richiesta non appena il volume giornaliero delle transazioni di vendita supera il {{limit}}.",
     "Complete KYC": "Completare il KYC",
     "I am already verified with DFX": "Sono già verificato con DFX"
   },

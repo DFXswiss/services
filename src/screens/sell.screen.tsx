@@ -83,7 +83,7 @@ export default function SellScreen(): JSX.Element {
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
   const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain, externalTransactionId } = useAppParams();
-  const { isComplete } = useKycHelper();
+  const { isComplete, defaultLimit, limitToString } = useKycHelper();
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
@@ -269,6 +269,17 @@ export default function SellScreen(): JSX.Element {
           setKycRequired(true);
           return undefined;
         }
+        break;
+
+      case TransactionError.BANK_TRANSACTION_MISSING:
+        setCustomAmountError(
+          translate(
+            'screens/kyc',
+            'A buy bank transaction is required once your daily sell transaction volume exceeds {{limit}}.',
+            { limit: limitToString(defaultLimit) },
+          ),
+        );
+        return undefined;
     }
 
     setCustomAmountError(undefined);
