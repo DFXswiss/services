@@ -247,6 +247,9 @@
     "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)": "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX Tassa)",
     "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})": "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX Tassa - min. {{minFee}}{{minFeeCurrency}})",
 
+    "Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.": "Inviare l'importo selezionato all'indirizzo indicato di seguito. Questo indirizzo può essere utilizzato più volte, è sempre lo stesso per i versamenti in {{currency}} al vostro IBAN {{iban}}.",
+    "Address": "Indirizzo",
+
     "Click here once you have issued the transaction": "Fare clic qui una volta emessa la transazione",
     "Complete transaction in your wallet": "Transazione completa nel portafoglio",
     "Pay with your wallet": "Pagare con il portafoglio",

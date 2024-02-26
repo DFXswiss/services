@@ -19,6 +19,7 @@ import {
   useUserContext,
 } from '@dfx.swiss/react';
 import {
+  AlignContent,
   AssetIconVariant,
   CopyButton,
   DfxIcon,
@@ -30,6 +31,8 @@ import {
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
+  StyledDataTable,
+  StyledDataTableRow,
   StyledDropdown,
   StyledHorizontalStack,
   StyledInfoText,
@@ -59,7 +62,7 @@ import { useKycLevelGuard, useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useSellHelper } from '../hooks/sell-helper.hook';
-import { isDefined } from '../util/utils';
+import { blankedAddress, isDefined } from '../util/utils';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -527,6 +530,30 @@ export default function SellScreen(): JSX.Element {
 
             {!isLoading && paymentInfo && !kycRequired && !errorMessage && (
               <>
+                <StyledVerticalStack gap={2} full>
+                  <h2 className="text-dfxBlue-800 text-center">
+                    {translate('screens/payment', 'Payment Information')}
+                  </h2>
+                  <div className="text-left">
+                    <StyledInfoText iconColor={IconColor.BLUE}>
+                      {translate(
+                        'screens/sell',
+                        'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.',
+                        { currency: paymentInfo.currency.name, iban: Utils.formatIban(selectedBankAccount.iban) ?? '' },
+                      )}
+                    </StyledInfoText>
+                  </div>
+                </StyledVerticalStack>
+
+                <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                  <StyledDataTableRow label={translate('screens/sell', 'Address')}>
+                    <div>
+                      <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+                    </div>
+                    <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
+                  </StyledDataTableRow>
+                </StyledDataTable>
+
                 {paymentInfo.paymentRequest && !canSendTransaction() && (
                   <StyledVerticalStack full center>
                     <p className="font-semibold text-sm text-dfxBlue-800">
