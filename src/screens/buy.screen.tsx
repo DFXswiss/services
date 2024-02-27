@@ -97,7 +97,7 @@ export function BuyScreen(): JSX.Element {
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const { toString } = useBlockchain();
-  const { isEmbedded, isDfxHosted } = useAppHandlingContext();
+  const { isEmbedded, isDfxHosted, isInitialized } = useAppHandlingContext();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
@@ -130,14 +130,16 @@ export function BuyScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
-  const availablePaymentMethods = [BuyPaymentMethod.BANK, BuyPaymentMethod.INSTANT];
+  const availablePaymentMethods = [BuyPaymentMethod.BANK];
+
+  (!selectedAsset || selectedAsset.instantBuyable) && availablePaymentMethods.push(BuyPaymentMethod.INSTANT);
+
   (isDfxHosted || !isEmbedded) &&
     wallet !== EmbeddedWallet &&
     user?.wallet !== EmbeddedWallet &&
-    selectedAsset?.blockchain !== Blockchain.MONERO &&
+    (!selectedAsset || selectedAsset?.cardBuyable) &&
     availablePaymentMethods.push(BuyPaymentMethod.CARD);
-  const defaultPaymentMethod =
-    availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
+
   const availableCurrencies = currencies?.filter((c) =>
     selectedPaymentMethod === BuyPaymentMethod.CARD
       ? c.cardSellable
@@ -171,8 +173,13 @@ export function BuyScreen(): JSX.Element {
   }, [assetIn, getCurrency, currencies, selectedPaymentMethod]);
 
   useEffect(() => {
-    if (defaultPaymentMethod) setVal('paymentMethod', defaultPaymentMethod);
-  }, [defaultPaymentMethod]);
+    const selectedMethod =
+      availablePaymentMethods.find((m) => m === selectedPaymentMethod) ??
+      availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ??
+      BuyPaymentMethod.BANK;
+
+    if (isInitialized && selectedMethod) setVal('paymentMethod', selectedMethod);
+  }, [availablePaymentMethods, paymentMethod]);
 
   useEffect(() => {
     if (amountIn) setVal('amount', amountIn);
