@@ -43,6 +43,8 @@ export default function ConnectBitbox(props: Props): JSX.Element {
   const [addressLoading, setAddressLoading] = useState(false);
   const [createAddressPromise, addressPromise] = useDeferredPromise<Account>();
   const [selectedType, setSelectedType] = useState<BitcoinAddressType>();
+  const [selectedAccountIndex, setSelectedAccountIndex] = useState<number>();
+
   const [pairingCode, setPairingCode] = useState<string>();
 
   async function getAccount(blockchain: Blockchain, isReconnect: boolean): Promise<Account> {
@@ -58,22 +60,24 @@ export default function ConnectBitbox(props: Props): JSX.Element {
     return createAddressPromise();
   }
 
-  function onAddressSelect(type: BitcoinAddressType, address: Address) {
-    addressPromise?.resolve({ ...address, type });
+  function onAddressSelect(accountIndex: number, type: BitcoinAddressType, address: Address) {
+    addressPromise?.resolve({ ...address, accountIndex, type });
     setAddresses(undefined);
   }
 
-  async function onLoadAddresses(type: BitcoinAddressType) {
+  async function onLoadAddresses(accountIndex: number, type: BitcoinAddressType) {
     if (!chain) throw new Error('Blockchain not defined');
 
     setAddressLoading(true);
     if (type !== selectedType) setAddresses([]);
+    if (accountIndex !== selectedAccountIndex) setAddresses([]);
 
     const loadAddresses = await fetchAddresses(
       props.wallet,
       chain,
+      accountIndex,
       type,
-      type !== selectedType || !addresses ? 0 : addresses.length,
+      type !== selectedType || !addresses || accountIndex !== selectedAccountIndex ? 0 : addresses.length,
       10,
     ).catch((e) => {
       addressPromise?.reject(e);
@@ -81,6 +85,7 @@ export default function ConnectBitbox(props: Props): JSX.Element {
     });
 
     setSelectedType(type);
+    setSelectedAccountIndex(accountIndex);
     setAddresses((a) => a?.concat(...loadAddresses));
     setAddressLoading(false);
   }
@@ -90,8 +95,8 @@ export default function ConnectBitbox(props: Props): JSX.Element {
       isSupported={isSupported}
       supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
-      signMessage={(msg, _a, chain, index, type) =>
-        signMessage(msg, props.wallet, chain, type ?? defaultAddressType, index ?? 0)
+      signMessage={(msg, _a, chain, accountIndex, index, type) =>
+        signMessage(msg, props.wallet, chain, accountIndex ?? 0, type ?? defaultAddressType, index ?? 0)
       }
       renderContent={(p) => (
         <Content
@@ -115,8 +120,8 @@ interface ContentProps extends ConnectContentProps {
   wallet: WalletType;
   addressLoading: boolean;
   addresses?: string[];
-  onAddressSelect: (type: BitcoinAddressType, address: Address) => void;
-  onLoadAddresses: (type: BitcoinAddressType) => void;
+  onAddressSelect: (accountIndex: number, type: BitcoinAddressType, address: Address) => void;
+  onLoadAddresses: (accountIndex: number, type: BitcoinAddressType) => void;
 }
 
 function Content({
@@ -135,12 +140,13 @@ function Content({
   const { addressTypes, defaultAddressType } = useBitbox();
 
   // form
-  const { control, setValue } = useForm<{ type: BitcoinAddressType; address?: Address }>({
-    defaultValues: { type: defaultAddressType },
+  const { control, setValue } = useForm<{ type: BitcoinAddressType; address?: Address; accountIndex: number }>({
+    defaultValues: { type: defaultAddressType, accountIndex: 0 },
   });
 
   const selectedType = useWatch({ control, name: 'type' });
   const selectedAddress = useWatch({ control, name: 'address' });
+  const selectedAccountIndex = useWatch({ control, name: 'accountIndex' });
 
   useEffect(() => {
     if (addresses?.length == 1) setValue('address', { address: addresses[0], index: 0 });
@@ -149,9 +155,9 @@ function Content({
   useEffect(() => {
     if (addresses?.length) {
       setValue('address', undefined);
-      onLoadAddresses(selectedType);
+      onLoadAddresses(selectedAccountIndex, selectedType);
     }
-  }, [selectedType]);
+  }, [selectedAccountIndex, selectedType]);
 
   const connectSteps = [
     'Connect your {{device}} with your computer',
@@ -171,21 +177,34 @@ function Content({
 
   return (
     <>
-      <StyledVerticalStack gap={5} center full>
-        {addresses ? (
-          <>
-            <h2 className="text-dfxGray-700">{translate('screens/home', 'Choose an address')}</h2>
-            <Form control={control} errors={{}}>
+      <Form control={control} errors={{}}>
+        <StyledVerticalStack gap={5} center full>
+          {addresses ? (
+            <>
+              <h2 className="text-dfxGray-700">{translate('screens/home', 'Choose an address')}</h2>
+
               {wallet === WalletType.BITBOX_BTC && (
-                <StyledDropdown<BitcoinAddressType>
-                  rootRef={rootRef}
-                  label={translate('screens/home', 'Address type')}
-                  name="type"
-                  items={addressTypes}
-                  labelFunc={(item) => item}
-                  full
-                  disabled={addressLoading}
-                />
+                <>
+                  <StyledDropdown<BitcoinAddressType>
+                    rootRef={rootRef}
+                    label={translate('screens/home', 'Address type')}
+                    name="type"
+                    items={addressTypes}
+                    labelFunc={(item) => item}
+                    full
+                    disabled={addressLoading}
+                  />
+                  <StyledDropdown<number>
+                    rootRef={rootRef}
+                    name="accountIndex"
+                    items={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+                    labelFunc={(item) => item.toString()}
+                    full
+                    disabled={addressLoading}
+                    placeholder={translate('general/actions', 'Select...')}
+                    label={translate('screens/home', 'Account index')}
+                  />
+                </>
               )}
               <StyledDropdown<Address>
                 rootRef={rootRef}
@@ -198,51 +217,51 @@ function Content({
                 placeholder={translate('general/actions', 'Select...')}
                 label={translate('screens/home', 'Address index')}
               />
-            </Form>
-            <StyledButton
-              width={StyledButtonWidth.MIN}
-              label={translate('screens/home', 'Load more addresses')}
-              onClick={() => onLoadAddresses(selectedType)}
-              caps={false}
-              className="my-4 "
-              isLoading={addressLoading}
-              color={StyledButtonColor.STURDY_WHITE}
+              <StyledButton
+                width={StyledButtonWidth.MIN}
+                label={translate('screens/home', 'Load more addresses')}
+                onClick={() => onLoadAddresses(selectedAccountIndex, selectedType)}
+                caps={false}
+                className="my-4 "
+                isLoading={addressLoading}
+                color={StyledButtonColor.STURDY_WHITE}
+              />
+            </>
+          ) : (
+            <ConnectInstructions
+              steps={steps}
+              params={{ device: 'BitBox' }}
+              img={pairingCode ? undefined : 'https://content.dfx.swiss/img/v1/services/bitboxready_en.png'}
             />
-          </>
-        ) : (
-          <ConnectInstructions
-            steps={steps}
-            params={{ device: 'BitBox' }}
-            img={pairingCode ? undefined : 'https://content.dfx.swiss/img/v1/services/bitboxready_en.png'}
-          />
-        )}
+          )}
 
-        {pairingCode ? (
-          <div>
-            <h2 className="text-dfxGray-700">{translate('screens/home', 'Pairing code')}:</h2>
-            <p className="text-dfxGray-700">{pairingCode}</p>
-          </div>
-        ) : (
-          <>
-            {error && <ConnectError error={error} />}
+          {pairingCode ? (
+            <div>
+              <h2 className="text-dfxGray-700">{translate('screens/home', 'Pairing code')}:</h2>
+              <p className="text-dfxGray-700">{pairingCode}</p>
+            </div>
+          ) : (
+            <>
+              {error && <ConnectError error={error} />}
 
-            <StyledButton
-              label={translate('general/actions', addresses ? 'Continue' : 'Connect')}
-              onClick={
-                addresses
-                  ? selectedAddress
-                    ? () => onAddressSelect(selectedType, selectedAddress)
-                    : () => undefined
-                  : () => connect()
-              }
-              width={StyledButtonWidth.MIN}
-              className="self-center"
-              isLoading={isConnecting && !addresses}
-              disabled={addresses && !selectedAddress}
-            />
-          </>
-        )}
-      </StyledVerticalStack>
+              <StyledButton
+                label={translate('general/actions', addresses ? 'Continue' : 'Connect')}
+                onClick={
+                  addresses
+                    ? selectedAddress
+                      ? () => onAddressSelect(selectedAccountIndex, selectedType, selectedAddress)
+                      : () => undefined
+                    : () => connect()
+                }
+                width={StyledButtonWidth.MIN}
+                className="self-center"
+                isLoading={isConnecting && !addresses}
+                disabled={addresses && !selectedAddress}
+              />
+            </>
+          )}
+        </StyledVerticalStack>
+      </Form>
     </>
   );
 }

@@ -23,7 +23,7 @@ enum SpecialMode {
 const SpecialModes: { [m in SpecialMode]: string } = {
   [SpecialMode.LOGIN]: 'login',
   [SpecialMode.SWITCH]: 'wallets',
-  [SpecialMode.MY_DFX]: 'login',
+  [SpecialMode.MY_DFX]: 'wallets',
 };
 
 function getMode(pathName: string): SpecialMode | undefined {

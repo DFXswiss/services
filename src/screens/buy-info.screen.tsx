@@ -243,7 +243,7 @@ export function BuyInfoScreen(): JSX.Element {
               <StyledLink
                 label={translate(
                   'screens/payment',
-                  'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                  'Please note that by using this service you automatically accept our terms and conditions.',
                 )}
                 url={process.env.REACT_APP_TNC_URL}
                 small

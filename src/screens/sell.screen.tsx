@@ -19,6 +19,7 @@ import {
   useUserContext,
 } from '@dfx.swiss/react';
 import {
+  AlignContent,
   AssetIconVariant,
   CopyButton,
   DfxIcon,
@@ -30,8 +31,11 @@ import {
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
+  StyledDataTable,
+  StyledDataTableRow,
   StyledDropdown,
   StyledHorizontalStack,
+  StyledInfoText,
   StyledInput,
   StyledLink,
   StyledModalButton,
@@ -45,6 +49,7 @@ import { KycHint, KycReason } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
 import { QrCopy } from '../components/payment/qr-copy';
+import { SanctionHint } from '../components/sanction-hint';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance } from '../contexts/balance.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -57,7 +62,7 @@ import { useKycLevelGuard, useSessionGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useSellHelper } from '../hooks/sell-helper.hook';
-import { isDefined } from '../util/utils';
+import { blankedAddress, isDefined } from '../util/utils';
 
 interface FormData {
   bankAccount: BankAccount;
@@ -82,7 +87,7 @@ export default function SellScreen(): JSX.Element {
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
   const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain, externalTransactionId } = useAppParams();
-  const { isComplete } = useKycHelper();
+  const { isComplete, defaultLimit, limitToString } = useKycHelper();
   const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
@@ -268,6 +273,17 @@ export default function SellScreen(): JSX.Element {
           setKycRequired(true);
           return undefined;
         }
+        break;
+
+      case TransactionError.BANK_TRANSACTION_MISSING:
+        setCustomAmountError(
+          translate(
+            'screens/kyc',
+            'A buy bank transaction is required once your daily sell transaction volume exceeds {{limit}}.',
+            { limit: limitToString(defaultLimit) },
+          ),
+        );
+        return undefined;
     }
 
     setCustomAmountError(undefined);
@@ -466,21 +482,32 @@ export default function SellScreen(): JSX.Element {
                   loading={isLoading || isPriceLoading}
                 />
                 {!isLoading && paymentInfo && paymentInfo.estimatedAmount > 0 && (
-                  <p className="text-dfxBlue-800 text-start w-full text-xs pt-2 pl-7">
-                    {translate(
-                      'screens/sell',
-                      paymentInfo.minFeeTarget && validatedData?.currency
-                        ? '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})'
-                        : '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)',
-                      {
-                        estimatedAmount: paymentInfo.estimatedAmount,
-                        currency: validatedData?.currency.name ?? '',
-                        fee: paymentInfo.fee,
-                        minFee: paymentInfo.minFeeTarget,
-                        minFeeCurrency: validatedData?.currency ? toSymbol(validatedData.currency) : '',
-                      },
-                    )}
-                  </p>
+                  <>
+                    <p className="text-dfxBlue-800 text-start w-full text-xs pt-2 pl-7">
+                      {translate(
+                        'screens/sell',
+                        paymentInfo.minFeeTarget && validatedData?.currency
+                          ? '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})'
+                          : '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)',
+                        {
+                          estimatedAmount: paymentInfo.estimatedAmount,
+                          currency: validatedData?.currency.name ?? '',
+                          fee: paymentInfo.fee,
+                          minFee: paymentInfo.minFeeTarget,
+                          minFeeCurrency: validatedData?.currency ? toSymbol(validatedData.currency) : '',
+                        },
+                      )}
+                    </p>
+
+                    <div className="mt-2">
+                      <StyledInfoText iconColor={IconColor.GRAY} discreet>
+                        {translate(
+                          'screens/payment',
+                          'This exchange rate is not guaranteed. The effective rate is determined when the transactions are received and processed by DFX.',
+                        )}
+                      </StyledInfoText>
+                    </div>
+                  </>
                 )}
               </div>
             )}
@@ -503,6 +530,30 @@ export default function SellScreen(): JSX.Element {
 
             {!isLoading && paymentInfo && !kycRequired && !errorMessage && (
               <>
+                <StyledVerticalStack gap={2} full>
+                  <h2 className="text-dfxBlue-800 text-center">
+                    {translate('screens/payment', 'Payment Information')}
+                  </h2>
+                  <div className="text-left">
+                    <StyledInfoText iconColor={IconColor.BLUE}>
+                      {translate(
+                        'screens/sell',
+                        'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.',
+                        { currency: paymentInfo.currency.name, iban: Utils.formatIban(selectedBankAccount.iban) ?? '' },
+                      )}
+                    </StyledInfoText>
+                  </div>
+                </StyledVerticalStack>
+
+                <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                  <StyledDataTableRow label={translate('screens/sell', 'Address')}>
+                    <div>
+                      <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+                    </div>
+                    <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
+                  </StyledDataTableRow>
+                </StyledDataTable>
+
                 {paymentInfo.paymentRequest && !canSendTransaction() && (
                   <StyledVerticalStack full center>
                     <p className="font-semibold text-sm text-dfxBlue-800">
@@ -511,12 +562,13 @@ export default function SellScreen(): JSX.Element {
                     <QrCopy data={paymentInfo.paymentRequest} />
                   </StyledVerticalStack>
                 )}
-                <div>
-                  <div className="pt-4 w-full text-left leading-none">
+                <div className="text-left">
+                  <SanctionHint />
+                  <div className="pt-4 w-full leading-none">
                     <StyledLink
                       label={translate(
                         'screens/payment',
-                        'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                        'Please note that by using this service you automatically accept our terms and conditions.',
                       )}
                       url={process.env.REACT_APP_TNC_URL}
                       small

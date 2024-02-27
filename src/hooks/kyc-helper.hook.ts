@@ -4,6 +4,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from './navigation.hook';
 
 interface KycHelperInterface {
+  defaultLimit: TradingLimit;
   limit: string | undefined;
   isComplete: boolean | undefined;
   start: () => void;
@@ -71,7 +72,16 @@ export function useKycHelper(): KycHelperInterface {
   }
 
   return useMemo(
-    () => ({ start, isComplete, limit, levelToString, limitToString, nameToString, typeToString }),
+    () => ({
+      start,
+      isComplete,
+      defaultLimit: { limit: 1000, period: LimitPeriod.DAY },
+      limit,
+      levelToString,
+      limitToString,
+      nameToString,
+      typeToString,
+    }),
     [user, translate],
   );
 }

@@ -89,6 +89,8 @@
     "No matching account was found.": "Non è stato trovato alcun account corrispondente.",
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Il conto deve essere verificato quando il volume delle transazioni giornaliere supera il {{limit}}. Se volete aumentare il vostro limite di trading giornaliero, completate il nostro processo KYC (Know-Your-Customer).",
     "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Le transazioni bancarie istantanee sono possibili solo con un conto verificato. Se desiderate utilizzare SEPA Instant, completate il nostro processo KYC (Know-Your-Customer).",
+    "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Nota: il vostro conto non è verificato. La vostra transazione sarà elaborata solo se non avete lo stesso nome di una persona sanzionata o esposta politicamente.",
+    "A buy bank transaction is required once your daily sell transaction volume exceeds {{limit}}.": "Una transazione di acquisto viene richiesta non appena il volume giornaliero delle transazioni di vendita supera il {{limit}}.",
     "Complete KYC": "Completare il KYC",
     "I am already verified with DFX": "Sono già verificato con DFX"
   },
@@ -156,6 +158,7 @@
     "Load more addresses": "Carica altri indirizzi",
     "Address type": "Tipo di indirizzo",
     "Address index": "Indice dell'indirizzo",
+    "Account index": "Indice del conto",
 
     "Open the {{app}} app on your Ledger": "Aprire l'applicazione {{app}} sul proprio Ledger",
 
@@ -186,6 +189,9 @@
 
     "Please install {{wallet}} from the wallet provider's website.": "Installare {{wallet}} dal sito web del fornitore del portafoglio.",
     "Open website": "Aprire il sito web",
+
+    "fps": "Purtroppo, DFX.swiss non offre l'acquisto e la vendita di token FPS. Se siete ancora interessati, potete visitare il sito web <2>www.frankencoin.com/pool</2> utilizzando il pulsante sottostante.",
+    "The website allows you to interact with the Frankencoin smart contract and trade FPS tokens. Please note that this is not an offer from DFX, it is not a recommendation and it is in no way a solicitation to trade. With this message DFX only points out that this technical possibility exists, nothing more. It is imperative that you inform yourself about all the details beforehand and always be aware that you are always trading on your own responsibility.": "Il sito web consente di interagire con lo smart contract Frankencoin e di scambiare i token FPS. Si prega di notare che questa non è un'offerta di DFX, non è una raccomandazione e non è in alcun modo una sollecitazione al commercio. Con questo messaggio DFX segnala solo l'esistenza di questa possibilità tecnica, niente di più. È indispensabile informarsi preventivamente su tutti i dettagli ed essere sempre consapevoli che si opera sempre sotto la propria responsabilità.",
 
     "Blockchain": "Blockchain",
     "Address": "Indirizzo",
@@ -241,6 +247,9 @@
     "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)": "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX Tassa)",
     "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})": "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX Tassa - min. {{minFee}}{{minFeeCurrency}})",
 
+    "Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.": "Inviare l'importo selezionato all'indirizzo indicato di seguito. Questo indirizzo può essere utilizzato più volte, è sempre lo stesso per i versamenti in {{currency}} al vostro IBAN {{iban}}.",
+    "Address": "Indirizzo",
+
     "Click here once you have issued the transaction": "Fare clic qui una volta emessa la transazione",
     "Complete transaction in your wallet": "Transazione completa nel portafoglio",
     "Pay with your wallet": "Pagare con il portafoglio",
@@ -265,7 +274,8 @@
     "BIC": "BIC",
     "Reference": "Scopo del pagamento",
 
-    "Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni. Il tasso di cambio effettivo viene fissato quando il denaro viene ricevuto e trattato da DFX.",
+    "This exchange rate is not guaranteed. The effective rate is determined when the transactions are received and processed by DFX.": "Questo tasso di cambio non è garantito. Il tasso effettivo viene determinato quando le transazioni vengono ricevute ed elaborate da DFX.",
+    "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
     "Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni e si autorizza DFX.swiss a riscuotere l'importo di cui sopra tramite il metodo di pagamento scelto e si accetta che tale importo non possa essere annullato, richiamato o rimborsato.",
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "L'importo inserito è inferiore al deposito minimo di {{amount}} {{currency}}",
     "Nice! You are all set! Give us a minute to handle your transaction": "Bello! Siete pronti! Dateci un minuto per gestire la vostra transazione",

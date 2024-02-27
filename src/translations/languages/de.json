@@ -89,6 +89,8 @@
     "No matching account was found.": "Es wurde kein passendes Konto gefunden.",
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Dein Konto muss verifiziert werden, sobald Dein tägliches Transaktionsvolumen {{limit}} überschreitet. Wenn Du Dein tägliches Handelslimit erhöhen möchtest, schliesse bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
     "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Sofort-Banktransaktionen sind nur mit einem verifizierten Konto möglich. Wenn Du SEPA Instant nutzen möchtest, schliesse bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
+    "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Hinweis: Dein Konto ist nicht verifiziert. Deine Transaktion wird nur verarbeitet werden können, wenn Du nicht den gleichen Namen hast wie eine sanktionierte oder politisch exponierte Person.",
+    "A buy bank transaction is required once your daily sell transaction volume exceeds {{limit}}.": "Eine Kauf-Bank-Transaktion ist erforderlich, sobald Dein tägliches Verkaufs-Transaktionsvolumen {{limit}} überschreitet.",
     "Complete KYC": "KYC vervollständigen",
     "I am already verified with DFX": "Ich bin bereits bei DFX verifiziert"
   },
@@ -156,6 +158,7 @@
     "Load more addresses": "Lade mehr Adressen",
     "Address type": "Adresstyp",
     "Address index": "Adressindex",
+    "Account index": "Accountindex",
 
     "Open the {{app}} app on your Ledger": "Öffne die {{app}} App auf Deinem Ledger",
 
@@ -186,6 +189,9 @@
 
     "Please install {{wallet}} from the wallet provider's website.": "Bitte installiere {{wallet}} von der Website des Wallet-Anbieters.",
     "Open website": "Website öffnen",
+
+    "fps": "Leider bietet DFX.swiss den Kauf und Verkauf von FPS-Tokens nicht an. Wenn Du dennoch Interesse hast, kannst Du die Website <2>www.frankencoin.com/pool</2> über den unten stehenden Button besuchen.",
+    "The website allows you to interact with the Frankencoin smart contract and trade FPS tokens. Please note that this is not an offer from DFX, it is not a recommendation and it is in no way a solicitation to trade. With this message DFX only points out that this technical possibility exists, nothing more. It is imperative that you inform yourself about all the details beforehand and always be aware that you are always trading on your own responsibility.": "Die Website ermöglicht, mit dem Frankencoin Smart Contract zu interagieren und FPS Token zu handeln. Bitte beachte, dass dies kein Angebot von DFX ist, dass es keine Empfehlung ist und dass es in keinster Weise eine Handelsaufforderung ist. DFX weist mit dieser Nachricht einzig darauf hin, dass es diese technische Möglichkeit gibt, mehr nicht. Informiere Dich zwingend vorher über alle Details und sei Dir stehts bewusst, dass Du immer in eigener Verantwortung handelst.",
 
     "Blockchain": "Blockchain",
     "Address": "Adresse",
@@ -241,6 +247,9 @@
     "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)": "≈ {{estimatedAmount}} {{currency}} (inkl. {{fee}} % DFX Gebühr)",
     "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})": "≈ {{estimatedAmount}} {{currency}} (inkl. {{fee}} % DFX Gebühr - min. {{minFee}}{{minFeeCurrency}})",
 
+    "Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.": "Sende den ausgewählten Betrag an die unten stehende Adresse. Diese Adresse kann mehrfach verwendet werden, sie ist immer die gleiche für Auszahlungen in {{currency}} an Deine IBAN {{iban}}.",
+    "Address": "Adresse",
+
     "Click here once you have issued the transaction": "Klicke hier, sobald Du die Transaktion getätigt hast",
     "Complete transaction in your wallet": "Schliesse die Transaktion in Deiner Wallet ab",
     "Pay with your wallet": "Bezahle mit Deiner Wallet",
@@ -265,7 +274,8 @@
     "BIC": "BIC",
     "Reference": "Verwendungszweck",
 
-    "Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst. Der effektive Wechselkurs wird festegelegt wenn das Geld bei DFX eingegangen ist und verarbeitet wird.",
+    "This exchange rate is not guaranteed. The effective rate is determined when the transactions are received and processed by DFX.": "Dieser Wechselkurs ist nicht garantiert. Der effektive Kurs wird ermittelt, wenn die Transaktionen bei DFX eingehen und verarbeitet werden.",
+    "Please note that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst.",
     "Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst und DFX.swiss ermächtigst, den oben genannten Betrag über die von Dir gewählte Zahlungsmethode einzuziehen. Du erklärst Dich damit einverstanden, dass dieser Betrag nicht storniert, zurückgerufen oder zurückerstattet werden kann.",
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
     "Nice! You are all set! Give us a minute to handle your transaction": "Sehr schön! Alles erledigt! Gib uns eine Minute, um Deine Transaktion zu bearbeiten",

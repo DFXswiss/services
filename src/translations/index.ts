@@ -18,5 +18,6 @@ export function setupLanguages() {
       interpolation: {
         escapeValue: false,
       },
+      nsSeparator: '>',
     });
 }

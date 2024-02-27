@@ -20,6 +20,7 @@ import {
 import {
   AssetIconVariant,
   Form,
+  IconColor,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
@@ -27,6 +28,7 @@ import {
   StyledCollapsible,
   StyledDropdown,
   StyledHorizontalStack,
+  StyledInfoText,
   StyledInput,
   StyledLink,
   StyledLoadingSpinner,
@@ -42,6 +44,7 @@ import { KycHint, KycReason } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PaymentInformationContent } from '../components/payment/payment-information';
+import { SanctionHint } from '../components/sanction-hint';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
@@ -94,7 +97,7 @@ export function BuyScreen(): JSX.Element {
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const { toString } = useBlockchain();
-  const { isEmbedded, isDfxHosted } = useAppHandlingContext();
+  const { isEmbedded, isDfxHosted, isInitialized } = useAppHandlingContext();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
@@ -127,14 +130,16 @@ export function BuyScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
-  const availablePaymentMethods = [BuyPaymentMethod.BANK, BuyPaymentMethod.INSTANT];
+  const availablePaymentMethods = [BuyPaymentMethod.BANK];
+
+  (!selectedAsset || selectedAsset.instantBuyable) && availablePaymentMethods.push(BuyPaymentMethod.INSTANT);
+
   (isDfxHosted || !isEmbedded) &&
     wallet !== EmbeddedWallet &&
     user?.wallet !== EmbeddedWallet &&
-    selectedAsset?.blockchain !== Blockchain.MONERO &&
+    (!selectedAsset || selectedAsset?.cardBuyable) &&
     availablePaymentMethods.push(BuyPaymentMethod.CARD);
-  const defaultPaymentMethod =
-    availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ?? BuyPaymentMethod.BANK;
+
   const availableCurrencies = currencies?.filter((c) =>
     selectedPaymentMethod === BuyPaymentMethod.CARD
       ? c.cardSellable
@@ -168,8 +173,13 @@ export function BuyScreen(): JSX.Element {
   }, [assetIn, getCurrency, currencies, selectedPaymentMethod]);
 
   useEffect(() => {
-    if (defaultPaymentMethod) setVal('paymentMethod', defaultPaymentMethod);
-  }, [defaultPaymentMethod]);
+    const selectedMethod =
+      availablePaymentMethods.find((m) => m === selectedPaymentMethod) ??
+      availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ??
+      BuyPaymentMethod.BANK;
+
+    if (isInitialized && selectedMethod) setVal('paymentMethod', selectedMethod);
+  }, [availablePaymentMethods, paymentMethod]);
 
   useEffect(() => {
     if (amountIn) setVal('amount', amountIn);
@@ -505,58 +515,44 @@ export function BuyScreen(): JSX.Element {
                         paymentInfo.asset.name
                       }`}
                     >
-                      <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">
-                        <div className="text-dfxGray-800">{translate('screens/buy', 'Base rate')}</div>
-                        <div>{baseRate}</div>
-
-                        <div className="text-dfxGray-800">{translate('screens/buy', 'DFX fee')}</div>
-                        <StyledVerticalStack>
-                          <div>{dfxFee}</div>
-                          {l1Replacement && (
-                            <div className="mt-1 text-xs text-dfxGray-700 leading-tight">
-                              {translate(
-                                'screens/buy',
-                                'Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees',
-                                { chain: l1Replacement },
-                              )}
-                            </div>
+                      <StyledVerticalStack gap={2}>
+                        <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">
+                          <div className="text-dfxGray-800">{translate('screens/buy', 'Base rate')}</div>
+                          <div>{baseRate}</div>
+                          <div className="text-dfxGray-800">{translate('screens/buy', 'DFX fee')}</div>
+                          <StyledVerticalStack>
+                            <div>{dfxFee}</div>
+                            {l1Replacement && (
+                              <div className="mt-1 text-xs text-dfxGray-700 leading-tight">
+                                {translate(
+                                  'screens/buy',
+                                  'Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees',
+                                  { chain: l1Replacement },
+                                )}
+                              </div>
+                            )}
+                          </StyledVerticalStack>
+                        </div>
+                        <StyledInfoText iconColor={IconColor.GRAY} discreet>
+                          {translate(
+                            'screens/payment',
+                            'This exchange rate is not guaranteed. The effective rate is determined when the transactions are received and processed by DFX.',
                           )}
-                        </StyledVerticalStack>
-                      </div>
+                        </StyledInfoText>
+                      </StyledVerticalStack>
                     </StyledCollapsible>
 
                     {selectedPaymentMethod !== BuyPaymentMethod.CARD ? (
-                      <div>
-                        <PaymentInformationContent info={paymentInfo} />
-                        <div className="pt-4 w-full leading-none">
-                          <StyledLink
-                            label={translate(
-                              'screens/payment',
-                              'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
-                            )}
-                            url={process.env.REACT_APP_TNC_URL}
-                            small
-                            dark
-                          />
+                      <>
+                        <div>
+                          <PaymentInformationContent info={paymentInfo} />
                         </div>
-                        <StyledButton
-                          width={StyledButtonWidth.FULL}
-                          label={translate('screens/buy', 'Click here once you have issued the transfer')}
-                          onClick={() => {
-                            setShowsCompletion(true);
-                            scrollRef.current?.scrollTo(0, 0);
-                          }}
-                          caps={false}
-                          className="my-4"
-                        />
-                      </div>
-                    ) : (
-                      paymentInfo.paymentLink && (
-                        <div className="leading-none">
+                        <SanctionHint />
+                        <div className="w-full leading-none">
                           <StyledLink
                             label={translate(
                               'screens/payment',
-                              'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
+                              'Please note that by using this service you automatically accept our terms and conditions.',
                             )}
                             url={process.env.REACT_APP_TNC_URL}
                             small
@@ -564,12 +560,39 @@ export function BuyScreen(): JSX.Element {
                           />
                           <StyledButton
                             width={StyledButtonWidth.FULL}
-                            label={translate('general/actions', 'Next')}
-                            onClick={() => onCardBuy(paymentInfo)}
-                            isLoading={isContinue}
+                            label={translate('screens/buy', 'Click here once you have issued the transfer')}
+                            onClick={() => {
+                              setShowsCompletion(true);
+                              scrollRef.current?.scrollTo(0, 0);
+                            }}
+                            caps={false}
                             className="my-4"
                           />
                         </div>
+                      </>
+                    ) : (
+                      paymentInfo.paymentLink && (
+                        <>
+                          <SanctionHint />
+                          <div className="leading-none">
+                            <StyledLink
+                              label={translate(
+                                'screens/payment',
+                                'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
+                              )}
+                              url={process.env.REACT_APP_TNC_URL}
+                              small
+                              dark
+                            />
+                            <StyledButton
+                              width={StyledButtonWidth.FULL}
+                              label={translate('general/actions', 'Next')}
+                              onClick={() => onCardBuy(paymentInfo)}
+                              isLoading={isContinue}
+                              className="my-4"
+                            />
+                          </div>
+                        </>
                       )
                     )}
                   </>

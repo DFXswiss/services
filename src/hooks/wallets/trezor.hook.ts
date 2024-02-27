@@ -16,12 +16,14 @@ export interface TrezorInterface {
     wallet: TrezorWallet,
     startIndex: number,
     count: number,
+    accountIndex: number,
     addressType: BitcoinAddressType,
   ) => Promise<string[]>;
   signMessage: (
     msg: string,
     wallet: TrezorWallet,
     addressIndex: number,
+    accountIndex: number,
     addressType: BitcoinAddressType,
   ) => Promise<string>;
 }
@@ -64,10 +66,10 @@ export function useTrezor(): TrezorInterface {
     const result =
       wallet === WalletType.TREZOR_BTC
         ? await TrezorConnect.getAddress({
-            path: KeyPath.BTC(addressType).address(0),
+            path: KeyPath.BTC(0, addressType).address(0),
             showOnTrezor: false,
           })
-        : await TrezorConnect.ethereumGetAddress({ path: KeyPath.ETH.address(0), showOnTrezor: false });
+        : await TrezorConnect.ethereumGetAddress({ path: KeyPath.ETH(0).address(0), showOnTrezor: false });
 
     if (result.success) {
       return result.payload.address;
@@ -80,13 +82,17 @@ export function useTrezor(): TrezorInterface {
     wallet: TrezorWallet,
     startIndex: number,
     count: number,
+    accountIndex: number,
     addressType: BitcoinAddressType,
   ): Promise<string[]> {
     const addressBundle = [];
 
     for (let i = startIndex; i < startIndex + count; i++) {
       addressBundle.push({
-        path: wallet === WalletType.TREZOR_BTC ? KeyPath.BTC(addressType).address(i) : KeyPath.ETH.address(i),
+        path:
+          wallet === WalletType.TREZOR_BTC
+            ? KeyPath.BTC(accountIndex, addressType).address(i)
+            : KeyPath.ETH(accountIndex).address(i),
         showOnTrezor: false,
       });
     }
@@ -106,17 +112,21 @@ export function useTrezor(): TrezorInterface {
   async function signMessage(
     msg: string,
     wallet: TrezorWallet,
+    accountIndex: number,
     addressIndex: number,
     addressType: BitcoinAddressType,
   ): Promise<string> {
     const result =
       wallet === WalletType.TREZOR_BTC
         ? await TrezorConnect.signMessage({
-            path: KeyPath.BTC(addressType).address(addressIndex),
+            path: KeyPath.BTC(accountIndex, addressType).address(addressIndex),
             message: msg,
             coin: 'btc',
           })
-        : await TrezorConnect.ethereumSignMessage({ path: KeyPath.ETH.address(addressIndex), message: msg });
+        : await TrezorConnect.ethereumSignMessage({
+            path: KeyPath.ETH(accountIndex).address(addressIndex),
+            message: msg,
+          });
 
     if (result.success) {
       return result.payload.signature;

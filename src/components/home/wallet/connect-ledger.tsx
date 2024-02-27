@@ -42,6 +42,7 @@ export default function ConnectLedger(props: Props): JSX.Element {
   const [addressLoading, setAddressLoading] = useState(false);
   const [createAddressPromise, addressPromise] = useDeferredPromise<Account>();
   const [selectedType, setSelectedType] = useState<BitcoinAddressType>();
+  const [selectedAccountIndex, setSelectedAccountIndex] = useState<number>();
 
   async function getAccount(_: Blockchain, isReconnect: boolean): Promise<Account> {
     if (isReconnect && session?.address) return { address: session.address };
@@ -52,23 +53,26 @@ export default function ConnectLedger(props: Props): JSX.Element {
     return createAddressPromise();
   }
 
-  function onAddressSelect(type: BitcoinAddressType, address: Address) {
-    addressPromise?.resolve({ ...address, type });
+  function onAddressSelect(accountIndex: number, type: BitcoinAddressType, address: Address) {
+    addressPromise?.resolve({ accountIndex, ...address, type });
     setAddresses(undefined);
   }
 
-  async function onLoadAddresses(type: BitcoinAddressType) {
+  async function onLoadAddresses(accountIndex: number, type: BitcoinAddressType) {
     setAddressLoading(true);
     if (type !== selectedType) setAddresses([]);
+    if (accountIndex !== selectedAccountIndex) setAddresses([]);
 
     const loadAddresses = await fetchAddresses(
       props.wallet,
-      type !== selectedType || !addresses ? 0 : addresses.length,
+      type !== selectedType || !addresses || accountIndex !== selectedAccountIndex ? 0 : addresses.length,
       3,
+      accountIndex,
       type,
     );
 
     setSelectedType(type);
+    setSelectedAccountIndex(accountIndex);
     setAddresses((a) => a?.concat(...loadAddresses));
     setAddressLoading(false);
   }
@@ -78,7 +82,9 @@ export default function ConnectLedger(props: Props): JSX.Element {
       isSupported={isSupported}
       supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
-      signMessage={(msg, _a, _b, index, type) => signMessage(msg, props.wallet, index ?? 0, type ?? defaultAddressType)}
+      signMessage={(msg, _a, _b, accountIndex, index, type) =>
+        signMessage(msg, props.wallet, accountIndex ?? 0, index ?? 0, type ?? defaultAddressType)
+      }
       renderContent={(p) => (
         <Content
           addresses={addresses}
@@ -99,8 +105,8 @@ interface ContentProps extends ConnectContentProps {
   addressLoading: boolean;
   wallet: WalletType;
   addresses?: string[];
-  onAddressSelect: (type: BitcoinAddressType, address: Address) => void;
-  onLoadAddresses: (type: BitcoinAddressType) => void;
+  onAddressSelect: (accountIndex: number, type: BitcoinAddressType, address: Address) => void;
+  onLoadAddresses: (accountIndex: number, type: BitcoinAddressType) => void;
 }
 
 function Content({
@@ -120,12 +126,13 @@ function Content({
   const app = wallet === WalletType.LEDGER_BTC ? 'Bitcoin' : 'Ethereum';
 
   // form
-  const { control, setValue } = useForm<{ type: BitcoinAddressType; address?: Address }>({
-    defaultValues: { type: defaultAddressType },
+  const { control, setValue } = useForm<{ type: BitcoinAddressType; address?: Address; accountIndex: number }>({
+    defaultValues: { type: defaultAddressType, accountIndex: 0 },
   });
 
   const selectedType = useWatch({ control, name: 'type' });
   const selectedAddress = useWatch({ control, name: 'address' });
+  const selectedAccountIndex = useWatch({ control, name: 'accountIndex' });
 
   useEffect(() => {
     if (addresses?.length == 1) setValue('address', { address: addresses[0], index: 0 });
@@ -134,9 +141,9 @@ function Content({
   useEffect(() => {
     if (addresses?.length) {
       setValue('address', undefined);
-      onLoadAddresses(selectedType);
+      onLoadAddresses(selectedAccountIndex, selectedType);
     }
-  }, [selectedType]);
+  }, [selectedAccountIndex, selectedType]);
 
   const steps = [
     'Connect your {{device}} with your computer',
@@ -147,39 +154,49 @@ function Content({
   ];
 
   return (
-    <>
+    <Form control={control} errors={{}}>
       <StyledVerticalStack gap={5} center full>
         {addresses ? (
           <>
             <h2 className="text-dfxGray-700">{translate('screens/home', 'Choose an address')}</h2>
-            <Form control={control} errors={{}}>
-              {wallet === WalletType.LEDGER_BTC && (
-                <StyledDropdown<BitcoinAddressType>
-                  rootRef={rootRef}
-                  label={translate('screens/home', 'Address type')}
-                  name="type"
-                  items={addressTypes}
-                  labelFunc={(item) => item}
-                  full
-                  disabled={addressLoading}
-                />
-              )}
-              <StyledDropdown<Address>
+
+            {wallet === WalletType.LEDGER_BTC && (
+              <StyledDropdown<BitcoinAddressType>
                 rootRef={rootRef}
-                name="address"
-                items={addresses.map((a, i) => ({ address: a, index: i }))}
-                labelFunc={(item) => item.address}
-                descriptionFunc={(item) => `Index ${item.index}`}
+                label={translate('screens/home', 'Address type')}
+                name="type"
+                items={addressTypes}
+                labelFunc={(item) => item}
                 full
                 disabled={addressLoading}
-                placeholder={translate('general/actions', 'Select...')}
-                label={translate('screens/home', 'Address index')}
               />
-            </Form>
+            )}
+            <StyledDropdown<number>
+              rootRef={rootRef}
+              name="accountIndex"
+              items={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]}
+              labelFunc={(item) => item.toString()}
+              full
+              disabled={addressLoading}
+              placeholder={translate('general/actions', 'Select...')}
+              label={translate('screens/home', 'Account index')}
+            />
+            <StyledDropdown<Address>
+              rootRef={rootRef}
+              name="address"
+              items={addresses.map((a, i) => ({ address: a, index: i }))}
+              labelFunc={(item) => item.address}
+              descriptionFunc={(item) => `Index ${item.index}`}
+              full
+              disabled={addressLoading}
+              placeholder={translate('general/actions', 'Select...')}
+              label={translate('screens/home', 'Address index')}
+            />
+
             <StyledButton
               width={StyledButtonWidth.MIN}
               label={translate('screens/home', 'Load more addresses')}
-              onClick={() => onLoadAddresses(selectedType)}
+              onClick={() => onLoadAddresses(selectedAccountIndex, selectedType)}
               caps={false}
               className="my-4"
               isLoading={addressLoading}
@@ -201,7 +218,7 @@ function Content({
           onClick={
             addresses
               ? selectedAddress
-                ? () => onAddressSelect(selectedType, selectedAddress)
+                ? () => onAddressSelect(selectedAccountIndex, selectedType, selectedAddress)
                 : () => undefined
               : () => connect()
           }
@@ -211,6 +228,6 @@ function Content({
           disabled={addresses && !selectedAddress}
         />
       </StyledVerticalStack>
-    </>
+    </Form>
   );
 }

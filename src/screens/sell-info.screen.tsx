@@ -64,7 +64,7 @@ export function SellInfoScreen(): JSX.Element {
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
-  const { isComplete } = useKycHelper();
+  const { isComplete, defaultLimit, limitToString } = useKycHelper();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
   const { closeServices } = useAppHandlingContext();
@@ -148,6 +148,17 @@ export function SellInfoScreen(): JSX.Element {
           setKycRequired(true);
           return undefined;
         }
+        break;
+
+      case TransactionError.BANK_TRANSACTION_MISSING:
+        setCustomAmountError(
+          translate(
+            'screens/kyc',
+            'A buy bank transaction is required once your daily sell transaction volume exceeds {{limit}}.',
+            { limit: limitToString(defaultLimit) },
+          ),
+        );
+        return undefined;
     }
 
     setCustomAmountError(undefined);
@@ -224,7 +235,7 @@ export function SellInfoScreen(): JSX.Element {
               <StyledLink
                 label={translate(
                   'screens/payment',
-                  'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                  'Please note that by using this service you automatically accept our terms and conditions.',
                 )}
                 url={process.env.REACT_APP_TNC_URL}
                 small

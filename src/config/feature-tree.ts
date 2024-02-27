@@ -1486,7 +1486,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'FPS',
         img: 'fps',
-        disabled: true,
+        wallet: {
+          type: WalletType.FPS,
+        },
       },
     ],
   },
@@ -1536,7 +1538,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'FPS',
         img: 'fps',
-        disabled: true,
+        wallet: {
+          type: WalletType.FPS,
+        },
       },
     ],
   },
@@ -1586,7 +1590,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'FPS',
         img: 'fps',
-        disabled: true,
+        wallet: {
+          type: WalletType.FPS,
+        },
       },
     ],
   },
@@ -1636,7 +1642,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'FPS',
         img: 'fps',
-        disabled: true,
+        wallet: {
+          type: WalletType.FPS,
+        },
       },
     ],
   },
