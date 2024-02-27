@@ -238,13 +238,7 @@ export function BuyScreen(): JSX.Element {
                   setIsPriceLoading(false);
                 }
               })
-              .catch((error: ApiError) => {
-                if (isRunning) {
-                  setPaymentInfo(undefined);
-                  setIsPriceLoading(false);
-                  setErrorMessage(error.message ?? 'Unknown error');
-                }
-              });
+              .catch(console.error);
           }
         }
       })
