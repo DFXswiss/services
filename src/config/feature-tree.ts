@@ -3152,6 +3152,11 @@ export const FeatureTree: Page[] = [
     bottomImage: 'https://content.dfx.swiss/img/v1/services/OnRamper.png',
     tiles: [
       {
+        id: 'dfx-wallet',
+        img: 'bitcoinapp',
+        wallet: { type: WalletType.DFX_TARO, blockchain: Blockchain.LIGHTNING },
+      },
+      {
         id: 'metamask',
         img: 'metamaskrabby',
         wallet: { type: WalletType.META_MASK },
@@ -3160,6 +3165,13 @@ export const FeatureTree: Page[] = [
         id: 'walletconnect',
         img: 'walletconnect',
         wallet: { type: WalletType.WALLET_CONNECT },
+      },
+      {
+        id: 'bitbox',
+        img: 'bitbox',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
+        }),
       },
       {
         id: 'ledger',
@@ -3174,6 +3186,20 @@ export const FeatureTree: Page[] = [
         wallet: (params) => ({
           type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
         }),
+      },
+      {
+        id: 'cli',
+        img: 'command',
+        wallet: (params) => {
+          switch (params.blockchain) {
+            case Blockchain.BITCOIN:
+              return { type: WalletType.CLI_BTC };
+            case Blockchain.MONERO:
+              return { type: WalletType.CLI_XMR };
+            default:
+              return { type: WalletType.CLI_ETH };
+          }
+        },
       },
     ],
   },

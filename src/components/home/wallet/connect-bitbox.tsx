@@ -24,11 +24,6 @@ import {
   ConnectProps,
 } from '../connect-shared';
 
-const SupportedBlockchains = {
-  [WalletType.BITBOX_BTC]: [Blockchain.BITCOIN],
-  [WalletType.BITBOX_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM, Blockchain.POLYGON],
-};
-
 interface Props extends ConnectProps {
   wallet: BitboxWallet;
 }
@@ -93,7 +88,6 @@ export default function ConnectBitbox(props: Props): JSX.Element {
   return (
     <ConnectBase
       isSupported={isSupported}
-      supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
       signMessage={(msg, _a, chain, accountIndex, index, type) =>
         signMessage(msg, props.wallet, chain, accountIndex ?? 0, type ?? defaultAddressType, index ?? 0)

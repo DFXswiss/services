@@ -13,16 +13,6 @@ import { useMetaMask } from '../../../hooks/wallets/metamask.hook';
 import { ConnectBase } from '../connect-base';
 import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../connect-shared';
 
-const SupportedBlockchains = {
-  [WalletType.META_MASK]: [
-    Blockchain.ETHEREUM,
-    Blockchain.ARBITRUM,
-    Blockchain.OPTIMISM,
-    Blockchain.POLYGON,
-    Blockchain.BINANCE_SMART_CHAIN,
-  ],
-};
-
 export default function ConnectMetaMask(props: ConnectProps): JSX.Element {
   const { isInstalled, requestAccount, requestBlockchain, requestChangeToBlockchain, sign } = useMetaMask();
 
@@ -40,7 +30,6 @@ export default function ConnectMetaMask(props: ConnectProps): JSX.Element {
     <ConnectBase
       isSupported={isInstalled}
       fallback={isMobile ? WalletType.WALLET_CONNECT : undefined}
-      supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
       signMessage={(msg, addr) => sign(addr, msg)}
       renderContent={Content}

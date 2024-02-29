@@ -31,7 +31,7 @@ export interface ConnectProps {
 export interface ConnectContentProps {
   rootRef: RefObject<HTMLDivElement>;
   back: () => void;
-  connect: () => Promise<void>;
+  connect: (chain?: Blockchain) => Promise<void>;
   isConnecting: boolean;
   error?: string;
   onSwitch: (wallet: WalletType) => void;

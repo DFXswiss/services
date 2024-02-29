@@ -7,7 +7,7 @@ import { ConnectWrapper } from '../components/home/connect-wrapper';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useWalletContext } from '../contexts/wallet.context';
+import { supportsBlockchain, useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { Tile, Wallet, isWallet, useFeatureTree } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -175,9 +175,19 @@ export function HomeScreen(): JSX.Element {
                 )}
               </div>
               <div className="grid grid-cols-2 gap-2.5 w-full mb-3">
-                {currentPage.tiles.map((t) => (
-                  <TileComponent key={t.id} tile={t} onClick={handleNext} />
-                ))}
+                {currentPage.tiles
+                  .filter(
+                    (t) =>
+                      !(
+                        appParams.mode &&
+                        appParams.blockchain &&
+                        isWallet(t) &&
+                        !supportsBlockchain(getWallet(t, appParams).type, appParams.blockchain as Blockchain)
+                      ),
+                  )
+                  .map((t) => (
+                    <TileComponent key={t.id} tile={t} onClick={handleNext} />
+                  ))}
               </div>
             </>
           )}

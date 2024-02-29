@@ -24,11 +24,6 @@ import {
   ConnectProps,
 } from '../connect-shared';
 
-const SupportedBlockchains = {
-  [WalletType.TREZOR_BTC]: [Blockchain.BITCOIN],
-  [WalletType.TREZOR_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM, Blockchain.POLYGON],
-};
-
 interface Props extends ConnectProps {
   wallet: TrezorWallet;
 }
@@ -80,7 +75,6 @@ export default function ConnectTrezor(props: Props): JSX.Element {
   return (
     <ConnectBase
       isSupported={isSupported}
-      supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
       signMessage={(msg, _a, _b, accountIndex, index, type) =>
         signMessage(msg, props.wallet, accountIndex ?? 0, index ?? 0, type ?? defaultAddressType)

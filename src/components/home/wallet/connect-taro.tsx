@@ -8,15 +8,10 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { useSettingsContext } from '../../../contexts/settings.context';
-import { WalletType } from '../../../contexts/wallet.context';
 import { useDeferredPromise } from '../../../hooks/deferred-promise.hook';
 import { QrCopy } from '../../payment/qr-copy';
 import { ConnectBase } from '../connect-base';
 import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../connect-shared';
-
-const SupportedBlockchains = {
-  [WalletType.DFX_TARO]: [Blockchain.LIGHTNING],
-};
 
 export default function ConnectTaro(props: ConnectProps): JSX.Element {
   const { session } = useAuthContext();
@@ -66,7 +61,6 @@ export default function ConnectTaro(props: ConnectProps): JSX.Element {
   return (
     <ConnectBase
       isSupported={() => true}
-      supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
       signMessage={getSignature}
       renderContent={(p) => <Content link={link} {...p} />}

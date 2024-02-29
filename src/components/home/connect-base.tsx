@@ -2,7 +2,7 @@ import { Blockchain, useAuthContext, useSessionContext } from '@dfx.swiss/react'
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { BitcoinAddressType } from '../../config/key-path';
-import { WalletType, useWalletContext } from '../../contexts/wallet.context';
+import { WalletBlockchains, WalletType, supportsBlockchain, useWalletContext } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
 import { Account, ConnectContentProps, ConnectProps } from './connect-shared';
 import { InstallHint } from './install-hint';
@@ -11,7 +11,6 @@ import { SignHint } from './sign-hint';
 interface Props extends ConnectProps {
   isSupported: () => boolean | Promise<boolean>;
   fallback?: WalletType;
-  supportedBlockchains: { [k in WalletType]?: Blockchain[] };
   getAccount: (blockchain: Blockchain, isReconnect: boolean) => Promise<Account>;
   signMessage: (
     msg: string,
@@ -31,7 +30,6 @@ export function ConnectBase({
   blockchain,
   isSupported,
   fallback,
-  supportedBlockchains,
   getAccount,
   signMessage,
   renderContent,
@@ -64,13 +62,13 @@ export function ConnectBase({
     if (autoConnect) connect();
   }
 
-  async function connect() {
+  async function connect(chain?: Blockchain) {
     setIsConnecting(true);
     setConnectError(undefined);
 
-    const usedChain = blockchain ?? supportedBlockchains[wallet]?.[0];
+    const usedChain = chain ?? blockchain ?? WalletBlockchains[wallet]?.[0];
     if (!usedChain) throw new Error('No blockchain');
-    if (!supportedBlockchains[wallet]?.includes(usedChain)) throw new Error('Invalid blockchain');
+    if (!supportsBlockchain(wallet, usedChain)) throw new Error('Invalid blockchain');
 
     await getAccount(usedChain, activeWallet === wallet)
       .then((a) => doLogin({ ...a, blockchain: usedChain }))
