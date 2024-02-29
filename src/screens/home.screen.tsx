@@ -46,7 +46,7 @@ export function HomeScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { authenticationToken } = useAuthContext();
   const { user } = useUserContext();
-  const { canClose, isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
+  const { hasSession, canClose, isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
   const { navigate } = useNavigation();
   const { pathname } = useLocation();
@@ -66,10 +66,10 @@ export function HomeScreen(): JSX.Element {
   const specialMode = getMode(pathname);
 
   useEffect(() => {
-    if (isInitialized && isLoggedIn && user && (!activeWallet || loginSuccessful)) {
+    if (isInitialized && isLoggedIn && user && ((!activeWallet && hasSession) || loginSuccessful)) {
       start(user.kycDataComplete);
     }
-  }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful]);
+  }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful, hasSession]);
 
   useEffect(() => {
     const mode = specialMode ? SpecialModes[specialMode] : appParams.mode;
