@@ -1,4 +1,4 @@
-import { Buy, Sell } from '@dfx.swiss/react';
+import { Blockchain, Buy, Sell, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useIframe } from '../hooks/iframe.hook';
@@ -124,6 +124,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const { redirectUri: storeRedirectUri } = useStore();
   const { isUsedByIframe, sendMessage } = useIframe();
   const { readBalances } = useBalanceContext();
+  const { availableBlockchains, logout } = useSessionContext();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasSession, setHasSession] = useState(false);
@@ -141,6 +142,11 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
   }, []);
+
+  useEffect(() => {
+    const blockchain = params.blockchain as Blockchain;
+    if (availableBlockchains && blockchain && !availableBlockchains.includes(blockchain)) logout();
+  }, [availableBlockchains, params]);
 
   // parameters
   function getParameter(query: URLSearchParams, key: string): string | undefined {
