@@ -13,23 +13,11 @@ import {
 import { useEffect, useState } from 'react';
 import { UseFormReturn, useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from '../../../contexts/settings.context';
-import { WalletType, useWalletContext } from '../../../contexts/wallet.context';
+import { WalletBlockchains, WalletType, useWalletContext } from '../../../contexts/wallet.context';
 import { useBlockchain } from '../../../hooks/blockchain.hook';
 import { useClipboard } from '../../../hooks/clipboard.hook';
 import { ConnectBase } from '../connect-base';
 import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../connect-shared';
-
-const SupportedBlockchains: { [w in WalletType]?: Blockchain[] } = {
-  [WalletType.CLI_BTC]: [Blockchain.BITCOIN],
-  [WalletType.CLI_XMR]: [Blockchain.MONERO],
-  [WalletType.CLI_ETH]: [
-    Blockchain.ETHEREUM,
-    Blockchain.ARBITRUM,
-    Blockchain.OPTIMISM,
-    Blockchain.POLYGON,
-    Blockchain.BINANCE_SMART_CHAIN,
-  ],
-};
 
 interface FormData {
   blockchain: Blockchain;
@@ -37,13 +25,19 @@ interface FormData {
   signature: string;
 }
 
+const Wallets = [WalletType.CLI_BTC, WalletType.CLI_ETH, WalletType.CLI_XMR];
+
+const SupportedBlockchains = Wallets.map((w) => WalletBlockchains[w])
+  .filter((c) => c)
+  .flat() as Blockchain[];
+
 export default function ConnectCli(props: ConnectProps): JSX.Element {
   const { session } = useAuthContext();
   const { activeWallet } = useWalletContext();
 
   const form = useForm<FormData>({
     mode: 'onTouched',
-    defaultValues: { blockchain: props.blockchain ?? SupportedBlockchains[props.wallet]?.[0] },
+    defaultValues: { blockchain: props.blockchain ?? SupportedBlockchains[0] },
   });
 
   async function getAccount(_: Blockchain, isReconnect: boolean): Promise<Account> {
@@ -59,7 +53,6 @@ export default function ConnectCli(props: ConnectProps): JSX.Element {
   return (
     <ConnectBase
       isSupported={() => true}
-      supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
       signMessage={getSignature}
       renderContent={(p) => <Content wallet={props.wallet} form={form} {...p} />}
@@ -105,9 +98,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch }: Conte
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const newWallet = Object.entries(SupportedBlockchains).find(([_, chains]) => chains.includes(blockchain))?.[0] as
-      | WalletType
-      | undefined;
+    const newWallet = Wallets.find((w) => WalletBlockchains[w]?.includes(blockchain));
     newWallet && onSwitch(newWallet);
   }, [blockchain]);
 
@@ -129,7 +120,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch }: Conte
   });
 
   async function submit(): Promise<void> {
-    await connect();
+    await connect(blockchain);
   }
 
   return (
@@ -141,7 +132,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch }: Conte
           disabled={isConnecting}
           full
           smallLabel
-          items={Object.values(SupportedBlockchains).flat()}
+          items={SupportedBlockchains}
           labelFunc={toString}
         />
 

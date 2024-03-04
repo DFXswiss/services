@@ -1,4 +1,4 @@
-import { Buy, Sell } from '@dfx.swiss/react';
+import { Blockchain, Buy, Sell, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useIframe } from '../hooks/iframe.hook';
@@ -96,6 +96,7 @@ export type CloseServicesParams = CancelServicesParams | BuyServicesParams | Sel
 // --- CONTEXT --- //
 interface AppHandlingContextInterface {
   isInitialized: boolean;
+  hasSession: boolean;
   isEmbedded: boolean;
   isDfxHosted: boolean;
   params: AppParams;
@@ -123,8 +124,10 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const { redirectUri: storeRedirectUri } = useStore();
   const { isUsedByIframe, sendMessage } = useIframe();
   const { readBalances } = useBalanceContext();
+  const { availableBlockchains, logout } = useSessionContext();
 
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
   const [redirectUri, setRedirectUri] = useState<string>();
   const [params, setParams] = useState<AppParams>({});
   const [redirectPath, setRedirectPath] = useState<string>();
@@ -139,6 +142,11 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
   }, []);
+
+  useEffect(() => {
+    const blockchain = params.blockchain as Blockchain;
+    if (availableBlockchains && blockchain && !availableBlockchains.includes(blockchain)) logout();
+  }, [availableBlockchains, params]);
 
   // parameters
   function getParameter(query: URLSearchParams, key: string): string | undefined {
@@ -159,7 +167,8 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       storeRedirectUri.set(params.redirectUri);
     }
 
-    const hasSession = params.session || (params.address && params.signature);
+    const hasSession = Boolean(params.session || (params.address && params.signature));
+    setHasSession(hasSession);
     if (params.balances || hasSession) {
       readBalances(params.balances);
     }
@@ -290,6 +299,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const context = useMemo(
     () => ({
       isEmbedded: props.isWidget || isUsedByIframe,
+      hasSession,
       isDfxHosted: window.location.hostname?.split('.').slice(-2).join('.') === 'dfx.swiss',
       closeServices,
       isInitialized,

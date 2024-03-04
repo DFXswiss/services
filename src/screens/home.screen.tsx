@@ -7,7 +7,7 @@ import { ConnectWrapper } from '../components/home/connect-wrapper';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useWalletContext } from '../contexts/wallet.context';
+import { supportsBlockchain, useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { Tile, Wallet, isWallet, useFeatureTree } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -46,7 +46,7 @@ export function HomeScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { authenticationToken } = useAuthContext();
   const { user } = useUserContext();
-  const { canClose, isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
+  const { hasSession, canClose, isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
   const { navigate } = useNavigation();
   const { pathname } = useLocation();
@@ -66,10 +66,10 @@ export function HomeScreen(): JSX.Element {
   const specialMode = getMode(pathname);
 
   useEffect(() => {
-    if (isInitialized && isLoggedIn && user && (!activeWallet || loginSuccessful)) {
+    if (isInitialized && isLoggedIn && user && ((!activeWallet && hasSession) || loginSuccessful)) {
       start(user.kycDataComplete);
     }
-  }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful]);
+  }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful, hasSession]);
 
   useEffect(() => {
     const mode = specialMode ? SpecialModes[specialMode] : appParams.mode;
@@ -175,9 +175,19 @@ export function HomeScreen(): JSX.Element {
                 )}
               </div>
               <div className="grid grid-cols-2 gap-2.5 w-full mb-3">
-                {currentPage.tiles.map((t) => (
-                  <TileComponent key={t.id} tile={t} onClick={handleNext} />
-                ))}
+                {currentPage.tiles
+                  .filter(
+                    (t) =>
+                      !(
+                        appParams.mode &&
+                        appParams.blockchain &&
+                        isWallet(t) &&
+                        !supportsBlockchain(getWallet(t, appParams).type, appParams.blockchain as Blockchain)
+                      ),
+                  )
+                  .map((t) => (
+                    <TileComponent key={t.id} tile={t} onClick={handleNext} />
+                  ))}
               </div>
             </>
           )}

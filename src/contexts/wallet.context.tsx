@@ -25,6 +25,47 @@ export enum WalletType {
   MAIL = 'Mail',
 }
 
+export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
+  [WalletType.META_MASK]: [
+    Blockchain.ETHEREUM,
+    Blockchain.ARBITRUM,
+    Blockchain.OPTIMISM,
+    Blockchain.POLYGON,
+    Blockchain.BINANCE_SMART_CHAIN,
+  ],
+  [WalletType.ALBY]: [Blockchain.LIGHTNING],
+  [WalletType.LEDGER_BTC]: [Blockchain.BITCOIN],
+  [WalletType.LEDGER_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM, Blockchain.POLYGON],
+  [WalletType.BITBOX_BTC]: [Blockchain.BITCOIN],
+  [WalletType.BITBOX_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM, Blockchain.POLYGON],
+  [WalletType.TREZOR_BTC]: [Blockchain.BITCOIN],
+  [WalletType.TREZOR_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM, Blockchain.POLYGON],
+  [WalletType.CLI_BTC]: [Blockchain.BITCOIN],
+  [WalletType.CLI_XMR]: [Blockchain.MONERO],
+  [WalletType.CLI_ETH]: [
+    Blockchain.ETHEREUM,
+    Blockchain.ARBITRUM,
+    Blockchain.OPTIMISM,
+    Blockchain.POLYGON,
+    Blockchain.BINANCE_SMART_CHAIN,
+  ],
+  [WalletType.DFX_TARO]: [Blockchain.LIGHTNING],
+  [WalletType.WALLET_CONNECT]: [
+    Blockchain.ETHEREUM,
+    Blockchain.ARBITRUM,
+    Blockchain.OPTIMISM,
+    Blockchain.POLYGON,
+    Blockchain.BINANCE_SMART_CHAIN,
+  ],
+  [WalletType.CAKE]: [Blockchain.MONERO],
+  [WalletType.MONERO]: [Blockchain.MONERO],
+};
+
+export function supportsBlockchain(wallet: WalletType, blockchain: Blockchain): boolean {
+  const supportedChains = WalletBlockchains[wallet];
+  return !supportedChains || supportedChains.includes(blockchain);
+}
+
 interface WalletInterface {
   isInitialized: boolean;
   blockchain?: Blockchain;

@@ -1,4 +1,3 @@
-import { Blockchain } from '@dfx.swiss/react';
 import {
   SpinnerSize,
   StyledButton,
@@ -15,10 +14,6 @@ import { AbortError } from '../../../util/abort-error';
 import { delay, url } from '../../../util/utils';
 import { ConnectBase } from '../connect-base';
 import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../connect-shared';
-
-const SupportedBlockchains = {
-  [WalletType.ALBY]: [Blockchain.LIGHTNING],
-};
 
 export default function ConnectAlby(props: ConnectProps): JSX.Element {
   const { redirectPath, params: appParams } = useAppHandlingContext();
@@ -58,7 +53,6 @@ export default function ConnectAlby(props: ConnectProps): JSX.Element {
   return (
     <ConnectBase
       isSupported={isInstalled}
-      supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
       signMessage={(msg) => signMessage(msg)}
       renderContent={Content}

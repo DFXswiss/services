@@ -10,22 +10,11 @@ import {
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useSettingsContext } from '../../../contexts/settings.context';
-import { WalletType } from '../../../contexts/wallet.context';
 import { useResizeObserver } from '../../../hooks/resize-observer.hook';
 import { DeepWallet, useWalletConnect } from '../../../hooks/wallets/wallet-connect.hook';
 import { QrCopy } from '../../payment/qr-copy';
 import { ConnectBase } from '../connect-base';
 import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../connect-shared';
-
-const SupportedBlockchains = {
-  [WalletType.WALLET_CONNECT]: [
-    Blockchain.ETHEREUM,
-    Blockchain.ARBITRUM,
-    Blockchain.OPTIMISM,
-    Blockchain.POLYGON,
-    Blockchain.BINANCE_SMART_CHAIN,
-  ],
-};
 
 export default function ConnectWalletConnect(props: ConnectProps): JSX.Element {
   const { connect, signMessage, wallets } = useWalletConnect();
@@ -45,7 +34,6 @@ export default function ConnectWalletConnect(props: ConnectProps): JSX.Element {
   return (
     <ConnectBase
       isSupported={() => true}
-      supportedBlockchains={SupportedBlockchains}
       getAccount={getAccount}
       signMessage={(msg, addr, chain) => signMessage(msg, addr, chain)}
       renderContent={(p) => <Content connectUri={connectUri} wallets={wallets} {...p} />}
