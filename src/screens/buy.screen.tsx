@@ -4,8 +4,8 @@ import {
   Blockchain,
   Buy,
   BuyPaymentInfo,
-  BuyPaymentMethod,
   Fiat,
+  FiatPaymentMethod,
   TransactionError,
   Utils,
   Validations,
@@ -59,21 +59,21 @@ import { blankedAddress, isDefined } from '../util/utils';
 interface FormData {
   amount: string;
   currency: Fiat;
-  paymentMethod: BuyPaymentMethod;
+  paymentMethod: FiatPaymentMethod;
   asset: Asset;
   address: { address: string; label: string; type: string };
 }
 
 const paymentLabels = {
-  [BuyPaymentMethod.BANK]: 'Standard bank transaction',
-  [BuyPaymentMethod.INSTANT]: 'Instant bank transaction',
-  [BuyPaymentMethod.CARD]: 'Credit card',
+  [FiatPaymentMethod.BANK]: 'Standard bank transaction',
+  [FiatPaymentMethod.INSTANT]: 'Instant bank transaction',
+  [FiatPaymentMethod.CARD]: 'Credit card',
 };
 
 const paymentDescriptions = {
-  [BuyPaymentMethod.BANK]: 'SWIFT, SEPA, SIC, euroSIC',
-  [BuyPaymentMethod.INSTANT]: 'SEPA Instant',
-  [BuyPaymentMethod.CARD]: 'Mastercard, Visa, Google Pay, Apple Pay',
+  [FiatPaymentMethod.BANK]: 'SWIFT, SEPA, SIC, euroSIC',
+  [FiatPaymentMethod.INSTANT]: 'SEPA Instant',
+  [FiatPaymentMethod.CARD]: 'Mastercard, Visa, Google Pay, Apple Pay',
 };
 
 const EmbeddedWallet = 'CakeWallet';
@@ -130,20 +130,20 @@ export function BuyScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
-  const availablePaymentMethods = [BuyPaymentMethod.BANK];
+  const availablePaymentMethods = [FiatPaymentMethod.BANK];
 
-  (!selectedAsset || selectedAsset.instantBuyable) && availablePaymentMethods.push(BuyPaymentMethod.INSTANT);
+  (!selectedAsset || selectedAsset.instantBuyable) && availablePaymentMethods.push(FiatPaymentMethod.INSTANT);
 
   (isDfxHosted || !isEmbedded) &&
     wallet !== EmbeddedWallet &&
     user?.wallet !== EmbeddedWallet &&
     (!selectedAsset || selectedAsset?.cardBuyable) &&
-    availablePaymentMethods.push(BuyPaymentMethod.CARD);
+    availablePaymentMethods.push(FiatPaymentMethod.CARD);
 
   const availableCurrencies = currencies?.filter((c) =>
-    selectedPaymentMethod === BuyPaymentMethod.CARD
+    selectedPaymentMethod === FiatPaymentMethod.CARD
       ? c.cardSellable
-      : selectedPaymentMethod === BuyPaymentMethod.INSTANT
+      : selectedPaymentMethod === FiatPaymentMethod.INSTANT
       ? c.instantSellable
       : c.sellable,
   );
@@ -176,7 +176,7 @@ export function BuyScreen(): JSX.Element {
     const selectedMethod =
       availablePaymentMethods.find((m) => m === selectedPaymentMethod) ??
       availablePaymentMethods.find((m) => m.toLowerCase() === paymentMethod?.toLowerCase()) ??
-      BuyPaymentMethod.BANK;
+      FiatPaymentMethod.BANK;
 
     if (isInitialized && selectedMethod) setVal('paymentMethod', selectedMethod);
   }, [availablePaymentMethods, paymentMethod]);
@@ -422,7 +422,7 @@ export function BuyScreen(): JSX.Element {
                       />
                     </div>
                   </StyledHorizontalStack>
-                  <StyledDropdown<BuyPaymentMethod>
+                  <StyledDropdown<FiatPaymentMethod>
                     rootRef={rootRef}
                     name="paymentMethod"
                     placeholder={translate('general/actions', 'Select...')}
@@ -536,7 +536,7 @@ export function BuyScreen(): JSX.Element {
                       </StyledVerticalStack>
                     </StyledCollapsible>
 
-                    {selectedPaymentMethod !== BuyPaymentMethod.CARD ? (
+                    {selectedPaymentMethod !== FiatPaymentMethod.CARD ? (
                       <>
                         <div>
                           <PaymentInformationContent info={paymentInfo} />
