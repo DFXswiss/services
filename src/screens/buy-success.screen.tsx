@@ -9,11 +9,9 @@ export function BuySuccessScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
 
-  const showsSimple = user?.mail != null;
-
   return (
     <Layout title={translate('screens/buy', 'Done!')} backButton={false} textStart>
-      <BuyCompletion showsSimple={showsSimple} navigateOnClose />
+      <BuyCompletion user={user} navigateOnClose />
     </Layout>
   );
 }

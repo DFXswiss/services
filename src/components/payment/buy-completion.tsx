@@ -1,12 +1,14 @@
-import { Buy } from '@dfx.swiss/react';
+import { Buy, User } from '@dfx.swiss/react';
 import {
   DfxIcon,
   IconColor,
   IconSize,
   IconVariant,
+  SpinnerSize,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
+  StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
@@ -15,16 +17,19 @@ import { useSettingsContext } from '../../contexts/settings.context';
 import { MailEdit } from '../edit/mail.edit';
 
 interface BuyCompletionProps {
-  showsSimple: boolean;
+  user?: User;
   paymentInfo?: Buy;
   navigateOnClose: boolean;
 }
 
-export function BuyCompletion({ showsSimple, paymentInfo, navigateOnClose }: BuyCompletionProps): JSX.Element {
+export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyCompletionProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
 
   const [isClosed, setIsClosed] = useState(false);
+
+  const isLoading = !user;
+  const showsSimple = user?.mail != null;
 
   function getHeader(): string {
     return showsSimple
@@ -42,6 +47,10 @@ export function BuyCompletion({ showsSimple, paymentInfo, navigateOnClose }: Buy
 
   return isClosed ? (
     <></>
+  ) : isLoading ? (
+    <div className="mt-4">
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
+    </div>
   ) : (
     <StyledVerticalStack gap={4}>
       <div className="mx-auto">
