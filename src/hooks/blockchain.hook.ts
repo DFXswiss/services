@@ -28,8 +28,8 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.ARBITRUM]: 'Arbitrum One · ERC-20 token',
       [Blockchain.OPTIMISM]: 'Optimism · ERC-20 token',
       [Blockchain.POLYGON]: 'Polygon · ERC-20 token',
-      [Blockchain.BASE]: 'ETH · ERC-20 token',
-      [Blockchain.HAQQ]: 'ISLM · ERC-20 token',
+      [Blockchain.BASE]: 'Base · ERC-20 token',
+      [Blockchain.HAQQ]: 'Haqq · ERC-20 token',
     },
     protocols: {
       [Blockchain.ETHEREUM]: Protocol.ERC_20,
