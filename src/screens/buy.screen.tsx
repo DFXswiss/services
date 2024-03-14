@@ -334,8 +334,6 @@ export function BuyScreen(): JSX.Element {
     amount: Validations.Required,
   });
 
-  const showsSimple = user?.mail != null;
-
   const title = showsCompletion
     ? translate('screens/buy', 'Done!')
     : showsSwitchScreen
@@ -388,7 +386,7 @@ export function BuyScreen(): JSX.Element {
           </StyledHorizontalStack>
         </>
       ) : showsCompletion && paymentInfo ? (
-        <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo} navigateOnClose />
+        <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose />
       ) : showsNameForm ? (
         <NameEdit onSuccess={openPaymentLink} />
       ) : (

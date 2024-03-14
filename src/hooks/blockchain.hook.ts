@@ -28,6 +28,8 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.ARBITRUM]: 'Arbitrum One · ERC-20 token',
       [Blockchain.OPTIMISM]: 'Optimism · ERC-20 token',
       [Blockchain.POLYGON]: 'Polygon · ERC-20 token',
+      [Blockchain.BASE]: 'Base · ERC-20 token',
+      [Blockchain.HAQQ]: 'Haqq · ERC-20 token',
     },
     protocols: {
       [Blockchain.ETHEREUM]: Protocol.ERC_20,
@@ -35,6 +37,8 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.ARBITRUM]: Protocol.ERC_20,
       [Blockchain.OPTIMISM]: Protocol.ERC_20,
       [Blockchain.POLYGON]: Protocol.ERC_20,
+      [Blockchain.BASE]: Protocol.ERC_20,
+      [Blockchain.HAQQ]: Protocol.ERC_20,
     },
     mainToken: {
       [Blockchain.ETHEREUM]: 'ETH',
@@ -42,6 +46,8 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.ARBITRUM]: 'ETH',
       [Blockchain.OPTIMISM]: 'ETH',
       [Blockchain.POLYGON]: 'MATIC',
+      [Blockchain.BASE]: 'ETH',
+      [Blockchain.HAQQ]: 'ISLM',
     },
     stringValue: {
       [Blockchain.ETHEREUM]: 'Ethereum',
@@ -49,6 +55,8 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.ARBITRUM]: 'Arbitrum',
       [Blockchain.OPTIMISM]: 'Optimism',
       [Blockchain.POLYGON]: 'Polygon',
+      [Blockchain.BASE]: 'Base',
+      [Blockchain.HAQQ]: 'Haqq',
       [Blockchain.BITCOIN]: 'Bitcoin',
       [Blockchain.LIGHTNING]: 'Lightning',
       [Blockchain.DEFICHAIN]: 'DeFiChain',

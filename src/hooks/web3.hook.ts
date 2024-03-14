@@ -24,6 +24,8 @@ const chainIds: { [id: number]: Blockchain } = {
   [42161]: Blockchain.ARBITRUM,
   [10]: Blockchain.OPTIMISM,
   [137]: Blockchain.POLYGON,
+  [8453]: Blockchain.BASE,
+  [11235]: Blockchain.HAQQ,
 };
 
 export function useWeb3(): Web3Interface {
@@ -97,6 +99,32 @@ export function useWeb3(): Web3Interface {
           },
           rpcUrls: ['https://polygon-rpc.com/'],
           blockExplorerUrls: ['https://polygonscan.com/'],
+        };
+
+      case Blockchain.BASE:
+        return {
+          chainId,
+          chainName: 'Base',
+          nativeCurrency: {
+            name: 'Ether',
+            symbol: 'ETH',
+            decimals: 18,
+          },
+          rpcUrls: ['https://mainnet.base.org'],
+          blockExplorerUrls: ['https://basescan.org'],
+        };
+
+      case Blockchain.HAQQ:
+        return {
+          chainId,
+          chainName: 'Haqq Network',
+          nativeCurrency: {
+            name: 'Islamic Coin',
+            symbol: 'ISLM',
+            decimals: 18,
+          },
+          rpcUrls: ['https://rpc.eth.haqq.network'],
+          blockExplorerUrls: ['https://explorer.haqq.network/'],
         };
 
       case Blockchain.ETHEREUM:

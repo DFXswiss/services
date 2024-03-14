@@ -8,9 +8,7 @@ import { useBalanceContext } from './balance.context';
 
 // --- INTERFACES --- //
 // CAUTION: params need to be added to index-widget.tsx
-const urlParams = [
-  'headless',
-  'flags',
+const urlParamsToRemove = [
   'lang',
   'address',
   'signature',
@@ -22,17 +20,7 @@ const urlParams = [
   'redirect',
   'type',
   'redirect-uri',
-  'mode',
-  'blockchain',
   'balances',
-  'amount-in',
-  'amount-out',
-  'assets',
-  'asset-in',
-  'asset-out',
-  'payment-method',
-  'bank-account',
-  'external-transaction-id',
 ];
 
 export interface AppParams {
@@ -215,8 +203,8 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   }
 
   function removeUrlParams(query: URLSearchParams) {
-    if (urlParams.map((param) => query.has(param)).every((b) => !b)) return;
-    urlParams.forEach((param) => query.delete(param));
+    if (urlParamsToRemove.map((param) => query.has(param)).every((b) => !b)) return;
+    urlParamsToRemove.forEach((param) => query.delete(param));
 
     const path = props.router.state.location.pathname;
     props.router.navigate(url(path, query), { replace: true });

@@ -134,12 +134,10 @@ export function BuyInfoScreen(): JSX.Element {
     return buy;
   }
 
-  const showsSimple = user?.mail != null;
-
   return (
     <Layout textStart backButton={false} scrollRef={scrollRef}>
       {showsCompletion && paymentInfo ? (
-        <BuyCompletion showsSimple={showsSimple} paymentInfo={paymentInfo} navigateOnClose={false} />
+        <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose={false} />
       ) : isLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />

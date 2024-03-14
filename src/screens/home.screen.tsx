@@ -45,7 +45,7 @@ export function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isLoggedIn } = useSessionContext();
   const { authenticationToken } = useAuthContext();
-  const { user } = useUserContext();
+  const { user, isUserLoading } = useUserContext();
   const { hasSession, canClose, isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
   const { navigate } = useNavigation();
@@ -135,7 +135,7 @@ export function HomeScreen(): JSX.Element {
       onBack={connectTo || currentPageId ? handleBack : undefined}
       rootRef={rootRef}
     >
-      {!isInitialized || !currentPage ? (
+      {!isInitialized || isUserLoading || !currentPage ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
