@@ -45,7 +45,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { ErrorHint } from '../components/error-hint';
-import { KycHint, KycReason } from '../components/kyc-hint';
+import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
 import { QrCopy } from '../components/payment/qr-copy';
@@ -97,7 +97,7 @@ export default function SellScreen(): JSX.Element {
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [errorMessage, setErrorMessage] = useState<string>();
-  const [kycRequired, setKycRequired] = useState<boolean>(false);
+  const [kycError, setKycError] = useState<TransactionError>();
   const [isLoading, setIsLoading] = useState(false);
   const [isPriceLoading, setIsPriceLoading] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
@@ -264,10 +264,14 @@ export default function SellScreen(): JSX.Element {
 
       case TransactionError.AMOUNT_TOO_HIGH:
         if (!isComplete) {
-          setKycRequired(true);
+          setKycError(sell.error);
           return undefined;
         }
         break;
+
+      case TransactionError.KYC_REQUIRED:
+        setKycError(sell.error);
+        return undefined;
 
       case TransactionError.BANK_TRANSACTION_MISSING:
         setCustomAmountError(
@@ -281,7 +285,7 @@ export default function SellScreen(): JSX.Element {
     }
 
     setCustomAmountError(undefined);
-    setKycRequired(false);
+    setKycError(undefined);
 
     return sell;
   }
@@ -471,7 +475,7 @@ export default function SellScreen(): JSX.Element {
                   buttonLabel={availableBalance ? 'MAX' : undefined}
                   buttonClick={() => availableBalance && setVal('amount', `${availableBalance}`)}
                   name="amount"
-                  forceError={kycRequired || customAmountError != null}
+                  forceError={kycError === TransactionError.AMOUNT_TOO_HIGH || customAmountError != null}
                   forceErrorMessage={customAmountError}
                   loading={isLoading || isPriceLoading}
                 />
@@ -506,7 +510,7 @@ export default function SellScreen(): JSX.Element {
               </div>
             )}
 
-            {kycRequired && !customAmountError && <KycHint reason={KycReason.LIMIT_EXCEEDED} />}
+            {kycError && !customAmountError && <KycHint error={kycError} />}
 
             {!isLoading && errorMessage && (
               <StyledVerticalStack center className="text-center">
@@ -522,7 +526,7 @@ export default function SellScreen(): JSX.Element {
               </StyledVerticalStack>
             )}
 
-            {!isLoading && paymentInfo && !kycRequired && !errorMessage && (
+            {!isLoading && paymentInfo && !kycError && !errorMessage && (
               <>
                 <StyledVerticalStack gap={2} full>
                   <h2 className="text-dfxBlue-800 text-center">

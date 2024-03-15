@@ -40,7 +40,7 @@ import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { NameEdit } from '../components/edit/name.edit';
 import { ErrorHint } from '../components/error-hint';
-import { KycHint, KycReason } from '../components/kyc-hint';
+import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PaymentInformationContent } from '../components/payment/payment-information';
@@ -103,8 +103,7 @@ export function BuyScreen(): JSX.Element {
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [errorMessage, setErrorMessage] = useState<string>();
-  const [limitExceeded, setLimitExceeded] = useState<boolean>(false);
-  const [kycRequired, setKycRequired] = useState<boolean>(false);
+  const [kycError, setKycError] = useState<TransactionError>();
   const [showsCompletion, setShowsCompletion] = useState(false);
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
   const [showsNameForm, setShowsNameForm] = useState(false);
@@ -257,8 +256,7 @@ export function BuyScreen(): JSX.Element {
 
   function validateBuy(buy: Buy): Buy | undefined {
     setCustomAmountError(undefined);
-    setLimitExceeded(false);
-    setKycRequired(false);
+    setKycError(undefined);
 
     switch (buy.error) {
       case TransactionError.AMOUNT_TOO_LOW:
@@ -272,13 +270,14 @@ export function BuyScreen(): JSX.Element {
 
       case TransactionError.AMOUNT_TOO_HIGH:
         if (!isComplete) {
-          setLimitExceeded(true);
+          setKycError(buy.error);
           return undefined;
         }
         break;
 
       case TransactionError.KYC_REQUIRED:
-        setKycRequired(true);
+      case TransactionError.KYC_REQUIRED_INSTANT:
+        setKycError(buy.error);
         return undefined;
     }
 
@@ -403,7 +402,7 @@ export function BuyScreen(): JSX.Element {
                         placeholder="0.00"
                         prefix={selectedCurrency && toSymbol(selectedCurrency)}
                         name="amount"
-                        forceError={limitExceeded || customAmountError != null}
+                        forceError={kycError === TransactionError.AMOUNT_TOO_HIGH || customAmountError != null}
                         forceErrorMessage={customAmountError}
                         full
                       />
@@ -481,8 +480,7 @@ export function BuyScreen(): JSX.Element {
                   </StyledVerticalStack>
                 )}
 
-                {!isLoading && limitExceeded && <KycHint reason={KycReason.LIMIT_EXCEEDED} />}
-                {!isLoading && kycRequired && <KycHint reason={KycReason.SEPA_INSTANT} />}
+                {!isLoading && kycError && <KycHint error={kycError} />}
 
                 {!isLoading && errorMessage && (
                   <StyledVerticalStack center className="text-center">
@@ -498,7 +496,7 @@ export function BuyScreen(): JSX.Element {
                   </StyledVerticalStack>
                 )}
 
-                {!isLoading && paymentInfo && !limitExceeded && !kycRequired && !errorMessage && (
+                {!isLoading && paymentInfo && !kycError && !errorMessage && (
                   <>
                     <StyledCollapsible
                       full
