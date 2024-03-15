@@ -33,7 +33,7 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorHint } from '../components/error-hint';
-import { KycHint, KycReason } from '../components/kyc-hint';
+import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { GiroCode } from '../components/payment/giro-code';
@@ -64,8 +64,7 @@ export function BuyInfoScreen(): JSX.Element {
   const [currency, setCurrency] = useState<Fiat>();
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [errorMessage, setErrorMessage] = useState<string>();
-  const [limitExceeded, setLimitExceeded] = useState<boolean>(false);
-  const [kycRequired, setKycRequired] = useState<boolean>(false);
+  const [kycError, setKycError] = useState<TransactionError>();
 
   // default params
   useEffect(() => {
@@ -106,8 +105,7 @@ export function BuyInfoScreen(): JSX.Element {
 
   function validateBuy(buy: Buy): Buy | undefined {
     setCustomAmountError(undefined);
-    setLimitExceeded(false);
-    setKycRequired(false);
+    setKycError(undefined);
 
     switch (buy.error) {
       case TransactionError.AMOUNT_TOO_LOW:
@@ -121,13 +119,14 @@ export function BuyInfoScreen(): JSX.Element {
 
       case TransactionError.AMOUNT_TOO_HIGH:
         if (!isComplete) {
-          setLimitExceeded(true);
+          setKycError(buy.error);
           return undefined;
         }
         break;
 
       case TransactionError.KYC_REQUIRED:
-        setKycRequired(true);
+      case TransactionError.KYC_REQUIRED_INSTANT:
+        setKycError(buy.error);
         return undefined;
     }
 
@@ -163,10 +162,8 @@ export function BuyInfoScreen(): JSX.Element {
             onClick={() => closeServices({ type: CloseType.CANCEL }, false)}
           />
         </>
-      ) : limitExceeded ? (
-        <KycHint reason={KycReason.LIMIT_EXCEEDED} />
-      ) : kycRequired ? (
-        <KycHint reason={KycReason.SEPA_INSTANT} />
+      ) : kycError ? (
+        <KycHint error={kycError} />
       ) : (
         paymentInfo && (
           <>

@@ -35,7 +35,7 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorHint } from '../components/error-hint';
-import { KycHint, KycReason } from '../components/kyc-hint';
+import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { QrCopy } from '../components/payment/qr-copy';
 import { SellCompletion } from '../components/payment/sell-completion';
@@ -79,7 +79,7 @@ export function SellInfoScreen(): JSX.Element {
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [errorMessage, setErrorMessage] = useState<string>();
-  const [kycRequired, setKycRequired] = useState<boolean>(false);
+  const [kycError, setKycError] = useState<TransactionError>();
 
   // default params
   useEffect(() => {
@@ -145,10 +145,14 @@ export function SellInfoScreen(): JSX.Element {
 
       case TransactionError.AMOUNT_TOO_HIGH:
         if (!isComplete) {
-          setKycRequired(true);
+          setKycError(sell.error);
           return undefined;
         }
         break;
+
+      case TransactionError.KYC_REQUIRED:
+        setKycError(sell.error);
+        return undefined;
 
       case TransactionError.BANK_TRANSACTION_MISSING:
         setCustomAmountError(
@@ -162,7 +166,7 @@ export function SellInfoScreen(): JSX.Element {
     }
 
     setCustomAmountError(undefined);
-    setKycRequired(false);
+    setKycError(undefined);
 
     return sell;
   }
@@ -196,8 +200,8 @@ export function SellInfoScreen(): JSX.Element {
             onClick={() => closeServices({ type: CloseType.CANCEL }, false)}
           />
         </>
-      ) : kycRequired ? (
-        <KycHint reason={KycReason.LIMIT_EXCEEDED} />
+      ) : kycError ? (
+        <KycHint error={kycError} />
       ) : (
         bankAccount &&
         paymentInfo && (
