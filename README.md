@@ -47,13 +47,9 @@ For web component integration, a closing callback (`on-close` attribute) should 
 
 #### Direct Login
 
-Credentials can be provided directly when opening DFX services. This is recommended for integrators with access to the wallet of the user. The services can be opened either with address and signature (not recommended) or a JWT access token for DFX API. Details on the authentication can be found in the [API documentation](https://github.com/DFXswiss/api#registration). The following authentication parameters are required.
+Credentials can be provided directly when opening DFX services. This is recommended for integrators with access to the wallet of the user. The services can be opened with a JWT access token for DFX API. Details on the authentication can be found in the [API documentation](https://github.com/DFXswiss/api#registration). Use the following parameter.
 
-- Address/signature parameters
-  - `address`: blockchain address of the user
-  - `signature`: signature of the DFX API sign message
-- Token parameters
-  - `session`: access token for the DFX API
+- `session`: access token for the DFX API
 
 When using direct login, the type of service (`buy` or `sell`) should be preselected. For standalone or Iframe integration, the service type needs to be added as URL path (e.g. `services.dfx.swiss/buy`). For web component integration the `service` attribute can be used.
 
@@ -108,8 +104,6 @@ _Hint: Asset selection parameters may be overwritten when using [wallet login](#
 
 **Direct login parameters**
 
-- Address (`address)`: blockchain address of the user
-- Signature (`signature)`: signature of the DFX API sign message
 - Access token (`session)`: access token for the DFX API
 - Balances (`balances`): wallet balances of the user (recommended for sell), usage example: `balances=0.35@113,12.3@111`
 - Blockchain (`blockchain`): filter for the asset selection (useful if the user has a multi-chain address)
