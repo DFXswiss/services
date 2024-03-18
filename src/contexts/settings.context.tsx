@@ -5,6 +5,7 @@ import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useSt
 import { useTranslation } from 'react-i18next';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
+import { useAppHandlingContext } from './app-handling.context';
 
 const ValidationErrors: Record<string, string> = {
   required: 'Mandatory field',
@@ -38,6 +39,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { language: storedLanguage } = useStore();
   const { lang, mail } = useAppParams();
   const { t } = useTranslation();
+  const { setParams } = useAppHandlingContext();
 
   const [language, setLanguage] = useState<Language>();
   const [store, setStore] = useState<Record<string, any>>({});
@@ -48,7 +50,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   useEffect(() => {
     const browserLanguage = browserLang({ languages: appLanguages.map((l) => l.toLowerCase()), fallback: 'en' });
     const customLanguage =
-      user?.language.symbol ?? lang?.toUpperCase() ?? storedLanguage.get() ?? browserLanguage.toUpperCase();
+      lang?.toUpperCase() ?? user?.language.symbol ?? storedLanguage.get() ?? browserLanguage.toUpperCase();
     const newAppLanguage =
       availableLanguages.find((l) => l.symbol === customLanguage) ?? getDefaultLanguage(availableLanguages);
 
@@ -68,6 +70,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   function changeLanguage(lang: Language) {
     if (!availableLanguages.some((l) => l.id === lang.id) || language?.id === lang.id) return;
 
+    setParams({ lang: undefined });
     changeAppLanguage(lang);
     changeUserLanguage(lang);
   }
