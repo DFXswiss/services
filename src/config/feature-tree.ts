@@ -3148,7 +3148,7 @@ export const FeatureTree: Page[] = [
   {
     id: 'onramper',
     header: 'OnRamper x DFX',
-    description: 'Buy and sell Crypto directly on your Wallet!',
+    description: 'Buy and sell crypto directly into your wallet!',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/OnRamper.png',
     tiles: [
       {
