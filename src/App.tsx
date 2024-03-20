@@ -20,6 +20,7 @@ import { LimitScreen } from './screens/limit.screen';
 import { LinkScreen } from './screens/link.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
 import { TfaScreen } from './screens/tfa.screen';
+import { TransactionScreen } from './screens/transaction.screen';
 import { setupLanguages } from './translations';
 
 const SellScreen = lazy(() => import('./screens/sell.screen'));
@@ -97,6 +98,10 @@ export const Routes = [
     path: '/limit',
     element: <LimitScreen />,
     isKycScreen: true,
+  },
+  {
+    path: '/tx',
+    element: <TransactionScreen />,
   },
 ];
 
