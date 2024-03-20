@@ -23,42 +23,11 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
+import { DateLabels, LimitLabels, OriginFutureLabels, OriginNowLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { toBase64 } from '../util/utils';
-
-const LimitLabels = {
-  [Limit.K_500]: "CHF 100'000 - 500'000",
-  [Limit.M_1]: "CHF 500'000 - 1'000'000",
-  [Limit.M_5]: "CHF 1'000'000 - 5'000'000",
-  [Limit.M_10]: "CHF 5'000'000 - 10'000'000",
-  [Limit.M_15]: "CHF 10'000'000 - 15'000'000",
-  [Limit.INFINITY]: "> CHF 15'000'000",
-};
-
-const DateLabels = {
-  [InvestmentDate.NOW]: 'Current assets',
-  [InvestmentDate.FUTURE]: 'Future assets',
-};
-
-const OriginNowLabels = {
-  [FundOrigin.SAVINGS]: 'Savings',
-  [FundOrigin.BUSINESS_PROFITS]: 'Business profits',
-  [FundOrigin.STOCK_GAINS]: 'Stock price gains',
-  [FundOrigin.CRYPTO_GAINS]: 'Crypto price gains',
-  [FundOrigin.INHERITANCE]: 'Inheritance',
-  [FundOrigin.OTHER]: 'Other',
-};
-
-const OriginFutureLabels = {
-  [FundOrigin.SAVINGS]: 'Future savings',
-  [FundOrigin.BUSINESS_PROFITS]: 'Future business profits',
-  [FundOrigin.STOCK_GAINS]: 'Future stock price gains',
-  [FundOrigin.CRYPTO_GAINS]: 'Future crypto price gains',
-  [FundOrigin.INHERITANCE]: 'Future inheritance',
-  [FundOrigin.OTHER]: 'Other',
-};
 
 interface FormData {
   limit: Limit;

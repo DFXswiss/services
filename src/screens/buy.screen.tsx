@@ -45,6 +45,7 @@ import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PaymentInformationContent } from '../components/payment/payment-information';
 import { SanctionHint } from '../components/sanction-hint';
+import { PaymentMethodDescriptions, PaymentMethodLabels } from '../config/labels';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
@@ -63,18 +64,6 @@ interface FormData {
   asset: Asset;
   address: { address: string; label: string; type: string };
 }
-
-const paymentLabels = {
-  [FiatPaymentMethod.BANK]: 'Standard bank transaction',
-  [FiatPaymentMethod.INSTANT]: 'Instant bank transaction',
-  [FiatPaymentMethod.CARD]: 'Credit card',
-};
-
-const paymentDescriptions = {
-  [FiatPaymentMethod.BANK]: 'SWIFT, SEPA, SIC, euroSIC',
-  [FiatPaymentMethod.INSTANT]: 'SEPA Instant',
-  [FiatPaymentMethod.CARD]: 'Mastercard, Visa, Google Pay, Apple Pay',
-};
 
 const EmbeddedWallet = 'CakeWallet';
 
@@ -424,8 +413,8 @@ export function BuyScreen(): JSX.Element {
                     name="paymentMethod"
                     placeholder={translate('general/actions', 'Select...')}
                     items={availablePaymentMethods}
-                    labelFunc={(item) => translate('screens/buy', paymentLabels[item])}
-                    descriptionFunc={(item) => translate('screens/buy', paymentDescriptions[item])}
+                    labelFunc={(item) => translate('screens/payment', PaymentMethodLabels[item])}
+                    descriptionFunc={(item) => translate('screens/payment', PaymentMethodDescriptions[item])}
                     full
                   />
                 </StyledVerticalStack>
@@ -500,16 +489,16 @@ export function BuyScreen(): JSX.Element {
                   <>
                     <StyledCollapsible
                       full
-                      label={translate('screens/buy', 'Exchange rate')}
+                      label={translate('screens/payment', 'Exchange rate')}
                       title={`${Utils.formatAmount(paymentInfo.rate)} ${paymentInfo.currency.name}/${
                         paymentInfo.asset.name
                       }`}
                     >
                       <StyledVerticalStack gap={2}>
                         <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">
-                          <div className="text-dfxGray-800">{translate('screens/buy', 'Base rate')}</div>
+                          <div className="text-dfxGray-800">{translate('screens/payment', 'Base rate')}</div>
                           <div>{baseRate}</div>
-                          <div className="text-dfxGray-800">{translate('screens/buy', 'DFX fee')}</div>
+                          <div className="text-dfxGray-800">{translate('screens/payment', 'DFX fee')}</div>
                           <StyledVerticalStack>
                             <div>{dfxFee}</div>
                             {l1Replacement && (

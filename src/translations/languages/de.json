@@ -211,9 +211,6 @@
     "Login with a different address": "Mit einer anderen Adresse anmelden",
     "Are you sure you want to send to a different address?": "Bist Du sicher, dass Du auf eine andere Adresse senden willst?",
 
-    "Exchange rate": "Wechselkurs",
-    "Base rate": "Basiskurs",
-    "DFX fee": "DFX-Gebühren",
     "Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees": "Verwende {{chain}} als Layer-2-Lösung, um von niedrigeren Transaktionsgebühren zu profitieren",
 
     "Done!": "Fertig!",
@@ -228,11 +225,7 @@
 
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Der eingegebene Betrag liegt unter der Mindesteinzahlung von {{amount}} {{currency}}",
 
-    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir das Asset in Deine Wallet übertragen.",
-
-    "Standard bank transaction": "Standard-Banktransaktion",
-    "Instant bank transaction": "Sofort-Banktransaktion",
-    "Credit card": "Kreditkarte"
+    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir das Asset in Deine Wallet übertragen."
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Bankverbindungen",
@@ -275,6 +268,41 @@
     "IBAN": "IBAN",
     "BIC": "BIC",
     "Reference": "Verwendungszweck",
+
+    "Exchange rate": "Wechselkurs",
+    "Base rate": "Basiskurs",
+    "DFX fee": "DFX-Gebühren",
+
+    "Transactions": "Transaktionen",
+
+    "ID": "ID",
+    "Date": "Datum",
+    "Input": "Input",
+    "Input TX": "Input TX",
+    "Output": "Output",
+    "Output TX": "Output TX",
+
+    "Type": "Typ",
+    "Buy": "Kauf",
+    "Sell": "Verkauf",
+    "Convert": "Umtausch",
+
+    "State": "Status",
+    "Created": "Erstellt",
+    "Processing": "In Bearbeitung",
+    "AML pending": "AML ausstehend",
+    "Fee to high": "Gebühr zu hoch",
+    "Completed": "Abgeschlossen",
+    "Failed": "Gescheitert",
+    "Returned": "Zurückgeschickt",
+
+    "Payment method": "Zahlungsmethode",
+    "Standard bank transaction": "Standard-Banktransaktion",
+    "Instant bank transaction": "Sofort-Banktransaktion",
+    "Credit card": "Kreditkarte",
+
+    "Show on block explorer": "Im Block-Explorer anzeigen",
+    "Report an issue": "Ein Problem melden",
 
     "This exchange rate is not guaranteed. The effective rate is determined when the transactions are received and processed by DFX.": "Dieser Wechselkurs ist nicht garantiert. Der effektive Kurs wird ermittelt, wenn die Transaktionen bei DFX eingehen und verarbeitet werden.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst.",
