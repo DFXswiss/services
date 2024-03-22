@@ -1,4 +1,11 @@
-import { FiatPaymentMethod, FundOrigin, InvestmentDate, Limit, TransactionState } from '@dfx.swiss/react';
+import {
+  FiatPaymentMethod,
+  FundOrigin,
+  InvestmentDate,
+  Limit,
+  TransactionFailureReason,
+  TransactionState,
+} from '@dfx.swiss/react';
 
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
@@ -21,6 +28,23 @@ export const PaymentStateLabels = {
   [TransactionState.COMPLETED]: 'Completed',
   [TransactionState.FAILED]: 'Failed',
   [TransactionState.RETURNED]: 'Returned',
+};
+
+export const PaymentFailureReasons = {
+  [TransactionFailureReason.UNKNOWN]: 'Unknown',
+  [TransactionFailureReason.DAILY_LIMIT_EXCEEDED]: 'Daily limit exceeded',
+  [TransactionFailureReason.ANNUAL_LIMIT_EXCEEDED]: 'Annual limit exceeded',
+  [TransactionFailureReason.ACCOUNT_HOLDER_MISMATCH]: 'Account holder mismatch',
+  [TransactionFailureReason.KYC_REJECTED]: 'KYC rejected',
+  [TransactionFailureReason.FRAUD_SUSPICION]: 'Fraud suspicion',
+  [TransactionFailureReason.SANCTION_SUSPICION]: 'Sanction suspicion',
+  [TransactionFailureReason.MIN_DEPOSIT_NOT_REACHED]: 'Minimum deposit not reached',
+  [TransactionFailureReason.ASSET_NOT_AVAILABLE]: 'Asset not available',
+  [TransactionFailureReason.STAKING_DISCONTINUED]: 'Staking discontinued',
+  [TransactionFailureReason.BANK_NOT_ALLOWED]: 'Bank not allowed',
+  [TransactionFailureReason.PAYMENT_ACCOUNT_NOT_ALLOWED]: 'Payment account not allowed',
+  [TransactionFailureReason.COUNTRY_NOT_ALLOWED]: 'Country not allowed',
+  [TransactionFailureReason.INSTANT_PAYMENT]: 'Instant payment',
 };
 
 // --- LIMIT REQUESTS --- //
