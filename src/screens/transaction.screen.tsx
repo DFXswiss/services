@@ -2,6 +2,7 @@ import {
   CryptoPaymentMethod,
   FiatPaymentMethod,
   Transaction,
+  TransactionType,
   useSessionContext,
   useTransaction,
 } from '@dfx.swiss/react';
@@ -22,7 +23,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { Layout } from '../components/layout';
-import { PaymentMethodLabels } from '../config/labels';
+import { PaymentFailureReasons, PaymentMethodLabels, PaymentStateLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { blankedAddress } from '../util/utils';
@@ -52,9 +53,9 @@ export function TransactionScreen(): JSX.Element {
               (p) => p !== CryptoPaymentMethod.CRYPTO,
             ) as FiatPaymentMethod;
 
-            const icon = [tx.outputAsset, tx.inputAsset].find((a) =>
-              Object.values(AssetIconVariant).includes(a as AssetIconVariant),
-            );
+            const icon = (
+              tx.type === TransactionType.SELL ? [tx.inputAsset, tx.outputAsset] : [tx.outputAsset, tx.inputAsset]
+            ).find((a) => Object.values(AssetIconVariant).includes(a as AssetIconVariant));
 
             const rateItems = [];
             tx.exchangeRate != null &&
@@ -79,10 +80,10 @@ export function TransactionScreen(): JSX.Element {
 
                     <div className="flex flex-col items-start">
                       <div className="font-bold leading-none">{translate('screens/payment', tx.type)}</div>
-                      <div className="leading-none">{translate('screens/payment', tx.state)}</div>
+                      <div className="leading-none">{translate('screens/payment', PaymentStateLabels[tx.state])}</div>
                     </div>
                     <div className="ml-auto">
-                      {tx.inputAmount} {tx.inputAsset}
+                      {tx.inputAmount} {tx.inputAsset} {tx.outputAsset ? ` → ${tx.outputAmount} ${tx.outputAsset}` : ''}
                     </div>
                   </div>
                 }
@@ -99,8 +100,13 @@ export function TransactionScreen(): JSX.Element {
                       <p>{translate('screens/payment', tx.type)}</p>
                     </StyledDataTableRow>
                     <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                      <p>{translate('screens/payment', tx.state)}</p>
+                      <p>{translate('screens/payment', PaymentStateLabels[tx.state])}</p>
                     </StyledDataTableRow>
+                    {tx.reason && (
+                      <StyledDataTableRow label={translate('screens/payment', 'Failure reason')}>
+                        <p>{translate('screens/payment', PaymentFailureReasons[tx.reason])}</p>
+                      </StyledDataTableRow>
+                    )}
                     {paymentMethod && (
                       <StyledDataTableRow label={translate('screens/payment', 'Payment method')}>
                         <p>{translate('screens/payment', PaymentMethodLabels[paymentMethod])}</p>
@@ -116,7 +122,11 @@ export function TransactionScreen(): JSX.Element {
                     )}
                     {tx.inputTxId && (
                       <StyledDataTableRow label={translate('screens/payment', 'Input TX')}>
-                        <StyledLink label={blankedAddress(tx.inputTxId)} url={tx.inputTxUrl} dark />
+                        {tx.inputTxUrl ? (
+                          <StyledLink label={blankedAddress(tx.inputTxId)} url={tx.inputTxUrl} dark />
+                        ) : (
+                          <p>{blankedAddress(tx.inputTxId)}</p>
+                        )}
                       </StyledDataTableRow>
                     )}
                     {tx.outputAsset && (
@@ -129,7 +139,11 @@ export function TransactionScreen(): JSX.Element {
                     )}
                     {tx.outputTxId && (
                       <StyledDataTableRow label={translate('screens/payment', 'Output TX')}>
-                        <StyledLink label={blankedAddress(tx.outputTxId)} url={tx.outputTxUrl} dark />
+                        {tx.outputTxUrl ? (
+                          <StyledLink label={blankedAddress(tx.outputTxId)} url={tx.outputTxUrl} dark />
+                        ) : (
+                          <p>{blankedAddress(tx.outputTxId)}</p>
+                        )}
                       </StyledDataTableRow>
                     )}
                     {tx.rate != null && (
