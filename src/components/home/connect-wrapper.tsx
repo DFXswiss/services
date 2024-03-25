@@ -1,7 +1,6 @@
 import { lazy } from 'react';
 import { WalletType } from '../../contexts/wallet.context';
 import { ConnectProps } from './connect-shared';
-import ConnectFps from './wallet/connect-fps';
 
 const ConnectAlby = lazy(() => import('./wallet/connect-alby'));
 const ConnectBitbox = lazy(() => import('./wallet/connect-bitbox'));
@@ -48,9 +47,6 @@ export function ConnectWrapper(props: ConnectProps): JSX.Element {
     case WalletType.CAKE:
     case WalletType.MONERO:
       return <ConnectMonero {...props} wallet={props.wallet} />;
-
-    case WalletType.FPS:
-      return <ConnectFps {...props} />;
 
     case WalletType.MAIL:
       return <ConnectMail {...props} />;

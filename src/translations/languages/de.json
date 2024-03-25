@@ -192,8 +192,10 @@
     "Please install {{wallet}} from the wallet provider's website.": "Bitte installiere {{wallet}} von der Website des Wallet-Anbieters.",
     "Open website": "Website öffnen",
 
-    "fps": "Leider bietet DFX.swiss den Kauf und Verkauf von FPS-Tokens nicht an. Wenn Du dennoch Interesse hast, kannst Du die Website <2>www.frankencoin.com/pool</2> über den unten stehenden Button besuchen.",
-    "The website allows you to interact with the Frankencoin smart contract and trade FPS tokens. Please note that this is not an offer from DFX, it is not a recommendation and it is in no way a solicitation to trade. With this message DFX only points out that this technical possibility exists, nothing more. It is imperative that you inform yourself about all the details beforehand and always be aware that you are always trading on your own responsibility.": "Die Website ermöglicht, mit dem Frankencoin Smart Contract zu interagieren und FPS Token zu handeln. Bitte beachte, dass dies kein Angebot von DFX ist, dass es keine Empfehlung ist und dass es in keinster Weise eine Handelsaufforderung ist. DFX weist mit dieser Nachricht einzig darauf hin, dass es diese technische Möglichkeit gibt, mehr nicht. Informiere Dich zwingend vorher über alle Details und sei Dir stehts bewusst, dass Du immer in eigener Verantwortung handelst.",
+    "Unfortunately, DFX.swiss does not offer the purchase and sale of {{token}} tokens.": "Leider bietet DFX.swiss den Kauf und Verkauf von {{token}} Token nicht an.",
+    "If you are still interested, you can visit their website.": "Falls Du dennoch Interesse hast, kannst Du ihre Website besuchen.",
+    "private": "Falls Du dennoch Interesse hast, kannst Du die Website <2></2> über den unten stehenden Button besuchen.",
+    "The website allows you to interact with the {{name}} smart contract and trade {{symbol}} tokens. Please note that this is not an offer from DFX, it is not a recommendation and it is in no way a solicitation to trade. With this message DFX only points out that this technical possibility exists, nothing more. It is imperative that you inform yourself about all the details beforehand and always be aware that you are always trading on your own responsibility.": "Die Website ermöglicht, mit dem {{name}} Smart Contract zu interagieren und {{symbol}} Token zu handeln. Bitte beachte, dass dies kein Angebot von DFX ist, dass es keine Empfehlung ist und dass es in keinster Weise eine Handelsaufforderung ist. DFX weist mit dieser Nachricht einzig darauf hin, dass es diese technische Möglichkeit gibt, mehr nicht. Informiere Dich zwingend vorher über alle Details und sei Dir stehts bewusst, dass Du immer in eigener Verantwortung handelst.",
 
     "Blockchain": "Blockchain",
     "Address": "Adresse",
@@ -239,8 +241,6 @@
     "Your Currency": "Deine Währung",
     "e.g. EUR": "z.B. EUR",
     "Enter your desired payout amount": "Gib den gewünschten Auszahlungsbetrag ein",
-    "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)": "≈ {{estimatedAmount}} {{currency}} (inkl. {{fee}} % DFX Gebühr)",
-    "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})": "≈ {{estimatedAmount}} {{currency}} (inkl. {{fee}} % DFX Gebühr - min. {{minFee}}{{minFeeCurrency}})",
 
     "Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.": "Sende den ausgewählten Betrag an die unten stehende Adresse. Diese Adresse kann mehrfach verwendet werden, sie ist immer die gleiche für Auszahlungen in {{currency}} an Deine IBAN {{iban}}.",
     "Address": "Adresse",
@@ -271,9 +271,11 @@
 
     "Exchange rate": "Wechselkurs",
     "Base rate": "Basiskurs",
-    "DFX fee": "DFX-Gebühren",
+    "DFX fee": "DFX-Gebühr",
+    "Network fee": "Netzwerk-Gebühr",
 
     "Transactions": "Transaktionen",
+    "No transactions found": "Keine Transaktionen gefunden",
 
     "ID": "ID",
     "Date": "Datum",
@@ -290,7 +292,8 @@
     "State": "Status",
     "Created": "Erstellt",
     "Processing": "In Bearbeitung",
-    "AML pending": "AML ausstehend",
+    "AML pending": "AML erforderlich",
+    "KYC required": "KYC benötigt",
     "Fee to high": "Gebühr zu hoch",
     "Completed": "Abgeschlossen",
     "Failed": "Gescheitert",

@@ -24,6 +24,7 @@ export const PaymentStateLabels = {
   [TransactionState.CREATED]: 'Created',
   [TransactionState.PROCESSING]: 'Processing',
   [TransactionState.AML_PENDING]: 'AML pending',
+  [TransactionState.KYC_REQUIRED]: 'KYC required',
   [TransactionState.FEE_TOO_HIGH]: 'Fee to high',
   [TransactionState.COMPLETED]: 'Completed',
   [TransactionState.FAILED]: 'Failed',

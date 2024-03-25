@@ -1486,8 +1486,13 @@ export const FeatureTree: Page[] = [
       {
         id: 'FPS',
         img: 'fps',
-        wallet: {
-          type: WalletType.FPS,
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'FPS' },
+          },
         },
       },
     ],
@@ -1538,8 +1543,13 @@ export const FeatureTree: Page[] = [
       {
         id: 'FPS',
         img: 'fps',
-        wallet: {
-          type: WalletType.FPS,
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'FPS' },
+          },
         },
       },
     ],
@@ -1590,8 +1600,13 @@ export const FeatureTree: Page[] = [
       {
         id: 'FPS',
         img: 'fps',
-        wallet: {
-          type: WalletType.FPS,
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'FPS' },
+          },
         },
       },
     ],
@@ -1642,8 +1657,13 @@ export const FeatureTree: Page[] = [
       {
         id: 'FPS',
         img: 'fps',
-        wallet: {
-          type: WalletType.FPS,
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'FPS' },
+          },
         },
       },
     ],

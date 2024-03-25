@@ -192,8 +192,10 @@
     "Please install {{wallet}} from the wallet provider's website.": "Installare {{wallet}} dal sito web del fornitore del portafoglio.",
     "Open website": "Aprire il sito web",
 
-    "fps": "Purtroppo, DFX.swiss non offre l'acquisto e la vendita di token FPS. Se siete ancora interessati, potete visitare il sito web <2>www.frankencoin.com/pool</2> utilizzando il pulsante sottostante.",
-    "The website allows you to interact with the Frankencoin smart contract and trade FPS tokens. Please note that this is not an offer from DFX, it is not a recommendation and it is in no way a solicitation to trade. With this message DFX only points out that this technical possibility exists, nothing more. It is imperative that you inform yourself about all the details beforehand and always be aware that you are always trading on your own responsibility.": "Il sito web consente di interagire con lo smart contract Frankencoin e di scambiare i token FPS. Si prega di notare che questa non è un'offerta di DFX, non è una raccomandazione e non è in alcun modo una sollecitazione al commercio. Con questo messaggio DFX segnala solo l'esistenza di questa possibilità tecnica, niente di più. È indispensabile informarsi preventivamente su tutti i dettagli ed essere sempre consapevoli che si opera sempre sotto la propria responsabilità.",
+    "Unfortunately, DFX.swiss does not offer the purchase and sale of {{token}} tokens.": "Purtroppo, DFX.swiss non offre l'acquisto e la vendita di token {{token}}.",
+    "If you are still interested, you can visit their website.": "Se siete ancora interessati, potete visitare il loro sito web.",
+    "private": "Se siete ancora interessati, potete visitare il sito web <2></2> utilizzando il pulsante sottostante.",
+    "The website allows you to interact with the {{name}} smart contract and trade {{symbol}} tokens. Please note that this is not an offer from DFX, it is not a recommendation and it is in no way a solicitation to trade. With this message DFX only points out that this technical possibility exists, nothing more. It is imperative that you inform yourself about all the details beforehand and always be aware that you are always trading on your own responsibility.": "Il sito web consente di interagire con lo smart contract {{name}} e di scambiare i token {{symbol}}. Si prega di notare che questa non è un'offerta di DFX, non è una raccomandazione e non è in alcun modo una sollecitazione al commercio. Con questo messaggio DFX segnala solo l'esistenza di questa possibilità tecnica, niente di più. È indispensabile informarsi preventivamente su tutti i dettagli ed essere sempre consapevoli che si opera sempre sotto la propria responsabilità.",
 
     "Blockchain": "Blockchain",
     "Address": "Indirizzo",
@@ -239,8 +241,6 @@
     "Your Currency": "La vostra valuta",
     "e.g. EUR": "ad esempio EUR",
     "Enter your desired payout amount": "Inserire l'importo del pagamento desiderato",
-    "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)": "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX Tassa)",
-    "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})": "≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX Tassa - min. {{minFee}}{{minFeeCurrency}})",
 
     "Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.": "Inviare l'importo selezionato all'indirizzo indicato di seguito. Questo indirizzo può essere utilizzato più volte, è sempre lo stesso per i versamenti in {{currency}} al vostro IBAN {{iban}}.",
     "Address": "Indirizzo",
@@ -272,8 +272,10 @@
     "Exchange rate": "Tasso di cambio",
     "Base rate": "Tasso base",
     "DFX fee": "Commissioni DFX",
+    "Network fee": "Commissione di rete",
 
     "Transactions": "Le transazioni",
+    "No transactions found": "Nessuna transazione trovata",
 
     "ID": "ID",
     "Date": "Data",
@@ -291,6 +293,7 @@
     "Created": "Creato",
     "Processing": "In corso",
     "AML pending": "In attesa di AML",
+    "KYC required": "KYC necessario",
     "Fee to high": "Tassa elevata",
     "Completed": "Completato",
     "Failed": "Fallito",

@@ -1,0 +1,73 @@
+import { Asset, Blockchain, Fiat, Utils, useFiat } from '@dfx.swiss/react';
+import { IconColor, StyledCollapsible, StyledInfoText, StyledVerticalStack } from '@dfx.swiss/react-components';
+import { Fees } from '@dfx.swiss/react/dist/definitions/fees';
+import { useSettingsContext } from '../contexts/settings.context';
+
+interface ExchangeRateProps {
+  exchangeRate: number;
+  rate: number;
+  fees: Fees;
+  feeCurrency: Fiat;
+  from: Fiat | Asset;
+  to: Fiat | Asset;
+}
+
+export function ExchangeRate({ exchangeRate, rate, fees, feeCurrency, from, to }: ExchangeRateProps): JSX.Element {
+  const { translate } = useSettingsContext();
+  const { toSymbol } = useFiat();
+
+  const symbol = toSymbol(feeCurrency);
+
+  const baseRate = `${Utils.formatAmount(exchangeRate)} ${from.name}/${to.name}`;
+  const minFee = `, min. ${fees.min}${symbol}`;
+  const dfxFee = `${fees.dfx}${symbol} (${fees.rate * 100}%${fees.min ? minFee : ''})`;
+  const networkFee = fees.network > 0 && `${fees.network}${symbol}`;
+
+  const l1Replacement =
+    'blockchain' in to &&
+    (to.blockchain === Blockchain.BITCOIN
+      ? 'Lightning'
+      : to.blockchain === Blockchain.ETHEREUM
+      ? 'Arbitrum / Optimism'
+      : undefined);
+
+  return (
+    <StyledCollapsible
+      full
+      label={translate('screens/payment', 'Exchange rate')}
+      title={`${Utils.formatAmount(rate)} ${from.name}/${to.name}`}
+    >
+      <StyledVerticalStack gap={2}>
+        <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">
+          <div className="text-dfxGray-800">{translate('screens/payment', 'Base rate')}</div>
+          <div>{baseRate}</div>
+          <div className="text-dfxGray-800">{translate('screens/payment', 'DFX fee')}</div>
+          <div>{dfxFee}</div>
+          {networkFee && (
+            <>
+              <div className="text-dfxGray-800">{translate('screens/payment', 'Network fee')}</div>
+              <StyledVerticalStack>
+                <div>{networkFee}</div>
+                {l1Replacement && (
+                  <div className="mt-1 text-xs text-dfxGray-700 leading-tight">
+                    {translate(
+                      'screens/buy',
+                      'Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees',
+                      { chain: l1Replacement },
+                    )}
+                  </div>
+                )}
+              </StyledVerticalStack>
+            </>
+          )}
+        </div>
+        <StyledInfoText iconColor={IconColor.GRAY} discreet>
+          {translate(
+            'screens/payment',
+            'This exchange rate is not guaranteed. The effective rate is determined when the transactions are received and processed by DFX.',
+          )}
+        </StyledInfoText>
+      </StyledVerticalStack>
+    </StyledCollapsible>
+  );
+}

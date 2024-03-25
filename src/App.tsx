@@ -127,7 +127,7 @@ function App({ routerFactory, params }: AppProps) {
   if (home) router.navigate(home);
 
   return (
-    <DfxContextProvider api={{}} data={{}}>
+    <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
       <BalanceContextProvider>
         <AppHandlingContextProvider
           isWidget={params != null}

@@ -24,7 +24,6 @@ export enum WalletType {
   WALLET_CONNECT = 'WalletConnect',
   CAKE = 'Cake',
   MONERO = 'Monero',
-  FPS = 'FPS',
   MAIL = 'Mail',
 }
 

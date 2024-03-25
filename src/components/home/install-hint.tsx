@@ -29,7 +29,6 @@ export function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: 
     case WalletType.WALLET_CONNECT:
     case WalletType.CAKE:
     case WalletType.MONERO:
-    case WalletType.FPS:
     case WalletType.MAIL:
       return <></>;
   }
