@@ -20,7 +20,7 @@ export function ExchangeRate({ exchangeRate, rate, fees, feeCurrency, from, to }
 
   const baseRate = `${Utils.formatAmount(exchangeRate)} ${from.name}/${to.name}`;
   const minFee = `, min. ${fees.min}${symbol}`;
-  const dfxFee = `${fees.dfx}${symbol} (${fees.rate * 100}%${fees.min ? minFee : ''})`;
+  const dfxFee = `${fees.dfx}${symbol} (${(fees.rate * 100).toFixed(2)}%${fees.min ? minFee : ''})`;
   const networkFee = fees.network > 0 && `${fees.network}${symbol}`;
 
   const l1Replacement =
