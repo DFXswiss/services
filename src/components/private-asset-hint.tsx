@@ -6,6 +6,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 
 const PrivateAssets: { [symbol: string]: { name: string; url: string } } = {
   FPS: { name: 'Frankencoin', url: 'www.frankencoin.com/pool' },
+  WFPS: { name: 'Frankencoin', url: 'www.frankencoin.com/pool' },
   Ebel2X: { name: 'Ebel2X', url: 'dhedge.org/vault/0xe137dd4bcd22e947c896ae33a0920c09c85e263d' },
 };
 
