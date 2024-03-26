@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { UseFormReturn, useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { WalletBlockchains, WalletType, useWalletContext } from '../../../contexts/wallet.context';
+import { useAppParams } from '../../../hooks/app-params.hook';
 import { useBlockchain } from '../../../hooks/blockchain.hook';
 import { useClipboard } from '../../../hooks/clipboard.hook';
 import { ConnectBase } from '../connect-base';
@@ -23,9 +24,10 @@ interface FormData {
   blockchain: Blockchain;
   address: string;
   signature: string;
+  key?: string;
 }
 
-const Wallets = [WalletType.CLI_BTC, WalletType.CLI_ETH, WalletType.CLI_XMR];
+const Wallets = [WalletType.CLI_BTC, WalletType.CLI_ETH, WalletType.CLI_XMR, WalletType.CLI_ADA, WalletType.CLI_AR];
 
 const SupportedBlockchains = Wallets.map((w) => WalletBlockchains[w])
   .filter((c) => c)
@@ -77,6 +79,8 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch }: Conte
     [WalletType.CLI_BTC]: /^([13]|bc1)[a-zA-HJ-NP-Z0-9]{25,62}$/,
     [WalletType.CLI_XMR]: /^[48][0-9AB][1-9A-HJ-NP-Za-km-z]{93}$/,
     [WalletType.CLI_ETH]: /^0x\w{40}$/,
+    [WalletType.CLI_ADA]: /^stake[a-z0-9]{54}$/,
+    [WalletType.CLI_AR]: /^[\w-]{43}$/,
   };
 
   function validateAddress(address: string): true | string {
@@ -92,31 +96,40 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch }: Conte
   } = form;
   const blockchain = useWatch({ control, name: 'blockchain' });
   const address = useWatch({ control, name: 'address' });
+  const key = useWatch({ control, name: 'key' });
   const addressValid = validateAddress(address) === true;
+  const { setParams } = useAppParams();
 
   const [signMessage, setSignMessage] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
 
+  const requiresKey = [Blockchain.CARDANO, Blockchain.ARWEAVE].includes(blockchain);
+  const hasKey = !requiresKey || key;
+
   useEffect(() => {
     const newWallet = Wallets.find((w) => WalletBlockchains[w]?.includes(blockchain));
-    newWallet && onSwitch(newWallet);
+    if (newWallet) {
+      onSwitch(newWallet);
+      setParams({ blockchain });
+    }
   }, [blockchain]);
 
   useEffect(() => {
-    address && trigger();
+    address && hasKey && trigger();
 
-    if (addressValid) {
+    if (addressValid && hasKey) {
       setIsLoading(true);
       getSignMessage(address)
         .then(setSignMessage)
         .finally(() => setIsLoading(false));
     }
-  }, [address, wallet]);
+  }, [address, wallet, hasKey]);
 
   const rules = Utils.createRules({
-    blockchain: [Validations.Required],
+    blockchain: Validations.Required,
     address: [Validations.Required, Validations.Custom(validateAddress)],
-    signature: [Validations.Required],
+    signature: Validations.Required,
+    key: requiresKey ? Validations.Required : undefined,
   });
 
   async function submit(): Promise<void> {
@@ -144,6 +157,17 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch }: Conte
           full
           smallLabel
         />
+
+        {requiresKey && (
+          <StyledInput
+            name="key"
+            autocomplete="publickey"
+            label={translate('screens/home', 'Key')}
+            disabled={isConnecting}
+            full
+            smallLabel
+          />
+        )}
 
         {addressValid && signMessage && (
           <>

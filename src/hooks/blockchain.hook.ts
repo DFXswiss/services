@@ -60,6 +60,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.BITCOIN]: 'Bitcoin',
       [Blockchain.LIGHTNING]: 'Lightning',
       [Blockchain.DEFICHAIN]: 'DeFiChain',
+      [Blockchain.ARWEAVE]: 'Arweave',
       [Blockchain.CARDANO]: 'Cardano',
       [Blockchain.MONERO]: 'Monero',
     },

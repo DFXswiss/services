@@ -90,10 +90,15 @@ export function ConnectBase({
       : logout().then(() =>
           'session' in account
             ? setSession(wallet, account.blockchain, account.session)
-            : login(wallet, account.address, account.blockchain, (a, m) =>
-                account.signature
-                  ? Promise.resolve(account.signature)
-                  : onSignMessage(a, account.blockchain, m, account.accountIndex, account.index, account.type),
+            : login(
+                wallet,
+                account.address,
+                account.blockchain,
+                (a, m) =>
+                  account.signature
+                    ? Promise.resolve(account.signature)
+                    : onSignMessage(a, account.blockchain, m, account.accountIndex, account.index, account.type),
+                account.key,
               ),
         );
   }

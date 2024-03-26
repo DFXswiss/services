@@ -5,7 +5,6 @@ import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useSt
 import { useTranslation } from 'react-i18next';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
-import { useAppHandlingContext } from './app-handling.context';
 
 const ValidationErrors: Record<string, string> = {
   required: 'Mandatory field',
@@ -37,9 +36,8 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { getDefaultLanguage } = useLanguage();
   const { user, changeLanguage: changeUserLanguage, changeMail: changeUserMail } = useUserContext();
   const { language: storedLanguage } = useStore();
-  const { lang, mail } = useAppParams();
+  const { lang, mail, setParams } = useAppParams();
   const { t } = useTranslation();
-  const { setParams } = useAppHandlingContext();
 
   const [language, setLanguage] = useState<Language>();
   const [store, setStore] = useState<Record<string, any>>({});

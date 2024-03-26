@@ -8,6 +8,7 @@ export type Account =
   | {
       address: string;
       signature?: string;
+      key?: string;
       accountIndex?: number;
       index?: number;
       type?: BitcoinAddressType;
