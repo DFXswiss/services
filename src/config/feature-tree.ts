@@ -3189,7 +3189,7 @@ export const FeatureTree: Page[] = [
           tiles: ['hw-wallet', 'metamask'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'Ebel2X' },
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'MKR' },
           },
         },
       },
