@@ -2932,6 +2932,18 @@ export const FeatureTree: Page[] = [
           },
         },
       },
+      {
+        id: 'ZCHF',
+        img: 'ZCHF',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ZCHF' },
+          },
+        },
+      },
     ],
   },
   {
@@ -2958,6 +2970,18 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'ebel2x',
+        img: 'EBEL2X',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'EBEL2X' },
           },
         },
       },
@@ -3006,6 +3030,18 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'ZCHF',
+        img: 'ZCHF',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ZCHF' },
           },
         },
       },
