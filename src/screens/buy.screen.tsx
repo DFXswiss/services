@@ -20,15 +20,12 @@ import {
 import {
   AssetIconVariant,
   Form,
-  IconColor,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
-  StyledCollapsible,
   StyledDropdown,
   StyledHorizontalStack,
-  StyledInfoText,
   StyledInput,
   StyledLink,
   StyledLoadingSpinner,
@@ -36,14 +33,17 @@ import {
   StyledTextBox,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { NameEdit } from '../components/edit/name.edit';
 import { ErrorHint } from '../components/error-hint';
+import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PaymentInformationContent } from '../components/payment/payment-information';
+import { PrivateAssetHint } from '../components/private-asset-hint';
 import { SanctionHint } from '../components/sanction-hint';
 import { PaymentMethodDescriptions, PaymentMethodLabels } from '../config/labels';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -76,7 +76,7 @@ export function BuyScreen(): JSX.Element {
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assets, assetIn, assetOut, amountIn, blockchain, paymentMethod, externalTransactionId, wallet } =
+  const { assets, assetIn, assetOut, amountIn, blockchain, paymentMethod, externalTransactionId, wallet, flags } =
     useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { isComplete } = useKycHelper();
@@ -139,7 +139,9 @@ export function BuyScreen(): JSX.Element {
   useEffect(() => {
     const activeBlockchain = walletBlockchain ?? blockchain;
     const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
-    const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false });
+    const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false }).filter(
+      (a) => a.category === AssetCategory.PUBLIC || a.name === assetOut,
+    );
     const activeAssets = assets
       ? assets
           .split(',')
@@ -328,23 +330,6 @@ export function BuyScreen(): JSX.Element {
     ? translate('screens/buy', 'Switch address')
     : translate('screens/buy', 'Buy');
 
-  const baseRate =
-    paymentInfo &&
-    `${Utils.formatAmount(paymentInfo.exchangeRate)} ${paymentInfo.currency.name}/${paymentInfo.asset.name}`;
-  const feeAmount =
-    paymentInfo && Math.max((paymentInfo.fee * paymentInfo.amount) / 100, paymentInfo.minFee ?? 0).toFixed(2);
-  const minFee = paymentInfo && `, min. ${paymentInfo.minFee}${toSymbol(paymentInfo.currency)}`;
-  const dfxFee =
-    paymentInfo &&
-    `${feeAmount}${toSymbol(paymentInfo.currency)} (${paymentInfo.fee}%${paymentInfo.minFee ? minFee : ''})`;
-
-  const l1Replacement =
-    paymentInfo?.asset.blockchain === Blockchain.BITCOIN
-      ? 'Lightning'
-      : paymentInfo?.asset.blockchain === Blockchain.ETHEREUM
-      ? 'Arbitrum / Optimism'
-      : undefined;
-
   return (
     <Layout
       title={title}
@@ -485,79 +470,34 @@ export function BuyScreen(): JSX.Element {
                   </StyledVerticalStack>
                 )}
 
-                {!isLoading && paymentInfo && !kycError && !errorMessage && (
-                  <>
-                    <StyledCollapsible
-                      full
-                      label={translate('screens/payment', 'Exchange rate')}
-                      title={`${Utils.formatAmount(paymentInfo.rate)} ${paymentInfo.currency.name}/${
-                        paymentInfo.asset.name
-                      }`}
-                    >
-                      <StyledVerticalStack gap={2}>
-                        <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">
-                          <div className="text-dfxGray-800">{translate('screens/payment', 'Base rate')}</div>
-                          <div>{baseRate}</div>
-                          <div className="text-dfxGray-800">{translate('screens/payment', 'DFX fee')}</div>
-                          <StyledVerticalStack>
-                            <div>{dfxFee}</div>
-                            {l1Replacement && (
-                              <div className="mt-1 text-xs text-dfxGray-700 leading-tight">
-                                {translate(
-                                  'screens/buy',
-                                  'Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees',
-                                  { chain: l1Replacement },
-                                )}
-                              </div>
-                            )}
-                          </StyledVerticalStack>
-                        </div>
-                        <StyledInfoText iconColor={IconColor.GRAY} discreet>
-                          {translate(
-                            'screens/payment',
-                            'This exchange rate is not guaranteed. The effective rate is determined when the transactions are received and processed by DFX.',
-                          )}
-                        </StyledInfoText>
-                      </StyledVerticalStack>
-                    </StyledCollapsible>
+                {!isLoading &&
+                  paymentInfo &&
+                  !kycError &&
+                  !errorMessage &&
+                  (selectedAsset.category === AssetCategory.PRIVATE && !flags?.includes('private') ? (
+                    <PrivateAssetHint asset={selectedAsset} />
+                  ) : (
+                    <>
+                      <ExchangeRate
+                        exchangeRate={paymentInfo.exchangeRate}
+                        rate={paymentInfo.rate}
+                        fees={paymentInfo.fees}
+                        feeCurrency={paymentInfo.currency}
+                        from={paymentInfo.currency}
+                        to={paymentInfo.asset}
+                      />
 
-                    {selectedPaymentMethod !== FiatPaymentMethod.CARD ? (
-                      <>
-                        <div>
-                          <PaymentInformationContent info={paymentInfo} />
-                        </div>
-                        <SanctionHint />
-                        <div className="w-full leading-none">
-                          <StyledLink
-                            label={translate(
-                              'screens/payment',
-                              'Please note that by using this service you automatically accept our terms and conditions.',
-                            )}
-                            url={process.env.REACT_APP_TNC_URL}
-                            small
-                            dark
-                          />
-                          <StyledButton
-                            width={StyledButtonWidth.FULL}
-                            label={translate('screens/buy', 'Click here once you have issued the transfer')}
-                            onClick={() => {
-                              setShowsCompletion(true);
-                              scrollRef.current?.scrollTo(0, 0);
-                            }}
-                            caps={false}
-                            className="my-4"
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      paymentInfo.paymentLink && (
+                      {selectedPaymentMethod !== FiatPaymentMethod.CARD ? (
                         <>
+                          <div>
+                            <PaymentInformationContent info={paymentInfo} />
+                          </div>
                           <SanctionHint />
-                          <div className="leading-none">
+                          <div className="w-full leading-none">
                             <StyledLink
                               label={translate(
                                 'screens/payment',
-                                'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
+                                'Please note that by using this service you automatically accept our terms and conditions.',
                               )}
                               url={process.env.REACT_APP_TNC_URL}
                               small
@@ -565,17 +505,43 @@ export function BuyScreen(): JSX.Element {
                             />
                             <StyledButton
                               width={StyledButtonWidth.FULL}
-                              label={translate('general/actions', 'Next')}
-                              onClick={() => onCardBuy(paymentInfo)}
-                              isLoading={isContinue}
+                              label={translate('screens/buy', 'Click here once you have issued the transfer')}
+                              onClick={() => {
+                                setShowsCompletion(true);
+                                scrollRef.current?.scrollTo(0, 0);
+                              }}
+                              caps={false}
                               className="my-4"
                             />
                           </div>
                         </>
-                      )
-                    )}
-                  </>
-                )}
+                      ) : (
+                        paymentInfo.paymentLink && (
+                          <>
+                            <SanctionHint />
+                            <div className="leading-none">
+                              <StyledLink
+                                label={translate(
+                                  'screens/payment',
+                                  'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
+                                )}
+                                url={process.env.REACT_APP_TNC_URL}
+                                small
+                                dark
+                              />
+                              <StyledButton
+                                width={StyledButtonWidth.FULL}
+                                label={translate('general/actions', 'Next')}
+                                onClick={() => onCardBuy(paymentInfo)}
+                                isLoading={isContinue}
+                                className="my-4"
+                              />
+                            </div>
+                          </>
+                        )
+                      )}
+                    </>
+                  ))}
               </>
             )}
           </StyledVerticalStack>

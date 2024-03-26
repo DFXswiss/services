@@ -45,6 +45,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { ErrorHint } from '../components/error-hint';
+import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
@@ -88,7 +89,7 @@ export default function SellScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain, externalTransactionId } = useAppParams();
   const { isComplete, defaultLimit, limitToString } = useKycHelper();
-  const { toDescription, toSymbol, getCurrency, getDefaultCurrency } = useFiat();
+  const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
   const { toString } = useBlockchain();
@@ -482,31 +483,23 @@ export default function SellScreen(): JSX.Element {
                 {!isLoading && paymentInfo && paymentInfo.estimatedAmount > 0 && (
                   <>
                     <p className="text-dfxBlue-800 text-start w-full text-xs pt-2 pl-7">
-                      {translate(
-                        'screens/sell',
-                        paymentInfo.minFeeTarget && validatedData?.currency
-                          ? '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee - min. {{minFee}}{{minFeeCurrency}})'
-                          : '≈ {{estimatedAmount}} {{currency}} (incl. {{fee}} % DFX fee)',
-                        {
-                          estimatedAmount: paymentInfo.estimatedAmount,
-                          currency: validatedData?.currency.name ?? '',
-                          fee: paymentInfo.fee,
-                          minFee: paymentInfo.minFeeTarget,
-                          minFeeCurrency: validatedData?.currency ? toSymbol(validatedData.currency) : '',
-                        },
-                      )}
+                      {`≈ ${paymentInfo.estimatedAmount} ${validatedData?.currency.name ?? ''}`}
                     </p>
-
-                    <div className="mt-2">
-                      <StyledInfoText iconColor={IconColor.GRAY} discreet>
-                        {translate(
-                          'screens/payment',
-                          'This exchange rate is not guaranteed. The effective rate is determined when the transactions are received and processed by DFX.',
-                        )}
-                      </StyledInfoText>
-                    </div>
                   </>
                 )}
+              </div>
+            )}
+
+            {!isLoading && paymentInfo && (
+              <div className="text-start w-full">
+                <ExchangeRate
+                  exchangeRate={1 / paymentInfo.exchangeRate}
+                  rate={1 / paymentInfo.rate}
+                  fees={paymentInfo.feesTarget}
+                  feeCurrency={paymentInfo.currency}
+                  from={paymentInfo.currency}
+                  to={paymentInfo.asset}
+                />
               </div>
             )}
 

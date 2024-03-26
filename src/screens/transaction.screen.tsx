@@ -2,6 +2,7 @@ import {
   CryptoPaymentMethod,
   FiatPaymentMethod,
   Transaction,
+  TransactionState,
   TransactionType,
   useSessionContext,
   useTransaction,
@@ -12,7 +13,6 @@ import {
   DfxAssetIcon,
   SpinnerSize,
   StyledButton,
-  StyledButtonWidth,
   StyledCollapsible,
   StyledDataTable,
   StyledDataTableExpandableRow,
@@ -26,11 +26,13 @@ import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, PaymentStateLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useSessionGuard } from '../hooks/guard.hook';
+import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress } from '../util/utils';
 
 export function TransactionScreen(): JSX.Element {
   useSessionGuard('/login');
 
+  const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { getTransactions } = useTransaction();
   const { isLoggedIn } = useSessionContext();
@@ -162,12 +164,15 @@ export function TransactionScreen(): JSX.Element {
                       )}
                     </StyledDataTable>
 
-                    {(tx.outputTxUrl ?? tx.inputTxUrl) && (
+                    {tx.outputTxUrl && (
                       <StyledButton
-                        width={StyledButtonWidth.MIN}
                         label={translate('screens/payment', 'Show on block explorer')}
-                        onClick={() => window.open(tx.outputTxUrl ?? tx.inputTxUrl, '_blank', 'noreferrer')}
+                        onClick={() => window.open(tx.outputTxUrl, '_blank', 'noreferrer')}
                       />
+                    )}
+
+                    {tx.state === TransactionState.KYC_REQUIRED && (
+                      <StyledButton label={translate('screens/kyc', 'Complete KYC')} onClick={() => navigate('/kyc')} />
                     )}
                   </StyledVerticalStack>
                 </StyledCollapsible>

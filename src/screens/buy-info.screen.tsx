@@ -220,7 +220,7 @@ export function BuyInfoScreen(): JSX.Element {
                     </div>
                   )}
                 </div>
-                <CopyButton onCopy={() => copy(paymentInfo.iban)} />
+                <CopyButton onCopy={() => copy(paymentInfo.iban ?? '')} />
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
                 {paymentInfo.bic}

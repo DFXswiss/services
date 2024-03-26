@@ -150,7 +150,7 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
           />
           <NavigationLink
             icon={IconVariant.TRANSACTIONS}
-            label={translate('navigation/links', 'Transactions')}
+            label={translate('screens/payment', 'Transactions')}
             url="/tx"
             target="_self"
           />
