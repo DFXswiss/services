@@ -1712,7 +1712,7 @@ export const FeatureTree: Page[] = [
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
-            service: 'buy',
+            service: 'sell',
             query: { blockchain: Blockchain.ETHEREUM, assetOut: 'FPS' },
           },
         },
@@ -1769,10 +1769,110 @@ export const FeatureTree: Page[] = [
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
-            service: 'buy',
+            service: 'sell',
             query: { blockchain: Blockchain.POLYGON, assetOut: 'WFPS' },
           },
         },
+      },
+    ],
+  },
+
+  {
+    id: 'frankencoin-sell-arbitrum',
+    header: 'Sell Frankencoin Assets on Ethereum',
+    description: 'Sell Frankencoin Assets on Ethereum',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    tiles: [
+      {
+        id: 'matic',
+        img: 'matic',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'MATIC' },
+          },
+        },
+      },
+      {
+        id: 'ZCHF',
+        img: 'frankencoin',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ZCHF' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'FPS',
+        img: 'polygonWFPS',
+        disabled: true,
+      },
+    ],
+  },
+
+  {
+    id: 'frankencoin-sell-optimism',
+    header: 'Sell Frankencoin Assets on Ethereum',
+    description: 'Sell Frankencoin Assets on Ethereum',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    tiles: [
+      {
+        id: 'matic',
+        img: 'matic',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'MATIC' },
+          },
+        },
+      },
+      {
+        id: 'ZCHF',
+        img: 'frankencoin',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ZCHF' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'FPS',
+        img: 'polygonWFPS',
+        disabled: true,
       },
     ],
   },
