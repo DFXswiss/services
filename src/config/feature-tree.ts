@@ -1541,14 +1541,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'FPS',
-        img: 'fps',
+        id: 'WFPS',
+        img: 'polygonWFPS',
         next: {
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'FPS' },
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'WFPS' },
           },
         },
       },
@@ -2975,7 +2975,7 @@ export const FeatureTree: Page[] = [
       },
       {
         id: 'ebel2x',
-        img: 'EBEL2X',
+        img: 'ebel2x',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask'],
