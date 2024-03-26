@@ -1656,13 +1656,13 @@ export const FeatureTree: Page[] = [
       },
       {
         id: 'FPS',
-        img: 'fps',
+        img: 'polygonWFPS',
         next: {
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'FPS' },
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'WFPS' },
           },
         },
       },
