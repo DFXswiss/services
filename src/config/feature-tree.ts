@@ -1356,7 +1356,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin',
     header: 'Frankencoin',
     description: 'Buy and sell Frankencoin Assets',
-    bottomImage: 'https://www.frankencoin.com/assets/logo.svg',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
     tiles: [
       {
         id: 'buy',
@@ -1379,7 +1379,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy',
     header: 'Blockchain',
     description: 'Select a blockchain to buy Frankencoin Assets',
-    bottomImage: 'https://www.frankencoin.com/assets/logo.svg',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
     tiles: [
       {
         id: 'ethereum',
@@ -1398,12 +1398,16 @@ export const FeatureTree: Page[] = [
       {
         id: 'arbitrum',
         img: 'arbitrum',
-        disabled: true,
+        next: {
+          page: 'frankencoin-buy-arbitrum',
+        },
       },
       {
         id: 'optimism',
         img: 'optimism',
-        disabled: true,
+        next: {
+          page: 'frankencoin-buy-optimism',
+        },
       },
     ],
   },
@@ -1412,7 +1416,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-sell',
     header: 'Blockchain',
     description: 'Select a blockchain to sell Frankencoin Assets',
-    bottomImage: 'https://www.frankencoin.com/assets/logo.svg',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
     tiles: [
       {
         id: 'ethereum',
@@ -1431,12 +1435,16 @@ export const FeatureTree: Page[] = [
       {
         id: 'arbitrum',
         img: 'arbitrum',
-        disabled: true,
+        next: {
+          page: 'frankencoin-sell-arbitrum',
+        },
       },
       {
         id: 'optimism',
         img: 'optimism',
-        disabled: true,
+        next: {
+          page: 'frankencoin-sell-optimism',
+        },
       },
     ],
   },
@@ -1445,7 +1453,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy-ethereum',
     header: 'Buy Frankencoin Assets on Ethereum',
     description: 'Buy Frankencoin Assets on Ethereum',
-    bottomImage: 'https://www.frankencoin.com/assets/logo.svg',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
     tiles: [
       {
         id: 'eth',
@@ -1502,7 +1510,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy-polygon',
     header: 'Buy Frankencoin Assets on Ethereum',
     description: 'Buy Frankencoin Assets on Ethereum',
-    bottomImage: 'https://www.frankencoin.com/assets/logo.svg',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
     tiles: [
       {
         id: 'matic',
@@ -1556,10 +1564,110 @@ export const FeatureTree: Page[] = [
   },
 
   {
+    id: 'frankencoin-buy-arbitrum',
+    header: 'Buy Frankencoin Assets on Ethereum',
+    description: 'Buy Frankencoin Assets on Ethereum',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'ZCHF',
+        img: 'frankencoin',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ZCHF' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'FPS',
+        img: 'fps',
+        disabled: true,
+      },
+    ],
+  },
+
+  {
+    id: 'frankencoin-buy-optimism',
+    header: 'Buy Frankencoin Assets on Ethereum',
+    description: 'Buy Frankencoin Assets on Ethereum',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'ZCHF',
+        img: 'frankencoin',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ZCHF' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'FPS',
+        img: 'fps',
+        disabled: true,
+      },
+    ],
+  },
+
+  {
     id: 'frankencoin-sell-ethereum',
     header: 'Sell Frankencoin Assets on Ethereum',
     description: 'Sell Frankencoin Assets on Ethereum',
-    bottomImage: 'https://www.frankencoin.com/assets/logo.svg',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
     tiles: [
       {
         id: 'eth',
@@ -1616,7 +1724,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-sell-polygon',
     header: 'Sell Frankencoin Assets on Ethereum',
     description: 'Sell Frankencoin Assets on Ethereum',
-    bottomImage: 'https://www.frankencoin.com/assets/logo.svg',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
     tiles: [
       {
         id: 'matic',
@@ -1656,13 +1764,13 @@ export const FeatureTree: Page[] = [
       },
       {
         id: 'FPS',
-        img: 'fps',
+        img: 'polygonWFPS',
         next: {
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'FPS' },
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'WFPS' },
           },
         },
       },
@@ -1673,7 +1781,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-wallets',
     header: 'Frankencoin Assets on Ethereum',
     description: 'Buy and Sell Frankencoin Assets on Ethereum',
-    bottomImage: 'https://www.frankencoin.com/assets/logo.svg',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
     tiles: [
       {
         id: 'metamask',
@@ -1713,7 +1821,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-hw-wallets',
     header: 'Frankencoin Assets on Ethereum',
     description: 'Buy and Sell Frankencoin Assets on Ethereum',
-    bottomImage: 'https://www.frankencoin.com/assets/logo.svg',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
     tiles: [
       {
         id: 'bitbox',
