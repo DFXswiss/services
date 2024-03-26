@@ -69,6 +69,7 @@ const EmbeddedWallet = 'CakeWallet';
 
 export function BuyScreen(): JSX.Element {
   useSessionGuard();
+
   const { translate, translateError } = useSettingsContext();
   const { availableBlockchains, logout } = useSessionContext();
   const { session } = useAuthContext();

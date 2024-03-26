@@ -4,10 +4,14 @@ import { useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useSettingsContext } from '../contexts/settings.context';
 
-const PrivateAssets: { [symbol: string]: { name: string; url: string } } = {
-  FPS: { name: 'Frankencoin', url: 'www.frankencoin.com/pool' },
-  WFPS: { name: 'Frankencoin', url: 'www.frankencoin.com/pool' },
-  Ebel2X: { name: 'Ebel2X', url: 'dhedge.org/vault/0xe137dd4bcd22e947c896ae33a0920c09c85e263d' },
+const PrivateAssets: { [symbol: string]: { name: string; urlText: string; url: string } } = {
+  FPS: { name: 'Frankencoin', urlText: 'www.frankencoin.com', url: 'https://www.frankencoin.com/pool' },
+  WFPS: { name: 'Frankencoin', urlText: 'www.frankencoin.com', url: 'https://www.frankencoin.com/pool' },
+  MKX: {
+    name: 'Ebel2X',
+    urlText: 'dhedge.org',
+    url: 'https://dhedge.org/vault/0xe137dd4bcd22e947c896ae33a0920c09c85e263d',
+  },
 };
 
 export function PrivateAssetHint({ asset }: { asset: Asset }): JSX.Element {
@@ -22,7 +26,7 @@ export function PrivateAssetHint({ asset }: { asset: Asset }): JSX.Element {
     if (!tokenInfos) return;
 
     setIsLoading(true);
-    window.open(`https://${tokenInfos.url}`, '_self');
+    window.open(tokenInfos.url, '_self');
   }
 
   return (
@@ -36,8 +40,7 @@ export function PrivateAssetHint({ asset }: { asset: Asset }): JSX.Element {
         {tokenInfos ? (
           <Trans i18nKey={'screens/home.private'}>
             If you are still interested, you can visit the website{' '}
-            <StyledLink url={`https://${tokenInfos.url}`} label={tokenInfos.url} target="_self" dark /> using the button
-            below.
+            <StyledLink url={tokenInfos.url} label={tokenInfos.urlText} target="_self" dark /> using the button below.
           </Trans>
         ) : (
           translate('screens/home', 'If you are still interested, you can visit their website.')

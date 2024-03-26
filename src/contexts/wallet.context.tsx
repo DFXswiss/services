@@ -20,6 +20,8 @@ export enum WalletType {
   CLI_BTC = 'CliBtc',
   CLI_XMR = 'CliXmr',
   CLI_ETH = 'CliEth',
+  CLI_ADA = 'CliAda',
+  CLI_AR = 'CliAr',
   DFX_TARO = 'DfxTaro',
   WALLET_CONNECT = 'WalletConnect',
   CAKE = 'Cake',
@@ -55,6 +57,8 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
     Blockchain.HAQQ,
     Blockchain.BINANCE_SMART_CHAIN,
   ],
+  [WalletType.CLI_ADA]: [Blockchain.CARDANO],
+  [WalletType.CLI_AR]: [Blockchain.ARWEAVE],
   [WalletType.DFX_TARO]: [Blockchain.LIGHTNING],
   [WalletType.WALLET_CONNECT]: [
     Blockchain.ETHEREUM,
@@ -83,6 +87,7 @@ interface WalletInterface {
     address: string,
     blockchain: Blockchain,
     onSignMessage: (address: string, message: string) => Promise<string>,
+    key?: string,
   ) => Promise<void>;
   setSession: (wallet: WalletType, blockchain: Blockchain, session: string) => Promise<void>;
   activeWallet: WalletType | undefined;
@@ -164,11 +169,12 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     address: string,
     blockchain: Blockchain,
     onSignMessage: (address: string, message: string) => Promise<string>,
+    key?: string,
   ): Promise<void> {
     try {
       const message = await getSignMessage(address);
       const signature = await onSignMessage(address, message);
-      await createSession(address, signature);
+      await createSession(address, signature, key);
     } catch (e) {
       api.logout();
       setWallet();
@@ -187,13 +193,8 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     setActiveBlockchain(blockchain);
   }
 
-  async function createSession(address: string, signature: string): Promise<string> {
-    const session =
-      (await api.login(address, signature, appParams.specialCode)) ??
-      (await api.signUp(address, signature, appParams.wallet, appParams.refcode, appParams.specialCode));
-    if (!session) throw new Error('Failed to create session');
-
-    return session;
+  async function createSession(address: string, signature: string, key?: string): Promise<string> {
+    return api.authenticate(address, signature, key, appParams.specialCode, appParams.wallet, appParams.refcode);
   }
 
   const context: WalletInterface = useMemo(
