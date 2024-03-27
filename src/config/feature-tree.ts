@@ -41,6 +41,13 @@ export const FeatureTree: Page[] = [
         },
       },
       {
+        id: 'evm',
+        img: 'evmchain',
+        next: {
+          page: 'buy-erc20',
+        },
+      },
+      {
         id: 'monero',
         img: 'monero',
         next: {
@@ -50,13 +57,6 @@ export const FeatureTree: Page[] = [
             service: 'buy',
             query: { blockchain: Blockchain.MONERO, assetOut: 'XMR' },
           },
-        },
-      },
-      {
-        id: 'evm',
-        img: 'evmchain',
-        next: {
-          page: 'buy-erc20',
         },
       },
       {
