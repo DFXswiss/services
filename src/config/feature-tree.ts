@@ -450,13 +450,13 @@ export const FeatureTree: Page[] = [
         id: 'stable',
         img: 'stablecoin',
         next: {
-          page: 'buy-optimism-stable',
+          page: 'buy-base-stable',
         },
       },
     ],
   },
   {
-    id: 'buy-optimism-stable',
+    id: 'buy-base-stable',
     dfxStyle: true,
     tiles: [
       {
