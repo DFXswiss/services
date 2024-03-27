@@ -86,13 +86,6 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'optimism',
-        img: 'optimism',
-        next: {
-          page: 'buy-optimism',
-        },
-      },
-      {
         id: 'polygon',
         img: 'polygon',
         next: {
@@ -100,10 +93,10 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'base',
-        img: 'basechain',
+        id: 'optimism',
+        img: 'optimism',
         next: {
-          page: 'buy-base',
+          page: 'buy-optimism',
         },
       },
       {
@@ -111,6 +104,13 @@ export const FeatureTree: Page[] = [
         img: 'binancesmartchain',
         next: {
           page: 'buy-bsc',
+        },
+      },
+      {
+        id: 'base',
+        img: 'basechain',
+        next: {
+          page: 'buy-base',
         },
       },
     ],
