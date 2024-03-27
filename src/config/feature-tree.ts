@@ -53,18 +53,16 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'erc20',
-        img: 'ethereumarbitrumoptimismpolygon',
+        id: 'evm',
+        img: 'evmchain',
         next: {
           page: 'buy-erc20',
         },
       },
       {
-        id: 'bsc',
-        img: 'binancesmartchain',
-        next: {
-          page: 'buy-bsc',
-        },
+        id: 'solana',
+        img: 'solanachain',
+        disabled: true,
       },
     ],
   },
@@ -99,6 +97,20 @@ export const FeatureTree: Page[] = [
         img: 'polygon',
         next: {
           page: 'buy-polygon',
+        },
+      },
+      {
+        id: 'base',
+        img: 'basechain',
+        next: {
+          page: 'buy-base',
+        },
+      },
+      {
+        id: 'bsc',
+        img: 'binancesmartchain',
+        next: {
+          page: 'buy-bsc',
         },
       },
     ],
@@ -409,6 +421,77 @@ export const FeatureTree: Page[] = [
             query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
           },
         },
+      },
+    ],
+  },
+
+  {
+    id: 'buy-base',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BASE, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        disabled: true,
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'buy-optimism-stable',
+        },
+      },
+    ],
+  },
+  {
+    id: 'buy-optimism-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BASE, assetOut: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BASE, assetOut: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        disabled: true,
+      },
+      {
+        id: 'zchf',
+        img: 'zchf',
+        disabled: true,
       },
     ],
   },
