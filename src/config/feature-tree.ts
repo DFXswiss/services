@@ -205,14 +205,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'other',
-        img: 'othersethereum',
+        id: 'ZCHF',
+        img: 'frankencoin',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ZCHF' },
           },
         },
       },
@@ -296,14 +296,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'xchf',
-        img: 'xchf',
+        id: 'zchf',
+        img: 'frankencoin',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'XCHF' },
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ZCHF' },
           },
         },
       },
@@ -399,14 +399,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'xchf',
-        img: 'xchf',
+        id: 'zchf',
+        img: 'frankencoin',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'XCHF' },
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ZCHF' },
           },
         },
       },
@@ -584,6 +584,18 @@ export const FeatureTree: Page[] = [
           },
         },
       },
+      {
+        id: 'zchf',
+        img: 'frankencoin',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'ZCHF' },
+          },
+        },
+      },
     ],
   },
   {
@@ -648,6 +660,18 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'zchf',
+        img: 'frankencoin',
+        next: {
+          page: 'wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'ZCHF' },
           },
         },
       },
