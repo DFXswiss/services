@@ -41,6 +41,13 @@ export const FeatureTree: Page[] = [
         },
       },
       {
+        id: 'evm',
+        img: 'evmchain',
+        next: {
+          page: 'buy-evm',
+        },
+      },
+      {
         id: 'monero',
         img: 'monero',
         next: {
@@ -53,24 +60,15 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'erc20',
-        img: 'ethereumarbitrumoptimismpolygon',
-        next: {
-          page: 'buy-erc20',
-        },
-      },
-      {
-        id: 'bsc',
-        img: 'binancesmartchain',
-        next: {
-          page: 'buy-bsc',
-        },
+        id: 'solana',
+        img: 'solanachain',
+        disabled: true,
       },
     ],
   },
 
   {
-    id: 'buy-erc20',
+    id: 'buy-evm',
     dfxStyle: true,
     tiles: [
       {
@@ -88,6 +86,13 @@ export const FeatureTree: Page[] = [
         },
       },
       {
+        id: 'polygon',
+        img: 'polygon',
+        next: {
+          page: 'buy-polygon',
+        },
+      },
+      {
         id: 'optimism',
         img: 'optimism',
         next: {
@@ -95,10 +100,17 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'polygon',
-        img: 'polygon',
+        id: 'bsc',
+        img: 'binancesmartchainchain',
         next: {
-          page: 'buy-polygon',
+          page: 'buy-bsc',
+        },
+      },
+      {
+        id: 'base',
+        img: 'basechain',
+        next: {
+          page: 'buy-base',
         },
       },
     ],
@@ -193,14 +205,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'other',
-        img: 'othersethereum',
+        id: 'ZCHF',
+        img: 'frankencoin',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ETHEREUM, assetOut: undefined },
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ZCHF' },
           },
         },
       },
@@ -284,14 +296,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'xchf',
-        img: 'xchf',
+        id: 'zchf',
+        img: 'frankencoin',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'XCHF' },
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ZCHF' },
           },
         },
       },
@@ -387,14 +399,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'xchf',
-        img: 'xchf',
+        id: 'zchf',
+        img: 'frankencoin',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'XCHF' },
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ZCHF' },
           },
         },
       },
@@ -409,6 +421,77 @@ export const FeatureTree: Page[] = [
             query: { blockchain: Blockchain.OPTIMISM, assetOut: undefined },
           },
         },
+      },
+    ],
+  },
+
+  {
+    id: 'buy-base',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BASE, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        disabled: true,
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'buy-base-stable',
+        },
+      },
+    ],
+  },
+  {
+    id: 'buy-base-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BASE, assetOut: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BASE, assetOut: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        disabled: true,
+      },
+      {
+        id: 'zchf',
+        img: 'frankencoin',
+        disabled: true,
       },
     ],
   },
@@ -501,6 +584,18 @@ export const FeatureTree: Page[] = [
           },
         },
       },
+      {
+        id: 'zchf',
+        img: 'frankencoin',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'ZCHF' },
+          },
+        },
+      },
     ],
   },
   {
@@ -565,6 +660,18 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'zchf',
+        img: 'frankencoin',
+        next: {
+          page: 'wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetOut: 'ZCHF' },
           },
         },
       },
