@@ -490,7 +490,7 @@ export const FeatureTree: Page[] = [
       },
       {
         id: 'zchf',
-        img: 'zchf',
+        img: 'frankencoin',
         disabled: true,
       },
     ],
