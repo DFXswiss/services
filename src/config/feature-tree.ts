@@ -1457,6 +1457,60 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
+// ---   Sunny-Decree --- //
+{
+  id: 'sunnydecree',
+  tiles: [
+    {
+      id: 'sunnydecree-buy',
+      img: 'kaufenbitcoinlightningonly',
+      next: {
+        page: 'sunnydecree-buy',
+      },
+    },
+    {
+      id: 'sunnydecree-sell',
+      img: 'verkaufen',
+      next: {
+        page: 'sunnydecree-sell',
+      },
+    },
+  ],
+},
+{
+  id: 'sunnydecree-buy',
+  tiles: [
+    {
+      id: 'bitcoin',
+      img: 'bitcoinlightning',
+      next: {
+        page: 'wallets',
+        tiles: ['dfx-wallet', 'hw-wallet', 'alby'],
+        options: {
+          service: 'buy',
+          query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+        },
+      },
+    },
+  ],
+},
+{
+  id: 'sunnydecree-sell',
+  tiles: [
+    {
+      id: 'bitcoin',
+      img: 'bitcoinlightning',
+      next: {
+        page: 'wallets',
+        tiles: ['dfx-wallet', 'hw-wallet', 'alby'],
+        options: {
+          service: 'sell',
+          query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
+        },
+      },
+    },
+  ],
+},
 
   // --- FRANKENCOIN --- //
   {
