@@ -44,7 +44,7 @@ export const FeatureTree: Page[] = [
         id: 'evm',
         img: 'evmchain',
         next: {
-          page: 'buy-erc20',
+          page: 'buy-evm',
         },
       },
       {
@@ -68,7 +68,7 @@ export const FeatureTree: Page[] = [
   },
 
   {
-    id: 'buy-erc20',
+    id: 'buy-evm',
     dfxStyle: true,
     tiles: [
       {
@@ -101,7 +101,7 @@ export const FeatureTree: Page[] = [
       },
       {
         id: 'bsc',
-        img: 'binancesmartchain',
+        img: 'binancesmartchainchain',
         next: {
           page: 'buy-bsc',
         },
