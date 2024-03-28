@@ -16,6 +16,8 @@ import {
   IconVariant,
   SpinnerSize,
   StyledButton,
+  StyledButtonColor,
+  StyledButtonWidth,
   StyledCollapsible,
   StyledDataTable,
   StyledDataTableExpandableRow,
@@ -37,10 +39,11 @@ export function TransactionScreen(): JSX.Element {
 
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
-  const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
+  const { getDetailTransactions, getUnassignedTransactions, getTransactionCsv } = useTransaction();
   const { isLoggedIn } = useSessionContext();
 
   const [transactions, setTransactions] = useState<DetailTransaction[]>();
+  const [isCsvLoading, setIsCsvLoading] = useState(false);
 
   useEffect(() => {
     if (isLoggedIn)
@@ -51,154 +54,171 @@ export function TransactionScreen(): JSX.Element {
       );
   }, [isLoggedIn]);
 
+  function exportCsv() {
+    setIsCsvLoading(true);
+    getTransactionCsv()
+      .then((url) => window.open(url, '_blank'))
+      .finally(() => setIsCsvLoading(false));
+  }
+
   return (
     <Layout title={translate('screens/payment', 'Transactions')}>
-      {transactions ? (
-        <>
-          {transactions.length === 0 ? (
+      <StyledVerticalStack gap={6} full center>
+        <StyledButton
+          color={StyledButtonColor.STURDY_WHITE}
+          width={StyledButtonWidth.FULL}
+          label={translate('screens/payment', 'Export CSV')}
+          isLoading={isCsvLoading}
+          onClick={exportCsv}
+        />
+        {transactions ? (
+          transactions.length === 0 ? (
             <p className="text-dfxGray-700">{translate('screens/payment', 'No transactions found')}</p>
           ) : (
-            transactions.map((tx) => {
-              const state = PaymentStateLabels[tx.state] ?? 'Unassigned';
-              const isUnassigned = state === 'Unassigned';
+            <StyledVerticalStack gap={2} full>
+              {transactions.map((tx) => {
+                const state = PaymentStateLabels[tx.state] ?? 'Unassigned';
+                const isUnassigned = state === 'Unassigned';
 
-              const paymentMethod = [tx.inputPaymentMethod, tx.outputPaymentMethod].find(
-                (p) => p !== CryptoPaymentMethod.CRYPTO,
-              ) as FiatPaymentMethod;
+                const paymentMethod = [tx.inputPaymentMethod, tx.outputPaymentMethod].find(
+                  (p) => p !== CryptoPaymentMethod.CRYPTO,
+                ) as FiatPaymentMethod;
 
-              const icon =
-                !isUnassigned &&
-                (tx.type === TransactionType.SELL ? [tx.inputAsset, tx.outputAsset] : [tx.outputAsset, tx.inputAsset])
-                  .map((a) => a?.replace(/^d/, '') as AssetIconVariant)
-                  .find((a) => Object.values(AssetIconVariant).includes(a));
+                const icon =
+                  !isUnassigned &&
+                  (tx.type === TransactionType.SELL ? [tx.inputAsset, tx.outputAsset] : [tx.outputAsset, tx.inputAsset])
+                    .map((a) => a?.replace(/^d/, '') as AssetIconVariant)
+                    .find((a) => Object.values(AssetIconVariant).includes(a));
 
-              const rateItems = [];
-              tx.exchangeRate != null &&
-                rateItems.push({
-                  label: translate('screens/payment', 'Base rate'),
-                  text: `${tx.exchangeRate} ${tx.inputAsset}/${tx.outputAsset}`,
-                });
+                const rateItems = [];
+                tx.exchangeRate != null &&
+                  rateItems.push({
+                    label: translate('screens/payment', 'Base rate'),
+                    text: `${tx.exchangeRate} ${tx.inputAsset}/${tx.outputAsset}`,
+                  });
+                tx.feeAmount != null &&
+                  rateItems.push({
+                    label: translate('screens/payment', 'DFX fee'),
+                    text: `${tx.feeAmount} ${tx.inputAsset}`,
+                  });
 
-              tx.feeAmount != null &&
-                rateItems.push({
-                  label: translate('screens/payment', 'DFX fee'),
-                  text: `${tx.feeAmount} ${tx.inputAsset}`,
-                });
+                return (
+                  <StyledCollapsible
+                    key={tx.id}
+                    full
+                    titleContent={
+                      <div className="flex flex-row gap-2 items-center">
+                        {icon ? (
+                          <DfxAssetIcon asset={icon as AssetIconVariant} />
+                        ) : (
+                          <DfxIcon icon={IconVariant.HELP} size={IconSize.LG} />
+                        )}
 
-              return (
-                <StyledCollapsible
-                  key={tx.id}
-                  full
-                  titleContent={
-                    <div className="flex flex-row gap-2 items-center">
-                      {icon ? (
-                        <DfxAssetIcon asset={icon as AssetIconVariant} />
-                      ) : (
-                        <DfxIcon icon={IconVariant.HELP} size={IconSize.LG} />
-                      )}
+                        <div className="flex flex-col items-start text-left">
+                          <div className="font-bold leading-none">{translate('screens/payment', tx.type)}</div>
+                          <div className={`leading-none ${isUnassigned && 'text-dfxRed-100'}`}>
+                            {translate('screens/payment', state)}
+                          </div>
+                        </div>
 
-                      <div className="flex flex-col items-start text-left">
-                        <div className="font-bold leading-none">{translate('screens/payment', tx.type)}</div>
-                        <div className={`leading-none ${isUnassigned && 'text-dfxRed-100'}`}>
-                          {translate('screens/payment', state)}
+                        <div className="ml-auto">
+                          {tx.inputAmount} {tx.inputAsset}{' '}
+                          {tx.outputAsset ? ` → ${tx.outputAmount} ${tx.outputAsset}` : ''}
                         </div>
                       </div>
-                      <div className="ml-auto">
-                        {tx.inputAmount} {tx.inputAsset}{' '}
-                        {tx.outputAsset ? ` → ${tx.outputAmount} ${tx.outputAsset}` : ''}
-                      </div>
-                    </div>
-                  }
-                >
-                  <StyledVerticalStack full gap={4}>
-                    <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                      <StyledDataTableRow label={translate('screens/payment', 'ID')}>
-                        <p>{tx.id}</p>
-                      </StyledDataTableRow>
-                      <StyledDataTableRow label={translate('screens/payment', 'Date')}>
-                        <p>{new Date(tx.date).toLocaleString()}</p>
-                      </StyledDataTableRow>
-                      <StyledDataTableRow label={translate('screens/payment', 'Type')}>
-                        <p>{translate('screens/payment', tx.type)}</p>
-                      </StyledDataTableRow>
-                      <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                        <p>{translate('screens/payment', state)}</p>
-                      </StyledDataTableRow>
-                      {tx.reason && (
-                        <StyledDataTableRow label={translate('screens/payment', 'Failure reason')}>
-                          <p>{translate('screens/payment', PaymentFailureReasons[tx.reason])}</p>
+                    }
+                  >
+                    <StyledVerticalStack full gap={4}>
+                      <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                        <StyledDataTableRow label={translate('screens/payment', 'ID')}>
+                          <p>{tx.id}</p>
                         </StyledDataTableRow>
-                      )}
-                      {paymentMethod && (
-                        <StyledDataTableRow label={translate('screens/payment', 'Payment method')}>
-                          <p>{translate('screens/payment', PaymentMethodLabels[paymentMethod])}</p>
+                        <StyledDataTableRow label={translate('screens/payment', 'Date')}>
+                          <p>{new Date(tx.date).toLocaleString()}</p>
                         </StyledDataTableRow>
-                      )}
-                      {tx.inputAsset && (
-                        <StyledDataTableRow label={translate('screens/payment', 'Input')}>
-                          <p>
-                            {tx.inputAmount} {tx.inputAsset}
-                            {tx.inputBlockchain ? ` (${tx.inputBlockchain})` : ''}
-                          </p>
+                        <StyledDataTableRow label={translate('screens/payment', 'Type')}>
+                          <p>{translate('screens/payment', tx.type)}</p>
                         </StyledDataTableRow>
-                      )}
-                      {tx.inputTxId && (
-                        <StyledDataTableRow label={translate('screens/payment', 'Input TX')}>
-                          {tx.inputTxUrl ? (
-                            <StyledLink label={blankedAddress(tx.inputTxId)} url={tx.inputTxUrl} dark />
-                          ) : (
-                            <p>{blankedAddress(tx.inputTxId)}</p>
-                          )}
+                        <StyledDataTableRow label={translate('screens/payment', 'State')}>
+                          <p>{translate('screens/payment', state)}</p>
                         </StyledDataTableRow>
+                        {tx.reason && (
+                          <StyledDataTableRow label={translate('screens/payment', 'Failure reason')}>
+                            <p>{translate('screens/payment', PaymentFailureReasons[tx.reason])}</p>
+                          </StyledDataTableRow>
+                        )}
+                        {paymentMethod && (
+                          <StyledDataTableRow label={translate('screens/payment', 'Payment method')}>
+                            <p>{translate('screens/payment', PaymentMethodLabels[paymentMethod])}</p>
+                          </StyledDataTableRow>
+                        )}
+                        {tx.inputAsset && (
+                          <StyledDataTableRow label={translate('screens/payment', 'Input')}>
+                            <p>
+                              {tx.inputAmount} {tx.inputAsset}
+                              {tx.inputBlockchain ? ` (${tx.inputBlockchain})` : ''}
+                            </p>
+                          </StyledDataTableRow>
+                        )}
+                        {tx.inputTxId && (
+                          <StyledDataTableRow label={translate('screens/payment', 'Input TX')}>
+                            {tx.inputTxUrl ? (
+                              <StyledLink label={blankedAddress(tx.inputTxId)} url={tx.inputTxUrl} dark />
+                            ) : (
+                              <p>{blankedAddress(tx.inputTxId)}</p>
+                            )}
+                          </StyledDataTableRow>
+                        )}
+                        {tx.outputAsset && (
+                          <StyledDataTableRow label={translate('screens/payment', 'Output')}>
+                            <p>
+                              {tx.outputAmount} {tx.outputAsset}
+                              {tx.outputBlockchain ? ` (${tx.outputBlockchain})` : ''}
+                            </p>
+                          </StyledDataTableRow>
+                        )}
+                        {tx.outputTxId && (
+                          <StyledDataTableRow label={translate('screens/payment', 'Output TX')}>
+                            {tx.outputTxUrl ? (
+                              <StyledLink label={blankedAddress(tx.outputTxId)} url={tx.outputTxUrl} dark />
+                            ) : (
+                              <p>{blankedAddress(tx.outputTxId)}</p>
+                            )}
+                          </StyledDataTableRow>
+                        )}
+                        {tx.rate != null && (
+                          <StyledDataTableExpandableRow
+                            label={translate('screens/payment', 'Exchange rate')}
+                            expansionItems={rateItems}
+                          >
+                            <p>
+                              {tx.rate} {tx.inputAsset}/{tx.outputAsset}
+                            </p>
+                          </StyledDataTableExpandableRow>
+                        )}
+                      </StyledDataTable>
+                      {tx.outputTxUrl && (
+                        <StyledButton
+                          label={translate('screens/payment', 'Show on block explorer')}
+                          onClick={() => window.open(tx.outputTxUrl, '_blank', 'noreferrer')}
+                        />
                       )}
-                      {tx.outputAsset && (
-                        <StyledDataTableRow label={translate('screens/payment', 'Output')}>
-                          <p>
-                            {tx.outputAmount} {tx.outputAsset}
-                            {tx.outputBlockchain ? ` (${tx.outputBlockchain})` : ''}
-                          </p>
-                        </StyledDataTableRow>
+                      {tx.state === TransactionState.KYC_REQUIRED && (
+                        <StyledButton
+                          label={translate('screens/kyc', 'Complete KYC')}
+                          onClick={() => navigate('/kyc')}
+                        />
                       )}
-                      {tx.outputTxId && (
-                        <StyledDataTableRow label={translate('screens/payment', 'Output TX')}>
-                          {tx.outputTxUrl ? (
-                            <StyledLink label={blankedAddress(tx.outputTxId)} url={tx.outputTxUrl} dark />
-                          ) : (
-                            <p>{blankedAddress(tx.outputTxId)}</p>
-                          )}
-                        </StyledDataTableRow>
-                      )}
-                      {tx.rate != null && (
-                        <StyledDataTableExpandableRow
-                          label={translate('screens/payment', 'Exchange rate')}
-                          expansionItems={rateItems}
-                        >
-                          <p>
-                            {tx.rate} {tx.inputAsset}/{tx.outputAsset}
-                          </p>
-                        </StyledDataTableExpandableRow>
-                      )}
-                    </StyledDataTable>
-
-                    {tx.outputTxUrl && (
-                      <StyledButton
-                        label={translate('screens/payment', 'Show on block explorer')}
-                        onClick={() => window.open(tx.outputTxUrl, '_blank', 'noreferrer')}
-                      />
-                    )}
-
-                    {tx.state === TransactionState.KYC_REQUIRED && (
-                      <StyledButton label={translate('screens/kyc', 'Complete KYC')} onClick={() => navigate('/kyc')} />
-                    )}
-                  </StyledVerticalStack>
-                </StyledCollapsible>
-              );
-            })
-          )}
-        </>
-      ) : (
-        <StyledLoadingSpinner size={SpinnerSize.LG} />
-      )}
+                    </StyledVerticalStack>
+                  </StyledCollapsible>
+                );
+              })}
+            </StyledVerticalStack>
+          )
+        ) : (
+          <StyledLoadingSpinner size={SpinnerSize.LG} />
+        )}
+      </StyledVerticalStack>
     </Layout>
   );
 }
