@@ -186,8 +186,9 @@ export function TransactionScreen(): JSX.Element {
                             </div>
                           </div>
                           <div className="ml-auto">
-                            {tx.inputAmount} {tx.inputAsset}{' '}
-                            {tx.outputAsset ? ` → ${tx.outputAmount} ${tx.outputAsset}` : ''}
+                            {tx.inputAsset ? `${tx.inputAmount} ${tx.inputAsset}` : ''}
+                            {tx.inputAsset && tx.outputAsset ? ' → ' : ''}
+                            {tx.outputAsset ? `${tx.outputAmount} ${tx.outputAsset}` : ''}
                           </div>
                         </div>
                       }
