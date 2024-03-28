@@ -298,6 +298,7 @@
     "Completed": "Terminé",
     "Failed": "Échec",
     "Returned": "Retourné",
+    "Unassigned": "Non attribué",
 
     "Failure reason": "Cause de l'erreur",
     "Unknown": "Inconnu",

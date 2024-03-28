@@ -298,6 +298,7 @@
     "Completed": "Abgeschlossen",
     "Failed": "Gescheitert",
     "Returned": "Zurückgeschickt",
+    "Unassigned": "Nicht zugeordnet",
 
     "Failure reason": "Fehlerursache",
     "Unknown": "Unbekannt",
