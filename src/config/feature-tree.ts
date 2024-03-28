@@ -205,7 +205,7 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'ZCHF',
+        id: 'zchf',
         img: 'frankencoin',
         next: {
           page: 'wallets',
@@ -850,10 +850,10 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'ZCHF',
+        id: 'zchf',
         img: 'frankencoin',
         next: {
-          page: 'frankencoin-wallets',
+          page: 'wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
@@ -953,10 +953,10 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'ZCHF',
+        id: 'zchf',
         img: 'frankencoin',
         next: {
-          page: 'frankencoin-wallets',
+          page: 'wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
@@ -1037,10 +1037,10 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'ZCHF',
+        id: 'zchf',
         img: 'frankencoin',
         next: {
-          page: 'frankencoin-wallets',
+          page: 'wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
@@ -1128,10 +1128,10 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'ZCHF',
+        id: 'zchf',
         img: 'frankencoin',
         next: {
-          page: 'frankencoin-wallets',
+          page: 'wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
@@ -1469,122 +1469,122 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
-// ---   Sunny-Decree --- //
-{
-  id: 'sunnydecree',
-  tiles: [
-    {
-      id: 'sunnydecree-buy',
-      img: 'kaufenbitcoinlightningonly',
-      next: {
-        page: 'sunnydecree-buy',
-      },
-    },
-    {
-      id: 'sunnydecree-sell',
-      img: 'verkaufen',
-      next: {
-        page: 'sunnydecree-sell',
-      },
-    },
-  ],
-},
-{
-  id: 'sunnydecree-buy',
-  tiles: [
-    {
-      id: 'bitcoin',
-      img: 'bitcoinlightning',
-      next: {
-        page: 'wallets',
-        tiles: ['dfx-wallet', 'hw-wallet', 'alby'],
-        options: {
-          service: 'buy',
-          query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+  // ---   Sunny-Decree --- //
+  {
+    id: 'sunnydecree',
+    tiles: [
+      {
+        id: 'sunnydecree-buy',
+        img: 'kaufenbitcoinlightningonly',
+        next: {
+          page: 'sunnydecree-buy',
         },
       },
-    },
-  ],
-},
-{
-  id: 'sunnydecree-sell',
-  tiles: [
-    {
-      id: 'bitcoin',
-      img: 'bitcoinlightning',
-      next: {
-        page: 'wallets',
-        tiles: ['dfx-wallet', 'hw-wallet', 'alby'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
+      {
+        id: 'sunnydecree-sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sunnydecree-sell',
         },
       },
-    },
-  ],
-},
-{
-  id: 'sunnydecree2',
-  tiles: [
-    {
-      id: 'sunnydecree-buy',
-      img: 'kaufenbitcoinlightningonly',
-      next: {
-        page: 'sunnydecree-buy',
-      },
-    },
-    {
-      id: 'sunnydecree-sell',
-      img: 'verkaufen',
-      next: {
-        page: 'sunnydecree-sell',
-      },
-    },
-  ],
-},
-{
-  id: 'sunnydecree-buy',
-  tiles: [
-    {
-      id: 'bitbox',
-      img: 'bitbox',
-      wallet: (params) => ({
-        type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
-      }),
-    },
-    {
-      id: 'ledger',
-      img: 'ledger',
-      wallet: (params) => ({
-        type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
-      }),
-    },
-    {
-      id: 'trezor',
-      img: 'trezor',
-      wallet: (params) => ({
-        type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
-      }),
-    },
-  ],
-},
-{
-  id: 'sunnydecree-sell',
-  tiles: [
-    {
-      id: 'bitcoin',
-      img: 'bitcoinlightning',
-      next: {
-        page: 'wallets',
-        tiles: ['dfx-wallet', 'hw-wallet', 'alby'],
-        options: {
-          service: 'sell',
-          query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
+    ],
+  },
+  {
+    id: 'sunnydecree-buy',
+    tiles: [
+      {
+        id: 'bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'wallets',
+          tiles: ['dfx-wallet', 'hw-wallet', 'alby'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BITCOIN, assetOut: 'BTC' },
+          },
         },
       },
-    },
-  ],
-},
+    ],
+  },
+  {
+    id: 'sunnydecree-sell',
+    tiles: [
+      {
+        id: 'bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'wallets',
+          tiles: ['dfx-wallet', 'hw-wallet', 'alby'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'sunnydecree2',
+    tiles: [
+      {
+        id: 'sunnydecree-buy',
+        img: 'kaufenbitcoinlightningonly',
+        next: {
+          page: 'sunnydecree-buy',
+        },
+      },
+      {
+        id: 'sunnydecree-sell',
+        img: 'verkaufen',
+        next: {
+          page: 'sunnydecree-sell',
+        },
+      },
+    ],
+  },
+  {
+    id: 'sunnydecree-buy',
+    tiles: [
+      {
+        id: 'bitbox',
+        img: 'bitbox',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
+        }),
+      },
+      {
+        id: 'ledger',
+        img: 'ledger',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
+        }),
+      },
+      {
+        id: 'trezor',
+        img: 'trezor',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
+        }),
+      },
+    ],
+  },
+  {
+    id: 'sunnydecree-sell',
+    tiles: [
+      {
+        id: 'bitcoin',
+        img: 'bitcoinlightning',
+        next: {
+          page: 'wallets',
+          tiles: ['dfx-wallet', 'hw-wallet', 'alby'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.BITCOIN, assetIn: 'BTC' },
+          },
+        },
+      },
+    ],
+  },
 
   // --- FRANKENCOIN --- //
   {
