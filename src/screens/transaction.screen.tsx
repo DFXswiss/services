@@ -68,10 +68,9 @@ export function TransactionScreen(): JSX.Element {
 
               const icon =
                 !isUnassigned &&
-                (tx.type === TransactionType.SELL
-                  ? [tx.inputAsset, tx.outputAsset]
-                  : [tx.outputAsset, tx.inputAsset]
-                ).find((a) => Object.values(AssetIconVariant).includes(a as AssetIconVariant));
+                (tx.type === TransactionType.SELL ? [tx.inputAsset, tx.outputAsset] : [tx.outputAsset, tx.inputAsset])
+                  .map((a) => a?.replace(/^d/, '') as AssetIconVariant)
+                  .find((a) => Object.values(AssetIconVariant).includes(a));
 
               const rateItems = [];
               tx.exchangeRate != null &&
@@ -98,7 +97,7 @@ export function TransactionScreen(): JSX.Element {
                         <DfxIcon icon={IconVariant.HELP} size={IconSize.LG} />
                       )}
 
-                      <div className="flex flex-col items-start">
+                      <div className="flex flex-col items-start text-left">
                         <div className="font-bold leading-none">{translate('screens/payment', tx.type)}</div>
                         <div className={`leading-none ${isUnassigned && 'text-dfxRed-100'}`}>
                           {translate('screens/payment', state)}
