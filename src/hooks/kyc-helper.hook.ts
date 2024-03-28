@@ -60,7 +60,7 @@ export function useKycHelper(): KycHelperInterface {
   }
 
   function limitToString({ limit, period }: TradingLimit): string {
-    return `${Utils.formatAmount(limit)} CHF ${translate('screens/kyc', periodMap[period])}`;
+    return `${Utils.formatAmount(limit, 0)} CHF ${translate('screens/kyc', periodMap[period])}`;
   }
 
   function nameToString(stepName: KycStepName): string {

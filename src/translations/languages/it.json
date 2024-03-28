@@ -324,7 +324,7 @@
     "Show on block explorer": "Mostra su block explorer",
     "Report an issue": "Segnala un problema",
 
-    "This exchange rate is not guaranteed. The effective rate is determined when the transactions are received and processed by DFX.": "Questo tasso di cambio non è garantito. Il tasso effettivo viene determinato quando le transazioni vengono ricevute ed elaborate da DFX.",
+    "This exchange rate is not guaranteed. The effective rate will be determined once the transactions have been received by DFX and the crypto assets can be delivered.": "Questo tasso di cambio non è garantito. Il tasso effettivo sarà determinato una volta che le transazioni saranno state ricevute da DFX e le criptovalute potranno essere consegnate.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
     "Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni e si autorizza DFX.swiss a riscuotere l'importo di cui sopra tramite il metodo di pagamento scelto e si accetta che tale importo non possa essere annullato, richiamato o rimborsato.",
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "L'importo inserito è inferiore al deposito minimo di {{amount}} {{currency}}",
