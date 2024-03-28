@@ -3,7 +3,10 @@ import {
   DetailTransaction,
   FiatPaymentMethod,
   TransactionState,
+  TransactionTarget,
   TransactionType,
+  Utils,
+  Validations,
   useSessionContext,
   useTransaction,
 } from '@dfx.swiss/react';
@@ -12,6 +15,7 @@ import {
   AssetIconVariant,
   DfxAssetIcon,
   DfxIcon,
+  Form,
   IconSize,
   IconVariant,
   SpinnerSize,
@@ -22,15 +26,18 @@ import {
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
+  StyledDropdown,
   StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, PaymentStateLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useBlockchain } from '../hooks/blockchain.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress } from '../util/utils';
@@ -40,27 +47,53 @@ export function TransactionScreen(): JSX.Element {
 
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
-  const { getDetailTransactions, getUnassignedTransactions, getTransactionCsv } = useTransaction();
+  const {
+    getDetailTransactions,
+    getUnassignedTransactions,
+    getTransactionCsv,
+    getTransactionTargets,
+    setTransactionTarget,
+  } = useTransaction();
   const { isLoggedIn } = useSessionContext();
   const { id } = useParams();
+  const { toString } = useBlockchain();
 
+  const rootRef = useRef<HTMLDivElement>(null);
   const txRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [transactions, setTransactions] = useState<DetailTransaction[]>();
+  const [transactionTargets, setTransactionTargets] = useState<TransactionTarget[]>();
   const [isCsvLoading, setIsCsvLoading] = useState(false);
-
-  useEffect(() => {
-    if (isLoggedIn)
-      Promise.all([getDetailTransactions(), getUnassignedTransactions()]).then((tx) =>
-        setTransactions(
-          tx.flat().sort((a, b) => (new Date(b.date) > new Date(a.date) ? 1 : -1)) as DetailTransaction[],
-        ),
-      );
-  }, [isLoggedIn]);
+  const [isTargetsLoading, setIsTargetsLoading] = useState(false);
+  const [isTransactionLoading, setIsTransactionLoading] = useState(false);
+  const [editTransaction, setEditTransaction] = useState<number>();
 
   useEffect(() => {
     if (id) setTimeout(() => txRefs.current[id]?.scrollIntoView());
   }, [id, transactions]);
+
+  useEffect(() => {
+    if (isLoggedIn) loadTransactions();
+  }, [isLoggedIn]);
+
+  function loadTransactions() {
+    setTransactions(undefined);
+    Promise.all([getDetailTransactions(), getUnassignedTransactions()]).then((tx) =>
+      setTransactions(tx.flat().sort((a, b) => (new Date(b.date) > new Date(a.date) ? 1 : -1)) as DetailTransaction[]),
+    );
+  }
+
+  // form
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isValid, errors },
+  } = useForm<{ target: TransactionTarget }>();
+
+  const rules = Utils.createRules({
+    target: Validations.Required,
+  });
 
   function exportCsv() {
     setIsCsvLoading(true);
@@ -69,8 +102,32 @@ export function TransactionScreen(): JSX.Element {
       .finally(() => setIsCsvLoading(false));
   }
 
+  async function assignTransaction(tx: DetailTransaction) {
+    if (!transactionTargets) {
+      setIsTargetsLoading(true);
+      await getTransactionTargets()
+        .then(setTransactionTargets)
+        .finally(() => setIsTargetsLoading(false));
+    }
+
+    setEditTransaction(tx.id);
+  }
+
+  async function onSubmit({ target }: { target: TransactionTarget }) {
+    if (!editTransaction) return;
+
+    setIsTransactionLoading(true);
+    setTransactionTarget(editTransaction, target.id)
+      .then(() => {
+        loadTransactions();
+        setEditTransaction(undefined);
+        reset();
+      })
+      .finally(() => setIsTransactionLoading(false));
+  }
+
   return (
-    <Layout title={translate('screens/payment', 'Transactions')}>
+    <Layout rootRef={rootRef} title={translate('screens/payment', 'Transactions')}>
       <StyledVerticalStack gap={6} full center>
         <StyledButton
           color={StyledButtonColor.STURDY_WHITE}
@@ -111,9 +168,8 @@ export function TransactionScreen(): JSX.Element {
                   });
 
                 return (
-                  <div ref={(el) => txRefs.current && (txRefs.current[tx.id] = el)}>
+                  <div key={tx.id} ref={(el) => txRefs.current && (txRefs.current[tx.id] = el)}>
                     <StyledCollapsible
-                      key={tx.id}
                       full
                       isExpanded={id ? +id === tx.id : undefined}
                       titleContent={
@@ -157,14 +213,16 @@ export function TransactionScreen(): JSX.Element {
                           )}
                           {paymentMethod && (
                             <StyledDataTableRow label={translate('screens/payment', 'Payment method')}>
-                              <p>{translate('screens/payment', PaymentMethodLabels[paymentMethod])}</p>
+                              <p className="text-right">
+                                {translate('screens/payment', PaymentMethodLabels[paymentMethod])}
+                              </p>
                             </StyledDataTableRow>
                           )}
                           {tx.inputAsset && (
                             <StyledDataTableRow label={translate('screens/payment', 'Input')}>
                               <p>
                                 {tx.inputAmount} {tx.inputAsset}
-                                {tx.inputBlockchain ? ` (${tx.inputBlockchain})` : ''}
+                                {tx.inputBlockchain ? ` (${toString(tx.inputBlockchain)})` : ''}
                               </p>
                             </StyledDataTableRow>
                           )}
@@ -181,7 +239,7 @@ export function TransactionScreen(): JSX.Element {
                             <StyledDataTableRow label={translate('screens/payment', 'Output')}>
                               <p>
                                 {tx.outputAmount} {tx.outputAsset}
-                                {tx.outputBlockchain ? ` (${tx.outputBlockchain})` : ''}
+                                {tx.outputBlockchain ? ` (${toString(tx.outputBlockchain)})` : ''}
                               </p>
                             </StyledDataTableRow>
                           )}
@@ -205,6 +263,42 @@ export function TransactionScreen(): JSX.Element {
                             </StyledDataTableExpandableRow>
                           )}
                         </StyledDataTable>
+                        {isUnassigned &&
+                          (editTransaction === tx.id ? (
+                            <>
+                              <Form control={control} errors={errors} rules={rules} onSubmit={handleSubmit(onSubmit)}>
+                                <StyledVerticalStack gap={3} full>
+                                  <p className="text-dfxGray-700 mt-4">{translate('screens/payment', 'Reference')}</p>
+                                  <StyledDropdown<TransactionTarget>
+                                    rootRef={rootRef}
+                                    items={transactionTargets ?? []}
+                                    labelFunc={(item) => `${item.bankUsage}`}
+                                    placeholder={translate('general/actions', 'Select...')}
+                                    descriptionFunc={(item) =>
+                                      `${toString(item.asset.blockchain)}/${item.asset.name} ${blankedAddress(
+                                        item.address,
+                                      )}`
+                                    }
+                                    full
+                                    name="target"
+                                  />
+                                  <StyledButton
+                                    type="submit"
+                                    isLoading={isTransactionLoading}
+                                    disabled={!isValid}
+                                    label={translate('screens/payment', 'Assign transaction')}
+                                    onClick={handleSubmit(onSubmit)}
+                                  />
+                                </StyledVerticalStack>
+                              </Form>
+                            </>
+                          ) : (
+                            <StyledButton
+                              isLoading={isTargetsLoading}
+                              label={translate('screens/payment', 'Assign transaction')}
+                              onClick={() => assignTransaction(tx)}
+                            />
+                          ))}
                         {tx.outputTxUrl && (
                           <StyledButton
                             label={translate('screens/payment', 'Show on block explorer')}

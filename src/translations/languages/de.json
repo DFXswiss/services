@@ -324,6 +324,7 @@
     "Show on block explorer": "Im Block-Explorer anzeigen",
     "Report an issue": "Ein Problem melden",
     "Export CSV": "Export CSV",
+    "Assign transaction": "Transaktion zuordnen",
 
     "This exchange rate is not guaranteed. The effective rate will be determined once the transactions have been received by DFX and the crypto assets can be delivered.": "Dieser Wechselkurs ist nicht garantiert. Der effektive Kurs wird ermittelt, wenn die Transaktionen bei DFX eingegangen ist und die Krypto-Assets ausgeliefert werden können.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst.",
