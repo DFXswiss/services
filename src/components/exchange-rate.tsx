@@ -64,7 +64,7 @@ export function ExchangeRate({ exchangeRate, rate, fees, feeCurrency, from, to }
         <StyledInfoText iconColor={IconColor.GRAY} discreet>
           {translate(
             'screens/payment',
-            'This exchange rate is not guaranteed. The effective rate is determined when the transactions are received and processed by DFX.',
+            'This exchange rate is not guaranteed. The effective rate will be determined once the transactions have been received by DFX and the crypto assets can be delivered.',
           )}
         </StyledInfoText>
       </StyledVerticalStack>

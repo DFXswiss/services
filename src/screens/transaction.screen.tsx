@@ -1,7 +1,7 @@
 import {
   CryptoPaymentMethod,
+  DetailTransaction,
   FiatPaymentMethod,
-  Transaction,
   TransactionState,
   TransactionType,
   useSessionContext,
@@ -11,6 +11,9 @@ import {
   AlignContent,
   AssetIconVariant,
   DfxAssetIcon,
+  DfxIcon,
+  IconSize,
+  IconVariant,
   SpinnerSize,
   StyledButton,
   StyledCollapsible,
@@ -34,15 +37,17 @@ export function TransactionScreen(): JSX.Element {
 
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
-  const { getTransactions } = useTransaction();
+  const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
   const { isLoggedIn } = useSessionContext();
 
-  const [transactions, setTransactions] = useState<Transaction[]>();
+  const [transactions, setTransactions] = useState<DetailTransaction[]>();
 
   useEffect(() => {
     if (isLoggedIn)
-      getTransactions().then((tx) =>
-        setTransactions(tx.sort((a, b) => (new Date(b.date) > new Date(a.date) ? 1 : -1))),
+      Promise.all([getDetailTransactions(), getUnassignedTransactions()]).then((tx) =>
+        setTransactions(
+          tx.flat().sort((a, b) => (new Date(b.date) > new Date(a.date) ? 1 : -1)) as DetailTransaction[],
+        ),
       );
   }, [isLoggedIn]);
 
@@ -54,13 +59,19 @@ export function TransactionScreen(): JSX.Element {
             <p className="text-dfxGray-700">{translate('screens/payment', 'No transactions found')}</p>
           ) : (
             transactions.map((tx) => {
+              const state = PaymentStateLabels[tx.state] ?? 'Unassigned';
+              const isUnassigned = state === 'Unassigned';
+
               const paymentMethod = [tx.inputPaymentMethod, tx.outputPaymentMethod].find(
                 (p) => p !== CryptoPaymentMethod.CRYPTO,
               ) as FiatPaymentMethod;
 
-              const icon = (
-                tx.type === TransactionType.SELL ? [tx.inputAsset, tx.outputAsset] : [tx.outputAsset, tx.inputAsset]
-              ).find((a) => Object.values(AssetIconVariant).includes(a as AssetIconVariant));
+              const icon =
+                !isUnassigned &&
+                (tx.type === TransactionType.SELL
+                  ? [tx.inputAsset, tx.outputAsset]
+                  : [tx.outputAsset, tx.inputAsset]
+                ).find((a) => Object.values(AssetIconVariant).includes(a as AssetIconVariant));
 
               const rateItems = [];
               tx.exchangeRate != null &&
@@ -81,11 +92,17 @@ export function TransactionScreen(): JSX.Element {
                   full
                   titleContent={
                     <div className="flex flex-row gap-2 items-center">
-                      {icon && <DfxAssetIcon asset={icon as AssetIconVariant} />}
+                      {icon ? (
+                        <DfxAssetIcon asset={icon as AssetIconVariant} />
+                      ) : (
+                        <DfxIcon icon={IconVariant.HELP} size={IconSize.LG} />
+                      )}
 
                       <div className="flex flex-col items-start">
                         <div className="font-bold leading-none">{translate('screens/payment', tx.type)}</div>
-                        <div className="leading-none">{translate('screens/payment', PaymentStateLabels[tx.state])}</div>
+                        <div className={`leading-none ${isUnassigned && 'text-dfxRed-100'}`}>
+                          {translate('screens/payment', state)}
+                        </div>
                       </div>
                       <div className="ml-auto">
                         {tx.inputAmount} {tx.inputAsset}{' '}
@@ -106,7 +123,7 @@ export function TransactionScreen(): JSX.Element {
                         <p>{translate('screens/payment', tx.type)}</p>
                       </StyledDataTableRow>
                       <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                        <p>{translate('screens/payment', PaymentStateLabels[tx.state])}</p>
+                        <p>{translate('screens/payment', state)}</p>
                       </StyledDataTableRow>
                       {tx.reason && (
                         <StyledDataTableRow label={translate('screens/payment', 'Failure reason')}>
