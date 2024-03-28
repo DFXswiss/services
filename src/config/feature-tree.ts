@@ -850,14 +850,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'other',
-        img: 'othersethereum',
+        id: 'ZCHF',
+        img: 'frankencoin',
         next: {
-          page: 'wallets',
+          page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ETHEREUM, assetIn: undefined },
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ZCHF' },
           },
         },
       },
@@ -953,14 +953,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'other',
-        img: 'othersarbitrum',
+        id: 'ZCHF',
+        img: 'frankencoin',
         next: {
-          page: 'wallets',
+          page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ARBITRUM, assetIn: undefined },
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ZCHF' },
           },
         },
       },
@@ -1037,14 +1037,14 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'other',
-        img: 'othersoptimism',
+        id: 'ZCHF',
+        img: 'frankencoin',
         next: {
-          page: 'wallets',
+          page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.OPTIMISM, assetIn: undefined },
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ZCHF' },
           },
         },
       },
@@ -1124,6 +1124,18 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.POLYGON, assetIn: 'DAI' },
+          },
+        },
+      },
+      {
+        id: 'ZCHF',
+        img: 'frankencoin',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'ZCHF' },
           },
         },
       },
