@@ -103,6 +103,10 @@ export const Routes = [
     path: '/tx',
     element: <TransactionScreen />,
   },
+  {
+    path: '/tx/:id',
+    element: <TransactionScreen />,
+  },
 ];
 
 export enum Service {
