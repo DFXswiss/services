@@ -7,6 +7,7 @@ import {
   KycLevel,
   Sell,
   TransactionError,
+  TransactionType,
   Utils,
   Validations,
   useAsset,
@@ -88,7 +89,7 @@ export default function SellScreen(): JSX.Element {
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
   const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain, externalTransactionId } = useAppParams();
-  const { isComplete, defaultLimit, limitToString } = useKycHelper();
+  const { isComplete } = useKycHelper();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
@@ -271,17 +272,8 @@ export default function SellScreen(): JSX.Element {
         break;
 
       case TransactionError.KYC_REQUIRED:
-        setKycError(sell.error);
-        return undefined;
-
       case TransactionError.BANK_TRANSACTION_MISSING:
-        setCustomAmountError(
-          translate(
-            'screens/kyc',
-            'A buy bank transaction is required once your daily sell transaction volume exceeds {{limit}}.',
-            { limit: limitToString(defaultLimit) },
-          ),
-        );
+        setKycError(sell.error);
         return undefined;
     }
 
@@ -476,7 +468,13 @@ export default function SellScreen(): JSX.Element {
                   buttonLabel={availableBalance ? 'MAX' : undefined}
                   buttonClick={() => availableBalance && setVal('amount', `${availableBalance}`)}
                   name="amount"
-                  forceError={kycError === TransactionError.AMOUNT_TOO_HIGH || customAmountError != null}
+                  forceError={
+                    (kycError &&
+                      [TransactionError.AMOUNT_TOO_HIGH, TransactionError.BANK_TRANSACTION_MISSING].includes(
+                        kycError,
+                      )) ||
+                    customAmountError != null
+                  }
                   forceErrorMessage={customAmountError}
                   loading={isLoading || isPriceLoading}
                 />
@@ -503,7 +501,7 @@ export default function SellScreen(): JSX.Element {
               </div>
             )}
 
-            {kycError && !customAmountError && <KycHint error={kycError} />}
+            {kycError && !customAmountError && <KycHint type={TransactionType.SELL} error={kycError} />}
 
             {!isLoading && errorMessage && (
               <StyledVerticalStack center className="text-center">

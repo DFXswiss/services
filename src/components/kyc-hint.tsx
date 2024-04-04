@@ -1,4 +1,4 @@
-import { TransactionError, useUserContext } from '@dfx.swiss/react';
+import { KycStepName, KycStepType, TransactionError, TransactionType, useUserContext } from '@dfx.swiss/react';
 import {
   StyledButton,
   StyledButtonWidth,
@@ -10,9 +10,9 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
-export function KycHint({ error }: { error: TransactionError }): JSX.Element {
+export function KycHint({ type, error }: { type: TransactionType; error: TransactionError }): JSX.Element {
   const { translate } = useSettingsContext();
-  const { start, limit } = useKycHelper();
+  const { start, startStep, limit, defaultLimit, limitToString } = useKycHelper();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
 
@@ -40,6 +40,21 @@ export function KycHint({ error }: { error: TransactionError }): JSX.Element {
           'screens/kyc',
           'Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.',
         );
+
+      case TransactionError.BANK_TRANSACTION_MISSING:
+        return translate(
+          'screens/kyc',
+          'A buy bank transaction or identification by video is required once {{volume}} exceeds {{limit}}.',
+          {
+            volume: translate(
+              'screens/kyc',
+              type === TransactionType.SELL
+                ? 'your daily sell transaction volume'
+                : 'your daily credit card transaction volume',
+            ),
+            limit: limitToString(defaultLimit),
+          },
+        );
     }
   }
 
@@ -48,9 +63,23 @@ export function KycHint({ error }: { error: TransactionError }): JSX.Element {
   return hint ? (
     <StyledVerticalStack gap={4} full center>
       <StyledInfoText invertedIcon>{hint}</StyledInfoText>
-      <StyledButton width={StyledButtonWidth.FULL} label={translate('screens/kyc', 'Complete KYC')} onClick={start} />
-      {user?.kycLevel === 0 && (
-        <StyledLink label={translate('screens/kyc', 'I am already verified with DFX')} onClick={onLink} dark />
+      {error === TransactionError.BANK_TRANSACTION_MISSING ? (
+        <StyledButton
+          width={StyledButtonWidth.FULL}
+          label={translate('screens/kyc', 'Start video identification')}
+          onClick={() => startStep(KycStepName.IDENT, KycStepType.VIDEO)}
+        />
+      ) : (
+        <>
+          <StyledButton
+            width={StyledButtonWidth.FULL}
+            label={translate('screens/kyc', 'Complete KYC')}
+            onClick={start}
+          />
+          {user?.kycLevel === 0 && (
+            <StyledLink label={translate('screens/kyc', 'I am already verified with DFX')} onClick={onLink} dark />
+          )}
+        </>
       )}
     </StyledVerticalStack>
   ) : (

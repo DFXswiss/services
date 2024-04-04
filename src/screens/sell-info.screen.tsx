@@ -7,6 +7,7 @@ import {
   Sell,
   SellPaymentInfo,
   TransactionError,
+  TransactionType,
   Utils,
   Validations,
   useAsset,
@@ -64,7 +65,7 @@ export function SellInfoScreen(): JSX.Element {
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
-  const { isComplete, defaultLimit, limitToString } = useKycHelper();
+  const { isComplete } = useKycHelper();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
   const { closeServices } = useAppHandlingContext();
@@ -151,17 +152,8 @@ export function SellInfoScreen(): JSX.Element {
         break;
 
       case TransactionError.KYC_REQUIRED:
-        setKycError(sell.error);
-        return undefined;
-
       case TransactionError.BANK_TRANSACTION_MISSING:
-        setCustomAmountError(
-          translate(
-            'screens/kyc',
-            'A buy bank transaction is required once your daily sell transaction volume exceeds {{limit}}.',
-            { limit: limitToString(defaultLimit) },
-          ),
-        );
+        setKycError(sell.error);
         return undefined;
     }
 
@@ -201,7 +193,7 @@ export function SellInfoScreen(): JSX.Element {
           />
         </>
       ) : kycError ? (
-        <KycHint error={kycError} />
+        <KycHint type={TransactionType.SELL} error={kycError} />
       ) : (
         bankAccount &&
         paymentInfo && (

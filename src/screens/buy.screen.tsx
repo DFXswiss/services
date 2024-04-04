@@ -7,6 +7,7 @@ import {
   Fiat,
   FiatPaymentMethod,
   TransactionError,
+  TransactionType,
   Utils,
   Validations,
   useAsset,
@@ -269,6 +270,7 @@ export function BuyScreen(): JSX.Element {
 
       case TransactionError.KYC_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
+      case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(buy.error);
         return undefined;
     }
@@ -455,7 +457,7 @@ export function BuyScreen(): JSX.Element {
                   </StyledVerticalStack>
                 )}
 
-                {!isLoading && kycError && <KycHint error={kycError} />}
+                {!isLoading && kycError && <KycHint type={TransactionType.BUY} error={kycError} />}
 
                 {!isLoading && errorMessage && (
                   <StyledVerticalStack center className="text-center">

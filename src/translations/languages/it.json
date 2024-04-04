@@ -91,8 +91,11 @@
     "This transaction is only possible with a verified account. Please complete our KYC (Know-Your-Customer) process.": "Questa transazione è possibile solo con un conto verificato. Completare il processo KYC (Know-Your-Customer).",
     "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Le transazioni bancarie istantanee sono possibili solo con un conto verificato. Se desiderate utilizzare SEPA Instant, completate il nostro processo KYC (Know-Your-Customer).",
     "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Nota: il vostro conto non è verificato. La vostra transazione sarà elaborata solo se non avete lo stesso nome di una persona sanzionata o esposta politicamente.",
-    "A buy bank transaction is required once your daily sell transaction volume exceeds {{limit}}.": "Una transazione di acquisto viene richiesta non appena il volume giornaliero delle transazioni di vendita supera il {{limit}}.",
+    "A buy bank transaction or identification by video is required once {{volume}} exceeds {{limit}}.": "Una transazione di acquisto o un'identificazione tramite video viene richiesta non appena {{volume}} supera il {{limit}}.",
+    "your daily sell transaction volume": "il volume giornaliero delle transazioni di vendita",
+    "your daily credit card transaction volume": "il volume di transazioni giornaliere con carta di credito",
     "Complete KYC": "Completare il KYC",
+    "Start video identification": "Iniziare l'identificazione video",
     "I am already verified with DFX": "Sono già verificato con DFX"
   },
   "screens/2fa": {
