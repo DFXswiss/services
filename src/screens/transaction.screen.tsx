@@ -88,6 +88,7 @@ export function TransactionScreen(): JSX.Element {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { isValid, errors },
   } = useForm<{ target: TransactionTarget }>();
 
@@ -106,7 +107,10 @@ export function TransactionScreen(): JSX.Element {
     if (!transactionTargets) {
       setIsTargetsLoading(true);
       await getTransactionTargets()
-        .then(setTransactionTargets)
+        .then((targets) => {
+          setTransactionTargets(targets);
+          if (targets.length === 1) setValue('target', targets[0]);
+        })
         .finally(() => setIsTargetsLoading(false));
     }
 

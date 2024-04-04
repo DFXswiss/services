@@ -90,7 +90,8 @@ export function KycScreen(): JSX.Element {
   const kycCode = paramKycCode ?? user?.kycHash;
   const redirectUri = params.get('kyc-redirect');
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
-  const kycCompleted = info?.kycSteps.every((s) => isStepDone(s));
+  const allStepsCompleted = info?.kycSteps.every((s) => isStepDone(s));
+  const canContinue = !allStepsCompleted || (info && info.kycLevel >= KycLevel.Completed);
 
   useSessionGuard('/login', !kycCode);
 
@@ -99,11 +100,11 @@ export function KycScreen(): JSX.Element {
   }, [info]);
 
   useEffect(() => {
-    if (redirectUri && kycCompleted) {
+    if (redirectUri && allStepsCompleted) {
       setIsLoading(true);
       window.open(redirectUri, '_self');
     }
-  }, [redirectUri, kycCompleted]);
+  }, [redirectUri, allStepsCompleted]);
 
   useEffect(() => {
     if (!kycCode) return;
@@ -127,13 +128,13 @@ export function KycScreen(): JSX.Element {
       .finally(() => setIsLoading(false));
   }, [kycCode, stepName, stepType]);
 
-  function onLoad(next: boolean) {
+  async function onLoad(next: boolean): Promise<void> {
     if (!kycCode) return;
 
     setIsSubmitting(true);
     setError(undefined);
     setShowLinkHint(false);
-    (next ? callKyc(() => continueKyc(kycCode)) : callKyc(() => getKycInfo(kycCode)))
+    return (next ? callKyc(() => continueKyc(kycCode)) : callKyc(() => getKycInfo(kycCode)))
       .then(handleReload)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsSubmitting(false));
@@ -190,8 +191,13 @@ export function KycScreen(): JSX.Element {
     setShowLinkHint(true);
   }
 
+  function retryLink() {
+    setIsLoading(true);
+    onLoad(false).finally(() => setIsLoading(false));
+  }
+
   function onContinue() {
-    return kycCompleted ? navigate('/limit') : onLoad(true);
+    return allStepsCompleted ? navigate('/limit') : onLoad(true);
   }
 
   function stepIcon(step: KycStep): { icon: IconVariant; size: IconSize } | undefined {
@@ -236,7 +242,7 @@ export function KycScreen(): JSX.Element {
           <StyledButton
             width={StyledButtonWidth.MIN}
             label={translate('general/actions', 'OK')}
-            onClick={() => onLoad(false)}
+            onClick={retryLink}
             isLoading={isLoading}
           />
         </StyledVerticalStack>
@@ -276,7 +282,9 @@ export function KycScreen(): JSX.Element {
                 <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
                   <div className="flex flex-row gap-1 items-center">
                     <p>{limitToString(info.tradingLimit)}</p>
-                    <StyledIconButton icon={IconVariant.ARROW_UP} onClick={onContinue} isLoading={isSubmitting} />
+                    {canContinue && (
+                      <StyledIconButton icon={IconVariant.ARROW_UP} onClick={onContinue} isLoading={isSubmitting} />
+                    )}
                   </div>
                 </StyledDataTableRow>
 
@@ -304,7 +312,7 @@ export function KycScreen(): JSX.Element {
                 )}
               </StyledDataTable>
 
-              {!kycCompleted && (
+              {!allStepsCompleted && (
                 <StyledButton
                   width={StyledButtonWidth.MIN}
                   label={translate('general/actions', kycStarted ? 'Continue' : 'Start')}

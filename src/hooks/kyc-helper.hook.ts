@@ -8,6 +8,7 @@ interface KycHelperInterface {
   limit: string | undefined;
   isComplete: boolean | undefined;
   start: () => void;
+  startStep: (stepName: KycStepName, stepType?: KycStepType) => void;
 
   levelToString: (level: number) => string;
   limitToString: (limit: TradingLimit) => string;
@@ -47,6 +48,11 @@ export function useKycHelper(): KycHelperInterface {
     navigate('/kyc');
   }
 
+  function startStep(stepName: KycStepName, stepType?: KycStepType) {
+    const step = stepName + (stepType ? `/${stepType}` : '');
+    navigate({ pathname: '/kyc', search: `step=${step}` });
+  }
+
   // formatting
   function levelToString(level: number): string {
     switch (level) {
@@ -74,6 +80,7 @@ export function useKycHelper(): KycHelperInterface {
   return useMemo(
     () => ({
       start,
+      startStep,
       isComplete,
       defaultLimit: { limit: 1000, period: LimitPeriod.DAY },
       limit,
