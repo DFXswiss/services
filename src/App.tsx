@@ -66,10 +66,6 @@ export const Routes = [
     element: <SellInfoScreen />,
   },
   {
-    path: '/bank-accounts',
-    element: <BankAccountsScreen />,
-  },
-  {
     path: '/kyc',
     element: <KycScreen />,
     isKycScreen: true,
@@ -106,6 +102,10 @@ export const Routes = [
   {
     path: '/tx/:id',
     element: <TransactionScreen />,
+  },
+  {
+    path: '/bank-accounts',
+    element: <BankAccountsScreen />,
   },
 ];
 

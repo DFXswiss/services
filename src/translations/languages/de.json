@@ -278,7 +278,9 @@
     "Network fee": "Netzwerk-Gebühr",
 
     "Transactions": "Transaktionen",
+    "Your Transactions": "Deine Transaktionen",
     "No transactions found": "Keine Transaktionen gefunden",
+    "My transaction is missing": "Meine Transaktion fehlt",
 
     "ID": "ID",
     "Date": "Datum",
@@ -336,6 +338,12 @@
     "Nice! You are all set! Give us a minute to handle your transaction": "Sehr schön! Alles erledigt! Gib uns eine Minute, um Deine Transaktion zu bearbeiten",
     "We will inform you about the progress of any purchase or sale via E-mail.": "Wir werden Dich per E-Mail über den Fortschritt Deiner Käufe oder Verkäufe informieren.",
     "Enter your email address if you want to be informed about the progress of any purchase or sale": "Gib Deine E-Mail Adresse ein, wenn Du über den Fortschritt Deiner Käufe oder Verkäufe informiert werden willst"
+  },
+  "screens/iban": {
+    "Bank Accounts": "Bankkonto",
+    "Accounts already used with DFX": "Bereits mit DFX verwendete Konten",
+    "To find your missing transaction, please add the bank account from which you sent the money.": "Um Deine fehlende Transaktion zu finden, füge bitte das Bankkonto hinzu, von dem Du das Geld gesendet hast.",
+    "Add account": "Konto hinzufügen"
   },
   "navigation/links": {
     "Buy & sell": "Kaufen & Verkaufen",
