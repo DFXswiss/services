@@ -119,12 +119,6 @@ export function BuyInfoScreen(): JSX.Element {
         return undefined;
 
       case TransactionError.AMOUNT_TOO_HIGH:
-        if (!isComplete) {
-          setKycError(buy.error);
-          return undefined;
-        }
-        break;
-
       case TransactionError.KYC_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:

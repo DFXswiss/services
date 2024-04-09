@@ -88,6 +88,7 @@
     "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to confirm your mail address.": "Il semble que vous ayez déjà un compte chez DFX. Nous venons de vous envoyer un e-mail. Cliquez sur le lien envoyé pour confirmer votre adresse e-mail.",
     "No matching account was found.": "Aucun compte correspondant n'a été trouvé.",
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Votre compte doit être vérifié dès que votre volume de transactions quotidiennes dépasse {{limit}}. Si vous souhaitez augmenter votre limite quotidienne de transactions, veuillez compléter notre processus KYC (Know-Your-Customer).",
+    "This transaction exceeds your trading limit of {{limit}}. If you would like to increase your limit, please submit a request using the button below.": "Cette transaction dépasse votre limite de transactions de {{limit}}. Si vous souhaitez augmenter votre limite, veuillez soumettre une demande en utilisant le bouton ci-dessous.",
     "This transaction is only possible with a verified account. Please complete our KYC (Know-Your-Customer) process.": "Cette transaction n'est possible qu'avec un compte vérifié. Veuillez compléter notre processus KYC (Know-Your-Customer).",
     "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Les transactions bancaires instantanées ne sont possibles qu'avec un compte vérifié. Si vous souhaitez utiliser SEPA Instant, veuillez compléter notre processus KYC (Know-Your-Customer).",
     "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Note : Votre compte n'est pas vérifié. Votre transaction ne sera traitée que si vous n'avez pas le même nom qu'une personne sanctionnée ou politiquement exposée.",
@@ -95,6 +96,7 @@
     "your daily sell transaction volume": "votre volume quotidien de transactions de vente",
     "your daily credit card transaction volume": "votre volume quotidien de transactions par carte de crédit",
     "Complete KYC": "Compléter le KYC",
+    "Increase limit": "Augmenter la limite",
     "Start video identification": "Lancer l'identification par vidéo",
     "I am already verified with DFX": "Je suis déjà vérifié par DFX"
   },

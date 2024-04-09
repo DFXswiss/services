@@ -265,12 +265,6 @@ export default function SellScreen(): JSX.Element {
         return undefined;
 
       case TransactionError.AMOUNT_TOO_HIGH:
-        if (!isComplete) {
-          setKycError(sell.error);
-          return undefined;
-        }
-        break;
-
       case TransactionError.KYC_REQUIRED:
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(sell.error);
