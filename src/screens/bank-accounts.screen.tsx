@@ -1,9 +1,18 @@
-import { ApiError, Iban, Utils, Validations, useBankAccount, useSessionContext } from '@dfx.swiss/react';
+import {
+  ApiError,
+  Iban,
+  Utils,
+  Validations,
+  useBankAccount,
+  useSessionContext,
+  useUserContext,
+} from '@dfx.swiss/react';
 import {
   Form,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
+  StyledInfoText,
   StyledInput,
   StyledLoadingSpinner,
   StyledVerticalStack,
@@ -20,14 +29,16 @@ export function BankAccountsScreen(): JSX.Element {
   useSessionGuard('/login');
 
   const { navigate } = useNavigation();
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
   const { getIbans, addIban } = useBankAccount();
   const { isLoggedIn } = useSessionContext();
+  const { countries } = useUserContext();
 
   const [accounts, setAccounts] = useState<Iban[]>();
   const [isAdd, setIsAdd] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>();
+  const [customError, setCustomError] = useState<string>();
 
   useEffect(() => {
     if (isLoggedIn)
@@ -44,18 +55,21 @@ export function BankAccountsScreen(): JSX.Element {
   } = useForm<Iban>();
 
   const rules = Utils.createRules({
-    iban: [Validations.Required, Validations.Iban],
+    iban: [Validations.Required, Validations.Iban(countries)],
   });
 
   function onSubmit({ iban }: Iban) {
     setIsSubmitting(true);
+    setError(undefined);
+    setCustomError(undefined);
+
     addIban(iban)
       .then(() => navigate('/tx'))
       .catch((e: ApiError) => {
         if (e.statusCode === 409) {
-          setError(translate('screens/iban', 'IBAN already exists in another DFX customer account'));
+          setCustomError(translate('screens/iban', 'IBAN already exists in another DFX customer account'));
         } else if (e.statusCode === 400 && e.message?.includes('Multi-account IBAN')) {
-          setError(
+          setCustomError(
             translate(
               'screens/iban',
               'This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.',
@@ -73,7 +87,13 @@ export function BankAccountsScreen(): JSX.Element {
       <StyledVerticalStack gap={6} full center>
         {accounts ? (
           isAdd ? (
-            <Form control={control} errors={errors} rules={rules} onSubmit={handleSubmit(onSubmit)}>
+            <Form
+              control={control}
+              errors={errors}
+              rules={rules}
+              onSubmit={handleSubmit(onSubmit)}
+              translate={translateError}
+            >
               <StyledVerticalStack gap={3} full>
                 <StyledInput
                   name="iban"
@@ -87,6 +107,12 @@ export function BankAccountsScreen(): JSX.Element {
                 {error && (
                   <div>
                     <ErrorHint message={error} />
+                  </div>
+                )}
+
+                {customError && (
+                  <div className="text-left">
+                    <StyledInfoText invertedIcon>{customError}</StyledInfoText>
                   </div>
                 )}
 
