@@ -108,7 +108,7 @@ export function BankAccountsScreen(): JSX.Element {
                   </h2>
                   {accounts.map(({ iban }) => (
                     <p key={iban} className="text-dfxGray-700">
-                      {iban}
+                      {Utils.formatIban(iban)}
                     </p>
                   ))}
                 </div>

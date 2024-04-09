@@ -71,6 +71,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
   return hint ? (
     <StyledVerticalStack gap={4} full center>
       <StyledInfoText invertedIcon>{hint}</StyledInfoText>
+
       {error === TransactionError.BANK_TRANSACTION_MISSING ? (
         <StyledButton
           width={StyledButtonWidth.FULL}

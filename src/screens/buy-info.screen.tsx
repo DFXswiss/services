@@ -42,7 +42,6 @@ import { CloseType, useAppHandlingContext } from '../contexts/app-handling.conte
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
-import { useKycHelper } from '../hooks/kyc-helper.hook';
 
 export function BuyInfoScreen(): JSX.Element {
   useSessionGuard();
@@ -53,7 +52,6 @@ export function BuyInfoScreen(): JSX.Element {
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
-  const { isComplete } = useKycHelper();
   const { currencies, receiveFor } = useBuy();
   const { closeServices } = useAppHandlingContext();
   const scrollRef = useRef<HTMLDivElement>(null);

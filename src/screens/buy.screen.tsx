@@ -54,7 +54,6 @@ import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
-import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress, isDefined } from '../util/utils';
 
@@ -81,7 +80,6 @@ export function BuyScreen(): JSX.Element {
   const { assets, assetIn, assetOut, amountIn, blockchain, paymentMethod, externalTransactionId, wallet, flags } =
     useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
-  const { isComplete } = useKycHelper();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
   const { blockchain: walletBlockchain } = useWalletContext();
@@ -185,6 +183,12 @@ export function BuyScreen(): JSX.Element {
       setAddress();
     }
   }, [selectedAddress]);
+
+  useEffect(() => {
+    if (!selectedAmount) {
+      setCustomAmountError(undefined);
+    }
+  }, [selectedAmount]);
 
   // data validation/fetch
   useEffect(() => updateData(), [selectedAmount, selectedCurrency, selectedAsset, selectedPaymentMethod]);
@@ -369,7 +373,7 @@ export function BuyScreen(): JSX.Element {
                   <StyledHorizontalStack gap={1}>
                     <div className="flex-[3_1_9rem]">
                       <StyledInput
-                        type={'number'}
+                        type="number"
                         placeholder="0.00"
                         prefix={selectedCurrency && toSymbol(selectedCurrency)}
                         name="amount"
@@ -400,6 +404,7 @@ export function BuyScreen(): JSX.Element {
                     full
                   />
                 </StyledVerticalStack>
+
                 <StyledVerticalStack gap={2} full>
                   <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
                   <StyledHorizontalStack gap={1}>
