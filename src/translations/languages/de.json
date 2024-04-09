@@ -343,7 +343,9 @@
     "Bank Accounts": "Bankkonto",
     "Accounts already used with DFX": "Bereits mit DFX verwendete Konten",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Um Deine fehlende Transaktion zu finden, füge bitte das Bankkonto hinzu, von dem Du das Geld gesendet hast.",
-    "Add account": "Konto hinzufügen"
+    "Add account": "Konto hinzufügen",
+    "IBAN already exists in another DFX customer account": "IBAN existiert bereits in einem anderen DFX-Kundenkonto",
+    "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Dies ist eine Mehrkonten-IBAN und kann nicht als persönliches Konto hinzugefügt werden. Bitte sende die Bestätigung der Banktransaktion als PDF an support@dfx.swiss."
   },
   "navigation/links": {
     "Buy & sell": "Kaufen & Verkaufen",

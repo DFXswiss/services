@@ -30,7 +30,10 @@ export function BankAccountsScreen(): JSX.Element {
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    if (isLoggedIn) getIbans().then(setAccounts);
+    if (isLoggedIn)
+      getIbans()
+        .then(setAccounts)
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   }, [isLoggedIn]);
 
   // form
@@ -48,7 +51,20 @@ export function BankAccountsScreen(): JSX.Element {
     setIsSubmitting(true);
     addIban(iban)
       .then(() => navigate('/tx'))
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .catch((e: ApiError) => {
+        if (e.statusCode === 409) {
+          setError(translate('screens/iban', 'IBAN already exists in another DFX customer account'));
+        } else if (e.statusCode === 400 && e.message?.includes('Multi-account IBAN')) {
+          setError(
+            translate(
+              'screens/iban',
+              'This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.',
+            ),
+          );
+        } else {
+          setError(e.message ?? 'Unknown error');
+        }
+      })
       .finally(() => setIsSubmitting(false));
   }
 
@@ -112,6 +128,10 @@ export function BankAccountsScreen(): JSX.Element {
               />
             </>
           )
+        ) : error ? (
+          <div>
+            <ErrorHint message={error} />
+          </div>
         ) : (
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         )}
