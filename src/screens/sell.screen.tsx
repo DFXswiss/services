@@ -416,6 +416,7 @@ export default function SellScreen(): JSX.Element {
                       filterFunc={(item: Asset, search?: string | undefined) =>
                         !search || item.name.toLowerCase().includes(search.toLowerCase())
                       }
+                      hideBalanceWhenClosed
                       full
                     />
                   </div>
