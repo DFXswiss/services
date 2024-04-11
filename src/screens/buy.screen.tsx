@@ -57,12 +57,18 @@ import { useSessionGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress, isDefined } from '../util/utils';
 
+interface Address {
+  address: string;
+  label: string;
+  chain?: Blockchain;
+}
+
 interface FormData {
   amount: string;
   currency: Fiat;
   paymentMethod: FiatPaymentMethod;
   asset: Asset;
-  address: { address: string; label: string; type: string };
+  address: Address;
 }
 
 const EmbeddedWallet = 'CakeWallet';
@@ -77,12 +83,22 @@ export function BuyScreen(): JSX.Element {
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assets, assetIn, assetOut, amountIn, blockchain, paymentMethod, externalTransactionId, wallet, flags } =
-    useAppParams();
+  const {
+    assets,
+    assetIn,
+    assetOut,
+    amountIn,
+    blockchain,
+    paymentMethod,
+    externalTransactionId,
+    wallet,
+    flags,
+    setParams,
+  } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
-  const { blockchain: walletBlockchain } = useWalletContext();
+  const { blockchain: walletBlockchain, switchBlockchain } = useWalletContext();
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const { toString } = useBlockchain();
@@ -117,6 +133,22 @@ export function BuyScreen(): JSX.Element {
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
     setValue(field, value, { shouldValidate: true });
   }
+
+  const addressItems: Address[] = [
+    {
+      address: translate('screens/buy', 'Switch address'),
+      label: translate('screens/buy', 'Login with a different address'),
+    },
+  ];
+  session &&
+    availableBlockchains &&
+    addressItems.unshift(
+      ...availableBlockchains.map((b) => ({
+        address: blankedAddress(session.address),
+        label: toString(b),
+        chain: b,
+      })),
+    );
 
   const availablePaymentMethods = [FiatPaymentMethod.BANK];
 
@@ -178,9 +210,16 @@ export function BuyScreen(): JSX.Element {
   useEffect(() => setAddress(), [session?.address, translate]);
 
   useEffect(() => {
-    if (selectedAddress && selectedAddress.type === 'Logout') {
-      setShowsSwitchScreen(true);
-      setAddress();
+    if (selectedAddress) {
+      if (selectedAddress.chain) {
+        if (blockchain !== selectedAddress.chain) {
+          setParams({ blockchain: selectedAddress.chain });
+          switchBlockchain(selectedAddress.chain);
+        }
+      } else {
+        setShowsSwitchScreen(true);
+        setAddress();
+      }
     }
   }, [selectedAddress]);
 
@@ -291,12 +330,10 @@ export function BuyScreen(): JSX.Element {
   }
 
   function setAddress() {
-    if (session?.address)
-      setVal('address', {
-        address: blankedAddress(session.address),
-        label: translate('screens/buy', 'Target address'),
-        type: 'Address',
-      });
+    if (session?.address) {
+      const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
+      setVal('address', address);
+    }
   }
 
   function onAddressSwitch() {
@@ -425,7 +462,7 @@ export function BuyScreen(): JSX.Element {
                         items={availableAssets}
                         labelFunc={(item) => item.name}
                         assetIconFunc={(item) => item.name as AssetIconVariant}
-                        descriptionFunc={(item) => toString(item.blockchain)}
+                        descriptionFunc={(item) => item.description}
                         filterFunc={(item: Asset, search?: string | undefined) =>
                           !search || item.name.toLowerCase().includes(search.toLowerCase())
                         }
@@ -433,16 +470,11 @@ export function BuyScreen(): JSX.Element {
                       />
                     </div>
                   </StyledHorizontalStack>
-                  <StyledDropdown<{ address: string; label: string; type: string }>
+
+                  <StyledDropdown<Address>
                     rootRef={rootRef}
                     name="address"
-                    items={[
-                      {
-                        address: translate('screens/buy', 'Switch address'),
-                        label: translate('screens/buy', 'Login with a different address'),
-                        type: 'Logout',
-                      },
-                    ]}
+                    items={addressItems}
                     labelFunc={(item) => item.address}
                     descriptionFunc={(item) => item.label}
                     full
@@ -476,7 +508,7 @@ export function BuyScreen(): JSX.Element {
                   paymentInfo &&
                   !kycError &&
                   !errorMessage &&
-                  (selectedAsset.category === AssetCategory.PRIVATE && !flags?.includes('private') ? (
+                  (selectedAsset?.category === AssetCategory.PRIVATE && !flags?.includes('private') ? (
                     <PrivateAssetHint asset={selectedAsset} />
                   ) : (
                     <>
