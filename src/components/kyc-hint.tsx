@@ -12,7 +12,7 @@ import { useNavigation } from '../hooks/navigation.hook';
 
 export function KycHint({ type, error }: { type: TransactionType; error: TransactionError }): JSX.Element {
   const { translate } = useSettingsContext();
-  const { start, startStep, limit, defaultLimit, limitToString } = useKycHelper();
+  const { start, startStep, limit, defaultLimit, limitToString, isComplete } = useKycHelper();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
 
@@ -23,11 +23,19 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
   function getHint(error: TransactionError): string | undefined {
     switch (error) {
       case TransactionError.AMOUNT_TOO_HIGH:
-        return translate(
-          'screens/kyc',
-          'Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.',
-          { limit: limit ?? '' },
-        );
+        return isComplete
+          ? translate(
+              'screens/kyc',
+              'This transaction exceeds your trading limit of {{limit}}. If you would like to increase your limit, please submit a request using the button below.',
+              {
+                limit: limit ?? '',
+              },
+            )
+          : translate(
+              'screens/kyc',
+              'Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.',
+              { limit: limit ?? '' },
+            );
 
       case TransactionError.KYC_REQUIRED:
         return translate(
@@ -63,6 +71,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
   return hint ? (
     <StyledVerticalStack gap={4} full center>
       <StyledInfoText invertedIcon>{hint}</StyledInfoText>
+
       {error === TransactionError.BANK_TRANSACTION_MISSING ? (
         <StyledButton
           width={StyledButtonWidth.FULL}
@@ -73,8 +82,8 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
         <>
           <StyledButton
             width={StyledButtonWidth.FULL}
-            label={translate('screens/kyc', 'Complete KYC')}
-            onClick={start}
+            label={translate('screens/kyc', isComplete ? 'Increase limit' : 'Complete KYC')}
+            onClick={isComplete ? () => navigate('/limit') : start}
           />
           {user?.kycLevel === 0 && (
             <StyledLink label={translate('screens/kyc', 'I am already verified with DFX')} onClick={onLink} dark />

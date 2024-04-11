@@ -87,7 +87,8 @@
 
     "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to confirm your mail address.": "Sembra che tu abbia già un account con DFX. Le abbiamo appena inviato un'e-mail. Fare clic sul link inviato per confermare il tuo indirizzo e-mail.",
     "No matching account was found.": "Non è stato trovato alcun account corrispondente.",
-    "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Il conto deve essere verificato quando il volume delle transazioni giornaliere supera il {{limit}}. Se volete aumentare il vostro limite di trading giornaliero, completate il nostro processo KYC (Know-Your-Customer).",
+    "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Il conto deve essere verificato quando il volume delle transazioni giornaliere supera il {{limit}}. Se volete aumentare il vostro limite delle transazioni giornaliero, completate il nostro processo KYC (Know-Your-Customer).",
+    "This transaction exceeds your trading limit of {{limit}}. If you would like to increase your limit, please submit a request using the button below.": "Questa transazione supera il limite delle transazioni di {{limit}}. Se desiderate aumentare il vostro limite, inviate una richiesta utilizzando il pulsante sottostante.",
     "This transaction is only possible with a verified account. Please complete our KYC (Know-Your-Customer) process.": "Questa transazione è possibile solo con un conto verificato. Completare il processo KYC (Know-Your-Customer).",
     "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Le transazioni bancarie istantanee sono possibili solo con un conto verificato. Se desiderate utilizzare SEPA Instant, completate il nostro processo KYC (Know-Your-Customer).",
     "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Nota: il vostro conto non è verificato. La vostra transazione sarà elaborata solo se non avete lo stesso nome di una persona sanzionata o esposta politicamente.",
@@ -95,6 +96,7 @@
     "your daily sell transaction volume": "il volume giornaliero delle transazioni di vendita",
     "your daily credit card transaction volume": "il volume di transazioni giornaliere con carta di credito",
     "Complete KYC": "Completare il KYC",
+    "Increase limit": "Aumenta il limite",
     "Start video identification": "Iniziare l'identificazione video",
     "I am already verified with DFX": "Sono già verificato con DFX"
   },
@@ -343,7 +345,9 @@
     "Bank Accounts": "Conti bancari",
     "Accounts already used with DFX": "Conti già utilizzati con DFX",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Per trovare la transazione mancante, aggiungete il conto bancario da cui avete inviato il denaro.",
-    "Add account": "Aggiungi conto"
+    "Add account": "Aggiungi conto",
+    "IBAN already exists in another DFX customer account": "L'IBAN esiste già in un altro conto cliente DFX",
+    "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Questo è un IBAN multi-account e non può essere aggiunto come conto personale. Si prega di inviare la conferma della transazione bancaria in formato PDF a support@dfx.swiss."
   },
   "navigation/links": {
     "Buy & sell": "Acquista & vendere",

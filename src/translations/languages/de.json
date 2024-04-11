@@ -88,6 +88,7 @@
     "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to confirm your mail address.": "Wie es aussieht, hast Du bereits ein Konto bei DFX. Wir haben Dir gerade eine E-Mail geschickt. Klicke auf den gesendeten Link, um Deine E-Mail-Adresse zu bestätigen.",
     "No matching account was found.": "Es wurde kein passendes Konto gefunden.",
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Dein Konto muss verifiziert werden, sobald Dein tägliches Transaktionsvolumen {{limit}} überschreitet. Wenn Du Dein tägliches Handelslimit erhöhen möchtest, schliesse bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
+    "This transaction exceeds your trading limit of {{limit}}. If you would like to increase your limit, please submit a request using the button below.": "Diese Transaktion überschreitet Dein Trading-Limit von {{limit}}. Wenn Du Dein Limit erhöhen möchtest, stelle bitte einen Antrag über den Button unten.",
     "This transaction is only possible with a verified account. Please complete our KYC (Know-Your-Customer) process.": "Diese Transaktion ist nur mit einem verifizierten Konto möglich. Bitte schliesse unser KYC-Verfahren (Know-Your-Customer) ab.",
     "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Sofort-Banktransaktionen sind nur mit einem verifizierten Konto möglich. Wenn Du SEPA Instant nutzen möchtest, schliesse bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
     "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Hinweis: Dein Konto ist nicht verifiziert. Deine Transaktion wird nur verarbeitet werden können, wenn Du nicht den gleichen Namen hast wie eine sanktionierte oder politisch exponierte Person.",
@@ -95,6 +96,7 @@
     "your daily sell transaction volume": "Dein tägliches Verkaufs-Transaktionsvolumen",
     "your daily credit card transaction volume": "Dein tägliches Kreditkarten-Transaktionsvolumen",
     "Complete KYC": "KYC vervollständigen",
+    "Increase limit": "Limite erhöhen",
     "Start video identification": "Video-Identifikation starten",
     "I am already verified with DFX": "Ich bin bereits bei DFX verifiziert"
   },
@@ -343,7 +345,9 @@
     "Bank Accounts": "Bankkonto",
     "Accounts already used with DFX": "Bereits mit DFX verwendete Konten",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Um Deine fehlende Transaktion zu finden, füge bitte das Bankkonto hinzu, von dem Du das Geld gesendet hast.",
-    "Add account": "Konto hinzufügen"
+    "Add account": "Konto hinzufügen",
+    "IBAN already exists in another DFX customer account": "IBAN existiert bereits in einem anderen DFX-Kundenkonto",
+    "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Dies ist eine Mehrkonten-IBAN und kann nicht als persönliches Konto hinzugefügt werden. Bitte sende die Bestätigung der Banktransaktion als PDF an support@dfx.swiss."
   },
   "navigation/links": {
     "Buy & sell": "Kaufen & Verkaufen",

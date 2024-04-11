@@ -35,7 +35,7 @@ export function ExchangeRate({ exchangeRate, rate, fees, feeCurrency, from, to }
     <StyledCollapsible
       full
       label={translate('screens/payment', 'Exchange rate')}
-      title={`${Utils.formatAmount(rate)} ${from.name}/${to.name}`}
+      title={`${rate === Number.MAX_VALUE ? '∞' : Utils.formatAmount(rate)} ${from.name}/${to.name}`}
     >
       <StyledVerticalStack gap={2}>
         <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">

@@ -28,6 +28,7 @@ import {
   IconColor,
   IconSize,
   IconVariant,
+  SpinnerSize,
   StyledBankAccountListItem,
   StyledButton,
   StyledButtonColor,
@@ -39,8 +40,10 @@ import {
   StyledInfoText,
   StyledInput,
   StyledLink,
+  StyledLoadingSpinner,
   StyledModalButton,
   StyledSearchDropdown,
+  StyledTextBox,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
@@ -61,7 +64,6 @@ import { useBlockchain } from '../hooks/blockchain.hook';
 import { useClipboard } from '../hooks/clipboard.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycLevelGuard, useSessionGuard } from '../hooks/guard.hook';
-import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useSellHelper } from '../hooks/sell-helper.hook';
 import { blankedAddress, isDefined } from '../util/utils';
@@ -78,7 +80,7 @@ export default function SellScreen(): JSX.Element {
   useKycLevelGuard(KycLevel.Sell, '/profile');
 
   const { copy } = useClipboard();
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
@@ -89,7 +91,6 @@ export default function SellScreen(): JSX.Element {
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
   const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain, externalTransactionId } = useAppParams();
-  const { isComplete } = useKycHelper();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
@@ -168,10 +169,6 @@ export default function SellScreen(): JSX.Element {
     }
   }, [bankAccount, getAccount, bankAccounts, countries]);
 
-  // data validation
-  const validatedData = validateData(useDebounce(data, 500));
-  const dataValid = validatedData != null;
-
   useEffect(() => {
     if (selectedBankAccount && selectedBankAccount.preferredCurrency)
       setVal('currency', selectedBankAccount.preferredCurrency);
@@ -182,6 +179,10 @@ export default function SellScreen(): JSX.Element {
       setCustomAmountError(undefined);
     }
   }, [enteredAmount]);
+
+  // data validation
+  const validatedData = validateData(useDebounce(data, 500));
+  const dataValid = validatedData != null;
 
   useEffect(() => {
     let isRunning = true;
@@ -265,12 +266,6 @@ export default function SellScreen(): JSX.Element {
         return undefined;
 
       case TransactionError.AMOUNT_TOO_HIGH:
-        if (!isComplete) {
-          setKycError(sell.error);
-          return undefined;
-        }
-        break;
-
       case TransactionError.KYC_REQUIRED:
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(sell.error);
@@ -291,6 +286,11 @@ export default function SellScreen(): JSX.Element {
 
   function findBalance(asset: Asset): number | undefined {
     return balances?.find((b) => b.asset.id === asset.id)?.amount;
+  }
+
+  function findBalanceString(asset: Asset): string {
+    const balance = findBalance(asset);
+    return balance != null ? Utils.formatAmountCrypto(balance) : '';
   }
 
   async function updateBankAccount(): Promise<BankAccount> {
@@ -336,224 +336,240 @@ export default function SellScreen(): JSX.Element {
           : translate('general/services', 'Sell')
       }
       onBack={bankAccountSelection ? () => setBankAccountSelection(false) : undefined}
+      textStart
       rootRef={rootRef}
     >
-      <Form control={control} rules={rules} errors={{}} onSubmit={handleSubmit(onSubmit)} hasFormElement={false}>
-        {paymentInfo && isTxDone ? (
-          <StyledVerticalStack gap={4} full>
-            <div className="mx-auto">
-              <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />
-            </div>
-            <p className="text-dfxBlue-800 text-center px-20">
-              {canSendTransaction() && (
-                <>
-                  {translate('screens/sell', 'Your transaction was executed successfully.')}
-                  <br />
-                </>
-              )}
-              {translate(
-                'screens/payment',
-                'We will inform you about the progress of any purchase or sale via E-mail.',
-              )}
-            </p>
-            {sellTxId && (
-              <StyledHorizontalStack gap={2} center>
-                <p className="text-dfxBlue-800">{translate('screens/sell', 'Transaction hash')}:</p>
-                <span className="text-dfxBlue-800 font-bold">{`${sellTxId.substring(0, 5)}...${sellTxId.substring(
-                  sellTxId.length - 5,
-                )}`}</span>
-                <CopyButton onCopy={() => copy(sellTxId)} />
-              </StyledHorizontalStack>
+      {paymentInfo && isTxDone ? (
+        <StyledVerticalStack gap={4} full>
+          <div className="mx-auto">
+            <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />
+          </div>
+          <p className="text-dfxBlue-800 text-center px-20">
+            {canSendTransaction() && (
+              <>
+                {translate('screens/sell', 'Your transaction was executed successfully.')}
+                <br />
+              </>
             )}
+            {translate('screens/payment', 'We will inform you about the progress of any purchase or sale via E-mail.')}
+          </p>
+          {sellTxId && (
+            <StyledHorizontalStack gap={2} center>
+              <p className="text-dfxBlue-800">{translate('screens/sell', 'Transaction hash')}:</p>
+              <span className="text-dfxBlue-800 font-bold">{blankedAddress(sellTxId)}</span>
+              <CopyButton onCopy={() => copy(sellTxId)} />
+            </StyledHorizontalStack>
+          )}
 
-            <StyledButton
-              width={StyledButtonWidth.FULL}
-              label={translate('general/actions', 'Close')}
-              onClick={() => close(paymentInfo, true)}
-              className="my-4"
-              isLoading={isProcessing}
-            />
-          </StyledVerticalStack>
-        ) : (
-          <StyledVerticalStack center gap={8} full className="relative">
-            {availableAssets && (
-              <StyledSearchDropdown<Asset>
-                rootRef={rootRef}
-                name="asset"
-                label={translate('screens/sell', 'Your Wallet')}
-                placeholder={translate('general/actions', 'Select...')}
-                items={availableAssets}
-                labelFunc={(item) => item.name}
-                balanceFunc={(item) => findBalance(item)?.toString() ?? ''}
-                assetIconFunc={(item) => item.name as AssetIconVariant}
-                descriptionFunc={(item) => toString(item.blockchain)}
-                filterFunc={(item: Asset, search?: string | undefined) =>
-                  !search || item.name.toLowerCase().includes(search.toLowerCase())
-                }
-                full
-              />
-            )}
-            {bankAccounts && !isCreatingAccount && (
-              <Controller
-                name="bankAccount"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <>
-                    <div className="w-full">
+          <StyledButton
+            width={StyledButtonWidth.FULL}
+            label={translate('general/actions', 'Close')}
+            onClick={() => close(paymentInfo, true)}
+            className="my-4"
+            isLoading={isProcessing}
+          />
+        </StyledVerticalStack>
+      ) : (
+        <Form
+          control={control}
+          rules={rules}
+          errors={{}}
+          onSubmit={handleSubmit(onSubmit)}
+          translate={translateError}
+          hasFormElement={false}
+        >
+          {availableAssets && currencies && bankAccounts && (
+            <StyledVerticalStack gap={8} full center className="relative">
+              <StyledVerticalStack gap={2} full>
+                <h2 className="text-dfxGray-700">{translate('screens/buy', 'You spend')}</h2>
+                <StyledHorizontalStack gap={1}>
+                  <div className="flex-[3_1_9rem]">
+                    <StyledInput
+                      type="number"
+                      placeholder="0.00"
+                      prefix={selectedAsset && selectedAsset.name}
+                      name="amount"
+                      buttonLabel={availableBalance ? 'MAX' : undefined}
+                      buttonClick={() => availableBalance && setVal('amount', `${availableBalance}`)}
+                      forceError={
+                        (kycError &&
+                          [TransactionError.AMOUNT_TOO_HIGH, TransactionError.BANK_TRANSACTION_MISSING].includes(
+                            kycError,
+                          )) ||
+                        customAmountError != null
+                      }
+                      forceErrorMessage={customAmountError}
+                      full
+                    />
+                  </div>
+
+                  <div className="flex-[1_0_9rem]">
+                    <StyledSearchDropdown<Asset>
+                      rootRef={rootRef}
+                      name="asset"
+                      placeholder={translate('general/actions', 'Select...')}
+                      items={availableAssets}
+                      labelFunc={(item) => item.name}
+                      balanceFunc={findBalanceString}
+                      assetIconFunc={(item) => item.name as AssetIconVariant}
+                      descriptionFunc={(item) => toString(item.blockchain)}
+                      filterFunc={(item: Asset, search?: string | undefined) =>
+                        !search || item.name.toLowerCase().includes(search.toLowerCase())
+                      }
+                      hideBalanceWhenClosed
+                      full
+                    />
+                  </div>
+                </StyledHorizontalStack>
+              </StyledVerticalStack>
+
+              <StyledVerticalStack gap={2} full>
+                <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
+                <StyledHorizontalStack gap={1}>
+                  <div className="flex-[3_1_9rem]">
+                    <StyledTextBox
+                      text={
+                        paymentInfo && !isLoading ? `≈ ${Utils.formatAmountCrypto(paymentInfo.estimatedAmount)}` : ' '
+                      }
+                      loading={!isLoading && isPriceLoading}
+                      full
+                    />
+                  </div>
+                  <div className="flex-[1_0_9rem]">
+                    <StyledDropdown<Fiat>
+                      rootRef={rootRef}
+                      name="currency"
+                      placeholder={translate('general/actions', 'Select...')}
+                      items={currencies}
+                      labelFunc={(item) => item.name}
+                      descriptionFunc={(item) => toDescription(item)}
+                      full
+                    />
+                  </div>
+                </StyledHorizontalStack>
+
+                <Controller
+                  name="bankAccount"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <>
                       <StyledModalButton
                         onClick={() => setBankAccountSelection(true)}
                         onBlur={onBlur}
-                        label={translate('screens/sell', 'Cash out to my bank account')}
                         placeholder={translate('screens/sell', 'Add or select your IBAN')}
                         value={Utils.formatIban(value?.iban) ?? undefined}
                         description={value?.label}
                       />
-                    </div>
 
-                    {bankAccountSelection && (
-                      <>
-                        <div className="absolute h-full w-full z-1 bg-white">
-                          {bankAccounts.length && (
-                            <>
-                              <StyledVerticalStack gap={4}>
-                                {bankAccounts.map((account, i) => (
-                                  <button
-                                    key={i}
-                                    className="text-start"
-                                    onClick={() => {
-                                      onChange(account);
-                                      setBankAccountSelection(false);
-                                    }}
-                                  >
-                                    <StyledBankAccountListItem bankAccount={account} />
-                                  </button>
-                                ))}
-                              </StyledVerticalStack>
+                      {bankAccountSelection && (
+                        <>
+                          <div className="absolute h-full w-full z-1 top-0 bg-white">
+                            {bankAccounts.length && (
+                              <>
+                                <StyledVerticalStack gap={4}>
+                                  {bankAccounts.map((account, i) => (
+                                    <button
+                                      key={i}
+                                      className="text-start"
+                                      onClick={() => {
+                                        onChange(account);
+                                        setBankAccountSelection(false);
+                                      }}
+                                    >
+                                      <StyledBankAccountListItem bankAccount={account} />
+                                    </button>
+                                  ))}
+                                </StyledVerticalStack>
 
-                              <div className={`h-[1px] bg-dfxGray-400 w-full my-6`} />
-                            </>
-                          )}
+                                <div className={`h-[1px] bg-dfxGray-400 w-full my-6`} />
+                              </>
+                            )}
 
-                          <AddBankAccount
-                            onSubmit={(account) => {
-                              onChange(account);
-                              setBankAccountSelection(false);
-                            }}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </>
-                )}
-              />
-            )}
-            {currencies && (
-              <StyledDropdown<Fiat>
-                rootRef={rootRef}
-                name="currency"
-                label={translate('screens/sell', 'Your Currency')}
-                placeholder={translate('screens/sell', 'e.g. EUR')}
-                items={currencies}
-                labelFunc={(item) => item.name}
-                descriptionFunc={(item) => toDescription(item)}
-                full
-              />
-            )}
-            {selectedAsset && (
-              <div className="text-start w-full">
-                <StyledInput
-                  type={'number'}
-                  label={translate('screens/sell', 'Enter your desired payout amount')}
-                  placeholder="0.00"
-                  prefix={selectedAsset.name}
-                  buttonLabel={availableBalance ? 'MAX' : undefined}
-                  buttonClick={() => availableBalance && setVal('amount', `${availableBalance}`)}
-                  name="amount"
-                  forceError={
-                    (kycError &&
-                      [TransactionError.AMOUNT_TOO_HIGH, TransactionError.BANK_TRANSACTION_MISSING].includes(
-                        kycError,
-                      )) ||
-                    customAmountError != null
-                  }
-                  forceErrorMessage={customAmountError}
-                  loading={isLoading || isPriceLoading}
-                />
-                {!isLoading && paymentInfo && paymentInfo.estimatedAmount > 0 && (
-                  <>
-                    <p className="text-dfxBlue-800 text-start w-full text-xs pt-2 pl-7">
-                      {`≈ ${paymentInfo.estimatedAmount} ${validatedData?.currency.name ?? ''}`}
-                    </p>
-                  </>
-                )}
-              </div>
-            )}
-
-            {!isLoading && paymentInfo && (
-              <div className="text-start w-full">
-                <ExchangeRate
-                  exchangeRate={1 / paymentInfo.exchangeRate}
-                  rate={1 / paymentInfo.rate}
-                  fees={paymentInfo.feesTarget}
-                  feeCurrency={paymentInfo.currency}
-                  from={paymentInfo.currency}
-                  to={paymentInfo.asset}
-                />
-              </div>
-            )}
-
-            {kycError && !customAmountError && <KycHint type={TransactionType.SELL} error={kycError} />}
-
-            {!isLoading && errorMessage && (
-              <StyledVerticalStack center className="text-center">
-                <ErrorHint message={errorMessage} />
-
-                <StyledButton
-                  width={StyledButtonWidth.MIN}
-                  label={translate('general/actions', 'Retry')}
-                  onClick={() => setVal('amount', enteredAmount)} // re-trigger
-                  className="my-4"
-                  color={StyledButtonColor.STURDY_WHITE}
+                            <AddBankAccount
+                              onSubmit={(account) => {
+                                onChange(account);
+                                setBankAccountSelection(false);
+                              }}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
                 />
               </StyledVerticalStack>
-            )}
 
-            {!isLoading && paymentInfo && !kycError && !errorMessage && (
-              <>
-                <StyledVerticalStack gap={2} full>
-                  <h2 className="text-dfxBlue-800 text-center">
-                    {translate('screens/payment', 'Payment Information')}
-                  </h2>
-                  <div className="text-left">
-                    <StyledInfoText iconColor={IconColor.BLUE}>
-                      {translate(
-                        'screens/sell',
-                        'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.',
-                        { currency: paymentInfo.currency.name, iban: Utils.formatIban(selectedBankAccount.iban) ?? '' },
-                      )}
-                    </StyledInfoText>
-                  </div>
+              {isLoading && (
+                <StyledVerticalStack center>
+                  <StyledLoadingSpinner size={SpinnerSize.LG} />
                 </StyledVerticalStack>
+              )}
 
-                <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                  <StyledDataTableRow label={translate('screens/sell', 'Address')}>
-                    <div>
-                      <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+              {!isLoading && kycError && !customAmountError && <KycHint type={TransactionType.SELL} error={kycError} />}
+
+              {!isLoading && errorMessage && (
+                <StyledVerticalStack center className="text-center">
+                  <ErrorHint message={errorMessage} />
+
+                  <StyledButton
+                    width={StyledButtonWidth.MIN}
+                    label={translate('general/actions', 'Retry')}
+                    onClick={() => setVal('amount', enteredAmount)} // re-trigger
+                    className="my-4"
+                    color={StyledButtonColor.STURDY_WHITE}
+                  />
+                </StyledVerticalStack>
+              )}
+
+              {!isLoading && paymentInfo && !kycError && !errorMessage && (
+                <>
+                  <ExchangeRate
+                    exchangeRate={1 / paymentInfo.exchangeRate}
+                    rate={1 / paymentInfo.rate}
+                    fees={paymentInfo.feesTarget}
+                    feeCurrency={paymentInfo.currency}
+                    from={paymentInfo.currency}
+                    to={paymentInfo.asset}
+                  />
+
+                  <StyledVerticalStack gap={2} full>
+                    <h2 className="text-dfxBlue-800 text-center">
+                      {translate('screens/payment', 'Payment Information')}
+                    </h2>
+                    <div className="text-left">
+                      <StyledInfoText iconColor={IconColor.BLUE}>
+                        {translate(
+                          'screens/sell',
+                          'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.',
+                          {
+                            currency: paymentInfo.currency.name,
+                            iban: Utils.formatIban(selectedBankAccount.iban) ?? '',
+                          },
+                        )}
+                      </StyledInfoText>
                     </div>
-                    <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
-                  </StyledDataTableRow>
-                </StyledDataTable>
 
-                {paymentInfo.paymentRequest && !canSendTransaction() && (
-                  <StyledVerticalStack full center>
-                    <p className="font-semibold text-sm text-dfxBlue-800">
-                      {translate('screens/sell', 'Pay with your wallet')}
-                    </p>
-                    <QrCopy data={paymentInfo.paymentRequest} />
+                    <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                      <StyledDataTableRow label={translate('screens/sell', 'Address')}>
+                        <div>
+                          <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+                        </div>
+                        <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
+                      </StyledDataTableRow>
+                    </StyledDataTable>
                   </StyledVerticalStack>
-                )}
-                <div className="text-left">
+
+                  {paymentInfo.paymentRequest && !canSendTransaction() && (
+                    <StyledVerticalStack full center>
+                      <p className="font-semibold text-sm text-dfxBlue-800">
+                        {translate('screens/sell', 'Pay with your wallet')}
+                      </p>
+                      <QrCopy data={paymentInfo.paymentRequest} />
+                    </StyledVerticalStack>
+                  )}
+
                   <SanctionHint />
-                  <div className="pt-4 w-full leading-none">
+
+                  <div className="w-full leading-none">
                     <StyledLink
                       label={translate(
                         'screens/payment',
@@ -563,26 +579,26 @@ export default function SellScreen(): JSX.Element {
                       small
                       dark
                     />
+                    <StyledButton
+                      width={StyledButtonWidth.FULL}
+                      label={translate(
+                        'screens/sell',
+                        canSendTransaction()
+                          ? 'Complete transaction in your wallet'
+                          : 'Click here once you have issued the transaction',
+                      )}
+                      onClick={() => handleNext(paymentInfo)}
+                      caps={false}
+                      className="my-4"
+                      isLoading={isProcessing}
+                    />
                   </div>
-                  <StyledButton
-                    width={StyledButtonWidth.FULL}
-                    label={translate(
-                      'screens/sell',
-                      canSendTransaction()
-                        ? 'Complete transaction in your wallet'
-                        : 'Click here once you have issued the transaction',
-                    )}
-                    onClick={() => handleNext(paymentInfo)}
-                    caps={false}
-                    className="my-4"
-                    isLoading={isProcessing}
-                  />
-                </div>
-              </>
-            )}
-          </StyledVerticalStack>
-        )}
-      </Form>
+                </>
+              )}
+            </StyledVerticalStack>
+          )}
+        </Form>
+      )}
     </Layout>
   );
 }

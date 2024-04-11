@@ -44,7 +44,6 @@ import { CloseType, useAppHandlingContext } from '../contexts/app-handling.conte
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useKycLevelGuard, useSessionGuard } from '../hooks/guard.hook';
-import { useKycHelper } from '../hooks/kyc-helper.hook';
 
 export function SellInfoScreen(): JSX.Element {
   useSessionGuard();
@@ -65,7 +64,6 @@ export function SellInfoScreen(): JSX.Element {
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
-  const { isComplete } = useKycHelper();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
   const { closeServices } = useAppHandlingContext();
@@ -145,12 +143,6 @@ export function SellInfoScreen(): JSX.Element {
         return undefined;
 
       case TransactionError.AMOUNT_TOO_HIGH:
-        if (!isComplete) {
-          setKycError(sell.error);
-          return undefined;
-        }
-        break;
-
       case TransactionError.KYC_REQUIRED:
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(sell.error);
