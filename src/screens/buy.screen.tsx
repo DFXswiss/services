@@ -260,11 +260,11 @@ export function BuyScreen(): JSX.Element {
     receiveFor(data)
       .then((buy) => {
         if (isRunning) {
-          const info = validateBuy(buy);
-          setPaymentInfo(info);
+          validateBuy(buy);
+          setPaymentInfo(buy);
 
           // load exact price
-          if (info && !info.exactPrice) {
+          if (buy && !buy.exactPrice) {
             setIsPriceLoading(true);
             receiveFor({ ...data, exactPrice: true })
               .then((info) => {
@@ -290,7 +290,7 @@ export function BuyScreen(): JSX.Element {
     };
   }, [useDebounce(validatedData, 500)]);
 
-  function validateBuy(buy: Buy): Buy | undefined {
+  function validateBuy(buy: Buy): void {
     setCustomAmountError(undefined);
     setKycError(undefined);
 
@@ -302,17 +302,15 @@ export function BuyScreen(): JSX.Element {
             currency: buy.currency.name,
           }),
         );
-        return undefined;
+        return;
 
       case TransactionError.AMOUNT_TOO_HIGH:
       case TransactionError.KYC_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(buy.error);
-        return undefined;
+        return;
     }
-
-    return buy;
   }
 
   function validateData({ amount: amountStr, currency, asset, paymentMethod }: Partial<FormData> = {}):
@@ -482,100 +480,102 @@ export function BuyScreen(): JSX.Element {
                   />
                 </StyledVerticalStack>
 
-                {isLoading && (
+                {isLoading ? (
                   <StyledVerticalStack center>
                     <StyledLoadingSpinner size={SpinnerSize.LG} />
                   </StyledVerticalStack>
-                )}
+                ) : (
+                  <>
+                    {kycError && <KycHint type={TransactionType.BUY} error={kycError} />}
 
-                {!isLoading && kycError && <KycHint type={TransactionType.BUY} error={kycError} />}
+                    {errorMessage && (
+                      <StyledVerticalStack center className="text-center">
+                        <ErrorHint message={errorMessage} />
 
-                {!isLoading && errorMessage && (
-                  <StyledVerticalStack center className="text-center">
-                    <ErrorHint message={errorMessage} />
+                        <StyledButton
+                          width={StyledButtonWidth.MIN}
+                          label={translate('general/actions', 'Retry')}
+                          onClick={updateData}
+                          className="my-4"
+                          color={StyledButtonColor.STURDY_WHITE}
+                        />
+                      </StyledVerticalStack>
+                    )}
 
-                    <StyledButton
-                      width={StyledButtonWidth.MIN}
-                      label={translate('general/actions', 'Retry')}
-                      onClick={updateData}
-                      className="my-4"
-                      color={StyledButtonColor.STURDY_WHITE}
-                    />
-                  </StyledVerticalStack>
-                )}
-
-                {!isLoading &&
-                  paymentInfo &&
-                  !kycError &&
-                  !errorMessage &&
-                  (selectedAsset?.category === AssetCategory.PRIVATE && !flags?.includes('private') ? (
-                    <PrivateAssetHint asset={selectedAsset} />
-                  ) : (
-                    <>
-                      <ExchangeRate
-                        exchangeRate={paymentInfo.exchangeRate}
-                        rate={paymentInfo.rate}
-                        fees={paymentInfo.fees}
-                        feeCurrency={paymentInfo.currency}
-                        from={paymentInfo.currency}
-                        to={paymentInfo.asset}
-                      />
-
-                      {selectedPaymentMethod !== FiatPaymentMethod.CARD ? (
-                        <>
-                          <div>
-                            <PaymentInformationContent info={paymentInfo} />
-                          </div>
-                          <SanctionHint />
-                          <div className="w-full leading-none">
-                            <StyledLink
-                              label={translate(
-                                'screens/payment',
-                                'Please note that by using this service you automatically accept our terms and conditions.',
-                              )}
-                              url={process.env.REACT_APP_TNC_URL}
-                              small
-                              dark
-                            />
-                            <StyledButton
-                              width={StyledButtonWidth.FULL}
-                              label={translate('screens/buy', 'Click here once you have issued the transfer')}
-                              onClick={() => {
-                                setShowsCompletion(true);
-                                scrollRef.current?.scrollTo(0, 0);
-                              }}
-                              caps={false}
-                              className="my-4"
-                            />
-                          </div>
-                        </>
+                    {paymentInfo &&
+                      !kycError &&
+                      !errorMessage &&
+                      !customAmountError &&
+                      (selectedAsset?.category === AssetCategory.PRIVATE && !flags?.includes('private') ? (
+                        <PrivateAssetHint asset={selectedAsset} />
                       ) : (
-                        paymentInfo.paymentLink && (
-                          <>
-                            <SanctionHint />
-                            <div className="leading-none">
-                              <StyledLink
-                                label={translate(
-                                  'screens/payment',
-                                  'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
-                                )}
-                                url={process.env.REACT_APP_TNC_URL}
-                                small
-                                dark
-                              />
-                              <StyledButton
-                                width={StyledButtonWidth.FULL}
-                                label={translate('general/actions', 'Next')}
-                                onClick={() => onCardBuy(paymentInfo)}
-                                isLoading={isContinue}
-                                className="my-4"
-                              />
-                            </div>
-                          </>
-                        )
-                      )}
-                    </>
-                  ))}
+                        <>
+                          <ExchangeRate
+                            exchangeRate={paymentInfo.exchangeRate}
+                            rate={paymentInfo.rate}
+                            fees={paymentInfo.fees}
+                            feeCurrency={paymentInfo.currency}
+                            from={paymentInfo.currency}
+                            to={paymentInfo.asset}
+                          />
+
+                          {selectedPaymentMethod !== FiatPaymentMethod.CARD ? (
+                            <>
+                              <div>
+                                <PaymentInformationContent info={paymentInfo} />
+                              </div>
+                              <SanctionHint />
+                              <div className="w-full leading-none">
+                                <StyledLink
+                                  label={translate(
+                                    'screens/payment',
+                                    'Please note that by using this service you automatically accept our terms and conditions.',
+                                  )}
+                                  url={process.env.REACT_APP_TNC_URL}
+                                  small
+                                  dark
+                                />
+                                <StyledButton
+                                  width={StyledButtonWidth.FULL}
+                                  label={translate('screens/buy', 'Click here once you have issued the transfer')}
+                                  onClick={() => {
+                                    setShowsCompletion(true);
+                                    scrollRef.current?.scrollTo(0, 0);
+                                  }}
+                                  caps={false}
+                                  className="my-4"
+                                />
+                              </div>
+                            </>
+                          ) : (
+                            paymentInfo.paymentLink && (
+                              <>
+                                <SanctionHint />
+                                <div className="leading-none">
+                                  <StyledLink
+                                    label={translate(
+                                      'screens/payment',
+                                      'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
+                                    )}
+                                    url={process.env.REACT_APP_TNC_URL}
+                                    small
+                                    dark
+                                  />
+                                  <StyledButton
+                                    width={StyledButtonWidth.FULL}
+                                    label={translate('general/actions', 'Next')}
+                                    onClick={() => onCardBuy(paymentInfo)}
+                                    isLoading={isContinue}
+                                    className="my-4"
+                                  />
+                                </div>
+                              </>
+                            )
+                          )}
+                        </>
+                      ))}
+                  </>
+                )}
               </>
             )}
           </StyledVerticalStack>
