@@ -21,7 +21,7 @@ export function ExchangeRate({ exchangeRate, rate, fees, feeCurrency, from, to }
   const baseRate = `${Utils.formatAmount(exchangeRate)} ${from.name}/${to.name}`;
   const minFee = `, min. ${fees.min}${symbol}`;
   const dfxFee = `${fees.dfx}${symbol} (${(fees.rate * 100).toFixed(2)}%${fees.min ? minFee : ''})`;
-  const networkFee = fees.network > 0 && `${fees.network}${symbol}`;
+  const networkFee = `${fees.network}${symbol}`;
 
   const l1Replacement =
     'blockchain' in to &&
@@ -43,23 +43,19 @@ export function ExchangeRate({ exchangeRate, rate, fees, feeCurrency, from, to }
           <div>{baseRate}</div>
           <div className="text-dfxGray-800">{translate('screens/payment', 'DFX fee')}</div>
           <div>{dfxFee}</div>
-          {networkFee && (
-            <>
-              <div className="text-dfxGray-800">{translate('screens/payment', 'Network fee')}</div>
-              <StyledVerticalStack>
-                <div>{networkFee}</div>
-                {l1Replacement && (
-                  <div className="mt-1 text-xs text-dfxGray-700 leading-tight">
-                    {translate(
-                      'screens/buy',
-                      'Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees',
-                      { chain: l1Replacement },
-                    )}
-                  </div>
+          <div className="text-dfxGray-800">{translate('screens/payment', 'Network fee')}</div>
+          <StyledVerticalStack>
+            <div>{networkFee}</div>
+            {l1Replacement && (
+              <div className="mt-1 text-xs text-dfxGray-700 leading-tight">
+                {translate(
+                  'screens/buy',
+                  'Use {{chain}} as a Layer 2 solution to benefit from lower transaction fees',
+                  { chain: l1Replacement },
                 )}
-              </StyledVerticalStack>
-            </>
-          )}
+              </div>
+            )}
+          </StyledVerticalStack>
         </div>
         <StyledInfoText iconColor={IconColor.GRAY} discreet>
           {translate(
