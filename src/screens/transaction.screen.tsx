@@ -39,7 +39,6 @@ import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, PaymentStateLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -60,7 +59,6 @@ export function TransactionScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { id } = useParams();
   const { toString } = useBlockchain();
-  const { flags } = useAppParams();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const txRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -165,14 +163,12 @@ export function TransactionScreen(): JSX.Element {
               isLoading={isCsvLoading}
               onClick={exportCsv}
             />
-            {flags?.includes('iban') && (
-              <StyledButton
-                color={StyledButtonColor.BLUE}
-                width={StyledButtonWidth.FULL}
-                label={translate('screens/payment', 'My transaction is missing')}
-                onClick={() => navigate('/bank-accounts')}
-              />
-            )}
+            <StyledButton
+              color={StyledButtonColor.BLUE}
+              width={StyledButtonWidth.FULL}
+              label={translate('screens/payment', 'My transaction is missing')}
+              onClick={() => navigate('/bank-accounts')}
+            />
             <StyledVerticalStack full center>
               <h2 className="text-dfxGray-700 mb-2">{translate('screens/payment', 'Your Transactions')}</h2>
               {transactionList ? (
