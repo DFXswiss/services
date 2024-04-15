@@ -204,11 +204,11 @@ export default function SellScreen(): JSX.Element {
     receiveFor(data)
       .then((sell) => {
         if (isRunning) {
-          const info = validateSell(sell);
-          setPaymentInfo(info);
+          validateSell(sell);
+          setPaymentInfo(sell);
 
           // load exact price
-          if (info && !info.exactPrice) {
+          if (sell && !sell.exactPrice) {
             setIsPriceLoading(true);
             receiveFor({ ...data, exactPrice: true })
               .then((info) => {
@@ -254,7 +254,7 @@ export default function SellScreen(): JSX.Element {
     }
   }
 
-  function validateSell(sell: Sell): Sell | undefined {
+  function validateSell(sell: Sell): void {
     switch (sell.error) {
       case TransactionError.AMOUNT_TOO_LOW:
         setCustomAmountError(
@@ -263,19 +263,27 @@ export default function SellScreen(): JSX.Element {
             currency: sell.asset.name,
           }),
         );
-        return undefined;
+        return;
 
       case TransactionError.AMOUNT_TOO_HIGH:
+        setCustomAmountError(
+          translate('screens/payment', 'Entered amount is above maximum deposit of {{amount}} {{currency}}', {
+            amount: Utils.formatAmountCrypto(sell.maxVolume),
+            currency: sell.asset.name,
+          }),
+        );
+        return;
+
+      case TransactionError.LIMIT_EXCEEDED:
       case TransactionError.KYC_REQUIRED:
+      case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(sell.error);
-        return undefined;
+        return;
     }
 
     setCustomAmountError(undefined);
     setKycError(undefined);
-
-    return sell;
   }
 
   function validateData(data?: DeepPartial<FormData>): FormData | undefined {
@@ -392,10 +400,7 @@ export default function SellScreen(): JSX.Element {
                       buttonLabel={availableBalance ? 'MAX' : undefined}
                       buttonClick={() => availableBalance && setVal('amount', `${availableBalance}`)}
                       forceError={
-                        (kycError &&
-                          [TransactionError.AMOUNT_TOO_HIGH, TransactionError.BANK_TRANSACTION_MISSING].includes(
-                            kycError,
-                          )) ||
+                        (kycError && kycError === TransactionError.BANK_TRANSACTION_MISSING) ||
                         customAmountError != null
                       }
                       forceErrorMessage={customAmountError}
@@ -498,101 +503,103 @@ export default function SellScreen(): JSX.Element {
                 />
               </StyledVerticalStack>
 
-              {isLoading && (
+              {isLoading ? (
                 <StyledVerticalStack center>
                   <StyledLoadingSpinner size={SpinnerSize.LG} />
                 </StyledVerticalStack>
-              )}
-
-              {!isLoading && kycError && !customAmountError && <KycHint type={TransactionType.SELL} error={kycError} />}
-
-              {!isLoading && errorMessage && (
-                <StyledVerticalStack center className="text-center">
-                  <ErrorHint message={errorMessage} />
-
-                  <StyledButton
-                    width={StyledButtonWidth.MIN}
-                    label={translate('general/actions', 'Retry')}
-                    onClick={() => setVal('amount', enteredAmount)} // re-trigger
-                    className="my-4"
-                    color={StyledButtonColor.STURDY_WHITE}
-                  />
-                </StyledVerticalStack>
-              )}
-
-              {!isLoading && paymentInfo && !kycError && !errorMessage && (
+              ) : (
                 <>
-                  <ExchangeRate
-                    exchangeRate={1 / paymentInfo.exchangeRate}
-                    rate={1 / paymentInfo.rate}
-                    fees={paymentInfo.feesTarget}
-                    feeCurrency={paymentInfo.currency}
-                    from={paymentInfo.currency}
-                    to={paymentInfo.asset}
-                  />
+                  {kycError && !customAmountError && <KycHint type={TransactionType.SELL} error={kycError} />}
 
-                  <StyledVerticalStack gap={2} full>
-                    <h2 className="text-dfxBlue-800 text-center">
-                      {translate('screens/payment', 'Payment Information')}
-                    </h2>
-                    <div className="text-left">
-                      <StyledInfoText iconColor={IconColor.BLUE}>
-                        {translate(
-                          'screens/sell',
-                          'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.',
-                          {
-                            currency: paymentInfo.currency.name,
-                            iban: Utils.formatIban(selectedBankAccount.iban) ?? '',
-                          },
-                        )}
-                      </StyledInfoText>
-                    </div>
+                  {errorMessage && (
+                    <StyledVerticalStack center className="text-center">
+                      <ErrorHint message={errorMessage} />
 
-                    <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                      <StyledDataTableRow label={translate('screens/sell', 'Address')}>
-                        <div>
-                          <p>{blankedAddress(paymentInfo.depositAddress)}</p>
-                        </div>
-                        <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
-                      </StyledDataTableRow>
-                    </StyledDataTable>
-                  </StyledVerticalStack>
-
-                  {paymentInfo.paymentRequest && !canSendTransaction() && (
-                    <StyledVerticalStack full center>
-                      <p className="font-semibold text-sm text-dfxBlue-800">
-                        {translate('screens/sell', 'Pay with your wallet')}
-                      </p>
-                      <QrCopy data={paymentInfo.paymentRequest} />
+                      <StyledButton
+                        width={StyledButtonWidth.MIN}
+                        label={translate('general/actions', 'Retry')}
+                        onClick={() => setVal('amount', enteredAmount)} // re-trigger
+                        className="my-4"
+                        color={StyledButtonColor.STURDY_WHITE}
+                      />
                     </StyledVerticalStack>
                   )}
 
-                  <SanctionHint />
+                  {paymentInfo && !kycError && !errorMessage && !customAmountError && (
+                    <>
+                      <ExchangeRate
+                        exchangeRate={1 / paymentInfo.exchangeRate}
+                        rate={1 / paymentInfo.rate}
+                        fees={paymentInfo.feesTarget}
+                        feeCurrency={paymentInfo.currency}
+                        from={paymentInfo.currency}
+                        to={paymentInfo.asset}
+                      />
 
-                  <div className="w-full leading-none">
-                    <StyledLink
-                      label={translate(
-                        'screens/payment',
-                        'Please note that by using this service you automatically accept our terms and conditions.',
+                      <StyledVerticalStack gap={2} full>
+                        <h2 className="text-dfxBlue-800 text-center">
+                          {translate('screens/payment', 'Payment Information')}
+                        </h2>
+                        <div className="text-left">
+                          <StyledInfoText iconColor={IconColor.BLUE}>
+                            {translate(
+                              'screens/sell',
+                              'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.',
+                              {
+                                currency: paymentInfo.currency.name,
+                                iban: Utils.formatIban(selectedBankAccount.iban) ?? '',
+                              },
+                            )}
+                          </StyledInfoText>
+                        </div>
+
+                        <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                          <StyledDataTableRow label={translate('screens/sell', 'Address')}>
+                            <div>
+                              <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+                            </div>
+                            <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
+                          </StyledDataTableRow>
+                        </StyledDataTable>
+                      </StyledVerticalStack>
+
+                      {paymentInfo.paymentRequest && !canSendTransaction() && (
+                        <StyledVerticalStack full center>
+                          <p className="font-semibold text-sm text-dfxBlue-800">
+                            {translate('screens/sell', 'Pay with your wallet')}
+                          </p>
+                          <QrCopy data={paymentInfo.paymentRequest} />
+                        </StyledVerticalStack>
                       )}
-                      url={process.env.REACT_APP_TNC_URL}
-                      small
-                      dark
-                    />
-                    <StyledButton
-                      width={StyledButtonWidth.FULL}
-                      label={translate(
-                        'screens/sell',
-                        canSendTransaction()
-                          ? 'Complete transaction in your wallet'
-                          : 'Click here once you have issued the transaction',
-                      )}
-                      onClick={() => handleNext(paymentInfo)}
-                      caps={false}
-                      className="my-4"
-                      isLoading={isProcessing}
-                    />
-                  </div>
+
+                      <SanctionHint />
+
+                      <div className="w-full leading-none">
+                        <StyledLink
+                          label={translate(
+                            'screens/payment',
+                            'Please note that by using this service you automatically accept our terms and conditions.',
+                          )}
+                          url={process.env.REACT_APP_TNC_URL}
+                          small
+                          dark
+                        />
+                        <StyledButton
+                          width={StyledButtonWidth.FULL}
+                          label={translate(
+                            'screens/sell',
+                            canSendTransaction()
+                              ? 'Complete transaction in your wallet'
+                              : 'Click here once you have issued the transaction',
+                          )}
+                          onClick={() => handleNext(paymentInfo)}
+                          caps={false}
+                          className="my-4"
+                          isLoading={isProcessing}
+                        />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </StyledVerticalStack>

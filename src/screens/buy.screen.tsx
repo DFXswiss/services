@@ -57,12 +57,18 @@ import { useSessionGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress, isDefined } from '../util/utils';
 
+interface Address {
+  address: string;
+  label: string;
+  chain?: Blockchain;
+}
+
 interface FormData {
   amount: string;
   currency: Fiat;
   paymentMethod: FiatPaymentMethod;
   asset: Asset;
-  address: { address: string; label: string; type: string };
+  address: Address;
 }
 
 const EmbeddedWallet = 'CakeWallet';
@@ -77,12 +83,22 @@ export function BuyScreen(): JSX.Element {
   const { toSymbol } = useFiat();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
-  const { assets, assetIn, assetOut, amountIn, blockchain, paymentMethod, externalTransactionId, wallet, flags } =
-    useAppParams();
+  const {
+    assets,
+    assetIn,
+    assetOut,
+    amountIn,
+    blockchain,
+    paymentMethod,
+    externalTransactionId,
+    wallet,
+    flags,
+    setParams,
+  } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
-  const { blockchain: walletBlockchain } = useWalletContext();
+  const { blockchain: walletBlockchain, switchBlockchain } = useWalletContext();
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const { toString } = useBlockchain();
@@ -117,6 +133,22 @@ export function BuyScreen(): JSX.Element {
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
     setValue(field, value, { shouldValidate: true });
   }
+
+  const addressItems: Address[] = [
+    {
+      address: translate('screens/buy', 'Switch address'),
+      label: translate('screens/buy', 'Login with a different address'),
+    },
+  ];
+  session &&
+    availableBlockchains &&
+    addressItems.unshift(
+      ...availableBlockchains.map((b) => ({
+        address: blankedAddress(session.address),
+        label: toString(b),
+        chain: b,
+      })),
+    );
 
   const availablePaymentMethods = [FiatPaymentMethod.BANK];
 
@@ -178,9 +210,16 @@ export function BuyScreen(): JSX.Element {
   useEffect(() => setAddress(), [session?.address, translate]);
 
   useEffect(() => {
-    if (selectedAddress && selectedAddress.type === 'Logout') {
-      setShowsSwitchScreen(true);
-      setAddress();
+    if (selectedAddress) {
+      if (selectedAddress.chain) {
+        if (blockchain !== selectedAddress.chain) {
+          setParams({ blockchain: selectedAddress.chain });
+          switchBlockchain(selectedAddress.chain);
+        }
+      } else {
+        setShowsSwitchScreen(true);
+        setAddress();
+      }
     }
   }, [selectedAddress]);
 
@@ -221,11 +260,11 @@ export function BuyScreen(): JSX.Element {
     receiveFor(data)
       .then((buy) => {
         if (isRunning) {
-          const info = validateBuy(buy);
-          setPaymentInfo(info);
+          validateBuy(buy);
+          setPaymentInfo(buy);
 
           // load exact price
-          if (info && !info.exactPrice) {
+          if (buy && !buy.exactPrice) {
             setIsPriceLoading(true);
             receiveFor({ ...data, exactPrice: true })
               .then((info) => {
@@ -251,7 +290,7 @@ export function BuyScreen(): JSX.Element {
     };
   }, [useDebounce(validatedData, 500)]);
 
-  function validateBuy(buy: Buy): Buy | undefined {
+  function validateBuy(buy: Buy): void {
     setCustomAmountError(undefined);
     setKycError(undefined);
 
@@ -263,17 +302,24 @@ export function BuyScreen(): JSX.Element {
             currency: buy.currency.name,
           }),
         );
-        return undefined;
+        return;
 
       case TransactionError.AMOUNT_TOO_HIGH:
+        setCustomAmountError(
+          translate('screens/payment', 'Entered amount is above maximum deposit of {{amount}} {{currency}}', {
+            amount: Utils.formatAmount(buy.maxVolume),
+            currency: buy.currency.name,
+          }),
+        );
+        return;
+
+      case TransactionError.LIMIT_EXCEEDED:
       case TransactionError.KYC_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(buy.error);
-        return undefined;
+        return;
     }
-
-    return buy;
   }
 
   function validateData({ amount: amountStr, currency, asset, paymentMethod }: Partial<FormData> = {}):
@@ -291,12 +337,10 @@ export function BuyScreen(): JSX.Element {
   }
 
   function setAddress() {
-    if (session?.address)
-      setVal('address', {
-        address: blankedAddress(session.address),
-        label: translate('screens/buy', 'Target address'),
-        type: 'Address',
-      });
+    if (session?.address) {
+      const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
+      setVal('address', address);
+    }
   }
 
   function onAddressSwitch() {
@@ -377,7 +421,7 @@ export function BuyScreen(): JSX.Element {
                         placeholder="0.00"
                         prefix={selectedCurrency && toSymbol(selectedCurrency)}
                         name="amount"
-                        forceError={kycError === TransactionError.AMOUNT_TOO_HIGH || customAmountError != null}
+                        forceError={customAmountError != null}
                         forceErrorMessage={customAmountError}
                         full
                       />
@@ -425,7 +469,7 @@ export function BuyScreen(): JSX.Element {
                         items={availableAssets}
                         labelFunc={(item) => item.name}
                         assetIconFunc={(item) => item.name as AssetIconVariant}
-                        descriptionFunc={(item) => toString(item.blockchain)}
+                        descriptionFunc={(item) => item.description}
                         filterFunc={(item: Asset, search?: string | undefined) =>
                           !search || item.name.toLowerCase().includes(search.toLowerCase())
                         }
@@ -433,16 +477,11 @@ export function BuyScreen(): JSX.Element {
                       />
                     </div>
                   </StyledHorizontalStack>
-                  <StyledDropdown<{ address: string; label: string; type: string }>
+
+                  <StyledDropdown<Address>
                     rootRef={rootRef}
                     name="address"
-                    items={[
-                      {
-                        address: translate('screens/buy', 'Switch address'),
-                        label: translate('screens/buy', 'Login with a different address'),
-                        type: 'Logout',
-                      },
-                    ]}
+                    items={addressItems}
                     labelFunc={(item) => item.address}
                     descriptionFunc={(item) => item.label}
                     full
@@ -450,100 +489,102 @@ export function BuyScreen(): JSX.Element {
                   />
                 </StyledVerticalStack>
 
-                {isLoading && (
+                {isLoading ? (
                   <StyledVerticalStack center>
                     <StyledLoadingSpinner size={SpinnerSize.LG} />
                   </StyledVerticalStack>
-                )}
+                ) : (
+                  <>
+                    {kycError && <KycHint type={TransactionType.BUY} error={kycError} />}
 
-                {!isLoading && kycError && <KycHint type={TransactionType.BUY} error={kycError} />}
+                    {errorMessage && (
+                      <StyledVerticalStack center className="text-center">
+                        <ErrorHint message={errorMessage} />
 
-                {!isLoading && errorMessage && (
-                  <StyledVerticalStack center className="text-center">
-                    <ErrorHint message={errorMessage} />
+                        <StyledButton
+                          width={StyledButtonWidth.MIN}
+                          label={translate('general/actions', 'Retry')}
+                          onClick={updateData}
+                          className="my-4"
+                          color={StyledButtonColor.STURDY_WHITE}
+                        />
+                      </StyledVerticalStack>
+                    )}
 
-                    <StyledButton
-                      width={StyledButtonWidth.MIN}
-                      label={translate('general/actions', 'Retry')}
-                      onClick={updateData}
-                      className="my-4"
-                      color={StyledButtonColor.STURDY_WHITE}
-                    />
-                  </StyledVerticalStack>
-                )}
-
-                {!isLoading &&
-                  paymentInfo &&
-                  !kycError &&
-                  !errorMessage &&
-                  (selectedAsset.category === AssetCategory.PRIVATE && !flags?.includes('private') ? (
-                    <PrivateAssetHint asset={selectedAsset} />
-                  ) : (
-                    <>
-                      <ExchangeRate
-                        exchangeRate={paymentInfo.exchangeRate}
-                        rate={paymentInfo.rate}
-                        fees={paymentInfo.fees}
-                        feeCurrency={paymentInfo.currency}
-                        from={paymentInfo.currency}
-                        to={paymentInfo.asset}
-                      />
-
-                      {selectedPaymentMethod !== FiatPaymentMethod.CARD ? (
-                        <>
-                          <div>
-                            <PaymentInformationContent info={paymentInfo} />
-                          </div>
-                          <SanctionHint />
-                          <div className="w-full leading-none">
-                            <StyledLink
-                              label={translate(
-                                'screens/payment',
-                                'Please note that by using this service you automatically accept our terms and conditions.',
-                              )}
-                              url={process.env.REACT_APP_TNC_URL}
-                              small
-                              dark
-                            />
-                            <StyledButton
-                              width={StyledButtonWidth.FULL}
-                              label={translate('screens/buy', 'Click here once you have issued the transfer')}
-                              onClick={() => {
-                                setShowsCompletion(true);
-                                scrollRef.current?.scrollTo(0, 0);
-                              }}
-                              caps={false}
-                              className="my-4"
-                            />
-                          </div>
-                        </>
+                    {paymentInfo &&
+                      !kycError &&
+                      !errorMessage &&
+                      !customAmountError &&
+                      (selectedAsset?.category === AssetCategory.PRIVATE && !flags?.includes('private') ? (
+                        <PrivateAssetHint asset={selectedAsset} />
                       ) : (
-                        paymentInfo.paymentLink && (
-                          <>
-                            <SanctionHint />
-                            <div className="leading-none">
-                              <StyledLink
-                                label={translate(
-                                  'screens/payment',
-                                  'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
-                                )}
-                                url={process.env.REACT_APP_TNC_URL}
-                                small
-                                dark
-                              />
-                              <StyledButton
-                                width={StyledButtonWidth.FULL}
-                                label={translate('general/actions', 'Next')}
-                                onClick={() => onCardBuy(paymentInfo)}
-                                isLoading={isContinue}
-                                className="my-4"
-                              />
-                            </div>
-                          </>
-                        )
-                      )}
-                    </>
-                  ))}
+                        <>
+                          <ExchangeRate
+                            exchangeRate={paymentInfo.exchangeRate}
+                            rate={paymentInfo.rate}
+                            fees={paymentInfo.fees}
+                            feeCurrency={paymentInfo.currency}
+                            from={paymentInfo.currency}
+                            to={paymentInfo.asset}
+                          />
+
+                          {selectedPaymentMethod !== FiatPaymentMethod.CARD ? (
+                            <>
+                              <div>
+                                <PaymentInformationContent info={paymentInfo} />
+                              </div>
+                              <SanctionHint />
+                              <div className="w-full leading-none">
+                                <StyledLink
+                                  label={translate(
+                                    'screens/payment',
+                                    'Please note that by using this service you automatically accept our terms and conditions.',
+                                  )}
+                                  url={process.env.REACT_APP_TNC_URL}
+                                  small
+                                  dark
+                                />
+                                <StyledButton
+                                  width={StyledButtonWidth.FULL}
+                                  label={translate('screens/buy', 'Click here once you have issued the transfer')}
+                                  onClick={() => {
+                                    setShowsCompletion(true);
+                                    scrollRef.current?.scrollTo(0, 0);
+                                  }}
+                                  caps={false}
+                                  className="my-4"
+                                />
+                              </div>
+                            </>
+                          ) : (
+                            paymentInfo.paymentLink && (
+                              <>
+                                <SanctionHint />
+                                <div className="leading-none">
+                                  <StyledLink
+                                    label={translate(
+                                      'screens/payment',
+                                      'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
+                                    )}
+                                    url={process.env.REACT_APP_TNC_URL}
+                                    small
+                                    dark
+                                  />
+                                  <StyledButton
+                                    width={StyledButtonWidth.FULL}
+                                    label={translate('general/actions', 'Next')}
+                                    onClick={() => onCardBuy(paymentInfo)}
+                                    isLoading={isContinue}
+                                    className="my-4"
+                                  />
+                                </div>
+                              </>
+                            )
+                          )}
+                        </>
+                      ))}
+                  </>
+                )}
               </>
             )}
           </StyledVerticalStack>
