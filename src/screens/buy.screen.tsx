@@ -305,6 +305,15 @@ export function BuyScreen(): JSX.Element {
         return;
 
       case TransactionError.AMOUNT_TOO_HIGH:
+        setCustomAmountError(
+          translate('screens/payment', 'Entered amount is above maximum deposit of {{amount}} {{currency}}', {
+            amount: Utils.formatAmount(buy.maxVolume),
+            currency: buy.currency.name,
+          }),
+        );
+        return;
+
+      case TransactionError.LIMIT_EXCEEDED:
       case TransactionError.KYC_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
@@ -412,7 +421,7 @@ export function BuyScreen(): JSX.Element {
                         placeholder="0.00"
                         prefix={selectedCurrency && toSymbol(selectedCurrency)}
                         name="amount"
-                        forceError={kycError === TransactionError.AMOUNT_TOO_HIGH || customAmountError != null}
+                        forceError={customAmountError != null}
                         forceErrorMessage={customAmountError}
                         full
                       />

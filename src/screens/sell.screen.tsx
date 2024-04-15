@@ -266,7 +266,17 @@ export default function SellScreen(): JSX.Element {
         return;
 
       case TransactionError.AMOUNT_TOO_HIGH:
+        setCustomAmountError(
+          translate('screens/payment', 'Entered amount is above maximum deposit of {{amount}} {{currency}}', {
+            amount: Utils.formatAmountCrypto(sell.maxVolume),
+            currency: sell.asset.name,
+          }),
+        );
+        return;
+
+      case TransactionError.LIMIT_EXCEEDED:
       case TransactionError.KYC_REQUIRED:
+      case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(sell.error);
         return;
@@ -390,10 +400,7 @@ export default function SellScreen(): JSX.Element {
                       buttonLabel={availableBalance ? 'MAX' : undefined}
                       buttonClick={() => availableBalance && setVal('amount', `${availableBalance}`)}
                       forceError={
-                        (kycError &&
-                          [TransactionError.AMOUNT_TOO_HIGH, TransactionError.BANK_TRANSACTION_MISSING].includes(
-                            kycError,
-                          )) ||
+                        (kycError && kycError === TransactionError.BANK_TRANSACTION_MISSING) ||
                         customAmountError != null
                       }
                       forceErrorMessage={customAmountError}

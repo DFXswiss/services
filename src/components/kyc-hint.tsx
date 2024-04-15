@@ -22,7 +22,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
 
   function getHint(error: TransactionError): string | undefined {
     switch (error) {
-      case TransactionError.AMOUNT_TOO_HIGH:
+      case TransactionError.LIMIT_EXCEEDED:
         return isComplete
           ? translate(
               'screens/kyc',
