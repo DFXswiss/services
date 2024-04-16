@@ -118,7 +118,7 @@ export function BuyScreen(): JSX.Element {
   const [validatedData, setValidatedData] = useState<BuyPaymentInfo>();
 
   // form
-  const { control, handleSubmit, setValue } = useForm<FormData>({
+  const { control, handleSubmit, setValue, resetField } = useForm<FormData>({
     defaultValues: {
       amount: '100',
     },
@@ -215,6 +215,8 @@ export function BuyScreen(): JSX.Element {
         if (blockchain !== selectedAddress.chain) {
           setParams({ blockchain: selectedAddress.chain });
           switchBlockchain(selectedAddress.chain);
+          resetField('asset');
+          setAvailableAssets(undefined);
         }
       } else {
         setShowsSwitchScreen(true);
