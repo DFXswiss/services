@@ -107,6 +107,7 @@ _Hint: Asset selection parameters may be overwritten when using [wallet login](#
 - Access token (`session)`: access token for the DFX API
 - Balances (`balances`): wallet balances of the user (recommended for sell), usage example: `balances=0.35@113,12.3@111`
 - Blockchain (`blockchain`): filter for the asset selection (useful if the user has a multi-chain address)
+- Blockchains (`blockchains`): supported blockchains to which the user can switch
 
 **Special parameters**
 

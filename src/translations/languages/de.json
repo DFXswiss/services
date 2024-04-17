@@ -341,7 +341,7 @@
     "Enter your email address if you want to be informed about the progress of any purchase or sale": "Gib Deine E-Mail Adresse ein, wenn Du über den Fortschritt Deiner Käufe oder Verkäufe informiert werden willst"
   },
   "screens/iban": {
-    "Bank Accounts": "Bankkonto",
+    "Bank Accounts": "Bankkonten",
     "Accounts already used with DFX": "Bereits mit DFX verwendete Konten",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Um Deine fehlende Transaktion zu finden, füge bitte das Bankkonto hinzu, von dem Du das Geld gesendet hast.",
     "Add account": "Konto hinzufügen",

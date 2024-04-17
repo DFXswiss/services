@@ -182,9 +182,11 @@ export function TransactionScreen(): JSX.Element {
                         {list.map((tx) => {
                           const state = PaymentStateLabels[tx.state] ?? 'Unassigned';
                           const isUnassigned = state === 'Unassigned';
+
                           const paymentMethod = [tx.inputPaymentMethod, tx.outputPaymentMethod].find(
                             (p) => p !== CryptoPaymentMethod.CRYPTO,
                           ) as FiatPaymentMethod;
+
                           const icon =
                             !isUnassigned &&
                             (tx.type === TransactionType.SELL
@@ -193,6 +195,7 @@ export function TransactionScreen(): JSX.Element {
                             )
                               .map((a) => a?.replace(/^d/, '') as AssetIconVariant)
                               .find((a) => Object.values(AssetIconVariant).includes(a));
+
                           const rateItems = [];
                           tx.exchangeRate != null &&
                             rateItems.push({
@@ -204,6 +207,7 @@ export function TransactionScreen(): JSX.Element {
                               label: translate('screens/payment', 'DFX fee'),
                               text: `${tx.feeAmount} ${tx.inputAsset}`,
                             });
+
                           return (
                             <div key={tx.id} ref={(el) => txRefs.current && (txRefs.current[tx.id] = el)}>
                               <StyledCollapsible

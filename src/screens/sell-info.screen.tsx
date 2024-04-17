@@ -16,7 +16,6 @@ import {
   useBankAccountContext,
   useFiat,
   useSell,
-  useSessionContext,
   useUserContext,
 } from '@dfx.swiss/react';
 import {
@@ -50,7 +49,6 @@ export function SellInfoScreen(): JSX.Element {
   useKycLevelGuard(KycLevel.Sell, '/profile');
 
   const { translate } = useSettingsContext();
-  const { availableBlockchains } = useSessionContext();
   const { bankAccounts, createAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
   const {
@@ -60,6 +58,7 @@ export function SellInfoScreen(): JSX.Element {
     amountOut,
     bankAccount: bankAccountParam,
     externalTransactionId,
+    availableBlockchains,
   } = useAppParams();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();

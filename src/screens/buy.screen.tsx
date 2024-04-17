@@ -77,7 +77,7 @@ export function BuyScreen(): JSX.Element {
   useSessionGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { availableBlockchains, logout } = useSessionContext();
+  const { logout } = useSessionContext();
   const { session } = useAuthContext();
   const { currencies, receiveFor } = useBuy();
   const { toSymbol } = useFiat();
@@ -94,6 +94,7 @@ export function BuyScreen(): JSX.Element {
     wallet,
     flags,
     setParams,
+    availableBlockchains,
   } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { navigate } = useNavigation();
