@@ -39,6 +39,7 @@ export interface AppParams {
   redirectUri?: string;
   mode?: string;
   blockchain?: string;
+  blockchains?: string;
   balances?: string;
   amountIn?: string;
   amountOut?: string;
@@ -87,6 +88,7 @@ interface AppHandlingContextInterface {
   hasSession: boolean;
   isEmbedded: boolean;
   isDfxHosted: boolean;
+  availableBlockchains?: Blockchain[];
   params: AppParams;
   setParams: (params: Partial<AppParams>) => void;
   closeServices: (params: CloseServicesParams, navigate: boolean) => void;
@@ -112,7 +114,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const { redirectUri: storeRedirectUri } = useStore();
   const { isUsedByIframe, sendMessage } = useIframe();
   const { readBalances } = useBalanceContext();
-  const { availableBlockchains, logout } = useSessionContext();
+  const { availableBlockchains } = useSessionContext();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasSession, setHasSession] = useState(false);
@@ -130,11 +132,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
   }, []);
-
-  useEffect(() => {
-    const blockchain = params.blockchain as Blockchain;
-    if (availableBlockchains && blockchain && !availableBlockchains.includes(blockchain)) logout();
-  }, [availableBlockchains, params]);
 
   // parameters
   function getParameter(query: URLSearchParams, key: string): string | undefined {
@@ -189,7 +186,10 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           type: getParameter(query, 'type'),
           redirectUri: getParameter(query, 'redirect-uri'),
           mode: getParameter(query, 'mode'),
-          blockchain: getParameter(query, 'blockchain'),
+          blockchain: Object.values(Blockchain).find(
+            (b) => b.toLowerCase() === getParameter(query, 'blockchain')?.toLowerCase(),
+          ),
+          blockchains: getParameter(query, 'blockchains'),
           balances: getParameter(query, 'balances'),
           amountIn: getParameter(query, 'amount-in'),
           amountOut: getParameter(query, 'amount-out'),
@@ -293,6 +293,14 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       isInitialized,
       params,
       setParams: setParameters,
+      availableBlockchains: availableBlockchains?.filter(
+        (b) =>
+          !params.blockchains ||
+          params.blockchains
+            .split(',')
+            .map((b1) => b1.toLowerCase())
+            .includes(b.toLowerCase()),
+      ),
       redirectPath,
       setRedirectPath,
       canClose: redirectUri != null,

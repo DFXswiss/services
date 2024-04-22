@@ -11,7 +11,6 @@ import {
   useAssetContext,
   useBuy,
   useFiat,
-  useSessionContext,
   useUserContext,
 } from '@dfx.swiss/react';
 import {
@@ -47,8 +46,7 @@ export function BuyInfoScreen(): JSX.Element {
   useSessionGuard();
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
-  const { availableBlockchains } = useSessionContext();
-  const { assetIn, assetOut, amountIn, amountOut, externalTransactionId } = useAppParams();
+  const { assetIn, assetOut, amountIn, amountOut, externalTransactionId, availableBlockchains } = useAppParams();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();

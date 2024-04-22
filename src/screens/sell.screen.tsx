@@ -16,7 +16,6 @@ import {
   useBankAccountContext,
   useFiat,
   useSell,
-  useSessionContext,
   useUserContext,
 } from '@dfx.swiss/react';
 import {
@@ -86,11 +85,11 @@ export default function SellScreen(): JSX.Element {
   const { getAccount } = useBankAccount();
   const { blockchain: walletBlockchain, activeWallet } = useWalletContext();
   const { getBalances, sendTransaction, canSendTransaction } = useSellHelper();
-  const { availableBlockchains } = useSessionContext();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
-  const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain, externalTransactionId } = useAppParams();
+  const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain, externalTransactionId, availableBlockchains } =
+    useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();

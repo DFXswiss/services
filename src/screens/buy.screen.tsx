@@ -77,7 +77,7 @@ export function BuyScreen(): JSX.Element {
   useSessionGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { availableBlockchains, logout } = useSessionContext();
+  const { logout } = useSessionContext();
   const { session } = useAuthContext();
   const { currencies, receiveFor } = useBuy();
   const { toSymbol } = useFiat();
@@ -94,6 +94,7 @@ export function BuyScreen(): JSX.Element {
     wallet,
     flags,
     setParams,
+    availableBlockchains,
   } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { navigate } = useNavigation();
@@ -134,22 +135,20 @@ export function BuyScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
-  const addressItems: Address[] = [
-    {
-      address: translate('screens/buy', 'Switch address'),
-      label: translate('screens/buy', 'Login with a different address'),
-    },
-  ];
-  session &&
-    availableBlockchains &&
-    addressItems.unshift(
-      ...availableBlockchains.map((b) => ({
-        address: blankedAddress(session.address),
-        label: toString(b),
-        chain: b,
-      })),
-    );
-
+  const addressItems: Address[] =
+    session && availableBlockchains
+      ? [
+          ...availableBlockchains.map((b) => ({
+            address: blankedAddress(session.address),
+            label: toString(b),
+            chain: b,
+          })),
+          {
+            address: translate('screens/buy', 'Switch address'),
+            label: translate('screens/buy', 'Login with a different address'),
+          },
+        ]
+      : [];
   const availablePaymentMethods = [FiatPaymentMethod.BANK];
 
   (!selectedAsset || selectedAsset.instantBuyable) && availablePaymentMethods.push(FiatPaymentMethod.INSTANT);
@@ -339,7 +338,7 @@ export function BuyScreen(): JSX.Element {
   }
 
   function setAddress() {
-    if (session?.address) {
+    if (isInitialized && session?.address && addressItems) {
       const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
       setVal('address', address);
     }

@@ -17,6 +17,7 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   redirectUri: 'string',
   mode: 'string',
   blockchain: 'string',
+  blockchains: 'string',
   balances: 'string',
   amountIn: 'string',
   amountOut: 'string',
