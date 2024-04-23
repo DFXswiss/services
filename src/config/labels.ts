@@ -31,6 +31,10 @@ export const PaymentStateLabels = {
   [TransactionState.RETURNED]: 'Returned',
 };
 
+export function toPaymentStateLabel(state: TransactionState): string {
+  return PaymentStateLabels[state] ?? 'Unassigned';
+}
+
 export const PaymentFailureReasons = {
   [TransactionFailureReason.UNKNOWN]: 'Unknown',
   [TransactionFailureReason.DAILY_LIMIT_EXCEEDED]: 'Daily limit exceeded',
@@ -46,6 +50,7 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.PAYMENT_ACCOUNT_NOT_ALLOWED]: 'Payment account not allowed',
   [TransactionFailureReason.COUNTRY_NOT_ALLOWED]: 'Country not allowed',
   [TransactionFailureReason.INSTANT_PAYMENT]: 'Instant payment',
+  [TransactionFailureReason.FEE_TOO_HIGH]: 'Network fee too high',
 };
 
 // --- LIMIT REQUESTS --- //

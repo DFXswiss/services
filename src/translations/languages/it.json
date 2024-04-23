@@ -278,6 +278,7 @@
     "Your Transactions": "Le vostre transazioni",
     "No transactions found": "Nessuna transazione trovata",
     "My transaction is missing": "La mia transazione è scomparsa",
+    "Transaction status": "Stato della transazione",
 
     "ID": "ID",
     "Date": "Data",
@@ -317,6 +318,7 @@
     "Payment account not allowed": "Conto di pagamento non autorizzato",
     "Country not allowed": "Paese non autorizzato",
     "Instant payment": "Pagamento istantaneo",
+    "Network fee too high": "Costi di rete troppo elevati",
 
     "Payment method": "Metodo di pagamento",
     "Standard bank transaction": "Transazione bancaria standard",
