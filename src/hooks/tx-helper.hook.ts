@@ -64,7 +64,6 @@ export function useTxHelper(): TxHelperInterface {
         return sendPayment(tx.paymentRequest).then((p) => p.preimage);
 
       case WalletType.WALLET_CONNECT:
-        console.log('asdasd');
         if (!session?.address) throw new Error('Address is not defined');
 
         return createTransactionWalletConnect(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
