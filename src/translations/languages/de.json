@@ -33,7 +33,7 @@
   "general/services": {
     "Buy": "Kaufen",
     "Sell": "Verkaufen",
-    "Swap": "Umtauschen"
+    "Swap": "Tauschen"
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -278,6 +278,7 @@
     "Your Transactions": "Deine Transaktionen",
     "No transactions found": "Keine Transaktionen gefunden",
     "My transaction is missing": "Meine Transaktion fehlt",
+    "Transaction status": "Status der Transaktion",
 
     "ID": "ID",
     "Date": "Datum",
@@ -289,7 +290,7 @@
     "Type": "Typ",
     "Buy": "Kauf",
     "Sell": "Verkauf",
-    "Convert": "Umtausch",
+    "Swap": "Tausch",
 
     "State": "Status",
     "Created": "Erstellt",
@@ -317,6 +318,7 @@
     "Payment account not allowed": "Zahlungskonto nicht erlaubt",
     "Country not allowed": "Land nicht erlaubt",
     "Instant payment": "Sofort-Transaktion",
+    "Network fee too high": "Netzwerkgebühr zu hoch",
 
     "Payment method": "Zahlungsmethode",
     "Standard bank transaction": "Standard-Banktransaktion",

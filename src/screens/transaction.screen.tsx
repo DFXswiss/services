@@ -3,6 +3,7 @@ import {
   CryptoPaymentMethod,
   DetailTransaction,
   FiatPaymentMethod,
+  Transaction,
   TransactionState,
   TransactionTarget,
   TransactionType,
@@ -37,7 +38,7 @@ import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
-import { PaymentFailureReasons, PaymentMethodLabels, PaymentStateLabels } from '../config/labels';
+import { PaymentFailureReasons, PaymentMethodLabels, toPaymentStateLabel } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
@@ -45,6 +46,43 @@ import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress } from '../util/utils';
 
 export function TransactionScreen(): JSX.Element {
+  const { id } = useParams();
+
+  return id && id.startsWith('T') ? <TransactionStatus /> : <TransactionList />;
+}
+
+export function TransactionStatus(): JSX.Element {
+  const { navigate } = useNavigation();
+  const { translate } = useSettingsContext();
+  const { id } = useParams();
+  const { getTransactionByUid } = useTransaction();
+
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const [transaction, setTransaction] = useState<Transaction>();
+  const [error, setError] = useState<string>();
+
+  useEffect(() => {
+    if (id)
+      getTransactionByUid(id)
+        .then(setTransaction)
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+  }, [id]);
+
+  return (
+    <Layout rootRef={rootRef} title={translate('screens/payment', 'Transaction status')} onBack={() => navigate('/tx')}>
+      {error ? (
+        <ErrorHint message={error} />
+      ) : transaction ? (
+        <TxInfo tx={transaction} />
+      ) : (
+        <StyledLoadingSpinner size={SpinnerSize.LG} />
+      )}
+    </Layout>
+  );
+}
+
+export function TransactionList(): JSX.Element {
   useSessionGuard('/login');
 
   const { navigate } = useNavigation();
@@ -180,12 +218,8 @@ export function TransactionScreen(): JSX.Element {
                       <p className="text-dfxGray-700">{date}</p>
                       <StyledVerticalStack gap={2} full>
                         {list.map((tx) => {
-                          const state = PaymentStateLabels[tx.state] ?? 'Unassigned';
+                          const state = toPaymentStateLabel(tx.state);
                           const isUnassigned = state === 'Unassigned';
-
-                          const paymentMethod = [tx.inputPaymentMethod, tx.outputPaymentMethod].find(
-                            (p) => p !== CryptoPaymentMethod.CRYPTO,
-                          ) as FiatPaymentMethod;
 
                           const icon =
                             !isUnassigned &&
@@ -195,18 +229,6 @@ export function TransactionScreen(): JSX.Element {
                             )
                               .map((a) => a?.replace(/^d/, '') as AssetIconVariant)
                               .find((a) => Object.values(AssetIconVariant).includes(a));
-
-                          const rateItems = [];
-                          tx.exchangeRate != null &&
-                            rateItems.push({
-                              label: translate('screens/payment', 'Base rate'),
-                              text: `${tx.exchangeRate} ${tx.inputAsset}/${tx.outputAsset}`,
-                            });
-                          tx.feeAmount != null &&
-                            rateItems.push({
-                              label: translate('screens/payment', 'DFX fee'),
-                              text: `${tx.feeAmount} ${tx.inputAsset}`,
-                            });
 
                           return (
                             <div key={tx.id} ref={(el) => txRefs.current && (txRefs.current[tx.id] = el)}>
@@ -229,102 +251,16 @@ export function TransactionScreen(): JSX.Element {
                                       </div>
                                     </div>
                                     <div className="ml-auto">
-                                      {tx.inputAsset ? `${tx.inputAmount} ${tx.inputAsset}` : ''}
+                                      {tx.inputAsset ? `${tx.inputAmount ?? ''} ${tx.inputAsset}` : ''}
                                       {tx.inputAsset && tx.outputAsset ? ' → ' : ''}
-                                      {tx.outputAsset ? `${tx.outputAmount} ${tx.outputAsset}` : ''}
+                                      {tx.outputAsset ? `${tx.outputAmount ?? ''} ${tx.outputAsset}` : ''}
                                     </div>
                                   </div>
                                 }
                               >
                                 <StyledVerticalStack full gap={4}>
-                                  <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                                    <StyledDataTableRow label={translate('screens/payment', 'ID')}>
-                                      <p>{tx.id}</p>
-                                    </StyledDataTableRow>
-                                    <StyledDataTableRow label={translate('screens/payment', 'Date')}>
-                                      <p>{new Date(tx.date).toLocaleString()}</p>
-                                    </StyledDataTableRow>
-                                    <StyledDataTableRow label={translate('screens/payment', 'Type')}>
-                                      <p>{translate('screens/payment', tx.type)}</p>
-                                    </StyledDataTableRow>
-                                    <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                                      <p>{translate('screens/payment', state)}</p>
-                                    </StyledDataTableRow>
-                                    {tx.reason && (
-                                      <StyledDataTableRow label={translate('screens/payment', 'Failure reason')}>
-                                        <p>{translate('screens/payment', PaymentFailureReasons[tx.reason])}</p>
-                                      </StyledDataTableRow>
-                                    )}
-                                    {paymentMethod && (
-                                      <StyledDataTableRow label={translate('screens/payment', 'Payment method')}>
-                                        <p className="text-right">
-                                          {translate('screens/payment', PaymentMethodLabels[paymentMethod])}
-                                        </p>
-                                      </StyledDataTableRow>
-                                    )}
-                                    {tx.inputAsset && (
-                                      <StyledDataTableRow label={translate('screens/payment', 'Input')}>
-                                        <p>
-                                          {tx.inputAmount} {tx.inputAsset}
-                                          {tx.inputBlockchain ? ` (${toString(tx.inputBlockchain)})` : ''}
-                                        </p>
-                                      </StyledDataTableRow>
-                                    )}
-                                    {tx.sourceAccount && (
-                                      <StyledDataTableRow label={translate('screens/payment', 'Input Account')}>
-                                        <p>{blankedAddress(tx.sourceAccount, 12)}</p>
-                                      </StyledDataTableRow>
-                                    )}
-                                    {tx.inputTxId && (
-                                      <StyledDataTableRow label={translate('screens/payment', 'Input TX')}>
-                                        {tx.inputTxUrl ? (
-                                          <StyledLink
-                                            label={blankedAddress(tx.inputTxId, 12)}
-                                            url={tx.inputTxUrl}
-                                            dark
-                                          />
-                                        ) : (
-                                          <p>{blankedAddress(tx.inputTxId, 12)}</p>
-                                        )}
-                                      </StyledDataTableRow>
-                                    )}
-                                    {tx.outputAsset && (
-                                      <StyledDataTableRow label={translate('screens/payment', 'Output')}>
-                                        <p>
-                                          {tx.outputAmount} {tx.outputAsset}
-                                          {tx.outputBlockchain ? ` (${toString(tx.outputBlockchain)})` : ''}
-                                        </p>
-                                      </StyledDataTableRow>
-                                    )}
-                                    {tx.targetAccount && (
-                                      <StyledDataTableRow label={translate('screens/payment', 'Output Account')}>
-                                        <p>{blankedAddress(tx.targetAccount, 12)}</p>
-                                      </StyledDataTableRow>
-                                    )}
-                                    {tx.outputTxId && (
-                                      <StyledDataTableRow label={translate('screens/payment', 'Output TX')}>
-                                        {tx.outputTxUrl ? (
-                                          <StyledLink
-                                            label={blankedAddress(tx.outputTxId, 12)}
-                                            url={tx.outputTxUrl}
-                                            dark
-                                          />
-                                        ) : (
-                                          <p>{blankedAddress(tx.outputTxId, 12)}</p>
-                                        )}
-                                      </StyledDataTableRow>
-                                    )}
-                                    {tx.rate != null && (
-                                      <StyledDataTableExpandableRow
-                                        label={translate('screens/payment', 'Exchange rate')}
-                                        expansionItems={rateItems}
-                                      >
-                                        <p>
-                                          {tx.rate} {tx.inputAsset}/{tx.outputAsset}
-                                        </p>
-                                      </StyledDataTableExpandableRow>
-                                    )}
-                                  </StyledDataTable>
+                                  <TxInfo tx={tx} />
+
                                   {isUnassigned &&
                                     (editTransaction === tx.id ? (
                                       <Form
@@ -395,5 +331,110 @@ export function TransactionScreen(): JSX.Element {
         )}
       </StyledVerticalStack>
     </Layout>
+  );
+}
+
+interface TxInfoProps {
+  tx: DetailTransaction;
+}
+
+function TxInfo({ tx }: TxInfoProps): JSX.Element {
+  const { translate } = useSettingsContext();
+  const { toString } = useBlockchain();
+
+  const state = toPaymentStateLabel(tx.state);
+
+  const paymentMethod = [tx.inputPaymentMethod, tx.outputPaymentMethod].find(
+    (p) => p !== CryptoPaymentMethod.CRYPTO,
+  ) as FiatPaymentMethod;
+
+  const rateItems = [];
+  tx.exchangeRate != null &&
+    rateItems.push({
+      label: translate('screens/payment', 'Base rate'),
+      text: `${tx.exchangeRate} ${tx.inputAsset}/${tx.outputAsset}`,
+    });
+  tx.feeAmount != null &&
+    rateItems.push({
+      label: translate('screens/payment', 'DFX fee'),
+      text: `${tx.feeAmount} ${tx.inputAsset}`,
+    });
+
+  return (
+    <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+      <StyledDataTableRow label={translate('screens/payment', 'ID')}>
+        <p>{tx.id}</p>
+      </StyledDataTableRow>
+      <StyledDataTableRow label={translate('screens/payment', 'Date')}>
+        <p>{new Date(tx.date).toLocaleString()}</p>
+      </StyledDataTableRow>
+      <StyledDataTableRow label={translate('screens/payment', 'Type')}>
+        <p>{translate('screens/payment', tx.type)}</p>
+      </StyledDataTableRow>
+      <StyledDataTableRow label={translate('screens/payment', 'State')}>
+        <p>{translate('screens/payment', state)}</p>
+      </StyledDataTableRow>
+      {tx.reason && (
+        <StyledDataTableRow label={translate('screens/payment', 'Failure reason')}>
+          <p>{translate('screens/payment', PaymentFailureReasons[tx.reason])}</p>
+        </StyledDataTableRow>
+      )}
+      {paymentMethod && (
+        <StyledDataTableRow label={translate('screens/payment', 'Payment method')}>
+          <p className="text-right">{translate('screens/payment', PaymentMethodLabels[paymentMethod])}</p>
+        </StyledDataTableRow>
+      )}
+      {tx.inputAsset && (
+        <StyledDataTableRow label={translate('screens/payment', 'Input')}>
+          <p>
+            {tx.inputAmount ?? ''} {tx.inputAsset}
+            {tx.inputBlockchain ? ` (${toString(tx.inputBlockchain)})` : ''}
+          </p>
+        </StyledDataTableRow>
+      )}
+      {tx.sourceAccount && (
+        <StyledDataTableRow label={translate('screens/payment', 'Input Account')}>
+          <p>{blankedAddress(tx.sourceAccount, 12)}</p>
+        </StyledDataTableRow>
+      )}
+      {tx.inputTxId && (
+        <StyledDataTableRow label={translate('screens/payment', 'Input TX')}>
+          {tx.inputTxUrl ? (
+            <StyledLink label={blankedAddress(tx.inputTxId, 12)} url={tx.inputTxUrl} dark />
+          ) : (
+            <p>{blankedAddress(tx.inputTxId, 12)}</p>
+          )}
+        </StyledDataTableRow>
+      )}
+      {tx.outputAsset && (
+        <StyledDataTableRow label={translate('screens/payment', 'Output')}>
+          <p>
+            {tx.outputAmount ?? ''} {tx.outputAsset}
+            {tx.outputBlockchain ? ` (${toString(tx.outputBlockchain)})` : ''}
+          </p>
+        </StyledDataTableRow>
+      )}
+      {tx.targetAccount && (
+        <StyledDataTableRow label={translate('screens/payment', 'Output Account')}>
+          <p>{blankedAddress(tx.targetAccount, 12)}</p>
+        </StyledDataTableRow>
+      )}
+      {tx.outputTxId && (
+        <StyledDataTableRow label={translate('screens/payment', 'Output TX')}>
+          {tx.outputTxUrl ? (
+            <StyledLink label={blankedAddress(tx.outputTxId, 12)} url={tx.outputTxUrl} dark />
+          ) : (
+            <p>{blankedAddress(tx.outputTxId, 12)}</p>
+          )}
+        </StyledDataTableRow>
+      )}
+      {tx.rate != null && (
+        <StyledDataTableExpandableRow label={translate('screens/payment', 'Exchange rate')} expansionItems={rateItems}>
+          <p>
+            {tx.rate} {tx.inputAsset}/{tx.outputAsset}
+          </p>
+        </StyledDataTableExpandableRow>
+      )}
+    </StyledDataTable>
   );
 }
