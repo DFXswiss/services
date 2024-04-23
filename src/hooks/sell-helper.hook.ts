@@ -6,6 +6,7 @@ import { AssetBalance, useBalanceContext } from '../contexts/balance.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { useAlby } from './wallets/alby.hook';
 import { useMetaMask } from './wallets/metamask.hook';
+import { useWalletConnect } from './wallets/wallet-connect.hook';
 
 export interface SellHelperInterface {
   getBalances: (assets: Asset[]) => Promise<AssetBalance[] | undefined>;
@@ -15,7 +16,10 @@ export interface SellHelperInterface {
 
 // CAUTION: This is a helper hook for all sell functionalities. Think about lazy loading, as soon as it gets bigger.
 export function useSellHelper(): SellHelperInterface {
-  const { readBalance, createTransaction } = useMetaMask();
+  const { readBalance: readBalanceMetaMask, createTransaction: createTransactionMetaMask } = useMetaMask();
+  const { readBalance: readBalanceWalletConnect, createTransaction: createTransactionWalletConnect } =
+    useWalletConnect();
+
   const { sendPayment } = useAlby();
   const { getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet } = useWalletContext();
@@ -27,9 +31,14 @@ export function useSellHelper(): SellHelperInterface {
 
     switch (activeWallet) {
       case WalletType.META_MASK:
-        return (await Promise.all(assets.map((asset: Asset) => readBalance(asset, session?.address)))).filter(
+        return (await Promise.all(assets.map((asset: Asset) => readBalanceMetaMask(asset, session?.address)))).filter(
           (b) => b.amount > 0,
         );
+
+      case WalletType.WALLET_CONNECT:
+        return (
+          await Promise.all(assets.map((asset: Asset) => readBalanceWalletConnect(asset, session?.address)))
+        ).filter((b) => b.amount > 0);
 
       default:
         // no balance available
@@ -44,12 +53,23 @@ export function useSellHelper(): SellHelperInterface {
       case WalletType.META_MASK:
         if (!session?.address) throw new Error('Address is not defined');
 
-        return createTransaction(new BigNumber(sell.amount), sell.asset, session.address, sell.depositAddress);
+        return createTransactionMetaMask(new BigNumber(sell.amount), sell.asset, session.address, sell.depositAddress);
 
       case WalletType.ALBY:
         if (!sell.paymentRequest) throw new Error('Payment request not defined');
 
         return sendPayment(sell.paymentRequest).then((p) => p.preimage);
+
+      case WalletType.WALLET_CONNECT:
+        console.log('asdasd');
+        if (!session?.address) throw new Error('Address is not defined');
+
+        return createTransactionWalletConnect(
+          new BigNumber(sell.amount),
+          sell.asset,
+          session.address,
+          sell.depositAddress,
+        );
 
       default:
         throw new Error('Not supported yet');
@@ -62,6 +82,7 @@ export function useSellHelper(): SellHelperInterface {
     switch (activeWallet) {
       case WalletType.META_MASK:
       case WalletType.ALBY:
+      case WalletType.WALLET_CONNECT:
         return true;
 
       default:
@@ -70,6 +91,12 @@ export function useSellHelper(): SellHelperInterface {
   }
   return useMemo(
     () => ({ getBalances, sendTransaction, canSendTransaction }),
-    [readBalance, createTransaction, sendPayment],
+    [
+      readBalanceMetaMask,
+      readBalanceWalletConnect,
+      createTransactionMetaMask,
+      createTransactionWalletConnect,
+      sendPayment,
+    ],
   );
 }

@@ -1,8 +1,11 @@
-import { Blockchain } from '@dfx.swiss/react';
+import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
 import { EthereumProvider as EthClient } from '@walletconnect/ethereum-provider/dist/types/EthereumProvider';
-import { useEffect, useState } from 'react';
+import BigNumber from 'bignumber.js';
+import { useEffect, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
+import Web3 from 'web3';
+import { AssetBalance } from '../../contexts/balance.context';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { AbortError } from '../../util/abort-error';
 import { useWeb3 } from '../web3.hook';
@@ -10,6 +13,8 @@ import { useWeb3 } from '../web3.hook';
 export interface WalletConnectInterface {
   connect: (blockchain: Blockchain, onConnectUri: (uri: string) => void) => Promise<string>;
   signMessage: (msg: string, address: string, blockchain: Blockchain) => Promise<string>;
+  createTransaction: (amount: BigNumber, asset: Asset, from: string, to: string) => Promise<string>;
+  readBalance: (asset: Asset, address?: string) => Promise<AssetBalance>;
   wallets: DeepWallet[];
 }
 
@@ -30,6 +35,11 @@ export interface DeepWallet {
   name: string;
   deepLink: string;
   imageUrl: string;
+}
+declare enum EthCall {
+  BALANCE_OF = '0x70a08231',
+  TRANSFER = '0xa9059cbb',
+  DECIMALS = '0x313ce567',
 }
 
 export function useWalletConnect(): WalletConnectInterface {
@@ -109,9 +119,104 @@ export function useWalletConnect(): WalletConnectInterface {
     }
   }
 
-  return {
-    connect,
-    signMessage,
-    wallets,
-  };
+  function toUsableNumber(balance: any, decimals = 18): BigNumber {
+    return new BigNumber(balance).dividedBy(Math.pow(10, decimals));
+  }
+
+  function decodeMethod(method: EthCall, address: string): string {
+    return method + '000000000000000000000000' + address.substring(2, address.length);
+  }
+  async function readBalance(asset: Asset, address?: string): Promise<AssetBalance> {
+    if (!address || !asset) return { asset, amount: 0 };
+    const client = get<EthClient>(storageKey) ?? (await setupConnection(asset.blockchain));
+
+    try {
+      if (asset.type === AssetType.COIN) {
+        const balance = await client.request<number>({
+          method: 'eth_getBalance',
+          params: [address, 'latest'],
+        });
+
+        return {
+          asset,
+          amount: toUsableNumber(balance).toNumber(),
+        };
+      } else {
+        const decimals = await client.request<any>({
+          method: 'eth_call',
+          params: [{ to: asset.chainId, data: decodeMethod(EthCall.DECIMALS, address) }, 'latest'],
+        });
+
+        const tokenBalance = await client.request<any>({
+          method: 'eth_call',
+          params: [{ to: asset.chainId, data: decodeMethod(EthCall.BALANCE_OF, address) }, 'latest'],
+        });
+
+        return {
+          asset,
+          amount: toUsableNumber(tokenBalance, new BigNumber(decimals).toNumber()).toNumber(),
+        };
+      }
+    } catch (e) {
+      return { asset, amount: 0 };
+    }
+  }
+
+  async function createTransaction(amount: BigNumber, asset: Asset, from: string, to: string): Promise<string> {
+    const client = get<EthClient>(storageKey) ?? (await setupConnection(asset.blockchain));
+    const web3 = new Web3(client.chainId as any);
+
+    if (asset.type === AssetType.COIN) {
+      await client.request<any>({
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            to,
+            from,
+            value: new BigNumber(web3.utils.toWei(amount.toString(), 'ether')).toString(16),
+            maxPriorityFeePerGas: null,
+            maxFeePerGas: null,
+          },
+        ],
+      });
+      return '';
+    } else {
+      const decimals = await client.request<any>({
+        method: 'eth_call',
+        params: [{ to: asset.chainId, data: decodeMethod(EthCall.DECIMALS, from) }, 'latest'],
+      });
+
+      const adjustedAmount = amount
+        .multipliedBy(Math.pow(10, new BigNumber(decimals).toNumber()))
+        .toString(16)
+        .padStart(64, '0');
+
+      const transaction = await client.request<any>({
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            from,
+            to: asset.chainId,
+            value: '0x0',
+            maxPriorityFeePerGas: null,
+            maxFeePerGas: null,
+            data: decodeMethod(EthCall.TRANSFER, to) + adjustedAmount,
+          },
+        ],
+      });
+
+      return transaction;
+    }
+  }
+
+  return useMemo(
+    () => ({
+      connect,
+      signMessage,
+      createTransaction,
+      readBalance,
+      wallets,
+    }),
+    [],
+  );
 }
