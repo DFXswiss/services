@@ -58,6 +58,8 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
               'screens/kyc',
               type === TransactionType.SELL
                 ? 'your daily sell transaction volume'
+                : type === TransactionType.SWAP
+                ? 'your daily swap transaction volume'
                 : 'your daily credit card transaction volume',
             ),
             limit: limitToString(defaultLimit),
