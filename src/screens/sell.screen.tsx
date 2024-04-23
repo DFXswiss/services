@@ -22,11 +22,8 @@ import {
   AlignContent,
   AssetIconVariant,
   CopyButton,
-  DfxIcon,
   Form,
   IconColor,
-  IconSize,
-  IconVariant,
   SpinnerSize,
   StyledBankAccountListItem,
   StyledButton,
@@ -53,6 +50,7 @@ import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
 import { QrCopy } from '../components/payment/qr-copy';
+import { SellCompletion } from '../components/payment/sell-completion';
 import { SanctionHint } from '../components/sanction-hint';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance } from '../contexts/balance.context';
@@ -64,7 +62,7 @@ import { useClipboard } from '../hooks/clipboard.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useKycLevelGuard, useSessionGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { useSellHelper } from '../hooks/sell-helper.hook';
+import { useTxHelper } from '../hooks/tx-helper.hook';
 import { blankedAddress, isDefined } from '../util/utils';
 
 interface FormData {
@@ -84,7 +82,7 @@ export default function SellScreen(): JSX.Element {
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
   const { blockchain: walletBlockchain, activeWallet } = useWalletContext();
-  const { getBalances, sendTransaction, canSendTransaction } = useSellHelper();
+  const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
@@ -241,7 +239,7 @@ export default function SellScreen(): JSX.Element {
     const balance = findBalance(asset) ?? 0;
     if (balances && amount > Number(balance)) {
       setCustomAmountError(
-        translate('screens/sell', 'Entered amount is higher than available balance of {{amount}} {{asset}}', {
+        translate('screens/payment', 'Entered amount is higher than available balance of {{amount}} {{asset}}', {
           amount: balance,
           asset: asset.name,
         }),
@@ -313,7 +311,8 @@ export default function SellScreen(): JSX.Element {
 
     await updateBankAccount();
 
-    if (canSendTransaction() && !activeWallet) return close(paymentInfo, false);
+    if (canSendTransaction() && !activeWallet)
+      return closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo }, false);
 
     try {
       if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSellTxId);
@@ -322,10 +321,6 @@ export default function SellScreen(): JSX.Element {
     } finally {
       setIsProcessing(false);
     }
-  }
-
-  function close(sell: Sell, isComplete: boolean) {
-    closeServices({ type: CloseType.SELL, isComplete, sell }, isComplete);
   }
 
   const rules = Utils.createRules({
@@ -347,35 +342,7 @@ export default function SellScreen(): JSX.Element {
       rootRef={rootRef}
     >
       {paymentInfo && isTxDone ? (
-        <StyledVerticalStack gap={4} full>
-          <div className="mx-auto">
-            <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />
-          </div>
-          <p className="text-dfxBlue-800 text-center px-20">
-            {canSendTransaction() && (
-              <>
-                {translate('screens/sell', 'Your transaction was executed successfully.')}
-                <br />
-              </>
-            )}
-            {translate('screens/payment', 'We will inform you about the progress of any purchase or sale via E-mail.')}
-          </p>
-          {sellTxId && (
-            <StyledHorizontalStack gap={2} center>
-              <p className="text-dfxBlue-800">{translate('screens/sell', 'Transaction hash')}:</p>
-              <span className="text-dfxBlue-800 font-bold">{blankedAddress(sellTxId)}</span>
-              <CopyButton onCopy={() => copy(sellTxId)} />
-            </StyledHorizontalStack>
-          )}
-
-          <StyledButton
-            width={StyledButtonWidth.FULL}
-            label={translate('general/actions', 'Close')}
-            onClick={() => close(paymentInfo, true)}
-            className="my-4"
-            isLoading={isProcessing}
-          />
-        </StyledVerticalStack>
+        <SellCompletion paymentInfo={paymentInfo} navigateOnClose={true} txId={sellTxId} />
       ) : (
         <Form
           control={control}
@@ -543,8 +510,9 @@ export default function SellScreen(): JSX.Element {
                           <StyledInfoText iconColor={IconColor.BLUE}>
                             {translate(
                               'screens/sell',
-                              'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.',
+                              'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts from {{chain}} to your IBAN {{iban}} in {{currency}}.',
                               {
+                                chain: toString(paymentInfo.asset.blockchain),
                                 currency: paymentInfo.currency.name,
                                 iban: Utils.formatIban(selectedBankAccount.iban) ?? '',
                               },

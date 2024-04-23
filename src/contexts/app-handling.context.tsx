@@ -1,4 +1,4 @@
-import { Blockchain, Buy, Sell, useSessionContext } from '@dfx.swiss/react';
+import { Blockchain, Buy, Sell, Swap, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useIframe } from '../hooks/iframe.hook';
@@ -54,6 +54,7 @@ export interface AppParams {
 export enum CloseType {
   BUY = 'buy',
   SELL = 'sell',
+  SWAP = 'swap',
   CANCEL = 'cancel',
 }
 
@@ -62,6 +63,7 @@ export interface CloseMessageData {
   isComplete?: boolean;
   buy?: Buy;
   sell?: Sell;
+  swap?: Swap;
 }
 
 export interface CancelServicesParams extends CloseMessageData {
@@ -80,7 +82,13 @@ export interface SellServicesParams extends CloseMessageData {
   sell: Sell;
 }
 
-export type CloseServicesParams = CancelServicesParams | BuyServicesParams | SellServicesParams;
+export interface SwapServicesParams extends CloseMessageData {
+  type: CloseType.SWAP;
+  isComplete: boolean;
+  swap: Swap;
+}
+
+export type CloseServicesParams = CancelServicesParams | BuyServicesParams | SellServicesParams | SwapServicesParams;
 
 // --- CONTEXT --- //
 interface AppHandlingContextInterface {

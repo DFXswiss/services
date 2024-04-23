@@ -33,7 +33,7 @@
   "general/services": {
     "Buy": "Acheter",
     "Sell": "Vendre",
-    "Convert": "Convertir"
+    "Swap": "Convertir"
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -94,6 +94,7 @@
     "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Note : Votre compte n'est pas vérifié. Votre transaction ne sera traitée que si vous n'avez pas le même nom qu'une personne sanctionnée ou politiquement exposée.",
     "A buy bank transaction or identification by video is required once {{volume}} exceeds {{limit}}.": "Une opération d'achat en banque ou une identification par vidéo est requise dès que {{volume}} dépasse {{limit}}.",
     "your daily sell transaction volume": "votre volume quotidien de transactions de vente",
+    "your daily swap transaction volume": "votre volume quotidien d'opérations de swap",
     "your daily credit card transaction volume": "votre volume quotidien de transactions par carte de crédit",
     "Complete KYC": "Compléter le KYC",
     "Increase limit": "Augmenter la limite",
@@ -237,30 +238,26 @@
     "Todo list of bank accounts": "Liste des comptes bancaires à faire"
   },
   "screens/sell": {
-    "Your Wallet": "Votre portefeuille",
-    "Cash out to my bank account": "Versement de l'argent sur mon compte bancaire",
     "Add or select your IBAN": "Ajouter ou sélectionner votre IBAN",
     "Select payment account": "Sélectionner le compte de paiement",
-    "Your Currency": "Votre monnaie",
-    "e.g. EUR": "par exemple : EUR",
-    "Enter your desired payout amount": "Gib den gewünschten Auszahlungsbetrag ein",
 
-    "Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts in {{currency}} to your IBAN {{iban}}.": "Envoyez le montant sélectionné à l'adresse ci-dessous. Cette adresse peut être utilisée plusieurs fois, elle est toujours la même pour les paiements en {{currency}} vers votre IBAN {{iban}}.",
+    "Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts from {{chain}} to your IBAN {{iban}} in {{currency}}.": "Envoyez le montant sélectionné à l'adresse ci-dessous. Cette adresse peut être utilisée plusieurs fois, elle est toujours la même pour les paiements de {{chain}} à votre IBAN {{iban}} en {{currency}}.",
     "Address": "Adresse",
 
     "Click here once you have issued the transaction": "Cliquez ici une fois que vous avez émis la transaction",
     "Complete transaction in your wallet": "Transaction complète dans votre portefeuille",
     "Pay with your wallet": "Payer avec son portefeuille",
-    "Your transaction was executed successfully.": "Votre transaction a été exécutée avec succès.",
     "Transaction hash": "Hachage de transaction",
 
     "Optional - Account Designation": "Facultatif - Désignation du compte",
     "e.g. Deutsche Bank": "par exemple, la Deutsche Bank",
     "Add Bank Account": "Ajouter un compte bancaire",
 
-    "Entered amount is higher than available balance of {{amount}} {{asset}}": "Le montant saisi est supérieur au solde disponible de {{amount}} {{asset}}",
-
     "As soon as the transaction arrives in our wallet, we will transfer your money to your bank account.": "Dès que la transaction arrive dans notre portefeuille, nous transférons votre argent sur votre compte bancaire."
+  },
+  "screens/swap": {
+    "Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.": "Envoyez le montant sélectionné à l'adresse ci-dessous. Cette adresse peut être utilisée plusieurs fois, elle est toujours la même pour les échanges de {{sourceChain}} vers {{asset}} sur {{targetChain}}.",
+    "As soon as the transaction arrives in our wallet, we will transfer your asset to your wallet.": "Dès que la transaction arrive dans notre portefeuille, nous transférerons votre actif dans votre portefeuille."
   },
   "screens/payment": {
     "Payment Information": "Informations sur le paiement",
@@ -336,9 +333,10 @@
     "Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales et autorisez DFX.swiss à collecter le montant ci-dessus via la méthode de paiement choisie et acceptez que ce montant ne puisse pas être annulé, rappelé ou remboursé.",
     "Entered amount is below minimum deposit of {{amount}} {{currency}}": "Le montant saisi est inférieur au dépôt minimum de {{amount}} {{currency}}",
     "Entered amount is above maximum deposit of {{amount}} {{currency}}": "Le montant saisi est supérieur au dépôt maximum de {{amount}} {{currency}}",
-    "Nice! You are all set! Give us a minute to handle your transaction": "C'est très bien ! Vous êtes prêt ! Donnez-nous une minute pour traiter votre transaction",
-    "We will inform you about the progress of any purchase or sale via E-mail.": "Nous vous informerons de l'évolution de l'achat ou de la vente par courrier électronique.",
-    "Enter your email address if you want to be informed about the progress of any purchase or sale": "Saisissez votre adresse électronique si vous souhaitez être informé de l'avancement de tout achat ou vente."
+    "Entered amount is higher than available balance of {{amount}} {{asset}}": "Le montant saisi est supérieur au solde disponible de {{amount}} {{asset}}",
+    "Nice! You are all set! Give us a minute to handle your transaction.": "C'est très bien ! Vous êtes prêt ! Donnez-nous une minute pour traiter votre transaction.",
+    "We will inform you by e-mail about the progress of your transactions.": "Nous vous informerons par e-mail de l'état d'avancement de vos transactions.",
+    "Enter your email address if you want to be informed about the progress of any purchase or sale": "Saisissez votre adresse électronique si vous souhaitez être informé de l'avancement de vos transactions"
   },
   "screens/iban": {
     "Bank Accounts": "Comptes bancaires",

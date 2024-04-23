@@ -1,4 +1,4 @@
-import { Sell } from '@dfx.swiss/react';
+import { Swap } from '@dfx.swiss/react';
 import {
   CopyButton,
   DfxIcon,
@@ -17,13 +17,13 @@ import { useSettingsContext } from '../../contexts/settings.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
 import { blankedAddress } from '../../util/utils';
 
-interface SellCompletionProps {
-  paymentInfo: Sell;
+interface SwapCompletionProps {
+  paymentInfo: Swap;
   navigateOnClose: boolean;
   txId?: string;
 }
 
-export function SellCompletion({ paymentInfo, navigateOnClose, txId }: SellCompletionProps): JSX.Element {
+export function SwapCompletion({ paymentInfo, navigateOnClose, txId }: SwapCompletionProps): JSX.Element {
   const { copy } = useClipboard();
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
@@ -31,7 +31,7 @@ export function SellCompletion({ paymentInfo, navigateOnClose, txId }: SellCompl
   const [isClosed, setIsClosed] = useState(false);
 
   function close() {
-    closeServices({ type: CloseType.SELL, isComplete: true, sell: paymentInfo }, navigateOnClose);
+    closeServices({ type: CloseType.SWAP, isComplete: true, swap: paymentInfo }, navigateOnClose);
     setIsClosed(true);
   }
 
@@ -58,8 +58,8 @@ export function SellCompletion({ paymentInfo, navigateOnClose, txId }: SellCompl
       <p className="text-center text-dfxBlue-800">
         {!txId &&
           translate(
-            'screens/sell',
-            'As soon as the transaction arrives in our wallet, we will transfer your money to your bank account.',
+            'screens/swap',
+            'As soon as the transaction arrives in our wallet, we will transfer your asset to your wallet.',
           )}{' '}
         {translate('screens/payment', 'We will inform you by e-mail about the progress of your transactions.')}
       </p>

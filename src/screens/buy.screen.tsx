@@ -42,6 +42,7 @@ import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
+import { AddressSwitch } from '../components/payment/address-switch';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PaymentInformationContent } from '../components/payment/payment-information';
 import { PrivateAssetHint } from '../components/private-asset-hint';
@@ -386,24 +387,7 @@ export function BuyScreen(): JSX.Element {
       scrollRef={scrollRef}
     >
       {showsSwitchScreen ? (
-        <>
-          <p className="text-dfxBlue-800 mb-2">
-            {translate('screens/buy', 'Are you sure you want to send to a different address?')}
-          </p>
-          <StyledHorizontalStack>
-            <StyledButton
-              color={StyledButtonColor.STURDY_WHITE}
-              width={StyledButtonWidth.MIN}
-              label={translate('general/actions', 'No')}
-              onClick={() => setShowsSwitchScreen(false)}
-            />
-            <StyledButton
-              width={StyledButtonWidth.MIN}
-              label={translate('general/actions', 'Yes')}
-              onClick={onAddressSwitch}
-            />
-          </StyledHorizontalStack>
-        </>
+        <AddressSwitch onClose={(r) => (r ? onAddressSwitch() : setShowsSwitchScreen(false))} />
       ) : showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose />
       ) : showsNameForm ? (
