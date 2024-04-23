@@ -29,11 +29,11 @@ export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyComplet
   const [isClosed, setIsClosed] = useState(false);
 
   const isLoading = !user;
-  const showsSimple = user?.mail != null;
+  const hasMail = user?.mail != null;
 
   function getHeader(): string {
-    return showsSimple
-      ? translate('screens/payment', 'Nice! You are all set! Give us a minute to handle your transaction')
+    return hasMail
+      ? translate('screens/payment', 'Nice! You are all set! Give us a minute to handle your transaction.')
       : translate(
           'screens/buy',
           'As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.',
@@ -57,21 +57,21 @@ export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyComplet
         <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />
       </div>
       <p className="text-base font-bold text-center text-dfxBlue-800">{getHeader()}</p>
-      {showsSimple ? (
+
+      {hasMail ? (
         <>
           <p className="text-center text-dfxBlue-800">
             {translate(
               'screens/buy',
               'As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.',
             )}{' '}
-            {translate('screens/payment', 'We will inform you about the progress of any purchase or sale via E-mail.')}
+            {translate('screens/payment', 'We will inform you by e-mail about the progress of your transactions.')}
           </p>
           <StyledButton
             label={translate('general/actions', 'Close')}
             onClick={close}
             color={StyledButtonColor.STURDY_WHITE}
             width={StyledButtonWidth.FULL}
-            caps
           />
         </>
       ) : (

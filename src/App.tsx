@@ -24,6 +24,7 @@ import { TransactionScreen } from './screens/transaction.screen';
 import { setupLanguages } from './translations';
 
 const SellScreen = lazy(() => import('./screens/sell.screen'));
+const SwapScreen = lazy(() => import('./screens/swap.screen'));
 
 setupLanguages();
 
@@ -64,6 +65,10 @@ export const Routes = [
   {
     path: '/sell/info',
     element: <SellInfoScreen />,
+  },
+  {
+    path: '/swap',
+    element: withSuspense(<SwapScreen />),
   },
   {
     path: '/kyc',

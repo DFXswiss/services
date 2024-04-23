@@ -7,7 +7,7 @@ interface ExchangeRateProps {
   exchangeRate: number;
   rate: number;
   fees: Fees;
-  feeCurrency: Fiat;
+  feeCurrency: Fiat | Asset;
   from: Fiat | Asset;
   to: Fiat | Asset;
 }
@@ -16,12 +16,12 @@ export function ExchangeRate({ exchangeRate, rate, fees, feeCurrency, from, to }
   const { translate } = useSettingsContext();
   const { toSymbol } = useFiat();
 
-  const symbol = toSymbol(feeCurrency);
+  const feeSymbol = 'blockchain' in feeCurrency ? ` ${feeCurrency.name}` : toSymbol(feeCurrency);
 
   const baseRate = `${Utils.formatAmount(exchangeRate)} ${from.name}/${to.name}`;
-  const minFee = `, min. ${fees.min}${symbol}`;
-  const dfxFee = `${fees.dfx}${symbol} (${(fees.rate * 100).toFixed(2)}%${fees.min ? minFee : ''})`;
-  const networkFee = `${fees.network}${symbol}`;
+  const minFee = `, min. ${fees.min}${feeSymbol}`;
+  const dfxFee = `${fees.dfx}${feeSymbol} (${(fees.rate * 100).toFixed(2)}%${fees.min ? minFee : ''})`;
+  const networkFee = `${fees.network}${feeSymbol}`;
 
   const l1Replacement =
     'blockchain' in to &&

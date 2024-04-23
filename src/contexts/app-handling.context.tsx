@@ -1,4 +1,4 @@
-import { Blockchain, Buy, Sell, useSessionContext } from '@dfx.swiss/react';
+import { Blockchain, Buy, Sell, Swap, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useIframe } from '../hooks/iframe.hook';
@@ -54,6 +54,7 @@ export interface AppParams {
 export enum CloseType {
   BUY = 'buy',
   SELL = 'sell',
+  SWAP = 'swap',
   CANCEL = 'cancel',
 }
 
@@ -62,6 +63,7 @@ export interface CloseMessageData {
   isComplete?: boolean;
   buy?: Buy;
   sell?: Sell;
+  swap?: Swap;
 }
 
 export interface CancelServicesParams extends CloseMessageData {
@@ -80,7 +82,13 @@ export interface SellServicesParams extends CloseMessageData {
   sell: Sell;
 }
 
-export type CloseServicesParams = CancelServicesParams | BuyServicesParams | SellServicesParams;
+export interface SwapServicesParams extends CloseMessageData {
+  type: CloseType.SWAP;
+  isComplete: boolean;
+  swap: Swap;
+}
+
+export type CloseServicesParams = CancelServicesParams | BuyServicesParams | SellServicesParams | SwapServicesParams;
 
 // --- CONTEXT --- //
 interface AppHandlingContextInterface {
@@ -114,7 +122,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const { redirectUri: storeRedirectUri } = useStore();
   const { isUsedByIframe, sendMessage } = useIframe();
   const { readBalances } = useBalanceContext();
-  const { availableBlockchains, logout } = useSessionContext();
+  const { availableBlockchains } = useSessionContext();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasSession, setHasSession] = useState(false);
@@ -132,11 +140,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
   }, []);
-
-  useEffect(() => {
-    const blockchain = params.blockchain as Blockchain;
-    if (availableBlockchains && blockchain && !availableBlockchains.includes(blockchain)) logout();
-  }, [availableBlockchains, params]);
 
   // parameters
   function getParameter(query: URLSearchParams, key: string): string | undefined {
