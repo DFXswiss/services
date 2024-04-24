@@ -6,6 +6,7 @@ import { AssetBalance, useBalanceContext } from '../contexts/balance.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { useAlby } from './wallets/alby.hook';
 import { useMetaMask } from './wallets/metamask.hook';
+import { useWalletConnect } from './wallets/wallet-connect.hook';
 
 export interface TxHelperInterface {
   getBalances: (assets: Asset[]) => Promise<AssetBalance[] | undefined>;
@@ -15,7 +16,9 @@ export interface TxHelperInterface {
 
 // CAUTION: This is a helper hook for all blockchain transaction functionalities. Think about lazy loading, as soon as it gets bigger.
 export function useTxHelper(): TxHelperInterface {
-  const { readBalance, createTransaction } = useMetaMask();
+  const { readBalance: readBalanceMetaMask, createTransaction: createTransactionMetaMask } = useMetaMask();
+  const { readBalance: readBalanceWalletConnect, createTransaction: createTransactionWalletConnect } =
+    useWalletConnect();
   const { sendPayment } = useAlby();
   const { getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet } = useWalletContext();
@@ -27,9 +30,14 @@ export function useTxHelper(): TxHelperInterface {
 
     switch (activeWallet) {
       case WalletType.META_MASK:
-        return (await Promise.all(assets.map((asset: Asset) => readBalance(asset, session?.address)))).filter(
+        return (await Promise.all(assets.map((asset: Asset) => readBalanceMetaMask(asset, session?.address)))).filter(
           (b) => b.amount > 0,
         );
+
+      case WalletType.WALLET_CONNECT:
+        return (
+          await Promise.all(assets.map((asset: Asset) => readBalanceWalletConnect(asset, session?.address)))
+        ).filter((b) => b.amount > 0);
 
       default:
         // no balance available
@@ -40,17 +48,23 @@ export function useTxHelper(): TxHelperInterface {
   async function sendTransaction(tx: Sell | Swap): Promise<string> {
     if (!activeWallet) throw new Error('No wallet connected');
 
+    const asset = 'asset' in tx ? tx.asset : tx.sourceAsset;
+
     switch (activeWallet) {
       case WalletType.META_MASK:
         if (!session?.address) throw new Error('Address is not defined');
 
-        const asset = 'asset' in tx ? tx.asset : tx.sourceAsset;
-        return createTransaction(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
+        return createTransactionMetaMask(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
       case WalletType.ALBY:
         if (!tx.paymentRequest) throw new Error('Payment request not defined');
 
         return sendPayment(tx.paymentRequest).then((p) => p.preimage);
+
+      case WalletType.WALLET_CONNECT:
+        if (!session?.address) throw new Error('Address is not defined');
+
+        return createTransactionWalletConnect(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
       default:
         throw new Error('Not supported yet');
@@ -63,6 +77,7 @@ export function useTxHelper(): TxHelperInterface {
     switch (activeWallet) {
       case WalletType.META_MASK:
       case WalletType.ALBY:
+      case WalletType.WALLET_CONNECT:
         return true;
 
       default:
@@ -71,6 +86,12 @@ export function useTxHelper(): TxHelperInterface {
   }
   return useMemo(
     () => ({ getBalances, sendTransaction, canSendTransaction }),
-    [readBalance, createTransaction, sendPayment],
+    [
+      readBalanceMetaMask,
+      readBalanceWalletConnect,
+      createTransactionMetaMask,
+      createTransactionWalletConnect,
+      sendPayment,
+    ],
   );
 }
