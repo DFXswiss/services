@@ -36,7 +36,7 @@ export interface DeepWallet {
   deepLink: string;
   imageUrl: string;
 }
-declare enum EthCall {
+enum EthCall {
   BALANCE_OF = '0x70a08231',
   TRANSFER = '0xa9059cbb',
   DECIMALS = '0x313ce567',
@@ -214,6 +214,6 @@ export function useWalletConnect(): WalletConnectInterface {
       readBalance,
       wallets,
     }),
-    [],
+    [wallets],
   );
 }
