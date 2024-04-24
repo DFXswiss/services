@@ -167,7 +167,7 @@ export function useWalletConnect(): WalletConnectInterface {
     const web3 = new Web3(client.chainId as any);
 
     if (asset.type === AssetType.COIN) {
-      return await client.request<any>({
+      return client.request<any>({
         method: 'eth_sendTransaction',
         params: [
           {
@@ -190,7 +190,7 @@ export function useWalletConnect(): WalletConnectInterface {
         .toString(16)
         .padStart(64, '0');
 
-      return await client.request<any>({
+      return client.request<any>({
         method: 'eth_sendTransaction',
         params: [
           {
