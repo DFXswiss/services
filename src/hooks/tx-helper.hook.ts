@@ -14,8 +14,6 @@ export interface TxHelperInterface {
   canSendTransaction: () => boolean;
 }
 
-// CAUTION: This is a helper hook for all sell functionalities. Think about lazy loading, as soon as it gets bigger.
-
 // CAUTION: This is a helper hook for all blockchain transaction functionalities. Think about lazy loading, as soon as it gets bigger.
 export function useTxHelper(): TxHelperInterface {
   const { readBalance: readBalanceMetaMask, createTransaction: createTransactionMetaMask } = useMetaMask();

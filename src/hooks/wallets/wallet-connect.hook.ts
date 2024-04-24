@@ -123,7 +123,7 @@ export function useWalletConnect(): WalletConnectInterface {
     return new BigNumber(balance).dividedBy(Math.pow(10, decimals));
   }
 
-  function decodeMethod(method: EthCall, address: string): string {
+  function encodeMethodData(method: EthCall, address: string): string {
     return method + '000000000000000000000000' + address.substring(2, address.length);
   }
   async function readBalance(asset: Asset, address?: string): Promise<AssetBalance> {
@@ -144,12 +144,12 @@ export function useWalletConnect(): WalletConnectInterface {
       } else {
         const decimals = await client.request<any>({
           method: 'eth_call',
-          params: [{ to: asset.chainId, data: decodeMethod(EthCall.DECIMALS, address) }, 'latest'],
+          params: [{ to: asset.chainId, data: encodeMethodData(EthCall.DECIMALS, address) }, 'latest'],
         });
 
         const tokenBalance = await client.request<any>({
           method: 'eth_call',
-          params: [{ to: asset.chainId, data: decodeMethod(EthCall.BALANCE_OF, address) }, 'latest'],
+          params: [{ to: asset.chainId, data: encodeMethodData(EthCall.BALANCE_OF, address) }, 'latest'],
         });
 
         return {
@@ -167,7 +167,7 @@ export function useWalletConnect(): WalletConnectInterface {
     const web3 = new Web3(client.chainId as any);
 
     if (asset.type === AssetType.COIN) {
-      await client.request<any>({
+      return await client.request<any>({
         method: 'eth_sendTransaction',
         params: [
           {
@@ -179,11 +179,10 @@ export function useWalletConnect(): WalletConnectInterface {
           },
         ],
       });
-      return '';
     } else {
       const decimals = await client.request<any>({
         method: 'eth_call',
-        params: [{ to: asset.chainId, data: decodeMethod(EthCall.DECIMALS, from) }, 'latest'],
+        params: [{ to: asset.chainId, data: encodeMethodData(EthCall.DECIMALS, from) }, 'latest'],
       });
 
       const adjustedAmount = amount
@@ -191,7 +190,7 @@ export function useWalletConnect(): WalletConnectInterface {
         .toString(16)
         .padStart(64, '0');
 
-      const transaction = await client.request<any>({
+      return await client.request<any>({
         method: 'eth_sendTransaction',
         params: [
           {
@@ -200,12 +199,10 @@ export function useWalletConnect(): WalletConnectInterface {
             value: '0x0',
             maxPriorityFeePerGas: null,
             maxFeePerGas: null,
-            data: decodeMethod(EthCall.TRANSFER, to) + adjustedAmount,
+            data: encodeMethodData(EthCall.TRANSFER, to) + adjustedAmount,
           },
         ],
       });
-
-      return transaction;
     }
   }
 
