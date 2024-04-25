@@ -354,10 +354,15 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
       label: translate('screens/payment', 'Base rate'),
       text: `${tx.exchangeRate} ${tx.inputAsset}/${tx.outputAsset}`,
     });
-  tx.feeAmount != null &&
+  tx.fees?.dfx != null &&
     rateItems.push({
       label: translate('screens/payment', 'DFX fee'),
-      text: `${tx.feeAmount} ${tx.inputAsset}`,
+      text: `${tx.fees.dfx} ${tx.inputAsset}`,
+    });
+  tx.fees?.network != null &&
+    rateItems.push({
+      label: translate('screens/payment', 'Network fee'),
+      text: `${tx.fees.network} ${tx.inputAsset}`,
     });
 
   return (

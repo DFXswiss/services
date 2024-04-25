@@ -261,6 +261,8 @@
   },
   "screens/payment": {
     "Payment Information": "Informazioni sul pagamento",
+    "Text": "Testo",
+    "QR Code": "Codice QR",
     "Bank Transaction Details": "Dettagli della transazione bancarian",
     "Recipient": "Destinatario",
     "Amount": "Importo",

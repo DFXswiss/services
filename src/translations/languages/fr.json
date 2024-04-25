@@ -261,6 +261,8 @@
   },
   "screens/payment": {
     "Payment Information": "Informations sur le paiement",
+    "Text": "Texte",
+    "QR Code": "Code QR",
     "Bank Transaction Details": "Détails de la transaction bancaire",
     "Recipient": "Bénéficiaire",
     "Amount": "Montant",
