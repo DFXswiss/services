@@ -82,10 +82,10 @@ export function BuyScreen(): JSX.Element {
   const { session } = useAuthContext();
   const { currencies, receiveFor } = useBuy();
   const { toSymbol } = useFiat();
-  const { getAssets } = useAssetContext();
+  const { assets, getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const {
-    assets,
+    assets: assetFilter,
     assetIn,
     assetOut,
     amountIn,
@@ -136,10 +136,13 @@ export function BuyScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
+  const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
+  const blockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
+
   const addressItems: Address[] =
-    session && availableBlockchains
+    session && blockchains?.length
       ? [
-          ...availableBlockchains.map((b) => ({
+          ...blockchains.map((b) => ({
             address: blankedAddress(session.address),
             label: toString(b),
             chain: b,
@@ -174,17 +177,13 @@ export function BuyScreen(): JSX.Element {
     const blockchainAssets = getAssets(assetBlockchains, { buyable: true, comingSoon: false }).filter(
       (a) => a.category === AssetCategory.PUBLIC || a.name === assetOut,
     );
-    const activeAssets = assets
-      ? assets
-          .split(',')
-          .map((a) => getAsset(blockchainAssets, a))
-          .filter(isDefined)
-      : blockchainAssets;
+    const activeAssets = filterAssets(blockchainAssets, assetFilter);
+
     setAvailableAssets(activeAssets);
 
     const asset = getAsset(activeAssets, assetOut) ?? (activeAssets.length === 1 && activeAssets[0]);
     if (asset) setVal('asset', asset);
-  }, [assetOut, assets, getAsset, getAssets, blockchain, walletBlockchain, availableBlockchains]);
+  }, [assetOut, assetFilter, getAsset, getAssets, blockchain, walletBlockchain, availableBlockchains]);
 
   useEffect(() => {
     const currency =
@@ -334,6 +333,15 @@ export function BuyScreen(): JSX.Element {
   }
 
   // misc
+  function filterAssets(assets: Asset[], filter?: string): Asset[] {
+    return filter
+      ? filter
+          .split(',')
+          .map((a) => getAsset(assets, a))
+          .filter(isDefined)
+      : assets;
+  }
+
   function onSubmit(_data: FormData) {
     // TODO: (Krysh fix broken form validation and onSubmit
   }
