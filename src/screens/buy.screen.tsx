@@ -170,8 +170,8 @@ export function BuyScreen(): JSX.Element {
 
   useEffect(() => {
     const activeBlockchain = walletBlockchain ?? blockchain;
-    const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
-    const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false }).filter(
+    const assetBlockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
+    const blockchainAssets = getAssets(assetBlockchains, { buyable: true, comingSoon: false }).filter(
       (a) => a.category === AssetCategory.PUBLIC || a.name === assetOut,
     );
     const activeAssets = assets
@@ -184,7 +184,7 @@ export function BuyScreen(): JSX.Element {
 
     const asset = getAsset(activeAssets, assetOut) ?? (activeAssets.length === 1 && activeAssets[0]);
     if (asset) setVal('asset', asset);
-  }, [assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
+  }, [assetOut, assets, getAsset, getAssets, blockchain, walletBlockchain, availableBlockchains]);
 
   useEffect(() => {
     const currency =

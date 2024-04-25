@@ -154,7 +154,7 @@ export default function SwapScreen(): JSX.Element {
 
     const targetAsset = getAsset(activeAssets, assetOut) ?? (activeAssets.length === 1 && activeAssets[0]);
     if (targetAsset) setVal('targetAsset', targetAsset);
-  }, [assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
+  }, [assets, assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
     if (amountIn) setVal('amount', amountIn);
