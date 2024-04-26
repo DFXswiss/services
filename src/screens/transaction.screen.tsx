@@ -29,6 +29,7 @@ import {
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledIconButton,
   StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
@@ -208,7 +209,14 @@ export function TransactionList(): JSX.Element {
               onClick={() => navigate('/bank-accounts')}
             />
             <StyledVerticalStack full center>
-              <h2 className="text-dfxGray-700 mb-2">{translate('screens/payment', 'Your Transactions')}</h2>
+              <div className="relative w-full">
+                <h2 className="text-dfxGray-700 mb-2 flex-1">{translate('screens/payment', 'Your Transactions')}</h2>
+
+                {transactions && <div className="absolute right-0 top-1">
+                  <StyledIconButton onClick={loadTransactions} icon={IconVariant.RELOAD} />
+                </div>}
+              </div>
+
               {transactionList ? (
                 transactionList.length === 0 ? (
                   <p className="text-dfxGray-700">{translate('screens/payment', 'No transactions found')}</p>
