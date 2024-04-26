@@ -72,6 +72,13 @@ interface FormData {
   amount: string;
 }
 
+interface CustomAmountError {
+  key: string;
+  defaultValue: string;
+  interpolation?: Record<string, string | number> | undefined;
+  hideInfos: boolean;
+}
+
 export default function SellScreen(): JSX.Element {
   useSessionGuard();
   useKycLevelGuard(KycLevel.Sell, '/profile');
@@ -95,7 +102,7 @@ export default function SellScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
-  const [customAmountError, setCustomAmountError] = useState<string>();
+  const [customAmountError, setCustomAmountError] = useState<CustomAmountError>();
   const [errorMessage, setErrorMessage] = useState<string>();
   const [kycError, setKycError] = useState<TransactionError>();
   const [isLoading, setIsLoading] = useState(false);
@@ -186,7 +193,7 @@ export default function SellScreen(): JSX.Element {
 
     setErrorMessage(undefined);
 
-    if (!dataValid || !checkForAmountAvailable(Number(validatedData.amount), validatedData.asset)) {
+    if (!dataValid) {
       setPaymentInfo(undefined);
       setIsLoading(false);
       setIsPriceLoading(false);
@@ -235,40 +242,31 @@ export default function SellScreen(): JSX.Element {
     };
   }, [validatedData]);
 
-  function checkForAmountAvailable(amount: number, asset: Asset): boolean {
-    const balance = findBalance(asset) ?? 0;
-    if (balances && amount > Number(balance)) {
-      setCustomAmountError(
-        translate('screens/payment', 'Entered amount is higher than available balance of {{amount}} {{asset}}', {
-          amount: balance,
-          asset: asset.name,
-        }),
-      );
-      return false;
-    } else {
-      setCustomAmountError(undefined);
-      return true;
-    }
-  }
-
   function validateSell(sell: Sell): void {
+    // tx errors
     switch (sell.error) {
       case TransactionError.AMOUNT_TOO_LOW:
-        setCustomAmountError(
-          translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+        setCustomAmountError({
+          key: 'screens/payment',
+          defaultValue: 'Entered amount is below minimum deposit of {{amount}} {{currency}}',
+          interpolation: {
             amount: Utils.formatAmountCrypto(sell.minVolume),
             currency: sell.asset.name,
-          }),
-        );
+          },
+          hideInfos: true,
+        });
         return;
 
       case TransactionError.AMOUNT_TOO_HIGH:
-        setCustomAmountError(
-          translate('screens/payment', 'Entered amount is above maximum deposit of {{amount}} {{currency}}', {
+        setCustomAmountError({
+          key: 'screens/payment',
+          defaultValue: 'Entered amount is above maximum deposit of {{amount}} {{currency}}',
+          interpolation: {
             amount: Utils.formatAmountCrypto(sell.maxVolume),
             currency: sell.asset.name,
-          }),
-        );
+          },
+          hideInfos: true,
+        });
         return;
 
       case TransactionError.LIMIT_EXCEEDED:
@@ -277,6 +275,21 @@ export default function SellScreen(): JSX.Element {
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(sell.error);
         return;
+    }
+
+    // balance check
+    const balance = findBalance(sell.asset) ?? 0;
+    if (balances && sell.amount > Number(balance)) {
+      setCustomAmountError({
+        key: 'screens/payment',
+        defaultValue: 'Entered amount is higher than available balance of {{amount}} {{asset}}',
+        interpolation: {
+          amount: balance,
+          asset: sell.asset.name,
+        },
+        hideInfos: false,
+      });
+      return;
     }
 
     setCustomAmountError(undefined);
@@ -369,7 +382,14 @@ export default function SellScreen(): JSX.Element {
                         (kycError && kycError === TransactionError.BANK_TRANSACTION_MISSING) ||
                         customAmountError != null
                       }
-                      forceErrorMessage={customAmountError}
+                      forceErrorMessage={
+                        customAmountError &&
+                        translate(
+                          customAmountError.key,
+                          customAmountError.defaultValue,
+                          customAmountError.interpolation,
+                        )
+                      }
                       full
                     />
                   </div>
@@ -491,7 +511,7 @@ export default function SellScreen(): JSX.Element {
                     </StyledVerticalStack>
                   )}
 
-                  {paymentInfo && !kycError && !errorMessage && !customAmountError && (
+                  {paymentInfo && !kycError && !errorMessage && !customAmountError?.hideInfos && (
                     <>
                       <ExchangeRate
                         exchangeRate={1 / paymentInfo.exchangeRate}
