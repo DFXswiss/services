@@ -322,6 +322,11 @@ export function TransactionList(): JSX.Element {
                                       onClick={() => navigate('/kyc')}
                                     />
                                   )}
+                                  <StyledButton
+                                    color={StyledButtonColor.STURDY_WHITE}
+                                    label={translate('screens/payment', 'Report an issue')}
+                                    onClick={() => navigate(`/tx/${tx.id}/issue`)}
+                                  />
                                 </StyledVerticalStack>
                               </StyledCollapsible>
                             </div>

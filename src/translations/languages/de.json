@@ -350,6 +350,17 @@
     "IBAN already exists in another DFX customer account": "IBAN existiert bereits in einem anderen DFX-Kundenkonto",
     "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Dies ist eine Mehrkonten-IBAN und kann nicht als persönliches Konto hinzugefügt werden. Bitte sende die Bestätigung der Banktransaktion als PDF an support@dfx.swiss."
   },
+  "screens/support": {
+    "Support issue": "Supportanfrage",
+    "The issue has been successfully submitted. You will be contacted by email.": "Die Anfrage wurde erfolgreich eingereicht. Du wirst per E-Mail kontaktiert.",
+
+    "Reason": "Grund",
+    "Funds not received": "Zahlung nicht erhalten",
+    "Other": "Andere",
+
+    "Description": "Beschreibung",
+    "File": "Datei"
+  },
   "navigation/links": {
     "Buy & sell": "Kaufen & Verkaufen",
     "KYC": "KYC",
