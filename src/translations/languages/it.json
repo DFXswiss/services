@@ -276,7 +276,8 @@
     "DFX fee": "Commissioni DFX",
     "Network fee": "Commissione di rete",
 
-    "Transactions": "Le transazioni",
+    "Transactions": "Transazioni",
+    "Transaction": "Transazione",
     "Your Transactions": "Le vostre transazioni",
     "No transactions found": "Nessuna transazione trovata",
     "My transaction is missing": "La mia transazione è scomparsa",

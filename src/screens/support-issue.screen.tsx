@@ -9,7 +9,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { CreateTransactionIssue, SupportIssueReason } from '@dfx.swiss/react/dist/definitions/support';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
@@ -21,6 +21,7 @@ import { useNavigation } from '../hooks/navigation.hook';
 import { toBase64 } from '../util/utils';
 
 interface FormData {
+  transaction: string;
   reason: SupportIssueReason;
   description?: string;
   file?: File;
@@ -43,7 +44,12 @@ export function SupportIssueScreen(): JSX.Element {
     control,
     handleSubmit,
     formState: { errors, isValid },
+    setValue,
   } = useForm<FormData>({ mode: 'onTouched' });
+
+  useEffect(() => {
+    id && setValue('transaction', id);
+  }, [id]);
 
   async function onSubmit(data: FormData) {
     if (!id) return;
@@ -95,6 +101,16 @@ export function SupportIssueScreen(): JSX.Element {
           translate={translateError}
         >
           <StyledVerticalStack gap={6} full center>
+            <StyledDropdown<string>
+              rootRef={rootRef}
+              label={translate('screens/payment', 'Transaction')}
+              items={[]}
+              labelFunc={(item) => `${translate('screens/payment', 'Transaction')} ${item}`}
+              name="transaction"
+              placeholder={translate('general/actions', 'Select...')}
+              full
+            />
+
             <StyledDropdown<SupportIssueReason>
               rootRef={rootRef}
               label={translate('screens/support', 'Reason')}
