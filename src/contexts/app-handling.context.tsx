@@ -313,7 +313,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       setRedirectPath,
       canClose: redirectUri != null,
     }),
-    [props.isWidget, isUsedByIframe, redirectUri, isInitialized, params, redirectPath],
+    [props.isWidget, isUsedByIframe, redirectUri, isInitialized, params, redirectPath, availableBlockchains],
   );
 
   return <AppHandlingContext.Provider value={context}>{props.children}</AppHandlingContext.Provider>;

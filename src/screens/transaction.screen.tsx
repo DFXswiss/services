@@ -29,6 +29,7 @@ import {
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledIconButton,
   StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
@@ -208,7 +209,14 @@ export function TransactionList(): JSX.Element {
               onClick={() => navigate('/bank-accounts')}
             />
             <StyledVerticalStack full center>
-              <h2 className="text-dfxGray-700 mb-2">{translate('screens/payment', 'Your Transactions')}</h2>
+              <div className="relative w-full">
+                <h2 className="text-dfxGray-700 mb-2 flex-1">{translate('screens/payment', 'Your Transactions')}</h2>
+
+                {transactions && <div className="absolute right-0 top-1">
+                  <StyledIconButton onClick={loadTransactions} icon={IconVariant.RELOAD} />
+                </div>}
+              </div>
+
               {transactionList ? (
                 transactionList.length === 0 ? (
                   <p className="text-dfxGray-700">{translate('screens/payment', 'No transactions found')}</p>
@@ -314,6 +322,11 @@ export function TransactionList(): JSX.Element {
                                       onClick={() => navigate('/kyc')}
                                     />
                                   )}
+                                  <StyledButton
+                                    color={StyledButtonColor.STURDY_WHITE}
+                                    label={translate('screens/payment', 'Report an issue')}
+                                    onClick={() => navigate(`/tx/${tx.id}/issue`)}
+                                  />
                                 </StyledVerticalStack>
                               </StyledCollapsible>
                             </div>
@@ -354,10 +367,15 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
       label: translate('screens/payment', 'Base rate'),
       text: `${tx.exchangeRate} ${tx.inputAsset}/${tx.outputAsset}`,
     });
-  tx.feeAmount != null &&
+  tx.fees?.dfx != null &&
     rateItems.push({
       label: translate('screens/payment', 'DFX fee'),
-      text: `${tx.feeAmount} ${tx.inputAsset}`,
+      text: `${tx.fees.dfx} ${tx.inputAsset}`,
+    });
+  tx.fees?.network != null &&
+    rateItems.push({
+      label: translate('screens/payment', 'Network fee'),
+      text: `${tx.fees.network} ${tx.inputAsset}`,
     });
 
   return (

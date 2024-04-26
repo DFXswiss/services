@@ -6,6 +6,7 @@ import {
   TransactionFailureReason,
   TransactionState,
 } from '@dfx.swiss/react';
+import { SupportIssueReason } from '@dfx.swiss/react/dist/definitions/support';
 
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
@@ -84,4 +85,10 @@ export const OriginFutureLabels = {
   [FundOrigin.CRYPTO_GAINS]: 'Future crypto price gains',
   [FundOrigin.INHERITANCE]: 'Future inheritance',
   [FundOrigin.OTHER]: 'Other',
+};
+
+// --- SUPPORT ISSUE --- //
+export const ReasonLabels = {
+  [SupportIssueReason.FUNDS_NOT_RECEIVED]: 'Funds not received',
+  [SupportIssueReason.OTHER]: 'Other',
 };

@@ -261,6 +261,8 @@
   },
   "screens/payment": {
     "Payment Information": "Informations sur le paiement",
+    "Text": "Texte",
+    "QR Code": "Code QR",
     "Bank Transaction Details": "Détails de la transaction bancaire",
     "Recipient": "Bénéficiaire",
     "Amount": "Montant",
@@ -275,6 +277,7 @@
     "Network fee": "Frais de réseau",
 
     "Transactions": "Transactions",
+    "Transaction": "Transaction",
     "Your Transactions": "Vos transactions",
     "No transactions found": "Aucune transaction trouvée",
     "My transaction is missing": "Ma transaction est manquante",
@@ -347,6 +350,17 @@
     "Add account": "Ajouter un compte",
     "IBAN already exists in another DFX customer account": "L'IBAN existe déjà sur un autre compte client de DFX",
     "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez envoyer la confirmation de la transaction bancaire au format PDF à support@dfx.swiss."
+  },
+  "screens/support": {
+    "Support issue": "Demande de support",
+    "The issue has been successfully submitted. You will be contacted by email.": "La demande a été soumise avec succès. Vous serez contacté par e-mail.",
+
+    "Reason": "Motif",
+    "Funds not received": "Fonds non reçus",
+    "Other": "Autres",
+
+    "Description": "Description",
+    "File": "Fichier"
   },
   "navigation/links": {
     "Buy & sell": "Acheter & vendre",

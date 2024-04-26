@@ -71,6 +71,13 @@ interface FormData {
   address: Address;
 }
 
+interface CustomAmountError {
+  key: string;
+  defaultValue: string;
+  interpolation?: Record<string, string | number> | undefined;
+  hideInfos: boolean;
+}
+
 export default function SwapScreen(): JSX.Element {
   useSessionGuard();
 
@@ -90,7 +97,7 @@ export default function SwapScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
-  const [customAmountError, setCustomAmountError] = useState<string>();
+  const [customAmountError, setCustomAmountError] = useState<CustomAmountError>();
   const [errorMessage, setErrorMessage] = useState<string>();
   const [kycError, setKycError] = useState<TransactionError>();
   const [isLoading, setIsLoading] = useState(false);
@@ -154,7 +161,7 @@ export default function SwapScreen(): JSX.Element {
 
     const targetAsset = getAsset(activeAssets, assetOut) ?? (activeAssets.length === 1 && activeAssets[0]);
     if (targetAsset) setVal('targetAsset', targetAsset);
-  }, [assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
+  }, [assets, assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
     if (amountIn) setVal('amount', amountIn);
@@ -193,7 +200,7 @@ export default function SwapScreen(): JSX.Element {
 
     setErrorMessage(undefined);
 
-    if (!dataValid || !checkForAmountAvailable(Number(validatedData.amount), validatedData.sourceAsset)) {
+    if (!dataValid) {
       setPaymentInfo(undefined);
       setIsLoading(false);
       setIsPriceLoading(false);
@@ -242,40 +249,31 @@ export default function SwapScreen(): JSX.Element {
     };
   }, [validatedData]);
 
-  function checkForAmountAvailable(amount: number, asset: Asset): boolean {
-    const balance = findBalance(asset) ?? 0;
-    if (balances && amount > Number(balance)) {
-      setCustomAmountError(
-        translate('screens/payment', 'Entered amount is higher than available balance of {{amount}} {{asset}}', {
-          amount: balance,
-          asset: asset.name,
-        }),
-      );
-      return false;
-    } else {
-      setCustomAmountError(undefined);
-      return true;
-    }
-  }
-
   function validateSwap(swap: Swap): void {
+    // tx errors
     switch (swap.error) {
       case TransactionError.AMOUNT_TOO_LOW:
-        setCustomAmountError(
-          translate('screens/payment', 'Entered amount is below minimum deposit of {{amount}} {{currency}}', {
+        setCustomAmountError({
+          key: 'screens/payment',
+          defaultValue: 'Entered amount is below minimum deposit of {{amount}} {{currency}}',
+          interpolation: {
             amount: Utils.formatAmountCrypto(swap.minVolume),
             currency: swap.sourceAsset.name,
-          }),
-        );
+          },
+          hideInfos: true,
+        });
         return;
 
       case TransactionError.AMOUNT_TOO_HIGH:
-        setCustomAmountError(
-          translate('screens/payment', 'Entered amount is above maximum deposit of {{amount}} {{currency}}', {
+        setCustomAmountError({
+          key: 'screens/payment',
+          defaultValue: 'Entered amount is above maximum deposit of {{amount}} {{currency}}',
+          interpolation: {
             amount: Utils.formatAmountCrypto(swap.maxVolume),
             currency: swap.sourceAsset.name,
-          }),
-        );
+          },
+          hideInfos: true,
+        });
         return;
 
       case TransactionError.LIMIT_EXCEEDED:
@@ -284,6 +282,21 @@ export default function SwapScreen(): JSX.Element {
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(swap.error);
         return;
+    }
+
+    // balance check
+    const balance = findBalance(swap.sourceAsset) ?? 0;
+    if (balances && swap.amount > Number(balance)) {
+      setCustomAmountError({
+        key: 'screens/payment',
+        defaultValue: 'Entered amount is higher than available balance of {{amount}} {{asset}}',
+        interpolation: {
+          amount: balance,
+          asset: swap.sourceAsset.name,
+        },
+        hideInfos: false,
+      });
+      return;
     }
 
     setCustomAmountError(undefined);
@@ -378,7 +391,14 @@ export default function SwapScreen(): JSX.Element {
                         (kycError && kycError === TransactionError.BANK_TRANSACTION_MISSING) ||
                         customAmountError != null
                       }
-                      forceErrorMessage={customAmountError}
+                      forceErrorMessage={
+                        customAmountError &&
+                        translate(
+                          customAmountError.key,
+                          customAmountError.defaultValue,
+                          customAmountError.interpolation,
+                        )
+                      }
                       full
                     />
                   </div>
@@ -470,7 +490,7 @@ export default function SwapScreen(): JSX.Element {
                 </StyledVerticalStack>
               )}
 
-              {!isLoading && paymentInfo && !kycError && !errorMessage && (
+              {!isLoading && paymentInfo && !kycError && !errorMessage && !customAmountError?.hideInfos && (
                 <>
                   <ExchangeRate
                     exchangeRate={1 / paymentInfo.exchangeRate}

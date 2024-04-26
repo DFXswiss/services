@@ -19,6 +19,7 @@ import { KycScreen } from './screens/kyc.screen';
 import { LimitScreen } from './screens/limit.screen';
 import { LinkScreen } from './screens/link.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
+import { SupportIssueScreen } from './screens/support-issue.screen';
 import { TfaScreen } from './screens/tfa.screen';
 import { TransactionScreen } from './screens/transaction.screen';
 import { setupLanguages } from './translations';
@@ -107,6 +108,10 @@ export const Routes = [
   {
     path: '/tx/:id',
     element: <TransactionScreen />,
+  },
+  {
+    path: '/tx/:id/issue',
+    element: <SupportIssueScreen />,
   },
   {
     path: '/bank-accounts',

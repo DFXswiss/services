@@ -163,6 +163,7 @@ export function LimitScreen(): JSX.Element {
             <StyledInput
               name="fundOriginText"
               label={`${translate('screens/limit', 'Origin of funds')} (${translate('screens/limit', 'free text')})`}
+              multiLine
               full
             />
 
