@@ -3,10 +3,10 @@ import {
   FundOrigin,
   InvestmentDate,
   Limit,
+  SupportIssueReason,
   TransactionFailureReason,
   TransactionState,
 } from '@dfx.swiss/react';
-import { SupportIssueReason } from '@dfx.swiss/react/dist/definitions/support';
 
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
@@ -52,6 +52,7 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.COUNTRY_NOT_ALLOWED]: 'Country not allowed',
   [TransactionFailureReason.INSTANT_PAYMENT]: 'Instant payment',
   [TransactionFailureReason.FEE_TOO_HIGH]: 'Network fee too high',
+  [TransactionFailureReason.RECEIVER_REJECTED]: 'Payment rejected by receiver node',
 };
 
 // --- LIMIT REQUESTS --- //
