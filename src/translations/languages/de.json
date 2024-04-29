@@ -322,6 +322,7 @@
     "Country not allowed": "Land nicht erlaubt",
     "Instant payment": "Sofort-Transaktion",
     "Network fee too high": "Netzwerkgebühr zu hoch",
+    "Payment rejected by receiver node": "Zahlung von Empfänger-Node abgelehnt",
 
     "Payment method": "Zahlungsmethode",
     "Standard bank transaction": "Standard-Banktransaktion",
