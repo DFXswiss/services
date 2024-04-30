@@ -7,18 +7,18 @@ export function useSift(): void {
   const { pathname } = useLocation();
 
   const sift = (window._sift ??= []);
-  const beaconKey = process.env.REACT_APP_SIFT_BEACON_KEY;
+  const beaconKey = process.env.REACT_APP_SIFT_BEACON_KEY ?? '';
+  const hasKey = beaconKey && !beaconKey.includes('SIFT_BEACON_KEY');
 
   useEffect(() => {
-    if (!beaconKey) return;
+    if (!hasKey) return;
 
     sift.push(['_setAccount', beaconKey]);
     sift.push(['_setUserId', session?.address ?? '']);
-    sift.push(['_trackPageview']);
   }, [session?.address]);
 
   useEffect(() => {
-    if (!beaconKey) return;
+    if (!hasKey) return;
 
     sift.push(['_trackPageview']);
   }, [pathname]);

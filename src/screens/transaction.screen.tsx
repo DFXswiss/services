@@ -394,7 +394,7 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
       </StyledDataTableRow>
       {tx.reason && (
         <StyledDataTableRow label={translate('screens/payment', 'Failure reason')}>
-          <p>{translate('screens/payment', PaymentFailureReasons[tx.reason])}</p>
+          <p className='text-right'>{translate('screens/payment', PaymentFailureReasons[tx.reason])}</p>
         </StyledDataTableRow>
       )}
       {paymentMethod && (
