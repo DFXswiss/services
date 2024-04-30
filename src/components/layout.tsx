@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Routes } from '../App';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useNavigation } from '../hooks/navigation.hook';
+import { useSift } from '../hooks/sift.hook';
 import { isNode } from '../util/utils';
 import { Navigation } from './navigation';
 
@@ -26,6 +27,8 @@ export function Layout({
   scrollRef,
   noPadding,
 }: LayoutProps): JSX.Element {
+  useSift();
+
   const navRef = useRef<HTMLDivElement>(null);
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const { pathname } = useLocation();
