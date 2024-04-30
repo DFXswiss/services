@@ -45,6 +45,13 @@ jobs:
           replace: ${{ secrets.DEV_WC_PID}}
           regex: false
 
+      - name: Update Sift Beacon Key
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: '{SIFT_BEACON_KEY}'
+          replace: ${{ secrets.SIFT_BEACON_KEY}}
+          regex: false
+
       - name: Build code
         run: |
           npm run build:dev
