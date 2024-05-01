@@ -84,7 +84,7 @@ export function TransactionStatus(): JSX.Element {
 }
 
 export function TransactionList(): JSX.Element {
-  useSessionGuard('/login');
+  useSessionGuard('/switch');
 
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
