@@ -126,6 +126,7 @@ export function useWalletConnect(): WalletConnectInterface {
   function encodeMethodData(method: EthCall, address: string): string {
     return method + '000000000000000000000000' + address.substring(2, address.length);
   }
+
   async function readBalance(asset: Asset, address?: string): Promise<AssetBalance> {
     if (!address || !asset) return { asset, amount: 0 };
     const client = get<EthClient>(storageKey) ?? (await setupConnection(asset.blockchain));
