@@ -22,6 +22,7 @@ export const PaymentMethodDescriptions = {
 };
 
 export const PaymentStateLabels = {
+  [TransactionState.UNASSIGNED]: 'Unassigned',
   [TransactionState.CREATED]: 'Created',
   [TransactionState.PROCESSING]: 'Processing',
   [TransactionState.AML_PENDING]: 'AML pending',
@@ -33,7 +34,7 @@ export const PaymentStateLabels = {
 };
 
 export function toPaymentStateLabel(state: TransactionState): string {
-  return PaymentStateLabels[state] ?? 'Unassigned';
+  return PaymentStateLabels[state] ?? 'Unknown';
 }
 
 export const PaymentFailureReasons = {

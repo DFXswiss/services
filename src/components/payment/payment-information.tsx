@@ -42,6 +42,7 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
             ]}
             darkTheme
             spread
+            small
           />
         ) : (
           <PaymentInformationText info={info} />
