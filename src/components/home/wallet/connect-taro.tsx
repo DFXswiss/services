@@ -2,9 +2,10 @@ import { Blockchain, LnurlAuth, useAuth, useAuthContext } from '@dfx.swiss/react
 import {
   SpinnerSize,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
-  StyledLink,
   StyledLoadingSpinner,
+  StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { useSettingsContext } from '../../../contexts/settings.context';
@@ -93,9 +94,15 @@ function Content({ connect, link, error }: ContentProps): JSX.Element {
   if (link)
     return (
       <>
-        <h2 className="text-dfxGray-700 mb-4">{translate('screens/home', 'Login with your BTC Taro Wallet')}</h2>
-        <QrCopy data={link} />
-        <StyledLink label={translate('screens/home', 'Open app')} url={link} target="_self" dark />
+        <StyledVerticalStack gap={4} full center>
+          <h2 className="text-dfxGray-700">{translate('screens/home', 'Login with your BTC Taro Wallet')}</h2>
+          <QrCopy data={link} />
+          <StyledButton
+            label={translate('screens/home', 'Open app')}
+            color={StyledButtonColor.STURDY_WHITE}
+            onClick={() => window.open(link, '_self')}
+          />
+        </StyledVerticalStack>
 
         <h2 className="text-dfxGray-700 mt-8">{translate('screens/home', 'Install BTC Taro')}</h2>
         <a href="https://dfx.swiss/app/btc" target="_blank">
