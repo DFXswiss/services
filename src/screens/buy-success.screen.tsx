@@ -44,7 +44,9 @@ export function BuySuccessScreen(): JSX.Element {
           ) : (
             <StyledVerticalStack gap={2} center>
               <StyledLoadingSpinner size={SpinnerSize.LG} />
-              <p className="text-dfxGray-800">{translate('screens/buy', 'Waiting for the transaction to arrive...')}</p>
+              <p className="text-dfxGray-800">
+                {translate('screens/buy', 'Waiting for the payment confirmation ... this may take a moment.')}
+              </p>
             </StyledVerticalStack>
           )}
         </>

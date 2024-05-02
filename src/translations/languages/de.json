@@ -232,7 +232,7 @@
     "Address": "Adresse",
 
     "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir das Asset in Deine Wallet übertragen.",
-    "Waiting for the transaction to arrive...": "Warten auf das Eintreffen der Transaktion..."
+    "Waiting for the payment confirmation ... this may take a moment.": "Warten auf die Zahlungsbestätigung ... das kann einen Moment dauern."
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Bankverbindungen",
