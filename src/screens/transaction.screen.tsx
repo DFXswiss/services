@@ -226,8 +226,7 @@ export function TransactionList(): JSX.Element {
                       <p className="text-dfxGray-700">{date}</p>
                       <StyledVerticalStack gap={2} full>
                         {list.map((tx) => {
-                          const state = toPaymentStateLabel(tx.state);
-                          const isUnassigned = state === 'Unassigned';
+                          const isUnassigned = tx.state === TransactionState.UNASSIGNED;
 
                           const icon =
                             !isUnassigned &&
@@ -255,7 +254,7 @@ export function TransactionList(): JSX.Element {
                                         {translate('screens/payment', tx.type)}
                                       </div>
                                       <div className={`leading-none ${isUnassigned && 'text-dfxRed-100'}`}>
-                                        {translate('screens/payment', state)}
+                                        {translate('screens/payment', toPaymentStateLabel(tx.state))}
                                       </div>
                                     </div>
                                     <div className="ml-auto">
@@ -355,8 +354,6 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
 
-  const state = toPaymentStateLabel(tx.state);
-
   const paymentMethod = [tx.inputPaymentMethod, tx.outputPaymentMethod].find(
     (p) => p !== CryptoPaymentMethod.CRYPTO,
   ) as FiatPaymentMethod;
@@ -390,7 +387,7 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
         <p>{translate('screens/payment', tx.type)}</p>
       </StyledDataTableRow>
       <StyledDataTableRow label={translate('screens/payment', 'State')}>
-        <p>{translate('screens/payment', state)}</p>
+        <p>{translate('screens/payment', toPaymentStateLabel(tx.state))}</p>
       </StyledDataTableRow>
       {tx.reason && (
         <StyledDataTableRow label={translate('screens/payment', 'Failure reason')}>
