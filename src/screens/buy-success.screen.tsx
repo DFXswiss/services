@@ -27,7 +27,7 @@ export function BuySuccessScreen(): JSX.Element {
 
   function fetchCkoTx(id: string) {
     getTransactionByCkoId(id)
-      .then((tx) => navigate(`/tx/${tx.id}`))
+      .then((tx) => navigate({ pathname: `/tx/${tx.id}` }, { clearParams: ['cko-payment-id', 'cko-session-id'] }))
       .catch((e: ApiError) => {
         if (e.statusCode != 404) setError(e.message ?? 'Unknown error');
 
