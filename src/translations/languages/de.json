@@ -231,7 +231,8 @@
     "Name": "Name",
     "Address": "Adresse",
 
-    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir das Asset in Deine Wallet übertragen."
+    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir das Asset in Deine Wallet übertragen.",
+    "Waiting for the transaction to arrive...": "Warten auf das Eintreffen der Transaktion..."
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Bankverbindungen",

@@ -231,7 +231,8 @@
     "Name": "Nome",
     "Address": "Indirizzo",
 
-    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Non appena il bonifico arriverà sul nostro conto bancario, trasferiremo il vostro bene nel vostro portafoglio."
+    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Non appena il bonifico arriverà sul nostro conto bancario, trasferiremo il vostro bene nel vostro portafoglio.",
+    "Waiting for the transaction to arrive...": "In attesa dell'arrivo della transazione..."
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "Conti bancari DFX",
