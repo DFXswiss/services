@@ -231,7 +231,8 @@
     "Name": "Nom",
     "Address": "Adresse",
 
-    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Dès que le virement arrive sur notre compte bancaire, nous transférons votre avoir sur votre porte-monnaie."
+    "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Dès que le virement arrive sur notre compte bancaire, nous transférons votre avoir sur votre porte-monnaie.",
+    "Waiting for the payment confirmation ... this may take a moment.": "En attente de la confirmation du paiement ... cela peut prendre un moment."
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Coordonnées bancaires",

@@ -56,7 +56,7 @@ import { useBlockchain } from '../hooks/blockchain.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useSessionGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { blankedAddress, isDefined } from '../util/utils';
+import { blankedAddress } from '../util/utils';
 
 interface Address {
   address: string;
@@ -83,7 +83,7 @@ export function BuyScreen(): JSX.Element {
   const { currencies, receiveFor } = useBuy();
   const { toSymbol } = useFiat();
   const { assets, getAssets } = useAssetContext();
-  const { getAsset } = useAsset();
+  const { getAsset, isSameAsset } = useAsset();
   const {
     assets: assetFilter,
     assetIn,
@@ -334,12 +334,10 @@ export function BuyScreen(): JSX.Element {
 
   // misc
   function filterAssets(assets: Asset[], filter?: string): Asset[] {
-    return filter
-      ? filter
-          .split(',')
-          .map((a) => getAsset(assets, a))
-          .filter(isDefined)
-      : assets;
+    if (!filter) return assets;
+
+    const allowedAssets = filter.split(',');
+    return assets.filter((a) => allowedAssets.some((f) => isSameAsset(a, f)) );
   }
 
   function onSubmit(_data: FormData) {
