@@ -9,6 +9,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useAppHandlingContext } from '../../../contexts/app-handling.context';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { useNavigation } from '../../../hooks/navigation.hook';
 import { ConnectError, ConnectProps } from '../connect-shared';
@@ -21,10 +22,14 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { signInWithMail } = useAuth();
   const { navigate } = useNavigation();
+  const { redirectPath } = useAppHandlingContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [mailSent, setMailSent] = useState(false);
   const [error, setError] = useState<string>();
+
+  const win: Window = window;
+  const redirectUri = redirectPath && `${win.location.origin}${redirectPath}`;
 
   const {
     control,
@@ -41,7 +46,7 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
   async function submit({ mail }: FormData): Promise<void> {
     setIsLoading(true);
     setError(undefined);
-    signInWithMail(mail)
+    signInWithMail(mail, redirectUri)
       .then(() => setMailSent(true))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));

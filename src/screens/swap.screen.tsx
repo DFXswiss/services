@@ -134,11 +134,11 @@ export default function SwapScreen(): JSX.Element {
       label: translate('screens/buy', 'Login with a different address'),
     },
   ];
-  session &&
+  session?.address &&
     availableBlockchains &&
     addressItems.unshift(
       ...availableBlockchains.map((b) => ({
-        address: blankedAddress(session.address),
+        address: blankedAddress(session.address ?? ''),
         label: toString(b),
         chain: b,
       })),

@@ -140,10 +140,10 @@ export function BuyScreen(): JSX.Element {
   const blockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
 
   const addressItems: Address[] =
-    session && blockchains?.length
+    session?.address && blockchains?.length
       ? [
           ...blockchains.map((b) => ({
-            address: blankedAddress(session.address),
+            address: blankedAddress(session.address ?? ''),
             label: toString(b),
             chain: b,
           })),
@@ -337,7 +337,7 @@ export function BuyScreen(): JSX.Element {
     if (!filter) return assets;
 
     const allowedAssets = filter.split(',');
-    return assets.filter((a) => allowedAssets.some((f) => isSameAsset(a, f)) );
+    return assets.filter((a) => allowedAssets.some((f) => isSameAsset(a, f)));
   }
 
   function onSubmit(_data: FormData) {
