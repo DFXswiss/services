@@ -60,7 +60,7 @@ import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import { useClipboard } from '../hooks/clipboard.hook';
 import useDebounce from '../hooks/debounce.hook';
-import { useKycLevelGuard, useSessionGuard } from '../hooks/guard.hook';
+import { useAddressGuard, useKycLevelGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useTxHelper } from '../hooks/tx-helper.hook';
 import { blankedAddress, isDefined } from '../util/utils';
@@ -80,7 +80,7 @@ interface CustomAmountError {
 }
 
 export default function SellScreen(): JSX.Element {
-  useSessionGuard();
+  useAddressGuard();
   useKycLevelGuard(KycLevel.Sell, '/profile');
 
   const { copy } = useClipboard();

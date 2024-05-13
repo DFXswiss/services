@@ -42,7 +42,7 @@ import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, toPaymentStateLabel } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useBlockchain } from '../hooks/blockchain.hook';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress } from '../util/utils';
 
@@ -84,7 +84,7 @@ export function TransactionStatus(): JSX.Element {
 }
 
 export function TransactionList(): JSX.Element {
-  useSessionGuard('/switch');
+  useUserGuard('/switch');
 
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();

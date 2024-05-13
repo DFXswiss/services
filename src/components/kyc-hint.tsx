@@ -87,7 +87,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
             label={translate('screens/kyc', isComplete ? 'Increase limit' : 'Complete KYC')}
             onClick={isComplete ? () => navigate('/limit') : start}
           />
-          {user?.kycLevel === 0 && (
+          {user?.kyc.level === 0 && (
             <StyledLink label={translate('screens/kyc', 'I am already verified with DFX')} onClick={onLink} dark />
           )}
         </>

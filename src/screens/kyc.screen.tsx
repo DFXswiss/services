@@ -54,7 +54,7 @@ import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useGeoLocation } from '../hooks/geo-location.hook';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useUserGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { delay } from '../util/utils';
@@ -87,13 +87,13 @@ export function KycScreen(): JSX.Element {
   const [step, stepSequence] = params.get('step')?.split(':') ?? [];
   const [stepName, stepType] = step?.split('/') ?? [];
   const paramKycCode = params.get('code');
-  const kycCode = paramKycCode ?? user?.kycHash;
+  const kycCode = paramKycCode ?? user?.kyc.hash;
   const redirectUri = params.get('kyc-redirect');
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
   const allStepsCompleted = info?.kycSteps.every((s) => isStepDone(s));
   const canContinue = !allStepsCompleted || (info && info.kycLevel >= KycLevel.Completed);
 
-  useSessionGuard('/login', !kycCode);
+  useUserGuard('/login', !kycCode);
 
   useEffect(() => {
     if (info) changeLanguage(info.language);

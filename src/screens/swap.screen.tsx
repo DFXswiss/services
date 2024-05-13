@@ -53,7 +53,7 @@ import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import { useClipboard } from '../hooks/clipboard.hook';
 import useDebounce from '../hooks/debounce.hook';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useTxHelper } from '../hooks/tx-helper.hook';
 import { blankedAddress, isDefined } from '../util/utils';
@@ -79,7 +79,7 @@ interface CustomAmountError {
 }
 
 export default function SwapScreen(): JSX.Element {
-  useSessionGuard();
+  useAddressGuard();
 
   const { copy } = useClipboard();
   const { translate, translateError } = useSettingsContext();

@@ -16,7 +16,7 @@ import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { ReasonLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { toBase64 } from '../util/utils';
 
@@ -28,7 +28,7 @@ interface FormData {
 }
 
 export function SupportIssueScreen(): JSX.Element {
-  useSessionGuard('/login');
+  useUserGuard('/login');
 
   const { id } = useParams();
   const { navigate } = useNavigation();

@@ -40,10 +40,11 @@ import { GiroCode } from '../components/payment/giro-code';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useAddressGuard } from '../hooks/guard.hook';
 
 export function BuyInfoScreen(): JSX.Element {
-  useSessionGuard();
+  useAddressGuard();
+
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
   const { assetIn, assetOut, amountIn, amountOut, externalTransactionId, availableBlockchains } = useAppParams();

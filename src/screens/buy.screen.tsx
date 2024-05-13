@@ -54,7 +54,7 @@ import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import useDebounce from '../hooks/debounce.hook';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress } from '../util/utils';
 
@@ -75,7 +75,7 @@ interface FormData {
 const EmbeddedWallet = 'CakeWallet';
 
 export function BuyScreen(): JSX.Element {
-  useSessionGuard();
+  useAddressGuard();
 
   const { translate, translateError } = useSettingsContext();
   const { logout } = useSessionContext();
@@ -159,7 +159,7 @@ export function BuyScreen(): JSX.Element {
 
   (isDfxHosted || !isEmbedded) &&
     wallet !== EmbeddedWallet &&
-    user?.wallet !== EmbeddedWallet &&
+    user?.activeAddress?.wallet !== EmbeddedWallet &&
     (!selectedAsset || selectedAsset?.cardBuyable) &&
     availablePaymentMethods.push(FiatPaymentMethod.CARD);
 
