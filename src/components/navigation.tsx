@@ -111,7 +111,7 @@ function MenuIcon({ icon, setIsNavigationOpen }: IconContentProps): JSX.Element 
 
 function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JSX.Element {
   const { navigate } = useNavigation();
-  const { authenticationToken } = useAuthContext();
+  const { authenticationToken, session } = useAuthContext();
   const { translate, language, availableLanguages, changeLanguage } = useSettingsContext();
   const { isLoggedIn, logout: apiLogout } = useSessionContext();
 
@@ -163,7 +163,11 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
           <NavigationLink
             icon={IconVariant.SETTINGS}
             label={translate('navigation/links', 'My DFX')}
-            url={authenticationToken ? `${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}` : '/my-dfx'}
+            url={
+              authenticationToken && session?.address
+                ? `${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`
+                : '/my-dfx'
+            }
             target={authenticationToken ? '_blank' : '_self'}
           />
           <NavigationLink

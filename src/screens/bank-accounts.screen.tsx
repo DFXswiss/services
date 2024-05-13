@@ -22,11 +22,11 @@ import { useForm } from 'react-hook-form';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
 export function BankAccountsScreen(): JSX.Element {
-  useSessionGuard('/login');
+  useUserGuard('/login');
 
   const { navigate } = useNavigation();
   const { translate, translateError } = useSettingsContext();

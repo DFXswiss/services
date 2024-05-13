@@ -54,7 +54,7 @@ import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import useDebounce from '../hooks/debounce.hook';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress } from '../util/utils';
 
@@ -75,7 +75,7 @@ interface FormData {
 const EmbeddedWallet = 'CakeWallet';
 
 export function BuyScreen(): JSX.Element {
-  useSessionGuard();
+  useAddressGuard();
 
   const { translate, translateError } = useSettingsContext();
   const { logout } = useSessionContext();
@@ -140,10 +140,10 @@ export function BuyScreen(): JSX.Element {
   const blockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
 
   const addressItems: Address[] =
-    session && blockchains?.length
+    session?.address && blockchains?.length
       ? [
           ...blockchains.map((b) => ({
-            address: blankedAddress(session.address),
+            address: blankedAddress(session.address ?? ''),
             label: toString(b),
             chain: b,
           })),
@@ -159,7 +159,7 @@ export function BuyScreen(): JSX.Element {
 
   (isDfxHosted || !isEmbedded) &&
     wallet !== EmbeddedWallet &&
-    user?.wallet !== EmbeddedWallet &&
+    user?.activeAddress?.wallet !== EmbeddedWallet &&
     (!selectedAsset || selectedAsset?.cardBuyable) &&
     availablePaymentMethods.push(FiatPaymentMethod.CARD);
 
@@ -337,7 +337,7 @@ export function BuyScreen(): JSX.Element {
     if (!filter) return assets;
 
     const allowedAssets = filter.split(',');
-    return assets.filter((a) => allowedAssets.some((f) => isSameAsset(a, f)) );
+    return assets.filter((a) => allowedAssets.some((f) => isSameAsset(a, f)));
   }
 
   function onSubmit(_data: FormData) {

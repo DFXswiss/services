@@ -1,4 +1,4 @@
-import { ApiError, Utils, Validations, useSupport } from '@dfx.swiss/react';
+import { ApiError, KycLevel, Utils, Validations, useSupport } from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
@@ -16,19 +16,21 @@ import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { ReasonLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { toBase64 } from '../util/utils';
 
 interface FormData {
+  name: string;
   transaction: string;
   reason: SupportIssueReason;
-  description?: string;
+  message: string;
   file?: File;
 }
 
 export function SupportIssueScreen(): JSX.Element {
-  useSessionGuard('/login');
+  useUserGuard('/login');
+  useKycLevelGuard(KycLevel.Link, '/contact');
 
   const { id } = useParams();
   const { navigate } = useNavigation();
@@ -58,8 +60,9 @@ export function SupportIssueScreen(): JSX.Element {
 
     try {
       const request: CreateTransactionIssue = {
+        name: data.name,
         reason: data.reason,
-        description: data.description,
+        message: data.message,
         file: data.file && (await toBase64(data.file)),
         fileName: data.file?.name,
       };
@@ -74,7 +77,9 @@ export function SupportIssueScreen(): JSX.Element {
   }
 
   const rules = Utils.createRules({
+    name: Validations.Required,
     reason: Validations.Required,
+    message: Validations.Required,
   });
 
   return (
@@ -101,6 +106,14 @@ export function SupportIssueScreen(): JSX.Element {
           translate={translateError}
         >
           <StyledVerticalStack gap={6} full center>
+            <StyledInput
+              name="name"
+              autocomplete="name"
+              label={translate('screens/support', 'Name')}
+              placeholder={`${translate('screens/kyc', 'John')} ${translate('screens/kyc', 'Doe')}`}
+              full
+            />
+
             <StyledDropdown<string>
               rootRef={rootRef}
               label={translate('screens/payment', 'Transaction')}
@@ -121,7 +134,7 @@ export function SupportIssueScreen(): JSX.Element {
               full
             />
 
-            <StyledInput name="description" label={translate('screens/support', 'Description')} multiLine full />
+            <StyledInput name="message" label={translate('screens/support', 'Description')} multiLine full />
 
             <StyledFileUpload
               name="file"

@@ -42,7 +42,7 @@ import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, toPaymentStateLabel } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useBlockchain } from '../hooks/blockchain.hook';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress } from '../util/utils';
 
@@ -84,7 +84,7 @@ export function TransactionStatus(): JSX.Element {
 }
 
 export function TransactionList(): JSX.Element {
-  useSessionGuard('/switch');
+  useUserGuard('/switch');
 
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
@@ -212,9 +212,11 @@ export function TransactionList(): JSX.Element {
               <div className="relative w-full">
                 <h2 className="text-dfxGray-700 mb-2 flex-1">{translate('screens/payment', 'Your Transactions')}</h2>
 
-                {transactions && <div className="absolute right-0 top-1">
-                  <StyledIconButton onClick={loadTransactions} icon={IconVariant.RELOAD} />
-                </div>}
+                {transactions && (
+                  <div className="absolute right-0 top-1">
+                    <StyledIconButton onClick={loadTransactions} icon={IconVariant.RELOAD} />
+                  </div>
+                )}
               </div>
 
               {transactionList ? (
@@ -367,7 +369,7 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
   tx.fees?.dfx != null &&
     rateItems.push({
       label: translate('screens/payment', 'DFX fee'),
-      text: `${tx.fees.dfx} ${tx.inputAsset}`,
+      text: `${tx.fees.dfx} ${tx.inputAsset} (${(tx.fees.rate * 100).toFixed(2)}%)`,
     });
   tx.fees?.network != null &&
     rateItems.push({
@@ -391,7 +393,7 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
       </StyledDataTableRow>
       {tx.reason && (
         <StyledDataTableRow label={translate('screens/payment', 'Failure reason')}>
-          <p className='text-right'>{translate('screens/payment', PaymentFailureReasons[tx.reason])}</p>
+          <p className="text-right">{translate('screens/payment', PaymentFailureReasons[tx.reason])}</p>
         </StyledDataTableRow>
       )}
       {paymentMethod && (

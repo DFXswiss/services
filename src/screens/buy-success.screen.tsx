@@ -6,11 +6,12 @@ import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
 export function BuySuccessScreen(): JSX.Element {
-  useSessionGuard();
+  useAddressGuard();
+
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { user } = useUserContext();

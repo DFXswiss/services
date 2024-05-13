@@ -42,10 +42,10 @@ import { SellCompletion } from '../components/payment/sell-completion';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
-import { useKycLevelGuard, useSessionGuard } from '../hooks/guard.hook';
+import { useAddressGuard, useKycLevelGuard } from '../hooks/guard.hook';
 
 export function SellInfoScreen(): JSX.Element {
-  useSessionGuard();
+  useAddressGuard();
   useKycLevelGuard(KycLevel.Sell, '/profile');
 
   const { translate } = useSettingsContext();

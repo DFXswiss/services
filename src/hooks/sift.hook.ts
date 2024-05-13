@@ -14,8 +14,8 @@ export function useSift(): void {
     if (!hasKey) return;
 
     sift.push(['_setAccount', beaconKey]);
-    sift.push(['_setUserId', session?.address ?? '']);
-  }, [session?.address]);
+    sift.push(['_setUserId', session?.id?.toString() ?? '']);
+  }, [session?.id]);
 
   useEffect(() => {
     if (!hasKey) return;

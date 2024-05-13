@@ -42,7 +42,7 @@ export function useKycHelper(): KycHelperInterface {
 
   const limit = user && limitToString(user.tradingLimit);
 
-  const isComplete = user && user.kycLevel >= KycLevel.Completed;
+  const isComplete = user && user.kyc.level >= KycLevel.Completed;
 
   function start() {
     navigate('/kyc');
