@@ -1,4 +1,4 @@
-import { ApiError, Utils, Validations, useSupport } from '@dfx.swiss/react';
+import { ApiError, KycLevel, Utils, Validations, useSupport } from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
@@ -16,7 +16,7 @@ import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { ReasonLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useUserGuard } from '../hooks/guard.hook';
+import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { toBase64 } from '../util/utils';
 
@@ -30,6 +30,7 @@ interface FormData {
 
 export function SupportIssueScreen(): JSX.Element {
   useUserGuard('/login');
+  useKycLevelGuard(KycLevel.Link, '/contact');
 
   const { id } = useParams();
   const { navigate } = useNavigation();

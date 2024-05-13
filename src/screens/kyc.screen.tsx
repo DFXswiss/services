@@ -62,8 +62,14 @@ import { IframeMessageType } from './kyc-redirect.screen';
 
 enum Mode {
   KYC = 'KYC',
+  CONTACT = 'Contact',
   PROFILE = 'Profile',
 }
+
+const RequiredKycLevel = {
+  [Mode.CONTACT]: KycLevel.Link,
+  [Mode.PROFILE]: KycLevel.Sell,
+};
 
 export function KycScreen(): JSX.Element {
   const { clearParams } = useNavigation();
@@ -81,7 +87,7 @@ export function KycScreen(): JSX.Element {
   const [error, setError] = useState<string>();
   const [showLinkHint, setShowLinkHint] = useState(false);
 
-  const mode = pathname.includes('/profile') ? Mode.PROFILE : Mode.KYC;
+  const mode = pathname.includes('/profile') ? Mode.PROFILE : pathname.includes('/contact') ? Mode.CONTACT : Mode.KYC;
   const rootRef = useRef<HTMLDivElement>(null);
   const params = new URLSearchParams(search);
   const [step, stepSequence] = params.get('step')?.split(':') ?? [];
@@ -141,19 +147,19 @@ export function KycScreen(): JSX.Element {
   }
 
   async function handleInitial(info: KycInfo): Promise<void> {
-    if (mode === Mode.PROFILE) {
-      if (info.kycLevel >= KycLevel.Sell || !kycCode) {
+    if (mode === Mode.KYC) {
+      setInfo(info);
+    } else {
+      if (info.kycLevel >= RequiredKycLevel[mode] || !kycCode) {
         goBack();
       } else {
         return callKyc(() => continueKyc(kycCode)).then(handleReload);
       }
-    } else {
-      setInfo(info);
     }
   }
 
   async function handleReload(info: KycSession): Promise<void> {
-    if (mode === Mode.PROFILE && info.kycLevel >= KycLevel.Sell) {
+    if ((mode === Mode.CONTACT || mode === Mode.PROFILE) && info.kycLevel >= RequiredKycLevel[mode]) {
       return reloadUser()
         .then(() => delay(0.01))
         .then(() => goBack());
@@ -401,7 +407,7 @@ function ContactData({ code, mode, isLoading, step, onDone, showLinkHint }: Edit
         translate={translateError}
       >
         <StyledVerticalStack gap={6} full center>
-          {mode === Mode.PROFILE && (
+          {mode !== Mode.KYC && (
             <>
               <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
               <p className="text-base font-bold text-dfxBlue-800">

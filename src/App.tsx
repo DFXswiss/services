@@ -87,6 +87,11 @@ export const Routes = [
     isKycScreen: true,
   },
   {
+    path: '/contact',
+    element: <KycScreen />,
+    isKycScreen: true,
+  },
+  {
     path: '/link',
     element: <LinkScreen />,
     isKycScreen: true,
