@@ -11,6 +11,7 @@
     "@r2wc/react-to-web-component": "^2.0.2",
     "@trezor/connect-web": "^9.1.1",
     "@walletconnect/ethereum-provider": "^2.11.0",
+    "bech32": "^2.0.0",
     "bitbox-api": "^0.2.1",
     "browser-lang": "^0.2.1",
     "buffer": "^6.0.3",
