@@ -18,8 +18,7 @@ This guide details how to package and publish a React component as an npm packag
    function MainWidget(params) {
      return <div>...</div>;
    }
-   const DfxServices = MainWidget;
-   export default DfxServices;
+   export default MainWidget;
    ```
 
 2. **Define Your Package Exports**:
@@ -50,7 +49,7 @@ This guide details how to package and publish a React component as an npm packag
    Include the main entry point and typings in your package configuration:
    ```json
    {
-     "name": "@dfx.swiss/services",
+     "name": "@dfx.swiss/services-react",
      "version": "1.0.0",
      "main": "dist/public_api.js",
      "types": "dist/public_api.d.ts",
@@ -71,8 +70,16 @@ This guide details how to package and publish a React component as an npm packag
 
 2. **Package Locally**:
    Use `npm pack` to create a local `.tgz` file for testing your package:
+
    ```bash
    npm pack
+   ```
+
+3. **Install and Test Locally**:
+   Install the package in a test project to verify its functionality:
+
+   ```bash
+   npm install ../path/to/dfx.swiss-services-react-1.0.0.tgz
    ```
 
 ### Step 4: Automate Publishing Using GitHub Actions

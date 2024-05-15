@@ -7,7 +7,7 @@
 
 # testing
 /coverage
-dfx.swiss-services-1.0.0.tgz
+dfx.swiss-*.tgz
 
 # next.js
 /.next/

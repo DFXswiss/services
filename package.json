@@ -1,5 +1,5 @@
 {
-  "name": "@dfx.swiss/services",
+  "name": "@dfx.swiss/services-react",
   "version": "1.0.0",
   "private": true,
   "main": "dist/public_api.js",
