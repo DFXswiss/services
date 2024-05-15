@@ -46,13 +46,19 @@ This guide details how to package and publish a React component as an npm packag
    ```
 
 2. **Adjust `package.json`**:
-   Include the main entry point and typings in your package configuration:
+   Include the main entry point, typings, and build script in your `package.json`:
    ```json
    {
      "name": "@dfx.swiss/services-react",
      "version": "1.0.0",
+     "license": "MIT",
+     "private": false,
      "main": "dist/public_api.js",
      "types": "dist/public_api.d.ts",
+     "files": ["dist"],
+     "publishConfig": {
+       "access": "public"
+     },
      "scripts": {
        "build:lib": "tsc"
      }

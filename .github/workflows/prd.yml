@@ -65,6 +65,9 @@ jobs:
         run: |
           npm run widget
 
+      - name: Build library
+        run: npm run build:lib
+
       - name: Copy widget
         run: |
           version=$(echo "v${{ steps.package_version.outputs.current-version }}" | cut -d '.' -f1-2)
