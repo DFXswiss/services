@@ -11,6 +11,7 @@ DFX Services can be integrated in three different ways,
 - as a [standalone page](#standalone) (with browser redirect)
 - in an [Iframe](#iframe) (not recommended)
 - using a [web component](#web-component)
+- as a [React component](#react-component) (NPM package)
 
 and supports two different login modes,
 
@@ -43,6 +44,12 @@ DFX services can be integrated as a web component. See the [code example](#web-c
 
 For web component integration, a closing callback (`on-close` attribute) should be provided. On cancel or completion, this callback is called. See [below](#close-message) for details on the message format.
 
+#### React Component
+
+DFX services can be integrated as React component from the [`@dfx.swiss/services-react` NPM package](https://www.npmjs.com/package/@dfx.swiss/services-react). See code example [below](#react-component-example). The desired parameters (see [below](#query-parameters)) can be supplied as props.
+
+Similar to the Web Component, the React component requires a closing callback (`onClose` prop) to be provided. On cancel or completion, this callback is called. See [below](#close-message) for details on the message format.
+
 ### Authentication Modes
 
 #### Direct Login
@@ -74,7 +81,7 @@ If no credentials are provided during opening, the user will be presented with a
 
 ### Query Parameters
 
-DFX services supports the following parameters.
+DFX services supports the following parameters. Note that for the React component, the parameters are written in _camelCase_, e.g. `assetIn` instead of `asset-in` (see [React component example](#react-component-example)).
 
 **General parameters**
 
@@ -145,7 +152,7 @@ If a redirect URI was provided (`redirect-uri` parameter), the user will be redi
 
 #### Close Message
 
-The following data format is used for the close message ([Iframe](#iframe) or [web component](#web-component) integration).
+The following data format is used for the close message ([Iframe](#iframe), [web component](#web-component) or [React component](#react-component) integration).
 
 ```ts
 enum CloseType {
@@ -197,4 +204,18 @@ Documentation on `BuyPaymentInfoDto` and `SellPaymentInfoDto` can be found in th
 <h1>DFX Services in a Widget</h1>
 
 <dfx-services on-close="handleClose" session="{ACCESS_TOKEN}">Loading ...</dfx-services>
+```
+
+#### React Component Example
+
+```tsx
+import { DfxServices, Service, CloseMessage } from '@dfx.swiss/services-react';
+
+function App() {
+  const handleClose = (data: CloseMessage) => {
+    /* ADD YOUR CODE HERE */
+  };
+
+  return <DfxServices headless="true" service={Service.BUY} session="{ACCESS_TOKEN}" onClose={handleClose} />;
+}
 ```

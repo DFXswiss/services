@@ -30,6 +30,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Setup npm
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_ACCESS_TOKEN }}" > .npmrc
+
       - name: Install packages
         run: |
           npm ci
@@ -69,6 +73,9 @@ jobs:
         run: |
           npm run widget
 
+      - name: Build library
+        run: npm run build:lib
+
       - name: Copy widget
         run: |
           version=$(echo "v${{ steps.package_version.outputs.current-version }}" | cut -d '.' -f1-2)
@@ -92,6 +99,11 @@ jobs:
         with:
           inlineScript: |
             az cdn endpoint purge --content-paths  "/*" --profile-name ${{ env.AZURE_CDN_PROFILE }} --name ${{ env.AZURE_CDN_ENDPOINT }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
 
       - name: Logout
         run: |
