@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const version = require('./package.json').version;
+const widgetVersion = version.split('.').slice(0, 2).join('.');
 
 module.exports = function override(config, env) {
   config.resolve.fallback = {
@@ -24,8 +25,8 @@ module.exports = function override(config, env) {
     ...(process.env.PUBLIC_URL && process.env.CUSTOM_CHUNK_PATH
       ? {
           publicPath: process.env.PUBLIC_URL + process.env.CUSTOM_CHUNK_PATH,
-          chunkFilename: config.output.chunkFilename.replace('static/js', `v${version}-chunks`),
-          webassemblyModuleFilename: `v${version}-chunks/[hash].module.wasm`,
+          chunkFilename: config.output.chunkFilename.replace('static/js', `v${widgetVersion}-chunks`),
+          webassemblyModuleFilename: `v${widgetVersion}-chunks/[hash].module.wasm`,
         }
       : undefined),
   };
