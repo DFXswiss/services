@@ -8,6 +8,7 @@ import {
   StyledDataTable,
   StyledDataTableRow,
   StyledInfoText,
+  StyledTabContainer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useSettingsContext } from '../../contexts/settings.context';
@@ -20,18 +21,43 @@ interface PaymentInformationContentProps {
 
 export function PaymentInformationContent({ info }: PaymentInformationContentProps): JSX.Element {
   const { translate } = useSettingsContext();
-  const { copy } = useClipboard();
+
   return (
     <>
-      <StyledVerticalStack marginY={5} gap={2}>
+      <StyledVerticalStack gap={3}>
         <h2 className="text-dfxBlue-800 text-center">{translate('screens/payment', 'Payment Information')}</h2>
+
         <StyledInfoText iconColor={IconColor.BLUE}>
           {translate(
             'screens/buy',
             'Please transfer the purchase amount using this information via your banking application. The reference is important!',
           )}
         </StyledInfoText>
+
+        {info.paymentRequest ? (
+          <StyledTabContainer
+            tabs={[
+              { title: translate('screens/payment', 'Text'), content: <PaymentInformationText info={info} /> },
+              { title: translate('screens/payment', 'QR Code'), content: <GiroCode value={info.paymentRequest} /> },
+            ]}
+            darkTheme
+            spread
+            small
+          />
+        ) : (
+          <PaymentInformationText info={info} />
+        )}
       </StyledVerticalStack>
+    </>
+  );
+}
+
+function PaymentInformationText({ info }: PaymentInformationContentProps): JSX.Element {
+  const { translate } = useSettingsContext();
+  const { copy } = useClipboard();
+
+  return (
+    <>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
           <div>
@@ -60,39 +86,35 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
         </StyledDataTableRow>
       </StyledDataTable>
 
-      {info.paymentRequest && (
-        <div className="mt-4">
-          <GiroCode value={info.paymentRequest} />
-        </div>
-      )}
-
-      <StyledDataTable
-        label={translate('screens/payment', 'Recipient')}
-        alignContent={AlignContent.RIGHT}
-        showBorder
-        minWidth={false}
-      >
-        <StyledDataTableRow label={translate('screens/buy', 'Name')}>
-          {info.name}
-          <CopyButton onCopy={() => copy(`${info.name}`)} />
-        </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/buy', 'Address')}>
-          {`${info.street} ${info.number}`}
-          <CopyButton onCopy={() => copy(`${info.street} ${info.number}`)} />
-        </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/kyc', 'ZIP code')}>
-          {info.zip}
-          <CopyButton onCopy={() => copy(`${info.zip}`)} />
-        </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/kyc', 'City')}>
-          {info.city}
-          <CopyButton onCopy={() => copy(`${info.city}`)} />
-        </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/kyc', 'Country')}>
-          {info.country}
-          <CopyButton onCopy={() => copy(`${info.country}`)} />
-        </StyledDataTableRow>
-      </StyledDataTable>
+      <div className="mt-3">
+        <StyledDataTable
+          label={translate('screens/payment', 'Recipient')}
+          alignContent={AlignContent.RIGHT}
+          showBorder
+          minWidth={false}
+        >
+          <StyledDataTableRow label={translate('screens/buy', 'Name')}>
+            {info.name}
+            <CopyButton onCopy={() => copy(`${info.name}`)} />
+          </StyledDataTableRow>
+          <StyledDataTableRow label={translate('screens/buy', 'Address')}>
+            {`${info.street} ${info.number}`}
+            <CopyButton onCopy={() => copy(`${info.street} ${info.number}`)} />
+          </StyledDataTableRow>
+          <StyledDataTableRow label={translate('screens/kyc', 'ZIP code')}>
+            {info.zip}
+            <CopyButton onCopy={() => copy(`${info.zip}`)} />
+          </StyledDataTableRow>
+          <StyledDataTableRow label={translate('screens/kyc', 'City')}>
+            {info.city}
+            <CopyButton onCopy={() => copy(`${info.city}`)} />
+          </StyledDataTableRow>
+          <StyledDataTableRow label={translate('screens/kyc', 'Country')}>
+            {info.country}
+            <CopyButton onCopy={() => copy(`${info.country}`)} />
+          </StyledDataTableRow>
+        </StyledDataTable>
+      </div>
     </>
   );
 }

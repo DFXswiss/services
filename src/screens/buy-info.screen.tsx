@@ -40,10 +40,11 @@ import { GiroCode } from '../components/payment/giro-code';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useAddressGuard } from '../hooks/guard.hook';
 
 export function BuyInfoScreen(): JSX.Element {
-  useSessionGuard();
+  useAddressGuard();
+
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
   const { assetIn, assetOut, amountIn, amountOut, externalTransactionId, availableBlockchains } = useAppParams();
@@ -239,7 +240,7 @@ export function BuyInfoScreen(): JSX.Element {
               <StyledLink
                 label={translate(
                   'screens/payment',
-                  'Please note that by using this service you automatically accept our terms and conditions.',
+                  'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
                 )}
                 url={process.env.REACT_APP_TNC_URL}
                 small

@@ -17,6 +17,7 @@ import { WalletBlockchains, WalletType, useWalletContext } from '../../../contex
 import { useAppParams } from '../../../hooks/app-params.hook';
 import { useBlockchain } from '../../../hooks/blockchain.hook';
 import { useClipboard } from '../../../hooks/clipboard.hook';
+import { Lnurl } from '../../../util/lnurl';
 import { ConnectBase } from '../connect-base';
 import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../connect-shared';
 
@@ -27,11 +28,22 @@ interface FormData {
   key?: string;
 }
 
-const Wallets = [WalletType.CLI_BTC, WalletType.CLI_ETH, WalletType.CLI_XMR, WalletType.CLI_ADA, WalletType.CLI_AR];
+const Wallets = [
+  WalletType.CLI_BTC,
+  WalletType.CLI_LN,
+  WalletType.CLI_ETH,
+  WalletType.CLI_XMR,
+  WalletType.CLI_ADA,
+  WalletType.CLI_AR,
+];
 
 const SupportedBlockchains = Wallets.map((w) => WalletBlockchains[w])
   .filter((c) => c)
   .flat() as Blockchain[];
+
+function encodeAddress(address: string): string {
+  return /^\S+@\S+\.\S+$/.test(address) ? Lnurl.addressToLnurl(address) : address;
+}
 
 export default function ConnectCli(props: ConnectProps): JSX.Element {
   const { session } = useAuthContext();
@@ -45,7 +57,9 @@ export default function ConnectCli(props: ConnectProps): JSX.Element {
   async function getAccount(_: Blockchain, isReconnect: boolean): Promise<Account> {
     if (isReconnect && session?.address) return { address: session.address };
 
-    return form.getValues();
+    const values = form.getValues();
+    values.address = encodeAddress(values.address);
+    return values;
   }
 
   async function getSignature(): Promise<never> {
@@ -77,6 +91,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch }: Conte
 
   const addressRegex: { [wallet in WalletType]?: RegExp } = {
     [WalletType.CLI_BTC]: /^([13]|bc1)[a-zA-HJ-NP-Z0-9]{25,62}$/,
+    [WalletType.CLI_LN]: /^((LNURL|LNDHUB)[A-Z0-9]{25,250}|LNNID[A-Z0-9]{66}|\S+@\S+\.\S+)$/,
     [WalletType.CLI_XMR]: /^[48][0-9AB][1-9A-HJ-NP-Za-km-z]{93}$/,
     [WalletType.CLI_ETH]: /^0x\w{40}$/,
     [WalletType.CLI_ADA]: /^stake[a-z0-9]{54}$/,
@@ -119,7 +134,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch }: Conte
 
     if (addressValid && hasKey) {
       setIsLoading(true);
-      getSignMessage(address)
+      getSignMessage(encodeAddress(address))
         .then(setSignMessage)
         .finally(() => setIsLoading(false));
     }

@@ -67,7 +67,7 @@ export function HomeScreen(): JSX.Element {
 
   useEffect(() => {
     if (isInitialized && isLoggedIn && user && ((!activeWallet && hasSession) || loginSuccessful)) {
-      start(user.kycDataComplete);
+      start(user.kyc.dataComplete);
     }
   }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful, hasSession]);
 

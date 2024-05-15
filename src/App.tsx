@@ -19,11 +19,13 @@ import { KycScreen } from './screens/kyc.screen';
 import { LimitScreen } from './screens/limit.screen';
 import { LinkScreen } from './screens/link.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
+import { SupportIssueScreen } from './screens/support-issue.screen';
 import { TfaScreen } from './screens/tfa.screen';
 import { TransactionScreen } from './screens/transaction.screen';
 import { setupLanguages } from './translations';
 
 const SellScreen = lazy(() => import('./screens/sell.screen'));
+const SwapScreen = lazy(() => import('./screens/swap.screen'));
 
 setupLanguages();
 
@@ -66,6 +68,10 @@ export const Routes = [
     element: <SellInfoScreen />,
   },
   {
+    path: '/swap',
+    element: withSuspense(<SwapScreen />),
+  },
+  {
     path: '/kyc',
     element: <KycScreen />,
     isKycScreen: true,
@@ -77,6 +83,11 @@ export const Routes = [
   },
   {
     path: '/profile',
+    element: <KycScreen />,
+    isKycScreen: true,
+  },
+  {
+    path: '/contact',
     element: <KycScreen />,
     isKycScreen: true,
   },
@@ -102,6 +113,10 @@ export const Routes = [
   {
     path: '/tx/:id',
     element: <TransactionScreen />,
+  },
+  {
+    path: '/tx/:id/issue',
+    element: <SupportIssueScreen />,
   },
   {
     path: '/bank-accounts',

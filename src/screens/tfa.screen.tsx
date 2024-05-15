@@ -19,7 +19,7 @@ import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useClipboard } from '../hooks/clipboard.hook';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
 export function TfaScreen(): JSX.Element {
@@ -39,9 +39,9 @@ export function TfaScreen(): JSX.Element {
   const [setupInfo, setSetupInfo] = useState<TfaSetup>();
 
   const params = new URLSearchParams(search);
-  const kycCode = params.get('code') ?? user?.kycHash;
+  const kycCode = params.get('code') ?? user?.kyc.hash;
 
-  useSessionGuard('/login', !kycCode);
+  useUserGuard('/login', !kycCode);
 
   useEffect(() => {
     load();

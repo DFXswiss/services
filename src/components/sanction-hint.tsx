@@ -6,7 +6,7 @@ export function SanctionHint(): JSX.Element {
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
 
-  return user && user.kycLevel < 30 ? (
+  return user && user.kyc.level < 30 ? (
     <StyledInfoText iconColor={IconColor.BLUE}>
       {translate(
         'screens/kyc',

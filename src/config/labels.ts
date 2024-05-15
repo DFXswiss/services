@@ -3,6 +3,7 @@ import {
   FundOrigin,
   InvestmentDate,
   Limit,
+  SupportIssueReason,
   TransactionFailureReason,
   TransactionState,
 } from '@dfx.swiss/react';
@@ -21,6 +22,7 @@ export const PaymentMethodDescriptions = {
 };
 
 export const PaymentStateLabels = {
+  [TransactionState.UNASSIGNED]: 'Unassigned',
   [TransactionState.CREATED]: 'Created',
   [TransactionState.PROCESSING]: 'Processing',
   [TransactionState.AML_PENDING]: 'AML pending',
@@ -30,6 +32,10 @@ export const PaymentStateLabels = {
   [TransactionState.FAILED]: 'Failed',
   [TransactionState.RETURNED]: 'Returned',
 };
+
+export function toPaymentStateLabel(state: TransactionState): string {
+  return PaymentStateLabels[state] ?? 'Unknown';
+}
 
 export const PaymentFailureReasons = {
   [TransactionFailureReason.UNKNOWN]: 'Unknown',
@@ -46,6 +52,8 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.PAYMENT_ACCOUNT_NOT_ALLOWED]: 'Payment account not allowed',
   [TransactionFailureReason.COUNTRY_NOT_ALLOWED]: 'Country not allowed',
   [TransactionFailureReason.INSTANT_PAYMENT]: 'Instant payment',
+  [TransactionFailureReason.FEE_TOO_HIGH]: 'Network fee too high',
+  [TransactionFailureReason.RECEIVER_REJECTED]: 'Payment rejected by receiver node',
 };
 
 // --- LIMIT REQUESTS --- //
@@ -79,4 +87,10 @@ export const OriginFutureLabels = {
   [FundOrigin.CRYPTO_GAINS]: 'Future crypto price gains',
   [FundOrigin.INHERITANCE]: 'Future inheritance',
   [FundOrigin.OTHER]: 'Other',
+};
+
+// --- SUPPORT ISSUE --- //
+export const ReasonLabels = {
+  [SupportIssueReason.FUNDS_NOT_RECEIVED]: 'Funds not received',
+  [SupportIssueReason.OTHER]: 'Other',
 };

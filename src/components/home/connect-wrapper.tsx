@@ -34,6 +34,7 @@ export function ConnectWrapper(props: ConnectProps): JSX.Element {
       return <ConnectTrezor {...props} wallet={props.wallet} />;
 
     case WalletType.CLI_BTC:
+    case WalletType.CLI_LN:
     case WalletType.CLI_XMR:
     case WalletType.CLI_ETH:
     case WalletType.CLI_ADA:

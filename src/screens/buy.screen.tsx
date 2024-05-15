@@ -42,6 +42,7 @@ import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
+import { AddressSwitch } from '../components/payment/address-switch';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PaymentInformationContent } from '../components/payment/payment-information';
 import { PrivateAssetHint } from '../components/private-asset-hint';
@@ -53,9 +54,9 @@ import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import useDebounce from '../hooks/debounce.hook';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { blankedAddress, isDefined } from '../util/utils';
+import { blankedAddress } from '../util/utils';
 
 interface Address {
   address: string;
@@ -74,17 +75,17 @@ interface FormData {
 const EmbeddedWallet = 'CakeWallet';
 
 export function BuyScreen(): JSX.Element {
-  useSessionGuard();
+  useAddressGuard();
 
   const { translate, translateError } = useSettingsContext();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
   const { currencies, receiveFor } = useBuy();
   const { toSymbol } = useFiat();
-  const { getAssets } = useAssetContext();
-  const { getAsset } = useAsset();
+  const { assets, getAssets } = useAssetContext();
+  const { getAsset, isSameAsset } = useAsset();
   const {
-    assets,
+    assets: assetFilter,
     assetIn,
     assetOut,
     amountIn,
@@ -135,29 +136,30 @@ export function BuyScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
-  const addressItems: Address[] = [
-    {
-      address: translate('screens/buy', 'Switch address'),
-      label: translate('screens/buy', 'Login with a different address'),
-    },
-  ];
-  session &&
-    availableBlockchains &&
-    addressItems.unshift(
-      ...availableBlockchains.map((b) => ({
-        address: blankedAddress(session.address),
-        label: toString(b),
-        chain: b,
-      })),
-    );
+  const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
+  const blockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
 
+  const addressItems: Address[] =
+    session?.address && blockchains?.length
+      ? [
+          ...blockchains.map((b) => ({
+            address: blankedAddress(session.address ?? ''),
+            label: toString(b),
+            chain: b,
+          })),
+          {
+            address: translate('screens/buy', 'Switch address'),
+            label: translate('screens/buy', 'Login with a different address'),
+          },
+        ]
+      : [];
   const availablePaymentMethods = [FiatPaymentMethod.BANK];
 
   (!selectedAsset || selectedAsset.instantBuyable) && availablePaymentMethods.push(FiatPaymentMethod.INSTANT);
 
   (isDfxHosted || !isEmbedded) &&
     wallet !== EmbeddedWallet &&
-    user?.wallet !== EmbeddedWallet &&
+    user?.activeAddress?.wallet !== EmbeddedWallet &&
     (!selectedAsset || selectedAsset?.cardBuyable) &&
     availablePaymentMethods.push(FiatPaymentMethod.CARD);
 
@@ -171,21 +173,17 @@ export function BuyScreen(): JSX.Element {
 
   useEffect(() => {
     const activeBlockchain = walletBlockchain ?? blockchain;
-    const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
-    const blockchainAssets = getAssets(blockchains, { buyable: true, comingSoon: false }).filter(
+    const assetBlockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
+    const blockchainAssets = getAssets(assetBlockchains, { buyable: true, comingSoon: false }).filter(
       (a) => a.category === AssetCategory.PUBLIC || a.name === assetOut,
     );
-    const activeAssets = assets
-      ? assets
-          .split(',')
-          .map((a) => getAsset(blockchainAssets, a))
-          .filter(isDefined)
-      : blockchainAssets;
+    const activeAssets = filterAssets(blockchainAssets, assetFilter);
+
     setAvailableAssets(activeAssets);
 
     const asset = getAsset(activeAssets, assetOut) ?? (activeAssets.length === 1 && activeAssets[0]);
     if (asset) setVal('asset', asset);
-  }, [assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
+  }, [assetOut, assetFilter, getAsset, getAssets, blockchain, walletBlockchain, availableBlockchains]);
 
   useEffect(() => {
     const currency =
@@ -335,12 +333,19 @@ export function BuyScreen(): JSX.Element {
   }
 
   // misc
+  function filterAssets(assets: Asset[], filter?: string): Asset[] {
+    if (!filter) return assets;
+
+    const allowedAssets = filter.split(',');
+    return assets.filter((a) => allowedAssets.some((f) => isSameAsset(a, f)));
+  }
+
   function onSubmit(_data: FormData) {
     // TODO: (Krysh fix broken form validation and onSubmit
   }
 
   function setAddress() {
-    if (session?.address) {
+    if (isInitialized && session?.address && addressItems) {
       const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
       setVal('address', address);
     }
@@ -388,24 +393,7 @@ export function BuyScreen(): JSX.Element {
       scrollRef={scrollRef}
     >
       {showsSwitchScreen ? (
-        <>
-          <p className="text-dfxBlue-800 mb-2">
-            {translate('screens/buy', 'Are you sure you want to send to a different address?')}
-          </p>
-          <StyledHorizontalStack>
-            <StyledButton
-              color={StyledButtonColor.STURDY_WHITE}
-              width={StyledButtonWidth.MIN}
-              label={translate('general/actions', 'No')}
-              onClick={() => setShowsSwitchScreen(false)}
-            />
-            <StyledButton
-              width={StyledButtonWidth.MIN}
-              label={translate('general/actions', 'Yes')}
-              onClick={onAddressSwitch}
-            />
-          </StyledHorizontalStack>
-        </>
+        <AddressSwitch onClose={(r) => (r ? onAddressSwitch() : setShowsSwitchScreen(false))} />
       ) : showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose />
       ) : showsNameForm ? (
@@ -541,7 +529,7 @@ export function BuyScreen(): JSX.Element {
                                 <StyledLink
                                   label={translate(
                                     'screens/payment',
-                                    'Please note that by using this service you automatically accept our terms and conditions.',
+                                    'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
                                   )}
                                   url={process.env.REACT_APP_TNC_URL}
                                   small

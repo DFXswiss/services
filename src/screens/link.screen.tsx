@@ -45,7 +45,7 @@ export function LinkScreen(): JSX.Element {
   const [contactStep, setContactStep] = useState<KycStepSession>();
   const [showLinkHint, setShowLinkHint] = useState(false);
 
-  const kycCode = user?.kycHash;
+  const kycCode = user?.kyc.hash;
 
   useEffect(() => {
     if (!kycCode) return;

@@ -25,7 +25,7 @@ import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { DateLabels, LimitLabels, OriginFutureLabels, OriginNowLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
-import { useSessionGuard } from '../hooks/guard.hook';
+import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { toBase64 } from '../util/utils';
 
@@ -51,9 +51,9 @@ export function LimitScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const params = new URLSearchParams(search);
   const paramKycCode = params.get('code');
-  const kycCode = paramKycCode ?? user?.kycHash;
+  const kycCode = paramKycCode ?? user?.kyc.hash;
 
-  useSessionGuard('/login', !kycCode);
+  useUserGuard('/login', !kycCode);
 
   const {
     control,
@@ -163,6 +163,7 @@ export function LimitScreen(): JSX.Element {
             <StyledInput
               name="fundOriginText"
               label={`${translate('screens/limit', 'Origin of funds')} (${translate('screens/limit', 'free text')})`}
+              multiLine
               full
             />
 

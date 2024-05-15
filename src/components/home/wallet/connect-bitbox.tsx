@@ -175,8 +175,6 @@ function Content({
         <StyledVerticalStack gap={5} center full>
           {addresses ? (
             <>
-              <h2 className="text-dfxGray-700">{translate('screens/home', 'Choose an address')}</h2>
-
               {wallet === WalletType.BITBOX_BTC && (
                 <>
                   <StyledDropdown<BitcoinAddressType>

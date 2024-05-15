@@ -42,10 +42,10 @@ import { SellCompletion } from '../components/payment/sell-completion';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
-import { useKycLevelGuard, useSessionGuard } from '../hooks/guard.hook';
+import { useAddressGuard, useKycLevelGuard } from '../hooks/guard.hook';
 
 export function SellInfoScreen(): JSX.Element {
-  useSessionGuard();
+  useAddressGuard();
   useKycLevelGuard(KycLevel.Sell, '/profile');
 
   const { translate } = useSettingsContext();
@@ -232,7 +232,7 @@ export function SellInfoScreen(): JSX.Element {
               <StyledLink
                 label={translate(
                   'screens/payment',
-                  'Please note that by using this service you automatically accept our terms and conditions.',
+                  'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
                 )}
                 url={process.env.REACT_APP_TNC_URL}
                 small

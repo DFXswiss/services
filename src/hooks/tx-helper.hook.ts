@@ -1,4 +1,4 @@
-import { Asset, Sell, useAuthContext } from '@dfx.swiss/react';
+import { Asset, Sell, Swap, useAuthContext } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -6,16 +6,19 @@ import { AssetBalance, useBalanceContext } from '../contexts/balance.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { useAlby } from './wallets/alby.hook';
 import { useMetaMask } from './wallets/metamask.hook';
+import { useWalletConnect } from './wallets/wallet-connect.hook';
 
-export interface SellHelperInterface {
+export interface TxHelperInterface {
   getBalances: (assets: Asset[]) => Promise<AssetBalance[] | undefined>;
-  sendTransaction: (sell: Sell) => Promise<string>;
+  sendTransaction: (tx: Sell | Swap) => Promise<string>;
   canSendTransaction: () => boolean;
 }
 
-// CAUTION: This is a helper hook for all sell functionalities. Think about lazy loading, as soon as it gets bigger.
-export function useSellHelper(): SellHelperInterface {
-  const { readBalance, createTransaction } = useMetaMask();
+// CAUTION: This is a helper hook for all blockchain transaction functionalities. Think about lazy loading, as soon as it gets bigger.
+export function useTxHelper(): TxHelperInterface {
+  const { readBalance: readBalanceMetaMask, createTransaction: createTransactionMetaMask } = useMetaMask();
+  const { readBalance: readBalanceWalletConnect, createTransaction: createTransactionWalletConnect } =
+    useWalletConnect();
   const { sendPayment } = useAlby();
   const { getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet } = useWalletContext();
@@ -27,7 +30,7 @@ export function useSellHelper(): SellHelperInterface {
 
     switch (activeWallet) {
       case WalletType.META_MASK:
-        return (await Promise.all(assets.map((asset: Asset) => readBalance(asset, session?.address)))).filter(
+        return (await Promise.all(assets.map((asset: Asset) => readBalanceMetaMask(asset, session?.address)))).filter(
           (b) => b.amount > 0,
         );
 
@@ -37,19 +40,26 @@ export function useSellHelper(): SellHelperInterface {
     }
   }
 
-  async function sendTransaction(sell: Sell): Promise<string> {
+  async function sendTransaction(tx: Sell | Swap): Promise<string> {
     if (!activeWallet) throw new Error('No wallet connected');
+
+    const asset = 'asset' in tx ? tx.asset : tx.sourceAsset;
 
     switch (activeWallet) {
       case WalletType.META_MASK:
         if (!session?.address) throw new Error('Address is not defined');
 
-        return createTransaction(new BigNumber(sell.amount), sell.asset, session.address, sell.depositAddress);
+        return createTransactionMetaMask(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
       case WalletType.ALBY:
-        if (!sell.paymentRequest) throw new Error('Payment request not defined');
+        if (!tx.paymentRequest) throw new Error('Payment request not defined');
 
-        return sendPayment(sell.paymentRequest).then((p) => p.preimage);
+        return sendPayment(tx.paymentRequest).then((p) => p.preimage);
+
+      case WalletType.WALLET_CONNECT:
+        if (!session?.address) throw new Error('Address is not defined');
+
+        return createTransactionWalletConnect(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
       default:
         throw new Error('Not supported yet');
@@ -62,6 +72,7 @@ export function useSellHelper(): SellHelperInterface {
     switch (activeWallet) {
       case WalletType.META_MASK:
       case WalletType.ALBY:
+      case WalletType.WALLET_CONNECT:
         return true;
 
       default:
@@ -70,6 +81,12 @@ export function useSellHelper(): SellHelperInterface {
   }
   return useMemo(
     () => ({ getBalances, sendTransaction, canSendTransaction }),
-    [readBalance, createTransaction, sendPayment],
+    [
+      readBalanceMetaMask,
+      readBalanceWalletConnect,
+      createTransactionMetaMask,
+      createTransactionWalletConnect,
+      sendPayment,
+    ],
   );
 }

@@ -1,9 +1,13 @@
 import { IconVariant, StyledButton, StyledButtonColor, StyledVerticalStack } from '@dfx.swiss/react-components';
+import { useSearchParams } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 
 export function ErrorScreen(): JSX.Element {
   const { translate } = useSettingsContext();
+  const [params] = useSearchParams();
+
+  const error = params.get('msg');
 
   return (
     <Layout>
@@ -11,10 +15,11 @@ export function ErrorScreen(): JSX.Element {
         <div>
           <h2 className="text-dfxBlue-800">{translate('screens/error', 'Oh sorry something went wrong')}</h2>
           <p className="text-dfxGray-700">
-            {translate(
-              'screens/error',
-              'Please return to the previous page. If this problem persists, please contact our support.',
-            )}
+            {error ??
+              translate(
+                'screens/error',
+                'Please return to the previous page. If this problem persists, please contact our support.',
+              )}
           </p>
         </div>
 
