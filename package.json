@@ -1,7 +1,7 @@
 {
   "name": "@dfx.swiss/services-react",
   "version": "1.0.0",
-  "private": true,
+  "private": false,
   "main": "dist/public_api.js",
   "types": "dist/public_api.d.ts",
   "dependencies": {
