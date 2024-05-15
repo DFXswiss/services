@@ -85,11 +85,6 @@ jobs:
           inlineScript: |
             az cdn endpoint purge --content-paths  "/*" --profile-name ${{ env.AZURE_CDN_PROFILE }} --name ${{ env.AZURE_CDN_ENDPOINT }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
 
-      - name: Publish to npm
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
-
       - name: Logout
         run: |
           az logout

@@ -46,7 +46,7 @@ For web component integration, a closing callback (`on-close` attribute) should 
 
 #### React Component
 
-DFX services can be integrated as React component from the `@dfx.swiss/services` NPM package. See code example [below](#react-component-example). The desired parameters (see [below](#query-parameters)) can be supplied as props.
+DFX services can be integrated as React component from the `@dfx.swiss/services-react` NPM package. See code example [below](#react-component-example). The desired parameters (see [below](#query-parameters)) can be supplied as props.
 
 Similar to the Web Component, the React component requires a closing callback (`onClose` prop) to be provided. On cancel or completion, this callback is called. See [below](#close-message) for details on the message format.
 
@@ -209,7 +209,7 @@ Documentation on `BuyPaymentInfoDto` and `SellPaymentInfoDto` can be found in th
 #### React Component Example
 
 ```tsx
-import { DfxServices, Service } from '@dfx.swiss/services';
+import { DfxServices, Service, CloseMessage } from '@dfx.swiss/services-react';
 
 function App() {
   const handleClose = (data: CloseMessage) => {
