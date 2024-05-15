@@ -14,4 +14,5 @@ function MainWidget(params: WidgetParams) {
   );
 }
 
-export default MainWidget;
+const DfxServices = MainWidget;
+export default DfxServices;
