@@ -22,9 +22,9 @@ This guide details how to package and publish a React component as an npm packag
    ```
 
 2. **Define Your Package Exports**:
-   Set up a `public_api.ts` to define and manage exports cleanly:
+   Set up a `public-api.ts` to define and manage exports cleanly:
    ```tsx
-   // src/public_api.ts
+   // src/public-api.ts
    export { default as DfxServices } from './Main.widget';
    ```
 
@@ -53,8 +53,8 @@ This guide details how to package and publish a React component as an npm packag
      "version": "1.0.0",
      "license": "MIT",
      "private": false,
-     "main": "dist/public_api.js",
-     "types": "dist/public_api.d.ts",
+     "main": "dist/public-api.js",
+     "types": "dist/public-api.d.ts",
      "files": ["dist"],
      "publishConfig": {
        "access": "public"
