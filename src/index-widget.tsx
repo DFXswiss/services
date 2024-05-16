@@ -5,6 +5,7 @@ import './index.css';
 
 const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'function' | 'json' } = {
   headless: 'string',
+  borderless: 'string',
   flags: 'string',
   lang: 'string',
   address: 'string',

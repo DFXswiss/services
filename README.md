@@ -119,6 +119,8 @@ _Hint: Asset selection parameters may be overwritten when using [wallet login](#
 **Special parameters**
 
 - Redirect URI (`redirect-uri`): URI to redirect the user to after cancel or completion (only for [standalone](#standalone) or [Iframe](#iframe) integration, see [closing](#closing))
+- Headless (`headless=true`): hides the menu bar
+- Borderless (`borderless=true`): removes the page padding
 
 #### Hints
 

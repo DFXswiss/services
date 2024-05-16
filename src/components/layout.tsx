@@ -33,7 +33,7 @@ export function Layout({
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const { pathname } = useLocation();
   const { clearParams } = useNavigation();
-  const { headless } = useAppParams();
+  const { headless, borderless } = useAppParams();
 
   useEffect(() => {
     const kycRoutes = Routes.filter((r) => r.isKycScreen);
@@ -64,7 +64,7 @@ export function Layout({
           <div
             className={`relative w-full max-w-screen-md flex flex-grow flex-col items-center ${
               textStart ? 'text-start' : 'text-center'
-            } ${!noPadding && 'p-5'} gap-2`}
+            } ${!(noPadding || borderless) && 'p-5'} gap-2`}
           >
             {children}
           </div>

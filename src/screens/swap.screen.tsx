@@ -516,7 +516,7 @@ export default function SwapScreen(): JSX.Element {
                         width={StyledButtonWidth.MIN}
                         label={translate('general/actions', 'Retry')}
                         onClick={() => setVal('amount', enteredAmount)} // re-trigger
-                        className="my-4"
+                        className="mt-4"
                         color={StyledButtonColor.STURDY_WHITE}
                       />
                     </StyledVerticalStack>
@@ -588,7 +588,7 @@ export default function SwapScreen(): JSX.Element {
                           )}
                           onClick={() => handleNext(paymentInfo)}
                           caps={false}
-                          className="my-4"
+                          className="mt-4"
                           isLoading={isProcessing}
                         />
                       </div>
