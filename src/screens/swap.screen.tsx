@@ -32,6 +32,7 @@ import {
   StyledLink,
   StyledLoadingSpinner,
   StyledSearchDropdown,
+  StyledTabContainer,
   StyledTextBox,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -168,8 +169,7 @@ export default function SwapScreen(): JSX.Element {
       : [];
 
   useEffect(() => {
-    const activeSourceBlockchains = walletBlockchain ? [walletBlockchain] : sourceBlockchains ?? [];
-    const blockchainSourceAssets = getAssets(activeSourceBlockchains, { sellable: true, comingSoon: false });
+    const blockchainSourceAssets = getAssets(sourceBlockchains ?? [], { sellable: true, comingSoon: false });
     const activeSourceAssets = filterAssets(blockchainSourceAssets, assetFilter);
     setSourceAssets(activeSourceAssets);
 
@@ -533,42 +533,38 @@ export default function SwapScreen(): JSX.Element {
                         to={paymentInfo.targetAsset}
                       />
 
-                      <StyledVerticalStack gap={2} full>
+                      <StyledVerticalStack gap={3} full>
                         <h2 className="text-dfxBlue-800 text-center">
                           {translate('screens/payment', 'Payment Information')}
                         </h2>
-                        <div className="text-left">
-                          <StyledInfoText iconColor={IconColor.BLUE}>
-                            {translate(
-                              'screens/swap',
-                              'Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.',
+
+                        {paymentInfo.paymentRequest && !canSendTransaction() ? (
+                          <StyledTabContainer
+                            tabs={[
                               {
-                                sourceChain: toString(paymentInfo.sourceAsset.blockchain),
-                                targetChain: toString(paymentInfo.targetAsset.blockchain),
-                                asset: paymentInfo.targetAsset.name,
+                                title: translate('screens/payment', 'Text'),
+                                content: <PaymentInformationText paymentInfo={paymentInfo} />,
                               },
-                            )}
-                          </StyledInfoText>
-                        </div>
-
-                        <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                          <StyledDataTableRow label={translate('screens/sell', 'Address')}>
-                            <div>
-                              <p>{blankedAddress(paymentInfo.depositAddress)}</p>
-                            </div>
-                            <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
-                          </StyledDataTableRow>
-                        </StyledDataTable>
+                              {
+                                title: translate('screens/payment', 'QR Code'),
+                                content: (
+                                  <StyledVerticalStack full center>
+                                    <p className="font-semibold text-sm text-dfxBlue-800">
+                                      {translate('screens/sell', 'Pay with your wallet')}
+                                    </p>
+                                    <QrCopy data={paymentInfo.paymentRequest} />
+                                  </StyledVerticalStack>
+                                ),
+                              },
+                            ]}
+                            darkTheme
+                            spread
+                            small
+                          />
+                        ) : (
+                          <PaymentInformationText paymentInfo={paymentInfo} />
+                        )}
                       </StyledVerticalStack>
-
-                      {paymentInfo.paymentRequest && !canSendTransaction() && (
-                        <StyledVerticalStack full center>
-                          <p className="font-semibold text-sm text-dfxBlue-800">
-                            {translate('screens/sell', 'Pay with your wallet')}
-                          </p>
-                          <QrCopy data={paymentInfo.paymentRequest} />
-                        </StyledVerticalStack>
-                      )}
 
                       <SanctionHint />
 
@@ -605,5 +601,38 @@ export default function SwapScreen(): JSX.Element {
         </Form>
       )}
     </Layout>
+  );
+}
+
+function PaymentInformationText({ paymentInfo }: { paymentInfo: Swap }): JSX.Element {
+  const { copy } = useClipboard();
+  const { translate } = useSettingsContext();
+  const { toString } = useBlockchain();
+
+  return (
+    <StyledVerticalStack gap={2} full>
+      <div className="text-left">
+        <StyledInfoText iconColor={IconColor.BLUE}>
+          {translate(
+            'screens/swap',
+            'Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.',
+            {
+              sourceChain: toString(paymentInfo.sourceAsset.blockchain),
+              targetChain: toString(paymentInfo.targetAsset.blockchain),
+              asset: paymentInfo.targetAsset.name,
+            },
+          )}
+        </StyledInfoText>
+      </div>
+
+      <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+        <StyledDataTableRow label={translate('screens/sell', 'Address')}>
+          <div>
+            <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+          </div>
+          <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
+        </StyledDataTableRow>
+      </StyledDataTable>
+    </StyledVerticalStack>
   );
 }
