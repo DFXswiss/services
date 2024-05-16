@@ -173,8 +173,8 @@ export function BuyScreen(): JSX.Element {
 
   useEffect(() => {
     const activeBlockchain = walletBlockchain ?? blockchain;
-    const assetBlockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
-    const blockchainAssets = getAssets(assetBlockchains, { buyable: true, comingSoon: false }).filter(
+    const activeBlockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
+    const blockchainAssets = getAssets(activeBlockchains, { buyable: true, comingSoon: false }).filter(
       (a) => a.category === AssetCategory.PUBLIC || a.name === assetOut,
     );
     const activeAssets = filterAssets(blockchainAssets, assetFilter);

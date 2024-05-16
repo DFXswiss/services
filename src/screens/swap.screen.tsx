@@ -56,7 +56,7 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useTxHelper } from '../hooks/tx-helper.hook';
-import { blankedAddress, isDefined } from '../util/utils';
+import { blankedAddress } from '../util/utils';
 
 interface Address {
   address: string;
@@ -88,15 +88,24 @@ export default function SwapScreen(): JSX.Element {
   const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
   const { availableBlockchains, logout } = useSessionContext();
   const { session } = useAuthContext();
-  const { getAssets } = useAssetContext();
-  const { getAsset } = useAsset();
+  const { assets, getAssets } = useAssetContext();
+  const { getAsset, isSameAsset } = useAsset();
   const { navigate } = useNavigation();
-  const { assets, assetIn, assetOut, amountIn, blockchain, externalTransactionId, setParams } = useAppParams();
+  const {
+    assets: assetFilter,
+    assetIn,
+    assetOut,
+    amountIn,
+    blockchain,
+    externalTransactionId,
+    setParams,
+  } = useAppParams();
   const { receiveFor } = useSwap();
   const { toString } = useBlockchain();
   const rootRef = useRef<HTMLDivElement>(null);
 
-  const [availableAssets, setAvailableAssets] = useState<Asset[]>();
+  const [sourceAssets, setSourceAssets] = useState<Asset[]>();
+  const [targetAssets, setTargetAssets] = useState<Asset[]>();
   const [customAmountError, setCustomAmountError] = useState<CustomAmountError>();
   const [errorMessage, setErrorMessage] = useState<string>();
   const [kycError, setKycError] = useState<TransactionError>();
@@ -110,8 +119,8 @@ export default function SwapScreen(): JSX.Element {
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
 
   useEffect(() => {
-    availableAssets && getBalances(availableAssets).then(setBalances);
-  }, [getBalances, availableAssets]);
+    sourceAssets && getBalances(sourceAssets).then(setBalances);
+  }, [getBalances, sourceAssets]);
 
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
@@ -121,47 +130,62 @@ export default function SwapScreen(): JSX.Element {
   const enteredAmount = useWatch({ control, name: 'amount' });
   const selectedAddress = useWatch({ control, name: 'address' });
 
-  const availableBalance = selectedSourceAsset && findBalance(selectedSourceAsset);
-
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
     setValue(field, value, { shouldValidate: true });
   }
 
-  const addressItems: Address[] = [
-    {
-      address: translate('screens/buy', 'Switch address'),
-      label: translate('screens/buy', 'Login with a different address'),
-    },
+  const availableBalance = selectedSourceAsset && findBalance(selectedSourceAsset);
+
+  const SwapInputBlockchains: Blockchain[] = [
+    Blockchain.BITCOIN,
+    Blockchain.LIGHTNING,
+    Blockchain.ETHEREUM,
+    Blockchain.ARBITRUM,
+    Blockchain.OPTIMISM,
+    Blockchain.POLYGON,
   ];
-  session?.address &&
-    availableBlockchains &&
-    addressItems.unshift(
-      ...availableBlockchains.map((b) => ({
-        address: blankedAddress(session.address ?? ''),
-        label: toString(b),
-        chain: b,
-      })),
-    );
+
+  const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
+  const sourceBlockchains = availableBlockchains?.filter(
+    (b) => SwapInputBlockchains.includes(b) && filteredAssets?.some((a) => a.blockchain === b),
+  );
+  const targetBlockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
+
+  const addressItems: Address[] =
+    session?.address && targetBlockchains?.length
+      ? [
+          ...targetBlockchains.map((b) => ({
+            address: blankedAddress(session.address ?? ''),
+            label: toString(b),
+            chain: b,
+          })),
+          {
+            address: translate('screens/buy', 'Switch address'),
+            label: translate('screens/buy', 'Login with a different address'),
+          },
+        ]
+      : [];
 
   useEffect(() => {
-    const activeBlockchain = walletBlockchain ?? blockchain;
-    const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
-    const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
-    const activeAssets = assets
-      ? assets
-          .split(',')
-          .map((a) => getAsset(blockchainAssets, a))
-          .filter(isDefined)
-      : blockchainAssets;
-    setAvailableAssets(activeAssets);
+    const activeSourceBlockchains = walletBlockchain ? [walletBlockchain] : sourceBlockchains ?? [];
+    const blockchainSourceAssets = getAssets(activeSourceBlockchains, { sellable: true, comingSoon: false });
+    const activeSourceAssets = filterAssets(blockchainSourceAssets, assetFilter);
+    setSourceAssets(activeSourceAssets);
 
-    const sourceAsset = getAsset(activeAssets, assetIn) ?? (activeAssets.length === 1 && activeAssets[0]);
+    const activeTargetBlockchains = blockchain ? [blockchain as Blockchain] : targetBlockchains ?? [];
+    const blockchainTargetAssets = getAssets(activeTargetBlockchains ?? [], { buyable: true, comingSoon: false });
+    const activeTargetAssets = filterAssets(blockchainTargetAssets, assetFilter);
+    setTargetAssets(activeTargetAssets);
+
+    const sourceAsset =
+      getAsset(activeSourceAssets, assetIn) ?? (activeSourceAssets.length === 1 && activeSourceAssets[0]);
     if (sourceAsset) setVal('sourceAsset', sourceAsset);
 
-    const targetAsset = getAsset(activeAssets, assetOut) ?? (activeAssets.length === 1 && activeAssets[0]);
+    const targetAsset =
+      getAsset(activeTargetAssets, assetOut) ?? (activeTargetAssets.length === 1 && activeTargetAssets[0]);
     if (targetAsset) setVal('targetAsset', targetAsset);
-  }, [assets, assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
+  }, [assetFilter, assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
     if (amountIn) setVal('amount', amountIn);
@@ -176,7 +200,7 @@ export default function SwapScreen(): JSX.Element {
           setParams({ blockchain: selectedAddress.chain });
           switchBlockchain(selectedAddress.chain);
           resetField('targetAsset');
-          setAvailableAssets(undefined);
+          setTargetAssets(undefined);
         }
       } else {
         setShowsSwitchScreen(true);
@@ -318,6 +342,14 @@ export default function SwapScreen(): JSX.Element {
     return balance != null ? Utils.formatAmountCrypto(balance) : '';
   }
 
+  // misc
+  function filterAssets(assets: Asset[], filter?: string): Asset[] {
+    if (!filter) return assets;
+
+    const allowedAssets = filter.split(',');
+    return assets.filter((a) => allowedAssets.some((f) => isSameAsset(a, f)));
+  }
+
   function onSubmit(_data: FormData) {
     // TODO: (Krysh fix broken form validation and onSubmit
   }
@@ -374,7 +406,7 @@ export default function SwapScreen(): JSX.Element {
           translate={translateError}
           hasFormElement={false}
         >
-          {availableAssets && (
+          {sourceAssets && targetAssets && (
             <StyledVerticalStack gap={8} full center className="relative">
               <StyledVerticalStack gap={2} full>
                 <h2 className="text-dfxGray-700">{translate('screens/buy', 'You spend')}</h2>
@@ -408,7 +440,7 @@ export default function SwapScreen(): JSX.Element {
                       rootRef={rootRef}
                       name="sourceAsset"
                       placeholder={translate('general/actions', 'Select...')}
-                      items={availableAssets}
+                      items={sourceAssets}
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
                       assetIconFunc={(item) => item.name as AssetIconVariant}
@@ -442,11 +474,11 @@ export default function SwapScreen(): JSX.Element {
                         rootRef={rootRef}
                         name="targetAsset"
                         placeholder={translate('general/actions', 'Select...')}
-                        items={availableAssets}
+                        items={targetAssets}
                         labelFunc={(item) => item.name}
                         balanceFunc={findBalanceString}
                         assetIconFunc={(item) => item.name as AssetIconVariant}
-                        descriptionFunc={(item) => toString(item.blockchain)}
+                        descriptionFunc={(item) => item.description}
                         filterFunc={(item: Asset, search?: string | undefined) =>
                           !search || item.name.toLowerCase().includes(search.toLowerCase())
                         }
