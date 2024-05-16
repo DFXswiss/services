@@ -500,102 +500,104 @@ export default function SwapScreen(): JSX.Element {
                 />
               </StyledVerticalStack>
 
-              {isLoading && (
+              {isLoading ? (
                 <StyledVerticalStack center>
                   <StyledLoadingSpinner size={SpinnerSize.LG} />
                 </StyledVerticalStack>
-              )}
-
-              {!isLoading && kycError && !customAmountError && <KycHint type={TransactionType.SWAP} error={kycError} />}
-
-              {!isLoading && errorMessage && (
-                <StyledVerticalStack center className="text-center">
-                  <ErrorHint message={errorMessage} />
-
-                  <StyledButton
-                    width={StyledButtonWidth.MIN}
-                    label={translate('general/actions', 'Retry')}
-                    onClick={() => setVal('amount', enteredAmount)} // re-trigger
-                    className="my-4"
-                    color={StyledButtonColor.STURDY_WHITE}
-                  />
-                </StyledVerticalStack>
-              )}
-
-              {!isLoading && paymentInfo && !kycError && !errorMessage && !customAmountError?.hideInfos && (
+              ) : (
                 <>
-                  <ExchangeRate
-                    exchangeRate={1 / paymentInfo.exchangeRate}
-                    rate={1 / paymentInfo.rate}
-                    fees={paymentInfo.fees}
-                    feeCurrency={paymentInfo.sourceAsset}
-                    from={paymentInfo.sourceAsset}
-                    to={paymentInfo.targetAsset}
-                  />
+                  {kycError && !customAmountError && <KycHint type={TransactionType.SWAP} error={kycError} />}
 
-                  <StyledVerticalStack gap={2} full>
-                    <h2 className="text-dfxBlue-800 text-center">
-                      {translate('screens/payment', 'Payment Information')}
-                    </h2>
-                    <div className="text-left">
-                      <StyledInfoText iconColor={IconColor.BLUE}>
-                        {translate(
-                          'screens/swap',
-                          'Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.',
-                          {
-                            sourceChain: toString(paymentInfo.sourceAsset.blockchain),
-                            targetChain: toString(paymentInfo.targetAsset.blockchain),
-                            asset: paymentInfo.targetAsset.name,
-                          },
-                        )}
-                      </StyledInfoText>
-                    </div>
+                  {errorMessage && (
+                    <StyledVerticalStack center className="text-center">
+                      <ErrorHint message={errorMessage} />
 
-                    <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                      <StyledDataTableRow label={translate('screens/sell', 'Address')}>
-                        <div>
-                          <p>{blankedAddress(paymentInfo.depositAddress)}</p>
-                        </div>
-                        <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
-                      </StyledDataTableRow>
-                    </StyledDataTable>
-                  </StyledVerticalStack>
-
-                  {paymentInfo.paymentRequest && !canSendTransaction() && (
-                    <StyledVerticalStack full center>
-                      <p className="font-semibold text-sm text-dfxBlue-800">
-                        {translate('screens/sell', 'Pay with your wallet')}
-                      </p>
-                      <QrCopy data={paymentInfo.paymentRequest} />
+                      <StyledButton
+                        width={StyledButtonWidth.MIN}
+                        label={translate('general/actions', 'Retry')}
+                        onClick={() => setVal('amount', enteredAmount)} // re-trigger
+                        className="my-4"
+                        color={StyledButtonColor.STURDY_WHITE}
+                      />
                     </StyledVerticalStack>
                   )}
 
-                  <SanctionHint />
+                  {paymentInfo && !kycError && !errorMessage && !customAmountError?.hideInfos && (
+                    <>
+                      <ExchangeRate
+                        exchangeRate={1 / paymentInfo.exchangeRate}
+                        rate={1 / paymentInfo.rate}
+                        fees={paymentInfo.fees}
+                        feeCurrency={paymentInfo.sourceAsset}
+                        from={paymentInfo.sourceAsset}
+                        to={paymentInfo.targetAsset}
+                      />
 
-                  <div className="w-full leading-none">
-                    <StyledLink
-                      label={translate(
-                        'screens/payment',
-                        'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                      <StyledVerticalStack gap={2} full>
+                        <h2 className="text-dfxBlue-800 text-center">
+                          {translate('screens/payment', 'Payment Information')}
+                        </h2>
+                        <div className="text-left">
+                          <StyledInfoText iconColor={IconColor.BLUE}>
+                            {translate(
+                              'screens/swap',
+                              'Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.',
+                              {
+                                sourceChain: toString(paymentInfo.sourceAsset.blockchain),
+                                targetChain: toString(paymentInfo.targetAsset.blockchain),
+                                asset: paymentInfo.targetAsset.name,
+                              },
+                            )}
+                          </StyledInfoText>
+                        </div>
+
+                        <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                          <StyledDataTableRow label={translate('screens/sell', 'Address')}>
+                            <div>
+                              <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+                            </div>
+                            <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
+                          </StyledDataTableRow>
+                        </StyledDataTable>
+                      </StyledVerticalStack>
+
+                      {paymentInfo.paymentRequest && !canSendTransaction() && (
+                        <StyledVerticalStack full center>
+                          <p className="font-semibold text-sm text-dfxBlue-800">
+                            {translate('screens/sell', 'Pay with your wallet')}
+                          </p>
+                          <QrCopy data={paymentInfo.paymentRequest} />
+                        </StyledVerticalStack>
                       )}
-                      url={process.env.REACT_APP_TNC_URL}
-                      small
-                      dark
-                    />
-                    <StyledButton
-                      width={StyledButtonWidth.FULL}
-                      label={translate(
-                        'screens/sell',
-                        canSendTransaction()
-                          ? 'Complete transaction in your wallet'
-                          : 'Click here once you have issued the transaction',
-                      )}
-                      onClick={() => handleNext(paymentInfo)}
-                      caps={false}
-                      className="my-4"
-                      isLoading={isProcessing}
-                    />
-                  </div>
+
+                      <SanctionHint />
+
+                      <div className="w-full leading-none">
+                        <StyledLink
+                          label={translate(
+                            'screens/payment',
+                            'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                          )}
+                          url={process.env.REACT_APP_TNC_URL}
+                          small
+                          dark
+                        />
+                        <StyledButton
+                          width={StyledButtonWidth.FULL}
+                          label={translate(
+                            'screens/sell',
+                            canSendTransaction()
+                              ? 'Complete transaction in your wallet'
+                              : 'Click here once you have issued the transaction',
+                          )}
+                          onClick={() => handleNext(paymentInfo)}
+                          caps={false}
+                          className="my-4"
+                          isLoading={isProcessing}
+                        />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </StyledVerticalStack>
