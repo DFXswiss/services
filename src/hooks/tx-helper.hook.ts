@@ -16,7 +16,11 @@ export interface TxHelperInterface {
 
 // CAUTION: This is a helper hook for all blockchain transaction functionalities. Think about lazy loading, as soon as it gets bigger.
 export function useTxHelper(): TxHelperInterface {
-  const { readBalance: readBalanceMetaMask, createTransaction: createTransactionMetaMask } = useMetaMask();
+  const {
+    readBalance: readBalanceMetaMask,
+    createTransaction: createTransactionMetaMask,
+    requestChangeToBlockchain: requestChangeToBlockchainMetaMask,
+  } = useMetaMask();
   const { readBalance: readBalanceWalletConnect, createTransaction: createTransactionWalletConnect } =
     useWalletConnect();
   const { sendPayment } = useAlby();
@@ -49,6 +53,7 @@ export function useTxHelper(): TxHelperInterface {
       case WalletType.META_MASK:
         if (!session?.address) throw new Error('Address is not defined');
 
+        await requestChangeToBlockchainMetaMask(asset.blockchain);
         return createTransactionMetaMask(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
       case WalletType.ALBY:

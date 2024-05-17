@@ -173,8 +173,8 @@ export function BuyScreen(): JSX.Element {
 
   useEffect(() => {
     const activeBlockchain = walletBlockchain ?? blockchain;
-    const assetBlockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
-    const blockchainAssets = getAssets(assetBlockchains, { buyable: true, comingSoon: false }).filter(
+    const activeBlockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
+    const blockchainAssets = getAssets(activeBlockchains, { buyable: true, comingSoon: false }).filter(
       (a) => a.category === AssetCategory.PUBLIC || a.name === assetOut,
     );
     const activeAssets = filterAssets(blockchainAssets, assetFilter);
@@ -496,7 +496,7 @@ export function BuyScreen(): JSX.Element {
                           width={StyledButtonWidth.MIN}
                           label={translate('general/actions', 'Retry')}
                           onClick={updateData}
-                          className="my-4"
+                          className="mt-4"
                           color={StyledButtonColor.STURDY_WHITE}
                         />
                       </StyledVerticalStack>
@@ -543,7 +543,7 @@ export function BuyScreen(): JSX.Element {
                                     scrollRef.current?.scrollTo(0, 0);
                                   }}
                                   caps={false}
-                                  className="my-4"
+                                  className="mt-4"
                                 />
                               </div>
                             </>
@@ -566,7 +566,7 @@ export function BuyScreen(): JSX.Element {
                                     label={translate('general/actions', 'Next')}
                                     onClick={() => onCardBuy(paymentInfo)}
                                     isLoading={isContinue}
-                                    className="my-4"
+                                    className="mt-4"
                                   />
                                 </div>
                               </>

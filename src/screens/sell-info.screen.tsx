@@ -180,7 +180,7 @@ export function SellInfoScreen(): JSX.Element {
             width={StyledButtonWidth.MIN}
             label={translate('general/actions', 'Retry')}
             onClick={fetchData}
-            className="my-4"
+            className="mt-4"
             color={StyledButtonColor.STURDY_WHITE}
           />
         </StyledVerticalStack>
@@ -248,7 +248,7 @@ export function SellInfoScreen(): JSX.Element {
                 scrollRef.current?.scrollTo(0, 0);
               }}
               caps={false}
-              className="my-4"
+              className="mt-4"
             />
           </>
         )

@@ -11,21 +11,21 @@ This guide details how to package and publish a React component as an npm packag
 ### Step 1: Prepare Your Component
 
 1. **Organize Your Component Code**:
-   Ensure your main component, e.g., `MainWidget`, is properly configured:
+   Ensure your main component, e.g., `MainLib`, is properly configured:
 
    ```tsx
-   // src/Main.widget.tsx
-   function MainWidget(params) {
+   // src/Main.lib.tsx
+   function MainLib(params) {
      return <div>...</div>;
    }
-   export default MainWidget;
+   export default MainLib;
    ```
 
 2. **Define Your Package Exports**:
    Set up a `public-api.ts` to define and manage exports cleanly:
    ```tsx
    // src/public-api.ts
-   export { default as DfxServices } from './Main.widget';
+   export { default as DfxServices } from './Main.lib';
    ```
 
 ### Step 2: Configure TypeScript and Package Settings
