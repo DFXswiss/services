@@ -80,9 +80,8 @@ interface CustomAmountError {
 }
 
 export default function SwapScreen(): JSX.Element {
-  useAddressGuard();
+  useAddressGuard('/switch');
 
-  const { copy } = useClipboard();
   const { translate, translateError } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
