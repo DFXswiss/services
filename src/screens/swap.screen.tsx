@@ -32,6 +32,7 @@ import {
   StyledLink,
   StyledLoadingSpinner,
   StyledSearchDropdown,
+  StyledTabContainer,
   StyledTextBox,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -56,7 +57,7 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useTxHelper } from '../hooks/tx-helper.hook';
-import { blankedAddress, isDefined } from '../util/utils';
+import { blankedAddress } from '../util/utils';
 
 interface Address {
   address: string;
@@ -79,24 +80,32 @@ interface CustomAmountError {
 }
 
 export default function SwapScreen(): JSX.Element {
-  useAddressGuard();
+  useAddressGuard('/switch');
 
-  const { copy } = useClipboard();
   const { translate, translateError } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
   const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
   const { availableBlockchains, logout } = useSessionContext();
   const { session } = useAuthContext();
-  const { getAssets } = useAssetContext();
-  const { getAsset } = useAsset();
+  const { assets, getAssets } = useAssetContext();
+  const { getAsset, isSameAsset } = useAsset();
   const { navigate } = useNavigation();
-  const { assets, assetIn, assetOut, amountIn, blockchain, externalTransactionId, setParams } = useAppParams();
+  const {
+    assets: assetFilter,
+    assetIn,
+    assetOut,
+    amountIn,
+    blockchain,
+    externalTransactionId,
+    setParams,
+  } = useAppParams();
   const { receiveFor } = useSwap();
   const { toString } = useBlockchain();
   const rootRef = useRef<HTMLDivElement>(null);
 
-  const [availableAssets, setAvailableAssets] = useState<Asset[]>();
+  const [sourceAssets, setSourceAssets] = useState<Asset[]>();
+  const [targetAssets, setTargetAssets] = useState<Asset[]>();
   const [customAmountError, setCustomAmountError] = useState<CustomAmountError>();
   const [errorMessage, setErrorMessage] = useState<string>();
   const [kycError, setKycError] = useState<TransactionError>();
@@ -110,8 +119,8 @@ export default function SwapScreen(): JSX.Element {
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
 
   useEffect(() => {
-    availableAssets && getBalances(availableAssets).then(setBalances);
-  }, [getBalances, availableAssets]);
+    sourceAssets && getBalances(sourceAssets).then(setBalances);
+  }, [getBalances, sourceAssets]);
 
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
@@ -121,47 +130,61 @@ export default function SwapScreen(): JSX.Element {
   const enteredAmount = useWatch({ control, name: 'amount' });
   const selectedAddress = useWatch({ control, name: 'address' });
 
-  const availableBalance = selectedSourceAsset && findBalance(selectedSourceAsset);
-
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
     setValue(field, value, { shouldValidate: true });
   }
 
-  const addressItems: Address[] = [
-    {
-      address: translate('screens/buy', 'Switch address'),
-      label: translate('screens/buy', 'Login with a different address'),
-    },
+  const availableBalance = selectedSourceAsset && findBalance(selectedSourceAsset);
+
+  const SwapInputBlockchains: Blockchain[] = [
+    Blockchain.BITCOIN,
+    Blockchain.LIGHTNING,
+    Blockchain.ETHEREUM,
+    Blockchain.ARBITRUM,
+    Blockchain.OPTIMISM,
+    Blockchain.POLYGON,
   ];
-  session?.address &&
-    availableBlockchains &&
-    addressItems.unshift(
-      ...availableBlockchains.map((b) => ({
-        address: blankedAddress(session.address ?? ''),
-        label: toString(b),
-        chain: b,
-      })),
-    );
+
+  const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
+  const sourceBlockchains = availableBlockchains?.filter(
+    (b) => SwapInputBlockchains.includes(b) && filteredAssets?.some((a) => a.blockchain === b),
+  );
+  const targetBlockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
+
+  const addressItems: Address[] =
+    session?.address && targetBlockchains?.length
+      ? [
+          ...targetBlockchains.map((b) => ({
+            address: blankedAddress(session.address ?? ''),
+            label: toString(b),
+            chain: b,
+          })),
+          {
+            address: translate('screens/buy', 'Switch address'),
+            label: translate('screens/buy', 'Login with a different address'),
+          },
+        ]
+      : [];
 
   useEffect(() => {
-    const activeBlockchain = walletBlockchain ?? blockchain;
-    const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
-    const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
-    const activeAssets = assets
-      ? assets
-          .split(',')
-          .map((a) => getAsset(blockchainAssets, a))
-          .filter(isDefined)
-      : blockchainAssets;
-    setAvailableAssets(activeAssets);
+    const blockchainSourceAssets = getAssets(sourceBlockchains ?? [], { sellable: true, comingSoon: false });
+    const activeSourceAssets = filterAssets(blockchainSourceAssets, assetFilter);
+    setSourceAssets(activeSourceAssets);
 
-    const sourceAsset = getAsset(activeAssets, assetIn) ?? (activeAssets.length === 1 && activeAssets[0]);
+    const activeTargetBlockchains = blockchain ? [blockchain as Blockchain] : targetBlockchains ?? [];
+    const blockchainTargetAssets = getAssets(activeTargetBlockchains ?? [], { buyable: true, comingSoon: false });
+    const activeTargetAssets = filterAssets(blockchainTargetAssets, assetFilter);
+    setTargetAssets(activeTargetAssets);
+
+    const sourceAsset =
+      getAsset(activeSourceAssets, assetIn) ?? (activeSourceAssets.length === 1 && activeSourceAssets[0]);
     if (sourceAsset) setVal('sourceAsset', sourceAsset);
 
-    const targetAsset = getAsset(activeAssets, assetOut) ?? (activeAssets.length === 1 && activeAssets[0]);
+    const targetAsset =
+      getAsset(activeTargetAssets, assetOut) ?? (activeTargetAssets.length === 1 && activeTargetAssets[0]);
     if (targetAsset) setVal('targetAsset', targetAsset);
-  }, [assets, assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
+  }, [assetFilter, assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
     if (amountIn) setVal('amount', amountIn);
@@ -176,7 +199,7 @@ export default function SwapScreen(): JSX.Element {
           setParams({ blockchain: selectedAddress.chain });
           switchBlockchain(selectedAddress.chain);
           resetField('targetAsset');
-          setAvailableAssets(undefined);
+          setTargetAssets(undefined);
         }
       } else {
         setShowsSwitchScreen(true);
@@ -318,6 +341,14 @@ export default function SwapScreen(): JSX.Element {
     return balance != null ? Utils.formatAmountCrypto(balance) : '';
   }
 
+  // misc
+  function filterAssets(assets: Asset[], filter?: string): Asset[] {
+    if (!filter) return assets;
+
+    const allowedAssets = filter.split(',');
+    return assets.filter((a) => allowedAssets.some((f) => isSameAsset(a, f)));
+  }
+
   function onSubmit(_data: FormData) {
     // TODO: (Krysh fix broken form validation and onSubmit
   }
@@ -374,7 +405,7 @@ export default function SwapScreen(): JSX.Element {
           translate={translateError}
           hasFormElement={false}
         >
-          {availableAssets && (
+          {sourceAssets && targetAssets && (
             <StyledVerticalStack gap={8} full center className="relative">
               <StyledVerticalStack gap={2} full>
                 <h2 className="text-dfxGray-700">{translate('screens/buy', 'You spend')}</h2>
@@ -408,7 +439,7 @@ export default function SwapScreen(): JSX.Element {
                       rootRef={rootRef}
                       name="sourceAsset"
                       placeholder={translate('general/actions', 'Select...')}
-                      items={availableAssets}
+                      items={sourceAssets}
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
                       assetIconFunc={(item) => item.name as AssetIconVariant}
@@ -442,11 +473,11 @@ export default function SwapScreen(): JSX.Element {
                         rootRef={rootRef}
                         name="targetAsset"
                         placeholder={translate('general/actions', 'Select...')}
-                        items={availableAssets}
+                        items={targetAssets}
                         labelFunc={(item) => item.name}
                         balanceFunc={findBalanceString}
                         assetIconFunc={(item) => item.name as AssetIconVariant}
-                        descriptionFunc={(item) => toString(item.blockchain)}
+                        descriptionFunc={(item) => item.description}
                         filterFunc={(item: Asset, search?: string | undefined) =>
                           !search || item.name.toLowerCase().includes(search.toLowerCase())
                         }
@@ -468,102 +499,100 @@ export default function SwapScreen(): JSX.Element {
                 />
               </StyledVerticalStack>
 
-              {isLoading && (
+              {isLoading ? (
                 <StyledVerticalStack center>
                   <StyledLoadingSpinner size={SpinnerSize.LG} />
                 </StyledVerticalStack>
-              )}
-
-              {!isLoading && kycError && !customAmountError && <KycHint type={TransactionType.SWAP} error={kycError} />}
-
-              {!isLoading && errorMessage && (
-                <StyledVerticalStack center className="text-center">
-                  <ErrorHint message={errorMessage} />
-
-                  <StyledButton
-                    width={StyledButtonWidth.MIN}
-                    label={translate('general/actions', 'Retry')}
-                    onClick={() => setVal('amount', enteredAmount)} // re-trigger
-                    className="my-4"
-                    color={StyledButtonColor.STURDY_WHITE}
-                  />
-                </StyledVerticalStack>
-              )}
-
-              {!isLoading && paymentInfo && !kycError && !errorMessage && !customAmountError?.hideInfos && (
+              ) : (
                 <>
-                  <ExchangeRate
-                    exchangeRate={1 / paymentInfo.exchangeRate}
-                    rate={1 / paymentInfo.rate}
-                    fees={paymentInfo.fees}
-                    feeCurrency={paymentInfo.sourceAsset}
-                    from={paymentInfo.sourceAsset}
-                    to={paymentInfo.targetAsset}
-                  />
+                  {kycError && !customAmountError && <KycHint type={TransactionType.SWAP} error={kycError} />}
 
-                  <StyledVerticalStack gap={2} full>
-                    <h2 className="text-dfxBlue-800 text-center">
-                      {translate('screens/payment', 'Payment Information')}
-                    </h2>
-                    <div className="text-left">
-                      <StyledInfoText iconColor={IconColor.BLUE}>
-                        {translate(
-                          'screens/swap',
-                          'Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.',
-                          {
-                            sourceChain: toString(paymentInfo.sourceAsset.blockchain),
-                            targetChain: toString(paymentInfo.targetAsset.blockchain),
-                            asset: paymentInfo.targetAsset.name,
-                          },
-                        )}
-                      </StyledInfoText>
-                    </div>
+                  {errorMessage && (
+                    <StyledVerticalStack center className="text-center">
+                      <ErrorHint message={errorMessage} />
 
-                    <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                      <StyledDataTableRow label={translate('screens/sell', 'Address')}>
-                        <div>
-                          <p>{blankedAddress(paymentInfo.depositAddress)}</p>
-                        </div>
-                        <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
-                      </StyledDataTableRow>
-                    </StyledDataTable>
-                  </StyledVerticalStack>
-
-                  {paymentInfo.paymentRequest && !canSendTransaction() && (
-                    <StyledVerticalStack full center>
-                      <p className="font-semibold text-sm text-dfxBlue-800">
-                        {translate('screens/sell', 'Pay with your wallet')}
-                      </p>
-                      <QrCopy data={paymentInfo.paymentRequest} />
+                      <StyledButton
+                        width={StyledButtonWidth.MIN}
+                        label={translate('general/actions', 'Retry')}
+                        onClick={() => setVal('amount', enteredAmount)} // re-trigger
+                        className="mt-4"
+                        color={StyledButtonColor.STURDY_WHITE}
+                      />
                     </StyledVerticalStack>
                   )}
 
-                  <SanctionHint />
+                  {paymentInfo && !kycError && !errorMessage && !customAmountError?.hideInfos && (
+                    <>
+                      <ExchangeRate
+                        exchangeRate={1 / paymentInfo.exchangeRate}
+                        rate={1 / paymentInfo.rate}
+                        fees={paymentInfo.fees}
+                        feeCurrency={paymentInfo.sourceAsset}
+                        from={paymentInfo.sourceAsset}
+                        to={paymentInfo.targetAsset}
+                      />
 
-                  <div className="w-full leading-none">
-                    <StyledLink
-                      label={translate(
-                        'screens/payment',
-                        'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
-                      )}
-                      url={process.env.REACT_APP_TNC_URL}
-                      small
-                      dark
-                    />
-                    <StyledButton
-                      width={StyledButtonWidth.FULL}
-                      label={translate(
-                        'screens/sell',
-                        canSendTransaction()
-                          ? 'Complete transaction in your wallet'
-                          : 'Click here once you have issued the transaction',
-                      )}
-                      onClick={() => handleNext(paymentInfo)}
-                      caps={false}
-                      className="my-4"
-                      isLoading={isProcessing}
-                    />
-                  </div>
+                      <StyledVerticalStack gap={3} full>
+                        <h2 className="text-dfxBlue-800 text-center">
+                          {translate('screens/payment', 'Payment Information')}
+                        </h2>
+
+                        {paymentInfo.paymentRequest && !canSendTransaction() ? (
+                          <StyledTabContainer
+                            tabs={[
+                              {
+                                title: translate('screens/payment', 'Text'),
+                                content: <PaymentInformationText paymentInfo={paymentInfo} />,
+                              },
+                              {
+                                title: translate('screens/payment', 'QR Code'),
+                                content: (
+                                  <StyledVerticalStack full center>
+                                    <p className="font-semibold text-sm text-dfxBlue-800">
+                                      {translate('screens/sell', 'Pay with your wallet')}
+                                    </p>
+                                    <QrCopy data={paymentInfo.paymentRequest} />
+                                  </StyledVerticalStack>
+                                ),
+                              },
+                            ]}
+                            darkTheme
+                            spread
+                            small
+                          />
+                        ) : (
+                          <PaymentInformationText paymentInfo={paymentInfo} />
+                        )}
+                      </StyledVerticalStack>
+
+                      <SanctionHint />
+
+                      <div className="w-full leading-none">
+                        <StyledLink
+                          label={translate(
+                            'screens/payment',
+                            'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                          )}
+                          url={process.env.REACT_APP_TNC_URL}
+                          small
+                          dark
+                        />
+                        <StyledButton
+                          width={StyledButtonWidth.FULL}
+                          label={translate(
+                            'screens/sell',
+                            canSendTransaction()
+                              ? 'Complete transaction in your wallet'
+                              : 'Click here once you have issued the transaction',
+                          )}
+                          onClick={() => handleNext(paymentInfo)}
+                          caps={false}
+                          className="mt-4"
+                          isLoading={isProcessing}
+                        />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </StyledVerticalStack>
@@ -571,5 +600,38 @@ export default function SwapScreen(): JSX.Element {
         </Form>
       )}
     </Layout>
+  );
+}
+
+function PaymentInformationText({ paymentInfo }: { paymentInfo: Swap }): JSX.Element {
+  const { copy } = useClipboard();
+  const { translate } = useSettingsContext();
+  const { toString } = useBlockchain();
+
+  return (
+    <StyledVerticalStack gap={2} full>
+      <div className="text-left">
+        <StyledInfoText iconColor={IconColor.BLUE}>
+          {translate(
+            'screens/swap',
+            'Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.',
+            {
+              sourceChain: toString(paymentInfo.sourceAsset.blockchain),
+              targetChain: toString(paymentInfo.targetAsset.blockchain),
+              asset: paymentInfo.targetAsset.name,
+            },
+          )}
+        </StyledInfoText>
+      </div>
+
+      <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+        <StyledDataTableRow label={translate('screens/sell', 'Address')}>
+          <div>
+            <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+          </div>
+          <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
+        </StyledDataTableRow>
+      </StyledDataTable>
+    </StyledVerticalStack>
   );
 }

@@ -1,6 +1,6 @@
 # DFX Services
 
-Reusable web widget to buy, sell and convert crypto assets
+Reusable web widget to buy, sell and swap crypto assets
 
 ![ ](https://content.dfx.swiss/img/v1/services/iframe.png)
 
@@ -100,10 +100,10 @@ DFX services supports the following parameters. Note that for the React componen
 
   - Payment method (`payment-method)`: the payment method (buy only, `bank`, `instant` or `card`)
   - Bank account (`bank-account`): the bank account to send the money to (sell only)
-  - Input amount (`amount-in`): the amount to sell or convert (in input asset)
+  - Input amount (`amount-in`): the amount to sell or swap (in input asset)
   - Output amount (`amount-out`): the amount to receive (in output asset) (_TBD_)
   - Assets: (`assets`): crypto asset filter
-  - Input asset: (`asset-in`): the asset to sell or convert (crypto asset or currency)
+  - Input asset: (`asset-in`): the asset to sell or swap (crypto asset or currency)
   - Output asset (`asset-out`): the asset to receive (crypto asset or currency)
   - External transaction ID (`external-transaction-id`): a custom ID to track the transaction
 
@@ -119,6 +119,8 @@ _Hint: Asset selection parameters may be overwritten when using [wallet login](#
 **Special parameters**
 
 - Redirect URI (`redirect-uri`): URI to redirect the user to after cancel or completion (only for [standalone](#standalone) or [Iframe](#iframe) integration, see [closing](#closing))
+- Headless (`headless=true`): hides the menu bar
+- Borderless (`borderless=true`): removes the page padding
 
 #### Hints
 

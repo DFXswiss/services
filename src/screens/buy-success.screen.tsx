@@ -10,8 +10,6 @@ import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
 export function BuySuccessScreen(): JSX.Element {
-  useAddressGuard();
-
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
@@ -21,6 +19,8 @@ export function BuySuccessScreen(): JSX.Element {
   const [error, setError] = useState<string>();
 
   const ckoId = params.get('cko-payment-id');
+
+  useAddressGuard('/', ckoId == null);
 
   useEffect(() => {
     if (ckoId) fetchCkoTx(ckoId);
