@@ -317,6 +317,7 @@
     "Sanction suspicion": "Soupçon de sanction",
     "Minimum deposit not reached": "Dépôt minimum non atteint",
     "Asset not available": "Actif non disponible",
+    "Asset not available with chosen bank": "Actif non disponible avec la banque sélectionnée",
     "Staking discontinued": "Staking plus possible",
     "Bank not allowed": "Banque non autorisée",
     "Payment account not allowed": "Compte de paiement non autorisé",

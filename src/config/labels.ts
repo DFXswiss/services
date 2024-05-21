@@ -47,6 +47,7 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.SANCTION_SUSPICION]: 'Sanction suspicion',
   [TransactionFailureReason.MIN_DEPOSIT_NOT_REACHED]: 'Minimum deposit not reached',
   [TransactionFailureReason.ASSET_NOT_AVAILABLE]: 'Asset not available',
+  [TransactionFailureReason.ASSET_NOT_AVAILABLE_WITH_CHOSEN_BANK]: 'Asset not available with chosen bank',
   [TransactionFailureReason.STAKING_DISCONTINUED]: 'Staking discontinued',
   [TransactionFailureReason.BANK_NOT_ALLOWED]: 'Bank not allowed',
   [TransactionFailureReason.PAYMENT_ACCOUNT_NOT_ALLOWED]: 'Payment account not allowed',
