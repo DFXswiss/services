@@ -5,7 +5,7 @@ import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { ConnectWrapper } from '../components/home/connect-wrapper';
 import { Layout } from '../components/layout';
-import { useAppHandlingContext } from '../contexts/app-handling.context';
+import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { supportsBlockchain, useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -46,7 +46,7 @@ export function HomeScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { session, authenticationToken } = useAuthContext();
   const { user, isUserLoading } = useUserContext();
-  const { hasSession, canClose, isEmbedded, redirectPath, setRedirectPath } = useAppHandlingContext();
+  const { hasSession, canClose, isEmbedded, redirectPath, setRedirectPath, closeServices } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
   const { navigate } = useNavigation();
   const { pathname } = useLocation();
@@ -73,9 +73,10 @@ export function HomeScreen(): JSX.Element {
 
   useEffect(() => {
     const mode = specialMode ? SpecialModes[specialMode] : appParams.mode;
-    const stack = mode ? new Stack([{ page: mode, allowedTiles: undefined }]) : new Stack<Page>();
+    const wallets = specialMode ? appParams.wallets?.split(',') : undefined;
+    const stack = mode ? new Stack([{ page: mode, allowedTiles: wallets }]) : new Stack<Page>();
     setPages(stack);
-  }, [appParams.mode, specialMode]);
+  }, [appParams.mode, appParams.wallets, specialMode]);
 
   // tile handling
   function handleNext(tile: Tile) {
@@ -112,6 +113,12 @@ export function HomeScreen(): JSX.Element {
         navigate('/');
 
       default:
+        if (appParams.wallets) {
+          console.log("Closing services");
+          setConnectTo(undefined);
+          closeServices({ type: CloseType.CANCEL, isComplete: true }, true);
+          break;
+        }
         const path = redirectPath ?? '/buy';
         const targetPath = path.includes('sell') && !kycComplete ? '/profile' : path;
         setRedirectPath(targetPath != path ? path : undefined);
