@@ -31,7 +31,7 @@
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto."
   },
   "general/services": {
-    "Buy": "Acquista",
+    "Buy": "Comprare",
     "Sell": "Vendere",
     "Swap": "Convertire"
   },
@@ -367,7 +367,8 @@
     "File": "File"
   },
   "navigation/links": {
-    "Buy & sell": "Acquista & vendere",
+    "Buy & sell": "Comprare & vendere",
+    "Swap": "Swap",
     "KYC": "KYC",
     "My DFX": "My DFX",
     "Help": "Aiuto",

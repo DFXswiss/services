@@ -149,6 +149,12 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             target="_self"
           />
           <NavigationLink
+            icon={IconVariant.SWAP}
+            label={translate('navigation/links', 'Swap')}
+            url="/"
+            target="_self"
+          />
+          <NavigationLink
             icon={IconVariant.TRANSACTIONS}
             label={translate('screens/payment', 'Transactions')}
             url="/tx"
