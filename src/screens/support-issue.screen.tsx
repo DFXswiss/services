@@ -8,10 +8,10 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { CreateTransactionIssue, SupportIssueReason } from '@dfx.swiss/react/dist/definitions/support';
+import { CreateSupportIssue, SupportIssueReason } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { ReasonLabels } from '../config/labels';
@@ -19,6 +19,16 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { toBase64 } from '../util/utils';
+
+enum IssueType {
+  GENERAL = 'General',
+  TRANSACTION = 'Transaction',
+}
+
+const IssueReasons: { [t in IssueType]: SupportIssueReason[] } = {
+  [IssueType.GENERAL]: [SupportIssueReason.OTHER],
+  [IssueType.TRANSACTION]: [SupportIssueReason.OTHER, SupportIssueReason.FUNDS_NOT_RECEIVED],
+};
 
 interface FormData {
   name: string;
@@ -33,14 +43,18 @@ export function SupportIssueScreen(): JSX.Element {
   useKycLevelGuard(KycLevel.Link, '/contact');
 
   const { id } = useParams();
+  const { pathname } = useLocation();
   const { navigate } = useNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
-  const { createTransactionIssue } = useSupport();
+  const { createGeneralIssue, createTransactionIssue } = useSupport();
   const { translate, translateError } = useSettingsContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [issueCreated, setIssueCreated] = useState(false);
+
+  const type = pathname.includes('tx') ? IssueType.TRANSACTION : IssueType.GENERAL;
+  const reasons = IssueReasons[type];
 
   const {
     control,
@@ -53,13 +67,15 @@ export function SupportIssueScreen(): JSX.Element {
     id && setValue('transaction', id);
   }, [id]);
 
-  async function onSubmit(data: FormData) {
-    if (!id) return;
+  useEffect(() => {
+    reasons.length === 1 && setValue('reason', reasons[0]);
+  }, [reasons]);
 
+  async function onSubmit(data: FormData) {
     setIsLoading(true);
 
     try {
-      const request: CreateTransactionIssue = {
+      const request: CreateSupportIssue = {
         name: data.name,
         reason: data.reason,
         message: data.message,
@@ -67,12 +83,34 @@ export function SupportIssueScreen(): JSX.Element {
         fileName: data.file?.name,
       };
 
-      await createTransactionIssue(+id, request);
+      switch (type) {
+        case IssueType.GENERAL:
+          await createGeneralIssue(request);
+          break;
+
+        case IssueType.TRANSACTION:
+          if (!id) throw new Error('Missing transaction ID');
+          await createTransactionIssue(+id, request);
+          break;
+      }
+
       setIssueCreated(true);
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  function onDone() {
+    switch (type) {
+      case IssueType.GENERAL:
+        navigate('/');
+        break;
+
+      case IssueType.TRANSACTION:
+        navigate('/tx');
+        break;
     }
   }
 
@@ -92,7 +130,7 @@ export function SupportIssueScreen(): JSX.Element {
 
           <StyledButton
             label={translate('general/actions', 'Ok')}
-            onClick={() => navigate('/tx')}
+            onClick={onDone}
             width={StyledButtonWidth.FULL}
             isLoading={isLoading}
           />
@@ -114,25 +152,29 @@ export function SupportIssueScreen(): JSX.Element {
               full
             />
 
-            <StyledDropdown<string>
-              rootRef={rootRef}
-              label={translate('screens/payment', 'Transaction')}
-              items={[]}
-              labelFunc={(item) => `${translate('screens/payment', 'Transaction')} ${item}`}
-              name="transaction"
-              placeholder={translate('general/actions', 'Select...')}
-              full
-            />
+            {type === IssueType.TRANSACTION && (
+              <StyledDropdown<string>
+                rootRef={rootRef}
+                label={translate('screens/payment', 'Transaction')}
+                items={[]}
+                labelFunc={(item) => `${translate('screens/payment', 'Transaction')} ${item}`}
+                name="transaction"
+                placeholder={translate('general/actions', 'Select...')}
+                full
+              />
+            )}
 
-            <StyledDropdown<SupportIssueReason>
-              rootRef={rootRef}
-              label={translate('screens/support', 'Reason')}
-              items={Object.values(SupportIssueReason)}
-              labelFunc={(item) => translate('screens/support', ReasonLabels[item])}
-              name="reason"
-              placeholder={translate('general/actions', 'Select...')}
-              full
-            />
+            {reasons.length > 1 && (
+              <StyledDropdown<SupportIssueReason>
+                rootRef={rootRef}
+                label={translate('screens/support', 'Reason')}
+                items={reasons}
+                labelFunc={(item) => translate('screens/support', ReasonLabels[item])}
+                name="reason"
+                placeholder={translate('general/actions', 'Select...')}
+                full
+              />
+            )}
 
             <StyledInput name="message" label={translate('screens/support', 'Description')} multiLine full />
 

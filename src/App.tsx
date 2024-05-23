@@ -119,6 +119,10 @@ export const Routes = [
     element: <SupportIssueScreen />,
   },
   {
+    path: 'support/issue',
+    element: <SupportIssueScreen />,
+  },
+  {
     path: '/bank-accounts',
     element: <BankAccountsScreen />,
   },
