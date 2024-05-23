@@ -142,7 +142,6 @@ interface AppProps {
 
 function App({ routerFactory, params }: AppProps) {
   const router = routerFactory(Routes);
-  // params = { ...params, service: Service.SWITCH, wallets: 'metamask,hw-wallet,walletconnect,cli', onClose: () => console.log('onClose called') }; // remove, just for testing
 
   const home = params?.service && `/${params.service}`;
   if (home) router.navigate(home);
