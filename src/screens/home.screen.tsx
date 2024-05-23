@@ -114,7 +114,6 @@ export function HomeScreen(): JSX.Element {
 
       default:
         if (appParams.wallets) {
-          console.log("Closing services");
           setConnectTo(undefined);
           closeServices({ type: CloseType.CANCEL, isComplete: true }, true);
           break;

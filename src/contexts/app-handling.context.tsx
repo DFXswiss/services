@@ -190,6 +190,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
         signature: getParameter(query, 'signature'),
         mail: getParameter(query, 'mail'),
         wallet: getParameter(query, 'wallet'),
+        wallets: getParameter(query, 'wallets'),
         refcode: getParameter(query, 'refcode'),
         specialCode: getParameter(query, 'special-code'),
         session: getParameter(query, 'session'),
