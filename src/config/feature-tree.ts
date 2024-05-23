@@ -22,6 +22,17 @@ export const FeatureTree: Page[] = [
           page: 'sell',
         },
       },
+      {
+        id: 'swap',
+        img: 'swap',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'swap',
+          },
+        },
+      },
     ],
   },
   {

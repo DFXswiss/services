@@ -259,6 +259,16 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           isComplete: params.isComplete.toString(),
         });
         break;
+
+      case CloseType.SWAP:
+        uri = adaptUri(uri, params.type, {
+          routeId: params.swap.routeId.toString(),
+          amount: params.swap.amount.toString(),
+          asset: params.swap.sourceAsset.name,
+          blockchain: params.swap.sourceAsset.blockchain,
+          isComplete: params.isComplete.toString(),
+        });
+        break;
     }
 
     return uri.toString();
@@ -287,6 +297,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     switch (params.type) {
       case CloseType.BUY:
       case CloseType.SELL:
+      case CloseType.SWAP:
         return params;
 
       default:

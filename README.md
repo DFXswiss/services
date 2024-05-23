@@ -58,9 +58,9 @@ Credentials can be provided directly when opening DFX services. This is recommen
 
 - `session`: access token for the DFX API
 
-When using direct login, the type of service (`buy` or `sell`) should be preselected. For standalone or Iframe integration, the service type needs to be added as URL path (e.g. `services.dfx.swiss/buy`). For web component integration the `service` attribute can be used.
+When using direct login, the type of service (`buy`, `sell` or `swap`) should be preselected. For standalone or Iframe integration, the service type needs to be added as URL path (e.g. `services.dfx.swiss/buy`). For web/react component integration the `service` attribute can be used.
 
-For selling, the integrator should provide the available asset balances (see `balances` [parameter](#query-parameters)). Additionally, the integrator finally has to initiate the corresponding blockchain transaction, as the widget does not have the right to do so (see [closing](#closing) and [integration](#integration-types) chapters for more details).
+For selling or swapping, the integrator should provide the available asset balances (see `balances` [parameter](#query-parameters)). Additionally, the integrator finally has to initiate the corresponding blockchain transaction, as the widget does not have the right to do so (see [closing](#closing) and [integration](#integration-types) chapters for more details).
 
 #### Wallet Login
 
@@ -91,14 +91,14 @@ DFX services supports the following parameters. Note that for the React componen
 
 - User information
 
-  - E-mail (`mail)`: user email
-  - Wallet (`wallet)`: wallet/client identifier (name or ID), used for sign up, see [API documentation](https://github.com/DFXswiss/api#initial-wallet-setup-optional) (optional, but recommended)
-  - Referral code (`refcode)`: sign-up referral code
-  - Special code (`special-code)`: special/promo code
+  - E-mail (`mail`): user email
+  - Wallet (`wallet`): wallet/client identifier (name or ID), used for sign up, see [API documentation](https://github.com/DFXswiss/api#initial-wallet-setup-optional) (optional, but recommended)
+  - Referral code (`refcode`): sign-up referral code
+  - Special code (`special-code`): special/promo code
 
 - Transaction information
 
-  - Payment method (`payment-method)`: the payment method (buy only, `bank`, `instant` or `card`)
+  - Payment method (`payment-method`): the payment method (buy only, `bank`, `instant` or `card`)
   - Bank account (`bank-account`): the bank account to send the money to (sell only)
   - Input amount (`amount-in`): the amount to sell or swap (in input asset)
   - Output amount (`amount-out`): the amount to receive (in output asset) (_TBD_)
@@ -111,8 +111,8 @@ _Hint: Asset selection parameters may be overwritten when using [wallet login](#
 
 **Direct login parameters**
 
-- Access token (`session)`: access token for the DFX API
-- Balances (`balances`): wallet balances of the user (recommended for sell), usage example: `balances=0.35@113,12.3@111`
+- Access token (`session`): access token for the DFX API
+- Balances (`balances`): wallet balances of the user (recommended for sell and swap), usage example: `balances=0.35@113,12.3@111`
 - Blockchain (`blockchain`): filter for the asset selection (useful if the user has a multi-chain address)
 - Blockchains (`blockchains`): supported blockchains to which the user can switch
 
@@ -135,8 +135,9 @@ There are multiple types of closings.
 - Cancel: user cancelled the service
 - Buy: user wants to buy crypto
 - Sell: user wants to sell crypto
+- Swap: user wants to swap crypto
 
-In case of a sell, the service returns the information (`isComplete`) as to whether the required blockchain transaction has already been executed or not. If `isComplete` is set to `false`, the integrator should initiate the corresponding transaction to complete the sell.
+In case of a sell or swap, the service returns the information (`isComplete`) as to whether the required blockchain transaction has already been executed or not. If `isComplete` is set to `false`, the integrator should initiate the corresponding transaction to complete the sell/swap.
 
 #### Redirect
 
@@ -144,11 +145,11 @@ If a redirect URI was provided (`redirect-uri` parameter), the user will be redi
 
 - Cancel: redirected to `{redirect-url}`
 - Buy: redirected to `{redirect-url}/buy`
-- Sell: redirected to `{redirect-url}/sell` with the following parameters:
+- Sell/swap: redirected to `{redirect-url}/sell` or `{redirect-url}/swap` with the following parameters:
 
-  - `routeId`: sell route ID (get details from [route endpoint](https://api.dfx.swiss/swagger#/Sell/SellController_getSell), authentication required)
-  - `amount`: amount to sell
-  - `asset`: asset to sell
+  - `routeId`: sell/swap route ID (get details from [sell route](https://api.dfx.swiss/swagger#/Sell/SellController_getSell) or [swap route](https://api.dfx.swiss/swagger#/Swap/SwapController_getSwap) endpoint, authentication required)
+  - `amount`: amount to send
+  - `asset`: asset to send
   - `blockchain`: transfer blockchain
   - `isComplete`: is `true`, if blockchain transaction is already executed
 
@@ -161,6 +162,7 @@ enum CloseType {
   CANCEL = 'cancel',
   BUY = 'buy',
   SELL = 'sell',
+  SWAP = 'swap',
 }
 
 interface CloseMessage {
@@ -168,10 +170,11 @@ interface CloseMessage {
   isComplete?: boolean; // is 'true', if transaction is already executed
   buy?: BuyPaymentInfoDto;
   sell?: SellPaymentInfoDto;
+  swap?: SwapPaymentInfoDto;
 }
 ```
 
-Documentation on `BuyPaymentInfoDto` and `SellPaymentInfoDto` can be found in the [DFX API Swagger documentation](https://api.dfx.swiss/).
+Documentation on `BuyPaymentInfoDto`, `SellPaymentInfoDto` and `SwapPaymentInfoDto` can be found in the [DFX API Swagger documentation](https://api.dfx.swiss/).
 
 ### Code Examples
 

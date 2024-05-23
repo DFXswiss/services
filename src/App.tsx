@@ -127,6 +127,7 @@ export const Routes = [
 export enum Service {
   BUY = 'buy',
   SELL = 'sell',
+  SWAP = 'swap',
 }
 
 export interface WidgetParams extends AppParams {
