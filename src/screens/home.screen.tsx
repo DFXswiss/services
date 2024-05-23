@@ -3,6 +3,7 @@ import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
+import { Service } from '../App';
 import { ConnectWrapper } from '../components/home/connect-wrapper';
 import { Layout } from '../components/layout';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
@@ -16,13 +17,13 @@ import { Stack } from '../util/stack';
 
 enum SpecialMode {
   LOGIN = 'Login',
-  SWITCH = 'Switch',
+  CONNECT = 'Connect',
   MY_DFX = 'MyDfx',
 }
 
 const SpecialModes: { [m in SpecialMode]: string } = {
   [SpecialMode.LOGIN]: 'login',
-  [SpecialMode.SWITCH]: 'wallets',
+  [SpecialMode.CONNECT]: 'wallets',
   [SpecialMode.MY_DFX]: 'wallets',
 };
 
@@ -32,8 +33,8 @@ function getMode(pathName: string): SpecialMode | undefined {
       return SpecialMode.MY_DFX;
     case '/login':
       return SpecialMode.LOGIN;
-    case '/switch':
-      return SpecialMode.SWITCH;
+    case '/connect':
+      return SpecialMode.CONNECT;
     default:
       return undefined;
   }
@@ -46,7 +47,7 @@ export function HomeScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { session, authenticationToken } = useAuthContext();
   const { user, isUserLoading } = useUserContext();
-  const { hasSession, canClose, isEmbedded, redirectPath, setRedirectPath, closeServices } = useAppHandlingContext();
+  const { hasSession, canClose, service, isEmbedded, redirectPath, setRedirectPath, closeServices } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
   const { navigate } = useNavigation();
   const { pathname } = useLocation();
@@ -67,13 +68,17 @@ export function HomeScreen(): JSX.Element {
 
   useEffect(() => {
     if (isInitialized && isLoggedIn && user && ((!activeWallet && hasSession) || loginSuccessful)) {
-      start(user.kyc.dataComplete);
+      if (service === Service.CONNECT) {
+        close();
+      } else {
+        start(user.kyc.dataComplete);
+      }
     }
   }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful, hasSession]);
 
   useEffect(() => {
     const mode = specialMode ? SpecialModes[specialMode] : appParams.mode;
-    const wallets = specialMode ? appParams.wallets?.split(',') : undefined;
+    const wallets = mode === 'wallets' ? appParams.wallets?.split(',') : undefined;
     const stack = mode ? new Stack([{ page: mode, allowedTiles: wallets }]) : new Stack<Page>();
     setPages(stack);
   }, [appParams.mode, appParams.wallets, specialMode]);
@@ -113,17 +118,17 @@ export function HomeScreen(): JSX.Element {
         navigate('/');
 
       default:
-        if (appParams.wallets) {
-          setConnectTo(undefined);
-          closeServices({ type: CloseType.CANCEL, isComplete: true }, true);
-          break;
-        }
         const path = redirectPath ?? '/buy';
         const targetPath = path.includes('sell') && !kycComplete ? '/profile' : path;
         setRedirectPath(targetPath != path ? path : undefined);
         navigate(targetPath);
         break;
     }
+  }
+
+  function close() {
+    setConnectTo(undefined);
+    closeServices({ type: CloseType.CANCEL, isComplete: true }, true);
   }
 
   const title = translate('screens/home', currentPage?.header ?? (currentPage?.dfxStyle ? 'DFX services' : ' '));

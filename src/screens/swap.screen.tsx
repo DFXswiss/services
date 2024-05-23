@@ -80,7 +80,7 @@ interface CustomAmountError {
 }
 
 export default function SwapScreen(): JSX.Element {
-  useAddressGuard('/switch');
+  useAddressGuard('/connect');
 
   const { translate, translateError } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
@@ -155,16 +155,16 @@ export default function SwapScreen(): JSX.Element {
   const addressItems: Address[] =
     session?.address && targetBlockchains?.length
       ? [
-          ...targetBlockchains.map((b) => ({
-            address: blankedAddress(session.address ?? ''),
-            label: toString(b),
-            chain: b,
-          })),
-          {
-            address: translate('screens/buy', 'Switch address'),
-            label: translate('screens/buy', 'Login with a different address'),
-          },
-        ]
+        ...targetBlockchains.map((b) => ({
+          address: blankedAddress(session.address ?? ''),
+          label: toString(b),
+          chain: b,
+        })),
+        {
+          address: translate('screens/buy', 'Switch address'),
+          label: translate('screens/buy', 'Login with a different address'),
+        },
+      ]
       : [];
 
   useEffect(() => {
@@ -362,7 +362,7 @@ export default function SwapScreen(): JSX.Element {
 
   function onAddressSwitch() {
     logout();
-    navigate('/switch', { setRedirect: true });
+    navigate('/connect', { setRedirect: true });
   }
 
   async function handleNext(paymentInfo: Swap): Promise<void> {

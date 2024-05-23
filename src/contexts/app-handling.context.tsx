@@ -1,6 +1,7 @@
 import { Blockchain, Buy, Sell, Swap, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { Service } from '../App';
 import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
 import { url } from '../util/utils';
@@ -105,10 +106,12 @@ interface AppHandlingContextInterface {
   redirectPath?: string;
   setRedirectPath: (path?: string) => void;
   canClose: boolean;
+  service?: Service;
 }
 
 interface AppHandlingContextProps extends PropsWithChildren {
   isWidget: boolean;
+  service?: Service;
   params?: AppParams;
   router: Router;
   closeCallback?: (data: CloseMessageData) => void;
@@ -316,8 +319,9 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       redirectPath,
       setRedirectPath,
       canClose: redirectUri != null,
+      service: props.service,
     }),
-    [props.isWidget, isUsedByIframe, redirectUri, isInitialized, params, redirectPath, availableBlockchains],
+    [props.isWidget, props.service, isUsedByIframe, redirectUri, isInitialized, params, redirectPath, availableBlockchains],
   );
 
   return <AppHandlingContext.Provider value={context}>{props.children}</AppHandlingContext.Provider>;
