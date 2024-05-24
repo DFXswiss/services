@@ -43,6 +43,9 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
           'This transaction is only possible with a verified account. Please complete our KYC (Know-Your-Customer) process.',
         );
 
+      case TransactionError.KYC_DATA_REQUIRED:
+        return translate('screens/kyc', 'For this transaction we need your personal information.');
+
       case TransactionError.KYC_REQUIRED_INSTANT:
         return translate(
           'screens/kyc',
@@ -84,8 +87,21 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
         <>
           <StyledButton
             width={StyledButtonWidth.FULL}
-            label={translate('screens/kyc', isComplete ? 'Increase limit' : 'Complete KYC')}
-            onClick={isComplete ? () => navigate('/limit') : start}
+            label={translate(
+              'screens/kyc',
+              error === TransactionError.KYC_DATA_REQUIRED
+                ? 'Enter user data'
+                : isComplete
+                ? 'Increase limit'
+                : 'Complete KYC',
+            )}
+            onClick={
+              error === TransactionError.KYC_DATA_REQUIRED
+                ? () => navigate('/profile')
+                : isComplete
+                ? () => navigate('/limit')
+                : start
+            }
           />
           {user?.kyc.level === 0 && (
             <StyledLink label={translate('screens/kyc', 'I am already verified with DFX')} onClick={onLink} dark />

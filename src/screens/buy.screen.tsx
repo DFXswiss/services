@@ -142,16 +142,16 @@ export function BuyScreen(): JSX.Element {
   const addressItems: Address[] =
     session?.address && blockchains?.length
       ? [
-        ...blockchains.map((b) => ({
-          address: blankedAddress(session.address ?? ''),
-          label: toString(b),
-          chain: b,
-        })),
-        {
-          address: translate('screens/buy', 'Switch address'),
-          label: translate('screens/buy', 'Login with a different address'),
-        },
-      ]
+          ...blockchains.map((b) => ({
+            address: blankedAddress(session.address ?? ''),
+            label: toString(b),
+            chain: b,
+          })),
+          {
+            address: translate('screens/buy', 'Switch address'),
+            label: translate('screens/buy', 'Login with a different address'),
+          },
+        ]
       : [];
   const availablePaymentMethods = [FiatPaymentMethod.BANK];
 
@@ -167,8 +167,8 @@ export function BuyScreen(): JSX.Element {
     selectedPaymentMethod === FiatPaymentMethod.CARD
       ? c.cardSellable
       : selectedPaymentMethod === FiatPaymentMethod.INSTANT
-        ? c.instantSellable
-        : c.sellable,
+      ? c.instantSellable
+      : c.sellable,
   );
 
   useEffect(() => {
@@ -316,6 +316,7 @@ export function BuyScreen(): JSX.Element {
 
       case TransactionError.LIMIT_EXCEEDED:
       case TransactionError.KYC_REQUIRED:
+      case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(buy.error);
@@ -380,8 +381,8 @@ export function BuyScreen(): JSX.Element {
   const title = showsCompletion
     ? translate('screens/buy', 'Done!')
     : showsSwitchScreen
-      ? translate('screens/buy', 'Switch address')
-      : translate('screens/buy', 'Buy');
+    ? translate('screens/buy', 'Switch address')
+    : translate('screens/buy', 'Buy');
 
   return (
     <Layout
