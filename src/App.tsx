@@ -115,6 +115,10 @@ export const Routes = [
     element: <TransactionScreen />,
   },
   {
+    path: '/tx/:id/assign',
+    element: <TransactionScreen />,
+  },
+  {
     path: '/tx/:id/issue',
     element: <SupportIssueScreen />,
   },
