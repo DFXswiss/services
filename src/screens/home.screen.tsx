@@ -47,7 +47,8 @@ export function HomeScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { session, authenticationToken } = useAuthContext();
   const { user, isUserLoading } = useUserContext();
-  const { hasSession, canClose, service, isEmbedded, redirectPath, setRedirectPath, closeServices } = useAppHandlingContext();
+  const { hasSession, canClose, service, isEmbedded, redirectPath, setRedirectPath, closeServices } =
+    useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
   const { navigate } = useNavigation();
   const { pathname } = useLocation();
@@ -78,8 +79,7 @@ export function HomeScreen(): JSX.Element {
 
   useEffect(() => {
     const mode = specialMode ? SpecialModes[specialMode] : appParams.mode;
-    const wallets = mode === 'wallets' ? appParams.wallets?.split(',') : undefined;
-    const stack = mode ? new Stack([{ page: mode, allowedTiles: wallets }]) : new Stack<Page>();
+    const stack = mode ? new Stack([{ page: mode, allowedTiles: undefined }]) : new Stack<Page>();
     setPages(stack);
   }, [appParams.mode, appParams.wallets, specialMode]);
 
@@ -189,11 +189,11 @@ export function HomeScreen(): JSX.Element {
                 {currentPage.tiles
                   .filter(
                     (t) =>
+                      !isWallet(t) ||
                       !(
-                        appParams.mode &&
-                        appParams.blockchain &&
-                        isWallet(t) &&
-                        !supportsBlockchain(getWallet(t, appParams).type, appParams.blockchain as Blockchain)
+                        (appParams.blockchain &&
+                          !supportsBlockchain(getWallet(t, appParams).type, appParams.blockchain as Blockchain)) ||
+                        (appParams.wallets && !appParams.wallets.split(',').includes(getWallet(t, appParams).type))
                       ),
                   )
                   .map((t) => (
