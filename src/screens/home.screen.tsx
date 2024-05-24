@@ -72,7 +72,7 @@ export function HomeScreen(): JSX.Element {
       if (service === Service.CONNECT) {
         close();
       } else {
-        start(user.kyc.dataComplete);
+        start();
       }
     }
   }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful, hasSession]);
@@ -106,7 +106,7 @@ export function HomeScreen(): JSX.Element {
     }
   }
 
-  function start(kycComplete: boolean) {
+  function start() {
     switch (specialMode) {
       case SpecialMode.MY_DFX:
         const url = `${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`;
@@ -118,10 +118,8 @@ export function HomeScreen(): JSX.Element {
         navigate('/');
 
       default:
-        const path = redirectPath ?? '/buy';
-        const targetPath = path.includes('sell') && !kycComplete ? '/profile' : path;
-        setRedirectPath(targetPath != path ? path : undefined);
-        navigate(targetPath);
+        const path = redirectPath ?? (session?.address ? '/buy' : undefined);
+        path && navigate(path);
         break;
     }
   }
