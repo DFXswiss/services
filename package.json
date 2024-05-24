@@ -1,6 +1,6 @@
 {
   "name": "@dfx.swiss/services-react",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "MIT",
   "private": false,
   "main": "dist/public-api.js",
