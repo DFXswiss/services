@@ -1,6 +1,7 @@
 import { Blockchain, Buy, Sell, Swap, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { Service } from '../App';
 import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
 import { url } from '../util/utils';
@@ -32,6 +33,7 @@ export interface AppParams {
   signature?: string;
   mail?: string;
   wallet?: string;
+  wallets?: string;
   refcode?: string;
   specialCode?: string;
   session?: string;
@@ -104,10 +106,12 @@ interface AppHandlingContextInterface {
   redirectPath?: string;
   setRedirectPath: (path?: string) => void;
   canClose: boolean;
+  service?: Service;
 }
 
 interface AppHandlingContextProps extends PropsWithChildren {
   isWidget: boolean;
+  service?: Service;
   params?: AppParams;
   router: Router;
   closeCallback?: (data: CloseMessageData) => void;
@@ -175,41 +179,42 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   function extractUrlParams(params?: AppParams): AppParams {
     return params
       ? {
-          session: getParameter(query, 'session'),
-          redirect: getParameter(query, 'redirect'),
-          type: getParameter(query, 'type'),
-          ...params,
-        }
+        session: getParameter(query, 'session'),
+        redirect: getParameter(query, 'redirect'),
+        type: getParameter(query, 'type'),
+        ...params,
+      }
       : {
-          headless: getParameter(query, 'headless'),
-          borderless: getParameter(query, 'borderless'),
-          flags: getParameter(query, 'flags'),
-          lang: getParameter(query, 'lang'),
-          address: getParameter(query, 'address'),
-          signature: getParameter(query, 'signature'),
-          mail: getParameter(query, 'mail'),
-          wallet: getParameter(query, 'wallet'),
-          refcode: getParameter(query, 'refcode'),
-          specialCode: getParameter(query, 'special-code'),
-          session: getParameter(query, 'session'),
-          redirect: getParameter(query, 'redirect'),
-          type: getParameter(query, 'type'),
-          redirectUri: getParameter(query, 'redirect-uri'),
-          mode: getParameter(query, 'mode'),
-          blockchain: Object.values(Blockchain).find(
-            (b) => b.toLowerCase() === getParameter(query, 'blockchain')?.toLowerCase(),
-          ),
-          blockchains: getParameter(query, 'blockchains'),
-          balances: getParameter(query, 'balances'),
-          amountIn: getParameter(query, 'amount-in'),
-          amountOut: getParameter(query, 'amount-out'),
-          assets: getParameter(query, 'assets'),
-          assetIn: getParameter(query, 'asset-in'),
-          assetOut: getParameter(query, 'asset-out'),
-          paymentMethod: getParameter(query, 'payment-method'),
-          bankAccount: getParameter(query, 'bank-account'),
-          externalTransactionId: getParameter(query, 'external-transaction-id'),
-        };
+        headless: getParameter(query, 'headless'),
+        borderless: getParameter(query, 'borderless'),
+        flags: getParameter(query, 'flags'),
+        lang: getParameter(query, 'lang'),
+        address: getParameter(query, 'address'),
+        signature: getParameter(query, 'signature'),
+        mail: getParameter(query, 'mail'),
+        wallet: getParameter(query, 'wallet'),
+        wallets: getParameter(query, 'wallets'),
+        refcode: getParameter(query, 'refcode'),
+        specialCode: getParameter(query, 'special-code'),
+        session: getParameter(query, 'session'),
+        redirect: getParameter(query, 'redirect'),
+        type: getParameter(query, 'type'),
+        redirectUri: getParameter(query, 'redirect-uri'),
+        mode: getParameter(query, 'mode'),
+        blockchain: Object.values(Blockchain).find(
+          (b) => b.toLowerCase() === getParameter(query, 'blockchain')?.toLowerCase(),
+        ),
+        blockchains: getParameter(query, 'blockchains'),
+        balances: getParameter(query, 'balances'),
+        amountIn: getParameter(query, 'amount-in'),
+        amountOut: getParameter(query, 'amount-out'),
+        assets: getParameter(query, 'assets'),
+        assetIn: getParameter(query, 'asset-in'),
+        assetOut: getParameter(query, 'asset-out'),
+        paymentMethod: getParameter(query, 'payment-method'),
+        bankAccount: getParameter(query, 'bank-account'),
+        externalTransactionId: getParameter(query, 'external-transaction-id'),
+      };
   }
 
   function removeUrlParams(query: URLSearchParams) {
@@ -314,8 +319,9 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       redirectPath,
       setRedirectPath,
       canClose: redirectUri != null,
+      service: props.service,
     }),
-    [props.isWidget, isUsedByIframe, redirectUri, isInitialized, params, redirectPath, availableBlockchains],
+    [props.isWidget, props.service, isUsedByIframe, redirectUri, isInitialized, params, redirectPath, availableBlockchains],
   );
 
   return <AppHandlingContext.Provider value={context}>{props.children}</AppHandlingContext.Provider>;

@@ -2,6 +2,7 @@ import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
 import { EthereumProvider as EthClient } from '@walletconnect/ethereum-provider/dist/types/EthereumProvider';
 import BigNumber from 'bignumber.js';
+import { Buffer } from 'buffer';
 import { useEffect, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import Web3 from 'web3';
