@@ -16,10 +16,6 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
   const { navigate } = useNavigation();
   const { user } = useUserContext();
 
-  function onLink() {
-    navigate('/link', { setRedirect: true });
-  }
-
   function getHint(error: TransactionError): string | undefined {
     switch (error) {
       case TransactionError.LIMIT_EXCEEDED:
@@ -97,14 +93,18 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
             )}
             onClick={
               error === TransactionError.KYC_DATA_REQUIRED
-                ? () => navigate('/profile')
+                ? () => navigate('/profile', { setRedirect: true })
                 : isComplete
                 ? () => navigate('/limit')
                 : start
             }
           />
           {user?.kyc.level === 0 && (
-            <StyledLink label={translate('screens/kyc', 'I am already verified with DFX')} onClick={onLink} dark />
+            <StyledLink
+              label={translate('screens/kyc', 'I am already verified with DFX')}
+              onClick={() => navigate('/link', { setRedirect: true })}
+              dark
+            />
           )}
         </>
       )}
