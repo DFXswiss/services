@@ -189,7 +189,8 @@ export function HomeScreen(): JSX.Element {
                     (t) =>
                       !isWallet(t) ||
                       !(
-                        (appParams.blockchain &&
+                        (appParams.mode &&
+                          appParams.blockchain &&
                           !supportsBlockchain(getWallet(t, appParams).type, appParams.blockchain as Blockchain)) ||
                         (appParams.wallets && !appParams.wallets.split(',').includes(getWallet(t, appParams).type))
                       ),
