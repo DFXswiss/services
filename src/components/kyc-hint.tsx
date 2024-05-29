@@ -40,7 +40,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
         );
 
       case TransactionError.KYC_DATA_REQUIRED:
-        return translate('screens/kyc', 'For this transaction we need your personal information.');
+        return '';
 
       case TransactionError.KYC_REQUIRED_INSTANT:
         return translate(
@@ -69,9 +69,9 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
 
   const hint = getHint(error);
 
-  return hint ? (
+  return hint != null ? (
     <StyledVerticalStack gap={4} full center>
-      <StyledInfoText invertedIcon>{hint}</StyledInfoText>
+      {hint && <StyledInfoText invertedIcon>{hint}</StyledInfoText>}
 
       {error === TransactionError.BANK_TRANSACTION_MISSING ? (
         <StyledButton
