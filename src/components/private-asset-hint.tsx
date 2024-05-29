@@ -7,11 +7,6 @@ import { useSettingsContext } from '../contexts/settings.context';
 const PrivateAssets: { [symbol: string]: { name: string; urlText: string; url: string } } = {
   FPS: { name: 'Frankencoin', urlText: 'www.frankencoin.com', url: 'https://www.frankencoin.com/pool' },
   WFPS: { name: 'Frankencoin', urlText: 'www.frankencoin.com', url: 'https://www.frankencoin.com/pool' },
-  MKX: {
-    name: 'Ebel2X',
-    urlText: 'dhedge.org',
-    url: 'https://dhedge.org/vault/0xe137dd4bcd22e947c896ae33a0920c09c85e263d',
-  },
 };
 
 export function PrivateAssetHint({ asset }: { asset: Asset }): JSX.Element {

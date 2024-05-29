@@ -3417,18 +3417,6 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'ebel2x',
-        img: 'ebel2x',
-        next: {
-          page: 'wallets',
-          tiles: ['hw-wallet', 'metamask'],
-          options: {
-            service: 'buy',
-            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'MKX' },
-          },
-        },
-      },
-      {
         id: 'stable',
         img: 'stablecoin',
         next: {
