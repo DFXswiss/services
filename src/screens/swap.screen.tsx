@@ -80,7 +80,7 @@ interface CustomAmountError {
 }
 
 export default function SwapScreen(): JSX.Element {
-  useAddressGuard('/switch');
+  useAddressGuard('/connect');
 
   const { translate, translateError } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
@@ -301,6 +301,7 @@ export default function SwapScreen(): JSX.Element {
 
       case TransactionError.LIMIT_EXCEEDED:
       case TransactionError.KYC_REQUIRED:
+      case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(swap.error);
@@ -362,7 +363,7 @@ export default function SwapScreen(): JSX.Element {
 
   function onAddressSwitch() {
     logout();
-    navigate('/switch', { setRedirect: true });
+    navigate('/connect', { setRedirect: true });
   }
 
   async function handleNext(paymentInfo: Swap): Promise<void> {

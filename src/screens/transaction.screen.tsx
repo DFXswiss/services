@@ -36,10 +36,11 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, toPaymentStateLabel } from '../config/labels';
+import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import { useUserGuard } from '../hooks/guard.hook';
@@ -57,6 +58,8 @@ export function TransactionStatus(): JSX.Element {
   const { translate } = useSettingsContext();
   const { id } = useParams();
   const { getTransactionByUid } = useTransaction();
+  const { isLoggedIn } = useSessionContext();
+  const { setRedirectPath } = useAppHandlingContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -70,12 +73,34 @@ export function TransactionStatus(): JSX.Element {
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   }, [id]);
 
+  function assignTransaction() {
+    if (!transaction) return;
+
+    const path = `/tx/${transaction.id}/assign`;
+    if (isLoggedIn) {
+      navigate(path);
+    } else {
+      setRedirectPath(path);
+      navigate('/login');
+    }
+  }
+
   return (
     <Layout rootRef={rootRef} title={translate('screens/payment', 'Transaction status')} onBack={() => navigate('/tx')}>
       {error ? (
         <ErrorHint message={error} />
       ) : transaction ? (
-        <TxInfo tx={transaction} />
+        <StyledVerticalStack gap={6} full>
+          <TxInfo tx={transaction} />
+
+          {transaction.state === TransactionState.UNASSIGNED && (
+            <StyledButton
+              label={translate('screens/payment', 'Assign transaction')}
+              onClick={assignTransaction}
+              width={StyledButtonWidth.FULL}
+            />
+          )}
+        </StyledVerticalStack>
       ) : (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       )}
@@ -98,6 +123,7 @@ export function TransactionList(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { id } = useParams();
   const { toString } = useBlockchain();
+  const { pathname } = useLocation();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const txRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -115,12 +141,16 @@ export function TransactionList(): JSX.Element {
   }, [id, transactions]);
 
   useEffect(() => {
-    if (isLoggedIn) loadTransactions();
+    if (isLoggedIn)
+      loadTransactions().then(() => {
+        if (id && pathname.includes('assign')) assignTransaction(+id);
+      });
   }, [isLoggedIn]);
 
-  function loadTransactions() {
+  function loadTransactions(): Promise<void> {
     setTransactions(undefined);
-    Promise.all([getDetailTransactions(), getUnassignedTransactions()])
+
+    return Promise.all([getDetailTransactions(), getUnassignedTransactions()])
       .then((tx) => {
         const list = tx.flat().sort((a, b) => (new Date(b.date) > new Date(a.date) ? 1 : -1)) as DetailTransaction[];
         const map = list.reduce((map, tx) => {
@@ -155,7 +185,7 @@ export function TransactionList(): JSX.Element {
       .finally(() => setIsCsvLoading(false));
   }
 
-  async function assignTransaction(tx: DetailTransaction) {
+  async function assignTransaction(txId: number) {
     if (!transactionTargets) {
       setIsTargetsLoading(true);
       await getTransactionTargets()
@@ -167,7 +197,7 @@ export function TransactionList(): JSX.Element {
         .finally(() => setIsTargetsLoading(false));
     }
 
-    setEditTransaction(tx.id);
+    setEditTransaction(txId);
   }
 
   async function onSubmit({ target }: { target: TransactionTarget }) {
@@ -308,7 +338,7 @@ export function TransactionList(): JSX.Element {
                                       <StyledButton
                                         isLoading={isTargetsLoading}
                                         label={translate('screens/payment', 'Assign transaction')}
-                                        onClick={() => assignTransaction(tx)}
+                                        onClick={() => assignTransaction(tx.id)}
                                       />
                                     ))}
                                   {tx.outputTxUrl && (

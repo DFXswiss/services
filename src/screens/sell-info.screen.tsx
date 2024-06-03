@@ -3,7 +3,6 @@ import {
   Asset,
   BankAccount,
   Fiat,
-  KycLevel,
   Sell,
   SellPaymentInfo,
   TransactionError,
@@ -42,11 +41,10 @@ import { SellCompletion } from '../components/payment/sell-completion';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
-import { useAddressGuard, useKycLevelGuard } from '../hooks/guard.hook';
+import { useAddressGuard } from '../hooks/guard.hook';
 
 export function SellInfoScreen(): JSX.Element {
   useAddressGuard();
-  useKycLevelGuard(KycLevel.Sell, '/profile');
 
   const { translate } = useSettingsContext();
   const { bankAccounts, createAccount } = useBankAccountContext();
@@ -152,6 +150,7 @@ export function SellInfoScreen(): JSX.Element {
 
       case TransactionError.LIMIT_EXCEEDED:
       case TransactionError.KYC_REQUIRED:
+      case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(sell.error);

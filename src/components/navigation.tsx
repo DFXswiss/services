@@ -187,6 +187,12 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             url={process.env.REACT_APP_HELP_URL}
           />
           <NavigationLink
+            icon={IconVariant.SUPPORT}
+            label={translate('navigation/links', 'Support')}
+            url="/support/issue"
+            target="_self"
+          />
+          <NavigationLink
             icon={IconVariant.FILE}
             label={translate('navigation/links', 'Terms and conditions')}
             url={process.env.REACT_APP_TNC_URL}

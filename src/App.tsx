@@ -40,7 +40,7 @@ export const Routes = [
     element: <HomeScreen />,
   },
   {
-    path: '/switch',
+    path: '/connect',
     element: <HomeScreen />,
   },
   {
@@ -115,7 +115,15 @@ export const Routes = [
     element: <TransactionScreen />,
   },
   {
+    path: '/tx/:id/assign',
+    element: <TransactionScreen />,
+  },
+  {
     path: '/tx/:id/issue',
+    element: <SupportIssueScreen />,
+  },
+  {
+    path: 'support/issue',
     element: <SupportIssueScreen />,
   },
   {
@@ -128,6 +136,7 @@ export enum Service {
   BUY = 'buy',
   SELL = 'sell',
   SWAP = 'swap',
+  CONNECT = 'connect',
 }
 
 export interface WidgetParams extends AppParams {
@@ -151,6 +160,7 @@ function App({ routerFactory, params }: AppProps) {
       <BalanceContextProvider>
         <AppHandlingContextProvider
           isWidget={params != null}
+          service={params?.service}
           closeCallback={params?.onClose}
           params={params}
           router={router}

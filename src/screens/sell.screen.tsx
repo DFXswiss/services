@@ -4,7 +4,6 @@ import {
   BankAccount,
   Blockchain,
   Fiat,
-  KycLevel,
   Sell,
   TransactionError,
   TransactionType,
@@ -61,7 +60,7 @@ import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import { useClipboard } from '../hooks/clipboard.hook';
 import useDebounce from '../hooks/debounce.hook';
-import { useAddressGuard, useKycLevelGuard } from '../hooks/guard.hook';
+import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useTxHelper } from '../hooks/tx-helper.hook';
 import { blankedAddress, isDefined } from '../util/utils';
@@ -82,7 +81,6 @@ interface CustomAmountError {
 
 export default function SellScreen(): JSX.Element {
   useAddressGuard();
-  useKycLevelGuard(KycLevel.Sell, '/profile');
 
   const { translate, translateError } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
@@ -271,6 +269,7 @@ export default function SellScreen(): JSX.Element {
 
       case TransactionError.LIMIT_EXCEEDED:
       case TransactionError.KYC_REQUIRED:
+      case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
         setKycError(sell.error);

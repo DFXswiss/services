@@ -12,6 +12,7 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   signature: 'string',
   mail: 'string',
   wallet: 'string',
+  wallets: 'string',
   refcode: 'string',
   specialCode: 'string',
   session: 'string',

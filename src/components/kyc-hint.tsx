@@ -16,10 +16,6 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
   const { navigate } = useNavigation();
   const { user } = useUserContext();
 
-  function onLink() {
-    navigate('/link', { setRedirect: true });
-  }
-
   function getHint(error: TransactionError): string | undefined {
     switch (error) {
       case TransactionError.LIMIT_EXCEEDED:
@@ -42,6 +38,9 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
           'screens/kyc',
           'This transaction is only possible with a verified account. Please complete our KYC (Know-Your-Customer) process.',
         );
+
+      case TransactionError.KYC_DATA_REQUIRED:
+        return '';
 
       case TransactionError.KYC_REQUIRED_INSTANT:
         return translate(
@@ -70,9 +69,9 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
 
   const hint = getHint(error);
 
-  return hint ? (
+  return hint != null ? (
     <StyledVerticalStack gap={4} full center>
-      <StyledInfoText invertedIcon>{hint}</StyledInfoText>
+      {hint && <StyledInfoText invertedIcon>{hint}</StyledInfoText>}
 
       {error === TransactionError.BANK_TRANSACTION_MISSING ? (
         <StyledButton
@@ -84,11 +83,28 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
         <>
           <StyledButton
             width={StyledButtonWidth.FULL}
-            label={translate('screens/kyc', isComplete ? 'Increase limit' : 'Complete KYC')}
-            onClick={isComplete ? () => navigate('/limit') : start}
+            label={translate(
+              'screens/kyc',
+              error === TransactionError.KYC_DATA_REQUIRED
+                ? 'Enter user data'
+                : isComplete
+                ? 'Increase limit'
+                : 'Complete KYC',
+            )}
+            onClick={
+              error === TransactionError.KYC_DATA_REQUIRED
+                ? () => navigate('/profile', { setRedirect: true })
+                : isComplete
+                ? () => navigate('/limit')
+                : start
+            }
           />
           {user?.kyc.level === 0 && (
-            <StyledLink label={translate('screens/kyc', 'I am already verified with DFX')} onClick={onLink} dark />
+            <StyledLink
+              label={translate('screens/kyc', 'I am already verified with DFX')}
+              onClick={() => navigate('/link', { setRedirect: true })}
+              dark
+            />
           )}
         </>
       )}
