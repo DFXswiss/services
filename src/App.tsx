@@ -135,6 +135,7 @@ export const Routes = [
 export enum Service {
   BUY = 'buy',
   SELL = 'sell',
+  SWAP = 'swap',
   CONNECT = 'connect',
 }
 
