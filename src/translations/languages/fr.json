@@ -100,7 +100,8 @@
     "Enter user data": "Saisir les données",
     "Increase limit": "Augmenter la limite",
     "Start video identification": "Lancer l'identification par vidéo",
-    "I am already verified with DFX": "Je suis déjà vérifié par DFX"
+    "I am already verified with DFX": "Je suis déjà vérifié par DFX",
+    "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Par la présente, je charge DFX de transmettre mes données KYC à {{client}}."
   },
   "screens/2fa": {
     "2FA": "2FA",

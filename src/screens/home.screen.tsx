@@ -47,8 +47,7 @@ export function HomeScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { session, authenticationToken } = useAuthContext();
   const { user, isUserLoading } = useUserContext();
-  const { hasSession, canClose, service, isEmbedded, redirectPath, setRedirectPath, closeServices } =
-    useAppHandlingContext();
+  const { hasSession, canClose, service, isEmbedded, redirectPath, closeServices } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
   const { navigate } = useNavigation();
   const { pathname } = useLocation();

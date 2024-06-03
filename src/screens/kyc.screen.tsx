@@ -75,7 +75,7 @@ export function KycScreen(): JSX.Element {
   const { clearParams } = useNavigation();
   const { translate, changeLanguage } = useSettingsContext();
   const { user, reloadUser } = useUserContext();
-  const { getKycInfo, continueKyc, startStep } = useKyc();
+  const { getKycInfo, continueKyc, startStep, addTransferClient } = useKyc();
   const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
   const { pathname, search } = useLocation();
   const { navigate, goBack } = useNavigation();
@@ -83,6 +83,7 @@ export function KycScreen(): JSX.Element {
   const [info, setInfo] = useState<KycInfo | KycSession>();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [consentClient, setConsentClient] = useState<string>();
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
   const [showLinkHint, setShowLinkHint] = useState(false);
@@ -90,14 +91,17 @@ export function KycScreen(): JSX.Element {
   const mode = pathname.includes('/profile') ? Mode.PROFILE : pathname.includes('/contact') ? Mode.CONTACT : Mode.KYC;
   const rootRef = useRef<HTMLDivElement>(null);
   const params = new URLSearchParams(search);
+  const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
+  const allStepsCompleted = info?.kycSteps.every((s) => isStepDone(s));
+  const canContinue = !allStepsCompleted || (info && info.kycLevel >= KycLevel.Completed);
+
+  // params
   const [step, stepSequence] = params.get('step')?.split(':') ?? [];
   const [stepName, stepType] = step?.split('/') ?? [];
   const paramKycCode = params.get('code');
   const kycCode = paramKycCode ?? user?.kyc.hash;
   const redirectUri = params.get('kyc-redirect');
-  const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
-  const allStepsCompleted = info?.kycSteps.every((s) => isStepDone(s));
-  const canContinue = !allStepsCompleted || (info && info.kycLevel >= KycLevel.Completed);
+  const client = params.get('client') ?? undefined;
 
   useUserGuard('/login', !kycCode);
 
@@ -106,11 +110,18 @@ export function KycScreen(): JSX.Element {
   }, [info]);
 
   useEffect(() => {
-    if (redirectUri && allStepsCompleted) {
-      setIsLoading(true);
-      window.open(redirectUri, '_self');
+    if (info) {
+      const missingClient = client && !info.kycClients.includes(client) ? client : undefined;
+
+      if (missingClient && (allStepsCompleted || 'currentStep' in info)) {
+        setStepInProgress(undefined);
+        setConsentClient(missingClient);
+      } else if (allStepsCompleted && redirectUri) {
+        setIsLoading(true);
+        window.open(redirectUri, '_self');
+      }
     }
-  }, [redirectUri, allStepsCompleted]);
+  }, [redirectUri, info, client]);
 
   useEffect(() => {
     if (!kycCode) return;
@@ -140,6 +151,7 @@ export function KycScreen(): JSX.Element {
     setIsSubmitting(true);
     setError(undefined);
     setShowLinkHint(false);
+    setConsentClient(undefined);
     return (next ? callKyc(() => continueKyc(kycCode)) : callKyc(() => getKycInfo(kycCode)))
       .then(handleReload)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
@@ -165,6 +177,7 @@ export function KycScreen(): JSX.Element {
         .then(() => goBack());
     } else {
       setInfo(info);
+
       if (info.currentStep?.name === KycStepName.CONTACT_DATA && info.currentStep?.status === KycStepStatus.FAILED) {
         onLink();
       } else {
@@ -206,6 +219,19 @@ export function KycScreen(): JSX.Element {
     return allStepsCompleted ? navigate('/limit') : onLoad(true);
   }
 
+  function onConsent(client: string) {
+    if (!kycCode) return;
+
+    setIsSubmitting(true);
+
+    addTransferClient(kycCode, client)
+      .then(() => onLoad(true))
+      .catch((error: ApiError) => {
+        setError(error.message ?? 'Unknown error');
+        setIsSubmitting(false);
+      });
+  }
+
   function stepIcon(step: KycStep): { icon: IconVariant; size: IconSize } | undefined {
     switch (step.status) {
       case KycStepStatus.NOT_STARTED:
@@ -232,7 +258,13 @@ export function KycScreen(): JSX.Element {
     <Layout
       title={stepInProgress ? nameToString(stepInProgress.name) : translate('screens/kyc', 'DFX KYC')}
       rootRef={rootRef}
-      onBack={stepInProgress ? () => setStepInProgress(undefined) : showLinkHint ? () => onLoad(false) : undefined}
+      onBack={
+        stepInProgress
+          ? () => setStepInProgress(undefined)
+          : showLinkHint || consentClient
+          ? () => onLoad(false)
+          : undefined
+      }
       noPadding={isMobile && stepInProgress?.session?.type === UrlType.BROWSER}
     >
       {isLoading ? (
@@ -251,6 +283,25 @@ export function KycScreen(): JSX.Element {
             onClick={retryLink}
             isLoading={isLoading}
           />
+        </StyledVerticalStack>
+      ) : consentClient ? (
+        <StyledVerticalStack gap={6} full>
+          <p className="text-dfxGray-700">
+            {translate('screens/kyc', 'I hereby authorize DFX to transfer my KYC data to {{client}}.', {
+              client: consentClient,
+            })}
+          </p>
+          <StyledButton
+            width={StyledButtonWidth.MIN}
+            label={translate('general/actions', 'Next')}
+            onClick={() => onConsent(consentClient)}
+            isLoading={isSubmitting}
+          />
+          {error && (
+            <div>
+              <ErrorHint message={error} />
+            </div>
+          )}
         </StyledVerticalStack>
       ) : stepInProgress && kycCode && !error ? (
         [KycStepStatus.NOT_STARTED, KycStepStatus.IN_PROGRESS].includes(stepInProgress.status) ? (
