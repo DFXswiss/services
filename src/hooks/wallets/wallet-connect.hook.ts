@@ -1,19 +1,31 @@
-import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
-import { EthereumProvider } from '@walletconnect/ethereum-provider';
-import { EthereumProvider as EthClient } from '@walletconnect/ethereum-provider/dist/types/EthereumProvider';
+import { Asset, AssetType, Blockchain, useAuthContext } from '@dfx.swiss/react';
+import {
+  Connector,
+  getAccount,
+  getBalance,
+  getConnectors,
+  readContract,
+  sendTransaction,
+  simulateContract,
+  switchChain,
+  connect as wagmiConnect,
+  disconnect as wagmiDiconnect,
+  reconnect as wagmiReconnect,
+  signMessage as wagmiSignMessage,
+  writeContract,
+} from '@wagmi/core';
 import BigNumber from 'bignumber.js';
-import { Buffer } from 'buffer';
 import { useEffect, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
-import Web3 from 'web3';
+import { formatUnits, parseEther, parseUnits } from 'viem';
 import { AssetBalance } from '../../contexts/balance.context';
-import { useSettingsContext } from '../../contexts/settings.context';
-import { AbortError } from '../../util/abort-error';
+import { config } from '../../wagmi.config';
 import { useWeb3 } from '../web3.hook';
 
 export interface WalletConnectInterface {
   connect: (blockchain: Blockchain, onConnectUri: (uri: string) => void) => Promise<string>;
   signMessage: (msg: string, address: string, blockchain: Blockchain) => Promise<string>;
+  requestChangeToBlockchain: (blockchain?: Blockchain) => Promise<void>;
   createTransaction: (amount: BigNumber, asset: Asset, from: string, to: string) => Promise<string>;
   readBalance: (asset: Asset, address?: string) => Promise<AssetBalance>;
   wallets: DeepWallet[];
@@ -37,22 +49,42 @@ export interface DeepWallet {
   deepLink: string;
   imageUrl: string;
 }
-enum EthCall {
-  BALANCE_OF = '0x70a08231',
-  TRANSFER = '0xa9059cbb',
-  DECIMALS = '0x313ce567',
-}
+
+const erc20ABI = [
+  {
+    type: 'function',
+    name: 'decimals',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint8' }],
+  },
+  {
+    type: 'function',
+    name: 'transfer',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'recipient', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ type: 'bool' }],
+  },
+] as const;
 
 export function useWalletConnect(): WalletConnectInterface {
   const { toChainId } = useWeb3();
-  const storageKey = 'WalletConnectClient';
-  const { get, put } = useSettingsContext();
-
   const [wallets, setWallets] = useState<DeepWallet[]>([]);
+  const { isLoggedIn } = useAuthContext();
 
   useEffect(() => {
     getWallets().then(setWallets);
+    reconnect();
   }, []);
+
+  function getWalletConnectConnector(): Connector {
+    const walletConnectConnector = getConnectors(config).find((connector) => connector.id === 'walletConnect');
+    if (!walletConnectConnector) throw new Error('WalletConnect connector not found');
+    return walletConnectConnector;
+  }
 
   async function getWallets(): Promise<DeepWallet[]> {
     if (!process.env.REACT_APP_WC_PID) throw new Error('WalletConnect PID not defined');
@@ -78,133 +110,88 @@ export function useWalletConnect(): WalletConnectInterface {
   }
 
   async function connect(blockchain: Blockchain, onConnectUri: (uri: string) => void): Promise<string> {
-    const client = get<EthClient>(storageKey) ?? (await setupConnection(blockchain));
+    await disconnect();
+    const connector = getWalletConnectConnector();
+    const provider = (await connector.getProvider()) as any;
+    provider.events.on('display_uri', onConnectUri);
 
-    client.on('display_uri', onConnectUri);
-
-    await client.connect();
-    const result = await client.request<string[]>({ method: 'eth_requestAccounts' });
-    return result[0];
-  }
-
-  async function setupConnection(blockchain: Blockchain): Promise<EthClient> {
-    if (!process.env.REACT_APP_WC_PID) throw new Error('WalletConnect PID not defined');
-
-    const chainId = toChainId(blockchain);
-    const provider = await EthereumProvider.init({
-      projectId: process.env.REACT_APP_WC_PID,
-      chains: [+(chainId ?? 1)],
-      showQrModal: false,
-      metadata: {
-        name: document.title,
-        description: 'Buy and sell crypto.',
-        url: window.location.origin,
-        icons: [`${window.location.origin}/favicon.ico`],
-      },
+    const { accounts } = await wagmiConnect(config, {
+      chainId: toChainId(blockchain) as any,
+      connector,
     });
 
-    put(storageKey, provider);
-    return provider;
+    return accounts[0];
   }
 
-  async function signMessage(msg: string, address: string, blockchain: Blockchain): Promise<string> {
-    try {
-      const client = get<EthClient>(storageKey) ?? (await setupConnection(blockchain));
+  async function disconnect(): Promise<void> {
+    await wagmiDiconnect(config, { connector: getWalletConnectConnector() });
+  }
 
-      return await client.request<string>({
-        method: 'personal_sign',
-        params: [`0x${Buffer.from(msg, 'utf8').toString('hex')}`, address],
-      });
-    } catch (e) {
-      throw new AbortError('User cancelled');
+  async function reconnect(): Promise<void> {
+    const { isDisconnected } = getAccount(config);
+    if (isDisconnected) {
+      await wagmiReconnect(config, { connectors: [getWalletConnectConnector()] });
     }
   }
 
-  function toUsableNumber(balance: any, decimals = 18): BigNumber {
-    return new BigNumber(balance).dividedBy(Math.pow(10, decimals));
-  }
-
-  function encodeMethodData(method: EthCall, address: string): string {
-    return method + '000000000000000000000000' + address.substring(2, address.length);
+  async function signMessage(msg: string, address: string, blockchain: Blockchain): Promise<string> {
+    return await wagmiSignMessage(config, {
+      message: msg,
+      account: address as any,
+      connector: getWalletConnectConnector(),
+    });
   }
 
   async function readBalance(asset: Asset, address?: string): Promise<AssetBalance> {
-    if (!address || !asset) return { asset, amount: 0 };
-    const client = get<EthClient>(storageKey) ?? (await setupConnection(asset.blockchain));
+    const balance = await getBalance(config, {
+      address: address as any,
+      token: asset.chainId as any,
+      chainId: Number(toChainId(asset.blockchain)) as any,
+    });
 
-    try {
-      if (asset.type === AssetType.COIN) {
-        const balance = await client.request<number>({
-          method: 'eth_getBalance',
-          params: [address, 'latest'],
-        });
+    return { asset, amount: Number(formatUnits(balance.value, balance.decimals)) };
+  }
 
-        return {
-          asset,
-          amount: toUsableNumber(balance).toNumber(),
-        };
-      } else {
-        const decimals = await client.request<any>({
-          method: 'eth_call',
-          params: [{ to: asset.chainId, data: encodeMethodData(EthCall.DECIMALS, address) }, 'latest'],
-        });
-
-        const tokenBalance = await client.request<any>({
-          method: 'eth_call',
-          params: [{ to: asset.chainId, data: encodeMethodData(EthCall.BALANCE_OF, address) }, 'latest'],
-        });
-
-        return {
-          asset,
-          amount: toUsableNumber(tokenBalance, new BigNumber(decimals).toNumber()).toNumber(),
-        };
-      }
-    } catch (e) {
-      return { asset, amount: 0 };
+  async function requestChangeToBlockchain(blockchain?: Blockchain): Promise<void> {
+    if (!blockchain) return;
+    await reconnect();
+    const chainId = Number(toChainId(blockchain));
+    if (getAccount(config).chainId !== chainId) {
+      await switchChain(config, { chainId: chainId as any, connector: getWalletConnectConnector() });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
 
   async function createTransaction(amount: BigNumber, asset: Asset, from: string, to: string): Promise<string> {
-    const client = get<EthClient>(storageKey) ?? (await setupConnection(asset.blockchain));
-    const web3 = new Web3(client.chainId as any);
-
+    await reconnect();
     if (asset.type === AssetType.COIN) {
-      return client.request<any>({
-        method: 'eth_sendTransaction',
-        params: [
-          {
-            to,
-            from,
-            value: new BigNumber(web3.utils.toWei(amount.toString(), 'ether')).toString(16),
-            maxPriorityFeePerGas: null,
-            maxFeePerGas: null,
-          },
-        ],
+      const result = await sendTransaction(config, {
+        connector: getWalletConnectConnector(),
+        account: from as any,
+        chainId: Number(toChainId(asset.blockchain)) as any,
+        to: to as any,
+        value: parseEther(amount.toString()),
+        data: '0x', // needed for Trust Wallet
       });
+      return result;
     } else {
-      const decimals = await client.request<any>({
-        method: 'eth_call',
-        params: [{ to: asset.chainId, data: encodeMethodData(EthCall.DECIMALS, from) }, 'latest'],
+      const decimals = await readContract(config, {
+        abi: erc20ABI,
+        address: asset.chainId as any,
+        functionName: 'decimals',
+        chainId: Number(toChainId(asset.blockchain)) as any,
       });
 
-      const adjustedAmount = amount
-        .multipliedBy(Math.pow(10, new BigNumber(decimals).toNumber()))
-        .toString(16)
-        .padStart(64, '0');
-
-      return client.request<any>({
-        method: 'eth_sendTransaction',
-        params: [
-          {
-            from,
-            to: asset.chainId,
-            value: '0x0',
-            maxPriorityFeePerGas: null,
-            maxFeePerGas: null,
-            data: encodeMethodData(EthCall.TRANSFER, to) + adjustedAmount,
-          },
-        ],
+      const { request } = await simulateContract(config, {
+        abi: erc20ABI,
+        chainId: Number(toChainId(asset.blockchain)) as any,
+        address: asset.chainId as any,
+        functionName: 'transfer',
+        args: [to as any, parseUnits(amount.toString(), decimals)],
+        connector: getWalletConnectConnector(),
       });
+
+      return await writeContract(config, request);
     }
   }
 
@@ -212,6 +199,7 @@ export function useWalletConnect(): WalletConnectInterface {
     () => ({
       connect,
       signMessage,
+      requestChangeToBlockchain,
       createTransaction,
       readBalance,
       wallets,
