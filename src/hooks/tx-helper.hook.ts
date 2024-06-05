@@ -21,8 +21,11 @@ export function useTxHelper(): TxHelperInterface {
     createTransaction: createTransactionMetaMask,
     requestChangeToBlockchain: requestChangeToBlockchainMetaMask,
   } = useMetaMask();
-  const { readBalance: readBalanceWalletConnect, createTransaction: createTransactionWalletConnect } =
-    useWalletConnect();
+  const {
+    readBalance: readBalanceWalletConnect,
+    createTransaction: createTransactionWalletConnect,
+    requestChangeToBlockchain: requestChangeToBlockchainWalletConnect,
+  } = useWalletConnect();
   const { sendPayment } = useAlby();
   const { getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet } = useWalletContext();
@@ -63,7 +66,7 @@ export function useTxHelper(): TxHelperInterface {
 
       case WalletType.WALLET_CONNECT:
         if (!session?.address) throw new Error('Address is not defined');
-
+        await requestChangeToBlockchainWalletConnect(asset.blockchain);
         return createTransactionWalletConnect(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
       default:
