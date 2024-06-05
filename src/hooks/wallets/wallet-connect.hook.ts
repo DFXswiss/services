@@ -1,4 +1,4 @@
-import { Asset, AssetType, Blockchain, useAuthContext } from '@dfx.swiss/react';
+import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
 import {
   Connector,
   getAccount,
@@ -73,7 +73,6 @@ const erc20ABI = [
 export function useWalletConnect(): WalletConnectInterface {
   const { toChainId } = useWeb3();
   const [wallets, setWallets] = useState<DeepWallet[]>([]);
-  const { isLoggedIn } = useAuthContext();
 
   useEffect(() => {
     getWallets().then(setWallets);
@@ -124,7 +123,7 @@ export function useWalletConnect(): WalletConnectInterface {
   }
 
   async function disconnect(): Promise<void> {
-    await wagmiDiconnect(config, { connector: getWalletConnectConnector() });
+    await wagmiDiconnect(config, { connector: getWalletConnectConnector() }).catch((e) => console.error(e));
   }
 
   async function reconnect(): Promise<void> {
@@ -134,7 +133,7 @@ export function useWalletConnect(): WalletConnectInterface {
     }
   }
 
-  async function signMessage(msg: string, address: string, blockchain: Blockchain): Promise<string> {
+  async function signMessage(msg: string, address: string, _blockchain: Blockchain): Promise<string> {
     return await wagmiSignMessage(config, {
       message: msg,
       account: address as any,
@@ -165,7 +164,7 @@ export function useWalletConnect(): WalletConnectInterface {
   async function createTransaction(amount: BigNumber, asset: Asset, from: string, to: string): Promise<string> {
     await reconnect();
     if (asset.type === AssetType.COIN) {
-      const result = await sendTransaction(config, {
+      return await sendTransaction(config, {
         connector: getWalletConnectConnector(),
         account: from as any,
         chainId: Number(toChainId(asset.blockchain)) as any,
@@ -173,7 +172,6 @@ export function useWalletConnect(): WalletConnectInterface {
         value: parseEther(amount.toString()),
         data: '0x', // needed for Trust Wallet
       });
-      return result;
     } else {
       const decimals = await readContract(config, {
         abi: erc20ABI,
