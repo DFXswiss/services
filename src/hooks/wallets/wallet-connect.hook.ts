@@ -142,9 +142,11 @@ export function useWalletConnect(): WalletConnectInterface {
   }
 
   async function readBalance(asset: Asset, address?: string): Promise<AssetBalance> {
+    if (!address || !asset) return { asset, amount: 0 };
+
     const balance = await getBalance(config, {
       address: address as any,
-      token: asset.chainId as any,
+      token: asset.type === AssetType.COIN ? undefined : (asset.chainId as any),
       chainId: Number(toChainId(asset.blockchain)) as any,
     });
 
@@ -153,16 +155,14 @@ export function useWalletConnect(): WalletConnectInterface {
 
   async function requestChangeToBlockchain(blockchain?: Blockchain): Promise<void> {
     if (!blockchain) return;
-    await reconnect();
     const chainId = Number(toChainId(blockchain));
     if (getAccount(config).chainId !== chainId) {
       await switchChain(config, { chainId: chainId as any, connector: getWalletConnectConnector() });
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
 
   async function createTransaction(amount: BigNumber, asset: Asset, from: string, to: string): Promise<string> {
-    await reconnect();
     if (asset.type === AssetType.COIN) {
       return await sendTransaction(config, {
         connector: getWalletConnectConnector(),

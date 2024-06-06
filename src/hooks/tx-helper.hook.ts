@@ -41,6 +41,11 @@ export function useTxHelper(): TxHelperInterface {
           (b) => b.amount > 0,
         );
 
+      case WalletType.WALLET_CONNECT:
+        return (
+          await Promise.all(assets.map((asset: Asset) => readBalanceWalletConnect(asset, session?.address)))
+        ).filter((b) => b.amount > 0);
+
       default:
         // no balance available
         return undefined;
