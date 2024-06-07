@@ -17,7 +17,12 @@
     "isolatedModules": true,
     "noEmit": false,
     "jsx": "react-jsx",
-    "typeRoots": ["typings"]
+    "typeRoots": ["typings"],
+    "baseUrl": ".",
+    "paths": {
+      "swissqrbill/types": ["node_modules/swissqrbill/lib/esm/shared/types.d.ts"],
+      "swissqrbill/svg": ["node_modules/swissqrbill/lib/esm/svg/index.d.ts"]
+    }
   },
   "include": ["src", "typings"],
   "exclude": ["**/*.stories.tsx"]

@@ -40,6 +40,7 @@
     "react-scripts": "5.0.1",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
+    "swissqrbill": "^4.0.2",
     "typescript": "^4.9.3",
     "url": "^0.11.1",
     "web-vitals": "^2.1.4",

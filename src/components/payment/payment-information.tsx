@@ -14,6 +14,7 @@ import {
 import { useSettingsContext } from '../../contexts/settings.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
 import { GiroCode } from './giro-code';
+import { SwissQRBill } from './swiss-qr-bill';
 
 interface PaymentInformationContentProps {
   info: Buy;
@@ -39,6 +40,7 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
             tabs={[
               { title: translate('screens/payment', 'Text'), content: <PaymentInformationText info={info} /> },
               { title: translate('screens/payment', 'QR Code'), content: <GiroCode value={info.paymentRequest} /> },
+              { title: translate('screens/payment', 'Swiss QR-Bill'), content: <SwissQRBill info={info} /> },
             ]}
             darkTheme
             spread
