@@ -1,4 +1,3 @@
-import { Buy } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -14,10 +13,9 @@ import {
 import { useSettingsContext } from '../../contexts/settings.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
 import { GiroCode } from './giro-code';
-import { SwissQRBill } from './swiss-qr-bill';
 
 interface PaymentInformationContentProps {
-  info: Buy;
+  info: any; // Buy, TODO: extend Buy with id field
 }
 
 export function PaymentInformationContent({ info }: PaymentInformationContentProps): JSX.Element {
@@ -39,8 +37,10 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
           <StyledTabContainer
             tabs={[
               { title: translate('screens/payment', 'Text'), content: <PaymentInformationText info={info} /> },
-              { title: translate('screens/payment', 'QR Code'), content: <GiroCode value={info.paymentRequest} /> },
-              { title: translate('screens/payment', 'Swiss QR-Bill'), content: <SwissQRBill info={info} /> },
+              {
+                title: translate('screens/payment', 'QR Code'),
+                content: <GiroCode value={info.paymentRequest} txId={info.id} />,
+              },
             ]}
             darkTheme
             spread
