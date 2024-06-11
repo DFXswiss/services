@@ -188,7 +188,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       : {
           headless: getParameter(query, 'headless'),
           borderless: getParameter(query, 'borderless'),
-          hideTargetSelection: getParameter(query, 'show-address-items'),
+          hideTargetSelection: getParameter(query, 'hide-target-selection'),
           flags: getParameter(query, 'flags'),
           lang: getParameter(query, 'lang'),
           address: getParameter(query, 'address'),
