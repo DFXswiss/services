@@ -20,13 +20,14 @@ export function GiroCode({ value, txId }: GiroCodeProps): JSX.Element {
   const handleOnClick = async (txId?: number): Promise<void> => {
     if (!txId) return;
     try {
-      const base64EncPdf = await call<any>({ url: `buy/paymentInfos/${txId}/invoice`, method: 'PUT' }); // TODO: Add function to packages buy.hook.ts
-      const pdfWindow = window.open('');
-      pdfWindow?.document.write(
-        `<body style="margin: 0px"><iframe width='100%' height='100%' src='data:application/pdf;base64,${base64EncPdf.base64Enc}'></iframe></body>`,
-      );
+      const response = await call<any>({ url: `buy/paymentInfos/${txId}/invoice`, method: 'PUT' }); // TODO: Add function to packages buy.hook.ts
+      const pdfDataUri = `data:application/pdf;base64,${response.base64Enc}`;
+      const blob = await fetch(pdfDataUri).then((res) => res.blob());
+      const url = URL.createObjectURL(blob);
+      const pdfWindow = window.open(url, '_blank');
+      if (pdfWindow) pdfWindow.focus();
     } catch (err) {
-      throw new Error(`Error generating PDF: ${err}`);
+      throw new Error(`Error displaying PDF: ${err}`);
     }
   };
 
