@@ -97,6 +97,7 @@ export default function SwapScreen(): JSX.Element {
     assetOut,
     amountIn,
     blockchain,
+    hideTargetSelection,
     externalTransactionId,
     setParams,
   } = useAppParams();
@@ -489,15 +490,17 @@ export default function SwapScreen(): JSX.Element {
                   </div>
                 </StyledHorizontalStack>
 
-                <StyledDropdown<Address>
-                  rootRef={rootRef}
-                  name="address"
-                  items={addressItems}
-                  labelFunc={(item) => item.address}
-                  descriptionFunc={(item) => item.label}
-                  full
-                  forceEnable
-                />
+                {!hideTargetSelection && (
+                  <StyledDropdown<Address>
+                    rootRef={rootRef}
+                    name="address"
+                    items={addressItems}
+                    labelFunc={(item) => item.address}
+                    descriptionFunc={(item) => item.label}
+                    full
+                    forceEnable
+                  />
+                )}
               </StyledVerticalStack>
 
               {isLoading ? (
