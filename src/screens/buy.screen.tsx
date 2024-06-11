@@ -118,6 +118,11 @@ export function BuyScreen(): JSX.Element {
   const [isPriceLoading, setIsPriceLoading] = useState(false);
   const [isContinue, setIsContinue] = useState(false);
   const [validatedData, setValidatedData] = useState<BuyPaymentInfo>();
+  const [hideDropdowns, setHideDropdowns] = useState(false);
+
+  useEffect(() => {
+    setHideDropdowns(user?.activeAddress?.wallet === 'PointPay');
+  }, [user]);
 
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({
@@ -458,7 +463,7 @@ export function BuyScreen(): JSX.Element {
                         rootRef={rootRef}
                         name="asset"
                         placeholder={translate('general/actions', 'Select...')}
-                        items={availableAssets}
+                        items={hideDropdowns ? [selectedAsset ?? availableAssets[0]] : availableAssets}
                         labelFunc={(item) => item.name}
                         assetIconFunc={(item) => item.name as AssetIconVariant}
                         descriptionFunc={(item) => item.description}
@@ -470,15 +475,17 @@ export function BuyScreen(): JSX.Element {
                     </div>
                   </StyledHorizontalStack>
 
-                  <StyledDropdown<Address>
-                    rootRef={rootRef}
-                    name="address"
-                    items={addressItems}
-                    labelFunc={(item) => item.address}
-                    descriptionFunc={(item) => item.label}
-                    full
-                    forceEnable
-                  />
+                  {!hideDropdowns ?? (
+                    <StyledDropdown<Address>
+                      rootRef={rootRef}
+                      name="address"
+                      items={addressItems}
+                      labelFunc={(item) => item.address}
+                      descriptionFunc={(item) => item.label}
+                      full
+                      forceEnable
+                    />
+                  )}
                 </StyledVerticalStack>
 
                 {isLoading ? (
