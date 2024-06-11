@@ -95,6 +95,7 @@ export function BuyScreen(): JSX.Element {
     wallet,
     flags,
     setParams,
+    hideTargetSelection,
     availableBlockchains,
   } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
@@ -474,8 +475,7 @@ export function BuyScreen(): JSX.Element {
                       />
                     </div>
                   </StyledHorizontalStack>
-
-                  {!hideDropdowns ?? (
+                  {!hideDropdowns && !hideTargetSelection && (
                     <StyledDropdown<Address>
                       rootRef={rootRef}
                       name="address"
