@@ -27,6 +27,7 @@ const urlParamsToRemove = [
 export interface AppParams {
   headless?: string;
   borderless?: string;
+  hideTargetSelection?: string;
   flags?: string;
   lang?: string;
   address?: string;
@@ -187,6 +188,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       : {
           headless: getParameter(query, 'headless'),
           borderless: getParameter(query, 'borderless'),
+          hideTargetSelection: getParameter(query, 'show-address-items'),
           flags: getParameter(query, 'flags'),
           lang: getParameter(query, 'lang'),
           address: getParameter(query, 'address'),
