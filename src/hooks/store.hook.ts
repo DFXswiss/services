@@ -1,3 +1,4 @@
+import { AppParams } from '../contexts/app-handling.context';
 import { WalletType } from '../contexts/wallet.context';
 
 export interface StoreItem<T> {
@@ -11,6 +12,7 @@ export interface StoreInterface {
   balances: StoreItem<string>;
   language: StoreItem<string>;
   activeWallet: StoreItem<WalletType>;
+  queryParams: StoreItem<AppParams>;
 }
 
 enum StoreKey {
@@ -19,6 +21,7 @@ enum StoreKey {
   BALANCES = 'dfx.srv.balances',
   LANGUAGE = 'dfx.srv.language',
   ACTIVE_WALLET = 'dfx.srv.activeWallet',
+  QUERY_PARAMS = 'dfx.srv.queryParams',
 }
 
 export function useStore(): StoreInterface {
@@ -34,6 +37,15 @@ export function useStore(): StoreInterface {
 
   function remove(key: StoreKey) {
     localStorage.removeItem(key);
+  }
+
+  function getJson<T>(key: StoreKey): T | undefined {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : undefined;
+  }
+
+  function setJson<T>(key: StoreKey, value: T) {
+    localStorage.setItem(key, JSON.stringify(value));
   }
 
   return {
@@ -56,6 +68,11 @@ export function useStore(): StoreInterface {
       get: () => get(StoreKey.ACTIVE_WALLET) as WalletType,
       set: (value: WalletType) => set(StoreKey.ACTIVE_WALLET, value),
       remove: () => remove(StoreKey.ACTIVE_WALLET),
+    },
+    queryParams: {
+      get: () => getJson<AppParams>(StoreKey.QUERY_PARAMS),
+      set: (value: AppParams) => setJson(StoreKey.QUERY_PARAMS, value),
+      remove: () => remove(StoreKey.QUERY_PARAMS),
     },
   };
 }

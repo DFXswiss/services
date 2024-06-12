@@ -10,18 +10,34 @@ import { useBalanceContext } from './balance.context';
 // --- INTERFACES --- //
 // CAUTION: params need to be added to index-widget.tsx
 const urlParamsToRemove = [
+  'headless',
+  'borderless',
+  'hide-target-selection',
+  'flags',
   'lang',
   'address',
   'signature',
   'mail',
   'wallet',
+  'wallets',
   'refcode',
   'special-code',
   'session',
   'redirect',
   'type',
   'redirect-uri',
+  'mode',
+  'blockchain',
+  'blockchains',
   'balances',
+  'amount-in',
+  'amount-out',
+  'assets',
+  'asset-in',
+  'asset-out',
+  'payment-method',
+  'bank-account',
+  'external-transaction-id',
 ];
 
 export interface AppParams {
@@ -125,10 +141,10 @@ export function useAppHandlingContext(): AppHandlingContextInterface {
 }
 
 export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.Element {
-  const { redirectUri: storeRedirectUri } = useStore();
+  const { redirectUri: storeRedirectUri, queryParams: storeQueryParams } = useStore();
   const { isUsedByIframe, sendMessage } = useIframe();
   const { readBalances } = useBalanceContext();
-  const { availableBlockchains } = useSessionContext();
+  const { isInitialized: isSessionInitialized, isLoggedIn, availableBlockchains } = useSessionContext();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasSession, setHasSession] = useState(false);
@@ -140,8 +156,12 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const query = new URLSearchParams(search);
 
   useEffect(() => {
-    init();
-  }, []);
+    if (isSessionInitialized && !isLoggedIn) storeQueryParams.remove();
+  }, [isSessionInitialized, isLoggedIn]);
+
+  useEffect(() => {
+    isSessionInitialized && init();
+  }, [isSessionInitialized]);
 
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
@@ -156,10 +176,26 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     setParams((p) => ({ ...p, ...params }));
   }
 
-  async function init() {
-    const params = extractUrlParams(props.params);
+  function paramsIsNotEmpty(paramSet: AppParams): boolean {
+    return Object.values(paramSet).some((value) => value !== undefined);
+  }
 
-    setParams(params);
+  function loadQueryParams(): AppParams {
+    let queryParams = extractUrlParams(props.params);
+
+    const storedParams = storeQueryParams.get();
+    if ((paramsIsNotEmpty(queryParams) && !storedParams?.session) || queryParams.session) {
+      storeQueryParams.set(queryParams);
+    } else {
+      queryParams = storedParams ?? {};
+    }
+
+    setParams(queryParams);
+    return queryParams;
+  }
+
+  async function init() {
+    const params = loadQueryParams();
 
     if (params.redirectUri) {
       setRedirectUri(params.redirectUri);
