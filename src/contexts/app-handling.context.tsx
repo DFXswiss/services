@@ -125,7 +125,7 @@ export function useAppHandlingContext(): AppHandlingContextInterface {
 }
 
 export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.Element {
-  const { redirectUri: storeRedirectUri } = useStore();
+  const { redirectUri: storeRedirectUri, queryParams: storeQueryParams } = useStore();
   const { isUsedByIframe, sendMessage } = useIframe();
   const { readBalances } = useBalanceContext();
   const { isInitialized: isSessionInitialized, isLoggedIn, availableBlockchains } = useSessionContext();
@@ -156,18 +156,33 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     setParams((p) => ({ ...p, ...params }));
   }
 
-  async function init(loggedIn: boolean) {
-    // 1. not logged in -> delete parameters from local storage
-    // 2. parse query params and remove from URL
-    // 3. store params to storage (incl. session if available) if
-    //    - no params in storage or
-    //    - no session in storage or
-    //    - session in query
-    // 4. otherwise load params from storage
+  // 1. not logged in -> delete parameters from local storage
+  // 2. parse query params and remove from URL
+  // 3. store params to storage (incl. session if available) if
+  //    - no params in storage or
+  //    - no session in storage or
+  //    - session in query
+  // 4. otherwise load params from storage
+  function loadQueryParams(loggedIn: boolean): AppParams {
+    let params = extractUrlParams(props.params);
 
-    const params = extractUrlParams(props.params);
+    if (!loggedIn) {
+      storeQueryParams.remove();
+    } else {
+      const storedParams = storeQueryParams.get();
+      if (!storedParams || !storedParams.session || params.session) {
+        storeQueryParams.set(params);
+      } else {
+        params = storedParams;
+      }
+    }
 
     setParams(params);
+    return params;
+  }
+
+  async function init(loggedIn: boolean) {
+    const params = loadQueryParams(loggedIn);
 
     if (params.redirectUri) {
       setRedirectUri(params.redirectUri);
