@@ -156,7 +156,10 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const query = new URLSearchParams(search);
 
   useEffect(() => {
-    if (isSessionInitialized && !isLoggedIn) storeQueryParams.remove();
+    if (isSessionInitialized && !isLoggedIn) {
+      storeQueryParams.remove();
+      setParams({});
+    }
   }, [isSessionInitialized, isLoggedIn]);
 
   useEffect(() => {
