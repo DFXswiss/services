@@ -128,7 +128,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const { redirectUri: storeRedirectUri } = useStore();
   const { isUsedByIframe, sendMessage } = useIframe();
   const { readBalances } = useBalanceContext();
-  const { availableBlockchains } = useSessionContext();
+  const { isInitialized: isSessionInitialized, isLoggedIn, availableBlockchains } = useSessionContext();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasSession, setHasSession] = useState(false);
@@ -140,8 +140,8 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const query = new URLSearchParams(search);
 
   useEffect(() => {
-    init();
-  }, []);
+    isSessionInitialized && init(isLoggedIn);
+  }, [isSessionInitialized, isLoggedIn]);
 
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
@@ -156,7 +156,15 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     setParams((p) => ({ ...p, ...params }));
   }
 
-  async function init() {
+  async function init(loggedIn: boolean) {
+    // 1. not logged in -> delete parameters from local storage
+    // 2. parse query params and remove from URL
+    // 3. store params to storage (incl. session if available) if
+    //    - no params in storage or
+    //    - no session in storage or
+    //    - session in query
+    // 4. otherwise load params from storage
+
     const params = extractUrlParams(props.params);
 
     setParams(params);
