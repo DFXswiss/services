@@ -10,18 +10,34 @@ import { useBalanceContext } from './balance.context';
 // --- INTERFACES --- //
 // CAUTION: params need to be added to index-widget.tsx
 const urlParamsToRemove = [
+  'headless',
+  'borderless',
+  'hide-target-selection',
+  'flags',
   'lang',
   'address',
   'signature',
   'mail',
   'wallet',
+  'wallets',
   'refcode',
   'special-code',
   'session',
   'redirect',
   'type',
   'redirect-uri',
+  'mode',
+  'blockchain',
+  'blockchains',
   'balances',
+  'amount-in',
+  'amount-out',
+  'assets',
+  'asset-in',
+  'asset-out',
+  'payment-method',
+  'bank-account',
+  'external-transaction-id',
 ];
 
 export interface AppParams {
@@ -140,8 +156,12 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const query = new URLSearchParams(search);
 
   useEffect(() => {
-    isSessionInitialized && init(isLoggedIn);
+    if (isSessionInitialized && !isLoggedIn) storeQueryParams.remove();
   }, [isSessionInitialized, isLoggedIn]);
+
+  useEffect(() => {
+    isSessionInitialized && init();
+  }, [isSessionInitialized]);
 
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
@@ -156,33 +176,26 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     setParams((p) => ({ ...p, ...params }));
   }
 
-  // 1. not logged in -> delete parameters from local storage
-  // 2. parse query params and remove from URL
-  // 3. store params to storage (incl. session if available) if
-  //    - no params in storage or
-  //    - no session in storage or
-  //    - session in query
-  // 4. otherwise load params from storage
-  function loadQueryParams(loggedIn: boolean): AppParams {
-    let params = extractUrlParams(props.params);
-
-    if (!loggedIn) {
-      storeQueryParams.remove();
-    } else {
-      const storedParams = storeQueryParams.get();
-      if (!storedParams || !storedParams.session || params.session) {
-        storeQueryParams.set(params);
-      } else {
-        params = storedParams;
-      }
-    }
-
-    setParams(params);
-    return params;
+  function paramsIsNotEmpty(paramSet: AppParams): boolean {
+    return Object.values(paramSet).some((value) => value !== undefined);
   }
 
-  async function init(loggedIn: boolean) {
-    const params = loadQueryParams(loggedIn);
+  function loadQueryParams(): AppParams {
+    let queryParams = extractUrlParams(props.params);
+
+    const storedParams = storeQueryParams.get();
+    if ((paramsIsNotEmpty(queryParams) && !storedParams?.session) || queryParams.session) {
+      storeQueryParams.set(queryParams);
+    } else {
+      queryParams = storedParams ?? {};
+    }
+
+    setParams(queryParams);
+    return queryParams;
+  }
+
+  async function init() {
+    const params = loadQueryParams();
 
     if (params.redirectUri) {
       setRedirectUri(params.redirectUri);
