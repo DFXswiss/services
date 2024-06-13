@@ -234,7 +234,11 @@
     "Address": "Adresse",
 
     "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Sobald die Überweisung auf unserem Bankkonto eingegangen ist, werden wir das Asset in Deine Wallet übertragen.",
-    "Waiting for the payment confirmation ... this may take a moment.": "Warten auf die Zahlungsbestätigung ... das kann einen Moment dauern."
+    "Waiting for the payment confirmation ... this may take a moment.": "Warten auf die Zahlungsbestätigung ... das kann einen Moment dauern.",
+
+    "PDF Invoice": "PDF-Rechnung",
+    "Loading": "Laden",
+    "Requires KYC completion.": "Erfordert KYC-Abschluss."
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Bankverbindungen",
