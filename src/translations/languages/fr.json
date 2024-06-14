@@ -237,8 +237,7 @@
     "Waiting for the payment confirmation ... this may take a moment.": "En attente de la confirmation du paiement ... cela peut prendre un moment.",
 
     "PDF Invoice": "Facture PDF",
-    "QR-bill": "QR-facture",
-    "Requires KYC completion.": "Nécessite la complétion du KYC."
+    "QR-bill": "QR-facture"
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Coordonnées bancaires",
