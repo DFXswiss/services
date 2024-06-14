@@ -1,9 +1,11 @@
-import { useApi, useUserContext } from '@dfx.swiss/react';
+import { useBuy, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, SpinnerVariant, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { RiExternalLinkFill } from 'react-icons/ri';
 import QRCode from 'react-qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useNavigation } from 'src/hooks/navigation.hook';
+import { openPdfFromResponse } from 'src/util/utils';
 
 interface GiroCodeProps {
   value: string;
@@ -18,26 +20,21 @@ function stringIsSVG(value: string): boolean {
 }
 
 export function GiroCode({ value, txId }: GiroCodeProps): JSX.Element {
-  const { call } = useApi();
+  const { invoiceFor } = useBuy();
   const { user } = useUserContext();
+  const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
-  const [showRequiredKyc, setShowRequiredKyc] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleOnClick = async (): Promise<void> => {
     if (!user?.kyc.dataComplete) {
-      console.log('Requires KYC');
-      setShowRequiredKyc(true);
+      navigate('/profile', { setRedirect: true });
       return;
     }
     try {
       setIsLoading(true);
-      const response = await call<any>({ url: `buy/paymentInfos/${txId}/invoice`, method: 'PUT' }); // TODO: Add function to packages buy.hook.ts
-      const pdfDataUri = `data:application/pdf;base64,${response.invoidePdf}`;
-      const blob = await fetch(pdfDataUri).then((res) => res.blob());
-      const url = URL.createObjectURL(blob);
-      const pdfWindow = window.open(url, '_blank');
-      if (pdfWindow) pdfWindow.focus();
+      const response = await invoiceFor(txId!);
+      openPdfFromResponse(response.invoicePdf);
       setIsLoading(false);
     } catch (err) {
       console.error(`Error displaying PDF: ${err}`);
@@ -52,8 +49,7 @@ export function GiroCode({ value, txId }: GiroCodeProps): JSX.Element {
         <button
           type="button"
           onClick={handleOnClick}
-          disabled={showRequiredKyc}
-          className="flex flex-row rounded-md px-2.5 py-1.5 items-center gap-1 text-dfxBlue-800 font-semibold text-sm cursor-pointer bg-dfxGray-400 hover:bg-dfxGray-500 disabled:bg-dfxGray-400 disabled:cursor-default disabled:text-dfxGray-600 disabled:hover:bg-dfxGray-400"
+          className="flex flex-row rounded-md px-2.5 py-1.5 items-center gap-1 text-dfxBlue-800 font-semibold text-sm cursor-pointer bg-dfxGray-400 hover:bg-dfxGray-500"
         >
           {isLoading ? (
             <div className="flex flex-row gap-2">
@@ -67,9 +63,6 @@ export function GiroCode({ value, txId }: GiroCodeProps): JSX.Element {
             </>
           )}
         </button>
-      )}
-      {showRequiredKyc && (
-        <p className="text-dfxRed-150 text-sm">{translate('screens/buy', 'Requires KYC completion.')}</p>
       )}
     </div>
   ) : (

@@ -1,3 +1,4 @@
+import { Buy } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -15,7 +16,7 @@ import { useClipboard } from '../../hooks/clipboard.hook';
 import { GiroCode } from './giro-code';
 
 interface PaymentInformationContentProps {
-  info: any; // Buy, TODO: extend Buy with id field
+  info: Buy;
 }
 
 export function PaymentInformationContent({ info }: PaymentInformationContentProps): JSX.Element {
