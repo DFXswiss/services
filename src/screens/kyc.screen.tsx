@@ -272,9 +272,10 @@ export function KycScreen(): JSX.Element {
       ) : showLinkHint ? (
         <StyledVerticalStack gap={6} full>
           <p className="text-dfxGray-700">
+            {translate('screens/kyc', 'It looks like you already have an account with DFX.')}{' '}
             {translate(
               'screens/kyc',
-              'It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to confirm your mail address.',
+              'We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.',
             )}
           </p>
           <StyledButton

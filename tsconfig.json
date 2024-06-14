@@ -17,7 +17,8 @@
     "isolatedModules": true,
     "noEmit": false,
     "jsx": "react-jsx",
-    "typeRoots": ["typings"]
+    "typeRoots": ["typings"],
+    "baseUrl": ".",
   },
   "include": ["src", "typings"],
   "exclude": ["**/*.stories.tsx"]

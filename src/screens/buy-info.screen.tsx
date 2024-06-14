@@ -36,7 +36,7 @@ import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
-import { GiroCode } from '../components/payment/giro-code';
+import { PaymentQrCode } from '../components/payment/payment-qr-code';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -235,7 +235,7 @@ export function BuyInfoScreen(): JSX.Element {
               </StyledDataTableRow>
             </StyledDataTable>
 
-            {paymentInfo.paymentRequest && <GiroCode value={paymentInfo.paymentRequest} />}
+            {paymentInfo.paymentRequest && <PaymentQrCode value={paymentInfo.paymentRequest} txId={paymentInfo.id} />}
 
             <div className="pt-4 leading-none">
               <StyledLink
