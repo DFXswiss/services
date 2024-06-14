@@ -237,7 +237,7 @@
     "Waiting for the payment confirmation ... this may take a moment.": "En attente de la confirmation du paiement ... cela peut prendre un moment.",
 
     "PDF Invoice": "Facture PDF",
-    "Loading": "Chargement",
+    "QR-bill": "QR-facture",
     "Requires KYC completion.": "Nécessite la complétion du KYC."
   },
   "screens/bank-accounts": {
