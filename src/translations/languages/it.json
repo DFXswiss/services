@@ -235,7 +235,10 @@
     "Address": "Indirizzo",
 
     "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Non appena il bonifico arriverà sul nostro conto bancario, trasferiremo il vostro bene nel vostro portafoglio.",
-    "Waiting for the payment confirmation ... this may take a moment.": "In attesa della conferma del pagamento ... potrebbe volerci un attimo."
+    "Waiting for the payment confirmation ... this may take a moment.": "In attesa della conferma del pagamento ... potrebbe volerci un attimo.",
+
+    "PDF Invoice": "Fattura PDF",
+    "QR-bill": "QR-fattura"
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "Conti bancari DFX",

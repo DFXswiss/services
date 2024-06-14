@@ -235,7 +235,10 @@
     "Address": "Adresse",
 
     "As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.": "Dès que le virement arrive sur notre compte bancaire, nous transférons votre avoir sur votre porte-monnaie.",
-    "Waiting for the payment confirmation ... this may take a moment.": "En attente de la confirmation du paiement ... cela peut prendre un moment."
+    "Waiting for the payment confirmation ... this may take a moment.": "En attente de la confirmation du paiement ... cela peut prendre un moment.",
+
+    "PDF Invoice": "Facture PDF",
+    "QR-bill": "QR-facture"
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Coordonnées bancaires",

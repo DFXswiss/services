@@ -13,7 +13,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
-import { GiroCode } from './giro-code';
+import { PaymentQrCode } from './payment-qr-code';
 
 interface PaymentInformationContentProps {
   info: Buy;
@@ -38,7 +38,10 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
           <StyledTabContainer
             tabs={[
               { title: translate('screens/payment', 'Text'), content: <PaymentInformationText info={info} /> },
-              { title: translate('screens/payment', 'QR Code'), content: <GiroCode value={info.paymentRequest} /> },
+              {
+                title: translate('screens/payment', 'QR Code'),
+                content: <PaymentQrCode value={info.paymentRequest} txId={info.id} />,
+              },
             ]}
             darkTheme
             spread
