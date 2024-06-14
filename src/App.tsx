@@ -123,6 +123,10 @@ export const Routes = [
     element: <SupportIssueScreen />,
   },
   {
+    path: 'support',
+    element: <SupportIssueScreen />,
+  },
+  {
     path: 'support/issue',
     element: <SupportIssueScreen />,
   },
