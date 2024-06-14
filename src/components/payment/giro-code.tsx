@@ -49,19 +49,13 @@ export function GiroCode({ value, txId }: GiroCodeProps): JSX.Element {
         <button
           type="button"
           onClick={handleOnClick}
-          className="flex flex-row rounded-md px-2.5 py-1.5 items-center gap-1 text-dfxBlue-800 font-semibold text-sm cursor-pointer bg-dfxGray-400 hover:bg-dfxGray-500"
+          className="flex flex-row rounded-md px-2.5 py-1.5 items-center gap-2 text-dfxBlue-800 font-semibold text-sm cursor-pointer bg-dfxGray-400 hover:bg-dfxGray-500"
         >
-          {isLoading ? (
-            <div className="flex flex-row gap-2">
-              <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
-              {translate('screens/buy', 'Loading')}...
-            </div>
-          ) : (
-            <>
-              {translate('screens/buy', 'PDF Invoice')}
-              <RiExternalLinkFill className="text-base" />
-            </>
-          )}
+          <>
+            {isLoading && <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />}
+            {translate('screens/buy', 'PDF Invoice')}
+            <RiExternalLinkFill className="-ml-1 text-base" />
+          </>
         </button>
       )}
     </div>
