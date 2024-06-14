@@ -85,7 +85,8 @@
     "Please fill in personal information to continue": "Compilare i dati personali per continuare",
     "Please enter your contact information so that we can find your account": "Inserite le vostre informazioni di contatto per consentirci di trovare il vostro account",
 
-    "It looks like you already have an account with DFX. We have just sent you an E-Mail. Click on the sent link to confirm your mail address.": "Sembra che tu abbia già un account con DFX. Le abbiamo appena inviato un'e-mail. Fare clic sul link inviato per confermare il tuo indirizzo e-mail.",
+    "It looks like you already have an account with DFX.": "Sembra che tu abbia già un account con DFX.",
+    "We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.": "Le abbiamo appena inviato un'e-mail. Per continuare con l'account esistente, confermare l'indirizzo e-mail facendo clic sul link inviato.",
     "No matching account was found.": "Non è stato trovato alcun account corrispondente.",
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Il conto deve essere verificato quando il volume delle transazioni giornaliere supera il {{limit}}. Se volete aumentare il vostro limite delle transazioni giornaliero, completate il nostro processo KYC (Know-Your-Customer).",
     "This transaction exceeds your trading limit of {{limit}}. If you would like to increase your limit, please submit a request using the button below.": "Questa transazione supera il limite delle transazioni di {{limit}}. Se desiderate aumentare il vostro limite, inviate una richiesta utilizzando il pulsante sottostante.",
@@ -345,7 +346,7 @@
     "Entered amount is above maximum deposit of {{amount}} {{currency}}": "L'importo inserito è superiore al deposito massimo di {{amount}} {{currency}}",
     "Entered amount is higher than available balance of {{amount}} {{asset}}": "L'importo inserito è superiore al saldo disponibile di {{amount}} {{asset}}",
     "Nice! You are all set! Give us a minute to handle your transaction.": "Bello! Siete pronti! Dateci un minuto per gestire la vostra transazione.",
-    "We will inform you by e-mail about the progress of your transactions.": "Vi informeremo via e-mail sull'andamento delle vostre transazioni.",
+    "We will inform you by email about the progress of your transactions.": "Vi informeremo via e-mail sull'andamento delle vostre transazioni.",
     "Enter your email address if you want to be informed about the progress of any purchase or sale": "Inserite il vostro indirizzo e-mail se volete essere informati sull'andamento delle vostre transazioni"
   },
   "screens/iban": {
@@ -353,7 +354,7 @@
     "Accounts already used with DFX": "Conti già utilizzati con DFX",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Per trovare la transazione mancante, aggiungete il conto bancario da cui avete inviato il denaro.",
     "Add account": "Aggiungi conto",
-    "IBAN already exists in another DFX customer account": "L'IBAN esiste già in un altro conto cliente DFX",
+    "This IBAN already exists in another DFX customer account.": "Questo IBAN esiste già in un altro conto cliente DFX.",
     "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Questo è un IBAN multi-account e non può essere aggiunto come conto personale. Si prega di inviare la conferma della transazione bancaria in formato PDF a support@dfx.swiss."
   },
   "screens/support": {

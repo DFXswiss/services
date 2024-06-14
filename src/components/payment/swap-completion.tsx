@@ -61,7 +61,7 @@ export function SwapCompletion({ paymentInfo, navigateOnClose, txId }: SwapCompl
             'screens/swap',
             'As soon as the transaction arrives in our wallet, we will transfer your asset to your wallet.',
           )}{' '}
-        {translate('screens/payment', 'We will inform you by e-mail about the progress of your transactions.')}
+        {translate('screens/payment', 'We will inform you by email about the progress of your transactions.')}
       </p>
 
       <StyledButton
