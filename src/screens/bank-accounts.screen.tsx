@@ -74,7 +74,7 @@ export function BankAccountsScreen(): JSX.Element {
               ' ' +
               translate(
                 'screens/kyc',
-                'We have just sent you an email. To continue with your existing account, please confirm your e-mail address by clicking on the link sent.',
+                'We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.',
               ),
           );
         } else if (e.statusCode === 400 && e.message?.includes('Multi-account IBAN')) {

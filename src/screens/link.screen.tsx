@@ -134,7 +134,7 @@ export function LinkScreen(): JSX.Element {
             {translate('screens/kyc', 'It looks like you already have an account with DFX.')}{' '}
             {translate(
               'screens/kyc',
-              'We have just sent you an email. To continue with your existing account, please confirm your e-mail address by clicking on the link sent.',
+              'We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.',
             )}
           </p>
           <StyledButton width={StyledButtonWidth.MIN} label={translate('general/actions', 'OK')} onClick={goBack} />

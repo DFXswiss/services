@@ -61,7 +61,7 @@ export function SellCompletion({ paymentInfo, navigateOnClose, txId }: SellCompl
             'screens/sell',
             'As soon as the transaction arrives in our wallet, we will transfer your money to your bank account.',
           )}{' '}
-        {translate('screens/payment', 'We will inform you by e-mail about the progress of your transactions.')}
+        {translate('screens/payment', 'We will inform you by email about the progress of your transactions.')}
       </p>
 
       <StyledButton
