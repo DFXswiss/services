@@ -66,8 +66,17 @@ export function BankAccountsScreen(): JSX.Element {
     addIban(iban)
       .then(() => navigate('/tx'))
       .catch((e: ApiError) => {
-        if (e.statusCode === 409) {
-          setCustomError(translate('screens/iban', 'IBAN already exists in another DFX customer account'));
+        if (e.statusCode === 403) {
+          setCustomError(translate('screens/iban', 'This IBAN already exists in another DFX customer account.'));
+        } else if (e.statusCode === 409) {
+          setCustomError(
+            translate('screens/iban', 'This IBAN already exists in another DFX customer account.') +
+              ' ' +
+              translate(
+                'screens/kyc',
+                'We have just sent you an email. To continue with your existing account, please confirm your e-mail address by clicking on the link sent.',
+              ),
+          );
         } else if (e.statusCode === 400 && e.message?.includes('Multi-account IBAN')) {
           setCustomError(
             translate(
