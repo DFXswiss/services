@@ -52,26 +52,6 @@ export interface DeepWallet {
   imageUrl: string;
 }
 
-const erc20ABI = [
-  {
-    type: 'function',
-    name: 'decimals',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ type: 'uint8' }],
-  },
-  {
-    type: 'function',
-    name: 'transfer',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'recipient', type: 'address' },
-      { name: 'amount', type: 'uint256' },
-    ],
-    outputs: [{ type: 'bool' }],
-  },
-] as const;
-
 export function useWalletConnect(): WalletConnectInterface {
   const { toChainId } = useWeb3();
   const [wallets, setWallets] = useState<DeepWallet[]>([]);
@@ -223,18 +203,8 @@ export function useWalletConnect(): WalletConnectInterface {
     }
   }
 
-  function handleError(error: any): never {
-    const baseError = error as BaseError;
-    let finalError: unknown = baseError;
-
-    baseError.walk((e) => e instanceof Error);
-    finalError = baseError;
-
-    if (finalError instanceof BaseError || finalError instanceof Error) {
-      throw new Error((finalError as BaseError).shortMessage);
-    } else {
-      throw new Error('An unexpected error occurred.');
-    }
+  function handleError(error: unknown): never {
+    throw new Error((error as BaseError).shortMessage || (error as Error).message || 'An unexpected error occurred.');
   }
 
   return useMemo(
