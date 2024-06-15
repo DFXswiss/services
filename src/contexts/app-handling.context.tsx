@@ -222,7 +222,12 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           session: getParameter(query, 'session'),
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),
-          ...params,
+          ...Object.keys(params)
+            .filter(([key, _]) => urlParamsToRemove.includes(key))
+            .reduce((prev, [key, val]) => {
+              prev[key] = val;
+              return prev;
+            }, {} as { [key: string]: string }),
         }
       : {
           headless: getParameter(query, 'headless'),
