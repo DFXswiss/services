@@ -521,6 +521,10 @@ export function BuyScreen(): JSX.Element {
                             feeCurrency={paymentInfo.currency}
                             from={paymentInfo.currency}
                             to={paymentInfo.asset}
+                            steps={(paymentInfo as any).priceSteps}
+                            amountIn={paymentInfo.amount}
+                            amountOut={paymentInfo.estimatedAmount}
+                            type="buy"
                           />
 
                           {selectedPaymentMethod !== FiatPaymentMethod.CARD ? (

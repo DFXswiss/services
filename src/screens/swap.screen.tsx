@@ -532,8 +532,12 @@ export default function SwapScreen(): JSX.Element {
                         rate={1 / paymentInfo.rate}
                         fees={paymentInfo.fees}
                         feeCurrency={paymentInfo.sourceAsset}
-                        from={paymentInfo.sourceAsset}
-                        to={paymentInfo.targetAsset}
+                        from={paymentInfo.targetAsset}
+                        to={paymentInfo.sourceAsset}
+                        steps={(paymentInfo as any).priceSteps}
+                        amountIn={paymentInfo.amount}
+                        amountOut={paymentInfo.estimatedAmount}
+                        type="swap"
                       />
 
                       <StyledVerticalStack gap={3} full>

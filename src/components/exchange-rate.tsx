@@ -2,6 +2,7 @@ import { Asset, Blockchain, Fiat, Utils, useFiat } from '@dfx.swiss/react';
 import { IconColor, StyledCollapsible, StyledInfoText, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { Fees } from '@dfx.swiss/react/dist/definitions/fees';
 import { useSettingsContext } from '../contexts/settings.context';
+import { ReactComponent as PathArrow } from '../static/assets/path-arrow.svg';
 
 interface ExchangeRateProps {
   exchangeRate: number;
@@ -10,9 +11,24 @@ interface ExchangeRateProps {
   feeCurrency: Fiat | Asset;
   from: Fiat | Asset;
   to: Fiat | Asset;
+  steps: any;
+  amountIn: number;
+  amountOut: number;
+  type: string;
 }
 
-export function ExchangeRate({ exchangeRate, rate, fees, feeCurrency, from, to }: ExchangeRateProps): JSX.Element {
+export function ExchangeRate({
+  exchangeRate,
+  rate,
+  fees,
+  feeCurrency,
+  from,
+  to,
+  steps,
+  amountIn,
+  amountOut,
+  type,
+}: ExchangeRateProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { toSymbol } = useFiat();
 
@@ -31,6 +47,13 @@ export function ExchangeRate({ exchangeRate, rate, fees, feeCurrency, from, to }
       ? 'Arbitrum / Optimism'
       : undefined);
 
+  const outputInfo =
+    type === 'buy'
+      ? 'The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.'
+      : type === 'sell'
+      ? 'The output amount is computed as the input amount times the base rate minus the DFX fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.'
+      : 'The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{inputSymbol}} = ({{input}} {{outputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) × {{baseRate}}.';
+
   return (
     <StyledCollapsible
       full
@@ -40,7 +63,22 @@ export function ExchangeRate({ exchangeRate, rate, fees, feeCurrency, from, to }
       <StyledVerticalStack gap={2}>
         <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">
           <div className="text-dfxGray-800">{translate('screens/payment', 'Base rate')}</div>
-          <div>{baseRate}</div>
+          <StyledVerticalStack gap={1}>
+            <div>{baseRate}</div>
+            {steps.map((step: any, index: any) => (
+              <div key={index} className="flex flex-row gap-1 text-xs text-dfxGray-700 leading-tight">
+                <PathArrow className="w-2.5 h-2.5" />
+                {translate('screens/payment', '{{from}} to {{to}} at {{price}} {{from}}/{{to}} on {{source}}', {
+                  index: index + 1,
+                  source: step.source,
+                  from: step.from,
+                  to: step.to,
+                  price: step.price,
+                  timestamp: new Date(step.timestamp).toLocaleString(),
+                })}
+              </div>
+            ))}
+          </StyledVerticalStack>
           <div className="text-dfxGray-800">{translate('screens/payment', 'DFX fee')}</div>
           <div>{dfxFee}</div>
           <div className="text-dfxGray-800">{translate('screens/payment', 'Network fee')}</div>
@@ -57,6 +95,18 @@ export function ExchangeRate({ exchangeRate, rate, fees, feeCurrency, from, to }
             )}
           </StyledVerticalStack>
         </div>
+        <StyledInfoText iconColor={IconColor.GRAY} discreet>
+          {translate(`screens/${type}`, outputInfo, {
+            input: amountIn,
+            inputSymbol: from.name,
+            output: amountOut,
+            outputSymbol: to.name,
+            dfxFee: fees.dfx,
+            networkFee: fees.network,
+            feeSymbol,
+            baseRate,
+          })}
+        </StyledInfoText>
         <StyledInfoText iconColor={IconColor.GRAY} discreet>
           {translate(
             'screens/payment',
