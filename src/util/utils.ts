@@ -39,3 +39,10 @@ export function toBase64(file: File): Promise<string | undefined> {
     reader.onerror = (e) => reject(e);
   });
 }
+
+export function openPdfFromString(pdf: string) {
+  const byteArray = Uint8Array.from(atob(pdf), (c) => c.charCodeAt(0));
+  const file = new Blob([byteArray], { type: 'application/pdf;base64' });
+  const fileURL = URL.createObjectURL(file);
+  window.open(fileURL);
+}

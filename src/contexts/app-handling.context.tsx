@@ -10,23 +10,40 @@ import { useBalanceContext } from './balance.context';
 // --- INTERFACES --- //
 // CAUTION: params need to be added to index-widget.tsx
 const urlParamsToRemove = [
+  'headless',
+  'borderless',
+  'hide-target-selection',
+  'flags',
   'lang',
   'address',
   'signature',
   'mail',
   'wallet',
+  'wallets',
   'refcode',
   'special-code',
   'session',
   'redirect',
   'type',
   'redirect-uri',
+  'mode',
+  'blockchain',
+  'blockchains',
   'balances',
+  'amount-in',
+  'amount-out',
+  'assets',
+  'asset-in',
+  'asset-out',
+  'payment-method',
+  'bank-account',
+  'external-transaction-id',
 ];
 
 export interface AppParams {
   headless?: string;
   borderless?: string;
+  hideTargetSelection?: string;
   flags?: string;
   lang?: string;
   address?: string;
@@ -124,10 +141,10 @@ export function useAppHandlingContext(): AppHandlingContextInterface {
 }
 
 export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.Element {
-  const { redirectUri: storeRedirectUri } = useStore();
+  const { redirectUri: storeRedirectUri, queryParams: storeQueryParams } = useStore();
   const { isUsedByIframe, sendMessage } = useIframe();
   const { readBalances } = useBalanceContext();
-  const { availableBlockchains } = useSessionContext();
+  const { isInitialized: isSessionInitialized, isLoggedIn, availableBlockchains } = useSessionContext();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasSession, setHasSession] = useState(false);
@@ -139,8 +156,15 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const query = new URLSearchParams(search);
 
   useEffect(() => {
-    init();
-  }, []);
+    if (isSessionInitialized && !isLoggedIn) {
+      storeQueryParams.remove();
+      setParams({});
+    }
+  }, [isSessionInitialized, isLoggedIn]);
+
+  useEffect(() => {
+    isSessionInitialized && init();
+  }, [isSessionInitialized]);
 
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
@@ -155,10 +179,26 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     setParams((p) => ({ ...p, ...params }));
   }
 
-  async function init() {
-    const params = extractUrlParams(props.params);
+  function paramsIsNotEmpty(paramSet: AppParams): boolean {
+    return Object.values(paramSet).some((value) => value !== undefined);
+  }
 
-    setParams(params);
+  function loadQueryParams(): AppParams {
+    let queryParams = extractUrlParams(props.params);
+
+    const storedParams = storeQueryParams.get();
+    if ((paramsIsNotEmpty(queryParams) && !storedParams?.session) || queryParams.session) {
+      storeQueryParams.set(queryParams);
+    } else {
+      queryParams = storedParams ?? {};
+    }
+
+    setParams(queryParams);
+    return queryParams;
+  }
+
+  async function init() {
+    const params = loadQueryParams();
 
     if (params.redirectUri) {
       setRedirectUri(params.redirectUri);
@@ -182,11 +222,17 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           session: getParameter(query, 'session'),
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),
-          ...params,
+          ...Object.keys(params)
+            .filter(([key, _]) => urlParamsToRemove.includes(key))
+            .reduce((prev, [key, val]) => {
+              prev[key] = val;
+              return prev;
+            }, {} as { [key: string]: string }),
         }
       : {
           headless: getParameter(query, 'headless'),
           borderless: getParameter(query, 'borderless'),
+          hideTargetSelection: getParameter(query, 'hide-target-selection'),
           flags: getParameter(query, 'flags'),
           lang: getParameter(query, 'lang'),
           address: getParameter(query, 'address'),

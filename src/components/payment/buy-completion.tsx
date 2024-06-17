@@ -65,7 +65,7 @@ export function BuyCompletion({ user, paymentInfo, navigateOnClose }: BuyComplet
               'screens/buy',
               'As soon as the transfer arrives in our bank account, we will transfer your asset to your wallet.',
             )}{' '}
-            {translate('screens/payment', 'We will inform you by e-mail about the progress of your transactions.')}
+            {translate('screens/payment', 'We will inform you by email about the progress of your transactions.')}
           </p>
           <StyledButton
             label={translate('general/actions', 'Close')}

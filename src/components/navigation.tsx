@@ -44,11 +44,16 @@ interface NavigationMenuContentProps {
 
 export const Navigation = forwardRef<HTMLDivElement, NavigationIframeProps>(
   ({ title, backButton = true, onBack, isOpen, setIsOpen }: NavigationIframeProps, ref): JSX.Element => {
-    const { isEmbedded } = useAppHandlingContext();
+    const { params, isEmbedded } = useAppHandlingContext();
 
     return title || !isEmbedded ? (
-      <div className={`relative flex items-center justify-between h-12 px-4 py-5 bg-dfxGray-300`} ref={ref}>
-        <BackButton title={title} backButton={backButton} onBack={onBack} />
+      <div
+        className={`flex w-full h-12 px-4 py-5 ${
+          params.headless !== 'true' ? 'relative items-center justify-between bg-dfxGray-300' : 'absolute justify-end'
+        }`}
+        ref={ref}
+      >
+        {params.headless !== 'true' && <BackButton title={title} backButton={backButton} onBack={onBack} />}
 
         <div className="absolute right-4">
           <MenuIcon icon={isOpen ? IconVariant.CLOSE : IconVariant.MENU} setIsNavigationOpen={setIsOpen} />

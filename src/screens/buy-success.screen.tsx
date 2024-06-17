@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
+import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -15,6 +16,7 @@ export function BuySuccessScreen(): JSX.Element {
   const { user } = useUserContext();
   const [params] = useSearchParams();
   const { getTransactionByCkoId } = useTransaction();
+  const { canClose, closeServices } = useAppHandlingContext();
 
   const [error, setError] = useState<string>();
 
@@ -25,6 +27,10 @@ export function BuySuccessScreen(): JSX.Element {
   useEffect(() => {
     if (ckoId) fetchCkoTx(ckoId);
   }, [ckoId]);
+
+  useEffect(() => {
+    if (ckoId && canClose) closeServices({ type: CloseType.BUY, isComplete: true }, false);
+  }, [ckoId, canClose]);
 
   function fetchCkoTx(id: string) {
     getTransactionByCkoId(id)
