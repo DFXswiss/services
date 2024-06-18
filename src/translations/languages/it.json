@@ -87,6 +87,7 @@
 
     "It looks like you already have an account with DFX.": "Sembra che tu abbia già un account con DFX.",
     "We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.": "Le abbiamo appena inviato un'e-mail. Per continuare con l'account esistente, confermare l'indirizzo e-mail facendo clic sul link inviato.",
+    "Start the KYC process with the same email to merge your accounts.": "Avviate il processo KYC con la stessa e-mail per unire i vostri conti.",
     "No matching account was found.": "Non è stato trovato alcun account corrispondente.",
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Il conto deve essere verificato quando il volume delle transazioni giornaliere supera il {{limit}}. Se volete aumentare il vostro limite delle transazioni giornaliero, completate il nostro processo KYC (Know-Your-Customer).",
     "This transaction exceeds your trading limit of {{limit}}. If you would like to increase your limit, please submit a request using the button below.": "Questa transazione supera il limite delle transazioni di {{limit}}. Se desiderate aumentare il vostro limite, inviate una richiesta utilizzando il pulsante sottostante.",
