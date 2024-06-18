@@ -534,7 +534,7 @@ export default function SwapScreen(): JSX.Element {
                         feeCurrency={paymentInfo.sourceAsset}
                         from={paymentInfo.targetAsset}
                         to={paymentInfo.sourceAsset}
-                        steps={(paymentInfo as any).priceSteps}
+                        steps={paymentInfo.priceSteps}
                         amountIn={paymentInfo.amount}
                         amountOut={paymentInfo.estimatedAmount}
                         type="swap"

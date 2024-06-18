@@ -1,6 +1,7 @@
 import { Asset, Blockchain, Fiat, Utils, useFiat } from '@dfx.swiss/react';
 import { IconColor, StyledCollapsible, StyledInfoText, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { Fees } from '@dfx.swiss/react/dist/definitions/fees';
+import { PriceStep } from '@dfx.swiss/react/dist/definitions/price-step';
 import { useSettingsContext } from '../contexts/settings.context';
 import { ReactComponent as PathArrow } from '../static/assets/path-arrow.svg';
 
@@ -11,7 +12,7 @@ interface ExchangeRateProps {
   feeCurrency: Fiat | Asset;
   from: Fiat | Asset;
   to: Fiat | Asset;
-  steps: any;
+  steps: PriceStep[];
   amountIn: number;
   amountOut: number;
   type: string;

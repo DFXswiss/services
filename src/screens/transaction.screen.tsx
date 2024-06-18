@@ -451,8 +451,8 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
       : 'Output amount = (Input amount - DFX fee - Network fee) × Base rate.',
   );
 
-  const baseRateInfo = (tx as any).priceSteps
-    .map((step: any) =>
+  const baseRateInfo = tx.priceSteps
+    ?.map((step) =>
       translate('screens/payment', '{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})', {
         source: step.source,
         from: step.from,
@@ -468,6 +468,7 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
     rateItems.push({
       label: translate('screens/payment', 'Base rate'),
       text: `${tx.exchangeRate} ${tx.inputAsset}/${tx.outputAsset}`,
+      infoText: baseRateInfo,
     });
   tx.fees?.dfx != null &&
     rateItems.push({
@@ -549,15 +550,17 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
         </StyledDataTableRow>
       )}
       {tx.rate != null && (
-        <StyledDataTableExpandableRow
-          label={translate('screens/payment', 'Exchange rate')}
-          expansionItems={rateItems}
-          infoText={exchangeRateInfo}
-        >
-          <p>
-            {tx.rate} {tx.inputAsset}/{tx.outputAsset}
-          </p>
-        </StyledDataTableExpandableRow>
+        <div className="text-left">
+          <StyledDataTableExpandableRow
+            label={translate('screens/payment', 'Exchange rate')}
+            expansionItems={rateItems}
+            infoText={exchangeRateInfo}
+          >
+            <p>
+              {tx.rate} {tx.inputAsset}/{tx.outputAsset}
+            </p>
+          </StyledDataTableExpandableRow>
+        </div>
       )}
     </StyledDataTable>
   );
