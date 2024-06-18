@@ -69,14 +69,15 @@ export function BankAccountsScreen(): JSX.Element {
         if (e.statusCode === 403) {
           setCustomError(translate('screens/iban', 'This IBAN already exists in another DFX customer account.'));
         } else if (e.statusCode === 409) {
-          setCustomError(
-            translate('screens/iban', 'This IBAN already exists in another DFX customer account.') +
-              ' ' +
-              translate(
+          let error = translate('screens/iban', 'This IBAN already exists in another DFX customer account.') + ' ';
+          error += e.message?.includes('account merge')
+            ? translate(
                 'screens/kyc',
                 'We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.',
-              ),
-          );
+              )
+            : translate('screens/kyc', 'Start the KYC process with the same email to merge your accounts.');
+
+          setCustomError(error);
         } else if (e.statusCode === 400 && e.message?.includes('Multi-account IBAN')) {
           setCustomError(
             translate(
