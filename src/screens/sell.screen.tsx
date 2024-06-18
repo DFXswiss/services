@@ -91,8 +91,20 @@ export default function SellScreen(): JSX.Element {
   const { getAssets } = useAssetContext();
   const { getAsset } = useAsset();
   const { navigate } = useNavigation();
-  const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain, externalTransactionId, availableBlockchains } =
-    useAppParams();
+  const {
+    assets,
+    titleIn,
+    titleOut,
+    titleIban,
+    hideExchangeRate,
+    assetIn,
+    assetOut,
+    amountIn,
+    bankAccount,
+    blockchain,
+    externalTransactionId,
+    availableBlockchains,
+  } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
@@ -367,7 +379,7 @@ export default function SellScreen(): JSX.Element {
           {availableAssets && currencies && bankAccounts && (
             <StyledVerticalStack gap={8} full center className="relative">
               <StyledVerticalStack gap={2} full>
-                <h2 className="text-dfxGray-700">{translate('screens/buy', 'You spend')}</h2>
+                <h2 className="text-dfxGray-700">{translate('screens/buy', titleIn ?? 'You spend')}</h2>
                 <StyledHorizontalStack gap={1}>
                   <div className="flex-[3_1_9rem]">
                     <StyledInput
@@ -414,7 +426,7 @@ export default function SellScreen(): JSX.Element {
               </StyledVerticalStack>
 
               <StyledVerticalStack gap={2} full>
-                <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
+                <h2 className="text-dfxGray-700">{translate('screens/buy', titleOut ?? 'You get about')}</h2>
                 <StyledHorizontalStack gap={1}>
                   <div className="flex-[3_1_9rem]">
                     <StyledTextBox
@@ -438,54 +450,57 @@ export default function SellScreen(): JSX.Element {
                   </div>
                 </StyledHorizontalStack>
 
-                <Controller
-                  name="bankAccount"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <>
-                      <StyledModalButton
-                        onClick={() => setBankAccountSelection(true)}
-                        onBlur={onBlur}
-                        placeholder={translate('screens/sell', 'Add or select your IBAN')}
-                        value={Utils.formatIban(value?.iban) ?? undefined}
-                        description={value?.label}
-                      />
+                <StyledVerticalStack gap={2} full>
+                  {titleIban && <h2 className="text-dfxGray-700 mt-1.5">{titleIban}</h2>}
+                  <Controller
+                    name="bankAccount"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <>
+                        <StyledModalButton
+                          onClick={() => setBankAccountSelection(true)}
+                          onBlur={onBlur}
+                          placeholder={translate('screens/sell', 'Add or select your IBAN')}
+                          value={Utils.formatIban(value?.iban) ?? undefined}
+                          description={value?.label}
+                        />
 
-                      {bankAccountSelection && (
-                        <>
-                          <div className="absolute h-full w-full z-1 top-0 bg-white">
-                            {bankAccounts.length && (
-                              <>
-                                <StyledVerticalStack gap={4}>
-                                  {bankAccounts.map((account, i) => (
-                                    <button
-                                      key={i}
-                                      className="text-start"
-                                      onClick={() => {
-                                        onChange(account);
-                                        setBankAccountSelection(false);
-                                      }}
-                                    >
-                                      <StyledBankAccountListItem bankAccount={account} />
-                                    </button>
-                                  ))}
-                                </StyledVerticalStack>
+                        {bankAccountSelection && (
+                          <>
+                            <div className="absolute h-full w-full z-1 top-0 bg-white">
+                              {bankAccounts.length && (
+                                <>
+                                  <StyledVerticalStack gap={4}>
+                                    {bankAccounts.map((account, i) => (
+                                      <button
+                                        key={i}
+                                        className="text-start"
+                                        onClick={() => {
+                                          onChange(account);
+                                          setBankAccountSelection(false);
+                                        }}
+                                      >
+                                        <StyledBankAccountListItem bankAccount={account} />
+                                      </button>
+                                    ))}
+                                  </StyledVerticalStack>
 
-                                <div className={`h-[1px] bg-dfxGray-400 w-full my-6`} />
-                              </>
-                            )}
+                                  <div className={`h-[1px] bg-dfxGray-400 w-full my-6`} />
+                                </>
+                              )}
 
-                            <AddBankAccount
-                              onSubmit={(account) => {
-                                onChange(account);
-                                setBankAccountSelection(false);
-                              }}
-                            />
-                          </div>
-                        </>
-                      )}
-                    </>
-                  )}
-                />
+                              <AddBankAccount
+                                onSubmit={(account) => {
+                                  onChange(account);
+                                  setBankAccountSelection(false);
+                                }}
+                              />
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                  />
+                </StyledVerticalStack>
               </StyledVerticalStack>
 
               {isLoading ? (
@@ -512,14 +527,16 @@ export default function SellScreen(): JSX.Element {
 
                   {paymentInfo && !kycError && !errorMessage && !customAmountError?.hideInfos && (
                     <>
-                      <ExchangeRate
-                        exchangeRate={1 / paymentInfo.exchangeRate}
-                        rate={1 / paymentInfo.rate}
-                        fees={paymentInfo.feesTarget}
-                        feeCurrency={paymentInfo.currency}
-                        from={paymentInfo.currency}
-                        to={paymentInfo.asset}
-                      />
+                      {hideExchangeRate !== 'true' && (
+                        <ExchangeRate
+                          exchangeRate={1 / paymentInfo.exchangeRate}
+                          rate={1 / paymentInfo.rate}
+                          fees={paymentInfo.feesTarget}
+                          feeCurrency={paymentInfo.currency}
+                          from={paymentInfo.currency}
+                          to={paymentInfo.asset}
+                        />
+                      )}
 
                       <StyledVerticalStack gap={3} full>
                         <h2 className="text-dfxBlue-800 text-center">
@@ -598,31 +615,37 @@ function PaymentInformationText({ paymentInfo, account }: { paymentInfo: Sell; a
   const { copy } = useClipboard();
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
+  const { depositAddressHint, hideDepositAddress } = useAppParams();
 
   return (
     <StyledVerticalStack gap={2} full>
-      <div className="text-left">
-        <StyledInfoText iconColor={IconColor.BLUE}>
-          {translate(
-            'screens/sell',
-            'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts from {{chain}} to your IBAN {{iban}} in {{currency}}.',
-            {
-              chain: toString(paymentInfo.asset.blockchain),
-              currency: paymentInfo.currency.name,
-              iban: Utils.formatIban(account.iban) ?? '',
-            },
-          )}
-        </StyledInfoText>
-      </div>
+      {depositAddressHint !== '' && (
+        <div className="text-left">
+          <StyledInfoText iconColor={IconColor.BLUE}>
+            {translate(
+              'screens/sell',
+              depositAddressHint ??
+                'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts from {{chain}} to your IBAN {{iban}} in {{currency}}.',
+              {
+                chain: toString(paymentInfo.asset.blockchain),
+                currency: paymentInfo.currency.name,
+                iban: Utils.formatIban(account.iban) ?? '',
+              },
+            )}
+          </StyledInfoText>
+        </div>
+      )}
 
-      <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-        <StyledDataTableRow label={translate('screens/sell', 'Address')}>
-          <div>
-            <p>{blankedAddress(paymentInfo.depositAddress)}</p>
-          </div>
-          <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
-        </StyledDataTableRow>
-      </StyledDataTable>
+      {hideDepositAddress !== 'true' && (
+        <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+          <StyledDataTableRow label={translate('screens/sell', 'Address')}>
+            <div>
+              <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+            </div>
+            <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
+          </StyledDataTableRow>
+        </StyledDataTable>
+      )}
     </StyledVerticalStack>
   );
 }

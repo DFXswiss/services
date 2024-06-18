@@ -11,8 +11,16 @@ import { useBalanceContext } from './balance.context';
 // CAUTION: params need to be added to index-widget.tsx
 const urlParamsToRemove = [
   'headless',
+  'headless-menu',
   'borderless',
   'hide-target-selection',
+  'title-in',
+  'title-out',
+  'title-iban',
+  'hide-exchange-rate',
+  'deposit-address-hint',
+  'hide-deposit-address',
+  'account-not-verified-hint',
   'flags',
   'lang',
   'address',
@@ -42,8 +50,16 @@ const urlParamsToRemove = [
 
 export interface AppParams {
   headless?: string;
+  headlessMenu?: string;
   borderless?: string;
   hideTargetSelection?: string;
+  titleIn?: string;
+  titleOut?: string;
+  titleIban?: string;
+  hideExchangeRate?: string;
+  depositAddressHint?: string;
+  hideDepositAddress?: string;
+  accountNotVerifiedHint?: string;
   flags?: string;
   lang?: string;
   address?: string;
@@ -213,7 +229,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
     setIsInitialized(true);
 
-    removeUrlParams(query);
+    // removeUrlParams(query);
   }
 
   function extractUrlParams(params?: AppParams): AppParams {
@@ -231,8 +247,16 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
         }
       : {
           headless: getParameter(query, 'headless'),
+          headlessMenu: getParameter(query, 'headless-menu'),
           borderless: getParameter(query, 'borderless'),
           hideTargetSelection: getParameter(query, 'hide-target-selection'),
+          titleIn: getParameter(query, 'title-in'),
+          titleOut: getParameter(query, 'title-out'),
+          titleIban: getParameter(query, 'title-iban'),
+          hideExchangeRate: getParameter(query, 'hide-exchange-rate'),
+          depositAddressHint: getParameter(query, 'deposit-address-hint'),
+          hideDepositAddress: getParameter(query, 'hide-deposit-address'),
+          accountNotVerifiedHint: getParameter(query, 'account-not-verified-hint'),
           flags: getParameter(query, 'flags'),
           lang: getParameter(query, 'lang'),
           address: getParameter(query, 'address'),

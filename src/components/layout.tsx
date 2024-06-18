@@ -33,7 +33,7 @@ export function Layout({
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const { pathname } = useLocation();
   const { clearParams } = useNavigation();
-  const { borderless } = useAppParams();
+  const { headless, headlessMenu, borderless } = useAppParams();
 
   useEffect(() => {
     const kycRoutes = Routes.filter((r) => r.isKycScreen);
@@ -48,14 +48,16 @@ export function Layout({
 
   return (
     <div id="app-root" className="h-full flex flex-col" ref={rootRef} onClick={onClick}>
-      <Navigation
-        ref={navRef}
-        title={title}
-        backButton={backButton}
-        onBack={onBack}
-        isOpen={isNavigationOpen}
-        setIsOpen={setIsNavigationOpen}
-      />
+      {(headless !== 'true' || headlessMenu === 'true') && (
+        <Navigation
+          ref={navRef}
+          title={title}
+          backButton={backButton}
+          onBack={onBack}
+          isOpen={isNavigationOpen}
+          setIsOpen={setIsNavigationOpen}
+        />
+      )}
 
       <div className="flex flex-col flex-grow overflow-auto" ref={scrollRef}>
         <div className="flex flex-grow justify-center">

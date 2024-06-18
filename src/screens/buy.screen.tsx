@@ -86,6 +86,9 @@ export function BuyScreen(): JSX.Element {
   const { getAsset, isSameAsset } = useAsset();
   const {
     assets: assetFilter,
+    titleIn,
+    titleOut,
+    hideExchangeRate,
     assetIn,
     assetOut,
     amountIn,
@@ -406,7 +409,7 @@ export function BuyScreen(): JSX.Element {
             {availableCurrencies && availableAssets && (
               <>
                 <StyledVerticalStack gap={2} full>
-                  <h2 className="text-dfxGray-700">{translate('screens/buy', 'You spend')}</h2>
+                  <h2 className="text-dfxGray-700">{translate('screens/buy', titleIn ?? 'You spend')}</h2>
                   <StyledHorizontalStack gap={1}>
                     <div className="flex-[3_1_9rem]">
                       <StyledInput
@@ -443,7 +446,7 @@ export function BuyScreen(): JSX.Element {
                 </StyledVerticalStack>
 
                 <StyledVerticalStack gap={2} full>
-                  <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
+                  <h2 className="text-dfxGray-700">{translate('screens/buy', titleOut ?? 'You get about')}</h2>
                   <StyledHorizontalStack gap={1}>
                     <div className="flex-[3_1_9rem]">
                       <StyledTextBox
@@ -514,14 +517,16 @@ export function BuyScreen(): JSX.Element {
                         <PrivateAssetHint asset={selectedAsset} />
                       ) : (
                         <>
-                          <ExchangeRate
-                            exchangeRate={paymentInfo.exchangeRate}
-                            rate={paymentInfo.rate}
-                            fees={paymentInfo.fees}
-                            feeCurrency={paymentInfo.currency}
-                            from={paymentInfo.currency}
-                            to={paymentInfo.asset}
-                          />
+                          {hideExchangeRate !== 'true' && (
+                            <ExchangeRate
+                              exchangeRate={paymentInfo.exchangeRate}
+                              rate={paymentInfo.rate}
+                              fees={paymentInfo.fees}
+                              feeCurrency={paymentInfo.currency}
+                              from={paymentInfo.currency}
+                              to={paymentInfo.asset}
+                            />
+                          )}
 
                           {selectedPaymentMethod !== FiatPaymentMethod.CARD ? (
                             <>

@@ -95,6 +95,9 @@ export default function SwapScreen(): JSX.Element {
     assets: assetFilter,
     assetIn,
     assetOut,
+    titleIn,
+    titleOut,
+    hideExchangeRate,
     amountIn,
     blockchain,
     hideTargetSelection,
@@ -410,7 +413,7 @@ export default function SwapScreen(): JSX.Element {
           {sourceAssets && targetAssets && (
             <StyledVerticalStack gap={8} full center className="relative">
               <StyledVerticalStack gap={2} full>
-                <h2 className="text-dfxGray-700">{translate('screens/buy', 'You spend')}</h2>
+                <h2 className="text-dfxGray-700">{translate('screens/buy', titleIn ?? 'You spend')}</h2>
                 <StyledHorizontalStack gap={1}>
                   <div className="flex-[3_1_9rem]">
                     <StyledInput
@@ -457,7 +460,7 @@ export default function SwapScreen(): JSX.Element {
               </StyledVerticalStack>
 
               <StyledVerticalStack gap={2} full>
-                <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
+                <h2 className="text-dfxGray-700">{translate('screens/buy', titleOut ?? 'You get about')}</h2>
 
                 <StyledHorizontalStack gap={1}>
                   <div className="flex-[3_1_9rem]">
@@ -527,14 +530,16 @@ export default function SwapScreen(): JSX.Element {
 
                   {paymentInfo && !kycError && !errorMessage && !customAmountError?.hideInfos && (
                     <>
-                      <ExchangeRate
-                        exchangeRate={1 / paymentInfo.exchangeRate}
-                        rate={1 / paymentInfo.rate}
-                        fees={paymentInfo.fees}
-                        feeCurrency={paymentInfo.sourceAsset}
-                        from={paymentInfo.sourceAsset}
-                        to={paymentInfo.targetAsset}
-                      />
+                      {hideExchangeRate !== 'true' && (
+                        <ExchangeRate
+                          exchangeRate={1 / paymentInfo.exchangeRate}
+                          rate={1 / paymentInfo.rate}
+                          fees={paymentInfo.fees}
+                          feeCurrency={paymentInfo.sourceAsset}
+                          from={paymentInfo.sourceAsset}
+                          to={paymentInfo.targetAsset}
+                        />
+                      )}
 
                       <StyledVerticalStack gap={3} full>
                         <h2 className="text-dfxBlue-800 text-center">
@@ -611,31 +616,37 @@ function PaymentInformationText({ paymentInfo }: { paymentInfo: Swap }): JSX.Ele
   const { copy } = useClipboard();
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
+  const { depositAddressHint, hideDepositAddress } = useAppParams();
 
   return (
     <StyledVerticalStack gap={2} full>
-      <div className="text-left">
-        <StyledInfoText iconColor={IconColor.BLUE}>
-          {translate(
-            'screens/swap',
-            'Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.',
-            {
-              sourceChain: toString(paymentInfo.sourceAsset.blockchain),
-              targetChain: toString(paymentInfo.targetAsset.blockchain),
-              asset: paymentInfo.targetAsset.name,
-            },
-          )}
-        </StyledInfoText>
-      </div>
+      {depositAddressHint !== '' && (
+        <div className="text-left">
+          <StyledInfoText iconColor={IconColor.BLUE}>
+            {translate(
+              'screens/swap',
+              depositAddressHint ??
+                'Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.',
+              {
+                sourceChain: toString(paymentInfo.sourceAsset.blockchain),
+                targetChain: toString(paymentInfo.targetAsset.blockchain),
+                asset: paymentInfo.targetAsset.name,
+              },
+            )}
+          </StyledInfoText>
+        </div>
+      )}
 
-      <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-        <StyledDataTableRow label={translate('screens/sell', 'Address')}>
-          <div>
-            <p>{blankedAddress(paymentInfo.depositAddress)}</p>
-          </div>
-          <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
-        </StyledDataTableRow>
-      </StyledDataTable>
+      {hideDepositAddress !== 'true' && (
+        <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+          <StyledDataTableRow label={translate('screens/sell', 'Address')}>
+            <div>
+              <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+            </div>
+            <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
+          </StyledDataTableRow>
+        </StyledDataTable>
+      )}
     </StyledVerticalStack>
   );
 }

@@ -49,11 +49,13 @@ export const Navigation = forwardRef<HTMLDivElement, NavigationIframeProps>(
     return title || !isEmbedded ? (
       <div
         className={`flex w-full h-12 px-4 py-5 ${
-          params.headless !== 'true' ? 'relative items-center justify-between bg-dfxGray-300' : 'absolute justify-end'
+          params.headlessMenu !== 'true'
+            ? 'relative items-center justify-between bg-dfxGray-300'
+            : 'absolute justify-end'
         }`}
         ref={ref}
       >
-        {params.headless !== 'true' && <BackButton title={title} backButton={backButton} onBack={onBack} />}
+        {params.headlessMenu !== 'true' && <BackButton title={title} backButton={backButton} onBack={onBack} />}
 
         <div className="absolute right-4">
           <MenuIcon icon={isOpen ? IconVariant.CLOSE : IconVariant.MENU} setIsNavigationOpen={setIsOpen} />

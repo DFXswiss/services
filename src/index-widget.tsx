@@ -5,8 +5,16 @@ import './index.css';
 
 const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'function' | 'json' } = {
   headless: 'string',
+  headlessMenu: 'string',
   borderless: 'string',
   hideTargetSelection: 'string',
+  titleIn: 'string',
+  titleOut: 'string',
+  titleIban: 'string',
+  hideExchangeRate: 'string',
+  depositAddressHint: 'string',
+  hideDepositAddress: 'string',
+  accountNotVerifiedHint: 'string',
   flags: 'string',
   lang: 'string',
   address: 'string',
