@@ -295,6 +295,8 @@
     "No transactions found": "Nessuna transazione trovata",
     "My transaction is missing": "La mia transazione è scomparsa",
     "Transaction status": "Stato della transazione",
+    "Received amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Importo ricevuto = (Importo di input - Commissione DFX - Commissione di rete) ÷ Tasso base.",
+    "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} a {{to}} a {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",
     "Date": "Data",

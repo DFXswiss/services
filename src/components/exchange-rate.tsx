@@ -69,12 +69,10 @@ export function ExchangeRate({
               <div key={index} className="flex flex-row gap-1 text-xs text-dfxGray-700 leading-tight">
                 <PathArrow className="w-2.5 h-2.5" />
                 {translate('screens/payment', '{{from}} to {{to}} at {{price}} {{from}}/{{to}} on {{source}}', {
-                  index: index + 1,
                   source: step.source,
                   from: step.from,
                   to: step.to,
                   price: step.price,
-                  timestamp: new Date(step.timestamp).toLocaleString(),
                 })}
               </div>
             ))}
