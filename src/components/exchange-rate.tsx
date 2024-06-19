@@ -15,7 +15,7 @@ interface ExchangeRateProps {
   steps: PriceStep[];
   amountIn: number;
   amountOut: number;
-  type: string;
+  type: 'buy' | 'sell';
 }
 
 export function ExchangeRate({
@@ -35,7 +35,9 @@ export function ExchangeRate({
 
   const feeSymbol = 'blockchain' in feeCurrency ? ` ${feeCurrency.name}` : toSymbol(feeCurrency);
 
-  const baseRate = `${Utils.formatAmount(exchangeRate)} ${from.name}/${to.name}`;
+  const baseRate = `${
+    'blockchain' in from ? Utils.formatAmountCrypto(exchangeRate) : Utils.formatAmount(exchangeRate)
+  } ${from.name}/${to.name}`;
   const minFee = `, min. ${fees.min}${feeSymbol}`;
   const dfxFee = `${fees.dfx}${feeSymbol} (${(fees.rate * 100).toFixed(2)}%${fees.min ? minFee : ''})`;
   const networkFee = `${fees.network}${feeSymbol}`;
@@ -51,15 +53,19 @@ export function ExchangeRate({
   const outputInfo =
     type === 'buy'
       ? 'The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.'
-      : type === 'sell'
-      ? 'The output amount is computed as the input amount times the base rate minus the DFX fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.'
-      : 'The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{inputSymbol}} = ({{input}} {{outputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) × {{baseRate}}.';
+      : 'The output amount is computed as the input amount times the base rate minus the DFX fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.';
 
   return (
     <StyledCollapsible
       full
       label={translate('screens/payment', 'Exchange rate')}
-      title={`${rate === Number.MAX_VALUE ? '∞' : Utils.formatAmount(rate)} ${from.name}/${to.name}`}
+      title={`${
+        rate === Number.MAX_VALUE
+          ? '∞'
+          : 'blockchain' in from
+          ? Utils.formatAmountCrypto(rate)
+          : Utils.formatAmount(rate)
+      } ${from.name}/${to.name}`}
     >
       <StyledVerticalStack gap={2}>
         <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">

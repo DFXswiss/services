@@ -240,7 +240,8 @@
     "PDF Invoice": "Facture PDF",
     "QR-bill": "QR-facture",
 
-    "The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "Le montant de sortie est calculé comme le montant d'entrée moins les frais DFX et les frais de réseau sur le taux de base. C'est-à-dire, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}."
+    "The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "Le montant de sortie est calculé comme le montant d'entrée moins les frais DFX et les frais de réseau sur le taux de base. C'est-à-dire, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.",
+    "Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Montant de sortie = (Montant d'entrée - Frais DFX - Frais de réseau) ÷ Taux de base."
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Coordonnées bancaires",
@@ -264,13 +265,12 @@
 
     "As soon as the transaction arrives in our wallet, we will transfer your money to your bank account.": "Dès que la transaction arrive dans notre portefeuille, nous transférons votre argent sur votre compte bancaire.",
 
-    "The output amount is computed as the input amount times the base rate minus the DFX fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.": "Le montant de sortie est calculé comme le montant d'entrée multiplié par le taux de base moins les frais DFX et les frais de réseau. C'est-à-dire, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}."
+    "The output amount is computed as the input amount times the base rate minus the DFX fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.": "Le montant de sortie est calculé comme le montant d'entrée multiplié par le taux de base moins les frais DFX et les frais de réseau. C'est-à-dire, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.",
+    "Output amount = Input amount × Base rate - DFX fee - Network fee.": "Montant de sortie = Montant d'entrée × Taux de base - Frais DFX - Frais de réseau."
   },
   "screens/swap": {
     "Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.": "Envoyez le montant sélectionné à l'adresse ci-dessous. Cette adresse peut être utilisée plusieurs fois, elle est toujours la même pour les échanges de {{sourceChain}} vers {{asset}} sur {{targetChain}}.",
-    "As soon as the transaction arrives in our wallet, we will transfer your asset to your wallet.": "Dès que la transaction arrive dans notre portefeuille, nous transférerons votre actif dans votre portefeuille.",
-
-    "The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "Le montant de sortie est calculé comme le montant d'entrée moins les frais DFX et les frais de réseau sur le taux de base. C'est-à-dire, {{output}} {{inputSymbol}} = ({{input}} {{outputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) × {{baseRate}}."
+    "As soon as the transaction arrives in our wallet, we will transfer your asset to your wallet.": "Dès que la transaction arrive dans notre portefeuille, nous transférerons votre actif dans votre portefeuille."
   },
   "screens/payment": {
     "Payment Information": "Informations sur le paiement",
@@ -295,7 +295,6 @@
     "No transactions found": "Aucune transaction trouvée",
     "My transaction is missing": "Ma transaction est manquante",
     "Transaction status": "Statut de la transaction",
-    "Received amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Montant reçu = (Montant d'entrée - Frais DFX - Frais de réseau) ÷ Taux de base.",
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} vers {{to}} à {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",

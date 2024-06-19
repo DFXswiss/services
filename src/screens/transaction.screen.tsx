@@ -390,13 +390,12 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
     (p) => p !== CryptoPaymentMethod.CRYPTO,
   ) as FiatPaymentMethod;
 
+  const type = tx.type === TransactionType.SELL ? 'sell' : 'buy';
   const exchangeRateInfo = translate(
-    `screens/payment`,
-    tx.type === TransactionType.BUY
-      ? 'Received amount = (Input amount - DFX fee - Network fee) ÷ Base rate.'
-      : tx.type === TransactionType.SELL
-      ? 'Output amount = Input amount × Base rate - DFX fee - Network fee.'
-      : 'Output amount = (Input amount - DFX fee - Network fee) × Base rate.',
+    `screens/${type}`,
+    type === 'buy'
+      ? 'Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.'
+      : 'Output amount = Input amount × Base rate - DFX fee - Network fee.',
   );
 
   const baseRateInfo = tx.priceSteps
