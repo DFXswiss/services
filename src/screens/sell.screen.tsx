@@ -519,6 +519,10 @@ export default function SellScreen(): JSX.Element {
                         feeCurrency={paymentInfo.currency}
                         from={paymentInfo.currency}
                         to={paymentInfo.asset}
+                        steps={paymentInfo.priceSteps}
+                        amountIn={paymentInfo.amount}
+                        amountOut={paymentInfo.estimatedAmount}
+                        type="sell"
                       />
 
                       <StyledVerticalStack gap={3} full>
