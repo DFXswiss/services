@@ -241,6 +241,9 @@ export default function SellScreen(): JSX.Element {
   }, [validatedData]);
 
   function validateSell(sell: Sell): void {
+    setCustomAmountError(undefined);
+    setKycError(undefined);
+
     // tx errors
     switch (sell.error) {
       case TransactionError.AMOUNT_TOO_LOW:
@@ -290,9 +293,6 @@ export default function SellScreen(): JSX.Element {
       });
       return;
     }
-
-    setCustomAmountError(undefined);
-    setKycError(undefined);
   }
 
   function validateData(data?: DeepPartial<FormData>): FormData | undefined {
