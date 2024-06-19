@@ -284,6 +284,10 @@
     "IBAN": "IBAN",
     "BIC": "BIC",
     "Reference": "Verwendungszweck",
+    "Transaction Details": "Transaktionsdetails",
+    "Asset": "Asset",
+    "Deposit Address": "Einzahlungsadresse",
+    "Beneficiary Bank Account": "Begünstigten-Bankkonto",
 
     "Exchange rate": "Wechselkurs",
     "Base rate": "Basiskurs",

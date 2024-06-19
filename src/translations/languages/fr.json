@@ -284,6 +284,10 @@
     "IBAN": "IBAN",
     "BIC": "BIC",
     "Reference": "Objet du paiement",
+    "Transaction Details": "Détails de la transaction",
+    "Asset": "Actif",
+    "Deposit Address": "Adresse de dépôt",
+    "Beneficiary Bank Account": "Compte bancaire du bénéficiaire",
 
     "Exchange rate": "Taux de change",
     "Base rate": "Taux de base",

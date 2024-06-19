@@ -33,6 +33,8 @@ import {
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
+import { useWalletContext } from 'src/contexts/wallet.context';
+import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
@@ -64,6 +66,8 @@ export function SellInfoScreen(): JSX.Element {
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
   const { closeServices } = useAppHandlingContext();
+  const { sendTransaction, canSendTransaction } = useTxHelper();
+  const { activeWallet } = useWalletContext();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -76,6 +80,8 @@ export function SellInfoScreen(): JSX.Element {
   const [customAmountError, setCustomAmountError] = useState<string>();
   const [errorMessage, setErrorMessage] = useState<string>();
   const [kycError, setKycError] = useState<TransactionError>();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [sellTxId, setSellTxId] = useState<string>();
 
   // default params
   useEffect(() => {
@@ -163,10 +169,24 @@ export function SellInfoScreen(): JSX.Element {
     return sell;
   }
 
+  async function handleNext(paymentInfo: Sell): Promise<void> {
+    setIsProcessing(true);
+
+    if (canSendTransaction() && !activeWallet)
+      return closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo }, false);
+
+    try {
+      if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSellTxId);
+      setShowsCompletion(true);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
   return (
     <Layout textStart backButton={false} scrollRef={scrollRef}>
       {showsCompletion && paymentInfo ? (
-        <SellCompletion paymentInfo={paymentInfo} navigateOnClose={false} />
+        <SellCompletion paymentInfo={paymentInfo} navigateOnClose={false} txId={sellTxId} />
       ) : isLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -201,19 +221,31 @@ export function SellInfoScreen(): JSX.Element {
             <h2 className="text-dfxBlue-800 text-center">{translate('screens/payment', 'Payment Information')}</h2>
 
             <StyledDataTable
-              label={translate('screens/payment', 'Bank Transaction Details')}
+              label={translate('screens/payment', 'Transaction Details')}
               alignContent={AlignContent.RIGHT}
               showBorder
               minWidth={false}
             >
               <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                {paymentInfo.estimatedAmount}
-                <CopyButton onCopy={() => copy(`${paymentInfo.estimatedAmount}`)} />
+                {paymentInfo.amount}
+                <CopyButton onCopy={() => copy(`${paymentInfo.amount}`)} />
               </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/payment', 'Currency')}>
-                {paymentInfo.currency.name}
-                <CopyButton onCopy={() => copy(paymentInfo.currency.name)} />
+              <StyledDataTableRow label={translate('screens/payment', 'Asset')}>
+                {paymentInfo.asset.name}
+                <CopyButton onCopy={() => copy(`${paymentInfo.asset.name}`)} />
               </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/payment', 'Deposit Address')}>
+                {paymentInfo.depositAddress}
+                <CopyButton onCopy={() => copy(`${paymentInfo.depositAddress}`)} />
+              </StyledDataTableRow>
+            </StyledDataTable>
+
+            <StyledDataTable
+              label={translate('screens/payment', 'Beneficiary Bank Account')}
+              alignContent={AlignContent.RIGHT}
+              showBorder
+              minWidth={false}
+            >
               <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
                 <div>
                   <p>{bankAccount.iban}</p>
@@ -222,10 +254,14 @@ export function SellInfoScreen(): JSX.Element {
               </StyledDataTableRow>
             </StyledDataTable>
 
-            <p className="font-semibold text-sm text-dfxBlue-800">
-              {translate('screens/sell', 'Pay with your wallet')}
-            </p>
-            {paymentInfo.paymentRequest && <QrCopy data={paymentInfo.paymentRequest} />}
+            {paymentInfo.paymentRequest && !canSendTransaction() && (
+              <>
+                <p className="font-semibold text-sm text-dfxBlue-800">
+                  {translate('screens/sell', 'Pay with your wallet')}
+                </p>
+                <QrCopy data={paymentInfo.paymentRequest} />
+              </>
+            )}
 
             <div className="pt-4 leading-none">
               <StyledLink
@@ -238,16 +274,18 @@ export function SellInfoScreen(): JSX.Element {
                 dark
               />
             </div>
-
             <StyledButton
               width={StyledButtonWidth.FULL}
-              label={translate('screens/sell', 'Click here once you have issued the transaction')}
-              onClick={() => {
-                setShowsCompletion(true);
-                scrollRef.current?.scrollTo(0, 0);
-              }}
+              label={translate(
+                'screens/sell',
+                canSendTransaction()
+                  ? 'Complete transaction in your wallet'
+                  : 'Click here once you have issued the transaction',
+              )}
+              onClick={() => handleNext(paymentInfo)}
               caps={false}
               className="mt-4"
+              isLoading={isProcessing}
             />
           </>
         )
