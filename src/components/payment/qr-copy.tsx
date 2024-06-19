@@ -2,7 +2,12 @@ import { CopyButton } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import QRCode from 'react-qr-code';
 
-export function QrCopy({ data }: { data: string }): JSX.Element {
+interface QrCopyProps {
+  data: string;
+  size?: number;
+}
+
+export function QrCopy({ data, size }: QrCopyProps): JSX.Element {
   return (
     <div className="relative w-full max-w-[20rem]">
       <div
@@ -11,7 +16,7 @@ export function QrCopy({ data }: { data: string }): JSX.Element {
       >
         <CopyButton onCopy={() => copy(data)} />
       </div>
-      <QRCode className="mx-auto h-auto w-full" value={data} size={128} fgColor={'#072440'} />
+      <QRCode className="mx-auto h-auto" value={data} size={size ?? 128} fgColor={'#072440'} />
     </div>
   );
 }
