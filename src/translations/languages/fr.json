@@ -239,7 +239,10 @@
     "Waiting for the payment confirmation ... this may take a moment.": "En attente de la confirmation du paiement ... cela peut prendre un moment.",
 
     "PDF Invoice": "Facture PDF",
-    "QR-bill": "QR-facture"
+    "QR-bill": "QR-facture",
+
+    "The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "Le montant de sortie est calculé comme le montant d'entrée moins les frais DFX et les frais de réseau sur le taux de base. C'est-à-dire, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.",
+    "Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Montant de sortie = (Montant d'entrée - Frais DFX - Frais de réseau) ÷ Taux de base."
   },
   "screens/bank-accounts": {
     "DFX bank accounts": "DFX Coordonnées bancaires",
@@ -261,7 +264,10 @@
     "e.g. Deutsche Bank": "par exemple, la Deutsche Bank",
     "Add Bank Account": "Ajouter un compte bancaire",
 
-    "As soon as the transaction arrives in our wallet, we will transfer your money to your bank account.": "Dès que la transaction arrive dans notre portefeuille, nous transférons votre argent sur votre compte bancaire."
+    "As soon as the transaction arrives in our wallet, we will transfer your money to your bank account.": "Dès que la transaction arrive dans notre portefeuille, nous transférons votre argent sur votre compte bancaire.",
+
+    "The output amount is computed as the input amount times the base rate minus the DFX fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.": "Le montant de sortie est calculé comme le montant d'entrée multiplié par le taux de base moins les frais DFX et les frais de réseau. C'est-à-dire, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.",
+    "Output amount = Input amount × Base rate - DFX fee - Network fee.": "Montant de sortie = Montant d'entrée × Taux de base - Frais DFX - Frais de réseau."
   },
   "screens/swap": {
     "Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.": "Envoyez le montant sélectionné à l'adresse ci-dessous. Cette adresse peut être utilisée plusieurs fois, elle est toujours la même pour les échanges de {{sourceChain}} vers {{asset}} sur {{targetChain}}.",
@@ -278,6 +284,10 @@
     "IBAN": "IBAN",
     "BIC": "BIC",
     "Reference": "Objet du paiement",
+    "Transaction Details": "Détails de la transaction",
+    "Asset": "Actif",
+    "Deposit Address": "Adresse de dépôt",
+    "Beneficiary Bank Account": "Compte bancaire du bénéficiaire",
 
     "Exchange rate": "Taux de change",
     "Base rate": "Taux de base",
@@ -290,6 +300,7 @@
     "No transactions found": "Aucune transaction trouvée",
     "My transaction is missing": "Ma transaction est manquante",
     "Transaction status": "Statut de la transaction",
+    "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} vers {{to}} à {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",
     "Date": "Date",
@@ -343,6 +354,7 @@
     "Export CSV": "Exporter CSV",
     "Assign transaction": "Attribuer transaction",
 
+    "{{from}} to {{to}} at {{price}} {{from}}/{{to}} on {{source}}": "{{from}} vers {{to}} à {{price}} {{from}}/{{to}} sur {{source}}.",
     "This exchange rate is not guaranteed. The effective rate will be determined once the transactions have been received by DFX and the crypto assets can be delivered.": "Ce taux de change n'est pas garanti. Le taux effectif sera déterminé une fois que les transactions auront été reçues par DFX et que les crypto-actifs pourront être livrés.",
     "Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales. Le taux de change effectif est fixé lorsque l'argent est reçu et traité par DFX.",
     "Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales et autorisez DFX.swiss à collecter le montant ci-dessus via la méthode de paiement choisie et acceptez que ce montant ne puisse pas être annulé, rappelé ou remboursé.",

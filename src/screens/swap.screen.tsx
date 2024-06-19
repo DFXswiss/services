@@ -274,6 +274,9 @@ export default function SwapScreen(): JSX.Element {
   }, [validatedData]);
 
   function validateSwap(swap: Swap): void {
+    setCustomAmountError(undefined);
+    setKycError(undefined);
+
     // tx errors
     switch (swap.error) {
       case TransactionError.AMOUNT_TOO_LOW:
@@ -323,9 +326,6 @@ export default function SwapScreen(): JSX.Element {
       });
       return;
     }
-
-    setCustomAmountError(undefined);
-    setKycError(undefined);
   }
 
   function validateData(data?: DeepPartial<FormData>): FormData | undefined {
@@ -528,12 +528,16 @@ export default function SwapScreen(): JSX.Element {
                   {paymentInfo && !kycError && !errorMessage && !customAmountError?.hideInfos && (
                     <>
                       <ExchangeRate
-                        exchangeRate={1 / paymentInfo.exchangeRate}
-                        rate={1 / paymentInfo.rate}
+                        exchangeRate={paymentInfo.exchangeRate}
+                        rate={paymentInfo.rate}
                         fees={paymentInfo.fees}
                         feeCurrency={paymentInfo.sourceAsset}
                         from={paymentInfo.sourceAsset}
                         to={paymentInfo.targetAsset}
+                        steps={paymentInfo.priceSteps}
+                        amountIn={paymentInfo.amount}
+                        amountOut={paymentInfo.estimatedAmount}
+                        type="buy"
                       />
 
                       <StyledVerticalStack gap={3} full>

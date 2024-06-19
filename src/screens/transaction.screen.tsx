@@ -390,11 +390,32 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
     (p) => p !== CryptoPaymentMethod.CRYPTO,
   ) as FiatPaymentMethod;
 
+  const type = tx.type === TransactionType.SELL ? 'sell' : 'buy';
+  const exchangeRateInfo = translate(
+    `screens/${type}`,
+    type === 'buy'
+      ? 'Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.'
+      : 'Output amount = Input amount × Base rate - DFX fee - Network fee.',
+  );
+
+  const baseRateInfo = tx.priceSteps
+    ?.map((step) =>
+      translate('screens/payment', '{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})', {
+        source: step.source,
+        from: step.from,
+        to: step.to,
+        price: step.price,
+        timestamp: step.timestamp.toLocaleString(),
+      }),
+    )
+    .join(' → ');
+
   const rateItems = [];
   tx.exchangeRate != null &&
     rateItems.push({
       label: translate('screens/payment', 'Base rate'),
       text: `${tx.exchangeRate} ${tx.inputAsset}/${tx.outputAsset}`,
+      infoText: baseRateInfo,
     });
   tx.fees?.dfx != null &&
     rateItems.push({
@@ -476,11 +497,17 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
         </StyledDataTableRow>
       )}
       {tx.rate != null && (
-        <StyledDataTableExpandableRow label={translate('screens/payment', 'Exchange rate')} expansionItems={rateItems}>
-          <p>
-            {tx.rate} {tx.inputAsset}/{tx.outputAsset}
-          </p>
-        </StyledDataTableExpandableRow>
+        <div className="text-left">
+          <StyledDataTableExpandableRow
+            label={translate('screens/payment', 'Exchange rate')}
+            expansionItems={rateItems}
+            infoText={exchangeRateInfo}
+          >
+            <p>
+              {tx.rate} {tx.inputAsset}/{tx.outputAsset}
+            </p>
+          </StyledDataTableExpandableRow>
+        </div>
       )}
     </StyledDataTable>
   );
