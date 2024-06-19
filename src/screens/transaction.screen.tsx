@@ -1,11 +1,9 @@
 import {
   ApiError,
-  Blockchain,
   CryptoPaymentMethod,
   DetailTransaction,
   FiatPaymentMethod,
   Transaction,
-  TransactionFailureReason,
   TransactionState,
   TransactionTarget,
   TransactionType,
@@ -216,57 +214,7 @@ export function TransactionList(): JSX.Element {
       .finally(() => setIsTransactionLoading(false));
   }
 
-  // const transactionList = transactions && Object.entries(transactions);
-
-  const dummyTransactionsMap = {
-    '2022 - 1': [
-      {
-        id: 1,
-        uid: 'T1',
-        type: TransactionType.BUY,
-        state: TransactionState.COMPLETED,
-        inputAmount: 100,
-        inputAsset: 'dUSDT',
-        inputBlockchain: Blockchain.ETHEREUM,
-        inputPaymentMethod: CryptoPaymentMethod.CRYPTO,
-        inputTxId: '0x1234567890',
-        inputTxUrl: 'https://etherscan.io/tx/0x1234567890',
-        date: new Date('2022-01-01T12:00:00Z'),
-        reason: TransactionFailureReason.FEE_TOO_HIGH,
-        outputAsset: 'dBTC',
-        outputAmount: 0.01,
-        outputTxUrl: 'https://blockchain.info/tx/0x1234567890',
-        fees: {
-          rate: 0.01,
-          fixed: 0.1,
-          min: 0.1,
-          dfx: 0.01,
-          network: 0.001,
-          total: 0.011,
-        },
-        exchangeRate: 10000,
-        rate: 10000,
-        priceSteps: [
-          {
-            source: 'Kraken',
-            from: 'dUSDT',
-            to: 'dCHF',
-            price: 10000,
-            timestamp: new Date('2022-01-01T12:00:00Z'),
-          },
-          {
-            source: 'Binance',
-            from: 'dCHF',
-            to: 'dBTC',
-            price: 0.00001,
-            timestamp: new Date('2022-01-01T12:00:00Z'),
-          },
-        ],
-      },
-    ],
-  };
-
-  const transactionList = transactions && Object.entries(dummyTransactionsMap);
+  const transactionList = transactions && Object.entries(transactions);
 
   return (
     <Layout rootRef={rootRef} title={translate('screens/payment', 'Transactions')}>
