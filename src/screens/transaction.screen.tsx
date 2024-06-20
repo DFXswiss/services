@@ -497,17 +497,16 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
         </StyledDataTableRow>
       )}
       {tx.rate != null && (
-        <div className="text-left">
-          <StyledDataTableExpandableRow
-            label={translate('screens/payment', 'Exchange rate')}
-            expansionItems={rateItems}
-            infoText={exchangeRateInfo}
-          >
-            <p>
-              {tx.rate} {tx.inputAsset}/{tx.outputAsset}
-            </p>
-          </StyledDataTableExpandableRow>
-        </div>
+        <StyledDataTableExpandableRow
+          label={translate('screens/payment', 'Exchange rate')}
+          expansionItems={rateItems}
+          infoText={exchangeRateInfo}
+          discreet
+        >
+          <p>
+            {tx.rate} {tx.inputAsset}/{tx.outputAsset}
+          </p>
+        </StyledDataTableExpandableRow>
       )}
     </StyledDataTable>
   );
