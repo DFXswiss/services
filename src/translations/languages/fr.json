@@ -363,7 +363,11 @@
     "Entered amount is higher than available balance of {{amount}} {{asset}}": "Le montant saisi est supérieur au solde disponible de {{amount}} {{asset}}",
     "Nice! You are all set! Give us a minute to handle your transaction.": "C'est très bien ! Vous êtes prêt ! Donnez-nous une minute pour traiter votre transaction.",
     "We will inform you by email about the progress of your transactions.": "Nous vous informerons par e-mail de l'état d'avancement de vos transactions.",
-    "Enter your email address if you want to be informed about the progress of any purchase or sale": "Saisissez votre adresse électronique si vous souhaitez être informé de l'avancement de vos transactions"
+    "Enter your email address if you want to be informed about the progress of any purchase or sale": "Saisissez votre adresse électronique si vous souhaitez être informé de l'avancement de vos transactions",
+
+    "The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.": "Le taux de change de {{rate}} {{currency}}/{{asset}} est fixé pour {{timer}}, après quoi il sera recalculé.",
+    "Please send the specified amount to the address below.": "Veuillez envoyer le montant spécifié à l'adresse ci-dessous.",
+    "Please note that by using this service you automatically accept our terms and conditions.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales."
   },
   "screens/iban": {
     "Bank Accounts": "Comptes bancaires",
