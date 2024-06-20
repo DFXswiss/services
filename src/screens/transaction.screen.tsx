@@ -67,10 +67,18 @@ export function TransactionStatus(): JSX.Element {
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    if (id)
-      getTransactionByUid(id)
-        .then(setTransaction)
-        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+    const fetchTransaction = () => {
+      if (id && transaction?.state !== TransactionState.COMPLETED) {
+        getTransactionByUid(id)
+          .then(setTransaction)
+          .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+      }
+    };
+
+    fetchTransaction();
+    const interval = setInterval(fetchTransaction, 10000);
+
+    return () => clearInterval(interval);
   }, [id]);
 
   function assignTransaction() {
