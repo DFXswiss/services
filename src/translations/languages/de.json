@@ -294,6 +294,10 @@
     "DFX fee": "DFX-Gebühr",
     "Network fee": "Netzwerk-Gebühr",
 
+    "Credit Card Payment": "Kreditkartenzahlung",
+    "Your payment has failed. Please try again.": "Ihre Zahlung ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "Try again": "Erneut versuchen",
+
     "Transactions": "Transaktionen",
     "Transaction": "Transaktion",
     "Your Transactions": "Deine Transaktionen",

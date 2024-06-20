@@ -17,14 +17,14 @@ export function BuyFailureScreen(): JSX.Element {
   const header = translate('screens/payment', 'Your payment has failed. Please try again.');
 
   return (
-    <Layout title={translate('screens/buy', 'Credit Card Payment')} backButton={false} textStart>
+    <Layout title={translate('screens/payment', 'Credit Card Payment')} backButton={false} textStart>
       <StyledVerticalStack gap={4}>
         <div className="mx-auto">
-          <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_DONE} color={IconColor.BLUE} />
+          <DfxIcon size={IconSize.XXL} icon={IconVariant.PROCESS_FAILED} color={IconColor.BLUE} />
         </div>
         <p className="text-base font-bold text-center text-dfxBlue-800">{header}</p>
         <StyledButton
-          label={translate('general/actions', 'Try again')}
+          label={translate('screens/payment', 'Try again')}
           onClick={() => navigate('/buy')}
           width={StyledButtonWidth.FULL}
         />
