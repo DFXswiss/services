@@ -21,6 +21,7 @@ import {
   Validations,
   isStepDone,
   useKyc,
+  useSessionContext,
   useUserContext,
 } from '@dfx.swiss/react';
 import {
@@ -79,6 +80,7 @@ export function KycScreen(): JSX.Element {
   const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
   const { pathname, search } = useLocation();
   const { navigate, goBack } = useNavigation();
+  const { logout } = useSessionContext();
 
   const [info, setInfo] = useState<KycInfo | KycSession>();
   const [isLoading, setIsLoading] = useState(true);
@@ -190,11 +192,8 @@ export function KycScreen(): JSX.Element {
     return call().catch((e: ApiError) => {
       if (e.statusCode === 401 && 'switchToCode' in e) {
         setIsLoading(true);
-        if (paramKycCode) {
-          navigate({ search: `?code=${e.switchToCode}` });
-        } else {
-          reloadUser();
-        }
+        navigate({ search: `?code=${e.switchToCode}` });
+        logout();
       } else if (e.statusCode === 403 && e.message?.includes('2FA')) {
         navigate('/2fa', { setRedirect: true });
       } else if (e.statusCode === 409 && e.message?.includes('exists')) {
