@@ -9,6 +9,7 @@ import { BalanceContextProvider } from './contexts/balance.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
+import { BuyFailureScreen } from './screens/buy-failure.screen';
 import { BuyInfoScreen } from './screens/buy-info.screen';
 import { BuySuccessScreen } from './screens/buy-success.screen';
 import { BuyScreen } from './screens/buy.screen';
@@ -58,6 +59,10 @@ export const Routes = [
   {
     path: '/buy/success',
     element: <BuySuccessScreen />,
+  },
+  {
+    path: '/buy/failure',
+    element: <BuyFailureScreen />,
   },
   {
     path: '/sell',
