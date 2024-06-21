@@ -8,6 +8,7 @@ import { AppHandlingContextProvider, AppParams, CloseMessageData } from './conte
 import { BalanceContextProvider } from './contexts/balance.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
+import { AccountScreen } from './screens/account.screen';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyFailureScreen } from './screens/buy-failure.screen';
 import { BuyInfoScreen } from './screens/buy-info.screen';
@@ -35,6 +36,10 @@ export const Routes = [
     path: '/',
     element: <HomeScreen />,
     errorElement: <ErrorScreen />,
+  },
+  {
+    path: '/home',
+    element: <AccountScreen />,
   },
   {
     path: '/login',
