@@ -79,7 +79,7 @@ export function TransactionStatus(): JSX.Element {
     const interval = setInterval(fetchTransaction, 10000);
 
     return () => clearInterval(interval);
-  }, [id]);
+  }, [id, transaction?.state]);
 
   function assignTransaction() {
     if (!transaction) return;
