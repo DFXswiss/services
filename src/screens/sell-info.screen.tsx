@@ -15,6 +15,7 @@ import {
   useBankAccountContext,
   useFiat,
   useSell,
+  useTransaction,
   useUserContext,
 } from '@dfx.swiss/react';
 import {
@@ -54,7 +55,6 @@ interface Timer {
   seconds: number;
 }
 
-// TODO: If payment is done wihtout connected wallet, listen for the transaction and redirect to completion screen
 export function SellInfoScreen(): JSX.Element {
   useAddressGuard();
 
@@ -80,6 +80,7 @@ export function SellInfoScreen(): JSX.Element {
   const { activeWallet } = useWalletContext();
   const { toString } = useBlockchain();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { getTransactionByRequestId } = useTransaction();
 
   const [isLoading, setIsLoading] = useState(true);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
@@ -138,6 +139,9 @@ export function SellInfoScreen(): JSX.Element {
         if (!isLoading) fetchData();
       }
     }, 1000);
+
+    checkTransaction();
+
     return () => clearInterval(interval);
   }, [paymentInfo]);
 
@@ -199,6 +203,16 @@ export function SellInfoScreen(): JSX.Element {
     setKycError(undefined);
 
     return sell;
+  }
+
+  async function checkTransaction() {
+    if (!paymentInfo || sellTxId) return;
+    getTransactionByRequestId(paymentInfo.id.toString())
+      .then((tx) => {
+        setSellTxId(tx.id.toString());
+        setShowsCompletion(true);
+      })
+      .catch(() => setTimeout(checkTransaction, 5000));
   }
 
   async function handleNext(paymentInfo: Sell): Promise<void> {
