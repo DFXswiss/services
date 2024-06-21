@@ -294,6 +294,8 @@
     "DFX fee": "Frais DFX",
     "Network fee": "Frais de réseau",
 
+    "Your payment has failed. Please try again.": "Votre paiement a échoué. Veuillez réessayer.",
+
     "Transactions": "Transactions",
     "Transaction": "Transaction",
     "Your Transactions": "Vos transactions",
