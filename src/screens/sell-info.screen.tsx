@@ -22,6 +22,7 @@ import {
   CopyButton,
   IconColor,
   SpinnerSize,
+  SpinnerVariant,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
@@ -92,7 +93,7 @@ export function SellInfoScreen(): JSX.Element {
   const [kycError, setKycError] = useState<TransactionError>();
   const [isProcessing, setIsProcessing] = useState(false);
   const [sellTxId, setSellTxId] = useState<string>();
-  const [timer, setTimer] = useState<Timer>({ minutes: 15, seconds: 0 });
+  const [timer, setTimer] = useState<Timer>({ minutes: 0, seconds: 0 });
 
   // default params
   useEffect(() => {
@@ -122,18 +123,21 @@ export function SellInfoScreen(): JSX.Element {
 
   useEffect(() => {
     if (!paymentInfo) return;
-    const expires = new Date(new Date().getTime() + 15 * 60000); // TODO: Set this to some expiration time given by the API
+    const priceTimestamp = new Date(paymentInfo.timestamp).getTime();
     const interval = setInterval(() => {
-      const now = new Date();
-
-      const diff = Math.max(0, expires.getTime() - now.getTime());
-
+      const now = Date.now();
+      const expiration = priceTimestamp + Math.ceil((now - priceTimestamp) / 900_000) * 900_000;
+      const diff = expiration - now;
       setTimer({
-        minutes: Math.floor(diff / 60000),
-        seconds: Math.floor((diff % 60000) / 1000),
+        minutes: Math.floor(diff / 60_000),
+        seconds: Math.floor((diff % 60_000) / 1000),
       });
-    }, 1000);
 
+      if (diff <= 1000) {
+        clearInterval(interval);
+        if (!isLoading) fetchData();
+      }
+    }, 1000);
     return () => clearInterval(interval);
   }, [paymentInfo]);
 
@@ -283,15 +287,23 @@ export function SellInfoScreen(): JSX.Element {
                   </StyledDataTableRow>
                 </StyledDataTable>
                 <StyledInfoText textSize={StyledInfoTextSize.XS} iconColor={IconColor.GRAY} discreet>
-                  {translate(
-                    'screens/payment',
-                    'The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.',
-                    {
-                      rate: Utils.formatAmount(1 / paymentInfo.rate),
-                      currency: paymentInfo.currency.name,
-                      asset: paymentInfo.asset.name,
-                      timer: `${timer.minutes}m ${timer.seconds}s`,
-                    },
+                  {timer.minutes > 0 || timer.seconds > 0 ? (
+                    <>
+                      {translate(
+                        'screens/payment',
+                        'The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.',
+                        {
+                          rate: Utils.formatAmount(1 / paymentInfo.rate),
+                          currency: paymentInfo.currency.name,
+                          asset: paymentInfo.asset.name,
+                          timer: `${timer.minutes}m ${timer.seconds}s`,
+                        },
+                      )}
+                    </>
+                  ) : (
+                    <div className="mt-1">
+                      <StyledLoadingSpinner size={SpinnerSize.SM} variant={SpinnerVariant.LIGHT_MODE} />
+                    </div>
                   )}
                 </StyledInfoText>
               </StyledVerticalStack>
