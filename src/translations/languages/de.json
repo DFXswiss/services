@@ -211,7 +211,22 @@
     "Address": "Adresse",
     "Signature": "Signatur",
     "Sign message": "Nachricht zum Signieren",
-    "Instructions": "Anleitung"
+    "Instructions": "Anleitung",
+
+    "Account": "Konto",
+    "Active address": "Aktive Adresse",
+    "Latest transactions": "Neueste Transaktionen",
+    "Addresses by volume": "Adressen nach Volumen",
+    "Referral": "Referral",
+    "Referral code": "Referral-Code",
+    "Referral commission": "Referral Provision",
+    "Your referral stats": "Deine Referral-Statistiken",
+    "Level": "Level",
+    "Volume": "Volumen",
+    "Credit": "Gutschrift",
+    "Paid credit": "Ausgezahlte Gutschrift",
+    "User count": "Benutzeranzahl",
+    "Active user count": "Anzahl aktiver Benutzer"
   },
   "screens/buy": {
     "Buy": "Kaufen",

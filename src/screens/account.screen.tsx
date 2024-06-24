@@ -87,11 +87,11 @@ export function AccountScreen(): JSX.Element {
 
   const referralItems = referral?.code
     ? [
-        { label: 'Volume', text: Utils.formatAmountCrypto(referral.volume) },
-        { label: 'Credit', text: Utils.formatAmountCrypto(referral.credit) },
-        { label: 'Paid Credit', text: Utils.formatAmountCrypto(referral.paidCredit) },
-        { label: 'User Count', text: referral.userCount.toString() },
-        { label: 'Active User Count', text: referral.activeUserCount.toString() },
+        { label: translate('screens/home', 'Volume'), text: Utils.formatAmountCrypto(referral.volume) },
+        { label: translate('screens/home', 'Credit'), text: Utils.formatAmountCrypto(referral.credit) },
+        { label: translate('screens/home', 'Paid credit'), text: Utils.formatAmountCrypto(referral.paidCredit) },
+        { label: translate('screens/home', 'User count'), text: referral.userCount.toString() },
+        { label: translate('screens/home', 'Active user count'), text: referral.activeUserCount.toString() },
       ]
     : [];
 
@@ -115,7 +115,7 @@ export function AccountScreen(): JSX.Element {
             </StyledDataTableRow>
             {transactionItems && transactionItems.length > 0 && (
               <StyledDataTableExpandableRow
-                label={translate('screens/home', 'Latest Transactions')}
+                label={translate('screens/home', 'Latest transactions')}
                 expansionItems={transactionItems}
                 discreet
               />
@@ -134,15 +134,15 @@ export function AccountScreen(): JSX.Element {
             showBorder
             minWidth={false}
           >
-            <StyledDataTableRow label={translate('screens/home', 'Referral Code')}>
+            <StyledDataTableRow label={translate('screens/home', 'Referral code')}>
               {referral?.code ? referral.code : 'N/A'}
               {referral?.code && <CopyButton onCopy={() => copy(referral.code!)} />}
             </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/home', 'Commission')}>
+            <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
               {Utils.formatAmountCrypto(referral?.commission ? referral.commission * 100 : 0)}%
             </StyledDataTableRow>
             <StyledDataTableExpandableRow
-              label={translate('screens/home', 'Your Referral Stats')}
+              label={translate('screens/home', 'Your referral stats')}
               expansionItems={referralItems}
               discreet
             />
@@ -154,7 +154,7 @@ export function AccountScreen(): JSX.Element {
             minWidth={false}
           >
             <StyledDataTableRow label={translate('screens/home', 'Level')}>{user?.kyc.level}</StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/home', 'Trading Limit')}>
+            <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
               {user?.tradingLimit.limit}
             </StyledDataTableRow>
           </StyledDataTable>

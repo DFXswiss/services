@@ -211,7 +211,22 @@
     "Address": "Indirizzo",
     "Signature": "Firma",
     "Sign message": "Messaggio del cartello",
-    "Instructions": "Istruzioni"
+    "Instructions": "Istruzioni",
+
+    "Account": "Conto",
+    "Active address": "Indirizzo attivo",
+    "Latest transactions": "Ultime transazioni",
+    "Addresses by volume": "Indirizzi per volume",
+    "Referral": "Referenza",
+    "Referral code": "Codice di referenza",
+    "Referral commission": "Commissione di referenza",
+    "Your referral stats": "Le tue statistiche di referenza",
+    "Level": "Livello",
+    "Volume": "Volume",
+    "Credit": "Credito",
+    "Paid credit": "Credito pagato",
+    "User count": "Conteggio utenti",
+    "Active user count": "Conteggio utenti attivi"
   },
   "screens/buy": {
     "Buy": "Acquista",

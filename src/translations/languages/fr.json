@@ -211,7 +211,22 @@
     "Address": "Adresse",
     "Signature": "Signature",
     "Sign message": "Signer le message",
-    "Instructions": "Instructions"
+    "Instructions": "Instructions",
+
+    "Account": "Compte",
+    "Active address": "Adresse active",
+    "Latest transactions": "Dernières transactions",
+    "Addresses by volume": "Adresses par volume",
+    "Referral": "Parrainage",
+    "Referral code": "Code de parrainage",
+    "Referral commission": "Commission de parrainage",
+    "Your referral stats": "Vos statistiques de parrainage",
+    "Level": "Niveau",
+    "Volume": "Volume",
+    "Credit": "Crédit",
+    "Paid credit": "Crédit payé",
+    "User count": "Nombre d'utilisateurs",
+    "Active user count": "Nombre d'utilisateurs actifs"
   },
   "screens/buy": {
     "Buy": "Acheter",
