@@ -26,7 +26,6 @@ import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
-import { useNavigation } from '../hooks/navigation.hook';
 
 export function AccountScreen(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -37,7 +36,6 @@ export function AccountScreen(): JSX.Element {
   const { getRef } = useUser();
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
-  const { navigate } = useNavigation();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
@@ -55,7 +53,10 @@ export function AccountScreen(): JSX.Element {
   async function loadTransactions(): Promise<void> {
     Promise.all([getDetailTransactions(), getUnassignedTransactions()])
       .then((txs) => {
-        const sorted = txs.flat().sort((a, b) => (new Date(b.date) > new Date(a.date) ? 1 : -1)) as DetailTransaction[];
+        const sorted = txs
+          .flat()
+          .sort((a, b) => (new Date(b.date) > new Date(a.date) ? 1 : -1))
+          .slice(0, 5) as DetailTransaction[];
         setTransactions(
           sorted.map((t) => ({
             id: t.id,
@@ -114,7 +115,7 @@ export function AccountScreen(): JSX.Element {
             </StyledDataTableRow>
             {transactionItems && transactionItems.length > 0 && (
               <StyledDataTableExpandableRow
-                label={translate('screens/home', 'Transactions')}
+                label={translate('screens/home', 'Latest Transactions')}
                 expansionItems={transactionItems}
                 discreet
               />
