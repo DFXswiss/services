@@ -1,12 +1,7 @@
 import {
-  Blockchain,
-  CryptoPaymentMethod,
+  ApiError,
   DetailTransaction,
-  FiatPaymentMethod,
   Referral,
-  TransactionFailureReason,
-  TransactionState,
-  TransactionType,
   Utils,
   useAuthContext,
   useSessionContext,
@@ -35,103 +30,6 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useNavigation } from '../hooks/navigation.hook';
 
-const dummyTransactionsMap = [
-  {
-    id: 1,
-    uid: 'T1',
-    type: TransactionType.BUY,
-    state: TransactionState.COMPLETED,
-    inputAmount: 100,
-    inputAsset: 'dUSDT',
-    inputBlockchain: Blockchain.ETHEREUM,
-    inputPaymentMethod: CryptoPaymentMethod.CRYPTO,
-    inputTxId: '0x1234567890',
-    inputTxUrl: 'https://etherscan.io/tx/0x1234567890',
-    date: new Date('2022-01-01T12:00:00Z'),
-    reason: TransactionFailureReason.FEE_TOO_HIGH,
-    outputAsset: 'dBTC',
-    outputAmount: 0.01,
-    outputTxUrl: 'https://blockchain.info/tx/0x1234567890',
-    fees: {
-      rate: 0.01,
-      fixed: 0.1,
-      min: 0.1,
-      dfx: 0.01,
-      network: 0.001,
-      total: 0.011,
-    },
-    exchangeRate: 10000,
-    rate: 10000,
-    priceSteps: [
-      {
-        source: 'Kraken',
-        from: 'dUSDT',
-        to: 'dCHF',
-        price: 10000,
-        timestamp: new Date('2022-01-01T12:00:00Z'),
-      },
-      {
-        source: 'Binance',
-        from: 'dCHF',
-        to: 'dBTC',
-        price: 0.00001,
-        timestamp: new Date('2022-01-01T12:00:00Z'),
-      },
-    ],
-  },
-  {
-    id: 193040,
-    uid: 'T15E84121A935DBEB',
-    type: TransactionType.SELL,
-    state: TransactionState.COMPLETED,
-    reason: TransactionFailureReason.INSTANT_PAYMENT,
-    inputAmount: 0.0065,
-    inputAsset: 'BTC',
-    inputAssetId: 113,
-    inputBlockchain: Blockchain.BITCOIN,
-    inputPaymentMethod: CryptoPaymentMethod.CRYPTO,
-    exchangeRate: 0.00001738,
-    rate: 0.000017825,
-    outputAmount: 364.66,
-    outputAsset: 'CHF',
-    outputAssetId: 1,
-    outputBlockchain: Blockchain.BITCOIN,
-    outputPaymentMethod: FiatPaymentMethod.BANK,
-    priceSteps: [
-      {
-        source: 'Binance',
-        from: 'BTC',
-        to: 'USDT',
-        price: 0.000015364,
-        timestamp: new Date('2024-06-19T16:40:03.617Z'),
-      },
-      {
-        source: 'Kraken',
-        from: 'USDT',
-        to: 'CHF',
-        price: 1.1312,
-        timestamp: new Date('2024-06-19T16:40:02.791Z'),
-      },
-    ],
-    feeAmount: 0.00016195,
-    feeAsset: 'BTC',
-    fees: {
-      rate: 0.0149,
-      fixed: 0,
-      min: 0,
-      network: 0.0000651,
-      dfx: 0.00009685,
-      total: 0.00016195,
-    },
-    inputTxId: '45265cfd31ce5f30099f90c6c5227e863aad1f7d3faf800d952fe839ed37b27c',
-    inputTxUrl: 'https://explorer.lightning.space/tx/45265cfd31ce5f30099f90c6c5227e863aad1f7d3faf800d952fe839ed37b27c',
-    outputTxId: 'DFX Payment: 754409388',
-    outputTxUrl: undefined,
-    date: new Date('2024-06-19T20:01:43.930Z'),
-    externalTransactionId: undefined,
-  },
-];
-
 export function AccountScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
@@ -150,26 +48,28 @@ export function AccountScreen(): JSX.Element {
   useEffect(() => {
     if (isLoggedIn) {
       getRef().then((ref) => setRefferal(ref));
+      console.log('referral', referral);
+
+      loadTransactions();
     }
+  }, [isLoggedIn]);
 
-    loadTransactions().then(setTransactions);
-  }, []);
-
-  async function loadTransactions(): Promise<Partial<DetailTransaction>[]> {
-    // const results = await Promise.all([getDetailTransactions(), getUnassignedTransactions()]).catch((err) => {
-    //   console.error('Error loading transactions:', err);
-    //   return [];
-    // });
-    // const sorted = results.flat().sort((a, b) => (new Date(b.date) > new Date(a.date) ? 1 : -1)) as DetailTransaction[];
-    // TODO: Change back to sorted when transactions are available
-    return dummyTransactionsMap.map((t) => ({
-      id: t.id,
-      inputAsset: t.inputAsset,
-      inputAmount: t.inputAmount,
-      outputAsset: t.outputAsset,
-      outputAmount: t.outputAmount,
-      date: t.date,
-    }));
+  async function loadTransactions(): Promise<void> {
+    Promise.all([getDetailTransactions(), getUnassignedTransactions()])
+      .then((txs) => {
+        const sorted = txs.flat().sort((a, b) => (new Date(b.date) > new Date(a.date) ? 1 : -1)) as DetailTransaction[];
+        setTransactions(
+          sorted.map((t) => ({
+            id: t.id,
+            inputAsset: t.inputAsset,
+            inputAmount: t.inputAmount,
+            outputAsset: t.outputAsset,
+            outputAmount: t.outputAmount,
+            date: t.date,
+          })),
+        );
+      })
+      .catch((error: ApiError) => console.error(error.message ?? 'Unknown error'));
   }
 
   const title = translate('screens/home', 'DFX services');
@@ -177,7 +77,7 @@ export function AccountScreen(): JSX.Element {
   const hasBackButton = canClose && !isEmbedded;
 
   const transactionItems = transactions?.map((t) => ({
-    label: t.date?.toString() ?? '',
+    label: t.date?.toLocaleString() ?? '',
     text: `${t.inputAmount} ${t.inputAsset} -> ${t.outputAmount} ${t.outputAsset}`,
   }));
 
@@ -205,7 +105,7 @@ export function AccountScreen(): JSX.Element {
       ) : (
         <StyledVerticalStack gap={4} center full marginY={4}>
           <StyledDataTable
-            label={translate('screens/home', 'Account')}
+            label={translate('screens/home', 'Address')}
             alignContent={AlignContent.RIGHT}
             showBorder
             minWidth={false}
