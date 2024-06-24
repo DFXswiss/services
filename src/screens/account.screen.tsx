@@ -12,8 +12,6 @@ import {
 import {
   AlignContent,
   CopyButton,
-  DfxIcon,
-  IconVariant,
   SpinnerSize,
   StyledDataTable,
   StyledDataTableExpandableRow,
@@ -105,7 +103,7 @@ export function AccountScreen(): JSX.Element {
       ) : (
         <StyledVerticalStack gap={4} center full marginY={4}>
           <StyledDataTable
-            label={translate('screens/home', 'Address')}
+            label={translate('screens/home', 'Account')}
             alignContent={AlignContent.RIGHT}
             showBorder
             minWidth={false}
@@ -140,7 +138,7 @@ export function AccountScreen(): JSX.Element {
               {referral?.code && <CopyButton onCopy={() => copy(referral.code!)} />}
             </StyledDataTableRow>
             <StyledDataTableRow label={translate('screens/home', 'Commission')}>
-              {Utils.formatAmountCrypto(referral?.commission || 0)}
+              {Utils.formatAmountCrypto(referral?.commission ? referral.commission * 100 : 0)}%
             </StyledDataTableRow>
             <StyledDataTableExpandableRow
               label={translate('screens/home', 'Your Referral Stats')}
@@ -154,17 +152,10 @@ export function AccountScreen(): JSX.Element {
             showBorder
             minWidth={false}
           >
-            <StyledDataTableRow label={translate('screens/home', 'Status')}>
-              <button
-                className="flex flex-row gap-2 items-center"
-                onClick={() => navigate('/profile', { setRedirect: true })}
-                disabled={user?.kyc.dataComplete}
-              >
-                {user?.kyc.dataComplete ? 'Complete' : 'Incomplete'}
-                {!user?.kyc.dataComplete && <DfxIcon icon={IconVariant.ARROW_RIGHT} />}
-              </button>
-            </StyledDataTableRow>
             <StyledDataTableRow label={translate('screens/home', 'Level')}>{user?.kyc.level}</StyledDataTableRow>
+            <StyledDataTableRow label={translate('screens/home', 'Trading Limit')}>
+              {user?.tradingLimit.limit}
+            </StyledDataTableRow>
           </StyledDataTable>
         </StyledVerticalStack>
       )}
