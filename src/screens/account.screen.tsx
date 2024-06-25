@@ -1,13 +1,9 @@
 import {
   ApiError,
   DetailTransaction,
-  KycInfo,
-  KycLevel,
   Referral,
   Utils,
-  isStepDone,
   useAuthContext,
-  useKyc,
   useSessionContext,
   useTransaction,
   useUser,
@@ -39,7 +35,6 @@ export function AccountScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
   const { limitToString, levelToString } = useKycHelper();
-  const { getKycInfo } = useKyc();
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
   const { session } = useAuthContext();
@@ -51,7 +46,6 @@ export function AccountScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setRefferal] = useState<Referral | undefined>();
-  const [info, setInfo] = useState<KycInfo>();
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -60,15 +54,6 @@ export function AccountScreen(): JSX.Element {
       loadTransactions();
     }
   }, [isLoggedIn]);
-
-  useEffect(() => {
-    const kycCode = user?.kyc.hash;
-    if (kycCode) {
-      getKycInfo(kycCode).then(setInfo);
-    } else {
-      setInfo(undefined);
-    }
-  }, [user]);
 
   async function loadTransactions(): Promise<void> {
     Promise.all([getDetailTransactions(), getUnassignedTransactions()])
@@ -94,9 +79,6 @@ export function AccountScreen(): JSX.Element {
   const title = translate('screens/home', 'DFX services');
   const image = 'https://content.dfx.swiss/img/v1/services/berge.png';
   const hasBackButton = canClose && !isEmbedded;
-
-  const allKycStepsCompleted = info?.kycSteps.every((s) => isStepDone(s));
-  const canContinueKyc = !allKycStepsCompleted || (info && info.kycLevel >= KycLevel.Completed);
 
   const transactionItems = transactions?.map((t) => ({
     label: t.date?.toLocaleString() ?? '',
@@ -172,7 +154,7 @@ export function AccountScreen(): JSX.Element {
               />
             </StyledDataTable>
           )}
-          {info && (
+          {user && (
             <StyledDataTable
               label={translate('screens/home', 'KYC')}
               alignContent={AlignContent.RIGHT}
@@ -180,14 +162,12 @@ export function AccountScreen(): JSX.Element {
               minWidth={false}
             >
               <StyledDataTableRow label={translate('screens/home', 'Level')}>
-                <p>{levelToString(user!.kyc.level)}</p>
+                <p>{levelToString(user.kyc.level)}</p>
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
                 <div className="flex flex-row gap-1 items-center">
-                  <p>{limitToString(user!.tradingLimit)}</p>
-                  {canContinueKyc && (
-                    <StyledIconButton icon={IconVariant.ARROW_UP} onClick={() => navigate('/limit')} />
-                  )}
+                  <p>{limitToString(user.tradingLimit)}</p>
+                  <StyledIconButton icon={IconVariant.ARROW_UP} onClick={() => navigate('/kyc')} />
                 </div>
               </StyledDataTableRow>
             </StyledDataTable>
