@@ -304,7 +304,7 @@ export function SellInfoScreen(): JSX.Element {
                   {paymentInfo.beneficiary.name && (
                     <StyledDataTableRow label={translate('screens/payment', 'Beneficiary Bank Account Name')}>
                       {paymentInfo.beneficiary.name}
-                      <CopyButton onCopy={() => copy(bankAccount.iban)} />
+                      <CopyButton onCopy={() => copy(paymentInfo.beneficiary.name)} />
                     </StyledDataTableRow>
                   )}
                 </StyledDataTable>
