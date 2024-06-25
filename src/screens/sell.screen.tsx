@@ -20,27 +20,20 @@ import {
   useUserContext,
 } from '@dfx.swiss/react';
 import {
-  AlignContent,
   AssetIconVariant,
-  CopyButton,
   Form,
-  IconColor,
   SpinnerSize,
   StyledBankAccountListItem,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
-  StyledDataTable,
-  StyledDataTableRow,
   StyledDropdown,
   StyledHorizontalStack,
-  StyledInfoText,
   StyledInput,
   StyledLink,
   StyledLoadingSpinner,
   StyledModalButton,
   StyledSearchDropdown,
-  StyledTabContainer,
   StyledTextBox,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -48,12 +41,12 @@ import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { AddressSwitch } from 'src/components/payment/address-switch';
+import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddBankAccount } from '../components/payment/add-bank-account';
-import { QrCopy } from '../components/payment/qr-copy';
 import { SellCompletion } from '../components/payment/sell-completion';
 import { SanctionHint } from '../components/sanction-hint';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
@@ -62,7 +55,6 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
-import { useClipboard } from '../hooks/clipboard.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -373,6 +365,22 @@ export default function SellScreen(): JSX.Element {
     return updateAccount(selectedBankAccount.id, { preferredCurrency: data.currency as Fiat });
   }
 
+  function getPaymentInfoString(paymentInfo: Sell, selectedBankAccount: BankAccount): string {
+    return (
+      paymentInfo &&
+      selectedBankAccount &&
+      translate(
+        'screens/sell',
+        'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts from {{chain}} to your IBAN {{iban}} in {{currency}}.',
+        {
+          chain: toString(paymentInfo.asset.blockchain),
+          currency: paymentInfo.currency.name,
+          iban: Utils.formatIban(selectedBankAccount.iban) ?? '',
+        },
+      )
+    );
+  }
+
   // misc
   function filterAssets(assets: Asset[], filter?: string): Asset[] {
     if (!filter) return assets;
@@ -617,40 +625,10 @@ export default function SellScreen(): JSX.Element {
                         type="sell"
                       />
 
-                      <StyledVerticalStack gap={3} full>
-                        <h2 className="text-dfxBlue-800 text-center">
-                          {translate('screens/payment', 'Payment Information')}
-                        </h2>
-
-                        {paymentInfo.paymentRequest && !canSendTransaction() ? (
-                          <StyledTabContainer
-                            tabs={[
-                              {
-                                title: translate('screens/payment', 'Text'),
-                                content: (
-                                  <PaymentInformationText paymentInfo={paymentInfo} account={selectedBankAccount} />
-                                ),
-                              },
-                              {
-                                title: translate('screens/payment', 'QR Code'),
-                                content: (
-                                  <StyledVerticalStack full center>
-                                    <p className="font-semibold text-sm text-dfxBlue-800">
-                                      {translate('screens/sell', 'Pay with your wallet')}
-                                    </p>
-                                    <QrCopy data={paymentInfo.paymentRequest} />
-                                  </StyledVerticalStack>
-                                ),
-                              },
-                            ]}
-                            darkTheme
-                            spread
-                            small
-                          />
-                        ) : (
-                          <PaymentInformationText paymentInfo={paymentInfo} account={selectedBankAccount} />
-                        )}
-                      </StyledVerticalStack>
+                      <PaymentInformationContent
+                        info={paymentInfo}
+                        infoText={getPaymentInfoString(paymentInfo, selectedBankAccount)}
+                      />
 
                       <SanctionHint />
 
@@ -687,38 +665,5 @@ export default function SellScreen(): JSX.Element {
         </Form>
       )}
     </Layout>
-  );
-}
-
-function PaymentInformationText({ paymentInfo, account }: { paymentInfo: Sell; account: BankAccount }): JSX.Element {
-  const { copy } = useClipboard();
-  const { translate } = useSettingsContext();
-  const { toString } = useBlockchain();
-
-  return (
-    <StyledVerticalStack gap={2} full>
-      <div className="text-left">
-        <StyledInfoText iconColor={IconColor.BLUE}>
-          {translate(
-            'screens/sell',
-            'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts from {{chain}} to your IBAN {{iban}} in {{currency}}.',
-            {
-              chain: toString(paymentInfo.asset.blockchain),
-              currency: paymentInfo.currency.name,
-              iban: Utils.formatIban(account.iban) ?? '',
-            },
-          )}
-        </StyledInfoText>
-      </div>
-
-      <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-        <StyledDataTableRow label={translate('screens/sell', 'Address')}>
-          <div>
-            <p>{blankedAddress(paymentInfo.depositAddress)}</p>
-          </div>
-          <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
-        </StyledDataTableRow>
-      </StyledDataTable>
-    </StyledVerticalStack>
   );
 }
