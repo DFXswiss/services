@@ -11,10 +11,12 @@ import {
   Validations,
   useAsset,
   useAssetContext,
+  useAuthContext,
   useBankAccount,
   useBankAccountContext,
   useFiat,
   useSell,
+  useSessionContext,
   useUserContext,
 } from '@dfx.swiss/react';
 import {
@@ -42,8 +44,10 @@ import {
   StyledTextBox,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+import { AddressSwitch } from 'src/components/payment/address-switch';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
@@ -63,13 +67,20 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useTxHelper } from '../hooks/tx-helper.hook';
-import { blankedAddress, isDefined } from '../util/utils';
+import { blankedAddress } from '../util/utils';
+
+interface Address {
+  address: string;
+  label: string;
+  chain?: Blockchain;
+}
 
 interface FormData {
   bankAccount: BankAccount;
   currency: Fiat;
   asset: Asset;
   amount: string;
+  address: Address;
 }
 
 interface CustomAmountError {
@@ -83,16 +94,28 @@ export default function SellScreen(): JSX.Element {
   useAddressGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { closeServices } = useAppHandlingContext();
+  const { isInitialized, closeServices } = useAppHandlingContext();
+  const { logout } = useSessionContext();
+  const { session } = useAuthContext();
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
-  const { blockchain: walletBlockchain, activeWallet } = useWalletContext();
+  const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
   const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
-  const { getAssets } = useAssetContext();
-  const { getAsset } = useAsset();
+  const { assets, getAssets } = useAssetContext();
+  const { getAsset, isSameAsset } = useAsset();
   const { navigate } = useNavigation();
-  const { assets, assetIn, assetOut, amountIn, bankAccount, blockchain, externalTransactionId, availableBlockchains } =
-    useAppParams();
+  const {
+    assets: assetFilter,
+    assetIn,
+    assetOut,
+    amountIn,
+    bankAccount,
+    blockchain,
+    externalTransactionId,
+    setParams,
+    hideTargetSelection,
+    availableBlockchains,
+  } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
   const { countries } = useUserContext();
@@ -112,18 +135,20 @@ export default function SellScreen(): JSX.Element {
   const [isTxDone, setTxDone] = useState<boolean>(false);
   const [sellTxId, setSellTxId] = useState<string>();
   const [bankAccountSelection, setBankAccountSelection] = useState(false);
+  const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
 
   useEffect(() => {
     availableAssets && getBalances(availableAssets).then(setBalances);
   }, [getBalances, availableAssets]);
 
   // form
-  const { control, handleSubmit, setValue } = useForm<FormData>({ mode: 'onTouched' });
+  const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
 
   const data = useWatch({ control });
   const selectedBankAccount = useWatch({ control, name: 'bankAccount' });
   const selectedAsset = useWatch({ control, name: 'asset' });
   const enteredAmount = useWatch({ control, name: 'amount' });
+  const selectedAddress = useWatch({ control, name: 'address' });
 
   const availableBalance = selectedAsset && findBalance(selectedAsset);
 
@@ -132,16 +157,32 @@ export default function SellScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
+  const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
+  const blockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
+
+  const addressItems: Address[] =
+    session?.address && blockchains?.length
+      ? [
+          ...blockchains.map((b) => ({
+            address: blankedAddress(session.address ?? ''),
+            label: toString(b),
+            chain: b,
+          })),
+          {
+            address: translate('screens/buy', 'Switch address'),
+            label: translate('screens/buy', 'Login with a different address'),
+          },
+        ]
+      : [];
+
   useEffect(() => {
     const activeBlockchain = walletBlockchain ?? blockchain;
     const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
-    const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false });
-    const activeAssets = assets
-      ? assets
-          .split(',')
-          .map((a) => getAsset(blockchainAssets, a))
-          .filter(isDefined)
-      : blockchainAssets;
+    const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false }).filter(
+      (a) => a.category === AssetCategory.PUBLIC || a.name === assetIn,
+    );
+    const activeAssets = filterAssets(blockchainAssets, assetFilter);
+
     setAvailableAssets(activeAssets);
 
     const asset = getAsset(activeAssets, assetIn) ?? (activeAssets.length === 1 && activeAssets[0]);
@@ -156,6 +197,24 @@ export default function SellScreen(): JSX.Element {
   useEffect(() => {
     if (amountIn) setVal('amount', amountIn);
   }, [amountIn]);
+
+  useEffect(() => setAddress(), [session?.address, translate]);
+
+  useEffect(() => {
+    if (selectedAddress) {
+      if (selectedAddress.chain) {
+        if (blockchain !== selectedAddress.chain) {
+          setParams({ blockchain: selectedAddress.chain });
+          switchBlockchain(selectedAddress.chain);
+          resetField('asset');
+          setAvailableAssets(undefined);
+        }
+      } else {
+        setShowsSwitchScreen(true);
+        setAddress();
+      }
+    }
+  }, [selectedAddress]);
 
   useEffect(() => {
     if (bankAccount && bankAccounts) {
@@ -314,8 +373,28 @@ export default function SellScreen(): JSX.Element {
     return updateAccount(selectedBankAccount.id, { preferredCurrency: data.currency as Fiat });
   }
 
+  // misc
+  function filterAssets(assets: Asset[], filter?: string): Asset[] {
+    if (!filter) return assets;
+
+    const allowedAssets = filter.split(',');
+    return assets.filter((a) => allowedAssets.some((f) => isSameAsset(a, f)));
+  }
+
   function onSubmit(_data: FormData) {
     // TODO: (Krysh fix broken form validation and onSubmit
+  }
+
+  function setAddress() {
+    if (isInitialized && session?.address && addressItems) {
+      const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
+      setVal('address', address);
+    }
+  }
+
+  function onAddressSwitch() {
+    logout();
+    navigate('/connect', { setRedirect: true });
   }
 
   async function handleNext(paymentInfo: Sell): Promise<void> {
@@ -353,7 +432,9 @@ export default function SellScreen(): JSX.Element {
       textStart
       rootRef={rootRef}
     >
-      {paymentInfo && isTxDone ? (
+      {showsSwitchScreen ? (
+        <AddressSwitch onClose={(r) => (r ? onAddressSwitch() : setShowsSwitchScreen(false))} />
+      ) : paymentInfo && isTxDone ? (
         <SellCompletion paymentInfo={paymentInfo} navigateOnClose={true} txId={sellTxId} />
       ) : (
         <Form
@@ -411,6 +492,17 @@ export default function SellScreen(): JSX.Element {
                     />
                   </div>
                 </StyledHorizontalStack>
+                {!hideTargetSelection && (
+                  <StyledDropdown<Address>
+                    rootRef={rootRef}
+                    name="address"
+                    items={addressItems}
+                    labelFunc={(item) => item.address}
+                    descriptionFunc={(item) => item.label}
+                    full
+                    forceEnable
+                  />
+                )}
               </StyledVerticalStack>
 
               <StyledVerticalStack gap={2} full>
