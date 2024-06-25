@@ -39,7 +39,6 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { useWalletContext } from 'src/contexts/wallet.context';
-import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
@@ -78,7 +77,6 @@ export function SellInfoScreen(): JSX.Element {
   const { closeServices } = useAppHandlingContext();
   const { sendTransaction, canSendTransaction } = useTxHelper();
   const { activeWallet } = useWalletContext();
-  const { toString } = useBlockchain();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { getTransactionByRequestId } = useTransaction();
 
@@ -123,27 +121,39 @@ export function SellInfoScreen(): JSX.Element {
   }, [bankAccountParam, getAccount, bankAccounts, countries]);
 
   useEffect(() => {
-    if (!paymentInfo) return;
-    const priceTimestamp = new Date(paymentInfo.timestamp).getTime();
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const expiration = priceTimestamp + Math.ceil((now - priceTimestamp) / 900_000) * 900_000;
-      const diff = expiration - now;
+    if (!paymentInfo || isLoading) return;
+    const exchangeRateInterval = setInterval(() => {
+      const priceTimestamp = new Date(paymentInfo.timestamp);
+      const expiration = priceTimestamp.setMinutes(priceTimestamp.getMinutes() + 15);
+      const diff = expiration - Date.now();
       setTimer({
         minutes: Math.floor(diff / 60_000),
         seconds: Math.floor((diff % 60_000) / 1000),
       });
 
       if (diff <= 1000) {
-        clearInterval(interval);
-        if (!isLoading) fetchData();
+        clearInterval(exchangeRateInterval);
+        fetchData();
       }
     }, 1000);
 
-    checkTransaction();
+    const checkTransactionInterval = setInterval(() => {
+      getTransactionByRequestId(paymentInfo.id.toString())
+        .then((tx) => {
+          setSellTxId(tx.inputTxId);
+          setShowsCompletion(true);
+          clearInterval(checkTransactionInterval);
+        })
+        .catch(() => {
+          // ignore 404 Not Found
+        });
+    }, 5000);
 
-    return () => clearInterval(interval);
-  }, [paymentInfo]);
+    return () => {
+      clearInterval(exchangeRateInterval);
+      clearInterval(checkTransactionInterval);
+    };
+  }, [paymentInfo, isLoading]);
 
   useEffect(() => fetchData(), [asset, currency, bankAccount, amountIn, amountOut]);
 
@@ -152,7 +162,13 @@ export function SellInfoScreen(): JSX.Element {
 
     setErrorMessage(undefined);
 
-    const request: SellPaymentInfo = { asset, currency, iban: bankAccount?.iban, externalTransactionId };
+    const request: SellPaymentInfo = {
+      asset,
+      currency,
+      iban: bankAccount?.iban,
+      externalTransactionId,
+      exactPrice: true,
+    };
     if (amountIn) {
       request.amount = +amountIn;
     } else if (amountOut) {
@@ -205,16 +221,6 @@ export function SellInfoScreen(): JSX.Element {
     return sell;
   }
 
-  async function checkTransaction() {
-    if (!paymentInfo || sellTxId) return;
-    getTransactionByRequestId(paymentInfo.id.toString())
-      .then((tx) => {
-        setSellTxId(tx.id.toString());
-        setShowsCompletion(true);
-      })
-      .catch(() => setTimeout(checkTransaction, 5000));
-  }
-
   async function handleNext(paymentInfo: Sell): Promise<void> {
     setIsProcessing(true);
 
@@ -233,11 +239,7 @@ export function SellInfoScreen(): JSX.Element {
     return (
       paymentInfo &&
       selectedBankAccount &&
-      translate('screens/payment', 'Please send the specified amount to the address below.', {
-        chain: toString(paymentInfo.asset.blockchain),
-        currency: paymentInfo.currency.name,
-        iban: Utils.formatIban(selectedBankAccount.iban) ?? '',
-      })
+      translate('screens/payment', 'Please send the specified amount to the address below.')
     );
   }
 
@@ -296,9 +298,15 @@ export function SellInfoScreen(): JSX.Element {
                       'IBAN',
                     )})`}
                   >
-                    {bankAccount.iban}
+                    {paymentInfo.beneficiary.iban}
                     <CopyButton onCopy={() => copy(bankAccount.iban)} />
                   </StyledDataTableRow>
+                  {paymentInfo.beneficiary.name && (
+                    <StyledDataTableRow label={translate('screens/payment', 'Beneficiary Bank Account Name')}>
+                      {paymentInfo.beneficiary.name}
+                      <CopyButton onCopy={() => copy(bankAccount.iban)} />
+                    </StyledDataTableRow>
+                  )}
                 </StyledDataTable>
                 <StyledInfoText textSize={StyledInfoTextSize.XS} iconColor={IconColor.GRAY} discreet>
                   {timer.minutes > 0 || timer.seconds > 0 ? (

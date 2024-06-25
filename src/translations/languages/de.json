@@ -288,6 +288,7 @@
     "Asset": "Asset",
     "Deposit Address": "Einzahlungsadresse",
     "Beneficiary Bank Account": "Begünstigten-Bankkonto",
+    "Beneficiary Bank Account Name": "Name des Begünstigten-Bankkontos",
 
     "Exchange rate": "Wechselkurs",
     "Base rate": "Basiskurs",

@@ -10,6 +10,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { blankedAddress } from 'src/util/utils';
@@ -58,7 +59,7 @@ export function PaymentInformationContent({ info, infoText }: PaymentInformation
   );
 }
 
-export function PaymentInformationText({
+function PaymentInformationText({
   paymentInfo,
   infoText,
 }: {
@@ -67,8 +68,9 @@ export function PaymentInformationText({
 }): JSX.Element {
   const { copy } = useClipboard();
   const { translate } = useSettingsContext();
+  const { toString } = useBlockchain();
 
-  const chain = 'blockchain' in paymentInfo ? paymentInfo.blockchain : paymentInfo.targetAsset.name;
+  const chain = 'asset' in paymentInfo ? paymentInfo.asset.blockchain : paymentInfo.sourceAsset.blockchain;
 
   return (
     <StyledVerticalStack gap={2} full>
@@ -85,7 +87,7 @@ export function PaymentInformationText({
         </StyledDataTableRow>
         <StyledDataTableRow label={translate('screens/sell', 'Blockchain')}>
           <div>
-            <p>{chain}</p>
+            <p>{toString(chain)}</p>
           </div>
         </StyledDataTableRow>
       </StyledDataTable>

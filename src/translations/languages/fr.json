@@ -288,6 +288,7 @@
     "Asset": "Actif",
     "Deposit Address": "Adresse de dépôt",
     "Beneficiary Bank Account": "Compte bancaire du bénéficiaire",
+    "Beneficiary Bank Account Name": "Nom du compte bancaire du bénéficiaire",
 
     "Exchange rate": "Taux de change",
     "Base rate": "Taux de base",
