@@ -1,9 +1,13 @@
 import {
   ApiError,
   DetailTransaction,
+  KycInfo,
+  KycLevel,
   Referral,
   Utils,
+  isStepDone,
   useAuthContext,
+  useKyc,
   useSessionContext,
   useTransaction,
   useUser,
@@ -12,15 +16,19 @@ import {
 import {
   AlignContent,
   CopyButton,
+  IconVariant,
   SpinnerSize,
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
+  StyledIconButton,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
+import { useKycHelper } from 'src/hooks/kyc-helper.hook';
+import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -30,6 +38,9 @@ import { useWalletContext } from '../contexts/wallet.context';
 export function AccountScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
+  const { limitToString, levelToString } = useKycHelper();
+  const { getKycInfo } = useKyc();
+  const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
   const { session } = useAuthContext();
   const { user, isUserLoading } = useUserContext();
@@ -40,15 +51,24 @@ export function AccountScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setRefferal] = useState<Referral | undefined>();
+  const [info, setInfo] = useState<KycInfo>();
 
   useEffect(() => {
     if (isLoggedIn) {
-      getRef().then((ref) => setRefferal(ref));
-      console.log('referral', referral);
+      getRef().then(setRefferal);
 
       loadTransactions();
     }
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    const kycCode = user?.kyc.hash;
+    if (kycCode) {
+      getKycInfo(kycCode).then(setInfo);
+    } else {
+      setInfo(undefined);
+    }
+  }, [user]);
 
   async function loadTransactions(): Promise<void> {
     Promise.all([getDetailTransactions(), getUnassignedTransactions()])
@@ -74,6 +94,9 @@ export function AccountScreen(): JSX.Element {
   const title = translate('screens/home', 'DFX services');
   const image = 'https://content.dfx.swiss/img/v1/services/berge.png';
   const hasBackButton = canClose && !isEmbedded;
+
+  const allKycStepsCompleted = info?.kycSteps.every((s) => isStepDone(s));
+  const canContinueKyc = !allKycStepsCompleted || (info && info.kycLevel >= KycLevel.Completed);
 
   const transactionItems = transactions?.map((t) => ({
     label: t.date?.toLocaleString() ?? '',
@@ -128,36 +151,47 @@ export function AccountScreen(): JSX.Element {
               />
             )}
           </StyledDataTable>
-          <StyledDataTable
-            label={translate('screens/home', 'Referral')}
-            alignContent={AlignContent.RIGHT}
-            showBorder
-            minWidth={false}
-          >
-            <StyledDataTableRow label={translate('screens/home', 'Referral code')}>
-              {referral?.code ? referral.code : 'N/A'}
-              {referral?.code && <CopyButton onCopy={() => copy(referral.code!)} />}
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
-              {Utils.formatAmountCrypto(referral?.commission ? referral.commission * 100 : 0)}%
-            </StyledDataTableRow>
-            <StyledDataTableExpandableRow
-              label={translate('screens/home', 'Your referral stats')}
-              expansionItems={referralItems}
-              discreet
-            />
-          </StyledDataTable>
-          <StyledDataTable
-            label={translate('screens/home', 'KYC')}
-            alignContent={AlignContent.RIGHT}
-            showBorder
-            minWidth={false}
-          >
-            <StyledDataTableRow label={translate('screens/home', 'Level')}>{user?.kyc.level}</StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
-              {user?.tradingLimit.limit}
-            </StyledDataTableRow>
-          </StyledDataTable>
+          {referral?.code && (
+            <StyledDataTable
+              label={translate('screens/home', 'Referral')}
+              alignContent={AlignContent.RIGHT}
+              showBorder
+              minWidth={false}
+            >
+              <StyledDataTableRow label={translate('screens/home', 'Referral code')}>
+                {referral.code}
+                <CopyButton onCopy={() => copy(referral.code!)} />
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
+                {(referral.commission * 100).toFixed(2)}%
+              </StyledDataTableRow>
+              <StyledDataTableExpandableRow
+                label={translate('screens/home', 'Your referral stats')}
+                expansionItems={referralItems}
+                discreet
+              />
+            </StyledDataTable>
+          )}
+          {info && (
+            <StyledDataTable
+              label={translate('screens/home', 'KYC')}
+              alignContent={AlignContent.RIGHT}
+              showBorder
+              minWidth={false}
+            >
+              <StyledDataTableRow label={translate('screens/home', 'Level')}>
+                <p>{levelToString(user!.kyc.level)}</p>
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
+                <div className="flex flex-row gap-1 items-center">
+                  <p>{limitToString(user!.tradingLimit)}</p>
+                  {canContinueKyc && (
+                    <StyledIconButton icon={IconVariant.ARROW_UP} onClick={() => navigate('/limit')} />
+                  )}
+                </div>
+              </StyledDataTableRow>
+            </StyledDataTable>
+          )}
         </StyledVerticalStack>
       )}
       {image && (
