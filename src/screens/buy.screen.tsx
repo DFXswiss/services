@@ -37,6 +37,7 @@ import {
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
 import { NameEdit } from '../components/edit/name.edit';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
@@ -44,7 +45,6 @@ import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { AddressSwitch } from '../components/payment/address-switch';
 import { BuyCompletion } from '../components/payment/buy-completion';
-import { PaymentInformationContent } from '../components/payment/payment-information';
 import { PrivateAssetHint } from '../components/private-asset-hint';
 import { SanctionHint } from '../components/sanction-hint';
 import { PaymentMethodDescriptions, PaymentMethodLabels } from '../config/labels';

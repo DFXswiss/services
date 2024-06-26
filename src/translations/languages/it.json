@@ -287,7 +287,8 @@
     "Transaction Details": "Dettagli della transazione",
     "Asset": "Attività",
     "Deposit Address": "Indirizzo di deposito",
-    "Beneficiary Bank Account": "Conto bancario del beneficiario",
+    "Beneficiary bank account": "Conto bancario del beneficiario",
+    "Beneficiary name": "Nome del beneficiario",
 
     "Exchange rate": "Tasso di cambio",
     "Base rate": "Tasso base",
@@ -365,7 +366,11 @@
     "Entered amount is higher than available balance of {{amount}} {{asset}}": "L'importo inserito è superiore al saldo disponibile di {{amount}} {{asset}}",
     "Nice! You are all set! Give us a minute to handle your transaction.": "Bello! Siete pronti! Dateci un minuto per gestire la vostra transazione.",
     "We will inform you by email about the progress of your transactions.": "Vi informeremo via e-mail sull'andamento delle vostre transazioni.",
-    "Enter your email address if you want to be informed about the progress of any purchase or sale": "Inserite il vostro indirizzo e-mail se volete essere informati sull'andamento delle vostre transazioni"
+    "Enter your email address if you want to be informed about the progress of any purchase or sale": "Inserite il vostro indirizzo e-mail se volete essere informati sull'andamento delle vostre transazioni",
+
+    "The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.": "Il tasso di cambio di {{rate}} {{currency}}/{{asset}} è fisso per {{timer}}, dopo di che sarà ricalcolato.",
+    "Please send the specified amount to the address below.": "Si prega di inviare l'importo specificato all'indirizzo sottostante.",
+    "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni."
   },
   "screens/iban": {
     "Bank Accounts": "Conti bancari",
