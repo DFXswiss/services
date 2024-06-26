@@ -3,6 +3,8 @@ import {
   Referral,
   UserAddress,
   Utils,
+  useApi,
+  useApiSession,
   useSessionContext,
   useTransaction,
   useUser,
@@ -14,14 +16,22 @@ import {
   Form,
   IconVariant,
   SpinnerSize,
+  StyledButton,
+  StyledButtonColor,
+  StyledButtonWidth,
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledHorizontalStack,
   StyledIconButton,
   StyledLoadingSpinner,
+  StyledModal,
+  StyledModalType,
+  StyledSpacer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { SignIn } from '@dfx.swiss/react/dist/definitions/auth';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -43,13 +53,16 @@ export function AccountScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
+  const { updateSession, deleteSession } = useApiSession();
   const { getRef } = useUser();
+  const { call } = useApi();
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setRefferal] = useState<Referral | undefined>();
+  const [showDeleteAddressModal, setShowDeleteAddressModal] = useState<boolean>(false);
 
   const {
     control,
@@ -102,11 +115,29 @@ export function AccountScreen(): JSX.Element {
   }
 
   async function switchUser(address: string): Promise<void> {
-    // TODO: https://api.dfx.swiss/swagger#/User/UserController_changeUser
+    const { accessToken } = await call<SignIn>({
+      url: 'user/change',
+      data: { address },
+      method: 'POST',
+    });
+
+    updateSession(accessToken);
   }
 
-  async function deleteUser(address: string): Promise<void> {
-    // TODO: https://api.dfx.swiss/swagger#/User/UserController_deleteUser
+  async function deleteUser(): Promise<void> {
+    setShowDeleteAddressModal(false);
+
+    try {
+      await call({ url: 'user', method: 'DELETE' });
+      if (user!.addresses.length > 0) {
+        switchUser(user!.addresses[0].address);
+        setValue('address', user!.addresses[0]);
+      } else {
+        deleteSession();
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   const title = translate('screens/home', 'DFX services');
@@ -155,32 +186,40 @@ export function AccountScreen(): JSX.Element {
         </div>
       ) : (
         <StyledVerticalStack gap={4} center full marginY={4}>
-          <div className="w-full bg-dfxGray-300 p-2 rounded-md">
-            <div className="bg-white w-full rounded-md">
-              <Form control={control} errors={errors}>
-                <StyledDropdown
-                  name="address"
-                  placeholder={translate('general/actions', 'Select...')}
-                  items={Object.values(user!.addresses)}
-                  disabled={user!.addresses.length === 0}
-                  labelFunc={(item) => item.wallet}
-                  descriptionFunc={(item) => item.address}
-                />
-              </Form>
+          {user?.activeAddress && (
+            <div className="w-full bg-dfxGray-300 p-2 rounded-md">
+              <div className="bg-white w-full rounded-md">
+                <Form control={control} errors={errors}>
+                  <StyledDropdown
+                    name="address"
+                    placeholder={translate('general/actions', 'Select...')}
+                    items={Object.values(user!.addresses)}
+                    disabled={user!.addresses.length === 0}
+                    labelFunc={(item) => item.wallet}
+                    descriptionFunc={(item) => item.address}
+                  />
+                </Form>
+              </div>
+              <DeleteAddressModal
+                isVisible={showDeleteAddressModal}
+                address={selectedAddress?.address}
+                onConfirm={deleteUser}
+                onCancel={() => setShowDeleteAddressModal(false)}
+              />
+              <div className="flex flex-row  gap-2 w-full justify-end items-center text-dfxGray-800 text-xs pt-1.5 pr-1.5">
+                <button
+                  onClick={() => setShowDeleteAddressModal(true)}
+                  className="cursor-pointer hover:text-dfxRed-150"
+                >
+                  Delete Address
+                </button>
+                {' | '}
+                <button onClick={() => copy(selectedAddress.address)} className="cursor-pointer hover:text-dfxRed-150">
+                  Copy Address
+                </button>
+              </div>
             </div>
-            <div className="flex flex-row  gap-2 w-full justify-end items-center text-dfxGray-800 text-xs pt-1.5 pr-1.5">
-              <button
-                onClick={() => deleteUser(selectedAddress.address)}
-                className="cursor-pointer hover:text-dfxRed-150"
-              >
-                Delete Address
-              </button>
-              {' | '}
-              <button onClick={() => copy(selectedAddress.address)} className="cursor-pointer hover:text-dfxRed-150">
-                Copy Address
-              </button>
-            </div>
-          </div>
+          )}
           <StyledDataTable
             label={translate('screens/home', 'Activity')}
             alignContent={AlignContent.RIGHT}
@@ -253,5 +292,43 @@ export function AccountScreen(): JSX.Element {
         </div>
       )}
     </Layout>
+  );
+}
+
+function DeleteAddressModal({
+  isVisible,
+  address,
+  onConfirm,
+  onCancel,
+}: {
+  isVisible: boolean;
+  address: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}): JSX.Element {
+  return (
+    <StyledModal isVisible={isVisible} onClose={onCancel} type={StyledModalType.ALERT}>
+      <h2>Delete Address?</h2>
+      <StyledSpacer spacing={3} />
+      <p>
+        Are you sure you want to delete the address <strong>{address}</strong> from your DFX account? This action is
+        irreversible.
+      </p>
+      <StyledSpacer spacing={7} />
+      <StyledHorizontalStack gap={5}>
+        <StyledButton
+          color={StyledButtonColor.GRAY_OUTLINE}
+          label="Cancel"
+          onClick={onCancel}
+          width={StyledButtonWidth.FULL}
+        />
+        <StyledButton
+          color={StyledButtonColor.RED}
+          label="Confirm"
+          onClick={onConfirm}
+          width={StyledButtonWidth.FULL}
+        />
+      </StyledHorizontalStack>
+    </StyledModal>
   );
 }
