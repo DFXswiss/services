@@ -1,9 +1,8 @@
 import {
-  ApiError,
   DetailTransaction,
   Referral,
+  UserAddress,
   Utils,
-  useAuthContext,
   useSessionContext,
   useTransaction,
   useUser,
@@ -12,24 +11,30 @@ import {
 import {
   AlignContent,
   CopyButton,
+  Form,
   IconVariant,
   SpinnerSize,
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
+  StyledDropdown,
   StyledIconButton,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
+
+interface FormData {
+  address: UserAddress;
+}
 
 export function AccountScreen(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -37,7 +42,6 @@ export function AccountScreen(): JSX.Element {
   const { limitToString, levelToString } = useKycHelper();
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
-  const { session } = useAuthContext();
   const { user, isUserLoading } = useUserContext();
   const { getRef } = useUser();
   const { canClose, isEmbedded } = useAppHandlingContext();
@@ -47,13 +51,32 @@ export function AccountScreen(): JSX.Element {
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setRefferal] = useState<Referral | undefined>();
 
+  const {
+    control,
+    formState: { errors },
+    setValue,
+  } = useForm<FormData>();
+
+  const selectedAddress = useWatch({ control, name: 'address' });
+
   useEffect(() => {
     if (isLoggedIn) {
       getRef().then(setRefferal);
-
       loadTransactions();
     }
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (user?.activeAddress) {
+      setValue('address', user.activeAddress);
+    }
+  }, [user?.activeAddress]);
+
+  useEffect(() => {
+    if (user?.activeAddress && user.activeAddress.address !== selectedAddress.address) {
+      switchUser(selectedAddress.address);
+    }
+  }, [selectedAddress]);
 
   async function loadTransactions(): Promise<void> {
     Promise.all([getDetailTransactions(), getUnassignedTransactions()])
@@ -73,7 +96,17 @@ export function AccountScreen(): JSX.Element {
           })),
         );
       })
-      .catch((error: ApiError) => console.error(error.message ?? 'Unknown error'));
+      .catch(() => {
+        // ignore errors
+      });
+  }
+
+  async function switchUser(address: string): Promise<void> {
+    // TODO: https://api.dfx.swiss/swagger#/User/UserController_changeUser
+  }
+
+  async function deleteUser(address: string): Promise<void> {
+    // TODO: https://api.dfx.swiss/swagger#/User/UserController_deleteUser
   }
 
   const title = translate('screens/home', 'DFX services');
@@ -83,11 +116,6 @@ export function AccountScreen(): JSX.Element {
   const transactionItems = transactions?.map((t) => ({
     label: t.date?.toLocaleString() ?? '',
     text: `${t.inputAmount} ${t.inputAsset} -> ${t.outputAmount} ${t.outputAsset}`,
-  }));
-
-  const addressesByVolume = user?.addresses.map((a) => ({
-    label: blankedAddress(a.address),
-    text: (a.volumes.buy.total + a.volumes.sell.total + a.volumes.swap.total).toString(),
   }));
 
   const referralItems = referral?.code
@@ -100,6 +128,25 @@ export function AccountScreen(): JSX.Element {
       ]
     : [];
 
+  const totalVolumeItems = user
+    ? [
+        { label: translate('screens/home', 'Buy'), text: user.volumes.buy.total.toFixed(2) },
+        { label: translate('screens/home', 'Sell'), text: user.volumes.sell.total.toFixed(2) },
+        { label: translate('screens/home', 'Swap'), text: user.volumes.swap.total.toFixed(2) },
+      ]
+    : [];
+
+  const annualVolumeItems = user
+    ? [
+        { label: translate('screens/home', 'Buy'), text: user.volumes.buy.annual.toFixed(2) },
+        { label: translate('screens/home', 'Sell'), text: user.volumes.sell.annual.toFixed(2) },
+        { label: translate('screens/home', 'Swap'), text: user.volumes.swap.annual.toFixed(2) },
+      ]
+    : [];
+
+  const totalVolumeSum = user ? totalVolumeItems.reduce((acc, item) => acc + parseFloat(item.text), 0) : 0;
+  const annualVolumeSum = user ? annualVolumeItems.reduce((acc, item) => acc + parseFloat(item.text), 0) : 0;
+
   return (
     <Layout title={isEmbedded ? title : undefined} backButton={hasBackButton} rootRef={rootRef}>
       {!isInitialized || isUserLoading ? (
@@ -108,28 +155,54 @@ export function AccountScreen(): JSX.Element {
         </div>
       ) : (
         <StyledVerticalStack gap={4} center full marginY={4}>
+          <div className="w-full bg-dfxGray-300 p-2 rounded-md">
+            <div className="bg-white w-full rounded-md">
+              <Form control={control} errors={errors}>
+                <StyledDropdown
+                  name="address"
+                  placeholder={translate('general/actions', 'Select...')}
+                  items={Object.values(user!.addresses)}
+                  disabled={user!.addresses.length === 0}
+                  labelFunc={(item) => item.wallet}
+                  descriptionFunc={(item) => item.address}
+                />
+              </Form>
+            </div>
+            <div className="flex flex-row  gap-2 w-full justify-end items-center text-dfxGray-800 text-xs pt-1.5 pr-1.5">
+              <button
+                onClick={() => deleteUser(selectedAddress.address)}
+                className="cursor-pointer hover:text-dfxRed-150"
+              >
+                Delete Address
+              </button>
+              {' | '}
+              <button onClick={() => copy(selectedAddress.address)} className="cursor-pointer hover:text-dfxRed-150">
+                Copy Address
+              </button>
+            </div>
+          </div>
           <StyledDataTable
-            label={translate('screens/home', 'Account')}
+            label={translate('screens/home', 'Activity')}
             alignContent={AlignContent.RIGHT}
             showBorder
             minWidth={false}
           >
-            <StyledDataTableRow label={translate('screens/home', 'Active address')}>
-              {blankedAddress(session?.address || '', 10)}
-              <CopyButton onCopy={() => copy(`${session?.address}`)} />
-            </StyledDataTableRow>
+            <StyledDataTableExpandableRow
+              label={translate('screens/home', 'Total trading volume')}
+              expansionItems={totalVolumeItems}
+            >
+              {totalVolumeSum.toFixed(2)}
+            </StyledDataTableExpandableRow>
+            <StyledDataTableExpandableRow
+              label={translate('screens/home', 'Annual trading volume')}
+              expansionItems={annualVolumeItems}
+            >
+              {annualVolumeSum.toFixed(2)}
+            </StyledDataTableExpandableRow>
             {transactionItems && transactionItems.length > 0 && (
               <StyledDataTableExpandableRow
                 label={translate('screens/home', 'Latest transactions')}
                 expansionItems={transactionItems}
-                discreet
-              />
-            )}
-            {addressesByVolume && addressesByVolume.length > 0 && (
-              <StyledDataTableExpandableRow
-                label={translate('screens/home', 'Addresses by volume')}
-                expansionItems={addressesByVolume}
-                discreet
               />
             )}
           </StyledDataTable>
