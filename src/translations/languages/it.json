@@ -287,8 +287,8 @@
     "Transaction Details": "Dettagli della transazione",
     "Asset": "Attività",
     "Deposit Address": "Indirizzo di deposito",
-    "Beneficiary Bank Account": "Conto bancario del beneficiario",
-    "Beneficiary Bank Account Name": "Nome del conto bancario del beneficiario",
+    "Beneficiary bank account": "Conto bancario del beneficiario",
+    "Beneficiary name": "Nome del beneficiario",
 
     "Exchange rate": "Tasso di cambio",
     "Base rate": "Tasso base",

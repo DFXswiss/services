@@ -287,8 +287,8 @@
     "Transaction Details": "Transaktionsdetails",
     "Asset": "Asset",
     "Deposit Address": "Einzahlungsadresse",
-    "Beneficiary Bank Account": "Begünstigten-Bankkonto",
-    "Beneficiary Bank Account Name": "Name des Begünstigten-Bankkontos",
+    "Beneficiary bank account": "Begünstigten-Bankkonto",
+    "Beneficiary name": "Name des Begünstigten",
 
     "Exchange rate": "Wechselkurs",
     "Base rate": "Basiskurs",
