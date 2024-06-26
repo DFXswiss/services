@@ -211,11 +211,11 @@ export function AccountScreen(): JSX.Element {
                   onClick={() => setShowDeleteAddressModal(true)}
                   className="cursor-pointer hover:text-dfxRed-150"
                 >
-                  Delete Address
+                  {translate('general/actions', 'Delete Address')}
                 </button>
                 {' | '}
                 <button onClick={() => copy(selectedAddress.address)} className="cursor-pointer hover:text-dfxRed-150">
-                  Copy Address
+                  {translate('general/actions', 'Copy Address')}
                 </button>
               </div>
             </div>
@@ -306,25 +306,33 @@ function DeleteAddressModal({
   onConfirm: () => void;
   onCancel: () => void;
 }): JSX.Element {
+  const { translate } = useSettingsContext();
+  const message = translate(
+    'screens/home',
+    'Are you sure you want to delete the address {{address}} from your DFX account? This action is irreversible.',
+    { address },
+  ).split(address);
+
   return (
     <StyledModal isVisible={isVisible} onClose={onCancel} type={StyledModalType.ALERT}>
-      <h2>Delete Address?</h2>
+      <h2>{translate('screens/actions', 'Delete Address')}?</h2>
       <StyledSpacer spacing={3} />
       <p>
-        Are you sure you want to delete the address <strong>{address}</strong> from your DFX account? This action is
-        irreversible.
+        {message[0]}
+        <strong>{address}</strong>
+        {message[1]}
       </p>
       <StyledSpacer spacing={7} />
       <StyledHorizontalStack gap={5}>
         <StyledButton
           color={StyledButtonColor.GRAY_OUTLINE}
-          label="Cancel"
+          label={translate('screens/home', 'Cancel')}
           onClick={onCancel}
           width={StyledButtonWidth.FULL}
         />
         <StyledButton
           color={StyledButtonColor.RED}
-          label="Confirm"
+          label={translate('screens/home', 'Delete')}
           onClick={onConfirm}
           width={StyledButtonWidth.FULL}
         />
