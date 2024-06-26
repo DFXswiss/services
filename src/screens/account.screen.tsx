@@ -35,6 +35,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { useStore } from 'src/hooks/store.hook';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -55,6 +56,7 @@ export function AccountScreen(): JSX.Element {
   const { getRef, changeUserAddress, deleteUserAddress } = useUser();
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
+  const { activeWallet } = useStore();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
@@ -114,6 +116,7 @@ export function AccountScreen(): JSX.Element {
   async function switchUser(address: string): Promise<void> {
     const { accessToken } = await changeUserAddress(address);
     updateSession(accessToken);
+    activeWallet.remove();
   }
 
   async function deleteUser(): Promise<void> {
@@ -126,6 +129,7 @@ export function AccountScreen(): JSX.Element {
         setValue('address', user!.addresses[0]);
       } else {
         deleteSession();
+        activeWallet.remove();
       }
     } catch (e) {
       console.error(e);
