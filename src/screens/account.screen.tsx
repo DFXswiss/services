@@ -3,7 +3,6 @@ import {
   Referral,
   UserAddress,
   Utils,
-  useApi,
   useApiSession,
   useSessionContext,
   useTransaction,
@@ -31,7 +30,6 @@ import {
   StyledSpacer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { SignIn } from '@dfx.swiss/react/dist/definitions/auth';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -54,8 +52,7 @@ export function AccountScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
   const { updateSession, deleteSession } = useApiSession();
-  const { getRef } = useUser();
-  const { call } = useApi();
+  const { getRef, changeUserAddress, deleteUserAddress } = useUser();
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
 
@@ -115,12 +112,7 @@ export function AccountScreen(): JSX.Element {
   }
 
   async function switchUser(address: string): Promise<void> {
-    const { accessToken } = await call<SignIn>({
-      url: 'user/change',
-      data: { address },
-      method: 'POST',
-    });
-
+    const { accessToken } = await changeUserAddress(address);
     updateSession(accessToken);
   }
 
@@ -128,7 +120,7 @@ export function AccountScreen(): JSX.Element {
     setShowDeleteAddressModal(false);
 
     try {
-      await call({ url: 'user', method: 'DELETE' });
+      await deleteUserAddress();
       if (user!.addresses.length > 0) {
         switchUser(user!.addresses[0].address);
         setValue('address', user!.addresses[0]);
