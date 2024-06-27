@@ -10,6 +10,7 @@
     "Cancel": "Abbrechen",
     "Finish": "Fertig",
     "Save": "Speichern",
+    "Delete": "Löschen",
     "Login": "Login",
     "Logout": "Logout",
     "Back": "Zurück",
@@ -19,7 +20,9 @@
     "Yes": "Ja",
     "No": "Nein",
     "Drop files here": "Dateien hier ablegen",
-    "Browse": "Durchsuchen"
+    "Browse": "Durchsuchen",
+    "Delete Address": "Adresse löschen",
+    "Copy Address": "Adresse kopieren"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -214,7 +217,10 @@
     "Instructions": "Anleitung",
 
     "Account": "Konto",
+    "Activity": "Aktivität",
     "Active address": "Aktive Adresse",
+    "Total trading volume": "Gesamthandelsvolumen",
+    "Annual trading volume": "Jährliches Handelsvolumen",
     "Latest transactions": "Neueste Transaktionen",
     "Addresses by volume": "Adressen nach Volumen",
     "Referral": "Referral",
@@ -226,7 +232,9 @@
     "Credit": "Guthaben",
     "Paid credit": "Ausgezahltes Guthaben",
     "User count": "Anzahl Benutzer",
-    "Active user count": "Anzahl aktiver Benutzer"
+    "Active user count": "Anzahl aktiver Benutzer",
+
+    "Are you sure you want to delete the address {{address}} from your DFX account? This action is irreversible.": "Bist Du sicher, dass Du die Adresse {{address}} von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen."
   },
   "screens/buy": {
     "Buy": "Kaufen",

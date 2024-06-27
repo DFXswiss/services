@@ -132,7 +132,7 @@ export function AccountScreen(): JSX.Element {
         activeWallet.remove();
       }
     } catch (e) {
-      console.error(e);
+      // ignore errors
     }
   }
 
@@ -157,17 +157,17 @@ export function AccountScreen(): JSX.Element {
 
   const totalVolumeItems = user
     ? [
-        { label: translate('screens/home', 'Buy'), text: user.volumes.buy.total.toFixed(2) },
-        { label: translate('screens/home', 'Sell'), text: user.volumes.sell.total.toFixed(2) },
-        { label: translate('screens/home', 'Swap'), text: user.volumes.swap.total.toFixed(2) },
+        { label: translate('general/services', 'Buy'), text: user.volumes.buy.total.toFixed(2) },
+        { label: translate('general/services', 'Sell'), text: user.volumes.sell.total.toFixed(2) },
+        { label: translate('general/services', 'Swap'), text: user.volumes.swap.total.toFixed(2) },
       ]
     : [];
 
   const annualVolumeItems = user
     ? [
-        { label: translate('screens/home', 'Buy'), text: user.volumes.buy.annual.toFixed(2) },
-        { label: translate('screens/home', 'Sell'), text: user.volumes.sell.annual.toFixed(2) },
-        { label: translate('screens/home', 'Swap'), text: user.volumes.swap.annual.toFixed(2) },
+        { label: translate('general/services', 'Buy'), text: user.volumes.buy.annual.toFixed(2) },
+        { label: translate('general/services', 'Sell'), text: user.volumes.sell.annual.toFixed(2) },
+        { label: translate('general/services', 'Swap'), text: user.volumes.swap.annual.toFixed(2) },
       ]
     : [];
 
@@ -311,7 +311,7 @@ function DeleteAddressModal({
 
   return (
     <StyledModal isVisible={isVisible} onClose={onCancel} type={StyledModalType.ALERT}>
-      <h2>{translate('screens/actions', 'Delete Address')}?</h2>
+      <h2>{translate('general/actions', 'Delete Address')}?</h2>
       <StyledSpacer spacing={3} />
       <p>
         {message[0]}
@@ -322,13 +322,13 @@ function DeleteAddressModal({
       <StyledHorizontalStack gap={5}>
         <StyledButton
           color={StyledButtonColor.GRAY_OUTLINE}
-          label={translate('screens/home', 'Cancel')}
+          label={translate('general/actions', 'Cancel')}
           onClick={onCancel}
           width={StyledButtonWidth.FULL}
         />
         <StyledButton
           color={StyledButtonColor.RED}
-          label={translate('screens/home', 'Delete')}
+          label={translate('general/actions', 'Delete')}
           onClick={onConfirm}
           width={StyledButtonWidth.FULL}
         />

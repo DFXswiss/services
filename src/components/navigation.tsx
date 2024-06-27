@@ -33,6 +33,10 @@ interface FormData {
   language: Language;
 }
 
+interface AddressData {
+  address: UserAddress;
+}
+
 interface BackButtonProps extends PropsWithChildren {
   title?: string;
   backButton?: boolean;
@@ -253,10 +257,6 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
       </div>
     </nav>
   );
-}
-
-interface AddressData {
-  address: UserAddress;
 }
 
 function AddressSelector(): JSX.Element {
