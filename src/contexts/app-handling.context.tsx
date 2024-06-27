@@ -183,11 +183,15 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     return Object.values(paramSet).some((value) => value !== undefined);
   }
 
+  function paramsHasSession(params?: AppParams): boolean {
+    return Boolean(params?.session || (params?.address && params.signature));
+  }
+
   function loadQueryParams(): AppParams {
     let queryParams = extractUrlParams(props.params);
 
     const storedParams = storeQueryParams.get();
-    if ((paramsIsNotEmpty(queryParams) && !storedParams?.session) || queryParams.session) {
+    if ((paramsIsNotEmpty(queryParams) && !paramsHasSession(storedParams)) || paramsHasSession(queryParams)) {
       storeQueryParams.set(queryParams);
     } else {
       queryParams = storedParams ?? {};
@@ -205,7 +209,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       storeRedirectUri.set(params.redirectUri);
     }
 
-    const hasSession = Boolean(params.session || (params.address && params.signature));
+    const hasSession = paramsHasSession(params);
     setHasSession(hasSession);
     if (params.balances || hasSession) {
       readBalances(params.balances);
