@@ -5,9 +5,6 @@ import { useStore } from '../hooks/store.hook';
 import { useAppHandlingContext } from './app-handling.context';
 import { useBalanceContext } from './balance.context';
 
-const SignatureFormat =
-  /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[A-Fa-f0-9]{64})$/;
-
 export enum WalletType {
   META_MASK = 'MetaMask',
   ALBY = 'Alby',
@@ -145,8 +142,6 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   async function handleParamSession(): Promise<boolean> {
     try {
       if (appParams.address && appParams.signature) {
-        if (!SignatureFormat.test(appParams.signature)) throw new Error('Invalid signature');
-
         await createSession(appParams.address, appParams.signature);
         return true;
       } else if (appParams.session && Utils.isJwt(appParams.session)) {
