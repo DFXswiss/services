@@ -21,7 +21,6 @@ import {
 import { PropsWithChildren, SetStateAction, forwardRef, useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
-import { useWalletContext } from 'src/contexts/wallet.context';
 import { useStore } from 'src/hooks/store.hook';
 import { blankedAddress } from 'src/util/utils';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
@@ -260,8 +259,7 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
 }
 
 function AddressSelector(): JSX.Element {
-  const { user, isUserLoading } = useUserContext();
-  const { isInitialized } = useWalletContext();
+  const { user } = useUserContext();
   const { activeWallet } = useStore();
   const { changeUserAddress } = useUser();
   const { updateSession } = useApiSession();
@@ -292,7 +290,7 @@ function AddressSelector(): JSX.Element {
     activeWallet.remove();
   }
 
-  return isInitialized && !isUserLoading ? (
+  return user?.addresses ? (
     <Form control={control} errors={errors}>
       <StyledDropdown
         name="address"
