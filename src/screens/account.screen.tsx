@@ -141,8 +141,10 @@ export function AccountScreen(): JSX.Element {
   const hasBackButton = canClose && !isEmbedded;
 
   const transactionItems = transactions?.map((t) => ({
-    label: t.date?.toLocaleString() ?? '',
-    text: `${t.inputAmount} ${t.inputAsset} -> ${t.outputAmount} ${t.outputAsset}`,
+    label: new Date(t.date as Date).toLocaleString(),
+    text: `${t.inputAsset ? `${t.inputAmount ?? ''} ${t.inputAsset}` : ''} ${
+      t.inputAsset && t.outputAsset ? ' → ' : ''
+    } ${t.outputAsset ? `${t.outputAmount ?? ''} ${t.outputAsset}` : ''}`,
   }));
 
   const referralItems = referral?.code
@@ -238,6 +240,7 @@ export function AccountScreen(): JSX.Element {
               <StyledDataTableExpandableRow
                 label={translate('screens/home', 'Latest transactions')}
                 expansionItems={transactionItems}
+                discreet
               />
             )}
           </StyledDataTable>
