@@ -223,7 +223,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),
           ...Object.entries(params)
-            .filter(([key, _]) => urlParamsToRemove.includes(key))
+            .filter(([_, val]) => typeof val === 'string')
             .reduce((prev, [key, val]) => {
               prev[key] = val;
               return prev;
