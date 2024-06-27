@@ -15,35 +15,44 @@ import {
   useBankAccountContext,
   useFiat,
   useSell,
+  useTransaction,
   useUserContext,
 } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
+  IconColor,
   SpinnerSize,
+  SpinnerVariant,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
   StyledDataTable,
   StyledDataTableRow,
   StyledInfoText,
+  StyledInfoTextSize,
   StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
+import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
-import { QrCopy } from '../components/payment/qr-copy';
 import { SellCompletion } from '../components/payment/sell-completion';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
+
+interface Timer {
+  minutes: number;
+  seconds: number;
+}
 
 export function SellInfoScreen(): JSX.Element {
   useAddressGuard();
@@ -69,6 +78,7 @@ export function SellInfoScreen(): JSX.Element {
   const { sendTransaction, canSendTransaction } = useTxHelper();
   const { activeWallet } = useWalletContext();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { getTransactionByRequestId } = useTransaction();
 
   const [isLoading, setIsLoading] = useState(true);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
@@ -82,6 +92,7 @@ export function SellInfoScreen(): JSX.Element {
   const [kycError, setKycError] = useState<TransactionError>();
   const [isProcessing, setIsProcessing] = useState(false);
   const [sellTxId, setSellTxId] = useState<string>();
+  const [timer, setTimer] = useState<Timer>({ minutes: 0, seconds: 0 });
 
   // default params
   useEffect(() => {
@@ -109,6 +120,41 @@ export function SellInfoScreen(): JSX.Element {
     }
   }, [bankAccountParam, getAccount, bankAccounts, countries]);
 
+  useEffect(() => {
+    if (!paymentInfo || isLoading) return;
+    const exchangeRateInterval = setInterval(() => {
+      const priceTimestamp = new Date(paymentInfo.timestamp);
+      const expiration = priceTimestamp.setMinutes(priceTimestamp.getMinutes() + 15);
+      const diff = expiration - Date.now();
+      setTimer({
+        minutes: Math.floor(diff / 60_000),
+        seconds: Math.floor((diff % 60_000) / 1000),
+      });
+
+      if (diff <= 1000) {
+        clearInterval(exchangeRateInterval);
+        fetchData();
+      }
+    }, 1000);
+
+    const checkTransactionInterval = setInterval(() => {
+      getTransactionByRequestId(paymentInfo.id.toString())
+        .then((tx) => {
+          setSellTxId(tx.inputTxId);
+          setShowsCompletion(true);
+          clearInterval(checkTransactionInterval);
+        })
+        .catch(() => {
+          // ignore 404 Not Found
+        });
+    }, 5000);
+
+    return () => {
+      clearInterval(exchangeRateInterval);
+      clearInterval(checkTransactionInterval);
+    };
+  }, [paymentInfo, isLoading]);
+
   useEffect(() => fetchData(), [asset, currency, bankAccount, amountIn, amountOut]);
 
   function fetchData() {
@@ -116,7 +162,13 @@ export function SellInfoScreen(): JSX.Element {
 
     setErrorMessage(undefined);
 
-    const request: SellPaymentInfo = { asset, currency, iban: bankAccount?.iban, externalTransactionId };
+    const request: SellPaymentInfo = {
+      asset,
+      currency,
+      iban: bankAccount?.iban,
+      externalTransactionId,
+      exactPrice: true,
+    };
     if (amountIn) {
       request.amount = +amountIn;
     } else if (amountOut) {
@@ -183,6 +235,14 @@ export function SellInfoScreen(): JSX.Element {
     }
   }
 
+  function getPaymentInfoString(paymentInfo: Sell, selectedBankAccount: BankAccount): string {
+    return (
+      paymentInfo &&
+      selectedBankAccount &&
+      translate('screens/payment', 'Please send the specified amount to the address below.')
+    );
+  }
+
   return (
     <Layout textStart backButton={false} scrollRef={scrollRef}>
       {showsCompletion && paymentInfo ? (
@@ -218,75 +278,85 @@ export function SellInfoScreen(): JSX.Element {
         bankAccount &&
         paymentInfo && (
           <>
-            <h2 className="text-dfxBlue-800 text-center">{translate('screens/payment', 'Payment Information')}</h2>
+            <StyledVerticalStack gap={8} full>
+              <StyledVerticalStack gap={1} full>
+                <StyledDataTable
+                  label={translate('screens/payment', 'Transaction Details')}
+                  alignContent={AlignContent.RIGHT}
+                  showBorder
+                  minWidth={false}
+                >
+                  <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
+                    <div className="flex flex-col items-end">
+                      {`${paymentInfo.amount} ${paymentInfo.asset.name}`}
+                      <p className="text-dfxGray-700 text-xs">{`${paymentInfo.estimatedAmount} ${paymentInfo.currency.name}`}</p>
+                    </div>
+                  </StyledDataTableRow>
+                  <StyledDataTableRow
+                    label={`${translate('screens/payment', 'Beneficiary bank account')} (${translate(
+                      'screens/payment',
+                      'IBAN',
+                    )})`}
+                  >
+                    {paymentInfo.beneficiary.iban}
+                    <CopyButton onCopy={() => copy(bankAccount.iban)} />
+                  </StyledDataTableRow>
+                  {paymentInfo.beneficiary.name && (
+                    <StyledDataTableRow label={translate('screens/payment', 'Beneficiary name')}>
+                      {paymentInfo.beneficiary.name}
+                      <CopyButton onCopy={() => copy(paymentInfo.beneficiary.name)} />
+                    </StyledDataTableRow>
+                  )}
+                </StyledDataTable>
+                <StyledInfoText textSize={StyledInfoTextSize.XS} iconColor={IconColor.GRAY} discreet>
+                  {timer.minutes > 0 || timer.seconds > 0 ? (
+                    <>
+                      {translate(
+                        'screens/payment',
+                        'The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.',
+                        {
+                          rate: Utils.formatAmount(1 / paymentInfo.rate),
+                          currency: paymentInfo.currency.name,
+                          asset: paymentInfo.asset.name,
+                          timer: `${timer.minutes}m ${timer.seconds}s`,
+                        },
+                      )}
+                    </>
+                  ) : (
+                    <div className="mt-1">
+                      <StyledLoadingSpinner size={SpinnerSize.SM} variant={SpinnerVariant.LIGHT_MODE} />
+                    </div>
+                  )}
+                </StyledInfoText>
+              </StyledVerticalStack>
 
-            <StyledDataTable
-              label={translate('screens/payment', 'Transaction Details')}
-              alignContent={AlignContent.RIGHT}
-              showBorder
-              minWidth={false}
-            >
-              <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                {paymentInfo.amount}
-                <CopyButton onCopy={() => copy(`${paymentInfo.amount}`)} />
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/payment', 'Asset')}>
-                {paymentInfo.asset.name}
-                <CopyButton onCopy={() => copy(`${paymentInfo.asset.name}`)} />
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/payment', 'Deposit Address')}>
-                {paymentInfo.depositAddress}
-                <CopyButton onCopy={() => copy(`${paymentInfo.depositAddress}`)} />
-              </StyledDataTableRow>
-            </StyledDataTable>
+              <PaymentInformationContent info={paymentInfo} infoText={getPaymentInfoString(paymentInfo, bankAccount)} />
+            </StyledVerticalStack>
 
-            <StyledDataTable
-              label={translate('screens/payment', 'Beneficiary Bank Account')}
-              alignContent={AlignContent.RIGHT}
-              showBorder
-              minWidth={false}
-            >
-              <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
-                <div>
-                  <p>{bankAccount.iban}</p>
-                </div>
-                <CopyButton onCopy={() => copy(bankAccount.iban)} />
-              </StyledDataTableRow>
-            </StyledDataTable>
-
-            {paymentInfo.paymentRequest && !canSendTransaction() && (
-              <>
-                <p className="font-semibold text-sm text-dfxBlue-800">
-                  {translate('screens/sell', 'Pay with your wallet')}
-                </p>
-                <QrCopy data={paymentInfo.paymentRequest} />
-              </>
-            )}
-
-            <div className="pt-4 leading-none">
+            <div className="pt-2 w-full leading-none">
               <StyledLink
                 label={translate(
                   'screens/payment',
-                  'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                  'Please note that by using this service you automatically accept our terms and conditions.',
                 )}
                 url={process.env.REACT_APP_TNC_URL}
                 small
                 dark
               />
             </div>
-            <StyledButton
-              width={StyledButtonWidth.FULL}
-              label={translate(
-                'screens/sell',
-                canSendTransaction()
-                  ? 'Complete transaction in your wallet'
-                  : 'Click here once you have issued the transaction',
-              )}
-              onClick={() => handleNext(paymentInfo)}
-              caps={false}
-              className="mt-4"
-              isLoading={isProcessing}
-            />
+
+            {canSendTransaction() && (
+              <div className="pt-2 w-full leading-none">
+                <StyledButton
+                  width={StyledButtonWidth.FULL}
+                  label={translate('screens/sell', 'Complete transaction in your wallet')}
+                  onClick={() => handleNext(paymentInfo)}
+                  caps={false}
+                  className="mt-4"
+                  isLoading={isProcessing}
+                />
+              </div>
+            )}
           </>
         )
       )}
