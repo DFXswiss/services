@@ -61,7 +61,7 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
           type="submit"
           disabled={!isValid}
           color={StyledButtonColor.RED}
-          label={translate('screens/sell', 'Add Bank Account')}
+          label={translate('screens/iban', 'Add bank account')}
           onClick={handleSubmit(createBankAccount)}
           isLoading={isAccountLoading}
           caps

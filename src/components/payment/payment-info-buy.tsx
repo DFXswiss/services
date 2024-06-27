@@ -1,4 +1,4 @@
-import { Buy } from '@dfx.swiss/react';
+import { Buy, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -64,7 +64,7 @@ function PaymentInformationText({ info }: PaymentInformationContentProps): JSX.E
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
           <div>
-            <p>{info.iban}</p>
+            <p>{Utils.formatIban(info.iban)}</p>
             {info.sepaInstant && (
               <div className="text-white">
                 <DfxIcon icon={IconVariant.SEPA_INSTANT} color={IconColor.RED} />

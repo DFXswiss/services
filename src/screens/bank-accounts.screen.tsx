@@ -159,7 +159,7 @@ export function BankAccountsScreen(): JSX.Element {
 
               <StyledButton
                 color={StyledButtonColor.RED}
-                label={translate('screens/iban', 'Add account')}
+                label={translate('screens/iban', 'Add bank account')}
                 onClick={() => setIsAdd(true)}
               />
             </>

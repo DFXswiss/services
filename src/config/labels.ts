@@ -7,6 +7,7 @@ import {
   TransactionFailureReason,
   TransactionState,
 } from '@dfx.swiss/react';
+import { SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
@@ -91,7 +92,16 @@ export const OriginFutureLabels = {
 };
 
 // --- SUPPORT ISSUE --- //
-export const ReasonLabels = {
-  [SupportIssueReason.FUNDS_NOT_RECEIVED]: 'Funds not received',
+export const IssueTypeLabels = {
+  [SupportIssueType.GENERIC_ISSUE]: 'Generic issue',
+  [SupportIssueType.TRANSACTION_ISSUE]: 'Transaction issue',
+  [SupportIssueType.KYC_ISSUE]: 'KYC issue',
+  [SupportIssueType.LIMIT_REQUEST]: 'Limit request',
+  [SupportIssueType.PARTNERSHIP_REQUEST]: 'Partnership request',
+};
+
+export const IssueReasonLabels = {
   [SupportIssueReason.OTHER]: 'Other',
+  [SupportIssueReason.FUNDS_NOT_RECEIVED]: 'Funds not received',
+  [SupportIssueReason.TRANSACTION_MISSING]: 'Transaction missing',
 };

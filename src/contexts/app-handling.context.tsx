@@ -290,7 +290,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       }
     }
 
-    if (navigate) props.router.navigate('/');
+    if (navigate) props.router.navigate('/home');
   }
 
   function getRedirectUri(baseUri: string, params: CloseServicesParams): string {

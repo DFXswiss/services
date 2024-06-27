@@ -216,7 +216,7 @@ export function BuyInfoScreen(): JSX.Element {
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
                 <div>
-                  <p>{paymentInfo.iban}</p>
+                  <p>{Utils.formatIban(paymentInfo.iban)}</p>
                   {paymentInfo.sepaInstant && (
                     <div className="text-white">
                       <DfxIcon icon={IconVariant.SEPA_INSTANT} color={IconColor.RED} />

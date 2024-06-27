@@ -262,7 +262,6 @@
 
     "Optional - Account Designation": "Opzionale - Designazione del conto",
     "e.g. Deutsche Bank": "Ad esempio, Deutsche Bank",
-    "Add Bank Account": "Aggiungi conto bancario",
 
     "As soon as the transaction arrives in our wallet, we will transfer your money to your bank account.": "Non appena la transazione arriva nel nostro portafoglio, trasferiamo il denaro sul vostro conto bancario.",
 
@@ -376,7 +375,7 @@
     "Bank Accounts": "Conti bancari",
     "Accounts already used with DFX": "Conti già utilizzati con DFX",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Per trovare la transazione mancante, aggiungete il conto bancario da cui avete inviato il denaro.",
-    "Add account": "Aggiungi conto",
+    "Add bank account": "Aggiungi conto bancario",
     "This IBAN already exists in another DFX customer account.": "Questo IBAN esiste già in un altro conto cliente DFX.",
     "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Questo è un IBAN multi-account e non può essere aggiunto come conto personale. Si prega di inviare la conferma della transazione bancaria in formato PDF a support@dfx.swiss."
   },
@@ -386,8 +385,9 @@
 
     "Name": "Nome",
     "Reason": "Motivo",
-    "Funds not received": "Fondi non ricevuti",
     "Other": "Altro",
+    "Funds not received": "Fondi non ricevuti",
+    "Transaction missing": "",
 
     "Description": "Descrizione",
     "File": "File"

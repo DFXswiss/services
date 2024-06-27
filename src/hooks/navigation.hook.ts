@@ -40,7 +40,7 @@ export function useNavigation(): NavigationInterface {
 
   function goBack() {
     setRedirectPath(undefined);
-    navigate(redirectPath ?? '/');
+    navigate(redirectPath ?? '/home');
   }
 
   function setParams(newParams: URLSearchParams) {
