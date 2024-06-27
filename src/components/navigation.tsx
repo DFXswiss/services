@@ -1,4 +1,12 @@
-import { Language, useAuthContext, useSessionContext } from '@dfx.swiss/react';
+import {
+  Language,
+  UserAddress,
+  useApiSession,
+  useAuthContext,
+  useSessionContext,
+  useUser,
+  useUserContext,
+} from '@dfx.swiss/react';
 import {
   DfxIcon,
   Form,
@@ -13,6 +21,9 @@ import {
 import { PropsWithChildren, SetStateAction, forwardRef, useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
+import { useWalletContext } from 'src/contexts/wallet.context';
+import { useStore } from 'src/hooks/store.hook';
+import { blankedAddress } from 'src/util/utils';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -119,6 +130,7 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
   const { authenticationToken, session } = useAuthContext();
   const { translate, language, availableLanguages, changeLanguage } = useSettingsContext();
   const { isLoggedIn, logout: apiLogout } = useSessionContext();
+  const { user, isUserLoading } = useUserContext();
 
   const {
     control,
@@ -226,6 +238,10 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             </Form>
           </div>
 
+          <div className="mt-4">
+            <AddressSelector />
+          </div>
+
           <StyledButton
             className="mt-4"
             label={translate('general/actions', isLoggedIn ? 'Logout' : 'Login')}
@@ -236,5 +252,58 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
         </div>
       </div>
     </nav>
+  );
+}
+
+interface AddressData {
+  address: UserAddress;
+}
+
+function AddressSelector(): JSX.Element {
+  const { user, isUserLoading } = useUserContext();
+  const { isInitialized } = useWalletContext();
+  const { activeWallet } = useStore();
+  const { changeUserAddress } = useUser();
+  const { updateSession } = useApiSession();
+
+  const {
+    control,
+    formState: { errors },
+    setValue,
+  } = useForm<AddressData>();
+
+  const selectedAddress = useWatch({ control, name: 'address' });
+
+  useEffect(() => {
+    if (user?.activeAddress) {
+      setValue('address', user.activeAddress);
+    }
+  }, [user?.activeAddress]);
+
+  useEffect(() => {
+    if (user?.activeAddress && selectedAddress && user.activeAddress.address !== selectedAddress.address) {
+      switchUser(selectedAddress.address);
+    }
+  }, [selectedAddress]);
+
+  async function switchUser(address: string): Promise<void> {
+    const { accessToken } = await changeUserAddress(address);
+    updateSession(accessToken);
+    activeWallet.remove();
+  }
+
+  return isInitialized && !isUserLoading ? (
+    <Form control={control} errors={errors}>
+      <StyledDropdown
+        name="address"
+        placeholder="Select..."
+        items={Object.values(user?.addresses ?? [])}
+        disabled={user?.addresses.length === 0}
+        labelFunc={(item) => item.wallet}
+        descriptionFunc={(item) => blankedAddress(item.address, 20)}
+      />
+    </Form>
+  ) : (
+    <></>
   );
 }

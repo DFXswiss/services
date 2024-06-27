@@ -85,7 +85,7 @@ export function AccountScreen(): JSX.Element {
   }, [user?.activeAddress]);
 
   useEffect(() => {
-    if (user?.activeAddress && user.activeAddress.address !== selectedAddress.address) {
+    if (user?.activeAddress && selectedAddress && user.activeAddress.address !== selectedAddress.address) {
       switchUser(selectedAddress.address);
     }
   }, [selectedAddress]);
