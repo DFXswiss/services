@@ -40,7 +40,7 @@ export function ExchangeRate({
   const minFee = `, min. ${fees.min}${feeSymbol}`;
   const dfxFee = `${fees.dfx}${feeSymbol} (${(fees.rate * 100).toFixed(2)}%${fees.min ? minFee : ''})`;
   const networkFee = `${fees.network}${feeSymbol}`;
-  const networkStartFee = (fees as any)?.networkStart ? `${(fees as any)?.networkStart}${feeSymbol}` : undefined;
+  const networkStartFee = fees?.networkStart ? `${fees?.networkStart}${feeSymbol}` : undefined;
 
   const l1Replacement =
     'blockchain' in to &&
