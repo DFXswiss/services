@@ -8,29 +8,28 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { CreateSupportIssue, SupportIssueReason } from '@dfx.swiss/react/dist/definitions/support';
+import { CreateSupportIssue, SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
-import { ReasonLabels } from '../config/labels';
+import { IssueReasonLabels, IssueTypeLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { toBase64 } from '../util/utils';
 
-enum IssueType {
-  GENERAL = 'General',
-  TRANSACTION = 'Transaction',
-}
-
-const IssueReasons: { [t in IssueType]: SupportIssueReason[] } = {
-  [IssueType.GENERAL]: [SupportIssueReason.OTHER],
-  [IssueType.TRANSACTION]: [SupportIssueReason.OTHER, SupportIssueReason.FUNDS_NOT_RECEIVED],
+const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
+  [SupportIssueType.GENERIC_ISSUE]: [SupportIssueReason.OTHER],
+  [SupportIssueType.TRANSACTION_ISSUE]: [SupportIssueReason.OTHER, SupportIssueReason.FUNDS_NOT_RECEIVED],
+  [SupportIssueType.KYC_ISSUE]: [],
+  [SupportIssueType.LIMIT_REQUEST]: [],
+  [SupportIssueType.PARTNERSHIP_REQUEST]: [],
 };
 
 interface FormData {
+  type: SupportIssueType;
   name: string;
   transaction: string;
   reason: SupportIssueReason;
@@ -46,22 +45,28 @@ export function SupportIssueScreen(): JSX.Element {
   const { pathname } = useLocation();
   const { navigate } = useNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
-  const { createGeneralIssue, createTransactionIssue } = useSupport();
+  const { createIssue } = useSupport();
   const { translate, translateError } = useSettingsContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [issueCreated, setIssueCreated] = useState(false);
 
-  const type = pathname.includes('tx') ? IssueType.TRANSACTION : IssueType.GENERAL;
-  const reasons = IssueReasons[type];
-
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
     setValue,
-  } = useForm<FormData>({ mode: 'onTouched' });
+  } = useForm<FormData>({
+    mode: 'onTouched',
+    defaultValues: {
+      type: pathname.includes('/tx') ? SupportIssueType.TRANSACTION_ISSUE : undefined,
+    },
+  });
+  const selectedType = useWatch({ control, name: 'type' });
+
+  const types = Object.values(SupportIssueType).filter((t) => t !== SupportIssueType.LIMIT_REQUEST);
+  const reasons = IssueReasons[selectedType] ?? [];
 
   useEffect(() => {
     id && setValue('transaction', id);
@@ -71,11 +76,20 @@ export function SupportIssueScreen(): JSX.Element {
     reasons.length === 1 && setValue('reason', reasons[0]);
   }, [reasons]);
 
+  useEffect(() => {
+    if (selectedType === SupportIssueType.TRANSACTION_ISSUE) {
+      if (!id) navigate('/support/issue/tx');
+    } else {
+      navigate('/support/issue');
+    }
+  }, [selectedType]);
+
   async function onSubmit(data: FormData) {
     setIsLoading(true);
 
     try {
       const request: CreateSupportIssue = {
+        type: data.type,
         name: data.name,
         reason: data.reason,
         message: data.message,
@@ -83,16 +97,11 @@ export function SupportIssueScreen(): JSX.Element {
         fileName: data.file?.name,
       };
 
-      switch (type) {
-        case IssueType.GENERAL:
-          await createGeneralIssue(request);
-          break;
-
-        case IssueType.TRANSACTION:
-          if (!id) throw new Error('Missing transaction ID');
-          await createTransactionIssue(+id, request);
-          break;
+      if (data.type === SupportIssueType.TRANSACTION_ISSUE && id) {
+        request.transaction = { id: +id };
       }
+
+      await createIssue(request);
 
       setIssueCreated(true);
     } catch (e) {
@@ -103,18 +112,11 @@ export function SupportIssueScreen(): JSX.Element {
   }
 
   function onDone() {
-    switch (type) {
-      case IssueType.GENERAL:
-        navigate('/');
-        break;
-
-      case IssueType.TRANSACTION:
-        navigate('/tx');
-        break;
-    }
+    navigate('/account');
   }
 
   const rules = Utils.createRules({
+    type: Validations.Required,
     name: Validations.Required,
     reason: Validations.Required,
     message: Validations.Required,
@@ -144,15 +146,17 @@ export function SupportIssueScreen(): JSX.Element {
           translate={translateError}
         >
           <StyledVerticalStack gap={6} full center>
-            <StyledInput
-              name="name"
-              autocomplete="name"
-              label={translate('screens/support', 'Name')}
-              placeholder={`${translate('screens/kyc', 'John')} ${translate('screens/kyc', 'Doe')}`}
+            <StyledDropdown<SupportIssueType>
+              rootRef={rootRef}
+              label={translate('screens/support', 'Issue type')}
+              items={types}
+              labelFunc={(item) => item && translate('screens/support', IssueTypeLabels[item])}
+              name="type"
+              placeholder={translate('general/actions', 'Select...')}
               full
             />
 
-            {type === IssueType.TRANSACTION && (
+            {selectedType === SupportIssueType.TRANSACTION_ISSUE && (
               <StyledDropdown<string>
                 rootRef={rootRef}
                 label={translate('screens/payment', 'Transaction')}
@@ -169,12 +173,20 @@ export function SupportIssueScreen(): JSX.Element {
                 rootRef={rootRef}
                 label={translate('screens/support', 'Reason')}
                 items={reasons}
-                labelFunc={(item) => translate('screens/support', ReasonLabels[item])}
+                labelFunc={(item) => translate('screens/support', IssueReasonLabels[item])}
                 name="reason"
                 placeholder={translate('general/actions', 'Select...')}
                 full
               />
             )}
+
+            <StyledInput
+              name="name"
+              autocomplete="name"
+              label={translate('screens/support', 'Name')}
+              placeholder={`${translate('screens/kyc', 'John')} ${translate('screens/kyc', 'Doe')}`}
+              full
+            />
 
             <StyledInput name="message" label={translate('screens/support', 'Description')} multiLine full />
 

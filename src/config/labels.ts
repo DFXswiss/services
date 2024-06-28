@@ -7,6 +7,7 @@ import {
   TransactionFailureReason,
   TransactionState,
 } from '@dfx.swiss/react';
+import { SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
@@ -57,7 +58,7 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.RECEIVER_REJECTED]: 'Payment rejected by receiver node',
 };
 
-// --- LIMIT REQUESTS --- //
+// --- Limit increase requestS --- //
 export const LimitLabels = {
   [Limit.K_500]: "CHF 100'000 - 500'000",
   [Limit.M_1]: "CHF 500'000 - 1'000'000",
@@ -91,7 +92,16 @@ export const OriginFutureLabels = {
 };
 
 // --- SUPPORT ISSUE --- //
-export const ReasonLabels = {
-  [SupportIssueReason.FUNDS_NOT_RECEIVED]: 'Funds not received',
+export const IssueTypeLabels = {
+  [SupportIssueType.GENERIC_ISSUE]: 'Generic issue',
+  [SupportIssueType.TRANSACTION_ISSUE]: 'Transaction issue',
+  [SupportIssueType.KYC_ISSUE]: 'KYC issue',
+  [SupportIssueType.LIMIT_REQUEST]: 'Limit increase request',
+  [SupportIssueType.PARTNERSHIP_REQUEST]: 'Partnership request',
+};
+
+export const IssueReasonLabels = {
   [SupportIssueReason.OTHER]: 'Other',
+  [SupportIssueReason.FUNDS_NOT_RECEIVED]: 'Funds not received',
+  [SupportIssueReason.TRANSACTION_MISSING]: 'Transaction missing',
 };

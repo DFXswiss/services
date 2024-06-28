@@ -23,6 +23,7 @@ import { LinkScreen } from './screens/link.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
 import { SupportIssueScreen } from './screens/support-issue.screen';
 import { TfaScreen } from './screens/tfa.screen';
+import { TransactionMissingScreen } from './screens/transaction-missing.screen';
 import { TransactionScreen } from './screens/transaction.screen';
 import { setupLanguages } from './translations';
 
@@ -129,15 +130,23 @@ export const Routes = [
     element: <TransactionScreen />,
   },
   {
-    path: '/tx/:id/issue',
+    path: '/support',
     element: <SupportIssueScreen />,
   },
   {
-    path: 'support',
+    path: '/support/issue',
     element: <SupportIssueScreen />,
   },
   {
-    path: 'support/issue',
+    path: '/support/issue/tx',
+    element: <TransactionScreen />,
+  },
+  {
+    path: '/support/issue/tx-missing',
+    element: <TransactionMissingScreen />,
+  },
+  {
+    path: '/support/issue/tx/:id',
     element: <SupportIssueScreen />,
   },
   {
