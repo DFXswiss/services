@@ -41,6 +41,8 @@ interface FormData {
   file?: File;
 }
 
+const AddAccount = 'Add bank account';
+
 export function TransactionMissingScreen(): JSX.Element {
   useUserGuard('/login');
   useKycLevelGuard(KycLevel.Link, '/contact');
@@ -76,7 +78,7 @@ export function TransactionMissingScreen(): JSX.Element {
   });
 
   useEffect(() => {
-    if (selectedSender === 'Add bank account') navigate('/bank-accounts');
+    if (selectedSender === AddAccount) navigate('/bank-accounts');
   }, [selectedSender]);
 
   useEffect(() => {
@@ -156,10 +158,10 @@ export function TransactionMissingScreen(): JSX.Element {
                   label={translate('screens/support', 'Sender IBAN')}
                   items={[
                     ...accounts.map((a) => Utils.formatIban(a.iban) ?? ''),
-                    translate('screens/support', 'No IBAN, only account number'),
-                    translate('screens/iban', 'Add bank account'),
+                    'No IBAN, only account number',
+                    AddAccount,
                   ]}
-                  labelFunc={(item) => item}
+                  labelFunc={(item) => translate('screens/iban', item)}
                   name="senderIban"
                   placeholder={translate('general/actions', 'Select...')}
                   full

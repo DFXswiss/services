@@ -60,13 +60,13 @@ export function SupportIssueScreen(): JSX.Element {
   } = useForm<FormData>({
     mode: 'onTouched',
     defaultValues: {
-      type: pathname.includes('/tx') ? SupportIssueType.TRANSACTION_ISSUE : SupportIssueType.GENERIC_ISSUE,
+      type: pathname.includes('/tx') ? SupportIssueType.TRANSACTION_ISSUE : undefined,
     },
   });
   const selectedType = useWatch({ control, name: 'type' });
 
   const types = Object.values(SupportIssueType).filter((t) => t !== SupportIssueType.LIMIT_REQUEST);
-  const reasons = IssueReasons[selectedType];
+  const reasons = IssueReasons[selectedType] ?? [];
 
   useEffect(() => {
     id && setValue('transaction', id);
@@ -77,7 +77,11 @@ export function SupportIssueScreen(): JSX.Element {
   }, [reasons]);
 
   useEffect(() => {
-    if (selectedType === SupportIssueType.TRANSACTION_ISSUE && !id) navigate('/support/issue/tx');
+    if (selectedType === SupportIssueType.TRANSACTION_ISSUE) {
+      if (!id) navigate('/support/issue/tx');
+    } else {
+      navigate('/support/issue');
+    }
   }, [selectedType]);
 
   async function onSubmit(data: FormData) {
@@ -146,7 +150,7 @@ export function SupportIssueScreen(): JSX.Element {
               rootRef={rootRef}
               label={translate('screens/support', 'Issue type')}
               items={types}
-              labelFunc={(item) => translate('screens/support', IssueTypeLabels[item])}
+              labelFunc={(item) => item && translate('screens/support', IssueTypeLabels[item])}
               name="type"
               placeholder={translate('general/actions', 'Select...')}
               full
