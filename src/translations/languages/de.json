@@ -10,6 +10,7 @@
     "Cancel": "Abbrechen",
     "Finish": "Fertig",
     "Save": "Speichern",
+    "Delete": "Löschen",
     "Login": "Login",
     "Logout": "Logout",
     "Back": "Zurück",
@@ -19,7 +20,9 @@
     "Yes": "Ja",
     "No": "Nein",
     "Drop files here": "Dateien hier ablegen",
-    "Browse": "Durchsuchen"
+    "Browse": "Durchsuchen",
+    "Delete Address": "Adresse löschen",
+    "Copy Address": "Adresse kopieren"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -211,7 +214,27 @@
     "Address": "Adresse",
     "Signature": "Signatur",
     "Sign message": "Nachricht zum Signieren",
-    "Instructions": "Anleitung"
+    "Instructions": "Anleitung",
+
+    "Account": "Konto",
+    "Activity": "Aktivität",
+    "Active address": "Aktive Adresse",
+    "Total trading volume": "Gesamthandelsvolumen",
+    "Annual trading volume": "Jährliches Handelsvolumen",
+    "Latest transactions": "Neueste Transaktionen",
+    "Addresses by volume": "Adressen nach Volumen",
+    "Referral": "Referral",
+    "Referral code": "Referral-Code",
+    "Referral commission": "Referral-Provision",
+    "Your referral stats": "Deine Referral-Statistiken",
+    "Level": "Level",
+    "Volume": "Volumen",
+    "Credit": "Guthaben",
+    "Paid credit": "Ausgezahltes Guthaben",
+    "User count": "Anzahl Benutzer",
+    "Active user count": "Anzahl aktiver Benutzer",
+
+    "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen."
   },
   "screens/buy": {
     "Buy": "Kaufen",
