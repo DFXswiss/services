@@ -435,6 +435,12 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
       label: translate('screens/payment', 'Network fee'),
       text: `${tx.fees.network} ${tx.inputAsset}`,
     });
+  (tx?.fees as any)?.networkStart != null &&
+    (tx?.fees as any)?.networkStart !== 0 &&
+    rateItems.push({
+      label: translate('screens/payment', 'Network start fee'),
+      text: `${(tx?.fees as any)?.networkStart} ${tx.inputAsset}`,
+    });
 
   return (
     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
