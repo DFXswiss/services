@@ -262,7 +262,6 @@
 
     "Optional - Account Designation": "Facultatif - Désignation du compte",
     "e.g. Deutsche Bank": "par exemple, la Deutsche Bank",
-    "Add Bank Account": "Ajouter un compte bancaire",
 
     "As soon as the transaction arrives in our wallet, we will transfer your money to your bank account.": "Dès que la transaction arrive dans notre portefeuille, nous transférons votre argent sur votre compte bancaire.",
 
@@ -376,7 +375,9 @@
     "Bank Accounts": "Comptes bancaires",
     "Accounts already used with DFX": "Comptes déjà utilisés avec DFX",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Pour retrouver votre transaction manquante, veuillez ajouter le compte bancaire à partir duquel vous avez envoyé l'argent.",
-    "Add account": "Ajouter un compte",
+    "The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.": "Le compte bancaire a été ajouté, toutes les transactions de cet IBAN seront désormais associées à votre compte. Veuillez vérifier l'aperçu des transactions pour voir si la transaction manquante est maintenant visible.",
+    "Add bank account": "Ajouter un compte bancaire",
+    "No IBAN, only account number": "Pas d'IBAN, seulement numéro de compte",
     "This IBAN already exists in another DFX customer account.": "Cet IBAN existe déjà sur un autre compte client de DFX.",
     "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez envoyer la confirmation de la transaction bancaire au format PDF à support@dfx.swiss."
   },
@@ -384,13 +385,27 @@
     "Support issue": "Demande de support",
     "The issue has been successfully submitted. You will be contacted by email.": "La demande a été soumise avec succès. Vous serez contacté par e-mail.",
 
-    "Name": "Nom",
-    "Reason": "Motif",
-    "Funds not received": "Fonds non reçus",
-    "Other": "Autres",
+    "Issue type": "Type de demande",
+    "Generic issue": "Demande générique",
+    "Transaction issue": "Demande relative aux transactions",
+    "KYC issue": "Demande KYC",
+    "Limit increase request": "Demande d'augmentation de limite",
+    "Partnership request": "Demande de partenariat",
 
+    "Reason": "Motif",
+    "Other": "Autres",
+    "Funds not received": "Fonds non reçus",
+    "Transaction missing": "Transaction manquante",
+
+    "Name": "Nom",
     "Description": "Description",
-    "File": "Fichier"
+    "File": "Fichier",
+
+    "For which transaction would you like to create an issue? Select the relevant transaction or click on \"{{text}}\".": "Pour quelle transaction souhaitez-vous créer un problème ? Sélectionnez la transaction concernée ou cliquez sur \"{{text}}\".",
+    "Please provide us with all relevant information about the transaction you are missing.": "Veuillez nous fournir toutes les informations pertinentes concernant la transaction manquante.",
+    "Sender IBAN": "IBAN de l'expéditeur",
+    "Receiver IBAN": "IBAN du destinataire",
+    "Date of the transaction": "Date de transaction"
   },
   "navigation/links": {
     "Buy & sell": "Acheter & vendre",
