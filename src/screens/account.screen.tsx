@@ -73,11 +73,13 @@ export function AccountScreen(): JSX.Element {
   useEffect(() => {
     if (user?.activeAddress) {
       loadRefferal();
-      loadTransactions();
-
       setValue('address', user.activeAddress);
     }
   }, [user?.activeAddress]);
+
+  useEffect(() => {
+    if (isLoggedIn) loadTransactions();
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address) {
@@ -164,19 +166,19 @@ export function AccountScreen(): JSX.Element {
     : [];
 
   const totalVolumeItems = user && [
-    { label: translate('general/services', 'Buy'), text: user.volumes.buy.total.toFixed(2) + ' CHF' },
-    { label: translate('general/services', 'Sell'), text: user.volumes.sell.total.toFixed(2) + ' CHF' },
-    { label: translate('general/services', 'Swap'), text: user.volumes.swap.total.toFixed(2) + ' CHF' },
+    { label: translate('general/services', 'Buy'), value: user.volumes.buy.total },
+    { label: translate('general/services', 'Sell'), value: user.volumes.sell.total },
+    { label: translate('general/services', 'Swap'), value: user.volumes.swap.total },
   ];
 
   const annualVolumeItems = user && [
-    { label: translate('general/services', 'Buy'), text: user.volumes.buy.annual.toFixed(2) + ' CHF' },
-    { label: translate('general/services', 'Sell'), text: user.volumes.sell.annual.toFixed(2) + ' CHF' },
-    { label: translate('general/services', 'Swap'), text: user.volumes.swap.annual.toFixed(2) + ' CHF' },
+    { label: translate('general/services', 'Buy'), value: user.volumes.buy.annual },
+    { label: translate('general/services', 'Sell'), value: user.volumes.sell.annual },
+    { label: translate('general/services', 'Swap'), value: user.volumes.swap.annual },
   ];
 
-  const totalVolumeSum = totalVolumeItems?.reduce((acc, item) => acc + parseFloat(item.text), 0).toFixed(2) + ' CHF';
-  const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + parseFloat(item.text), 0).toFixed(2) + ' CHF';
+  const totalVolumeSum = totalVolumeItems?.reduce((acc, item) => acc + item.value, 0);
+  const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + item.value, 0);
 
   return (
     <Layout
@@ -234,15 +236,19 @@ export function AccountScreen(): JSX.Element {
           >
             <StyledDataTableExpandableRow
               label={translate('screens/home', 'Total trading volume')}
-              expansionItems={totalVolumeItems ?? []}
+              expansionItems={
+                totalVolumeItems?.map(({ label, value }) => ({ label, text: value.toFixed(2) + ' CHF' })) ?? []
+              }
             >
-              {totalVolumeSum}
+              {totalVolumeSum?.toFixed(2) + ' CHF'}
             </StyledDataTableExpandableRow>
             <StyledDataTableExpandableRow
               label={translate('screens/home', 'Annual trading volume')}
-              expansionItems={annualVolumeItems ?? []}
+              expansionItems={
+                totalVolumeItems?.map(({ label, value }) => ({ label, text: value.toFixed(2) + ' CHF' })) ?? []
+              }
             >
-              {annualVolumeSum}
+              {annualVolumeSum?.toFixed(2) + ' CHF'}
             </StyledDataTableExpandableRow>
             {transactionItems && transactionItems.length > 0 && (
               <StyledDataTableExpandableRow

@@ -226,8 +226,6 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             </Form>
           </div>
 
-          <div className="mt-4"></div>
-
           <StyledButton
             className="mt-4"
             label={translate('general/actions', isLoggedIn ? 'Logout' : 'Login')}

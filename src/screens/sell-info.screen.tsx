@@ -138,7 +138,7 @@ export function SellInfoScreen(): JSX.Element {
     }, 1000);
 
     const checkTransactionInterval = setInterval(() => {
-      getTransactionByRequestId(paymentInfo.id.toString())
+      getTransactionByRequestId(paymentInfo.id)
         .then((tx) => {
           setSellTxId(tx.inputTxId);
           setShowsCompletion(true);
