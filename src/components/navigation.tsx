@@ -1,4 +1,4 @@
-import { Language, useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
+import { Language, useAuthContext, useSessionContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
   Form,
@@ -119,7 +119,6 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
   const { authenticationToken, session } = useAuthContext();
   const { translate, language, availableLanguages, changeLanguage } = useSettingsContext();
   const { isLoggedIn, logout: apiLogout } = useSessionContext();
-  const { user, isUserLoading } = useUserContext();
 
   const {
     control,
