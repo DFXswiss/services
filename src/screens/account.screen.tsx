@@ -245,7 +245,7 @@ export function AccountScreen(): JSX.Element {
             <StyledDataTableExpandableRow
               label={translate('screens/home', 'Annual trading volume')}
               expansionItems={
-                totalVolumeItems?.map(({ label, value }) => ({ label, text: value.toFixed(2) + ' CHF' })) ?? []
+                annualVolumeItems?.map(({ label, value }) => ({ label, text: value.toFixed(2) + ' CHF' })) ?? []
               }
             >
               {annualVolumeSum?.toFixed(2) + ' CHF'}

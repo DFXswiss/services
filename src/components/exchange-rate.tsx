@@ -68,7 +68,7 @@ export function ExchangeRate({
       } ${from.name}/${to.name}`}
     >
       <StyledVerticalStack gap={2}>
-        <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">
+        <div className="grid gap-1 w-full text-sm grid-cols-[10rem_1fr]">
           <div className="text-dfxGray-800">{translate('screens/payment', 'Base rate')}</div>
           <StyledVerticalStack gap={1}>
             <div>{baseRate}</div>
