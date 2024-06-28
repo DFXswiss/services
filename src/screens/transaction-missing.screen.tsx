@@ -117,7 +117,7 @@ export function TransactionMissingScreen(): JSX.Element {
   }
 
   function onDone() {
-    navigate('/home');
+    navigate('/account');
   }
 
   return (

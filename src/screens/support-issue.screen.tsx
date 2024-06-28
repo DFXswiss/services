@@ -112,7 +112,7 @@ export function SupportIssueScreen(): JSX.Element {
   }
 
   function onDone() {
-    navigate('/home');
+    navigate('/account');
   }
 
   const rules = Utils.createRules({
