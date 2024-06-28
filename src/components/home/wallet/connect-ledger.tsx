@@ -143,7 +143,7 @@ function Content({
     'Connect your {{device}} with your computer',
     'Open the {{app}} app on your Ledger',
     'Click on "Connect"',
-    'Choose an address',
+    'Click on "Continue"',
     'Confirm "Sign message" on your {{device}}',
   ];
 
