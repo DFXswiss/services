@@ -144,6 +144,8 @@ export function TransactionList(): JSX.Element {
   const [error, setError] = useState<string>();
   const [editTransaction, setEditTransaction] = useState<number>();
 
+  const isSupport = pathname.includes('/support');
+
   useEffect(() => {
     if (id) setTimeout(() => txRefs.current[id]?.scrollIntoView());
   }, [id, transactions]);
@@ -151,7 +153,7 @@ export function TransactionList(): JSX.Element {
   useEffect(() => {
     if (isLoggedIn)
       loadTransactions().then(() => {
-        if (id && pathname.includes('assign')) assignTransaction(+id);
+        if (id && pathname.includes('/assign')) assignTransaction(+id);
       });
   }, [isLoggedIn]);
 
@@ -225,7 +227,10 @@ export function TransactionList(): JSX.Element {
   const transactionList = transactions && Object.entries(transactions);
 
   return (
-    <Layout rootRef={rootRef} title={translate('screens/payment', 'Transactions')}>
+    <Layout
+      rootRef={rootRef}
+      title={isSupport ? translate('screens/support', 'Support issue') : translate('screens/payment', 'Transactions')}
+    >
       <StyledVerticalStack gap={6} full center>
         {error ? (
           <div>
@@ -233,18 +238,28 @@ export function TransactionList(): JSX.Element {
           </div>
         ) : (
           <>
-            <StyledButton
-              color={StyledButtonColor.STURDY_WHITE}
-              width={StyledButtonWidth.FULL}
-              label={translate('screens/payment', 'Export CSV')}
-              isLoading={isCsvLoading}
-              onClick={exportCsv}
-            />
+            {isSupport ? (
+              <p className="text-dfxGray-700">
+                {translate(
+                  'screens/support',
+                  'For which transaction would you like to create an issue? Select the relevant transaction or click on "{{text}}".',
+                  { text: translate('screens/payment', 'My transaction is missing') },
+                )}
+              </p>
+            ) : (
+              <StyledButton
+                color={StyledButtonColor.STURDY_WHITE}
+                width={StyledButtonWidth.FULL}
+                label={translate('screens/payment', 'Export CSV')}
+                isLoading={isCsvLoading}
+                onClick={exportCsv}
+              />
+            )}
             <StyledButton
               color={StyledButtonColor.BLUE}
               width={StyledButtonWidth.FULL}
               label={translate('screens/payment', 'My transaction is missing')}
-              onClick={() => navigate('/bank-accounts')}
+              onClick={() => navigate('/support/issue/tx-missing')}
             />
             <StyledVerticalStack full center>
               <div className="relative w-full">
@@ -364,7 +379,7 @@ export function TransactionList(): JSX.Element {
                                   <StyledButton
                                     color={StyledButtonColor.STURDY_WHITE}
                                     label={translate('screens/payment', 'Report an issue')}
-                                    onClick={() => navigate(`/tx/${tx.id}/issue`)}
+                                    onClick={() => navigate(`/support/issue/tx/${tx.id}`)}
                                   />
                                 </StyledVerticalStack>
                               </StyledCollapsible>
@@ -434,6 +449,11 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
     rateItems.push({
       label: translate('screens/payment', 'Network fee'),
       text: `${tx.fees.network} ${tx.inputAsset}`,
+    });
+  tx?.fees?.networkStart &&
+    rateItems.push({
+      label: translate('screens/payment', 'Network start fee'),
+      text: `${tx?.fees?.networkStart} ${tx.inputAsset}`,
     });
 
   return (

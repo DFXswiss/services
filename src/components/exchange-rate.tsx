@@ -40,6 +40,7 @@ export function ExchangeRate({
   const minFee = `, min. ${fees.min}${feeSymbol}`;
   const dfxFee = `${fees.dfx}${feeSymbol} (${(fees.rate * 100).toFixed(2)}%${fees.min ? minFee : ''})`;
   const networkFee = `${fees.network}${feeSymbol}`;
+  const networkStartFee = fees?.networkStart ? `${fees?.networkStart}${feeSymbol}` : undefined;
 
   const l1Replacement =
     'blockchain' in to &&
@@ -67,7 +68,7 @@ export function ExchangeRate({
       } ${from.name}/${to.name}`}
     >
       <StyledVerticalStack gap={2}>
-        <div className="grid gap-1 w-full text-sm grid-cols-[8rem_1fr]">
+        <div className="grid gap-1 w-full text-sm grid-cols-[10rem_1fr]">
           <div className="text-dfxGray-800">{translate('screens/payment', 'Base rate')}</div>
           <StyledVerticalStack gap={1}>
             <div>{baseRate}</div>
@@ -98,6 +99,12 @@ export function ExchangeRate({
               </div>
             )}
           </StyledVerticalStack>
+          {networkStartFee && (
+            <>
+              <div className="text-dfxGray-800">{translate('screens/payment', 'Network start fee')}</div>
+              <div>{networkStartFee}</div>
+            </>
+          )}
         </div>
         <StyledInfoText iconColor={IconColor.GRAY} discreet>
           {translate(`screens/${type}`, outputInfo, {

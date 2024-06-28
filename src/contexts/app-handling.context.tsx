@@ -294,7 +294,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       }
     }
 
-    if (navigate) props.router.navigate('/');
+    if (navigate) props.router.navigate('/account');
   }
 
   function getRedirectUri(baseUri: string, params: CloseServicesParams): string {

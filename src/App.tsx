@@ -8,6 +8,7 @@ import { AppHandlingContextProvider, AppParams, CloseMessageData } from './conte
 import { BalanceContextProvider } from './contexts/balance.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
+import { AccountScreen } from './screens/account.screen';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyFailureScreen } from './screens/buy-failure.screen';
 import { BuyInfoScreen } from './screens/buy-info.screen';
@@ -22,6 +23,7 @@ import { LinkScreen } from './screens/link.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
 import { SupportIssueScreen } from './screens/support-issue.screen';
 import { TfaScreen } from './screens/tfa.screen';
+import { TransactionMissingScreen } from './screens/transaction-missing.screen';
 import { TransactionScreen } from './screens/transaction.screen';
 import { setupLanguages } from './translations';
 
@@ -35,6 +37,10 @@ export const Routes = [
     path: '/',
     element: <HomeScreen />,
     errorElement: <ErrorScreen />,
+  },
+  {
+    path: '/account',
+    element: <AccountScreen />,
   },
   {
     path: '/login',
@@ -124,15 +130,23 @@ export const Routes = [
     element: <TransactionScreen />,
   },
   {
-    path: '/tx/:id/issue',
+    path: '/support',
     element: <SupportIssueScreen />,
   },
   {
-    path: 'support',
+    path: '/support/issue',
     element: <SupportIssueScreen />,
   },
   {
-    path: 'support/issue',
+    path: '/support/issue/tx',
+    element: <TransactionScreen />,
+  },
+  {
+    path: '/support/issue/tx-missing',
+    element: <TransactionMissingScreen />,
+  },
+  {
+    path: '/support/issue/tx/:id',
     element: <SupportIssueScreen />,
   },
   {

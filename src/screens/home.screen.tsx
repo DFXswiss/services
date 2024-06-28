@@ -117,7 +117,7 @@ export function HomeScreen(): JSX.Element {
         navigate('/');
 
       default:
-        const path = redirectPath ?? (session?.address ? '/buy' : undefined);
+        const path = redirectPath ?? (session?.address ? '/home' : undefined);
         path && navigate(path);
         break;
     }

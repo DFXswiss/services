@@ -10,6 +10,7 @@
     "Cancel": "Annullare",
     "Finish": "Finitura",
     "Save": "Salvare",
+    "Delete": "Eliminare",
     "Login": "Login",
     "Logout": "Logout",
     "Back": "Indietro",
@@ -19,7 +20,9 @@
     "Yes": "Sì",
     "No": "No",
     "Drop files here": "Lasciare i file qui",
-    "Browse": "Sfogliare"
+    "Browse": "Sfogliare",
+    "Delete Address": "Elimina l'indirizzo",
+    "Copy Address": "Copia l'indirizzo"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -164,9 +167,9 @@
 
     "Connect your {{device}} with your computer": "Collegare il  {{device}} al computer",
     "Click on \"Connect\"": "Fare clic su \"Collegare\"",
+    "Click on \"Continue\"": "Fare clic su \"Continua\"",
     "Confirm \"Sign message\" on your {{device}}": "Confermare \"Sign message\" sul {{device}}",
 
-    "Choose an address": "Selezionare un indirizzo",
     "Load more addresses": "Carica altri indirizzi",
     "Address type": "Tipo di indirizzo",
     "Address index": "Indice dell'indirizzo",
@@ -211,7 +214,27 @@
     "Address": "Indirizzo",
     "Signature": "Firma",
     "Sign message": "Messaggio del cartello",
-    "Instructions": "Istruzioni"
+    "Instructions": "Istruzioni",
+
+    "Account": "Conto",
+    "Activity": "Attività",
+    "Active address": "Indirizzo attivo",
+    "Total trading volume": "Volume totale delle transazioni",
+    "Annual trading volume": "Volume annuale delle transazioni",
+    "Latest transactions": "Ultime transazioni",
+    "Addresses by volume": "Indirizzi per volume",
+    "Referral": "Referenza",
+    "Referral code": "Codice di referenza",
+    "Referral commission": "Commissione di referenza",
+    "Your referral stats": "Le tue statistiche di referenza",
+    "Level": "Livello",
+    "Volume": "Volume",
+    "Credit": "Credito",
+    "Paid credit": "Credito pagato",
+    "User count": "Conteggio utenti",
+    "Active user count": "Conteggio utenti attivi",
+
+    "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile."
   },
   "screens/buy": {
     "Buy": "Acquista",
@@ -262,7 +285,6 @@
 
     "Optional - Account Designation": "Opzionale - Designazione del conto",
     "e.g. Deutsche Bank": "Ad esempio, Deutsche Bank",
-    "Add Bank Account": "Aggiungi conto bancario",
 
     "As soon as the transaction arrives in our wallet, we will transfer your money to your bank account.": "Non appena la transazione arriva nel nostro portafoglio, trasferiamo il denaro sul vostro conto bancario.",
 
@@ -294,6 +316,7 @@
     "Base rate": "Tasso base",
     "DFX fee": "Commissioni DFX",
     "Network fee": "Commissione di rete",
+    "Network start fee": "Commissione di avvio della rete",
 
     "Your payment has failed. Please try again.": "Il tuo pagamento non è andato a buon fine. Per favore, riprova.",
 
@@ -376,7 +399,9 @@
     "Bank Accounts": "Conti bancari",
     "Accounts already used with DFX": "Conti già utilizzati con DFX",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Per trovare la transazione mancante, aggiungete il conto bancario da cui avete inviato il denaro.",
-    "Add account": "Aggiungi conto",
+    "The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.": "Il conto bancario è stato aggiunto, tutte le transazioni da questo IBAN saranno ora associate al vostro conto. Controllare la panoramica delle transazioni per verificare se la transazione mancante è ora visibile.",
+    "Add bank account": "Aggiungi conto bancario",
+    "No IBAN, only account number": "Nessun IBAN, solo numero di conto",
     "This IBAN already exists in another DFX customer account.": "Questo IBAN esiste già in un altro conto cliente DFX.",
     "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Questo è un IBAN multi-account e non può essere aggiunto come conto personale. Si prega di inviare la conferma della transazione bancaria in formato PDF a support@dfx.swiss."
   },
@@ -384,13 +409,27 @@
     "Support issue": "Problema di supporto",
     "The issue has been successfully submitted. You will be contacted by email.": "Il problema è stato inviato con successo. Sarete contattati via e-mail.",
 
-    "Name": "Nome",
-    "Reason": "Motivo",
-    "Funds not received": "Fondi non ricevuti",
-    "Other": "Altro",
+    "Issue type": "Tipo di problema",
+    "Generic issue": "Problema generica",
+    "Transaction issue": "Problema di transazione",
+    "KYC issue": "Problema KYC",
+    "Limit increase request": "Richiesta di aumento del limite",
+    "Partnership request": "Richiesta di partnership",
 
+    "Reason": "Motivo",
+    "Other": "Altro",
+    "Funds not received": "Fondi non ricevuti",
+    "Transaction missing": "Transazione mancante",
+
+    "Name": "Nome",
     "Description": "Descrizione",
-    "File": "File"
+    "File": "File",
+
+    "For which transaction would you like to create an issue? Select the relevant transaction or click on \"{{text}}\".": "Per quale transazione si desidera creare un problema? Selezionare la transazione pertinente o fare clic su \"{{text}}\".",
+    "Please provide us with all relevant information about the transaction you are missing.": "Vi preghiamo di fornirci tutte le informazioni rilevanti sulla transazione mancante.",
+    "Sender IBAN": "IBAN del mittente",
+    "Receiver IBAN": "IBAN del destinatario",
+    "Date of the transaction": "Data della transazione"
   },
   "navigation/links": {
     "Buy & sell": "Comprare & vendere",

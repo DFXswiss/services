@@ -158,7 +158,7 @@ function Content({
     'Click on "Connect"',
     'Enter your password on your BitBox',
     'Confirm the pairing code',
-    'Choose an address',
+    'Click on "Continue"',
     'Confirm "Sign message" on your {{device}}',
   ];
 
