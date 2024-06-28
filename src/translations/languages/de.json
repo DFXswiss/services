@@ -432,7 +432,8 @@
     "Date of the transaction": "Datum der Transaktion"
   },
   "navigation/links": {
-    "Buy & sell": "Kaufen & Verkaufen",
+    "Buy": "Kaufen",
+    "Sell": "Verkaufen",
     "Swap": "Swap",
     "KYC": "KYC",
     "My DFX": "My DFX",

@@ -148,15 +148,27 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
       <div className="absolute top-14 right-2 border-1 drop-shadow-md w-64 z-20 flex flex-col bg-dfxGray-300">
         <div className="mx-4 py-4 text-dfxGray-800">
           <NavigationLink
+            icon={IconVariant.BANK}
+            label={translate('navigation/links', 'Buy')}
+            url="/buy"
+            target="_self"
+          />
+          <NavigationLink
             icon={IconVariant.SELL}
-            label={translate('navigation/links', 'Buy & sell')}
-            url="/"
+            label={translate('navigation/links', 'Sell')}
+            url="/sell"
             target="_self"
           />
           <NavigationLink
             icon={IconVariant.SWAP}
             label={translate('navigation/links', 'Swap')}
-            url="/"
+            url="/swap"
+            target="_self"
+          />
+          <NavigationLink
+            icon={IconVariant.ACCOUNT}
+            label={translate('screens/home', 'Account')}
+            url="/account"
             target="_self"
           />
           <NavigationLink

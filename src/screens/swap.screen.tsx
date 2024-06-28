@@ -400,7 +400,7 @@ export default function SwapScreen(): JSX.Element {
   });
 
   return (
-    <Layout title={translate('general/services', 'Swap')} textStart rootRef={rootRef}>
+    <Layout title={translate('navigation/links', 'Swap')} textStart rootRef={rootRef}>
       {paymentInfo && isTxDone ? (
         <SwapCompletion paymentInfo={paymentInfo} navigateOnClose={true} txId={swapTxId} />
       ) : showsSwitchScreen ? (
