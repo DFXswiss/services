@@ -36,6 +36,7 @@ export function BankAccountsScreen(): JSX.Element {
 
   const [accounts, setAccounts] = useState<Iban[]>();
   const [isAdd, setIsAdd] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>();
   const [customError, setCustomError] = useState<string>();
@@ -64,7 +65,7 @@ export function BankAccountsScreen(): JSX.Element {
     setCustomError(undefined);
 
     addIban(iban)
-      .then(() => navigate('/tx'))
+      .then(() => setIsAdded(true))
       .catch((e: ApiError) => {
         if (e.statusCode === 403) {
           setCustomError(translate('screens/iban', 'This IBAN already exists in another DFX customer account.'));
@@ -92,11 +93,30 @@ export function BankAccountsScreen(): JSX.Element {
       .finally(() => setIsSubmitting(false));
   }
 
+  function onClose() {
+    navigate('/tx');
+  }
+
   return (
     <Layout title={translate('screens/iban', 'Bank Accounts')} onBack={isAdd ? () => setIsAdd(false) : undefined}>
       <StyledVerticalStack gap={6} full center>
         {accounts ? (
-          isAdd ? (
+          isAdded ? (
+            <>
+              <p className="text-dfxGray-700">
+                {translate(
+                  'screens/iban',
+                  'The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.',
+                )}
+              </p>
+
+              <StyledButton
+                color={StyledButtonColor.RED}
+                label={translate('general/actions', 'OK')}
+                onClick={onClose}
+              />
+            </>
+          ) : isAdd ? (
             <Form
               control={control}
               errors={errors}

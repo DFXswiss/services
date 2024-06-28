@@ -375,6 +375,7 @@
     "Bank Accounts": "Bankkonten",
     "Accounts already used with DFX": "Bereits mit DFX verwendete Konten",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Um Deine fehlende Transaktion zu finden, füge bitte das Bankkonto hinzu, von dem Du das Geld gesendet hast.",
+    "The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.": "Das Bankkonto wurde hinzugefügt, alle Transaktionen von dieser IBAN werden nun mit Deinem Konto verknüpft. Bitte prüfe in der Transaktionsübersicht, ob Deine fehlende Transaktion jetzt sichtbar ist.",
     "Add bank account": "Bankverbindung hinzufügen",
     "No IBAN, only account number": "Keine IBAN, nur Kontonummer",
     "This IBAN already exists in another DFX customer account.": "Diese IBAN existiert bereits in einem anderen DFX-Kundenkonto.",
