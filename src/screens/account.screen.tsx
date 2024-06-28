@@ -137,7 +137,7 @@ export function AccountScreen(): JSX.Element {
     ? `${translate('general/actions', 'Delete Address')}?`
     : isEmbedded
     ? translate('screens/home', 'DFX services')
-    : undefined;
+    : translate('screens/home', 'Account');
   const hasBackButton = showWalletDeleteOverlay || (canClose && !isEmbedded);
   const image = 'https://content.dfx.swiss/img/v1/services/berge.png';
 
@@ -146,6 +146,8 @@ export function AccountScreen(): JSX.Element {
     text: `${t.inputAsset ? `${t.inputAmount ?? ''} ${t.inputAsset}` : ''} ${
       t.inputAsset && t.outputAsset ? ' → ' : ''
     } ${t.outputAsset ? `${t.outputAmount ?? ''} ${t.outputAsset}` : ''}`,
+    icon: IconVariant.ARROW_RIGHT,
+    onClick: () => navigate(`/tx/${t.id}`),
   }));
 
   const referralItems = referral?.code
@@ -290,7 +292,7 @@ export function AccountScreen(): JSX.Element {
         </StyledVerticalStack>
       )}
       {image && (
-        <div className="absolute bottom-0 w-full">
+        <div className="absolute bottom-0 w-full pointer-events-none">
           <img src={image} className="w-full" />
         </div>
       )}
