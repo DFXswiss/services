@@ -234,7 +234,7 @@
     "User count": "Conteggio utenti",
     "Active user count": "Conteggio utenti attivi",
 
-    "Are you sure you want to delete the address {{address}} from your DFX account? This action is irreversible.": "Siete sicuri di voler eliminare l'indirizzo {{address}} dal vostro account DFX? Questa azione è irreversibile."
+    "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile."
   },
   "screens/buy": {
     "Buy": "Acquista",

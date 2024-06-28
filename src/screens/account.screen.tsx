@@ -15,27 +15,23 @@ import {
   Form,
   IconVariant,
   SpinnerSize,
-  StyledButton,
-  StyledButtonColor,
-  StyledButtonWidth,
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
-  StyledHorizontalStack,
   StyledIconButton,
   StyledLoadingSpinner,
-  StyledModal,
-  StyledModalType,
-  StyledSpacer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { AddressDelete } from 'src/components/home/address-delete';
+import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useStore } from 'src/hooks/store.hook';
+import { blankedAddress } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -52,16 +48,19 @@ export function AccountScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
-  const { updateSession, deleteSession } = useApiSession();
-  const { getRef, changeUserAddress, deleteUserAddress } = useUser();
+  const { getRef } = useUser();
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
   const { activeWallet } = useStore();
+  const { changeUserAddress, deleteUserAddress } = useUser();
+  const { updateSession, deleteSession } = useApiSession();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setRefferal] = useState<Referral | undefined>();
-  const [showDeleteAddressModal, setShowDeleteAddressModal] = useState<boolean>(false);
+  const [showWalletDeleteOverlay, setShowWalletDeleteOverlay] = useState(false);
+
+  useUserGuard('/login');
 
   const {
     control,
@@ -72,23 +71,23 @@ export function AccountScreen(): JSX.Element {
   const selectedAddress = useWatch({ control, name: 'address' });
 
   useEffect(() => {
-    if (isLoggedIn) {
-      getRef().then(setRefferal);
-      loadTransactions();
-    }
-  }, [isLoggedIn]);
-
-  useEffect(() => {
     if (user?.activeAddress) {
+      loadRefferal();
+      loadTransactions();
+
       setValue('address', user.activeAddress);
     }
   }, [user?.activeAddress]);
 
   useEffect(() => {
-    if (user?.activeAddress && selectedAddress && user.activeAddress.address !== selectedAddress.address) {
-      switchUser(selectedAddress.address);
+    if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address) {
+      onSwitchUser(selectedAddress.address);
     }
   }, [selectedAddress]);
+
+  async function loadRefferal(): Promise<void> {
+    return getRef().then(setRefferal);
+  }
 
   async function loadTransactions(): Promise<void> {
     Promise.all([getDetailTransactions(), getUnassignedTransactions()])
@@ -113,19 +112,17 @@ export function AccountScreen(): JSX.Element {
       });
   }
 
-  async function switchUser(address: string): Promise<void> {
+  async function onSwitchUser(address: string): Promise<void> {
     const { accessToken } = await changeUserAddress(address);
     updateSession(accessToken);
     activeWallet.remove();
   }
 
-  async function deleteUser(): Promise<void> {
-    setShowDeleteAddressModal(false);
-
+  async function onDeleteUser(): Promise<void> {
     try {
       await deleteUserAddress();
       if (user!.addresses.length > 0) {
-        switchUser(user!.addresses[0].address);
+        onSwitchUser(user!.addresses[0].address);
         setValue('address', user!.addresses[0]);
       } else {
         deleteSession();
@@ -136,9 +133,13 @@ export function AccountScreen(): JSX.Element {
     }
   }
 
-  const title = translate('screens/home', 'DFX services');
+  const title = showWalletDeleteOverlay
+    ? `${translate('general/actions', 'Delete Address')}?`
+    : isEmbedded
+    ? translate('screens/home', 'DFX services')
+    : undefined;
+  const hasBackButton = showWalletDeleteOverlay || (canClose && !isEmbedded);
   const image = 'https://content.dfx.swiss/img/v1/services/berge.png';
-  const hasBackButton = canClose && !isEmbedded;
 
   const transactionItems = transactions?.map((t) => ({
     label: new Date(t.date as Date).toLocaleString(),
@@ -149,64 +150,68 @@ export function AccountScreen(): JSX.Element {
 
   const referralItems = referral?.code
     ? [
-        { label: translate('screens/home', 'Volume'), text: Utils.formatAmountCrypto(referral.volume) },
-        { label: translate('screens/home', 'Credit'), text: Utils.formatAmountCrypto(referral.credit) },
-        { label: translate('screens/home', 'Paid credit'), text: Utils.formatAmountCrypto(referral.paidCredit) },
+        { label: translate('screens/home', 'Volume'), text: Utils.formatAmountCrypto(referral.volume) + ' EUR' },
+        { label: translate('screens/home', 'Credit'), text: Utils.formatAmountCrypto(referral.credit) + ' EUR' },
+        {
+          label: translate('screens/home', 'Paid credit'),
+          text: Utils.formatAmountCrypto(referral.paidCredit) + ' EUR',
+        },
         { label: translate('screens/home', 'User count'), text: referral.userCount.toString() },
         { label: translate('screens/home', 'Active user count'), text: referral.activeUserCount.toString() },
       ]
     : [];
 
-  const totalVolumeItems = user
-    ? [
-        { label: translate('general/services', 'Buy'), text: user.volumes.buy.total.toFixed(2) },
-        { label: translate('general/services', 'Sell'), text: user.volumes.sell.total.toFixed(2) },
-        { label: translate('general/services', 'Swap'), text: user.volumes.swap.total.toFixed(2) },
-      ]
-    : [];
+  const totalVolumeItems = user && [
+    { label: translate('general/services', 'Buy'), text: user.volumes.buy.total.toFixed(2) + ' CHF' },
+    { label: translate('general/services', 'Sell'), text: user.volumes.sell.total.toFixed(2) + ' CHF' },
+    { label: translate('general/services', 'Swap'), text: user.volumes.swap.total.toFixed(2) + ' CHF' },
+  ];
 
-  const annualVolumeItems = user
-    ? [
-        { label: translate('general/services', 'Buy'), text: user.volumes.buy.annual.toFixed(2) },
-        { label: translate('general/services', 'Sell'), text: user.volumes.sell.annual.toFixed(2) },
-        { label: translate('general/services', 'Swap'), text: user.volumes.swap.annual.toFixed(2) },
-      ]
-    : [];
+  const annualVolumeItems = user && [
+    { label: translate('general/services', 'Buy'), text: user.volumes.buy.annual.toFixed(2) + ' CHF' },
+    { label: translate('general/services', 'Sell'), text: user.volumes.sell.annual.toFixed(2) + ' CHF' },
+    { label: translate('general/services', 'Swap'), text: user.volumes.swap.annual.toFixed(2) + ' CHF' },
+  ];
 
-  const totalVolumeSum = user ? totalVolumeItems.reduce((acc, item) => acc + parseFloat(item.text), 0) : 0;
-  const annualVolumeSum = user ? annualVolumeItems.reduce((acc, item) => acc + parseFloat(item.text), 0) : 0;
+  const totalVolumeSum = totalVolumeItems?.reduce((acc, item) => acc + parseFloat(item.text), 0).toFixed(2) + ' CHF';
+  const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + parseFloat(item.text), 0).toFixed(2) + ' CHF';
 
   return (
-    <Layout title={isEmbedded ? title : undefined} backButton={hasBackButton} rootRef={rootRef}>
-      {!isInitialized || isUserLoading ? (
+    <Layout
+      title={title}
+      backButton={hasBackButton}
+      rootRef={rootRef}
+      onBack={showWalletDeleteOverlay ? () => setShowWalletDeleteOverlay(false) : undefined}
+    >
+      {!isInitialized || !isLoggedIn || isUserLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
+      ) : showWalletDeleteOverlay ? (
+        <AddressDelete
+          address={selectedAddress.address}
+          onClose={(r) => (r ? onDeleteUser() : setShowWalletDeleteOverlay(false))}
+        />
       ) : (
         <StyledVerticalStack gap={4} center full marginY={4}>
-          {user?.activeAddress && (
+          {/* Wallet Selector */}
+          {user?.addresses && (
             <div className="w-full bg-dfxGray-300 p-2 rounded-md">
               <div className="bg-white w-full rounded-md">
                 <Form control={control} errors={errors}>
                   <StyledDropdown
                     name="address"
                     placeholder={translate('general/actions', 'Select...')}
-                    items={Object.values(user!.addresses)}
-                    disabled={user!.addresses.length === 0}
+                    items={user.addresses}
+                    disabled={user.addresses.length === 0}
                     labelFunc={(item) => item.wallet}
-                    descriptionFunc={(item) => item.address}
+                    descriptionFunc={(item) => blankedAddress(item.address)}
                   />
                 </Form>
               </div>
-              <DeleteAddressModal
-                isVisible={showDeleteAddressModal}
-                address={selectedAddress?.address}
-                onConfirm={deleteUser}
-                onCancel={() => setShowDeleteAddressModal(false)}
-              />
               <div className="flex flex-row  gap-2 w-full justify-end items-center text-dfxGray-800 text-xs pt-1.5 pr-1.5">
                 <button
-                  onClick={() => setShowDeleteAddressModal(true)}
+                  onClick={() => setShowWalletDeleteOverlay(true)}
                   className="cursor-pointer hover:text-dfxRed-150"
                 >
                   {translate('general/actions', 'Delete Address')}
@@ -218,6 +223,7 @@ export function AccountScreen(): JSX.Element {
               </div>
             </div>
           )}
+          {/* User Data */}
           <StyledDataTable
             label={translate('screens/home', 'Activity')}
             alignContent={AlignContent.RIGHT}
@@ -226,21 +232,20 @@ export function AccountScreen(): JSX.Element {
           >
             <StyledDataTableExpandableRow
               label={translate('screens/home', 'Total trading volume')}
-              expansionItems={totalVolumeItems}
+              expansionItems={totalVolumeItems ?? []}
             >
-              {totalVolumeSum.toFixed(2)}
+              {totalVolumeSum}
             </StyledDataTableExpandableRow>
             <StyledDataTableExpandableRow
               label={translate('screens/home', 'Annual trading volume')}
-              expansionItems={annualVolumeItems}
+              expansionItems={annualVolumeItems ?? []}
             >
-              {annualVolumeSum.toFixed(2)}
+              {annualVolumeSum}
             </StyledDataTableExpandableRow>
             {transactionItems && transactionItems.length > 0 && (
               <StyledDataTableExpandableRow
                 label={translate('screens/home', 'Latest transactions')}
                 expansionItems={transactionItems}
-                discreet
               />
             )}
           </StyledDataTable>
@@ -260,8 +265,7 @@ export function AccountScreen(): JSX.Element {
               </StyledDataTableRow>
               <StyledDataTableExpandableRow
                 label={translate('screens/home', 'Your referral stats')}
-                expansionItems={referralItems}
-                discreet
+                expansionItems={referralItems ?? []}
               />
             </StyledDataTable>
           )}
@@ -291,51 +295,5 @@ export function AccountScreen(): JSX.Element {
         </div>
       )}
     </Layout>
-  );
-}
-
-function DeleteAddressModal({
-  isVisible,
-  address,
-  onConfirm,
-  onCancel,
-}: {
-  isVisible: boolean;
-  address: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}): JSX.Element {
-  const { translate } = useSettingsContext();
-  const message = translate(
-    'screens/home',
-    'Are you sure you want to delete the address {{address}} from your DFX account? This action is irreversible.',
-    { address },
-  ).split(address);
-
-  return (
-    <StyledModal isVisible={isVisible} onClose={onCancel} type={StyledModalType.ALERT}>
-      <h2>{translate('general/actions', 'Delete Address')}?</h2>
-      <StyledSpacer spacing={3} />
-      <p>
-        {message[0]}
-        <strong>{address}</strong>
-        {message[1]}
-      </p>
-      <StyledSpacer spacing={7} />
-      <StyledHorizontalStack gap={5}>
-        <StyledButton
-          color={StyledButtonColor.GRAY_OUTLINE}
-          label={translate('general/actions', 'Cancel')}
-          onClick={onCancel}
-          width={StyledButtonWidth.FULL}
-        />
-        <StyledButton
-          color={StyledButtonColor.RED}
-          label={translate('general/actions', 'Delete')}
-          onClick={onConfirm}
-          width={StyledButtonWidth.FULL}
-        />
-      </StyledHorizontalStack>
-    </StyledModal>
   );
 }

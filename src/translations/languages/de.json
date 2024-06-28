@@ -234,7 +234,7 @@
     "User count": "Anzahl Benutzer",
     "Active user count": "Anzahl aktiver Benutzer",
 
-    "Are you sure you want to delete the address {{address}} from your DFX account? This action is irreversible.": "Bist Du sicher, dass Du die Adresse {{address}} von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen."
+    "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen."
   },
   "screens/buy": {
     "Buy": "Kaufen",

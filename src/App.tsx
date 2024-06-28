@@ -38,7 +38,7 @@ export const Routes = [
     errorElement: <ErrorScreen />,
   },
   {
-    path: '/home',
+    path: '/account',
     element: <AccountScreen />,
   },
   {
