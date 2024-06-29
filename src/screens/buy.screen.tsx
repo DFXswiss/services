@@ -383,7 +383,7 @@ export function BuyScreen(): JSX.Element {
     ? translate('screens/buy', 'Done!')
     : showsSwitchScreen
     ? translate('screens/buy', 'Switch address')
-    : translate('screens/buy', 'Buy');
+    : translate('navigation/links', 'Buy');
 
   return (
     <Layout

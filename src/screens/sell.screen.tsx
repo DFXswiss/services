@@ -434,7 +434,7 @@ export default function SellScreen(): JSX.Element {
       title={
         bankAccountSelection
           ? translate('screens/sell', 'Select payment account')
-          : translate('general/services', 'Sell')
+          : translate('navigation/links', 'Sell')
       }
       onBack={bankAccountSelection ? () => setBankAccountSelection(false) : undefined}
       textStart

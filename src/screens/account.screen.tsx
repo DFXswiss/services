@@ -166,15 +166,15 @@ export function AccountScreen(): JSX.Element {
     : [];
 
   const totalVolumeItems = user && [
-    { label: translate('general/services', 'Buy'), value: user.volumes.buy.total },
-    { label: translate('general/services', 'Sell'), value: user.volumes.sell.total },
-    { label: translate('general/services', 'Swap'), value: user.volumes.swap.total },
+    { label: translate('navigation/links', 'Buy'), value: user.volumes.buy.total },
+    { label: translate('navigation/links', 'Sell'), value: user.volumes.sell.total },
+    { label: translate('navigation/links', 'Swap'), value: user.volumes.swap.total },
   ];
 
   const annualVolumeItems = user && [
-    { label: translate('general/services', 'Buy'), value: user.volumes.buy.annual },
-    { label: translate('general/services', 'Sell'), value: user.volumes.sell.annual },
-    { label: translate('general/services', 'Swap'), value: user.volumes.swap.annual },
+    { label: translate('navigation/links', 'Buy'), value: user.volumes.buy.annual },
+    { label: translate('navigation/links', 'Sell'), value: user.volumes.sell.annual },
+    { label: translate('navigation/links', 'Swap'), value: user.volumes.swap.annual },
   ];
 
   const totalVolumeSum = totalVolumeItems?.reduce((acc, item) => acc + item.value, 0);

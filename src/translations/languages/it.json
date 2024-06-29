@@ -33,11 +33,6 @@
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto."
   },
-  "general/services": {
-    "Buy": "Comprare",
-    "Sell": "Vendere",
-    "Swap": "Convertire"
-  },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
     "KYC level": "KYC level",
@@ -237,7 +232,6 @@
     "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile."
   },
   "screens/buy": {
-    "Buy": "Acquista",
     "You spend": "Si spende",
     "You get about": "Riceverete circa",
 
