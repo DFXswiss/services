@@ -23,9 +23,9 @@ import { toBase64 } from '../util/utils';
 const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.GENERIC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.TRANSACTION_ISSUE]: [SupportIssueReason.OTHER, SupportIssueReason.FUNDS_NOT_RECEIVED],
-  [SupportIssueType.KYC_ISSUE]: [],
-  [SupportIssueType.LIMIT_REQUEST]: [],
-  [SupportIssueType.PARTNERSHIP_REQUEST]: [],
+  [SupportIssueType.KYC_ISSUE]: [SupportIssueReason.OTHER],
+  [SupportIssueType.LIMIT_REQUEST]: [SupportIssueReason.OTHER],
+  [SupportIssueType.PARTNERSHIP_REQUEST]: [SupportIssueReason.OTHER],
 };
 
 interface FormData {
