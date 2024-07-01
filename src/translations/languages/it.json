@@ -296,6 +296,7 @@
     "Bank Transaction Details": "Dettagli della transazione bancarian",
     "Recipient": "Destinatario",
     "Amount": "Importo",
+    "Amount in {{currency}}": "Importo in {{currency}}",
     "Currency": "Valuta",
     "IBAN": "IBAN",
     "BIC": "BIC",
