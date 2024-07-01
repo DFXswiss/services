@@ -4,10 +4,9 @@ import QRCode from 'react-qr-code';
 
 interface QrCopyProps {
   data: string;
-  size?: number;
 }
 
-export function QrCopy({ data, size }: QrCopyProps): JSX.Element {
+export function QrCopy({ data }: QrCopyProps): JSX.Element {
   return (
     <div className="relative w-full max-w-[20rem]">
       <div
@@ -16,7 +15,7 @@ export function QrCopy({ data, size }: QrCopyProps): JSX.Element {
       >
         <CopyButton onCopy={() => copy(data)} />
       </div>
-      <QRCode className="mx-auto h-auto" value={data} size={size ?? 128} fgColor={'#072440'} />
+      <QRCode className="mx-auto h-auto w-full max-w-[15rem]" value={data} fgColor={'#072440'} />
     </div>
   );
 }
