@@ -62,6 +62,12 @@ function PaymentInformationText({ info }: PaymentInformationContentProps): JSX.E
   return (
     <>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+        <StyledDataTableRow
+          label={translate('screens/payment', 'Amount in {{currency}}', { currency: info.currency.name })}
+        >
+          {info.amount}
+          <CopyButton onCopy={() => copy(`${info.amount}`)} />
+        </StyledDataTableRow>
         <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
           <div>
             <p>{Utils.formatIban(info.iban)}</p>
