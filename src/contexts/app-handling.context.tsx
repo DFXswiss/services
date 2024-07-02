@@ -18,6 +18,21 @@ const urlParamsToRemove = [
   'address',
   'signature',
   'mail',
+  'account-type',
+  'first-name',
+  'last-name',
+  'personal-street',
+  'personal-house-number',
+  'personal-zip',
+  'personal-city',
+  'personal-country',
+  'organization-name',
+  'organization-street',
+  'organization-house-number',
+  'organization-zip',
+  'organization-city',
+  'organization-country',
+  'phone',
   'wallet',
   'wallets',
   'refcode',
@@ -49,6 +64,21 @@ export interface AppParams {
   address?: string;
   signature?: string;
   mail?: string;
+  accountType?: string;
+  firstName?: string;
+  lastName?: string;
+  personalStreet?: string;
+  personalHouseNumber?: string;
+  personalZip?: string;
+  personalCity?: string;
+  personalCountry?: string;
+  organizationName?: string;
+  organizationStreet?: string;
+  organizationHouseNumber?: string;
+  organizationZip?: string;
+  organizationCity?: string;
+  organizationCountry?: string;
+  phone?: string;
   wallet?: string;
   wallets?: string;
   refcode?: string;
@@ -242,6 +272,21 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           address: getParameter(query, 'address'),
           signature: getParameter(query, 'signature'),
           mail: getParameter(query, 'mail'),
+          accountType: getParameter(query, 'account-type'),
+          firstName: getParameter(query, 'first-name'),
+          lastName: getParameter(query, 'last-name'),
+          personalStreet: getParameter(query, 'personal-street'),
+          personalHouseNumber: getParameter(query, 'personal-house-number'),
+          personalZip: getParameter(query, 'personal-zip'),
+          personalCity: getParameter(query, 'personal-city'),
+          personalCountry: getParameter(query, 'personal-country'),
+          organizationName: getParameter(query, 'organization-name'),
+          organizationStreet: getParameter(query, 'organization-street'),
+          organizationHouseNumber: getParameter(query, 'organization-house-number'),
+          organizationZip: getParameter(query, 'organization-zip'),
+          organizationCity: getParameter(query, 'organization-city'),
+          organizationCountry: getParameter(query, 'organization-country'),
+          phone: getParameter(query, 'phone'),
           wallet: getParameter(query, 'wallet'),
           wallets: getParameter(query, 'wallets'),
           refcode: getParameter(query, 'refcode'),

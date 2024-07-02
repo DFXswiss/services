@@ -1,4 +1,15 @@
-import { Language, useLanguage, useLanguageContext, useUserContext } from '@dfx.swiss/react';
+import {
+  KycPersonalData,
+  KycResult,
+  KycSession,
+  KycStepName,
+  KycStepStatus,
+  Language,
+  useKyc,
+  useLanguage,
+  useLanguageContext,
+  useUserContext,
+} from '@dfx.swiss/react';
 import browserLang from 'browser-lang';
 import i18n from 'i18next';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
@@ -36,7 +47,28 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { getDefaultLanguage } = useLanguage();
   const { user, changeLanguage: changeUserLanguage, changeMail: changeUserMail } = useUserContext();
   const { language: storedLanguage } = useStore();
-  const { lang, mail, setParams } = useAppParams();
+  const { getCountries, startStep, setPersonalData } = useKyc();
+  const { queryParams } = useStore();
+  const {
+    lang,
+    mail,
+    accountType,
+    firstName,
+    lastName,
+    personalStreet,
+    personalHouseNumber,
+    personalZip,
+    personalCity,
+    personalCountry,
+    organizationName,
+    organizationStreet,
+    organizationHouseNumber,
+    organizationZip,
+    organizationCity,
+    organizationCountry,
+    phone,
+    setParams,
+  } = useAppParams();
   const { t } = useTranslation();
 
   const [language, setLanguage] = useState<Language>();
@@ -58,6 +90,82 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   useEffect(() => {
     if (user && mail && user.mail !== mail) changeUserMail(mail);
   }, [user, mail]);
+
+  useEffect(() => {
+    if (user?.kyc.hash && accountType && firstName) {
+      startStep(user.kyc.hash, KycStepName.PERSONAL_DATA)
+        .then(handlePersonalData)
+        .catch((e) => {
+          console.error(e);
+          // ignore API error, e.g. 2FA required
+        });
+    }
+  }, [
+    user,
+    accountType,
+    firstName,
+    lastName,
+    personalStreet,
+    personalHouseNumber,
+    personalZip,
+    personalCity,
+    personalCountry,
+    organizationName,
+    organizationStreet,
+    organizationHouseNumber,
+    organizationZip,
+    organizationCity,
+    organizationCountry,
+    phone,
+  ]);
+
+  // ExampleURL: localhost:3001/?account-type=Personal&first-name=John&last-name=Doe&personal-street=Maine&personal-house-number=1&personal-zip=12345&personal-city=Cityo&personal-country=Germany&phone=00498004353361&mail=jodoe@eodoj.com&session=1234 // TODO: Remove
+  async function handlePersonalData(kycSession: KycSession) {
+    console.log(kycSession);
+    if (
+      user?.kyc.hash &&
+      kycSession.currentStep?.session?.url &&
+      [KycStepStatus.NOT_STARTED, KycStepStatus.IN_PROGRESS].includes(kycSession.currentStep.status)
+    ) {
+      console.log('Handling personal data...');
+      const countries = await getCountries(user.kyc.hash);
+      const country = countries.find((c) => c.symbol === personalCountry || c.name === personalCountry);
+      const orgCountry = countries.find((c) => c.symbol === organizationCountry || c.name === organizationCountry);
+
+      console.log(user!.kyc.hash, kycSession.currentStep?.session?.url);
+      console.log(country);
+      setPersonalData(user!.kyc.hash, kycSession.currentStep?.session?.url, {
+        accountType,
+        firstName,
+        lastName,
+        phone,
+        address: {
+          street: personalStreet,
+          houseNumber: personalHouseNumber,
+          city: personalCity,
+          zip: personalZip,
+          country: country,
+        },
+        organizationName,
+        organizationAddress: {
+          street: organizationStreet,
+          houseNumber: organizationHouseNumber,
+          city: organizationCity,
+          zip: organizationZip,
+          country: orgCountry,
+        },
+      } as KycPersonalData)
+        .then((kycResult: KycResult) => {
+          console.log('Personal data saved');
+          console.log(kycResult);
+          // TODO: Remove KYC params from local storage to avoid retriggers?
+        })
+        .catch((e: any) => {
+          console.error(e);
+          // ignore API error
+        });
+    }
+  }
 
   function changeAppLanguage(lang: Language) {
     setLanguage(lang);
