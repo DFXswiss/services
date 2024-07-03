@@ -12,6 +12,8 @@ import {
   useAuthContext,
   useSessionContext,
   useSwap,
+  useUser,
+  useUserContext,
 } from '@dfx.swiss/react';
 import {
   AssetIconVariant,
@@ -32,6 +34,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
+import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
@@ -49,7 +52,6 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useTxHelper } from '../hooks/tx-helper.hook';
-import { blankedAddress } from '../util/utils';
 
 interface Address {
   address: string;
@@ -79,7 +81,10 @@ export default function SwapScreen(): JSX.Element {
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
   const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
   const { availableBlockchains, logout } = useSessionContext();
+  const { setSession } = useWalletContext();
+  const { changeUserAddress } = useUser();
   const { session } = useAuthContext();
+  const { user } = useUserContext();
   const { assets, getAssets } = useAssetContext();
   const { getAsset, isSameAsset } = useAsset();
   const { navigate } = useNavigation();
@@ -144,15 +149,16 @@ export default function SwapScreen(): JSX.Element {
     (b) => SwapInputBlockchains.includes(b) && filteredAssets?.some((a) => a.blockchain === b),
   );
   const targetBlockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
+  const userAddresses = Array.from(
+    new Set([session?.address, ...(user?.addresses?.map((a) => a.address) ?? [])].filter(Boolean)),
+  );
 
   const addressItems: Address[] =
-    session?.address && targetBlockchains?.length
+    userAddresses.length > 0 && targetBlockchains?.length
       ? [
-          ...targetBlockchains.map((b) => ({
-            address: blankedAddress(session.address ?? ''),
-            label: toString(b),
-            chain: b,
-          })),
+          ...userAddresses.flatMap((a) =>
+            targetBlockchains.map((b) => ({ address: a ?? '', label: toString(b), chain: b })),
+          ),
           {
             address: translate('screens/buy', 'Switch address'),
             label: translate('screens/buy', 'Login with a different address'),
@@ -188,6 +194,9 @@ export default function SwapScreen(): JSX.Element {
   useEffect(() => {
     if (selectedAddress) {
       if (selectedAddress.chain) {
+        if (selectedAddress.address && selectedAddress.address !== session?.address) {
+          onSwitchUser(selectedAddress.address);
+        }
         if (blockchain !== selectedAddress.chain) {
           setParams({ blockchain: selectedAddress.chain });
           switchBlockchain(selectedAddress.chain);
@@ -263,7 +272,12 @@ export default function SwapScreen(): JSX.Element {
     return () => {
       isRunning = false;
     };
-  }, [validatedData]);
+  }, [validatedData, session?.address]);
+
+  async function onSwitchUser(address: string): Promise<void> {
+    const { accessToken } = await changeUserAddress(address);
+    setSession(accessToken);
+  }
 
   function validateSwap(swap: Swap): void {
     setCustomAmountError(undefined);
@@ -502,7 +516,7 @@ export default function SwapScreen(): JSX.Element {
                     rootRef={rootRef}
                     name="address"
                     items={addressItems}
-                    labelFunc={(item) => item.address}
+                    labelFunc={(item) => blankedAddress(item.address)}
                     descriptionFunc={(item) => item.label}
                     full
                     forceEnable

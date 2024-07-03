@@ -30,7 +30,6 @@ import { AddressDelete } from 'src/components/home/address-delete';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { useStore } from 'src/hooks/store.hook';
 import { blankedAddress } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -46,14 +45,14 @@ export function AccountScreen(): JSX.Element {
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
   const { limitToString, levelToString } = useKycHelper();
   const { navigate } = useNavigation();
-  const { isLoggedIn } = useSessionContext();
+  const { logout, isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
   const { getRef } = useUser();
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
-  const { activeWallet } = useStore();
   const { changeUserAddress, deleteUserAddress } = useUser();
-  const { updateSession, deleteSession } = useApiSession();
+  const { deleteSession } = useApiSession();
+  const { setSession } = useWalletContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
@@ -116,8 +115,7 @@ export function AccountScreen(): JSX.Element {
 
   async function onSwitchUser(address: string): Promise<void> {
     const { accessToken } = await changeUserAddress(address);
-    updateSession(accessToken);
-    activeWallet.remove();
+    setSession(accessToken);
   }
 
   async function onDeleteUser(): Promise<void> {
@@ -127,8 +125,7 @@ export function AccountScreen(): JSX.Element {
         onSwitchUser(user!.addresses[0].address);
         setValue('address', user!.addresses[0]);
       } else {
-        deleteSession();
-        activeWallet.remove();
+        logout();
       }
     } catch (e) {
       // ignore errors
