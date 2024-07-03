@@ -25,9 +25,16 @@ export function isNode(e: EventTarget | null): e is Node {
   return e != null && 'nodeType' in e;
 }
 
-export function blankedAddress(address: string, displayLength = 24): string {
-  return address.length > displayLength
-    ? `${address.slice(0, displayLength / 2)}...${address.slice(address.length - displayLength / 2)}`
+export function blankedAddress(
+  address: string,
+  { displayLength = 24, dynamicLength = false }: { displayLength?: number; dynamicLength?: boolean } = {},
+): string {
+  if (dynamicLength) displayLength = Math.min(Math.floor((window.innerWidth * 0.5) / 10), address.length);
+  const has0xPrefix = /^0x/.test(address);
+  const offset = has0xPrefix ? 2 : 0;
+  displayLength -= offset;
+  return address.length - offset > displayLength
+    ? `${address.slice(0, offset + displayLength / 2)}...${address.slice(address.length - displayLength / 2)}`
     : address;
 }
 

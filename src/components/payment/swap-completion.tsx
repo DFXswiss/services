@@ -50,7 +50,7 @@ export function SwapCompletion({ paymentInfo, navigateOnClose, txId }: SwapCompl
       {txId && (
         <StyledHorizontalStack gap={2} center>
           <p className="text-dfxBlue-800">{translate('screens/sell', 'Transaction hash')}:</p>
-          <span className="text-dfxBlue-800 font-bold">{blankedAddress(txId)}</span>
+          <span className="text-dfxBlue-800 font-bold">{blankedAddress(txId, { dynamicLength: true })}</span>
           <CopyButton onCopy={() => copy(txId)} />
         </StyledHorizontalStack>
       )}

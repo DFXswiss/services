@@ -209,7 +209,7 @@ export function AccountScreen(): JSX.Element {
                     items={user.addresses}
                     disabled={user.addresses.length === 0}
                     labelFunc={(item) => item.wallet}
-                    descriptionFunc={(item) => blankedAddress(item.address)}
+                    descriptionFunc={(item) => blankedAddress(item.address, { dynamicLength: true })}
                   />
                 </Form>
               </div>

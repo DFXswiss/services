@@ -149,7 +149,7 @@ export default function SwapScreen(): JSX.Element {
     session?.address && targetBlockchains?.length
       ? [
           ...targetBlockchains.map((b) => ({
-            address: blankedAddress(session.address ?? ''),
+            address: blankedAddress(session.address ?? '', { dynamicLength: true }),
             label: toString(b),
             chain: b,
           })),

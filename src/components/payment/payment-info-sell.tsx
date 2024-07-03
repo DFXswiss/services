@@ -81,7 +81,7 @@ function PaymentInformationText({
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/sell', 'Address')}>
           <div>
-            <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+            <p>{blankedAddress(paymentInfo.depositAddress, { dynamicLength: true })}</p>
           </div>
           <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
         </StyledDataTableRow>
