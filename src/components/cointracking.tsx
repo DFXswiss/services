@@ -24,26 +24,35 @@ export interface ApiKey {
   secret: string;
 }
 
+interface FilterMode {
+  key: string;
+  value: string;
+}
+
+interface Filter {
+  key: TransactionFilterKey;
+  label: string;
+  value: string;
+}
+
 interface FormData {
-  selection?: { key: string; value: string };
-  filter?: { key: string; label: string; value: string }[];
+  filterMode?: FilterMode;
+  filter?: Filter[];
 }
 
 const UserUrl = 'user';
 const toHistoryQuery = (types?: TransactionFilterKey[]) => (types ? '?' + Object.values(types).join('&') : '');
 const equalKeys = (a: TransactionFilterKey[] | undefined, b: TransactionFilterKey[] | undefined) =>
-  !(a || b) || (a && b && a.length === b.length && a.every((v, i) => v === b[i]));
-// const exampleTypes = ['buy', 'sell', 'staking', 'ref', 'lm'] as TransactionFilterKey[];
+  !(a || b) || (a && b && a.length === b.length && a.every((v) => b.includes(v)));
 
 export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTMLDivElement> }) {
   const { call } = useApi();
   const { user, reloadUser } = useUserContext();
   const { lang } = useAppParams();
   const { translate } = useSettingsContext();
+  const { apiFilterCT } = user?.activeAddress ?? {};
   const [isKeyLoading, setIsKeyLoading] = useState(false);
   const [apiSecret, setApiSecret] = useState<string | undefined>(undefined);
-
-  const getApiFilterCT = () => user?.activeAddress?.apiFilterCT;
 
   const filterOptions = [
     { key: 'All', value: 'Transfer all data' },
@@ -56,7 +65,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
     { key: 'staking', label: 'Staking', value: translate('screens/payment', 'Staking transactions') },
     { key: 'ref', label: 'Referral', value: translate('screens/payment', 'Referral transactions') },
     { key: 'lm', label: 'LM', value: translate('screens/payment', 'Liquidity mining transactions') },
-  ];
+  ] as Filter[];
 
   const {
     control,
@@ -64,36 +73,31 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
     setValue,
   } = useForm<FormData>({ mode: 'onTouched' });
 
-  const filterType = useWatch({ control, name: 'selection' });
-  const filter = useWatch({ control, name: 'filter' });
+  const filterMode = useWatch({ control, name: 'filterMode' })?.key;
+  const filter = useWatch({ control, name: 'filter' })?.map((f) => f.key);
 
   useEffect(() => {
-    if (
-      !equalKeys(
-        getApiFilterCT(),
-        filter?.map((f) => f.key as TransactionFilterKey),
-      )
-    ) {
-      if (getApiFilterCT()?.length) {
-        setValue('selection', filterOptions[1]);
-        setValue(
-          'filter',
-          filterTypes.filter((t) => getApiFilterCT()?.includes(t.key as TransactionFilterKey)),
-        );
-      } else {
-        setValue('selection', filterOptions[0]);
-      }
+    if (!filter) {
+      setValue('filterMode', filterOptions[apiFilterCT?.length ? 1 : 0]);
+      setValue(
+        'filter',
+        filterTypes.filter((f) => apiFilterCT?.includes(f.key)),
+      );
     }
-  }, [user?.activeAddress?.apiFilterCT]);
+  }, [apiFilterCT]);
 
   useEffect(() => {
-    const f = filter?.map((f) => f.key as TransactionFilterKey);
-    if (filterType?.key === 'Filtered' && !equalKeys(getApiFilterCT(), f)) {
-      updateFilter(f);
-    } else if (filterType?.key === 'All' && getApiFilterCT()?.length) {
+    if (filterMode === 'All' && apiFilterCT?.length) {
+      setValue('filter', undefined);
       updateFilter();
     }
-  }, [filterType, filter]);
+  }, [filterMode]);
+
+  useEffect(() => {
+    if (filter && !equalKeys(apiFilterCT, filter)) {
+      updateFilter(filter);
+    }
+  }, [filter]);
 
   const onOpenCt = () => {
     let url = 'https://cointracking.info/?ref=D270827';
@@ -115,7 +119,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
 
   const onGenerateKey = () => {
     setIsKeyLoading(true);
-    generateApiKey(getApiFilterCT())
+    generateApiKey(apiFilterCT)
       .then((keys) => {
         reloadUser();
         setApiSecret(keys.secret);
@@ -185,14 +189,14 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
         <StyledVerticalStack gap={4} full>
           <StyledDropdown
             label={translate('screens/payment', 'Import filter')}
-            name="selection"
+            name="filterMode"
             rootRef={rootRef}
             placeholder={translate('general/actions', 'Select...')}
             items={filterOptions}
             labelFunc={(item) => item.key}
             descriptionFunc={(item) => item.value}
           />
-          {filterType?.key === 'Filtered' && (
+          {filterMode === 'Filtered' && (
             <StyledDropdownMultiChoice
               name="filter"
               rootRef={rootRef}
