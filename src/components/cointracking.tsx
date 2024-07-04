@@ -1,15 +1,21 @@
 import { TransactionFilter, TransactionFilterKey, useApi, useUserContext } from '@dfx.swiss/react';
 import {
   AlignContent,
+  Form,
   IconVariant,
   StyledButton,
+  StyledButtonColor,
   StyledDataTable,
   StyledDataTableRow,
+  StyledDropdown,
+  StyledDropdownMultiChoice,
   StyledIconButton,
+  StyledSpacer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 
@@ -18,25 +24,76 @@ export interface ApiKey {
   secret: string;
 }
 
+interface FormData {
+  selection?: { key: string; value: string };
+  filter?: { key: string; label: string; value: string }[];
+}
+
 const UserUrl = 'user';
 const toHistoryQuery = (types?: TransactionFilterKey[]) => (types ? '?' + Object.values(types).join('&') : '');
+const equalKeys = (a: TransactionFilterKey[] | undefined, b: TransactionFilterKey[] | undefined) =>
+  !(a || b) || (a && b && a.length === b.length && a.every((v, i) => v === b[i]));
+// const exampleTypes = ['buy', 'sell', 'staking', 'ref', 'lm'] as TransactionFilterKey[];
 
-export default function CoinTracking({ onClose }: { onClose?: () => void }) {
+export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTMLDivElement> }) {
   const { call } = useApi();
   const { user, reloadUser } = useUserContext();
   const { lang } = useAppParams();
   const { translate } = useSettingsContext();
-  const [isLoading, setIsLoading] = useState(false);
   const [isKeyLoading, setIsKeyLoading] = useState(false);
   const [apiSecret, setApiSecret] = useState<string | undefined>(undefined);
-  const [ctFilterEnabled, setCtFilterEnabled] = useState<boolean>(false);
-  const [ctTypes, setCtTypes] = useState<TransactionFilterKey[]>();
+
+  const getApiFilterCT = () => user?.activeAddress?.apiFilterCT;
+
+  const filterOptions = [
+    { key: 'All', value: 'Transfer all data' },
+    { key: 'Filtered', value: 'Transfer filtered data' },
+  ];
+
+  const filterTypes = [
+    { key: 'buy', label: 'Buy', value: translate('screens/payment', 'Buy transactions') },
+    { key: 'sell', label: 'Sell', value: translate('screens/payment', 'Sell transactions') },
+    { key: 'staking', label: 'Staking', value: translate('screens/payment', 'Staking transactions') },
+    { key: 'ref', label: 'Referral', value: translate('screens/payment', 'Referral transactions') },
+    { key: 'lm', label: 'LM', value: translate('screens/payment', 'Liquidity mining transactions') },
+  ];
+
+  const {
+    control,
+    formState: { errors },
+    setValue,
+  } = useForm<FormData>({ mode: 'onTouched' });
+
+  const filterType = useWatch({ control, name: 'selection' });
+  const filter = useWatch({ control, name: 'filter' });
 
   useEffect(() => {
-    if (!user) return;
-    setCtFilterEnabled(Boolean(user.activeAddress?.apiFilterCT?.length));
-    setCtTypes(user.activeAddress?.apiFilterCT);
-  }, [user]);
+    if (
+      !equalKeys(
+        getApiFilterCT(),
+        filter?.map((f) => f.key as TransactionFilterKey),
+      )
+    ) {
+      if (getApiFilterCT()?.length) {
+        setValue('selection', filterOptions[1]);
+        setValue(
+          'filter',
+          filterTypes.filter((t) => getApiFilterCT()?.includes(t.key as TransactionFilterKey)),
+        );
+      } else {
+        setValue('selection', filterOptions[0]);
+      }
+    }
+  }, [user?.activeAddress?.apiFilterCT]);
+
+  useEffect(() => {
+    const f = filter?.map((f) => f.key as TransactionFilterKey);
+    if (filterType?.key === 'Filtered' && !equalKeys(getApiFilterCT(), f)) {
+      updateFilter(f);
+    } else if (filterType?.key === 'All' && getApiFilterCT()?.length) {
+      updateFilter();
+    }
+  }, [filterType, filter]);
 
   const onOpenCt = () => {
     let url = 'https://cointracking.info/?ref=D270827';
@@ -58,7 +115,7 @@ export default function CoinTracking({ onClose }: { onClose?: () => void }) {
 
   const onGenerateKey = () => {
     setIsKeyLoading(true);
-    generateApiKey(ctTypes)
+    generateApiKey(getApiFilterCT())
       .then((keys) => {
         reloadUser();
         setApiSecret(keys.secret);
@@ -75,33 +132,23 @@ export default function CoinTracking({ onClose }: { onClose?: () => void }) {
       .finally(() => setIsKeyLoading(false));
   };
 
-  const enableCtFilter = (enabled: boolean) => {
-    setCtFilterEnabled(enabled);
-    updateFilter(enabled ? ctTypes : []);
-  };
-
-  const toggleCtFilter = (type: TransactionFilterKey) => {
-    setCtTypes((t) => {
-      const types = t ? t.filter((t) => t !== type) : [];
-      updateFilter(types);
-      return types;
-    });
-  };
-
   const updateFilter = (types?: TransactionFilterKey[]) => {
     putApiKeyFilter(types)
-      .then(console.log)
+      .then(() => reloadUser())
       .then(() => console.log(translate('screens/payment', 'Saved')))
       .catch(() => console.error(translate('screens/payment', 'Error while saving.')));
   };
 
   return (
-    <StyledVerticalStack gap={3} full className="text-dfxBlue-700">
-      <h2>{translate('screens/payment', 'Cointracking Link (read rights)')}</h2>
-      <StyledButton label={translate('screens/payment', 'Cointracking homepage')} onClick={onOpenCt} />
+    <StyledVerticalStack gap={4} full className="text-dfxBlue-700">
+      <p>{translate('screens/payment', 'You can link your DFX account to your Cointracking account.')}</p>
+      <StyledButton
+        label={translate('screens/payment', 'Cointracking homepage')}
+        onClick={onOpenCt}
+        color={StyledButtonColor.STURDY_WHITE}
+      />
       {user?.activeAddress?.apiKeyCT == null ? (
         <StyledVerticalStack gap={3} full>
-          <p>{translate('screens/payment', 'You can link your DFX account to your Cointracking account.')}</p>
           <StyledButton
             label={translate('screens/payment', 'Generate API key')}
             onClick={onGenerateKey}
@@ -109,7 +156,7 @@ export default function CoinTracking({ onClose }: { onClose?: () => void }) {
           />
         </StyledVerticalStack>
       ) : (
-        <StyledVerticalStack gap={3} full>
+        <StyledVerticalStack gap={4} full>
           <StyledDataTable alignContent={AlignContent.RIGHT} minWidth={false}>
             <StyledDataTableRow label={translate('screens/payment', 'API key')}>
               <div className="flex flex-row gap-2">
@@ -132,55 +179,31 @@ export default function CoinTracking({ onClose }: { onClose?: () => void }) {
           />
         </StyledVerticalStack>
       )}
+      <StyledSpacer spacing={0} />
 
-      <h4>{translate('screens/payment', 'Current import filter')}</h4>
-
-      {/* <View style={AppStyles.containerHorizontalWrap}>
-        <RadioButton
-          label={translate('screens/transactions', 'model.history.filter_inactive')}
-          onPress={() => enableCtFilter(false)}
-          checked={!ctFilterEnabled}
-        />
-        <RadioButton
-          label={translate('screens/transactions', 'model.history.filter_active')}
-          onPress={() => enableCtFilter(true)}
-          checked={ctFilterEnabled}
-        />
-      </View>
-
-      <View style={{ marginLeft: 30 }}>
-        {Object.values(TransactionFilter).map((type) => (
-          <Checkbox
-            key={type}
-            checked={ctTypes[type]}
-            disabled={!ctFilterEnabled}
-            label={translate('screens/transactions', `model.history.${type}`)}
-            onPress={() => toggleCtFilter(type)}
+      <Form control={control} errors={errors}>
+        <StyledVerticalStack gap={4} full>
+          <StyledDropdown
+            label={translate('screens/payment', 'Import filter')}
+            name="selection"
+            rootRef={rootRef}
+            placeholder={translate('general/actions', 'Select...')}
+            items={filterOptions}
+            labelFunc={(item) => item.key}
+            descriptionFunc={(item) => item.value}
           />
-        ))}
-      </View>
-
-      <SpacerV height={20} />
-      <Divider style={{ backgroundColor: Colors.LightGrey }} />
-      <SpacerV height={20} />
-
-      <H3 text={translate('screens/transactions', 'model.history.csv_export')} />
-      {Object.values(TransactionFilter).map((type) => (
-        <Checkbox
-          key={type}
-          checked={csvTypes[type]}
-          label={translate('screens/transactions', `model.history.${type}`)}
-          onPress={() => setCsvTypes((t) => ({ ...t, [type]: !t[type] }))}
-        />
-      ))}
-      <SpacerV /> */}
-
-      {/* <StyledButton
-        label={translate('screens/transactions', 'action.next')}
-        isLoading={isLoading}
-        onClick={onExportHistory}
-        disabled={Object.values(csvTypes).find((v) => v) == null}
-      /> */}
+          {filterType?.key === 'Filtered' && (
+            <StyledDropdownMultiChoice
+              name="filter"
+              rootRef={rootRef}
+              placeholder={translate('general/actions', 'Select data to import...')}
+              items={filterTypes}
+              labelFunc={(item) => item.label}
+              descriptionFunc={(item) => item.value}
+            />
+          )}
+        </StyledVerticalStack>
+      </Form>
     </StyledVerticalStack>
   );
 }

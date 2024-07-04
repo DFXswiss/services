@@ -389,6 +389,7 @@
     "Please send the specified amount to the address below.": "Bitte sende den angegebenen Betrag an die unten stehende Adresse.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst.",
 
+    "Cointracking": "Cointracking",
     "Error loading the data.": "Fehler beim Laden der Daten.",
     "Error while deleting.": "Fehler beim Löschen.",
     "Saved": "Gespeichert",
@@ -400,7 +401,9 @@
     "API key": "API-Schlüssel",
     "API secret": "API-Geheimnis",
     "Delete API key": "API-Schlüssel löschen",
-    "Current import filter": "Aktueller Importfilter"
+    "Import filter": "Importfilter",
+    "Transfer all data": "Alle Daten übertragen",
+    "Transfer filtered data": "Gefilterte Daten übertragen"
   },
   "screens/iban": {
     "Bank Accounts": "Bankkonten",
