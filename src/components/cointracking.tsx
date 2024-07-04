@@ -25,7 +25,8 @@ export interface ApiKey {
 }
 
 interface FilterMode {
-  key: string;
+  key: 'all' | 'filtered';
+  label: string;
   value: string;
 }
 
@@ -53,18 +54,47 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
   const { apiFilterCT } = user?.activeAddress ?? {};
   const [isKeyLoading, setIsKeyLoading] = useState(false);
   const [apiSecret, setApiSecret] = useState<string | undefined>(undefined);
+  const [showNotification, setShowNotification] = useState(false);
 
   const filterOptions = [
-    { key: 'All', value: 'Transfer all data' },
-    { key: 'Filtered', value: 'Transfer filtered data' },
-  ];
+    {
+      key: 'all',
+      label: translate('screens/payment', 'All'),
+      value: translate('screens/payment', 'Transfer all data'),
+    },
+    {
+      key: 'filtered',
+      label: translate('screens/payment', 'Filtered'),
+      value: translate('screens/payment', 'Transfer filtered data'),
+    },
+  ] as FilterMode[];
 
   const filterTypes = [
-    { key: 'buy', label: 'Buy', value: translate('screens/payment', 'Buy transactions') },
-    { key: 'sell', label: 'Sell', value: translate('screens/payment', 'Sell transactions') },
-    { key: 'staking', label: 'Staking', value: translate('screens/payment', 'Staking transactions') },
-    { key: 'ref', label: 'Referral', value: translate('screens/payment', 'Referral transactions') },
-    { key: 'lm', label: 'LM', value: translate('screens/payment', 'Liquidity mining transactions') },
+    {
+      key: 'buy',
+      label: translate('screens/payment', 'Buy'),
+      value: translate('screens/payment', 'Buy transactions'),
+    },
+    {
+      key: 'sell',
+      label: translate('screens/payment', 'Sell'),
+      value: translate('screens/payment', 'Sell transactions'),
+    },
+    {
+      key: 'staking',
+      label: translate('screens/payment', 'Staking'),
+      value: translate('screens/payment', 'Staking transactions'),
+    },
+    {
+      key: 'ref',
+      label: translate('screens/payment', 'Referral'),
+      value: translate('screens/payment', 'Referral rewards'),
+    },
+    {
+      key: 'lm',
+      label: translate('screens/payment', 'Liquidity mining'),
+      value: translate('screens/payment', 'Liquidity mining rewards'),
+    },
   ] as Filter[];
 
   const {
@@ -87,7 +117,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
   }, [apiFilterCT]);
 
   useEffect(() => {
-    if (filterMode === 'All' && apiFilterCT?.length) {
+    if (filterMode === 'all' && apiFilterCT?.length) {
       setValue('filter', undefined);
       updateFilter();
     }
@@ -98,6 +128,11 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
       updateFilter(filter);
     }
   }, [filter]);
+
+  const toggleNotification = () => {
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 2000);
+  };
 
   const onOpenCt = () => {
     let url = 'https://cointracking.info/?ref=D270827';
@@ -139,7 +174,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
   const updateFilter = (types?: TransactionFilterKey[]) => {
     putApiKeyFilter(types)
       .then(() => reloadUser())
-      .then(() => console.log(translate('screens/payment', 'Saved')))
+      .then(() => toggleNotification())
       .catch(() => console.error(translate('screens/payment', 'Error while saving.')));
   };
 
@@ -186,17 +221,24 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
       <StyledSpacer spacing={0} />
 
       <Form control={control} errors={errors}>
-        <StyledVerticalStack gap={4} full>
+        <StyledVerticalStack gap={4} full className="relative">
+          <div
+            className={`absolute text-sm text-dfxRed-100 text-right w-full pr-4 transition-opacity duration-100 ${
+              showNotification ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            {translate('screens/payment', 'Saved')}!
+          </div>
           <StyledDropdown
             label={translate('screens/payment', 'Import filter')}
             name="filterMode"
             rootRef={rootRef}
             placeholder={translate('general/actions', 'Select...')}
             items={filterOptions}
-            labelFunc={(item) => item.key}
+            labelFunc={(item) => item.label}
             descriptionFunc={(item) => item.value}
           />
-          {filterMode === 'Filtered' && (
+          {filterMode === 'filtered' && (
             <StyledDropdownMultiChoice
               name="filter"
               rootRef={rootRef}

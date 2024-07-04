@@ -333,6 +333,7 @@
     "Buy": "Kauf",
     "Sell": "Verkauf",
     "Swap": "Tausch",
+    "Staking": "Staking",
 
     "State": "Status",
     "Created": "Erstellt",
@@ -402,8 +403,17 @@
     "API secret": "API-Geheimnis",
     "Delete API key": "API-Schlüssel löschen",
     "Import filter": "Importfilter",
+    "All": "Alle",
+    "Filtered": "Gefiltert",
     "Transfer all data": "Alle Daten übertragen",
-    "Transfer filtered data": "Gefilterte Daten übertragen"
+    "Transfer filtered data": "Gefilterte Daten übertragen",
+    "Referral": "Referral",
+    "Liquidity mining": "Liquiditäts-Mining",
+    "Buy transactions": "Kauftransaktionen",
+    "Sell transactions": "Verkaufstransaktionen",
+    "Staking transactions": "Staking-Transaktionen",
+    "Referral rewards": "Referral-Rewards",
+    "Liquidity mining rewards": "Liquiditäts-Mining-Rewards"
   },
   "screens/iban": {
     "Bank Accounts": "Bankkonten",
