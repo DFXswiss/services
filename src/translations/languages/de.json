@@ -387,7 +387,20 @@
 
     "The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.": "Der Wechselkurs von {{rate}} {{currency}}/{{asset}} ist für {{timer}} festgelegt, danach wird er neu berechnet.",
     "Please send the specified amount to the address below.": "Bitte sende den angegebenen Betrag an die unten stehende Adresse.",
-    "Please note that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst."
+    "Please note that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst.",
+
+    "Error loading the data.": "Fehler beim Laden der Daten.",
+    "Error while deleting.": "Fehler beim Löschen.",
+    "Saved": "Gespeichert",
+    "Error while saving.": "Fehler beim Speichern.",
+    "Cointracking Link (read rights)": "Cointracking-Verknüpfung (Leserechte)",
+    "Cointracking homepage": "Cointracking Homepage",
+    "You can link your DFX account to your Cointracking account.": "Du kannst dein DFX-Konto mit deinem Cointracking-Konto verknüpfen.",
+    "Generate API key": "API-Schlüssel generieren",
+    "API key": "API-Schlüssel",
+    "API secret": "API-Geheimnis",
+    "Delete API key": "API-Schlüssel löschen",
+    "Current import filter": "Aktueller Importfilter"
   },
   "screens/iban": {
     "Bank Accounts": "Bankkonten",
