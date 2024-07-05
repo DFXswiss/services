@@ -179,7 +179,7 @@ export function SupportIssueScreen(): JSX.Element {
                 title={translate('screens/support', 'Telegram Community')}
                 description={translate(
                   'screens/support',
-                  'Join the DFX Community to ask urgent questions directly to our moderators. Remember, we will never contact you first. Do not fall for scams.',
+                  'Join the DFX Community. Our moderators are happy to assist you in the group.',
                 )}
                 onClick={() => setShowWarning(true)}
                 buttonLabel={translate('screens/support', 'Join now')}
