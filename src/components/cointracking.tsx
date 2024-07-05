@@ -91,11 +91,6 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
       label: translate('screens/payment', 'Referral'),
       value: translate('screens/payment', 'Referral rewards'),
     },
-    {
-      key: 'lm',
-      label: translate('screens/payment', 'Liquidity mining'),
-      value: translate('screens/payment', 'Liquidity mining rewards'),
-    },
   ] as Filter[];
 
   const {

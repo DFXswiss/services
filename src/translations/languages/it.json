@@ -408,12 +408,10 @@
     "Transfer all data": "Trasferisci tutti i dati",
     "Transfer filtered data": "Trasferisci dati filtrati",
     "Referral": "Referral",
-    "Liquidity mining": "Mining di liquidità",
     "Buy transactions": "Transazioni di acquisto",
     "Sell transactions": "Transazioni di vendita",
     "Staking transactions": "Transazioni di staking",
-    "Referral rewards": "Ricompense di referral",
-    "Liquidity mining rewards": "Ricompense di mining di liquidità"
+    "Referral rewards": "Ricompense di referral"
   },
   "screens/iban": {
     "Bank Accounts": "Conti bancari",
