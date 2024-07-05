@@ -119,21 +119,18 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     phone,
   ]);
 
-  // ExampleURL: localhost:3001/?account-type=Personal&first-name=John&last-name=Doe&personal-street=Maine&personal-house-number=1&personal-zip=12345&personal-city=Cityo&personal-country=Germany&phone=00498004353361&mail=jodoe@eodoj.com&session=1234 // TODO: Remove
+  // TODO: Remove example URL
+  // localhost:3001/?account-type=Personal&first-name=John&last-name=Doe&personal-street=Maine&personal-house-number=1&personal-zip=12345&personal-city=Cityo&personal-country=Germany&phone=00498004353361&mail=jodoe@eodoj.com&session=1234
   async function handlePersonalData(kycSession: KycSession) {
-    console.log(kycSession);
     if (
       user?.kyc.hash &&
       kycSession.currentStep?.session?.url &&
       [KycStepStatus.NOT_STARTED, KycStepStatus.IN_PROGRESS].includes(kycSession.currentStep.status)
     ) {
-      console.log('Handling personal data...');
       const countries = await getCountries(user.kyc.hash);
       const country = countries.find((c) => c.symbol === personalCountry || c.name === personalCountry);
       const orgCountry = countries.find((c) => c.symbol === organizationCountry || c.name === organizationCountry);
 
-      console.log(user!.kyc.hash, kycSession.currentStep?.session?.url);
-      console.log(country);
       setPersonalData(user!.kyc.hash, kycSession.currentStep?.session?.url, {
         accountType,
         firstName,
@@ -155,10 +152,9 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
           country: orgCountry,
         },
       } as KycPersonalData)
-        .then((kycResult: KycResult) => {
-          console.log('Personal data saved');
-          console.log(kycResult);
-          // TODO: Remove KYC params from local storage to avoid retriggers?
+        .then((_kycResult: KycResult) => {
+          // TODO: After setting the data, kycSession.currentStep.status does not update immediately.
+          // Remove the KYC params from local storage to avoid retriggers?
         })
         .catch((e: any) => {
           console.error(e);
