@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
+import { blankedAddress } from 'src/util/utils';
 
 export interface ApiKey {
   key: string;
@@ -51,7 +52,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
   const { user, reloadUser } = useUserContext();
   const { lang } = useAppParams();
   const { translate } = useSettingsContext();
-  const { apiFilterCT } = user?.activeAddress ?? {};
+  const { apiFilterCT, apiKeyCT } = user?.activeAddress ?? {};
   const [isKeyLoading, setIsKeyLoading] = useState(false);
   const [apiSecret, setApiSecret] = useState<string | undefined>(undefined);
   const [showNotification, setShowNotification] = useState(false);
@@ -186,7 +187,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
         onClick={onOpenCt}
         color={StyledButtonColor.STURDY_WHITE}
       />
-      {user?.activeAddress?.apiKeyCT == null ? (
+      {apiKeyCT == null ? (
         <StyledVerticalStack gap={3} full>
           <StyledButton
             label={translate('screens/payment', 'Generate API key')}
@@ -199,13 +200,13 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
           <StyledDataTable alignContent={AlignContent.RIGHT} minWidth={false}>
             <StyledDataTableRow label={translate('screens/payment', 'API key')}>
               <div className="flex flex-row gap-2">
-                <p>{user?.activeAddress?.apiKeyCT}</p>
-                <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(user?.activeAddress?.apiKeyCT ?? '')} />
+                <p>{blankedAddress(apiKeyCT)}</p> {/* TODO: update to dynamic length */}
+                <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(apiKeyCT ?? '')} />
               </div>
             </StyledDataTableRow>
             {apiSecret && (
               <StyledDataTableRow label={translate('screens/payment', 'API secret')}>
-                <p>{apiSecret}</p>
+                <p>{blankedAddress(apiSecret)}</p> {/* TODO: update to dynamic length */}
                 <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(apiSecret)} />
               </StyledDataTableRow>
             )}
