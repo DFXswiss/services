@@ -43,7 +43,7 @@ interface FormData {
 }
 
 const UserUrl = 'user';
-const toHistoryQuery = (types?: TransactionFilterKey[]) => (types ? '?' + Object.values(types).join('&') : '');
+const toHistoryQuery = (types?: TransactionFilterKey[]) => (types ? '?' + types.join('&') : '');
 const equalKeys = (a: TransactionFilterKey[] | undefined, b: TransactionFilterKey[] | undefined) =>
   !(a || b) || (a && b && a.length === b.length && a.every((v) => b.includes(v)));
 
@@ -136,15 +136,18 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
     window.open(url, '_blank');
   };
 
+  // TODO: Use function from user.hook.ts (in next package version)
   const generateApiKey = (types?: TransactionFilterKey[]): Promise<ApiKey> => {
     return call<ApiKey>({ url: `${UserUrl}/apiKey/CT${toHistoryQuery(types)}`, method: 'POST' });
   };
 
+  // TODO: Use function from user.hook.ts (in next package version)
   const deleteApiKey = (): Promise<void> => {
     return call<void>({ url: `${UserUrl}/apiKey/CT`, method: 'DELETE' });
   };
 
-  const putApiKeyFilter = (types?: TransactionFilterKey[]): Promise<TransactionFilter[]> => {
+  // TODO: Use function from user.hook.ts (in next package version)
+  const putApiFilter = (types?: TransactionFilterKey[]): Promise<TransactionFilter[]> => {
     return call<TransactionFilter[]>({ url: `${UserUrl}/apiFilter/CT${toHistoryQuery(types)}`, method: 'PUT' });
   };
 
@@ -168,7 +171,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
   };
 
   const updateFilter = (types?: TransactionFilterKey[]) => {
-    putApiKeyFilter(types)
+    putApiFilter(types)
       .then(() => reloadUser())
       .then(() => toggleNotification())
       .catch(() => console.error(translate('screens/payment', 'Error while saving.')));
