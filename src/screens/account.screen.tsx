@@ -264,9 +264,9 @@ export function AccountScreen(): JSX.Element {
               showBorder
               minWidth={false}
             >
-              <StyledDataTableRow label={translate('screens/home', 'Referral code')}>
+              <StyledDataTableRow label={translate('screens/home', 'Referral link')}>
                 {referral.code}
-                <CopyButton onCopy={() => copy(referral.code!)} />
+                <CopyButton onCopy={() => copy(`https://services.dfx.swiss/?refcode=${referral.code}`)} />
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
                 {(referral.commission * 100).toFixed(2)}%
