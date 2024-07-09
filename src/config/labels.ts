@@ -56,8 +56,9 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.INSTANT_PAYMENT]: 'Instant payment',
   [TransactionFailureReason.FEE_TOO_HIGH]: 'Network fee too high',
   [TransactionFailureReason.RECEIVER_REJECTED]: 'Payment rejected by receiver node',
-  [TransactionFailureReason.ASSET_KYC_NEEDED]: 'Asset requires KYC',
   [TransactionFailureReason.CHF_ABROAD_NOT_ALLOWED]: 'CHF abroad not allowed',
+  [TransactionFailureReason.ASSET_KYC_NEEDED]: 'Asset requires KYC',
+  [TransactionFailureReason.CARD_NAME_MISMATCH]: 'Card name mismatch',
 };
 
 // --- Limit increase requestS --- //
