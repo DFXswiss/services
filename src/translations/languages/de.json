@@ -363,6 +363,8 @@
     "Instant payment": "Sofort-Transaktion",
     "Network fee too high": "Netzwerkgebühr zu hoch",
     "Payment rejected by receiver node": "Zahlung von Empfänger-Node abgelehnt",
+    "Asset requires KYC": "Asset erfordert KYC",
+    "CHF abroad not allowed": "CHF im Ausland nicht erlaubt",
 
     "Payment method": "Zahlungsmethode",
     "Standard bank transaction": "Standard-Banktransaktion",
