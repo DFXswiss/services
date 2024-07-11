@@ -1,18 +1,7 @@
-import {
-  KycPersonalData,
-  KycResult,
-  KycSession,
-  KycStepName,
-  KycStepStatus,
-  Language,
-  useKyc,
-  useLanguage,
-  useLanguageContext,
-  useUserContext,
-} from '@dfx.swiss/react';
+import { Language, useKyc, useLanguage, useLanguageContext, UserData, useUserContext } from '@dfx.swiss/react';
 import browserLang from 'browser-lang';
 import i18n from 'i18next';
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
@@ -47,19 +36,18 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { getDefaultLanguage } = useLanguage();
   const { user, changeLanguage: changeUserLanguage, changeMail: changeUserMail } = useUserContext();
   const { language: storedLanguage } = useStore();
-  const { getCountries, startStep, setPersonalData } = useKyc();
-  const { queryParams } = useStore();
+  const { getCountries, setData } = useKyc();
   const {
     lang,
     mail,
     accountType,
     firstName,
     lastName,
-    personalStreet,
-    personalHouseNumber,
-    personalZip,
-    personalCity,
-    personalCountry,
+    street,
+    houseNumber,
+    zip,
+    city,
+    country,
     organizationName,
     organizationStreet,
     organizationHouseNumber,
@@ -92,24 +80,44 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, [user, mail]);
 
   useEffect(() => {
-    if (user?.kyc.hash && accountType && firstName) {
-      startStep(user.kyc.hash, KycStepName.PERSONAL_DATA)
-        .then(handlePersonalData)
-        .catch((e) => {
-          console.error(e);
-          // ignore API error, e.g. 2FA required
-        });
-    }
+    if (!user?.kyc.hash || !accountType) return;
+    getCountries(user.kyc.hash).then((cs) => {
+      setData({
+        mail,
+        accountType,
+        firstName,
+        lastName,
+        phone,
+        address: {
+          street: street,
+          houseNumber: houseNumber,
+          city: city,
+          zip: zip,
+          country: cs.find((c) => c.symbol === country || c.name === country),
+        },
+        organizationName,
+        organizationAddress: organizationName && {
+          street: organizationStreet,
+          houseNumber: organizationHouseNumber,
+          city: organizationCity,
+          zip: organizationZip,
+          country: cs.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
+        },
+      } as UserData).catch(() => {
+        // Ignore API errors
+      });
+    });
   }, [
     user,
+    mail,
     accountType,
     firstName,
     lastName,
-    personalStreet,
-    personalHouseNumber,
-    personalZip,
-    personalCity,
-    personalCountry,
+    street,
+    houseNumber,
+    zip,
+    city,
+    country,
     organizationName,
     organizationStreet,
     organizationHouseNumber,
@@ -118,50 +126,6 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     organizationCountry,
     phone,
   ]);
-
-  // TODO: Remove example URL
-  // localhost:3001/?account-type=Personal&first-name=John&last-name=Doe&personal-street=Maine&personal-house-number=1&personal-zip=12345&personal-city=Cityo&personal-country=Germany&phone=00498004353361&mail=jodoe@eodoj.com&session=1234
-  async function handlePersonalData(kycSession: KycSession) {
-    if (
-      user?.kyc.hash &&
-      kycSession.currentStep?.session?.url &&
-      [KycStepStatus.NOT_STARTED, KycStepStatus.IN_PROGRESS].includes(kycSession.currentStep.status)
-    ) {
-      const countries = await getCountries(user.kyc.hash);
-      const country = countries.find((c) => c.symbol === personalCountry || c.name === personalCountry);
-      const orgCountry = countries.find((c) => c.symbol === organizationCountry || c.name === organizationCountry);
-
-      setPersonalData(user!.kyc.hash, kycSession.currentStep?.session?.url, {
-        accountType,
-        firstName,
-        lastName,
-        phone,
-        address: {
-          street: personalStreet,
-          houseNumber: personalHouseNumber,
-          city: personalCity,
-          zip: personalZip,
-          country: country,
-        },
-        organizationName,
-        organizationAddress: {
-          street: organizationStreet,
-          houseNumber: organizationHouseNumber,
-          city: organizationCity,
-          zip: organizationZip,
-          country: orgCountry,
-        },
-      } as KycPersonalData)
-        .then((_kycResult: KycResult) => {
-          // TODO: After setting the data, kycSession.currentStep.status does not update immediately.
-          // Remove the KYC params from local storage to avoid retriggers?
-        })
-        .catch((e: any) => {
-          console.error(e);
-          // ignore API error
-        });
-    }
-  }
 
   function changeAppLanguage(lang: Language) {
     setLanguage(lang);
