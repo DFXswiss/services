@@ -266,7 +266,7 @@ export function AccountScreen(): JSX.Element {
             >
               <StyledDataTableRow label={translate('screens/home', 'Referral link')}>
                 {referral.code}
-                <CopyButton onCopy={() => copy(`https://services.dfx.swiss/?refcode=${referral.code}`)} />
+                <CopyButton onCopy={() => copy(`${process.env.REACT_APP_REF_URL}${referral.code}`)} />
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
                 {(referral.commission * 100).toFixed(2)}%
