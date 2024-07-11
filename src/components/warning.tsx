@@ -2,17 +2,16 @@ import { StyledButton, StyledButtonColor, StyledButtonWidth, StyledHorizontalSta
 import { useSettingsContext } from '../contexts/settings.context';
 
 interface WarningProps {
+  text: string;
   onClose: (confirm: boolean) => void;
 }
 
-export function Warning({ onClose }: WarningProps): JSX.Element {
+export function Warning({ text, onClose }: WarningProps): JSX.Element {
   const { translate } = useSettingsContext();
 
   return (
     <>
-      <p className="text-dfxBlue-800 mb-2">
-        {translate('screens/support', 'Please be cautious. We will never contact you first. Beware of scams.')}
-      </p>
+      <p className="text-dfxBlue-800 mb-2">{text}</p>
       <StyledHorizontalStack>
         <StyledButton
           color={StyledButtonColor.STURDY_WHITE}

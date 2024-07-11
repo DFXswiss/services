@@ -1,9 +1,6 @@
 import { ApiError, KycLevel, Utils, Validations, useSupport } from '@dfx.swiss/react';
 import {
-  DfxIcon,
   Form,
-  IconColor,
-  IconVariant,
   StyledButton,
   StyledButtonWidth,
   StyledDropdown,
@@ -14,10 +11,7 @@ import {
 import { CreateSupportIssue, SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { FaTelegram } from 'react-icons/fa';
-import { IoMdHelpCircle } from 'react-icons/io';
 import { useLocation, useParams } from 'react-router-dom';
-import { Warning } from 'src/components/warning';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { IssueReasonLabels, IssueTypeLabels } from '../config/labels';
@@ -52,12 +46,11 @@ export function SupportIssueScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
   const { createIssue } = useSupport();
-  const { translate, translateError } = useSettingsContext();
+  const { translate, translateError, language } = useSettingsContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [issueCreated, setIssueCreated] = useState(false);
-  const [showWarning, setShowWarning] = useState(false);
 
   const {
     control,
@@ -90,11 +83,6 @@ export function SupportIssueScreen(): JSX.Element {
       navigate('/support/issue');
     }
   }, [selectedType]);
-
-  function onCloseWarning(confirm: boolean) {
-    setShowWarning(false);
-    if (confirm) window.open('https://t.me/DFXswiss_en', '_blank');
-  }
 
   async function onSubmit(data: FormData) {
     setIsLoading(true);
@@ -134,12 +122,8 @@ export function SupportIssueScreen(): JSX.Element {
     message: Validations.Required,
   });
 
-  const title = showWarning
-    ? translate('screens/support', 'Telegram support')
-    : translate('screens/support', 'Support issue');
-
   return (
-    <Layout title={title} rootRef={rootRef} onBack={showWarning ? () => setShowWarning(false) : undefined}>
+    <Layout title={translate('screens/support', 'Support issue')} rootRef={rootRef}>
       {issueCreated ? (
         <StyledVerticalStack gap={6} full>
           <p className="text-dfxGray-700">
@@ -153,8 +137,6 @@ export function SupportIssueScreen(): JSX.Element {
             isLoading={isLoading}
           />
         </StyledVerticalStack>
-      ) : showWarning ? (
-        <Warning onClose={onCloseWarning} />
       ) : (
         <Form
           control={control}
@@ -164,28 +146,6 @@ export function SupportIssueScreen(): JSX.Element {
           translate={translateError}
         >
           <StyledVerticalStack gap={6} full center>
-            <div className="flex flex-row w-full gap-4 text-left text-sm mt-2">
-              <StyledButtonTile
-                title={translate('screens/support', 'FAQ')}
-                description={translate(
-                  'screens/support',
-                  'We have summarized the most common questions for you in our FAQ.',
-                )}
-                onClick={() => window.open('https://docs.dfx.swiss/en/faq.html', '_blank')}
-                buttonLabel={translate('screens/support', 'Search for it')}
-                icon={<IoMdHelpCircle className="h-auto w-7" />}
-              />
-              <StyledButtonTile
-                title={translate('screens/support', 'Telegram Community')}
-                description={translate(
-                  'screens/support',
-                  'Join the DFX Community. Our moderators are happy to assist you in the group.',
-                )}
-                onClick={() => setShowWarning(true)}
-                buttonLabel={translate('screens/support', 'Join now')}
-                icon={<FaTelegram className="h-auto w-6" />}
-              />
-            </div>
             <StyledDropdown<SupportIssueType>
               rootRef={rootRef}
               label={translate('screens/support', 'Issue type')}
@@ -256,36 +216,5 @@ export function SupportIssueScreen(): JSX.Element {
         </Form>
       )}
     </Layout>
-  );
-}
-
-function StyledButtonTile({
-  title,
-  description,
-  onClick,
-  buttonLabel,
-  icon,
-}: {
-  title: string;
-  description: string;
-  onClick?: () => void;
-  buttonLabel: string;
-  icon: JSX.Element;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      className="flex flex-1 flex-col gap-1.5 w-full p-4 border rounded-md text-dfxBlue-800 border-dfxGray-400 cursor-pointer hover:bg-link"
-    >
-      <div className="flex flex-row items-center gap-2 text-dfxBlue-800">
-        {icon}
-        <div className="text-base font-bold">{title}</div>
-      </div>
-      <p>{description}</p>
-      <button className="flex h-full items-end flex-row gap-2 mt-1 text-dfxGray-800">
-        <p>{buttonLabel}</p>
-        <DfxIcon icon={IconVariant.ARROW_RIGHT} color={IconColor.RED} />
-      </button>
-    </div>
   );
 }

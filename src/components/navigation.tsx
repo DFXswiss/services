@@ -203,7 +203,7 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
           <NavigationLink
             icon={IconVariant.SUPPORT}
             label={translate('navigation/links', 'Support')}
-            url="/support/issue"
+            url="/support"
             target="_self"
           />
           <NavigationLink
