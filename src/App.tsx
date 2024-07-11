@@ -170,9 +170,10 @@ export interface WidgetParams extends AppParams {
 interface AppProps {
   routerFactory: (routes: RouteObject[]) => Router;
   params?: WidgetParams;
+  width?: number;
 }
 
-function App({ routerFactory, params }: AppProps) {
+function App({ routerFactory, params, width }: AppProps) {
   const router = routerFactory(Routes);
 
   const home = params?.service && `/${params.service}`;
@@ -187,6 +188,7 @@ function App({ routerFactory, params }: AppProps) {
           closeCallback={params?.onClose}
           params={params}
           router={router}
+          width={width}
         >
           <SettingsContextProvider>
             <WalletContextProvider router={router}>

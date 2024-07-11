@@ -27,14 +27,13 @@ export function isNode(e: EventTarget | null): e is Node {
 
 export function blankedAddress(
   address: string,
-  { displayLength = 24, dynamicLength = false }: { displayLength?: number; dynamicLength?: boolean } = {},
+  { displayLength = 24, width }: { displayLength?: number; width?: number } = {},
 ): string {
-  if (dynamicLength) displayLength = Math.min(Math.floor((window.innerWidth * 0.5) / 10), address.length);
-  const has0xPrefix = /^0x/.test(address);
-  const offset = has0xPrefix ? 2 : 0;
-  displayLength -= offset;
-  return address.length - offset > displayLength
-    ? `${address.slice(0, offset + displayLength / 2)}...${address.slice(address.length - displayLength / 2)}`
+  if (width) displayLength = Math.min(Math.floor((width * 0.5) / 10), address.length);
+  const offset0x = /^0x/.test(address) ? 2 : 0;
+  displayLength -= offset0x;
+  return address.length - offset0x > displayLength
+    ? `${address.slice(0, offset0x + displayLength / 2)}...${address.slice(address.length - displayLength / 2)}`
     : address;
 }
 
