@@ -187,11 +187,11 @@ export function AccountScreen(): JSX.Element {
 
   const referralItems = referral?.code
     ? [
-        { label: translate('screens/home', 'Volume'), text: Utils.formatAmountCrypto(referral.volume) + ' EUR' },
-        { label: translate('screens/home', 'Credit'), text: Utils.formatAmountCrypto(referral.credit) + ' EUR' },
+        { label: translate('screens/home', 'Volume'), text: Utils.formatAmount(referral.volume) + ' EUR' },
+        { label: translate('screens/home', 'Credit'), text: Utils.formatAmount(referral.credit) + ' EUR' },
         {
           label: translate('screens/home', 'Paid credit'),
-          text: Utils.formatAmountCrypto(referral.paidCredit) + ' EUR',
+          text: Utils.formatAmount(referral.paidCredit) + ' EUR',
         },
         { label: translate('screens/home', 'User count'), text: referral.userCount.toString() },
         { label: translate('screens/home', 'Active user count'), text: referral.activeUserCount.toString() },
@@ -267,18 +267,19 @@ export function AccountScreen(): JSX.Element {
             <StyledDataTableExpandableRow
               label={translate('screens/home', 'Total trading volume')}
               expansionItems={
-                totalVolumeItems?.map(({ label, value }) => ({ label, text: value.toFixed(2) + ' CHF' })) ?? []
+                totalVolumeItems?.map(({ label, value }) => ({ label, text: Utils.formatAmount(value) + ' CHF' })) ?? []
               }
             >
-              {totalVolumeSum?.toFixed(2) + ' CHF'}
+              {Utils.formatAmount(totalVolumeSum) + ' CHF'}
             </StyledDataTableExpandableRow>
             <StyledDataTableExpandableRow
               label={translate('screens/home', 'Annual trading volume')}
               expansionItems={
-                annualVolumeItems?.map(({ label, value }) => ({ label, text: value.toFixed(2) + ' CHF' })) ?? []
+                annualVolumeItems?.map(({ label, value }) => ({ label, text: Utils.formatAmount(value) + ' CHF' })) ??
+                []
               }
             >
-              {annualVolumeSum?.toFixed(2) + ' CHF'}
+              {Utils.formatAmount(annualVolumeSum) + ' CHF'}
             </StyledDataTableExpandableRow>
             {transactionItems && transactionItems.length > 0 && (
               <StyledDataTableExpandableRow

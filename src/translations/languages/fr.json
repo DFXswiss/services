@@ -296,6 +296,7 @@
     "Bank Transaction Details": "Détails de la transaction bancaire",
     "Recipient": "Bénéficiaire",
     "Amount": "Montant",
+    "Amount in {{currency}}": "Montant en {{currency}}",
     "Currency": "Devise",
     "IBAN": "IBAN",
     "BIC": "BIC",

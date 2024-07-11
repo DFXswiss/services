@@ -14,29 +14,21 @@ import {
   useUserContext,
 } from '@dfx.swiss/react';
 import {
-  AlignContent,
-  CopyButton,
-  DfxIcon,
-  IconColor,
-  IconVariant,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
-  StyledDataTable,
-  StyledDataTableRow,
   StyledInfoText,
   StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
+import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
 import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
-import { PaymentQrCode } from '../components/payment/payment-qr-code';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -170,72 +162,7 @@ export function BuyInfoScreen(): JSX.Element {
       ) : (
         paymentInfo && (
           <>
-            <h2 className="text-dfxBlue-800 text-center">{translate('screens/payment', 'Payment Information')}</h2>
-
-            <StyledDataTable
-              label={translate('screens/payment', 'Recipient')}
-              alignContent={AlignContent.RIGHT}
-              showBorder
-              minWidth={false}
-            >
-              <StyledDataTableRow label={translate('screens/buy', 'Name')}>
-                {paymentInfo.name}
-                <CopyButton onCopy={() => copy(`${paymentInfo.name}`)} />
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/buy', 'Address')}>
-                {`${paymentInfo.street} ${paymentInfo.number}`}
-                <CopyButton onCopy={() => copy(`${paymentInfo.street} ${paymentInfo.number}`)} />
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/kyc', 'ZIP code')}>
-                {paymentInfo.zip}
-                <CopyButton onCopy={() => copy(`${paymentInfo.zip}`)} />
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/kyc', 'City')}>
-                {paymentInfo.city}
-                <CopyButton onCopy={() => copy(`${paymentInfo.city}`)} />
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/kyc', 'Country')}>
-                {paymentInfo.country}
-                <CopyButton onCopy={() => copy(`${paymentInfo.country}`)} />
-              </StyledDataTableRow>
-            </StyledDataTable>
-
-            <StyledDataTable
-              label={translate('screens/payment', 'Bank Transaction Details')}
-              alignContent={AlignContent.RIGHT}
-              showBorder
-              minWidth={false}
-            >
-              <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                {paymentInfo.amount}
-                <CopyButton onCopy={() => copy(`${paymentInfo.amount}`)} />
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/payment', 'Currency')}>
-                {paymentInfo.currency.name}
-                <CopyButton onCopy={() => copy(paymentInfo.currency.name)} />
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
-                <div>
-                  <p>{Utils.formatIban(paymentInfo.iban)}</p>
-                  {paymentInfo.sepaInstant && (
-                    <div className="text-white">
-                      <DfxIcon icon={IconVariant.SEPA_INSTANT} color={IconColor.RED} />
-                    </div>
-                  )}
-                </div>
-                <CopyButton onCopy={() => copy(paymentInfo.iban ?? '')} />
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
-                {paymentInfo.bic}
-                <CopyButton onCopy={() => copy(paymentInfo.bic)} />
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/payment', 'Reference')}>
-                {paymentInfo.remittanceInfo}
-                <CopyButton onCopy={() => copy(paymentInfo.remittanceInfo)} />
-              </StyledDataTableRow>
-            </StyledDataTable>
-
-            {paymentInfo.paymentRequest && <PaymentQrCode value={paymentInfo.paymentRequest} txId={paymentInfo.id} />}
+            <PaymentInformationContent info={paymentInfo} />
 
             <div className="pt-4 leading-none">
               <StyledLink
