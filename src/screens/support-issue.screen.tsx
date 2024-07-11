@@ -46,7 +46,7 @@ export function SupportIssueScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
   const { createIssue } = useSupport();
-  const { translate, translateError, language } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();

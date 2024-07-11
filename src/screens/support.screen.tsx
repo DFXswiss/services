@@ -1,4 +1,3 @@
-import { KycLevel } from '@dfx.swiss/react';
 import { DfxIcon, IconColor, IconVariant, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useRef, useState } from 'react';
 import { FaTelegram } from 'react-icons/fa';
@@ -7,13 +6,9 @@ import { MdEditSquare } from 'react-icons/md';
 import { Layout } from 'src/components/layout';
 import { Warning } from 'src/components/warning';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { useKycLevelGuard, useUserGuard } from 'src/hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
 export function SupportScreen(): JSX.Element {
-  useUserGuard('/login');
-  useKycLevelGuard(KycLevel.Link, '/contact');
-
   const { navigate } = useNavigation();
   const { translate, language } = useSettingsContext();
   const rootRef = useRef<HTMLDivElement>(null);
