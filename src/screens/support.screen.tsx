@@ -3,6 +3,7 @@ import { DfxIcon, IconColor, IconVariant, StyledVerticalStack } from '@dfx.swiss
 import { useRef, useState } from 'react';
 import { FaTelegram } from 'react-icons/fa';
 import { IoMdHelpCircle } from 'react-icons/io';
+import { MdEditSquare } from 'react-icons/md';
 import { Layout } from 'src/components/layout';
 import { Warning } from 'src/components/warning';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -67,7 +68,7 @@ export function SupportScreen(): JSX.Element {
             )}
             onClick={() => navigate('/support/issue')}
             buttonLabel={translate('screens/support', 'Submit Ticket')}
-            icon={<FaTelegram className="h-auto w-6" />}
+            icon={<MdEditSquare className="h-auto w-6" />}
           />
         </StyledVerticalStack>
       )}
