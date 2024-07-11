@@ -201,14 +201,9 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             url={process.env.REACT_APP_DFX_URL}
           />
           <NavigationLink
-            icon={IconVariant.HELP}
-            label={translate('navigation/links', 'Help')}
-            url={process.env.REACT_APP_HELP_URL}
-          />
-          <NavigationLink
             icon={IconVariant.SUPPORT}
             label={translate('navigation/links', 'Support')}
-            url="/support/issue"
+            url="/support"
             target="_self"
           />
           <NavigationLink
