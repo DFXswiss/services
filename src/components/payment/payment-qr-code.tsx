@@ -44,7 +44,10 @@ export function PaymentQrCode({ value, txId }: GiroCodeProps): JSX.Element {
 
   return stringIsSVG(value) ? (
     <div className="flex flex-col items-center py-4 gap-1.5">
-      <img className="mx-auto" src={`data:image/svg+xml;utf8,${encodeURIComponent(value)}`} />
+      <img
+        className="mx-auto h-auto w-full max-w-[15rem]"
+        src={`data:image/svg+xml;utf8,${encodeURIComponent(value)}`}
+      />
       <p className="text-dfxBlue-800 font-semibold text-base">{translate('screens/buy', 'QR-bill')}</p>
       <button
         type="button"
@@ -61,7 +64,7 @@ export function PaymentQrCode({ value, txId }: GiroCodeProps): JSX.Element {
     </div>
   ) : (
     <div className="flex flex-col items-center py-4 gap-1">
-      <QRCode className="mx-auto" value={value} size={174} fgColor={'#072440'} />
+      <QRCode className="mx-auto h-auto w-full max-w-[15rem]" value={value} fgColor={'#072440'} />
       <p className="text-dfxBlue-800 font-semibold text-base">GiroCode</p>
     </div>
   );

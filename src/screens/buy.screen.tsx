@@ -266,7 +266,7 @@ export function BuyScreen(): JSX.Element {
           setPaymentInfo(buy);
 
           // load exact price
-          if (buy && !buy.exactPrice) {
+          if (buy) {
             setIsPriceLoading(true);
             receiveFor({ ...data, exactPrice: true })
               .then((info) => {

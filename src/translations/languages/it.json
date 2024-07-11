@@ -297,6 +297,7 @@
     "Bank Transaction Details": "Dettagli della transazione bancarian",
     "Recipient": "Destinatario",
     "Amount": "Importo",
+    "Amount in {{currency}}": "Importo in {{currency}}",
     "Currency": "Valuta",
     "IBAN": "IBAN",
     "BIC": "BIC",
@@ -364,6 +365,9 @@
     "Instant payment": "Pagamento istantaneo",
     "Network fee too high": "Costi di rete troppo elevati",
     "Payment rejected by receiver node": "Pagamento rifiutato dal nodo ricevente",
+    "CHF abroad not allowed": "CHF all'estero non ammessi",
+    "Asset requires KYC": "Attività richiede KYC",
+    "Card name mismatch": "Il nome sulla carta non corrisponde",
 
     "Payment method": "Metodo di pagamento",
     "Standard bank transaction": "Transazione bancaria standard",
