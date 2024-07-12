@@ -21,6 +21,7 @@ import { KycScreen } from './screens/kyc.screen';
 import { LimitScreen } from './screens/limit.screen';
 import { LinkScreen } from './screens/link.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
+import { SettingsScreen } from './screens/settings.screen';
 import { SupportIssueScreen } from './screens/support-issue.screen';
 import { TfaScreen } from './screens/tfa.screen';
 import { TransactionMissingScreen } from './screens/transaction-missing.screen';
@@ -41,6 +42,10 @@ export const Routes = [
   {
     path: '/account',
     element: <AccountScreen />,
+  },
+  {
+    path: 'settings',
+    element: <SettingsScreen />,
   },
   {
     path: '/login',
