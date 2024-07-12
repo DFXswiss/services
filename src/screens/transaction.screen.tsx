@@ -431,7 +431,7 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
         timestamp: step.timestamp.toLocaleString(),
       }),
     )
-    .join('\n→ ');
+    .join('\n');
 
   const rateItems = [];
   tx.exchangeRate != null &&
