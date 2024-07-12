@@ -265,9 +265,9 @@ export function AccountScreen(): JSX.Element {
               showBorder
               minWidth={false}
             >
-              <StyledDataTableRow label={translate('screens/home', 'Referral code')}>
+              <StyledDataTableRow label={translate('screens/home', 'Referral link')}>
                 {referral.code}
-                <CopyButton onCopy={() => copy(referral.code!)} />
+                <CopyButton onCopy={() => copy(`${process.env.REACT_APP_REF_URL}${referral.code}`)} />
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
                 {(referral.commission * 100).toFixed(2)}%
