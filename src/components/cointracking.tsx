@@ -1,4 +1,4 @@
-import { TransactionFilter, TransactionFilterKey, useApi, useUserContext } from '@dfx.swiss/react';
+import { ApiError, TransactionFilterKey, useUser, useUserContext } from '@dfx.swiss/react';
 import {
   AlignContent,
   Form,
@@ -19,11 +19,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { blankedAddress } from 'src/util/utils';
-
-export interface ApiKey {
-  key: string;
-  secret: string;
-}
+import { ErrorHint } from './error-hint';
 
 interface FilterMode {
   key: 'all' | 'filtered';
@@ -42,17 +38,17 @@ interface FormData {
   filter?: Filter[];
 }
 
-const UserUrl = 'user';
-const toHistoryQuery = (types?: TransactionFilterKey[]) => (types ? '?' + types.join('&') : '');
 const equalKeys = (a: TransactionFilterKey[] | undefined, b: TransactionFilterKey[] | undefined) =>
   !(a || b) || (a && b && a.length === b.length && a.every((v) => b.includes(v)));
 
 export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTMLDivElement> }) {
-  const { call } = useApi();
   const { user, reloadUser } = useUserContext();
   const { lang } = useAppParams();
   const { translate } = useSettingsContext();
+  // const { width } = useAppHandlingContext(); // TODO
   const { apiFilterCT, apiKeyCT } = user?.activeAddress ?? {};
+  const { generateCTApiKey, deleteCTApiKey, updateCTApiFilter } = useUser();
+  const [error, setError] = useState<string>();
   const [isKeyLoading, setIsKeyLoading] = useState(false);
   const [apiSecret, setApiSecret] = useState<string | undefined>(undefined);
   const [showNotification, setShowNotification] = useState(false);
@@ -136,119 +132,112 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
     window.open(url, '_blank');
   };
 
-  // TODO: Use function from user.hook.ts (in next package version)
-  const generateApiKey = (types?: TransactionFilterKey[]): Promise<ApiKey> => {
-    return call<ApiKey>({ url: `${UserUrl}/apiKey/CT${toHistoryQuery(types)}`, method: 'POST' });
-  };
-
-  // TODO: Use function from user.hook.ts (in next package version)
-  const deleteApiKey = (): Promise<void> => {
-    return call<void>({ url: `${UserUrl}/apiKey/CT`, method: 'DELETE' });
-  };
-
-  // TODO: Use function from user.hook.ts (in next package version)
-  const putApiFilter = (types?: TransactionFilterKey[]): Promise<TransactionFilter[]> => {
-    return call<TransactionFilter[]>({ url: `${UserUrl}/apiFilter/CT${toHistoryQuery(types)}`, method: 'PUT' });
-  };
-
   const onGenerateKey = () => {
     setIsKeyLoading(true);
-    generateApiKey(apiFilterCT)
+    generateCTApiKey(apiFilterCT)
       .then((keys) => {
         reloadUser();
         setApiSecret(keys.secret);
       })
-      .catch(() => console.error(translate('screens/payment', 'Error loading the data.')))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsKeyLoading(false));
   };
 
   const onDeleteKey = () => {
     setIsKeyLoading(true);
-    deleteApiKey()
+    deleteCTApiKey()
       .then(() => reloadUser())
-      .catch(() => console.error(translate('screens/payment', 'Error while deleting.')))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsKeyLoading(false));
   };
 
   const updateFilter = (types?: TransactionFilterKey[]) => {
-    putApiFilter(types)
+    updateCTApiFilter(types)
       .then(() => reloadUser())
       .then(() => toggleNotification())
-      .catch(() => console.error(translate('screens/payment', 'Error while saving.')));
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   };
 
   return (
     <StyledVerticalStack gap={4} full className="text-dfxBlue-700">
-      <p>{translate('screens/payment', 'You can link your DFX account to your Cointracking account.')}</p>
-      <StyledButton
-        label={translate('screens/payment', 'Cointracking homepage')}
-        onClick={onOpenCt}
-        color={StyledButtonColor.STURDY_WHITE}
-      />
-      {apiKeyCT == null ? (
-        <StyledVerticalStack gap={3} full>
-          <StyledButton
-            label={translate('screens/payment', 'Generate API key')}
-            onClick={onGenerateKey}
-            isLoading={isKeyLoading}
-          />
-        </StyledVerticalStack>
+      {error ? (
+        <div>
+          <ErrorHint message={error} />
+        </div>
       ) : (
-        <StyledVerticalStack gap={4} full>
-          <StyledDataTable alignContent={AlignContent.RIGHT} minWidth={false}>
-            <StyledDataTableRow label={translate('screens/payment', 'API key')}>
-              <div className="flex flex-row gap-2">
-                <p>{blankedAddress(apiKeyCT)}</p> {/* TODO: update to dynamic length */}
-                <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(apiKeyCT ?? '')} />
-              </div>
-            </StyledDataTableRow>
-            {apiSecret && (
-              <StyledDataTableRow label={translate('screens/payment', 'API secret')}>
-                <p>{blankedAddress(apiSecret)}</p> {/* TODO: update to dynamic length */}
-                <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(apiSecret)} />
-              </StyledDataTableRow>
-            )}
-          </StyledDataTable>
-
+        <>
+          <p>{translate('screens/payment', 'You can link your DFX account to your Cointracking account.')}</p>
           <StyledButton
-            label={translate('screens/payment', 'Delete API key')}
-            onClick={onDeleteKey}
-            isLoading={isKeyLoading}
+            label={translate('screens/payment', 'Cointracking homepage')}
+            onClick={onOpenCt}
+            color={StyledButtonColor.STURDY_WHITE}
           />
-        </StyledVerticalStack>
-      )}
-      <StyledSpacer spacing={0} />
+          {apiKeyCT == null ? (
+            <StyledVerticalStack gap={3} full>
+              <StyledButton
+                label={translate('screens/payment', 'Generate API key')}
+                onClick={onGenerateKey}
+                isLoading={isKeyLoading}
+              />
+            </StyledVerticalStack>
+          ) : (
+            <StyledVerticalStack gap={4} full>
+              <StyledDataTable alignContent={AlignContent.RIGHT} minWidth={false}>
+                <StyledDataTableRow label={translate('screens/payment', 'API key')}>
+                  <div className="flex flex-row gap-2">
+                    <p>{blankedAddress(apiKeyCT)}</p> {/* TODO: set { width } param */}
+                    <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(apiKeyCT ?? '')} />
+                  </div>
+                </StyledDataTableRow>
+                {apiSecret && (
+                  <StyledDataTableRow label={translate('screens/payment', 'API secret')}>
+                    <p>{blankedAddress(apiSecret)}</p> {/* TODO: set { width } param */}
+                    <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(apiSecret)} />
+                  </StyledDataTableRow>
+                )}
+              </StyledDataTable>
 
-      <Form control={control} errors={errors}>
-        <StyledVerticalStack gap={4} full className="relative">
-          <div
-            className={`absolute text-sm text-dfxRed-100 text-right w-full pr-4 transition-opacity duration-100 ${
-              showNotification ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            {translate('screens/payment', 'Saved')}!
-          </div>
-          <StyledDropdown
-            label={translate('screens/payment', 'Import filter')}
-            name="filterMode"
-            rootRef={rootRef}
-            placeholder={translate('general/actions', 'Select...')}
-            items={filterOptions}
-            labelFunc={(item) => item.label}
-            descriptionFunc={(item) => item.value}
-          />
-          {filterMode === 'filtered' && (
-            <StyledDropdownMultiChoice
-              name="filter"
-              rootRef={rootRef}
-              placeholder={translate('general/actions', 'Select data to import...')}
-              items={filterTypes}
-              labelFunc={(item) => item.label}
-              descriptionFunc={(item) => item.value}
-            />
+              <StyledButton
+                label={translate('screens/payment', 'Delete API key')}
+                onClick={onDeleteKey}
+                isLoading={isKeyLoading}
+              />
+            </StyledVerticalStack>
           )}
-        </StyledVerticalStack>
-      </Form>
+          <StyledSpacer spacing={0} />
+
+          <Form control={control} errors={errors}>
+            <StyledVerticalStack gap={4} full className="relative">
+              <div
+                className={`absolute text-sm text-dfxRed-100 text-right w-full pr-4 transition-opacity duration-100 ${
+                  showNotification ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                {translate('screens/payment', 'Saved')}!
+              </div>
+              <StyledDropdown
+                label={translate('screens/payment', 'Import filter')}
+                name="filterMode"
+                rootRef={rootRef}
+                placeholder={translate('general/actions', 'Select...')}
+                items={filterOptions}
+                labelFunc={(item) => item.label}
+                descriptionFunc={(item) => item.value}
+              />
+              {filterMode === 'filtered' && (
+                <StyledDropdownMultiChoice
+                  name="filter"
+                  rootRef={rootRef}
+                  placeholder={translate('general/actions', 'Select data to import...')}
+                  items={filterTypes}
+                  labelFunc={(item) => item.label}
+                  descriptionFunc={(item) => item.value}
+                />
+              )}
+            </StyledVerticalStack>
+          </Form>
+        </>
+      )}
     </StyledVerticalStack>
   );
 }
