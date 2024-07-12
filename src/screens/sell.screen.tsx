@@ -261,7 +261,7 @@ export default function SellScreen(): JSX.Element {
           setPaymentInfo(sell);
 
           // load exact price
-          if (sell && !sell.exactPrice) {
+          if (sell) {
             setIsPriceLoading(true);
             receiveFor({ ...data, exactPrice: true })
               .then((info) => {

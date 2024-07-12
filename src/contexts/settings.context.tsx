@@ -1,7 +1,7 @@
-import { Language, useLanguage, useLanguageContext, useUserContext } from '@dfx.swiss/react';
+import { Language, useKyc, useLanguage, useLanguageContext, UserData, useUserContext } from '@dfx.swiss/react';
 import browserLang from 'browser-lang';
 import i18n from 'i18next';
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
@@ -36,7 +36,27 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { getDefaultLanguage } = useLanguage();
   const { user, changeLanguage: changeUserLanguage, changeMail: changeUserMail } = useUserContext();
   const { language: storedLanguage } = useStore();
-  const { lang, mail, setParams } = useAppParams();
+  const { getCountries, setData } = useKyc();
+  const {
+    lang,
+    mail,
+    accountType,
+    firstName,
+    lastName,
+    street,
+    houseNumber,
+    zip,
+    city,
+    country,
+    organizationName,
+    organizationStreet,
+    organizationHouseNumber,
+    organizationZip,
+    organizationCity,
+    organizationCountry,
+    phone,
+    setParams,
+  } = useAppParams();
   const { t } = useTranslation();
 
   const [language, setLanguage] = useState<Language>();
@@ -58,6 +78,54 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   useEffect(() => {
     if (user && mail && user.mail !== mail) changeUserMail(mail);
   }, [user, mail]);
+
+  useEffect(() => {
+    if (!user?.kyc.hash || !accountType) return;
+    getCountries(user.kyc.hash).then((cs) => {
+      setData({
+        mail,
+        accountType,
+        firstName,
+        lastName,
+        phone,
+        address: {
+          street: street,
+          houseNumber: houseNumber,
+          city: city,
+          zip: zip,
+          country: cs.find((c) => c.symbol === country || c.name === country),
+        },
+        organizationName,
+        organizationAddress: organizationName && {
+          street: organizationStreet,
+          houseNumber: organizationHouseNumber,
+          city: organizationCity,
+          zip: organizationZip,
+          country: cs.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
+        },
+      } as UserData).catch(() => {
+        // Ignore API errors
+      });
+    });
+  }, [
+    user,
+    mail,
+    accountType,
+    firstName,
+    lastName,
+    street,
+    houseNumber,
+    zip,
+    city,
+    country,
+    organizationName,
+    organizationStreet,
+    organizationHouseNumber,
+    organizationZip,
+    organizationCity,
+    organizationCountry,
+    phone,
+  ]);
 
   function changeAppLanguage(lang: Language) {
     setLanguage(lang);

@@ -1,10 +1,12 @@
 import { IconVariant, StyledButton, StyledButtonColor, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useSearchParams } from 'react-router-dom';
+import { useNavigation } from 'src/hooks/navigation.hook';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 
 export function ErrorScreen(): JSX.Element {
   const { translate } = useSettingsContext();
+  const { navigate } = useNavigation();
   const [params] = useSearchParams();
 
   const error = params.get('msg');
@@ -25,9 +27,9 @@ export function ErrorScreen(): JSX.Element {
 
         <StyledButton
           icon={IconVariant.HELP}
-          label={translate('navigation/links', 'Help')}
+          label={translate('navigation/links', 'Support')}
           color={StyledButtonColor.GRAY_OUTLINE}
-          onClick={() => window.open(process.env.REACT_APP_HELP_URL, '_blank', 'noreferrer')}
+          onClick={() => navigate('/support')}
         />
       </StyledVerticalStack>
     </Layout>

@@ -14,6 +14,7 @@
     "Login": "Login",
     "Logout": "Logout",
     "Back": "Zurück",
+    "Proceed": "Fortfahren",
     "Retry": "Erneut versuchen",
     "Connect": "Verbinden",
     "Continue in Trezor Connect": "Weiter zu Trezor Connect",
@@ -296,6 +297,7 @@
     "Bank Transaction Details": "Angaben zur Banktransaktion",
     "Recipient": "Empfänger",
     "Amount": "Betrag",
+    "Amount in {{currency}}": "Betrag in {{currency}}",
     "Currency": "Währung",
     "IBAN": "IBAN",
     "BIC": "BIC",
@@ -364,6 +366,9 @@
     "Instant payment": "Sofort-Transaktion",
     "Network fee too high": "Netzwerkgebühr zu hoch",
     "Payment rejected by receiver node": "Zahlung von Empfänger-Node abgelehnt",
+    "CHF abroad not allowed": "CHF im Ausland nicht erlaubt",
+    "Asset requires KYC": "Asset erfordert KYC",
+    "Card name mismatch": "Kartenname stimmt nicht überein",
 
     "Payment method": "Zahlungsmethode",
     "Standard bank transaction": "Standard-Banktransaktion",
@@ -444,7 +449,18 @@
     "Please provide us with all relevant information about the transaction you are missing.": "Bitte gib uns alle relevanten Informationen über die fehlende Transaktion an.",
     "Sender IBAN": "Absender-IBAN",
     "Receiver IBAN": "Empfängers-IBAN",
-    "Date of the transaction": "Datum der Transaktion"
+    "Date of the transaction": "Datum der Transaktion",
+
+    "Telegram support": "Telegram-Support",
+    "FAQ": "FAQ",
+    "We have summarized the most common questions for you in our FAQ.": "Wir haben die häufigsten Fragen für Dich in unseren FAQs zusammengefasst.",
+    "Search now": "Jetzt suchen",
+    "Telegram Community": "Telegram-Community",
+    "Submit Ticket": "Ticket einreichen",
+    "Join the DFX Community. Our moderators are happy to assist you in the group.": "Tritt der DFX-Community bei. Unsere Moderatoren stehen Dir in der Gruppe gerne zur Verfügung.",
+    "If you have a specific question or problem, you can submit a ticket here.": "Wenn Du eine spezifische Frage oder ein Problem hast, kannst Du hier ein Ticket einreichen.",
+    "Join now": "Jetzt beitreten",
+    "Please be cautious. We will never contact you first. Beware of scams.": "Bitte sei vorsichtig. Wir werden Dich niemals zuerst kontaktieren. Sei wachsam gegenüber Betrugsversuchen."
   },
   "navigation/links": {
     "Buy": "Kaufen",
@@ -452,7 +468,7 @@
     "Swap": "Swap",
     "KYC": "KYC",
     "My DFX": "My DFX",
-    "Help": "Hilfe",
+    "Support": "Support",
     "Terms and conditions": "Geschäftsbedingungen",
     "Privacy policy": "Datenschutzerklärung",
     "Imprint": "Impressum"
