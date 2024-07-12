@@ -39,6 +39,7 @@ import {
   StyledDataTable,
   StyledDataTableRow,
   StyledDropdown,
+  StyledDropdownMultiChoice,
   StyledHorizontalStack,
   StyledIconButton,
   StyledInput,
@@ -777,6 +778,7 @@ function Ident({ step, onDone, onBack }: EditProps): JSX.Element {
 interface FormData {
   text?: string;
   selection?: KycFinancialOption;
+  selectionMC?: KycFinancialOption[];
 }
 
 function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.Element {
@@ -827,10 +829,11 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
 
   const currentText = useWatch({ control, name: 'text' });
   const currentSelection = useWatch({ control, name: 'selection' })?.key;
-  const currentValue = currentText ?? currentSelection;
+  const currentSelectionMC = useWatch({ control, name: 'selectionMC' })?.map((o) => o.key);
+  const currentValue = currentText ?? currentSelection ?? (currentSelectionMC?.length ? currentSelectionMC : undefined);
 
-  function onSubmit({ text, selection }: FormData) {
-    const value = text ?? selection?.key;
+  function onSubmit({ text, selection, selectionMC }: FormData) {
+    const value = text ?? selection?.key ?? selectionMC?.map((o) => o.key).join(',');
     if (!currentQuestion || !value) return;
 
     if (!currentResponse) {
@@ -849,16 +852,15 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   }
 
   function setValue(value?: string) {
-    if (currentQuestion?.options?.length) {
-      setFormValue(
-        'selection',
-        currentQuestion.options.find((o) => o.key === value),
-      );
-      setFormValue('text', undefined);
-    } else {
-      setFormValue('selection', undefined);
-      setFormValue('text', value);
-    }
+    const isText = !currentQuestion?.options?.length;
+    const isMC = currentQuestion?.type === QuestionType.MULTIPLE_CHOICE;
+
+    setFormValue('text', isText ? value : undefined);
+    setFormValue('selection', !isText && !isMC ? currentQuestion?.options?.find((o) => o.key === value) : undefined);
+    setFormValue(
+      'selectionMC',
+      isMC ? currentQuestion?.options?.filter((o) => value?.split(',').includes(o.key)) : undefined,
+    );
   }
 
   return error ? (
@@ -908,8 +910,8 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
             />
           </>
         ) : currentQuestion.type === QuestionType.MULTIPLE_CHOICE ? (
-          <StyledDropdown
-            name="selection"
+          <StyledDropdownMultiChoice
+            name="selectionMC"
             rootRef={rootRef}
             label={currentQuestion.description}
             placeholder={translate('general/actions', 'Select...')}

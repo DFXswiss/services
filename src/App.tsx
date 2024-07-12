@@ -22,6 +22,7 @@ import { LimitScreen } from './screens/limit.screen';
 import { LinkScreen } from './screens/link.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
 import { SupportIssueScreen } from './screens/support-issue.screen';
+import { SupportScreen } from './screens/support.screen';
 import { TfaScreen } from './screens/tfa.screen';
 import { TransactionMissingScreen } from './screens/transaction-missing.screen';
 import { TransactionScreen } from './screens/transaction.screen';
@@ -131,7 +132,7 @@ export const Routes = [
   },
   {
     path: '/support',
-    element: <SupportIssueScreen />,
+    element: <SupportScreen />,
   },
   {
     path: '/support/issue',
