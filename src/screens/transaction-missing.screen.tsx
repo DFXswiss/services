@@ -27,7 +27,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { toBase64 } from 'src/util/utils';
+import { blankedAddress, toBase64 } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
@@ -170,7 +170,7 @@ export function TransactionMissingScreen(): JSX.Element {
                 <StyledDropdown<string>
                   rootRef={rootRef}
                   label={translate('screens/support', 'Receiver IBAN')}
-                  items={banks.map((b) => Utils.formatIban(b.iban) ?? '')}
+                  items={banks.map((b) => blankedAddress(Utils.formatIban(b.iban) ?? '', 18))}
                   labelFunc={(item) => item}
                   name="receiverIban"
                   placeholder={translate('general/actions', 'Select...')}
