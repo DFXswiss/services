@@ -37,6 +37,7 @@ import {
   StyledButtonWidth,
   StyledCheckboxRow,
   StyledDataTable,
+  StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
   StyledDropdownMultiChoice,
@@ -48,7 +49,7 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { Fragment, RefObject, useEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
@@ -232,25 +233,25 @@ export function KycScreen(): JSX.Element {
       });
   }
 
-  function stepIcon(step: KycStep): { icon: IconVariant; size: IconSize } | undefined {
+  function stepIcon(step: KycStep): { icon: IconVariant | undefined; label: string; size: IconSize } {
     switch (step.status) {
       case KycStepStatus.NOT_STARTED:
-        return undefined;
+        return { icon: IconVariant.CHECKBOX_EMPTY, label: 'Not started', size: IconSize.MD };
 
       case KycStepStatus.IN_PROGRESS:
-        return { icon: IconVariant.EDIT, size: IconSize.MD };
+        return { icon: IconVariant.EDIT, label: 'In progress', size: IconSize.MD };
 
       case KycStepStatus.IN_REVIEW:
-        return { icon: IconVariant.LOADING, size: IconSize.XS };
+        return { icon: IconVariant.LOADING, label: 'In review', size: IconSize.XS };
 
       case KycStepStatus.COMPLETED:
-        return { icon: IconVariant.CHECK, size: IconSize.MD };
+        return { icon: IconVariant.CHECKBOX_CHECKED, label: 'Completed', size: IconSize.MD };
 
       case KycStepStatus.FAILED:
-        return { icon: IconVariant.CLOSE, size: IconSize.MD };
+        return { icon: IconVariant.CLOSE, label: 'Failed', size: IconSize.MD };
 
       case KycStepStatus.OUTDATED:
-        return { icon: IconVariant.REPEAT, size: IconSize.MD };
+        return { icon: IconVariant.REPEAT, label: 'Outdated', size: IconSize.MD };
     }
   }
 
@@ -333,9 +334,23 @@ export function KycScreen(): JSX.Element {
           {info && (
             <>
               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                <StyledDataTableRow label={translate('screens/kyc', 'KYC level')}>
+                <StyledDataTableExpandableRow
+                  label={translate('screens/kyc', 'KYC level')}
+                  expansionItems={
+                    info.kycSteps.length
+                      ? info.kycSteps.map((step) => {
+                          const icon = stepIcon(step);
+                          return {
+                            label: nameToString(step.name),
+                            text: icon?.label ?? '',
+                            icon: icon?.icon,
+                          };
+                        })
+                      : []
+                  }
+                >
                   <p>{levelToString(info.kycLevel)}</p>
-                </StyledDataTableRow>
+                </StyledDataTableExpandableRow>
 
                 <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
                   <div className="flex flex-row gap-1 items-center">
@@ -349,25 +364,6 @@ export function KycScreen(): JSX.Element {
                 <StyledDataTableRow label={translate('screens/kyc', 'Two-factor authentication')}>
                   <p>{translate('general/actions', info.twoFactorEnabled ? 'Yes' : 'No')}</p>
                 </StyledDataTableRow>
-
-                {info.kycSteps.length && (
-                  <StyledDataTableRow label={translate('screens/kyc', 'KYC progress')}>
-                    <div className="grid gap-1 items-center grid-cols-[1.2rem_1fr]">
-                      {info.kycSteps.map((step) => {
-                        const icon = stepIcon(step);
-                        return (
-                          <Fragment key={`${step.name}-${step.type}`}>
-                            {icon ? <DfxIcon {...icon} /> : <div />}
-                            <div className={`text-left ${step.isCurrent && 'font-bold'}`}>
-                              {nameToString(step.name)}
-                              {step.type && ` (${typeToString(step.type)})`}
-                            </div>
-                          </Fragment>
-                        );
-                      })}
-                    </div>
-                  </StyledDataTableRow>
-                )}
               </StyledDataTable>
 
               {!allStepsCompleted && (
