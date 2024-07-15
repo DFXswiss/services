@@ -12,7 +12,6 @@ import {
   useAuthContext,
   useSessionContext,
   useSwap,
-  useUser,
   useUserContext,
 } from '@dfx.swiss/react';
 import {
@@ -81,8 +80,6 @@ export default function SwapScreen(): JSX.Element {
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
   const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
   const { availableBlockchains, logout } = useSessionContext();
-  const { setSession } = useWalletContext();
-  const { changeUserAddress } = useUser();
   const { session } = useAuthContext();
   const { user } = useUserContext();
   const { assets, getAssets } = useAssetContext();
@@ -119,6 +116,10 @@ export default function SwapScreen(): JSX.Element {
   useEffect(() => {
     sourceAssets && getBalances(sourceAssets).then(setBalances);
   }, [getBalances, sourceAssets]);
+
+  useEffect(() => {
+    console.log('receiveFor changed');
+  }, [receiveFor]);
 
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
@@ -194,9 +195,6 @@ export default function SwapScreen(): JSX.Element {
   useEffect(() => {
     if (selectedAddress) {
       if (selectedAddress.chain) {
-        if (selectedAddress.address && selectedAddress.address !== session?.address) {
-          onSwitchUser(selectedAddress.address);
-        }
         if (blockchain !== selectedAddress.chain) {
           setParams({ blockchain: selectedAddress.chain });
           switchBlockchain(selectedAddress.chain);
@@ -273,11 +271,6 @@ export default function SwapScreen(): JSX.Element {
       isRunning = false;
     };
   }, [validatedData, session?.address]);
-
-  async function onSwitchUser(address: string): Promise<void> {
-    const { accessToken } = await changeUserAddress(address);
-    setSession(accessToken);
-  }
 
   function validateSwap(swap: Swap): void {
     setCustomAmountError(undefined);
