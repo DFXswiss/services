@@ -20,6 +20,7 @@ interface SettingsInterface {
   changeLanguage: (language: Language) => void;
   translate: (key: string, defaultValue: string, interpolation?: Record<string, string | number>) => string;
   translateError: (key: string) => string;
+  processingKycData: boolean;
   // generic storage
   get: <T>(key: string) => T | undefined;
   put: <T>(key: string, value: T | undefined) => void;
@@ -61,6 +62,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
 
   const [language, setLanguage] = useState<Language>();
   const [store, setStore] = useState<Record<string, any>>({});
+  const [kycProcesses, setKycProcesses] = useState<number>(0);
 
   const appLanguages = ['DE', 'EN', 'FR', 'IT'];
   const availableLanguages = languages?.filter((l) => appLanguages.includes(l.symbol)) ?? [];
@@ -76,37 +78,43 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, [user, lang, languages]);
 
   useEffect(() => {
-    if (user && mail && user.mail !== mail) changeUserMail(mail);
+    if (user && mail && user.mail !== mail) {
+      setKycProcesses((p) => p + 1);
+      changeUserMail(mail).finally(() => setKycProcesses((p) => p - 1));
+    }
   }, [user, mail]);
 
   useEffect(() => {
     if (!user?.kyc.hash || !accountType) return;
-    getCountries(user.kyc.hash).then((cs) => {
-      setData({
-        mail,
-        accountType,
-        firstName,
-        lastName,
-        phone,
-        address: {
-          street: street,
-          houseNumber: houseNumber,
-          city: city,
-          zip: zip,
-          country: cs.find((c) => c.symbol === country || c.name === country),
-        },
-        organizationName,
-        organizationAddress: organizationName && {
-          street: organizationStreet,
-          houseNumber: organizationHouseNumber,
-          city: organizationCity,
-          zip: organizationZip,
-          country: cs.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
-        },
-      } as UserData).catch(() => {
-        // Ignore API errors
-      });
-    });
+    setKycProcesses((p) => p + 1);
+    getCountries(user.kyc.hash)
+      .then((cs) => {
+        setData({
+          mail,
+          accountType,
+          firstName,
+          lastName,
+          phone,
+          address: {
+            street: street,
+            houseNumber: houseNumber,
+            city: city,
+            zip: zip,
+            country: cs.find((c) => c.symbol === country || c.name === country),
+          },
+          organizationName,
+          organizationAddress: organizationName && {
+            street: organizationStreet,
+            houseNumber: organizationHouseNumber,
+            city: organizationCity,
+            zip: organizationZip,
+            country: cs.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
+          },
+        } as UserData).catch(() => {
+          // Ignore API errors
+        });
+      })
+      .finally(() => setKycProcesses((p) => p - 1));
   }, [
     user,
     mail,
@@ -164,6 +172,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
       changeLanguage,
       translate,
       translateError,
+      processingKycData: kycProcesses > 0,
       get,
       put,
     }),

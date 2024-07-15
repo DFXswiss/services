@@ -53,6 +53,7 @@ import { RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
+import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -76,17 +77,19 @@ const RequiredKycLevel = {
 
 export function KycScreen(): JSX.Element {
   const { clearParams } = useNavigation();
-  const { translate, changeLanguage } = useSettingsContext();
+  const { translate, changeLanguage, processingKycData } = useSettingsContext();
   const { user, reloadUser } = useUserContext();
   const { getKycInfo, continueKyc, startStep, addTransferClient } = useKyc();
-  const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
+  const { levelToString, limitToString, nameToString } = useKycHelper();
   const { pathname, search } = useLocation();
   const { navigate, goBack } = useNavigation();
   const { logout } = useSessionContext();
+  const { isInitialized, params, setParams } = useAppHandlingContext();
 
   const [info, setInfo] = useState<KycInfo | KycSession>();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAutoStarting, setIsAutoStarting] = useState(true);
   const [consentClient, setConsentClient] = useState<string>();
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
@@ -94,24 +97,37 @@ export function KycScreen(): JSX.Element {
 
   const mode = pathname.includes('/profile') ? Mode.PROFILE : pathname.includes('/contact') ? Mode.CONTACT : Mode.KYC;
   const rootRef = useRef<HTMLDivElement>(null);
-  const params = new URLSearchParams(search);
+  const urlParams = new URLSearchParams(search);
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
   const allStepsCompleted = info?.kycSteps.every((s) => isStepDone(s));
   const canContinue = !allStepsCompleted || (info && info.kycLevel >= KycLevel.Completed);
 
   // params
-  const [step, stepSequence] = params.get('step')?.split(':') ?? [];
+  const [step, stepSequence] = urlParams.get('step')?.split(':') ?? [];
   const [stepName, stepType] = step?.split('/') ?? [];
-  const paramKycCode = params.get('code');
+  const paramKycCode = urlParams.get('code');
   const kycCode = paramKycCode ?? user?.kyc.hash;
-  const redirectUri = params.get('kyc-redirect');
-  const client = params.get('client') ?? undefined;
+  const redirectUri = urlParams.get('kyc-redirect');
+  const client = urlParams.get('client') ?? undefined;
 
   useUserGuard('/login', !kycCode);
 
   useEffect(() => {
     if (info) changeLanguage(info.language);
   }, [info]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (params.autoStart !== 'true') {
+      setIsAutoStarting(false);
+    } else if (!processingKycData && kycCode) {
+      console.log('params.autoStart', params.autoStart, isInitialized);
+      onLoad(true).finally(() => {
+        setIsAutoStarting(false);
+        setParams({ autoStart: undefined });
+      });
+    }
+  }, [isInitialized, kycCode, processingKycData]);
 
   useEffect(() => {
     if (info) {
@@ -268,7 +284,7 @@ export function KycScreen(): JSX.Element {
       }
       noPadding={isMobile && stepInProgress?.session?.type === UrlType.BROWSER}
     >
-      {isLoading ? (
+      {isLoading || isAutoStarting ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : showLinkHint ? (
         <StyledVerticalStack gap={6} full>
