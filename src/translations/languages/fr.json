@@ -14,6 +14,7 @@
     "Login": "Login",
     "Logout": "Logout",
     "Back": "Retour",
+    "Proceed": "Continuer",
     "Retry": "Réessayer",
     "Connect": "Connecter",
     "Continue in Trezor Connect": "Continuer dans Trezor Connect",
@@ -219,7 +220,7 @@
     "Latest transactions": "Dernières transactions",
     "Addresses by volume": "Adresses par volume",
     "Referral": "Parrainage",
-    "Referral code": "Code de parrainage",
+    "Referral link": "Lien de parrainage",
     "Referral commission": "Commission de parrainage",
     "Your referral stats": "Vos statistiques de parrainage",
     "Level": "Niveau",
@@ -296,6 +297,7 @@
     "Bank Transaction Details": "Détails de la transaction bancaire",
     "Recipient": "Bénéficiaire",
     "Amount": "Montant",
+    "Amount in {{currency}}": "Montant en {{currency}}",
     "Currency": "Devise",
     "IBAN": "IBAN",
     "BIC": "BIC",
@@ -363,6 +365,9 @@
     "Instant payment": "Paiement instantané",
     "Network fee too high": "Frais de réseau trop élevés",
     "Payment rejected by receiver node": "Paiement rejeté par le nœud récepteur",
+    "CHF abroad not allowed": "CHF à l'étranger pas autorisés",
+    "Asset requires KYC": "Actif nécessite KYC",
+    "Card name mismatch": "Le nom sur la carte ne correspond pas",
 
     "Payment method": "Mode de paiement",
     "Standard bank transaction": "Transaction bancaire standard",
@@ -423,7 +428,18 @@
     "Please provide us with all relevant information about the transaction you are missing.": "Veuillez nous fournir toutes les informations pertinentes concernant la transaction manquante.",
     "Sender IBAN": "IBAN de l'expéditeur",
     "Receiver IBAN": "IBAN du destinataire",
-    "Date of the transaction": "Date de transaction"
+    "Date of the transaction": "Date de transaction",
+
+    "Telegram support": "Support Telegram",
+    "FAQ": "FAQ",
+    "We have summarized the most common questions for you in our FAQ.": "Nous avons résumé les questions les plus courantes pour vous dans notre FAQ.",
+    "Search now": "Rechercher maintenant",
+    "Telegram Community": "Communauté Telegram",
+    "Submit Ticket": "Soumettre un ticket",
+    "Join the DFX Community. Our moderators are happy to assist you in the group.": "Rejoignez la communauté DFX. Nos modérateurs sont ravis de vous aider dans le groupe.",
+    "If you have a specific question or problem, you can submit a ticket here.": "Si vous avez une question ou un problème spécifique, vous pouvez soumettre un ticket ici.",
+    "Join now": "Rejoignez maintenant",
+    "Please be cautious. We will never contact you first. Beware of scams.": "Soyez prudent. Nous ne vous contacterons jamais en premier. Méfiez-vous des arnaques."
   },
   "navigation/links": {
     "Buy": "Acheter",
@@ -431,7 +447,7 @@
     "Swap": "Swap",
     "KYC": "KYC",
     "My DFX": "My DFX",
-    "Help": "Aide",
+    "Support": "Support",
     "Terms and conditions": "Conditions générales",
     "Privacy policy": "Déclaration de confidentialité",
     "Imprint": "Impressum"

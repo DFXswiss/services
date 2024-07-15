@@ -235,7 +235,7 @@ export default function SwapScreen(): JSX.Element {
           setPaymentInfo(swap);
 
           // load exact price
-          if (swap && !swap.exactPrice) {
+          if (swap) {
             setIsPriceLoading(true);
             receiveFor({ ...data, exactPrice: true })
               .then((info) => {
