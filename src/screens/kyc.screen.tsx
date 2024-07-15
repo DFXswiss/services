@@ -121,7 +121,6 @@ export function KycScreen(): JSX.Element {
     if (params.autoStart !== 'true') {
       setIsAutoStarting(false);
     } else if (!processingKycData && kycCode) {
-      console.log('params.autoStart', params.autoStart, isInitialized);
       onLoad(true).finally(() => {
         setIsAutoStarting(false);
         setParams({ autoStart: undefined });

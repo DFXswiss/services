@@ -5,6 +5,7 @@ import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useSt
 import { useTranslation } from 'react-i18next';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
+import { useAppHandlingContext } from './app-handling.context';
 
 const ValidationErrors: Record<string, string> = {
   required: 'Mandatory field',
@@ -58,11 +59,12 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     phone,
     setParams,
   } = useAppParams();
+  const { isInitialized } = useAppHandlingContext();
   const { t } = useTranslation();
 
   const [language, setLanguage] = useState<Language>();
   const [store, setStore] = useState<Record<string, any>>({});
-  const [kycProcesses, setKycProcesses] = useState<number>(0);
+  const [processingKycData, setProcessingKycData] = useState(true);
 
   const appLanguages = ['DE', 'EN', 'FR', 'IT'];
   const availableLanguages = languages?.filter((l) => appLanguages.includes(l.symbol)) ?? [];
@@ -78,43 +80,43 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, [user, lang, languages]);
 
   useEffect(() => {
-    if (user && mail && user.mail !== mail) {
-      setKycProcesses((p) => p + 1);
-      changeUserMail(mail).finally(() => setKycProcesses((p) => p - 1));
-    }
+    if (user && mail && user.mail !== mail) changeUserMail(mail);
   }, [user, mail]);
 
   useEffect(() => {
-    if (!user?.kyc.hash || !accountType) return;
-    setKycProcesses((p) => p + 1);
-    getCountries(user.kyc.hash)
-      .then((cs) => {
-        setData({
-          mail,
-          accountType,
-          firstName,
-          lastName,
-          phone,
-          address: {
-            street: street,
-            houseNumber: houseNumber,
-            city: city,
-            zip: zip,
-            country: cs.find((c) => c.symbol === country || c.name === country),
-          },
-          organizationName,
-          organizationAddress: organizationName && {
-            street: organizationStreet,
-            houseNumber: organizationHouseNumber,
-            city: organizationCity,
-            zip: organizationZip,
-            country: cs.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
-          },
-        } as UserData).catch(() => {
+    if (!user?.kyc.hash || !isInitialized) return;
+    if (!accountType) {
+      setProcessingKycData(false);
+      return;
+    }
+    getCountries(user.kyc.hash).then((cs) => {
+      setData({
+        mail,
+        accountType,
+        firstName,
+        lastName,
+        phone,
+        address: {
+          street: street,
+          houseNumber: houseNumber,
+          city: city,
+          zip: zip,
+          country: cs.find((c) => c.symbol === country || c.name === country),
+        },
+        organizationName,
+        organizationAddress: organizationName && {
+          street: organizationStreet,
+          houseNumber: organizationHouseNumber,
+          city: organizationCity,
+          zip: organizationZip,
+          country: cs.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
+        },
+      } as UserData)
+        .catch(() => {
           // Ignore API errors
-        });
-      })
-      .finally(() => setKycProcesses((p) => p - 1));
+        })
+        .finally(() => setProcessingKycData(false));
+    });
   }, [
     user,
     mail,
@@ -133,6 +135,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     organizationCity,
     organizationCountry,
     phone,
+    isInitialized,
   ]);
 
   function changeAppLanguage(lang: Language) {
@@ -172,7 +175,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
       changeLanguage,
       translate,
       translateError,
-      processingKycData: kycProcesses > 0,
+      processingKycData,
       get,
       put,
     }),
