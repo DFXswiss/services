@@ -236,22 +236,22 @@ export function KycScreen(): JSX.Element {
   function stepIcon(step: KycStep): { icon: IconVariant | undefined; label: string; size: IconSize } {
     switch (step.status) {
       case KycStepStatus.NOT_STARTED:
-        return { icon: IconVariant.CHECKBOX_EMPTY, label: 'Not started', size: IconSize.MD };
+        return { icon: IconVariant.CHECKBOX_EMPTY, label: translate('screens/kyc', 'Not started'), size: IconSize.MD };
 
       case KycStepStatus.IN_PROGRESS:
-        return { icon: IconVariant.EDIT, label: 'In progress', size: IconSize.MD };
+        return { icon: IconVariant.EDIT, label: translate('screens/kyc', 'In progress'), size: IconSize.MD };
 
       case KycStepStatus.IN_REVIEW:
-        return { icon: IconVariant.LOADING, label: 'In review', size: IconSize.XS };
+        return { icon: IconVariant.LOADING, label: translate('screens/kyc', 'In review'), size: IconSize.XS };
 
       case KycStepStatus.COMPLETED:
-        return { icon: IconVariant.CHECKBOX_CHECKED, label: 'Completed', size: IconSize.MD };
+        return { icon: IconVariant.CHECKBOX_CHECKED, label: translate('screens/kyc', 'Completed'), size: IconSize.MD };
 
       case KycStepStatus.FAILED:
-        return { icon: IconVariant.CLOSE, label: 'Failed', size: IconSize.MD };
+        return { icon: IconVariant.CLOSE, label: translate('screens/kyc', 'Failed'), size: IconSize.MD };
 
       case KycStepStatus.OUTDATED:
-        return { icon: IconVariant.REPEAT, label: 'Outdated', size: IconSize.MD };
+        return { icon: IconVariant.REPEAT, label: translate('screens/kyc', 'Outdated'), size: IconSize.MD };
     }
   }
 
