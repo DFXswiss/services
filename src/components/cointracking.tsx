@@ -16,6 +16,7 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { blankedAddress } from 'src/util/utils';
@@ -45,7 +46,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
   const { user, reloadUser } = useUserContext();
   const { lang } = useAppParams();
   const { translate } = useSettingsContext();
-  // const { width } = useAppHandlingContext(); // TODO
+  const { width } = useAppHandlingContext();
   const { apiFilterCT, apiKeyCT } = user?.activeAddress ?? {};
   const { generateCTApiKey, deleteCTApiKey, updateCTApiFilter } = useUser();
   const [error, setError] = useState<string>();
@@ -185,13 +186,13 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
               <StyledDataTable alignContent={AlignContent.RIGHT} minWidth={false}>
                 <StyledDataTableRow label={translate('screens/payment', 'API key')}>
                   <div className="flex flex-row gap-2">
-                    <p>{blankedAddress(apiKeyCT)}</p> {/* TODO: set { width } param */}
+                    <p>{blankedAddress(apiKeyCT, { width })}</p>
                     <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(apiKeyCT ?? '')} />
                   </div>
                 </StyledDataTableRow>
                 {apiSecret && (
                   <StyledDataTableRow label={translate('screens/payment', 'API secret')}>
-                    <p>{blankedAddress(apiSecret)}</p> {/* TODO: set { width } param */}
+                    <p>{blankedAddress(apiSecret, { width })}</p>
                     <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(apiSecret)} />
                   </StyledDataTableRow>
                 )}
