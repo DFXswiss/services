@@ -208,8 +208,7 @@ export function AccountScreen(): JSX.Element {
                     placeholder={translate('general/actions', 'Select...')}
                     items={user.addresses}
                     disabled={user.addresses.length === 0}
-                    labelFunc={(item) => item.wallet}
-                    descriptionFunc={(item) => blankedAddress(item.address, { width })}
+                    labelFunc={(item) => blankedAddress(item.address, { width })}
                   />
                 </Form>
               </div>
