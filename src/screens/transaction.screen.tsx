@@ -133,6 +133,7 @@ export function TransactionList(): JSX.Element {
   const { id } = useParams();
   const { toString } = useBlockchain();
   const { pathname } = useLocation();
+  const { width } = useAppHandlingContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const txRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -358,6 +359,7 @@ export function TransactionList(): JSX.Element {
                                               descriptionFunc={(item) =>
                                                 `${toString(item.asset.blockchain)}/${item.asset.name} ${blankedAddress(
                                                   item.address,
+                                                  { width },
                                                 )}`
                                               }
                                               full
