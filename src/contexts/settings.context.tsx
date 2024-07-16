@@ -5,6 +5,7 @@ import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useSt
 import { useTranslation } from 'react-i18next';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useStore } from '../hooks/store.hook';
+import { useAppHandlingContext } from './app-handling.context';
 
 const ValidationErrors: Record<string, string> = {
   required: 'Mandatory field',
@@ -20,6 +21,7 @@ interface SettingsInterface {
   changeLanguage: (language: Language) => void;
   translate: (key: string, defaultValue: string, interpolation?: Record<string, string | number>) => string;
   translateError: (key: string) => string;
+  processingKycData: boolean;
   // generic storage
   get: <T>(key: string) => T | undefined;
   put: <T>(key: string, value: T | undefined) => void;
@@ -57,10 +59,12 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     phone,
     setParams,
   } = useAppParams();
+  const { isInitialized } = useAppHandlingContext();
   const { t } = useTranslation();
 
   const [language, setLanguage] = useState<Language>();
   const [store, setStore] = useState<Record<string, any>>({});
+  const [processingKycData, setProcessingKycData] = useState(true);
 
   const appLanguages = ['DE', 'EN', 'FR', 'IT'];
   const availableLanguages = languages?.filter((l) => appLanguages.includes(l.symbol)) ?? [];
@@ -80,7 +84,11 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, [user, mail]);
 
   useEffect(() => {
-    if (!user?.kyc.hash || !accountType) return;
+    if (!user?.kyc.hash || !isInitialized) return;
+    if (!accountType) {
+      setProcessingKycData(false);
+      return;
+    }
     getCountries(user.kyc.hash).then((cs) => {
       setData({
         mail,
@@ -103,9 +111,11 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
           zip: organizationZip,
           country: cs.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
         },
-      } as UserData).catch(() => {
-        // Ignore API errors
-      });
+      } as UserData)
+        .catch(() => {
+          // Ignore API errors
+        })
+        .finally(() => setProcessingKycData(false));
     });
   }, [
     user,
@@ -125,6 +135,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     organizationCity,
     organizationCountry,
     phone,
+    isInitialized,
   ]);
 
   function changeAppLanguage(lang: Language) {
@@ -164,6 +175,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
       changeLanguage,
       translate,
       translateError,
+      processingKycData,
       get,
       put,
     }),

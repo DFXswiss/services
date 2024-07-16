@@ -105,7 +105,7 @@ export function BuyScreen(): JSX.Element {
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const { toString } = useBlockchain();
-  const { isEmbedded, isDfxHosted, isInitialized } = useAppHandlingContext();
+  const { isEmbedded, isDfxHosted, isInitialized, width } = useAppHandlingContext();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
@@ -144,7 +144,7 @@ export function BuyScreen(): JSX.Element {
     session?.address && blockchains?.length
       ? [
           ...blockchains.map((b) => ({
-            address: blankedAddress(session.address ?? ''),
+            address: blankedAddress(session.address ?? '', { width }),
             label: toString(b),
             chain: b,
           })),

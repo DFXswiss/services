@@ -33,6 +33,7 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   specialCode: 'string',
   session: 'string',
   redirectUri: 'string',
+  autoStart: 'string',
   mode: 'string',
   blockchain: 'string',
   blockchains: 'string',

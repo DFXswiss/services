@@ -59,6 +59,13 @@
     "video": "video",
     "manual": "manuale",
 
+    "Not started": "Non iniziato",
+    "In progress": "In corso",
+    "In review": "In revisione",
+    "Completed": "Completato",
+    "Failed": "Fallito",
+    "Outdated": "Obsoleto",
+
     "Account Type": "Tipo di conto",
     "Personal": "Personale",
     "Business": "Affari",
@@ -220,7 +227,7 @@
     "Latest transactions": "Ultime transazioni",
     "Addresses by volume": "Indirizzi per volume",
     "Referral": "Referenza",
-    "Referral code": "Codice di referenza",
+    "Referral link": "Link di referenza",
     "Referral commission": "Commissione di referenza",
     "Your referral stats": "Le tue statistiche di referenza",
     "Level": "Livello",

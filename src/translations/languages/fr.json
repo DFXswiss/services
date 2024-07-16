@@ -59,6 +59,13 @@
     "video": "vidéo",
     "manual": "manuel",
 
+    "Not started": "Non commencé",
+    "In progress": "En cours",
+    "In review": "En révision",
+    "Completed": "Terminé",
+    "Failed": "Échoué",
+    "Outdated": "Obsolète",
+
     "Account Type": "Type de compte",
     "Personal": "Personnel",
     "Business": "Professionnel",
@@ -220,7 +227,7 @@
     "Latest transactions": "Dernières transactions",
     "Addresses by volume": "Adresses par volume",
     "Referral": "Parrainage",
-    "Referral code": "Code de parrainage",
+    "Referral link": "Lien de parrainage",
     "Referral commission": "Commission de parrainage",
     "Your referral stats": "Vos statistiques de parrainage",
     "Level": "Niveau",

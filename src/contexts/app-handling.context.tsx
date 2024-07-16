@@ -41,6 +41,7 @@ const urlParamsToRemove = [
   'redirect',
   'type',
   'redirect-uri',
+  'auto-start',
   'mode',
   'blockchain',
   'blockchains',
@@ -87,6 +88,7 @@ export interface AppParams {
   redirect?: string;
   type?: string;
   redirectUri?: string;
+  autoStart?: string;
   mode?: string;
   blockchain?: string;
   blockchains?: string;
@@ -154,6 +156,7 @@ interface AppHandlingContextInterface {
   setRedirectPath: (path?: string) => void;
   canClose: boolean;
   service?: Service;
+  width?: number;
 }
 
 interface AppHandlingContextProps extends PropsWithChildren {
@@ -161,6 +164,7 @@ interface AppHandlingContextProps extends PropsWithChildren {
   service?: Service;
   params?: AppParams;
   router: Router;
+  width?: number;
   closeCallback?: (data: CloseMessageData) => void;
 }
 
@@ -295,6 +299,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),
           redirectUri: getParameter(query, 'redirect-uri'),
+          autoStart: getParameter(query, 'auto-start'),
           mode: getParameter(query, 'mode'),
           blockchain: Object.values(Blockchain).find(
             (b) => b.toLowerCase() === getParameter(query, 'blockchain')?.toLowerCase(),
@@ -426,8 +431,10 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       setRedirectPath,
       canClose: redirectUri != null,
       service: props.service,
+      width: props.width,
     }),
     [
+      props.width,
       props.isWidget,
       props.service,
       isUsedByIframe,
