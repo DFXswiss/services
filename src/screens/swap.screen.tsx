@@ -76,7 +76,7 @@ export default function SwapScreen(): JSX.Element {
   useAddressGuard('/connect');
 
   const { translate, translateError } = useSettingsContext();
-  const { closeServices } = useAppHandlingContext();
+  const { closeServices, width } = useAppHandlingContext();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
   const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
   const { availableBlockchains, logout } = useSessionContext();
@@ -160,7 +160,7 @@ export default function SwapScreen(): JSX.Element {
           ...userAddresses.flatMap(({ address, blockchains }) =>
             blockchains
               .filter((b) => targetBlockchains.includes(b))
-              .map((b) => ({ address, label: toString(b), chain: b })),
+              .map((b) => ({ address: blankedAddress(address, { width }), label: toString(b), chain: b })),
           ),
           {
             address: translate('screens/buy', 'Switch address'),
@@ -244,7 +244,7 @@ export default function SwapScreen(): JSX.Element {
           setPaymentInfo(swap);
 
           // load exact price
-          if (swap && !swap.exactPrice) {
+          if (swap) {
             setIsPriceLoading(true);
             receiveFor({ ...data, exactPrice: true })
               .then((info) => {

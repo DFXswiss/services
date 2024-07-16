@@ -48,7 +48,7 @@ export function AccountScreen(): JSX.Element {
   const { logout, isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
   const { getRef } = useUser();
-  const { canClose, isEmbedded } = useAppHandlingContext();
+  const { canClose, isEmbedded, width } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
   const { changeUserAddress, deleteUserAddress } = useUser();
   const { deleteSession } = useApiSession();
@@ -151,11 +151,11 @@ export function AccountScreen(): JSX.Element {
 
   const referralItems = referral?.code
     ? [
-        { label: translate('screens/home', 'Volume'), text: Utils.formatAmountCrypto(referral.volume) + ' EUR' },
-        { label: translate('screens/home', 'Credit'), text: Utils.formatAmountCrypto(referral.credit) + ' EUR' },
+        { label: translate('screens/home', 'Volume'), text: Utils.formatAmount(referral.volume) + ' EUR' },
+        { label: translate('screens/home', 'Credit'), text: Utils.formatAmount(referral.credit) + ' EUR' },
         {
           label: translate('screens/home', 'Paid credit'),
-          text: Utils.formatAmountCrypto(referral.paidCredit) + ' EUR',
+          text: Utils.formatAmount(referral.paidCredit) + ' EUR',
         },
         { label: translate('screens/home', 'User count'), text: referral.userCount.toString() },
         { label: translate('screens/home', 'Active user count'), text: referral.activeUserCount.toString() },
@@ -206,7 +206,7 @@ export function AccountScreen(): JSX.Element {
                     items={user.addresses}
                     disabled={user.addresses.length === 0}
                     labelFunc={(item) => item.wallet}
-                    descriptionFunc={(item) => blankedAddress(item.address)}
+                    descriptionFunc={(item) => blankedAddress(item.address, { width })}
                   />
                 </Form>
               </div>
@@ -234,18 +234,19 @@ export function AccountScreen(): JSX.Element {
             <StyledDataTableExpandableRow
               label={translate('screens/home', 'Total trading volume')}
               expansionItems={
-                totalVolumeItems?.map(({ label, value }) => ({ label, text: value.toFixed(2) + ' CHF' })) ?? []
+                totalVolumeItems?.map(({ label, value }) => ({ label, text: Utils.formatAmount(value) + ' CHF' })) ?? []
               }
             >
-              {totalVolumeSum?.toFixed(2) + ' CHF'}
+              {Utils.formatAmount(totalVolumeSum) + ' CHF'}
             </StyledDataTableExpandableRow>
             <StyledDataTableExpandableRow
               label={translate('screens/home', 'Annual trading volume')}
               expansionItems={
-                annualVolumeItems?.map(({ label, value }) => ({ label, text: value.toFixed(2) + ' CHF' })) ?? []
+                annualVolumeItems?.map(({ label, value }) => ({ label, text: Utils.formatAmount(value) + ' CHF' })) ??
+                []
               }
             >
-              {annualVolumeSum?.toFixed(2) + ' CHF'}
+              {Utils.formatAmount(annualVolumeSum) + ' CHF'}
             </StyledDataTableExpandableRow>
             {transactionItems && transactionItems.length > 0 && (
               <StyledDataTableExpandableRow
@@ -261,9 +262,9 @@ export function AccountScreen(): JSX.Element {
               showBorder
               minWidth={false}
             >
-              <StyledDataTableRow label={translate('screens/home', 'Referral code')}>
+              <StyledDataTableRow label={translate('screens/home', 'Referral link')}>
                 {referral.code}
-                <CopyButton onCopy={() => copy(referral.code!)} />
+                <CopyButton onCopy={() => copy(`${process.env.REACT_APP_REF_URL}${referral.code}`)} />
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
                 {(referral.commission * 100).toFixed(2)}%

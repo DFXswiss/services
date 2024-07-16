@@ -247,10 +247,6 @@ export function SellInfoScreen(): JSX.Element {
     <Layout textStart backButton={false} scrollRef={scrollRef}>
       {showsCompletion && paymentInfo ? (
         <SellCompletion paymentInfo={paymentInfo} navigateOnClose={false} txId={sellTxId} />
-      ) : isLoading ? (
-        <div className="mt-4">
-          <StyledLoadingSpinner size={SpinnerSize.LG} />
-        </div>
       ) : errorMessage ? (
         <StyledVerticalStack center className="text-center">
           <ErrorHint message={errorMessage} />
@@ -286,11 +282,8 @@ export function SellInfoScreen(): JSX.Element {
                   showBorder
                   minWidth={false}
                 >
-                  <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                    <div className="flex flex-col items-end">
-                      {`${paymentInfo.amount} ${paymentInfo.asset.name}`}
-                      <p className="text-dfxGray-700 text-xs">{`${paymentInfo.estimatedAmount} ${paymentInfo.currency.name}`}</p>
-                    </div>
+                  <StyledDataTableRow label={translate('screens/payment', 'Amount')} isLoading={isLoading}>
+                    {`${paymentInfo.estimatedAmount.toFixed(2)} ${paymentInfo.currency.name}`}
                   </StyledDataTableRow>
                   <StyledDataTableRow
                     label={`${translate('screens/payment', 'Beneficiary bank account')} (${translate(
@@ -299,7 +292,6 @@ export function SellInfoScreen(): JSX.Element {
                     )})`}
                   >
                     {Utils.formatIban(paymentInfo.beneficiary.iban)}
-                    <CopyButton onCopy={() => copy(paymentInfo.beneficiary.iban)} />
                   </StyledDataTableRow>
                   {paymentInfo.beneficiary.name && (
                     <StyledDataTableRow label={translate('screens/payment', 'Beneficiary name')}>
@@ -330,32 +322,46 @@ export function SellInfoScreen(): JSX.Element {
                 </StyledInfoText>
               </StyledVerticalStack>
 
-              <PaymentInformationContent info={paymentInfo} infoText={getPaymentInfoString(paymentInfo, bankAccount)} />
+              {!isLoading ? (
+                <PaymentInformationContent
+                  info={paymentInfo}
+                  infoText={getPaymentInfoString(paymentInfo, bankAccount)}
+                  showAmount={true}
+                />
+              ) : (
+                <div className="flex w-full items-center justify-center">
+                  <StyledLoadingSpinner size={SpinnerSize.LG} variant={SpinnerVariant.LIGHT_MODE} />
+                </div>
+              )}
             </StyledVerticalStack>
 
-            <div className="pt-2 w-full leading-none">
-              <StyledLink
-                label={translate(
-                  'screens/payment',
-                  'Please note that by using this service you automatically accept our terms and conditions.',
-                )}
-                url={process.env.REACT_APP_TNC_URL}
-                small
-                dark
-              />
-            </div>
+            {!isLoading && (
+              <>
+                <div className="pt-2 w-full leading-none">
+                  <StyledLink
+                    label={translate(
+                      'screens/payment',
+                      'Please note that by using this service you automatically accept our terms and conditions.',
+                    )}
+                    url={process.env.REACT_APP_TNC_URL}
+                    small
+                    dark
+                  />
+                </div>
 
-            {canSendTransaction() && (
-              <div className="pt-2 w-full leading-none">
-                <StyledButton
-                  width={StyledButtonWidth.FULL}
-                  label={translate('screens/sell', 'Complete transaction in your wallet')}
-                  onClick={() => handleNext(paymentInfo)}
-                  caps={false}
-                  className="mt-4"
-                  isLoading={isProcessing}
-                />
-              </div>
+                {canSendTransaction() && (
+                  <div className="pt-2 w-full leading-none">
+                    <StyledButton
+                      width={StyledButtonWidth.FULL}
+                      label={translate('screens/sell', 'Complete transaction in your wallet')}
+                      onClick={() => handleNext(paymentInfo)}
+                      caps={false}
+                      className="mt-4"
+                      isLoading={isProcessing}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </>
         )

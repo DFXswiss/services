@@ -1,13 +1,14 @@
 import { DfxContextProvider } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { RouteObject, RouterProvider } from 'react-router-dom';
 import { Layout } from './components/layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
+import { useResizeObserver } from './hooks/resize-observer.hook';
 import { AccountScreen } from './screens/account.screen';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyFailureScreen } from './screens/buy-failure.screen';
@@ -22,6 +23,7 @@ import { LimitScreen } from './screens/limit.screen';
 import { LinkScreen } from './screens/link.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
 import { SupportIssueScreen } from './screens/support-issue.screen';
+import { SupportScreen } from './screens/support.screen';
 import { TfaScreen } from './screens/tfa.screen';
 import { TransactionMissingScreen } from './screens/transaction-missing.screen';
 import { TransactionScreen } from './screens/transaction.screen';
@@ -131,7 +133,7 @@ export const Routes = [
   },
   {
     path: '/support',
-    element: <SupportIssueScreen />,
+    element: <SupportScreen />,
   },
   {
     path: '/support/issue',
@@ -174,28 +176,34 @@ interface AppProps {
 
 function App({ routerFactory, params }: AppProps) {
   const router = routerFactory(Routes);
+  const [width, setWidth] = useState<number>();
+
+  const rootRef = useResizeObserver<HTMLDivElement>((el) => setWidth(el.offsetWidth));
 
   const home = params?.service && `/${params.service}`;
   if (home) router.navigate(home);
 
   return (
-    <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
-      <BalanceContextProvider>
-        <AppHandlingContextProvider
-          isWidget={params != null}
-          service={params?.service}
-          closeCallback={params?.onClose}
-          params={params}
-          router={router}
-        >
-          <SettingsContextProvider>
-            <WalletContextProvider router={router}>
-              <RouterProvider router={router} />
-            </WalletContextProvider>
-          </SettingsContextProvider>
-        </AppHandlingContextProvider>
-      </BalanceContextProvider>
-    </DfxContextProvider>
+    <div ref={rootRef}>
+      <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
+        <BalanceContextProvider>
+          <AppHandlingContextProvider
+            isWidget={params != null}
+            service={params?.service}
+            closeCallback={params?.onClose}
+            params={params}
+            router={router}
+            width={width}
+          >
+            <SettingsContextProvider>
+              <WalletContextProvider router={router}>
+                <RouterProvider router={router} />
+              </WalletContextProvider>
+            </SettingsContextProvider>
+          </AppHandlingContextProvider>
+        </BalanceContextProvider>
+      </DfxContextProvider>
+    </div>
   );
 }
 

@@ -408,6 +408,7 @@ interface TxInfoProps {
 function TxInfo({ tx }: TxInfoProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
+  const { width } = useAppHandlingContext();
 
   const paymentMethod = [tx.inputPaymentMethod, tx.outputPaymentMethod].find(
     (p) => p !== CryptoPaymentMethod.CRYPTO,
@@ -431,7 +432,7 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
         timestamp: step.timestamp.toLocaleString(),
       }),
     )
-    .join(' → ');
+    .join('\n');
 
   const rateItems = [];
   tx.exchangeRate != null &&
@@ -490,15 +491,15 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
       )}
       {tx.sourceAccount && (
         <StyledDataTableRow label={translate('screens/payment', 'Input Account')}>
-          <p>{blankedAddress(tx.sourceAccount, 12)}</p>
+          <p>{blankedAddress(tx.sourceAccount, { width })}</p>
         </StyledDataTableRow>
       )}
       {tx.inputTxId && (
         <StyledDataTableRow label={translate('screens/payment', 'Input TX')}>
           {tx.inputTxUrl ? (
-            <StyledLink label={blankedAddress(tx.inputTxId, 12)} url={tx.inputTxUrl} dark />
+            <StyledLink label={blankedAddress(tx.inputTxId, { width })} url={tx.inputTxUrl} dark />
           ) : (
-            <p>{blankedAddress(tx.inputTxId, 12)}</p>
+            <p>{blankedAddress(tx.inputTxId, { width })}</p>
           )}
         </StyledDataTableRow>
       )}
@@ -512,15 +513,15 @@ function TxInfo({ tx }: TxInfoProps): JSX.Element {
       )}
       {tx.targetAccount && (
         <StyledDataTableRow label={translate('screens/payment', 'Output Account')}>
-          <p>{blankedAddress(tx.targetAccount, 12)}</p>
+          <p>{blankedAddress(tx.targetAccount, { width })}</p>
         </StyledDataTableRow>
       )}
       {tx.outputTxId && (
         <StyledDataTableRow label={translate('screens/payment', 'Output TX')}>
           {tx.outputTxUrl ? (
-            <StyledLink label={blankedAddress(tx.outputTxId, 12)} url={tx.outputTxUrl} dark />
+            <StyledLink label={blankedAddress(tx.outputTxId, { width })} url={tx.outputTxUrl} dark />
           ) : (
-            <p>{blankedAddress(tx.outputTxId, 12)}</p>
+            <p>{blankedAddress(tx.outputTxId, { width })}</p>
           )}
         </StyledDataTableRow>
       )}
