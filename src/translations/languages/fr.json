@@ -59,6 +59,13 @@
     "video": "vidéo",
     "manual": "manuel",
 
+    "Not started": "Non commencé",
+    "In progress": "En cours",
+    "In review": "En révision",
+    "Completed": "Terminé",
+    "Failed": "Échoué",
+    "Outdated": "Obsolète",
+
     "Account Type": "Type de compte",
     "Personal": "Personnel",
     "Business": "Professionnel",
