@@ -117,10 +117,6 @@ export default function SwapScreen(): JSX.Element {
     sourceAssets && getBalances(sourceAssets).then(setBalances);
   }, [getBalances, sourceAssets]);
 
-  useEffect(() => {
-    console.log('receiveFor changed');
-  }, [receiveFor]);
-
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
 
@@ -150,15 +146,21 @@ export default function SwapScreen(): JSX.Element {
     (b) => SwapInputBlockchains.includes(b) && filteredAssets?.some((a) => a.blockchain === b),
   );
   const targetBlockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
-  const userAddresses = Array.from(
-    new Set([session?.address, ...(user?.addresses?.map((a) => a.address) ?? [])].filter(Boolean)),
-  );
+
+  const userAddresses = (
+    [
+      session?.address && { address: session.address, blockchains: session.blockchains },
+      ...(user?.addresses.map((a) => ({ address: a.address, blockchains: a.blockchains })) ?? []),
+    ] as { address: string; blockchains: Blockchain[] }[]
+  ).filter((a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i);
 
   const addressItems: Address[] =
     userAddresses.length > 0 && targetBlockchains?.length
       ? [
-          ...userAddresses.flatMap((a) =>
-            targetBlockchains.map((b) => ({ address: a ?? '', label: toString(b), chain: b })),
+          ...userAddresses.flatMap(({ address, blockchains }) =>
+            blockchains
+              .filter((b) => targetBlockchains.includes(b))
+              .map((b) => ({ address, label: toString(b), chain: b })),
           ),
           {
             address: translate('screens/buy', 'Switch address'),
