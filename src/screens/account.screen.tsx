@@ -49,7 +49,7 @@ export function AccountScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
   const { getRef } = useUser();
-  const { canClose, isEmbedded } = useAppHandlingContext();
+  const { canClose, isEmbedded, width } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
   const { activeWallet } = useStore();
   const { changeUserAddress, deleteUserAddress } = useUser();
@@ -209,7 +209,7 @@ export function AccountScreen(): JSX.Element {
                     items={user.addresses}
                     disabled={user.addresses.length === 0}
                     labelFunc={(item) => item.wallet}
-                    descriptionFunc={(item) => blankedAddress(item.address)}
+                    descriptionFunc={(item) => blankedAddress(item.address, { width })}
                   />
                 </Form>
               </div>

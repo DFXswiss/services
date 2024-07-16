@@ -14,6 +14,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
+import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useClipboard } from 'src/hooks/clipboard.hook';
@@ -77,6 +78,7 @@ function PaymentInformationText({
   const { copy } = useClipboard();
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
+  const { width } = useAppHandlingContext();
   const [showContract, setShowContract] = useState(false);
 
   const asset = 'asset' in paymentInfo ? paymentInfo.asset : paymentInfo.sourceAsset;
@@ -121,7 +123,7 @@ function PaymentInformationText({
         )}
         <StyledDataTableRow label={translate('screens/sell', 'Address')}>
           <div>
-            <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+            <p>{blankedAddress(paymentInfo.depositAddress, { width })}</p>
           </div>
           <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
         </StyledDataTableRow>

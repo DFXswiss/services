@@ -86,7 +86,7 @@ export default function SellScreen(): JSX.Element {
   useAddressGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { isInitialized, closeServices } = useAppHandlingContext();
+  const { isInitialized, closeServices, width } = useAppHandlingContext();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
@@ -156,7 +156,7 @@ export default function SellScreen(): JSX.Element {
     session?.address && blockchains?.length
       ? [
           ...blockchains.map((b) => ({
-            address: blankedAddress(session.address ?? ''),
+            address: blankedAddress(session.address ?? '', { width }),
             label: toString(b),
             chain: b,
           })),
