@@ -145,7 +145,6 @@ export default function SwapScreen(): JSX.Element {
   const sourceBlockchains = availableBlockchains?.filter(
     (b) => SwapInputBlockchains.includes(b) && filteredAssets?.some((a) => a.blockchain === b),
   );
-  const targetBlockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
 
   const userAddresses = (
     [
@@ -153,6 +152,11 @@ export default function SwapScreen(): JSX.Element {
       ...(user?.addresses.map((a) => ({ address: a.address, blockchains: a.blockchains })) ?? []),
     ] as { address: string; blockchains: Blockchain[] }[]
   ).filter((a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i);
+
+  const targetBlockchains = userAddresses
+    .flatMap((a) => a.blockchains)
+    .filter((b, i, arr) => arr.indexOf(b) === i)
+    .filter((b) => filteredAssets?.some((a) => a.blockchain === b));
 
   const addressItems: Address[] =
     userAddresses.length > 0 && targetBlockchains?.length

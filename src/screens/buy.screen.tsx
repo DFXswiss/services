@@ -120,6 +120,10 @@ export function BuyScreen(): JSX.Element {
   const [isContinue, setIsContinue] = useState(false);
   const [validatedData, setValidatedData] = useState<BuyPaymentInfo>();
 
+  useEffect(() => {
+    console.log('availableBlockchains', availableBlockchains);
+  }, [availableBlockchains]);
+
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({
     defaultValues: {
