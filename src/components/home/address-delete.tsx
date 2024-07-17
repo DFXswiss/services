@@ -21,14 +21,14 @@ export function DeleteOverlay({ type, onClose, address }: AddressDeleteProps): J
     <>
       <p className="text-dfxBlue-800 mb-2">
         {type === DeleteOverlayType.ADDRESS ? (
-          <Trans i18nKey="screens/home.delete" values={{ address }}>
+          <Trans i18nKey="screens/settings.delete" values={{ address }}>
             Are you sure you want to delete the address <strong>{address}</strong> from your DFX account? This action is
             irreversible.
           </Trans>
         ) : (
           translate(
-            'screens/home.delete',
-            'Are you sure you want to delete your DFX account? This action is irreversible.',
+            'screens/settings',
+            'Deleting your account is irreversible. Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.',
           )
         )}
       </p>

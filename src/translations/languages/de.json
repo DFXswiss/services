@@ -9,8 +9,10 @@
     "Ok": "Ok",
     "Cancel": "Abbrechen",
     "Finish": "Fertig",
+    "Copy": "Kopieren",
     "Save": "Speichern",
     "Delete": "Löschen",
+    "Rename": "Umbenennen",
     "Login": "Login",
     "Logout": "Logout",
     "Back": "Zurück",
@@ -22,7 +24,9 @@
     "Drop files here": "Dateien hier ablegen",
     "Browse": "Durchsuchen",
     "Delete Address": "Adresse löschen",
-    "Copy Address": "Adresse kopieren"
+    "Delete Account": "Konto löschen",
+    "Copy Address": "Adresse kopieren",
+    "Open Explorer": "Explorer öffnen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -227,9 +231,7 @@
     "Credit": "Guthaben",
     "Paid credit": "Ausgezahltes Guthaben",
     "User count": "Anzahl Benutzer",
-    "Active user count": "Anzahl aktiver Benutzer",
-
-    "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen."
+    "Active user count": "Anzahl aktiver Benutzer"
   },
   "screens/buy": {
     "You spend": "Du zahlst",
@@ -428,6 +430,16 @@
     "Sender IBAN": "Absender-IBAN",
     "Receiver IBAN": "Empfängers-IBAN",
     "Date of the transaction": "Datum der Transaktion"
+  },
+  "screens/settings": {
+    "Settings": "Einstellungen",
+    "Your Wallets": "Deine Wallets",
+    "Active": "Aktiv",
+    "Language": "Sprache",
+    "Currency": "Währung",
+
+    "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen.",
+    "Deleting your account is irreversible. Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Das Löschen Deines Kontos ist unwiderruflich. Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team."
   },
   "navigation/links": {
     "Buy": "Kaufen",

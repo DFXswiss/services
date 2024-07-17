@@ -3,7 +3,6 @@ import {
   Referral,
   UserAddress,
   Utils,
-  useApi,
   useApiSession,
   useSessionContext,
   useTransaction,
@@ -16,9 +15,6 @@ import {
   Form,
   IconVariant,
   SpinnerSize,
-  StyledButton,
-  StyledButtonColor,
-  StyledButtonWidth,
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
@@ -30,7 +26,6 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { DeleteOverlay, DeleteOverlayType } from 'src/components/home/address-delete';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -56,14 +51,12 @@ export function AccountScreen(): JSX.Element {
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
   const { activeWallet } = useStore();
-  const { changeUserAddress, deleteUserAddress } = useUser();
-  const { updateSession, deleteSession } = useApiSession();
+  const { changeUserAddress } = useUser();
+  const { updateSession } = useApiSession();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setRefferal] = useState<Referral | undefined>();
-  const [showDeleteOverlay, setShowDeleteOverlay] = useState<DeleteOverlayType>(DeleteOverlayType.NONE);
-  const { call } = useApi();
 
   useUserGuard('/login');
 
@@ -125,55 +118,8 @@ export function AccountScreen(): JSX.Element {
     activeWallet.remove();
   }
 
-  async function onDelete(response: boolean): Promise<void> {
-    if (response) {
-      switch (showDeleteOverlay) {
-        case DeleteOverlayType.ADDRESS:
-          onDeleteAddress();
-          break;
-        case DeleteOverlayType.ACCOUNT:
-          onDeleteAccount();
-          break;
-      }
-    }
-    setShowDeleteOverlay(DeleteOverlayType.NONE);
-  }
-
-  async function onDeleteAddress(): Promise<void> {
-    try {
-      await deleteUserAddress();
-      if (user!.addresses.length > 0) {
-        onSwitchUser(user!.addresses[0].address);
-        setValue('address', user!.addresses[0]);
-      } else {
-        deleteSession();
-        activeWallet.remove();
-      }
-    } catch (e) {
-      // ignore errors
-    }
-  }
-
-  async function onDeleteAccount(): Promise<void> {
-    console.log('Calling onDeleteAccount');
-    call({
-      url: 'user/account',
-      method: 'DELETE',
-    }).then(() => {
-      deleteSession();
-      activeWallet.remove();
-    });
-  }
-
-  const title =
-    showDeleteOverlay === DeleteOverlayType.ADDRESS
-      ? `${translate('general/actions', 'Delete Address')}?`
-      : showDeleteOverlay === DeleteOverlayType.ACCOUNT
-      ? translate('general/actions', 'Delete Account')
-      : isEmbedded
-      ? translate('screens/home', 'DFX services')
-      : translate('screens/home', 'Account');
-  const hasBackButton = Boolean(showDeleteOverlay || (canClose && !isEmbedded));
+  const title = isEmbedded ? translate('screens/home', 'DFX services') : translate('screens/home', 'Account');
+  const hasBackButton = Boolean(canClose && !isEmbedded);
   const image = 'https://content.dfx.swiss/img/v1/services/berge.png';
 
   const transactionItems = transactions?.map((t) => ({
@@ -214,18 +160,11 @@ export function AccountScreen(): JSX.Element {
   const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + item.value, 0);
 
   return (
-    <Layout
-      title={title}
-      backButton={hasBackButton}
-      rootRef={rootRef}
-      onBack={showDeleteOverlay ? () => setShowDeleteOverlay(DeleteOverlayType.NONE) : undefined}
-    >
+    <Layout title={title} backButton={hasBackButton} rootRef={rootRef}>
       {!isInitialized || !isLoggedIn || isUserLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
-      ) : showDeleteOverlay ? (
-        <DeleteOverlay type={showDeleteOverlay} onClose={onDelete} address={selectedAddress?.address} />
       ) : (
         <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
           {/* Wallet Selector */}
@@ -244,13 +183,6 @@ export function AccountScreen(): JSX.Element {
                 </Form>
               </div>
               <div className="flex flex-row  gap-2 w-full justify-end items-center text-dfxGray-800 text-xs pt-1.5 pr-1.5">
-                <button
-                  onClick={() => setShowDeleteOverlay(DeleteOverlayType.ADDRESS)}
-                  className="cursor-pointer hover:text-dfxRed-150"
-                >
-                  {translate('general/actions', 'Delete Address')}
-                </button>
-                {' | '}
                 <button onClick={() => copy(selectedAddress.address)} className="cursor-pointer hover:text-dfxRed-150">
                   {translate('general/actions', 'Copy Address')}
                 </button>
@@ -326,12 +258,6 @@ export function AccountScreen(): JSX.Element {
               </StyledDataTableRow>
             </StyledDataTable>
           )}
-          <StyledButton
-            label={translate('general/actions', 'DELETE ACCOUNT')}
-            onClick={() => setShowDeleteOverlay(DeleteOverlayType.ACCOUNT)}
-            color={StyledButtonColor.RED}
-            width={StyledButtonWidth.FULL}
-          />
         </StyledVerticalStack>
       )}
       {image && (

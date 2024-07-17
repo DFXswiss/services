@@ -9,8 +9,10 @@
     "Ok": "Ok",
     "Cancel": "Annullare",
     "Finish": "Finitura",
+    "Copy": "Copia",
     "Save": "Salvare",
     "Delete": "Eliminare",
+    "Rename": "Rinominare",
     "Login": "Login",
     "Logout": "Logout",
     "Back": "Indietro",
@@ -22,7 +24,9 @@
     "Drop files here": "Lasciare i file qui",
     "Browse": "Sfogliare",
     "Delete Address": "Elimina l'indirizzo",
-    "Copy Address": "Copia l'indirizzo"
+    "Delete Account": "Elimina l'account",
+    "Copy Address": "Copia l'indirizzo",
+    "Open Explorer": "Apri Explorer"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -227,9 +231,7 @@
     "Credit": "Credito",
     "Paid credit": "Credito pagato",
     "User count": "Conteggio utenti",
-    "Active user count": "Conteggio utenti attivi",
-
-    "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile."
+    "Active user count": "Conteggio utenti attivi"
   },
   "screens/buy": {
     "You spend": "Si spende",
@@ -428,6 +430,16 @@
     "Sender IBAN": "IBAN del mittente",
     "Receiver IBAN": "IBAN del destinatario",
     "Date of the transaction": "Data della transazione"
+  },
+  "screens/settings": {
+    "Settings": "Impostazioni",
+    "Your Wallets": "I tuoi portafogli",
+    "Active": "Attivo",
+    "Language": "Lingua",
+    "Currency": "Valuta",
+
+    "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile.",
+    "Deleting your account is irreversible. Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "La cancellazione del tuo account è irreversibile. I tuoi dati rimarranno sui nostri server temporaneamente prima della cancellazione definitiva. Se hai domande, contatta il nostro team di supporto."
   },
   "navigation/links": {
     "Buy": "Comprare",
