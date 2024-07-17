@@ -42,6 +42,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { AddressSwitch } from 'src/components/payment/address-switch';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
+import { useWindowContext } from 'src/contexts/window.context';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
@@ -86,9 +87,10 @@ export default function SellScreen(): JSX.Element {
   useAddressGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { isInitialized, closeServices, width } = useAppHandlingContext();
+  const { isInitialized, closeServices } = useAppHandlingContext();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
+  const { width } = useWindowContext();
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();

@@ -27,6 +27,7 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { AddressDelete } from 'src/components/home/address-delete';
+import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -48,7 +49,8 @@ export function AccountScreen(): JSX.Element {
   const { logout, isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
   const { getRef } = useUser();
-  const { canClose, isEmbedded, width } = useAppHandlingContext();
+  const { width } = useWindowContext();
+  const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
   const { changeUserAddress, deleteUserAddress } = useUser();
   const { deleteSession } = useApiSession();

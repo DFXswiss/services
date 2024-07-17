@@ -37,6 +37,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
+import { useWindowContext } from 'src/contexts/window.context';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, toPaymentStateLabel } from '../config/labels';
@@ -133,6 +134,7 @@ export function TransactionList(): JSX.Element {
   const { toString } = useBlockchain();
   const { pathname } = useLocation();
 
+  const { width } = useWindowContext();
   const rootRef = useRef<HTMLDivElement>(null);
   const txRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -343,6 +345,7 @@ export function TransactionList(): JSX.Element {
                                             descriptionFunc={(item) =>
                                               `${toString(item.asset.blockchain)}/${item.asset.name} ${blankedAddress(
                                                 item.address,
+                                                { width },
                                               )}`
                                             }
                                             full
@@ -408,7 +411,7 @@ interface TxInfoProps {
 function TxInfo({ tx }: TxInfoProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
-  const { width } = useAppHandlingContext();
+  const { width } = useWindowContext();
 
   const paymentMethod = [tx.inputPaymentMethod, tx.outputPaymentMethod].find(
     (p) => p !== CryptoPaymentMethod.CRYPTO,

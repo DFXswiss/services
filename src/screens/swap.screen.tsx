@@ -33,6 +33,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
+import { useWindowContext } from 'src/contexts/window.context';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
@@ -76,11 +77,12 @@ export default function SwapScreen(): JSX.Element {
   useAddressGuard('/connect');
 
   const { translate, translateError } = useSettingsContext();
-  const { closeServices, width } = useAppHandlingContext();
+  const { closeServices } = useAppHandlingContext();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
   const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
   const { availableBlockchains, logout } = useSessionContext();
   const { session } = useAuthContext();
+  const { width } = useWindowContext();
   const { user } = useUserContext();
   const { assets, getAssets } = useAssetContext();
   const { getAsset, isSameAsset } = useAsset();
@@ -515,7 +517,7 @@ export default function SwapScreen(): JSX.Element {
                     rootRef={rootRef}
                     name="address"
                     items={addressItems}
-                    labelFunc={(item) => blankedAddress(item.address)}
+                    labelFunc={(item) => blankedAddress(item.address, { width })}
                     descriptionFunc={(item) => item.label}
                     full
                     forceEnable

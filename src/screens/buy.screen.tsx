@@ -38,6 +38,7 @@ import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
+import { useWindowContext } from 'src/contexts/window.context';
 import { NameEdit } from '../components/edit/name.edit';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
@@ -105,7 +106,8 @@ export function BuyScreen(): JSX.Element {
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const { toString } = useBlockchain();
-  const { isEmbedded, isDfxHosted, isInitialized, width } = useAppHandlingContext();
+  const { width } = useWindowContext();
+  const { isEmbedded, isDfxHosted, isInitialized } = useAppHandlingContext();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
@@ -119,10 +121,6 @@ export function BuyScreen(): JSX.Element {
   const [isPriceLoading, setIsPriceLoading] = useState(false);
   const [isContinue, setIsContinue] = useState(false);
   const [validatedData, setValidatedData] = useState<BuyPaymentInfo>();
-
-  useEffect(() => {
-    console.log('availableBlockchains', availableBlockchains);
-  }, [availableBlockchains]);
 
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({
