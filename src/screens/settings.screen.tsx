@@ -57,7 +57,7 @@ export function SettingsScreen(): JSX.Element {
   }, [currencies]);
 
   useEffect(() => {
-    if (selectedLanguage?.id !== language?.id) {
+    if (selectedLanguage && selectedLanguage?.id !== language?.id) {
       changeLanguage(selectedLanguage);
     }
   }, [selectedLanguage]);
@@ -186,7 +186,7 @@ export function SettingsScreen(): JSX.Element {
                     {showMenu === address.address && (
                       <div
                         ref={menuRef}
-                        className="absolute right-5 top-3 border border-dfxGray-400 shadow-md shadow-dfxGray-400 z-10 bg-white rounded-md"
+                        className="absolute right-5 top-3 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip"
                       >
                         <div className="flex flex-col divide-y-0.5 divide-dfxGray-400 items-start bg-dfxGray-100 w-36">
                           <button
@@ -199,7 +199,7 @@ export function SettingsScreen(): JSX.Element {
                             {translate('general/actions', 'Copy')}
                           </button>
                           <button
-                            className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
+                            className="hover:bg-dfxGray-300  w-full text-left px-4 py-2"
                             onClick={() => {
                               console.log('open explorer');
                               setShowMenu(undefined);
