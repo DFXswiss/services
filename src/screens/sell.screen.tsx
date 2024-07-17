@@ -158,7 +158,7 @@ export default function SellScreen(): JSX.Element {
     session?.address && blockchains?.length
       ? [
           ...blockchains.map((b) => ({
-            address: blankedAddress(session.address ?? '', { width }),
+            address: session.address ?? '',
             label: toString(b),
             chain: b,
           })),
@@ -507,7 +507,7 @@ export default function SellScreen(): JSX.Element {
                     rootRef={rootRef}
                     name="address"
                     items={addressItems}
-                    labelFunc={(item) => item.address}
+                    labelFunc={(item) => blankedAddress(item.address, { width })}
                     descriptionFunc={(item) => item.label}
                     full
                     forceEnable

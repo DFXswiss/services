@@ -166,7 +166,7 @@ export default function SwapScreen(): JSX.Element {
           ...userAddresses.flatMap(({ address, blockchains }) =>
             blockchains
               .filter((b) => targetBlockchains.includes(b))
-              .map((b) => ({ address: blankedAddress(address, { width }), label: toString(b), chain: b })),
+              .map((b) => ({ address: address, label: toString(b), chain: b })),
           ),
           {
             address: translate('screens/buy', 'Switch address'),
