@@ -1,14 +1,20 @@
-import { Sell, Swap } from '@dfx.swiss/react';
+import { Sell, Swap, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
   IconColor,
+  IconSize,
+  IconVariant,
   StyledDataTable,
   StyledDataTableRow,
+  StyledHorizontalStack,
+  StyledIconButton,
   StyledInfoText,
   StyledTabContainer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useState } from 'react';
+import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useClipboard } from 'src/hooks/clipboard.hook';
@@ -19,9 +25,10 @@ import { QrCopy } from './qr-copy';
 interface PaymentInformationContentProps {
   info: Sell | Swap;
   infoText?: string;
+  showAmount?: boolean;
 }
 
-export function PaymentInformationContent({ info, infoText }: PaymentInformationContentProps): JSX.Element {
+export function PaymentInformationContent({ info, infoText, showAmount }: PaymentInformationContentProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { canSendTransaction } = useTxHelper();
 
@@ -34,7 +41,7 @@ export function PaymentInformationContent({ info, infoText }: PaymentInformation
           tabs={[
             {
               title: translate('screens/payment', 'Text'),
-              content: <PaymentInformationText paymentInfo={info} infoText={infoText} />,
+              content: <PaymentInformationText paymentInfo={info} infoText={infoText} showAmount={showAmount} />,
             },
             {
               title: translate('screens/payment', 'QR Code'),
@@ -53,7 +60,7 @@ export function PaymentInformationContent({ info, infoText }: PaymentInformation
           small
         />
       ) : (
-        <PaymentInformationText paymentInfo={info} infoText={infoText} />
+        <PaymentInformationText paymentInfo={info} infoText={infoText} showAmount={showAmount} />
       )}
     </StyledVerticalStack>
   );
@@ -62,32 +69,67 @@ export function PaymentInformationContent({ info, infoText }: PaymentInformation
 function PaymentInformationText({
   paymentInfo,
   infoText,
+  showAmount,
 }: {
   paymentInfo: Sell | Swap;
   infoText?: string;
+  showAmount?: boolean;
 }): JSX.Element {
   const { copy } = useClipboard();
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
+  const { width } = useAppHandlingContext();
+  const [showContract, setShowContract] = useState(false);
 
-  const chain = 'asset' in paymentInfo ? paymentInfo.asset.blockchain : paymentInfo.sourceAsset.blockchain;
+  const asset = 'asset' in paymentInfo ? paymentInfo.asset : paymentInfo.sourceAsset;
 
   return (
     <StyledVerticalStack gap={2} full>
       <div className="text-left">
         <StyledInfoText iconColor={IconColor.BLUE}>{infoText}</StyledInfoText>
       </div>
-
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+        {showAmount && (
+          <>
+            <StyledDataTableRow label={translate('screens/sell', 'Amount')}>
+              <p>{Utils.formatAmountCrypto(paymentInfo.amount)}</p>
+              <CopyButton onCopy={() => copy(paymentInfo.amount.toString())} />
+            </StyledDataTableRow>
+            <StyledDataTableRow label={translate('screens/sell', 'Asset')}>
+              {showContract && asset.chainId ? (
+                <StyledHorizontalStack gap={2}>
+                  <span>{blankedAddress(asset.chainId, { width })}</span>
+                  <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(asset.chainId)} size={IconSize.SM} />
+                  {asset.explorerUrl && (
+                    <StyledIconButton
+                      icon={IconVariant.OPEN_IN_NEW}
+                      onClick={() => window.open(asset.explorerUrl, '_blank')}
+                      size={IconSize.SM}
+                    />
+                  )}
+                </StyledHorizontalStack>
+              ) : (
+                <p>{asset.name}</p>
+              )}
+              {asset.chainId && (
+                <StyledIconButton
+                  icon={showContract ? IconVariant.INFO : IconVariant.INFO_OUTLINE}
+                  color={IconColor.DARK_GRAY}
+                  onClick={() => setShowContract(!showContract)}
+                />
+              )}
+            </StyledDataTableRow>
+          </>
+        )}
         <StyledDataTableRow label={translate('screens/sell', 'Address')}>
           <div>
-            <p>{blankedAddress(paymentInfo.depositAddress)}</p>
+            <p>{blankedAddress(paymentInfo.depositAddress, { width })}</p>
           </div>
           <CopyButton onCopy={() => copy(paymentInfo.depositAddress)} />
         </StyledDataTableRow>
         <StyledDataTableRow label={translate('screens/sell', 'Blockchain')}>
           <div>
-            <p>{toString(chain)}</p>
+            <p>{toString(asset.blockchain)}</p>
           </div>
         </StyledDataTableRow>
       </StyledDataTable>

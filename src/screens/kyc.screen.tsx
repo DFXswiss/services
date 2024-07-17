@@ -37,8 +37,10 @@ import {
   StyledButtonWidth,
   StyledCheckboxRow,
   StyledDataTable,
+  StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledDropdownMultiChoice,
   StyledHorizontalStack,
   StyledIconButton,
   StyledInput,
@@ -47,10 +49,11 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { Fragment, RefObject, useEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
+import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -74,17 +77,19 @@ const RequiredKycLevel = {
 
 export function KycScreen(): JSX.Element {
   const { clearParams } = useNavigation();
-  const { translate, changeLanguage } = useSettingsContext();
+  const { translate, changeLanguage, processingKycData } = useSettingsContext();
   const { user, reloadUser } = useUserContext();
   const { getKycInfo, continueKyc, startStep, addTransferClient } = useKyc();
-  const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
+  const { levelToString, limitToString, nameToString } = useKycHelper();
   const { pathname, search } = useLocation();
   const { navigate, goBack } = useNavigation();
   const { logout } = useSessionContext();
+  const { isInitialized, params, setParams } = useAppHandlingContext();
 
   const [info, setInfo] = useState<KycInfo | KycSession>();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAutoStarting, setIsAutoStarting] = useState(true);
   const [consentClient, setConsentClient] = useState<string>();
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
@@ -92,24 +97,36 @@ export function KycScreen(): JSX.Element {
 
   const mode = pathname.includes('/profile') ? Mode.PROFILE : pathname.includes('/contact') ? Mode.CONTACT : Mode.KYC;
   const rootRef = useRef<HTMLDivElement>(null);
-  const params = new URLSearchParams(search);
+  const urlParams = new URLSearchParams(search);
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
   const allStepsCompleted = info?.kycSteps.every((s) => isStepDone(s));
   const canContinue = !allStepsCompleted || (info && info.kycLevel >= KycLevel.Completed);
 
   // params
-  const [step, stepSequence] = params.get('step')?.split(':') ?? [];
+  const [step, stepSequence] = urlParams.get('step')?.split(':') ?? [];
   const [stepName, stepType] = step?.split('/') ?? [];
-  const paramKycCode = params.get('code');
+  const paramKycCode = urlParams.get('code');
   const kycCode = paramKycCode ?? user?.kyc.hash;
-  const redirectUri = params.get('kyc-redirect');
-  const client = params.get('client') ?? undefined;
+  const redirectUri = urlParams.get('kyc-redirect');
+  const client = urlParams.get('client') ?? undefined;
 
   useUserGuard('/login', !kycCode);
 
   useEffect(() => {
     if (info) changeLanguage(info.language);
   }, [info]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (params.autoStart !== 'true') {
+      setIsAutoStarting(false);
+    } else if (!processingKycData && kycCode) {
+      onLoad(true).finally(() => {
+        setIsAutoStarting(false);
+        setParams({ autoStart: undefined });
+      });
+    }
+  }, [isInitialized, kycCode, processingKycData]);
 
   useEffect(() => {
     if (info) {
@@ -231,25 +248,25 @@ export function KycScreen(): JSX.Element {
       });
   }
 
-  function stepIcon(step: KycStep): { icon: IconVariant; size: IconSize } | undefined {
+  function stepIcon(step: KycStep): { icon: IconVariant | undefined; label: string; size: IconSize } {
     switch (step.status) {
       case KycStepStatus.NOT_STARTED:
-        return undefined;
+        return { icon: IconVariant.CHECKBOX_EMPTY, label: translate('screens/kyc', 'Not started'), size: IconSize.MD };
 
       case KycStepStatus.IN_PROGRESS:
-        return { icon: IconVariant.EDIT, size: IconSize.MD };
+        return { icon: IconVariant.EDIT, label: translate('screens/kyc', 'In progress'), size: IconSize.MD };
 
       case KycStepStatus.IN_REVIEW:
-        return { icon: IconVariant.LOADING, size: IconSize.XS };
+        return { icon: IconVariant.LOADING, label: translate('screens/kyc', 'In review'), size: IconSize.XS };
 
       case KycStepStatus.COMPLETED:
-        return { icon: IconVariant.CHECK, size: IconSize.MD };
+        return { icon: IconVariant.CHECKBOX_CHECKED, label: translate('screens/kyc', 'Completed'), size: IconSize.MD };
 
       case KycStepStatus.FAILED:
-        return { icon: IconVariant.CLOSE, size: IconSize.MD };
+        return { icon: IconVariant.CLOSE, label: translate('screens/kyc', 'Failed'), size: IconSize.MD };
 
       case KycStepStatus.OUTDATED:
-        return { icon: IconVariant.REPEAT, size: IconSize.MD };
+        return { icon: IconVariant.REPEAT, label: translate('screens/kyc', 'Outdated'), size: IconSize.MD };
     }
   }
 
@@ -266,7 +283,7 @@ export function KycScreen(): JSX.Element {
       }
       noPadding={isMobile && stepInProgress?.session?.type === UrlType.BROWSER}
     >
-      {isLoading ? (
+      {isLoading || isAutoStarting ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : showLinkHint ? (
         <StyledVerticalStack gap={6} full>
@@ -332,9 +349,23 @@ export function KycScreen(): JSX.Element {
           {info && (
             <>
               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                <StyledDataTableRow label={translate('screens/kyc', 'KYC level')}>
+                <StyledDataTableExpandableRow
+                  label={translate('screens/kyc', 'KYC level')}
+                  expansionItems={
+                    info.kycSteps.length
+                      ? info.kycSteps.map((step) => {
+                          const icon = stepIcon(step);
+                          return {
+                            label: nameToString(step.name),
+                            text: icon?.label ?? '',
+                            icon: icon?.icon,
+                          };
+                        })
+                      : []
+                  }
+                >
                   <p>{levelToString(info.kycLevel)}</p>
-                </StyledDataTableRow>
+                </StyledDataTableExpandableRow>
 
                 <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
                   <div className="flex flex-row gap-1 items-center">
@@ -348,25 +379,6 @@ export function KycScreen(): JSX.Element {
                 <StyledDataTableRow label={translate('screens/kyc', 'Two-factor authentication')}>
                   <p>{translate('general/actions', info.twoFactorEnabled ? 'Yes' : 'No')}</p>
                 </StyledDataTableRow>
-
-                {info.kycSteps.length && (
-                  <StyledDataTableRow label={translate('screens/kyc', 'KYC progress')}>
-                    <div className="grid gap-1 items-center grid-cols-[1.2rem_1fr]">
-                      {info.kycSteps.map((step) => {
-                        const icon = stepIcon(step);
-                        return (
-                          <Fragment key={`${step.name}-${step.type}`}>
-                            {icon ? <DfxIcon {...icon} /> : <div />}
-                            <div className={`text-left ${step.isCurrent && 'font-bold'}`}>
-                              {nameToString(step.name)}
-                              {step.type && ` (${typeToString(step.type)})`}
-                            </div>
-                          </Fragment>
-                        );
-                      })}
-                    </div>
-                  </StyledDataTableRow>
-                )}
               </StyledDataTable>
 
               {!allStepsCompleted && (
@@ -777,6 +789,7 @@ function Ident({ step, onDone, onBack }: EditProps): JSX.Element {
 interface FormData {
   text?: string;
   selection?: KycFinancialOption;
+  selectionMC?: KycFinancialOption[];
 }
 
 function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.Element {
@@ -827,10 +840,11 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
 
   const currentText = useWatch({ control, name: 'text' });
   const currentSelection = useWatch({ control, name: 'selection' })?.key;
-  const currentValue = currentText ?? currentSelection;
+  const currentSelectionMC = useWatch({ control, name: 'selectionMC' })?.map((o) => o.key);
+  const currentValue = currentText ?? currentSelection ?? (currentSelectionMC?.length ? currentSelectionMC : undefined);
 
-  function onSubmit({ text, selection }: FormData) {
-    const value = text ?? selection?.key;
+  function onSubmit({ text, selection, selectionMC }: FormData) {
+    const value = text ?? selection?.key ?? selectionMC?.map((o) => o.key).join(',');
     if (!currentQuestion || !value) return;
 
     if (!currentResponse) {
@@ -849,16 +863,15 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   }
 
   function setValue(value?: string) {
-    if (currentQuestion?.options?.length) {
-      setFormValue(
-        'selection',
-        currentQuestion.options.find((o) => o.key === value),
-      );
-      setFormValue('text', undefined);
-    } else {
-      setFormValue('selection', undefined);
-      setFormValue('text', value);
-    }
+    const isText = !currentQuestion?.options?.length;
+    const isMC = currentQuestion?.type === QuestionType.MULTIPLE_CHOICE;
+
+    setFormValue('text', isText ? value : undefined);
+    setFormValue('selection', !isText && !isMC ? currentQuestion?.options?.find((o) => o.key === value) : undefined);
+    setFormValue(
+      'selectionMC',
+      isMC ? currentQuestion?.options?.filter((o) => value?.split(',').includes(o.key)) : undefined,
+    );
   }
 
   return error ? (
@@ -908,8 +921,8 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
             />
           </>
         ) : currentQuestion.type === QuestionType.MULTIPLE_CHOICE ? (
-          <StyledDropdown
-            name="selection"
+          <StyledDropdownMultiChoice
+            name="selectionMC"
             rootRef={rootRef}
             label={currentQuestion.description}
             placeholder={translate('general/actions', 'Select...')}

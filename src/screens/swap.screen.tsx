@@ -75,7 +75,7 @@ export default function SwapScreen(): JSX.Element {
   useAddressGuard('/connect');
 
   const { translate, translateError } = useSettingsContext();
-  const { closeServices } = useAppHandlingContext();
+  const { closeServices, width } = useAppHandlingContext();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
   const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
   const { availableBlockchains, logout } = useSessionContext();
@@ -149,7 +149,7 @@ export default function SwapScreen(): JSX.Element {
     session?.address && targetBlockchains?.length
       ? [
           ...targetBlockchains.map((b) => ({
-            address: blankedAddress(session.address ?? ''),
+            address: blankedAddress(session.address ?? '', { width }),
             label: toString(b),
             chain: b,
           })),

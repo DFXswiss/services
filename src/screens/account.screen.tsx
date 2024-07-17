@@ -48,7 +48,7 @@ export function AccountScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
   const { getRef } = useUser();
-  const { canClose, isEmbedded } = useAppHandlingContext();
+  const { canClose, isEmbedded, width } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
   const { activeWallet } = useStore();
   const { changeUserAddress } = useUser();
@@ -177,8 +177,7 @@ export function AccountScreen(): JSX.Element {
                     placeholder={translate('general/actions', 'Select...')}
                     items={user.addresses}
                     disabled={user.addresses.length === 0}
-                    labelFunc={(item) => item.wallet}
-                    descriptionFunc={(item) => blankedAddress(item.address)}
+                    labelFunc={(item) => blankedAddress(item.address, { width })}
                   />
                 </Form>
               </div>
@@ -227,9 +226,9 @@ export function AccountScreen(): JSX.Element {
               showBorder
               minWidth={false}
             >
-              <StyledDataTableRow label={translate('screens/home', 'Referral code')}>
+              <StyledDataTableRow label={translate('screens/home', 'Referral link')}>
                 {referral.code}
-                <CopyButton onCopy={() => copy(referral.code!)} />
+                <CopyButton onCopy={() => copy(`${process.env.REACT_APP_REF_URL}${referral.code}`)} />
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
                 {(referral.commission * 100).toFixed(2)}%

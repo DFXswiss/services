@@ -16,6 +16,7 @@
     "Login": "Login",
     "Logout": "Logout",
     "Back": "Indietro",
+    "Proceed": "Procedi",
     "Retry": "Riprovare",
     "Connect": "Collegare",
     "Continue in Trezor Connect": "Continua in Trezor Connect",
@@ -61,6 +62,13 @@
     "auto": "auto",
     "video": "video",
     "manual": "manuale",
+
+    "Not started": "Non iniziato",
+    "In progress": "In corso",
+    "In review": "In revisione",
+    "Completed": "Completato",
+    "Failed": "Fallito",
+    "Outdated": "Obsoleto",
 
     "Account Type": "Tipo di conto",
     "Personal": "Personale",
@@ -223,7 +231,7 @@
     "Latest transactions": "Ultime transazioni",
     "Addresses by volume": "Indirizzi per volume",
     "Referral": "Referenza",
-    "Referral code": "Codice di referenza",
+    "Referral link": "Link di referenza",
     "Referral commission": "Commissione di referenza",
     "Your referral stats": "Le tue statistiche di referenza",
     "Level": "Livello",
@@ -336,6 +344,7 @@
     "Buy": "Acquisto",
     "Sell": "Vendita",
     "Swap": "Scambio",
+    "Staking": "Staking",
 
     "State": "Stato",
     "Created": "Creato",
@@ -393,7 +402,27 @@
 
     "The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.": "Il tasso di cambio di {{rate}} {{currency}}/{{asset}} è fisso per {{timer}}, dopo di che sarà ricalcolato.",
     "Please send the specified amount to the address below.": "Si prega di inviare l'importo specificato all'indirizzo sottostante.",
-    "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni."
+    "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
+
+    "Cointracking": "Cointracking",
+    "Saved": "Salvato",
+    "Cointracking Link (read rights)": "Collegamento Cointracking (diritti di lettura)",
+    "Cointracking homepage": "Homepage di Cointracking",
+    "You can link your DFX account to your Cointracking account.": "Puoi collegare il tuo account DFX al tuo account Cointracking.",
+    "Generate API key": "Genera chiave API",
+    "API key": "Chiave API",
+    "API secret": "Segreto API",
+    "Delete API key": "Elimina chiave API",
+    "Import filter": "Filtro di importazione",
+    "All": "Tutti",
+    "Filtered": "Filtrato",
+    "Transfer all data": "Trasferisci tutti i dati",
+    "Transfer filtered data": "Trasferisci dati filtrati",
+    "Referral": "Referral",
+    "Buy transactions": "Transazioni di acquisto",
+    "Sell transactions": "Transazioni di vendita",
+    "Staking transactions": "Transazioni di staking",
+    "Referral rewards": "Ricompense di referral"
   },
   "screens/iban": {
     "Bank Accounts": "Conti bancari",
@@ -429,7 +458,18 @@
     "Please provide us with all relevant information about the transaction you are missing.": "Vi preghiamo di fornirci tutte le informazioni rilevanti sulla transazione mancante.",
     "Sender IBAN": "IBAN del mittente",
     "Receiver IBAN": "IBAN del destinatario",
-    "Date of the transaction": "Data della transazione"
+    "Date of the transaction": "Data della transazione",
+
+    "Telegram support": "Supporto Telegram",
+    "FAQ": "FAQ",
+    "We have summarized the most common questions for you in our FAQ.": "Abbiamo riassunto le domande più comuni nelle nostre FAQ.",
+    "Search now": "Cerca ora",
+    "Telegram Community": "Comunità Telegram",
+    "Submit Ticket": "Invia un ticket",
+    "Join the DFX Community. Our moderators are happy to assist you in the group.": "Unisciti alla comunità DFX. I nostri moderatori sono felici di aiutarti nel gruppo.",
+    "If you have a specific question or problem, you can submit a ticket here.": "Se avete una domanda o un problema specifico, potete inviare un ticket qui.",
+    "Join now": "Unisciti ora",
+    "Please be cautious. We will never contact you first. Beware of scams.": "Si prega di essere cauti. Non ti contatteremo mai per primi. Attenzione alle truffe."
   },
   "screens/settings": {
     "Settings": "Impostazioni",
@@ -447,7 +487,7 @@
     "Swap": "Swap",
     "KYC": "KYC",
     "My DFX": "My DFX",
-    "Help": "Aiuto",
+    "Support": "Supporto",
     "Terms and conditions": "Termini e condizioni",
     "Privacy policy": "Informativa sulla privacy",
     "Imprint": "Impronta"
