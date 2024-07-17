@@ -342,6 +342,7 @@
     "Buy": "Kauf",
     "Sell": "Verkauf",
     "Swap": "Tausch",
+    "Staking": "Staking",
 
     "State": "Status",
     "Created": "Erstellt",
@@ -399,7 +400,27 @@
 
     "The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.": "Der Wechselkurs von {{rate}} {{currency}}/{{asset}} ist für {{timer}} festgelegt, danach wird er neu berechnet.",
     "Please send the specified amount to the address below.": "Bitte sende den angegebenen Betrag an die unten stehende Adresse.",
-    "Please note that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst."
+    "Please note that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst.",
+
+    "Cointracking": "Cointracking",
+    "Saved": "Gespeichert",
+    "Cointracking Link (read rights)": "Cointracking-Verknüpfung (Leserechte)",
+    "Cointracking homepage": "Cointracking Homepage",
+    "You can link your DFX account to your Cointracking account.": "Du kannst dein DFX-Konto mit deinem Cointracking-Konto verknüpfen.",
+    "Generate API key": "API-Schlüssel generieren",
+    "API key": "API-Schlüssel",
+    "API secret": "API-Geheimnis",
+    "Delete API key": "API-Schlüssel löschen",
+    "Import filter": "Importfilter",
+    "All": "Alle",
+    "Filtered": "Gefiltert",
+    "Transfer all data": "Alle Daten übertragen",
+    "Transfer filtered data": "Gefilterte Daten übertragen",
+    "Referral": "Referral",
+    "Buy transactions": "Kauftransaktionen",
+    "Sell transactions": "Verkaufstransaktionen",
+    "Staking transactions": "Staking-Transaktionen",
+    "Referral rewards": "Referral-Rewards"
   },
   "screens/iban": {
     "Bank Accounts": "Bankkonten",

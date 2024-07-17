@@ -98,7 +98,7 @@ function PaymentInformationText({
             <StyledDataTableRow label={translate('screens/sell', 'Asset')}>
               {showContract && asset.chainId ? (
                 <StyledHorizontalStack gap={2}>
-                  <span>{blankedAddress(asset.chainId)}</span>
+                  <span>{blankedAddress(asset.chainId, { width })}</span>
                   <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(asset.chainId)} size={IconSize.SM} />
                   {asset.explorerUrl && (
                     <StyledIconButton

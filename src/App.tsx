@@ -184,7 +184,7 @@ function App({ routerFactory, params }: AppProps) {
   if (home) router.navigate(home);
 
   return (
-    <div ref={rootRef}>
+    <div ref={rootRef} className="h-full w-full">
       <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
         <BalanceContextProvider>
           <AppHandlingContextProvider
