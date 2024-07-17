@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { DeleteOverlay, DeleteOverlayType } from 'src/components/home/address-delete';
 import { Layout } from 'src/components/layout';
+import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useStore } from 'src/hooks/store.hook';
@@ -32,6 +33,7 @@ export function SettingsScreen(): JSX.Element {
   const { copy } = useClipboard();
   const rootRef = useRef<HTMLDivElement>(null);
   const { activeWallet } = useStore();
+  const { width } = useAppHandlingContext();
   const { changeUserAddress, deleteUserAddress, deleteUserAccount } = useUser();
   const { updateSession, deleteSession } = useApiSession();
 
@@ -177,7 +179,7 @@ export function SettingsScreen(): JSX.Element {
                         </div>
                       )}
                     </div>
-                    <div className="text-xs text-dfxGray-700">{blankedAddress(address.address, 30)}</div>
+                    <div className="text-xs text-dfxGray-700">{blankedAddress(address.address, { width })}</div>
                   </div>
                   <div className="relative flex items-center">
                     <button onClick={() => toggleMenu(address.address)}>
