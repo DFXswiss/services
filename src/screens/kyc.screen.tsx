@@ -9,6 +9,7 @@ import {
   KycInfo,
   KycLevel,
   KycPersonalData,
+  KycResult,
   KycSession,
   KycStep,
   KycStepName,
@@ -421,6 +422,9 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.PERSONAL_DATA:
       return <PersonalData {...props} />;
 
+    case KycStepName.NATIONALITY_DATA:
+      return <NationalityData {...props} />;
+
     case KycStepName.IDENT:
       return <Ident {...props} />;
 
@@ -755,6 +759,95 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
               />
             </>
           ))}
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { getCountries } = useKyc();
+
+  const [isCountryLoading, setIsCountryLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+  const [countries, setCountries] = useState<Country[]>([]);
+
+  useEffect(() => {
+    getCountries(code)
+      .then(setCountries)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsCountryLoading(false));
+  }, []);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<KycPersonalData>({ mode: 'onTouched' });
+
+  // TODO: add setNationalityData to useKyc hook
+  function setNationalityData(_code: string, _url: string, _data: KycPersonalData): Promise<KycResult> {
+    return new Promise((resolve, _reject) => {
+      setTimeout(() => {
+        resolve({ status: KycStepStatus.COMPLETED });
+      }, 1000);
+    });
+  }
+
+  function onSubmit(data: KycPersonalData) {
+    if (!step.session) return;
+
+    setIsUpdating(true);
+    setError(undefined);
+    setNationalityData(code, step.session.url, data)
+      .then(() => (mode === Mode.KYC ? onDone() : onBack()))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    nationality: Validations.Required,
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full center>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Nationality')}
+          </p>
+          {isCountryLoading ? (
+            <StyledLoadingSpinner size={SpinnerSize.LG} />
+          ) : (
+            <StyledSearchDropdown
+              rootRef={rootRef}
+              name="nationality"
+              autocomplete="country"
+              label=""
+              placeholder={translate('general/actions', 'Select...')}
+              items={countries}
+              labelFunc={(item) => item.name}
+              filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+              matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+            />
+          )}
+        </StyledVerticalStack>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUpdating || isLoading}
+        />
       </StyledVerticalStack>
     </Form>
   );
