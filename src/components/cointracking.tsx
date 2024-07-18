@@ -16,8 +16,8 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from './error-hint';
@@ -46,7 +46,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
   const { user, reloadUser } = useUserContext();
   const { lang } = useAppParams();
   const { translate } = useSettingsContext();
-  const { width } = useAppHandlingContext();
+  const { width } = useWindowContext();
   const { apiFilterCT, apiKeyCT } = user?.activeAddress ?? {};
   const { generateCTApiKey, deleteCTApiKey, updateCTApiFilter } = useUser();
   const [error, setError] = useState<string>();

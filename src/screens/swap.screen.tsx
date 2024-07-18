@@ -12,6 +12,7 @@ import {
   useAuthContext,
   useSessionContext,
   useSwap,
+  useUserContext,
 } from '@dfx.swiss/react';
 import {
   AssetIconVariant,
@@ -32,6 +33,8 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
+import { useWindowContext } from 'src/contexts/window.context';
+import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
@@ -49,7 +52,6 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useTxHelper } from '../hooks/tx-helper.hook';
-import { blankedAddress } from '../util/utils';
 
 interface Address {
   address: string;
@@ -75,11 +77,13 @@ export default function SwapScreen(): JSX.Element {
   useAddressGuard('/connect');
 
   const { translate, translateError } = useSettingsContext();
-  const { closeServices, width } = useAppHandlingContext();
+  const { closeServices } = useAppHandlingContext();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
   const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
   const { availableBlockchains, logout } = useSessionContext();
   const { session } = useAuthContext();
+  const { width } = useWindowContext();
+  const { user } = useUserContext();
   const { assets, getAssets } = useAssetContext();
   const { getAsset, isSameAsset } = useAsset();
   const { navigate } = useNavigation();
@@ -143,16 +147,27 @@ export default function SwapScreen(): JSX.Element {
   const sourceBlockchains = availableBlockchains?.filter(
     (b) => SwapInputBlockchains.includes(b) && filteredAssets?.some((a) => a.blockchain === b),
   );
-  const targetBlockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
+
+  const userAddresses = (
+    [
+      session?.address && { address: session.address, blockchains: session.blockchains },
+      ...(user?.addresses.map((a) => ({ address: a.address, blockchains: a.blockchains })) ?? []),
+    ] as { address: string; blockchains: Blockchain[] }[]
+  ).filter((a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i);
+
+  const targetBlockchains = userAddresses
+    .flatMap((a) => a.blockchains)
+    .filter((b, i, arr) => arr.indexOf(b) === i)
+    .filter((b) => filteredAssets?.some((a) => a.blockchain === b));
 
   const addressItems: Address[] =
-    session?.address && targetBlockchains?.length
+    userAddresses.length > 0 && targetBlockchains?.length
       ? [
-          ...targetBlockchains.map((b) => ({
-            address: blankedAddress(session.address ?? '', { width }),
-            label: toString(b),
-            chain: b,
-          })),
+          ...userAddresses.flatMap(({ address, blockchains }) =>
+            blockchains
+              .filter((b) => targetBlockchains.includes(b))
+              .map((b) => ({ address: address, label: toString(b), chain: b })),
+          ),
           {
             address: translate('screens/buy', 'Switch address'),
             label: translate('screens/buy', 'Login with a different address'),
@@ -263,7 +278,7 @@ export default function SwapScreen(): JSX.Element {
     return () => {
       isRunning = false;
     };
-  }, [validatedData]);
+  }, [validatedData, session?.address]);
 
   function validateSwap(swap: Swap): void {
     setCustomAmountError(undefined);
@@ -502,7 +517,7 @@ export default function SwapScreen(): JSX.Element {
                     rootRef={rootRef}
                     name="address"
                     items={addressItems}
-                    labelFunc={(item) => item.address}
+                    labelFunc={(item) => blankedAddress(item.address, { width })}
                     descriptionFunc={(item) => item.label}
                     full
                     forceEnable
