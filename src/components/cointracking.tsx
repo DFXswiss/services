@@ -57,36 +57,36 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
   const filterOptions = [
     {
       key: 'all',
-      label: translate('screens/payment', 'All'),
-      value: translate('screens/payment', 'Transfer all data'),
+      label: 'All',
+      value: 'Transfer all data',
     },
     {
       key: 'filtered',
-      label: translate('screens/payment', 'Filtered'),
-      value: translate('screens/payment', 'Transfer filtered data'),
+      label: 'Filtered',
+      value: 'Transfer filtered data',
     },
   ] as FilterMode[];
 
   const filterTypes = [
     {
       key: 'buy',
-      label: translate('screens/payment', 'Buy'),
-      value: translate('screens/payment', 'Buy transactions'),
+      label: 'Buy',
+      value: 'Buy transactions',
     },
     {
       key: 'sell',
-      label: translate('screens/payment', 'Sell'),
-      value: translate('screens/payment', 'Sell transactions'),
+      label: 'Sell',
+      value: 'Sell transactions',
     },
     {
       key: 'staking',
-      label: translate('screens/payment', 'Staking'),
-      value: translate('screens/payment', 'Staking transactions'),
+      label: 'Staking',
+      value: 'Staking transactions',
     },
     {
       key: 'ref',
-      label: translate('screens/payment', 'Referral'),
-      value: translate('screens/payment', 'Referral rewards'),
+      label: 'Referral',
+      value: 'Referral rewards',
     },
   ] as Filter[];
 
@@ -222,8 +222,8 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
                 rootRef={rootRef}
                 placeholder={translate('general/actions', 'Select...')}
                 items={filterOptions}
-                labelFunc={(item) => item.label}
-                descriptionFunc={(item) => item.value}
+                labelFunc={(item) => translate('screens/payment', item.label)}
+                descriptionFunc={(item) => translate('screens/payment', item.value)}
               />
               {filterMode === 'filtered' && (
                 <StyledDropdownMultiChoice
@@ -231,8 +231,8 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
                   rootRef={rootRef}
                   placeholder={translate('general/actions', 'Select data to import...')}
                   items={filterTypes}
-                  labelFunc={(item) => item.label}
-                  descriptionFunc={(item) => item.value}
+                  labelFunc={(item) => translate('screens/payment', item.label)}
+                  descriptionFunc={(item) => translate('screens/payment', item.value)}
                 />
               )}
             </StyledVerticalStack>

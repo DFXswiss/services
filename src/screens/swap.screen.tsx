@@ -240,7 +240,7 @@ export default function SwapScreen(): JSX.Element {
 
     const amount = Number(validatedData.amount);
     const { sourceAsset, targetAsset } = validatedData;
-    const data = { amount, sourceAsset, targetAsset, externalTransactionId };
+    const data = { amount, sourceAsset, targetAsset, receiverAddress: selectedAddress?.address, externalTransactionId };
 
     setIsLoading(true);
     receiveFor(data)
