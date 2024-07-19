@@ -163,11 +163,10 @@ export default function SwapScreen(): JSX.Element {
   const addressItems: Address[] =
     userAddresses.length > 0 && targetBlockchains?.length
       ? [
-          ...userAddresses.flatMap(({ address, blockchains }) =>
-            blockchains
-              .filter((b) => targetBlockchains.includes(b))
-              .map((b) => ({ address: address, label: toString(b), chain: b })),
-          ),
+          ...targetBlockchains.flatMap((b) => {
+            const addresses = userAddresses.filter((a) => a.blockchains.includes(b));
+            return addresses.map((a) => ({ address: a.address, label: toString(b), chain: b }));
+          }),
           {
             address: translate('screens/buy', 'Switch address'),
             label: translate('screens/buy', 'Login with a different address'),
