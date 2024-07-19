@@ -12,6 +12,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
+import { useWindowContext } from 'src/contexts/window.context';
 import { CloseType, useAppHandlingContext } from '../../contexts/app-handling.context';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
@@ -27,6 +28,7 @@ export function SellCompletion({ paymentInfo, navigateOnClose, txId }: SellCompl
   const { copy } = useClipboard();
   const { translate } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
+  const { width } = useWindowContext();
 
   const [isClosed, setIsClosed] = useState(false);
 
@@ -50,7 +52,7 @@ export function SellCompletion({ paymentInfo, navigateOnClose, txId }: SellCompl
       {txId && (
         <StyledHorizontalStack gap={2} center>
           <p className="text-dfxBlue-800">{translate('screens/sell', 'Transaction hash')}:</p>
-          <span className="text-dfxBlue-800 font-bold">{blankedAddress(txId)}</span>
+          <span className="text-dfxBlue-800 font-bold">{blankedAddress(txId, { width })}</span>
           <CopyButton onCopy={() => copy(txId)} />
         </StyledHorizontalStack>
       )}

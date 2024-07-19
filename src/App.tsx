@@ -8,6 +8,7 @@ import { AppHandlingContextProvider, AppParams, CloseMessageData } from './conte
 import { BalanceContextProvider } from './contexts/balance.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
+import { WindowContextProvider } from './contexts/window.context';
 import { AccountScreen } from './screens/account.screen';
 import { BankAccountsScreen } from './screens/bank-accounts.screen';
 import { BuyFailureScreen } from './screens/buy-failure.screen';
@@ -180,23 +181,25 @@ function App({ routerFactory, params }: AppProps) {
   if (home) router.navigate(home);
 
   return (
-    <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
-      <BalanceContextProvider>
-        <AppHandlingContextProvider
-          isWidget={params != null}
-          service={params?.service}
-          closeCallback={params?.onClose}
-          params={params}
-          router={router}
-        >
-          <SettingsContextProvider>
-            <WalletContextProvider router={router}>
-              <RouterProvider router={router} />
-            </WalletContextProvider>
-          </SettingsContextProvider>
-        </AppHandlingContextProvider>
-      </BalanceContextProvider>
-    </DfxContextProvider>
+    <WindowContextProvider>
+      <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
+        <BalanceContextProvider>
+          <AppHandlingContextProvider
+            isWidget={params != null}
+            service={params?.service}
+            closeCallback={params?.onClose}
+            params={params}
+            router={router}
+          >
+            <SettingsContextProvider>
+              <WalletContextProvider router={router}>
+                <RouterProvider router={router} />
+              </WalletContextProvider>
+            </SettingsContextProvider>
+          </AppHandlingContextProvider>
+        </BalanceContextProvider>
+      </DfxContextProvider>
+    </WindowContextProvider>
   );
 }
 

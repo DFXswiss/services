@@ -38,6 +38,8 @@ import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
+import { useWindowContext } from 'src/contexts/window.context';
+import { blankedAddress } from 'src/util/utils';
 import { NameEdit } from '../components/edit/name.edit';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
@@ -56,7 +58,6 @@ import { useBlockchain } from '../hooks/blockchain.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { blankedAddress } from '../util/utils';
 
 interface Address {
   address: string;
@@ -105,6 +106,7 @@ export function BuyScreen(): JSX.Element {
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const { toString } = useBlockchain();
+  const { width } = useWindowContext();
   const { isEmbedded, isDfxHosted, isInitialized } = useAppHandlingContext();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
@@ -144,7 +146,7 @@ export function BuyScreen(): JSX.Element {
     session?.address && blockchains?.length
       ? [
           ...blockchains.map((b) => ({
-            address: blankedAddress(session.address ?? ''),
+            address: session.address ?? '',
             label: toString(b),
             chain: b,
           })),
@@ -476,7 +478,7 @@ export function BuyScreen(): JSX.Element {
                       rootRef={rootRef}
                       name="address"
                       items={addressItems}
-                      labelFunc={(item) => item.address}
+                      labelFunc={(item) => blankedAddress(item.address, { width })}
                       descriptionFunc={(item) => item.label}
                       full
                       forceEnable

@@ -41,6 +41,7 @@ const urlParamsToRemove = [
   'redirect',
   'type',
   'redirect-uri',
+  'auto-start',
   'mode',
   'blockchain',
   'blockchains',
@@ -87,6 +88,7 @@ export interface AppParams {
   redirect?: string;
   type?: string;
   redirectUri?: string;
+  autoStart?: string;
   mode?: string;
   blockchain?: string;
   blockchains?: string;
@@ -295,6 +297,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),
           redirectUri: getParameter(query, 'redirect-uri'),
+          autoStart: getParameter(query, 'auto-start'),
           mode: getParameter(query, 'mode'),
           blockchain: Object.values(Blockchain).find(
             (b) => b.toLowerCase() === getParameter(query, 'blockchain')?.toLowerCase(),

@@ -59,6 +59,13 @@
     "video": "video",
     "manual": "manuale",
 
+    "Not started": "Non iniziato",
+    "In progress": "In corso",
+    "In review": "In revisione",
+    "Completed": "Completato",
+    "Failed": "Fallito",
+    "Outdated": "Obsoleto",
+
     "Account Type": "Tipo di conto",
     "Personal": "Personale",
     "Business": "Affari",
@@ -335,6 +342,7 @@
     "Buy": "Acquisto",
     "Sell": "Vendita",
     "Swap": "Scambio",
+    "Staking": "Staking",
 
     "State": "Stato",
     "Created": "Creato",
@@ -392,7 +400,27 @@
 
     "The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.": "Il tasso di cambio di {{rate}} {{currency}}/{{asset}} è fisso per {{timer}}, dopo di che sarà ricalcolato.",
     "Please send the specified amount to the address below.": "Si prega di inviare l'importo specificato all'indirizzo sottostante.",
-    "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni."
+    "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
+
+    "Cointracking": "Cointracking",
+    "Saved": "Salvato",
+    "Cointracking Link (read rights)": "Collegamento Cointracking (diritti di lettura)",
+    "Cointracking homepage": "Homepage di Cointracking",
+    "You can link your DFX account to your Cointracking account.": "Puoi collegare il tuo account DFX al tuo account Cointracking.",
+    "Generate API key": "Genera chiave API",
+    "API key": "API-key",
+    "API secret": "API-secret",
+    "Delete API key": "Elimina chiave API",
+    "Import filter": "Filtro di importazione",
+    "All": "Tutti",
+    "Filtered": "Filtrato",
+    "Transfer all data": "Trasferisci tutti i dati",
+    "Transfer filtered data": "Trasferisci dati filtrati",
+    "Referral": "Referral",
+    "Buy transactions": "Transazioni di acquisto",
+    "Sell transactions": "Transazioni di vendita",
+    "Staking transactions": "Transazioni di staking",
+    "Referral rewards": "Ricompense di referral"
   },
   "screens/iban": {
     "Bank Accounts": "Conti bancari",
