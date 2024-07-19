@@ -29,7 +29,7 @@ export function blankedAddress(
   address: string,
   { displayLength = 24, width }: { displayLength?: number; width?: number } = {},
 ): string {
-  if (width) displayLength = Math.min(Math.floor((width * 0.5) / 10), address.length);
+  if (width) displayLength = Math.min(Math.floor((width * 0.6) / 10), address.length);
   const offset0x = /^0x/.test(address) ? 2 : 0;
   displayLength -= offset0x;
   return address.length - offset0x > displayLength

@@ -12,7 +12,10 @@ export const useWindowContext = () => useContext(WindowContext);
 export function WindowContextProvider({ children }: PropsWithChildren): JSX.Element {
   const [width, setWidth] = useState<number>();
 
-  const rootRef = useResizeObserver<HTMLDivElement>((el) => setWidth(el.offsetWidth));
+  const rootRef = useResizeObserver<HTMLDivElement>((el) => {
+    const effectiveWidth = Math.min(el.offsetWidth, 768); // max-w-screen-md
+    setWidth(effectiveWidth);
+  });
 
   const context = useMemo(() => ({ width }), [width]);
 
