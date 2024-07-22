@@ -67,7 +67,7 @@ export function HomeScreen(): JSX.Element {
   const specialMode = getMode(pathname);
 
   useEffect(() => {
-    if (isInitialized && isLoggedIn && user && ((!activeWallet && hasSession) || loginSuccessful)) {
+    if (isInitialized && isLoggedIn && user && loginSuccessful) {
       if (service === Service.CONNECT) {
         close();
       } else {
