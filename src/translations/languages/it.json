@@ -302,7 +302,7 @@
     "Reference": "Scopo del pagamento",
     "Transaction Details": "Dettagli della transazione",
     "Asset": "Attività",
-    "Deposit Address": "Indirizzo di deposito",
+    "Deposit address": "Indirizzo di deposito",
     "Beneficiary bank account": "Conto bancario del beneficiario",
     "Beneficiary name": "Nome del beneficiario",
 
@@ -347,6 +347,7 @@
 
     "Failure reason": "Causa dell'errore",
     "Unknown": "Sconosciuto",
+    "Annual volume": "Volume annuale",
     "Daily limit exceeded": "Limite giornaliero superato",
     "Annual limit exceeded": "Limite annuale superato",
     "Account holder mismatch": "Il titolare del conto non corrisponde",
@@ -387,7 +388,10 @@
 
     "The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.": "Il tasso di cambio di {{rate}} {{currency}}/{{asset}} è fisso per {{timer}}, dopo di che sarà ricalcolato.",
     "Please send the specified amount to the address below.": "Si prega di inviare l'importo specificato all'indirizzo sottostante.",
-    "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni."
+    "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
+
+    "Payment routes": "Modalità di pagamento",
+    "Purpose of payment": "Scopo del pagamento"
   },
   "screens/iban": {
     "Bank Accounts": "Conti bancari",
