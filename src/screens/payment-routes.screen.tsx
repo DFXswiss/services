@@ -135,6 +135,14 @@ export function PaymentRoutes(): JSX.Element {
                     { label: translate('screens/payment', 'Currency'), text: route.currency.name },
                     { label: translate('screens/payment', 'IBAN'), text: route.iban },
                     {
+                      label: translate('screens/payment', 'Deposit address'),
+                      text: route.deposit.address,
+                    },
+                    {
+                      label: translate('screens/home', 'Volume'),
+                      text: `${route.volume} CHF`,
+                    },
+                    {
                       label: translate('screens/payment', 'Annual volume'),
                       text: `${route.annualVolume} CHF`,
                     },
@@ -160,7 +168,7 @@ export function PaymentRoutes(): JSX.Element {
                       text: route.deposit.address,
                     },
                     {
-                      label: translate('screens/payment', 'Volume'),
+                      label: translate('screens/home', 'Volume'),
                       text: `${route.volume} CHF`,
                     },
                     {
