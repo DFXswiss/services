@@ -25,9 +25,15 @@ export function isNode(e: EventTarget | null): e is Node {
   return e != null && 'nodeType' in e;
 }
 
-export function blankedAddress(address: string, displayLength = 24): string {
-  return address.length > displayLength
-    ? `${address.slice(0, displayLength / 2)}...${address.slice(address.length - displayLength / 2)}`
+export function blankedAddress(
+  address: string,
+  { displayLength = 24, width }: { displayLength?: number; width?: number } = {},
+): string {
+  if (width) displayLength = Math.min(Math.floor((width * 0.6) / 10), address.length);
+  const offset0x = /^0x/.test(address) ? 2 : 0;
+  displayLength -= offset0x;
+  return address.length - offset0x > displayLength
+    ? `${address.slice(0, offset0x + displayLength / 2)}...${address.slice(address.length - displayLength / 2)}`
     : address;
 }
 

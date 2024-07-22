@@ -42,6 +42,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { AddressSwitch } from 'src/components/payment/address-switch';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
+import { useWindowContext } from 'src/contexts/window.context';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
@@ -89,6 +90,7 @@ export default function SellScreen(): JSX.Element {
   const { isInitialized, closeServices } = useAppHandlingContext();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
+  const { width } = useWindowContext();
   const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
@@ -156,7 +158,7 @@ export default function SellScreen(): JSX.Element {
     session?.address && blockchains?.length
       ? [
           ...blockchains.map((b) => ({
-            address: blankedAddress(session.address ?? ''),
+            address: session.address ?? '',
             label: toString(b),
             chain: b,
           })),
@@ -261,7 +263,7 @@ export default function SellScreen(): JSX.Element {
           setPaymentInfo(sell);
 
           // load exact price
-          if (sell && !sell.exactPrice) {
+          if (sell) {
             setIsPriceLoading(true);
             receiveFor({ ...data, exactPrice: true })
               .then((info) => {
@@ -505,7 +507,7 @@ export default function SellScreen(): JSX.Element {
                     rootRef={rootRef}
                     name="address"
                     items={addressItems}
-                    labelFunc={(item) => item.address}
+                    labelFunc={(item) => blankedAddress(item.address, { width })}
                     descriptionFunc={(item) => item.label}
                     full
                     forceEnable

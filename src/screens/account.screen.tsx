@@ -27,10 +27,10 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { AddressDelete } from 'src/components/home/address-delete';
+import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { useStore } from 'src/hooks/store.hook';
 import { blankedAddress } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -46,14 +46,15 @@ export function AccountScreen(): JSX.Element {
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
   const { limitToString, levelToString } = useKycHelper();
   const { navigate } = useNavigation();
-  const { isLoggedIn } = useSessionContext();
+  const { logout, isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
   const { getRef } = useUser();
+  const { width } = useWindowContext();
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
-  const { activeWallet } = useStore();
   const { changeUserAddress, deleteUserAddress } = useUser();
-  const { updateSession, deleteSession } = useApiSession();
+  const { deleteSession } = useApiSession();
+  const { setSession } = useWalletContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
@@ -116,8 +117,7 @@ export function AccountScreen(): JSX.Element {
 
   async function onSwitchUser(address: string): Promise<void> {
     const { accessToken } = await changeUserAddress(address);
-    updateSession(accessToken);
-    activeWallet.remove();
+    setSession(accessToken);
   }
 
   async function onDeleteUser(): Promise<void> {
@@ -127,8 +127,7 @@ export function AccountScreen(): JSX.Element {
         onSwitchUser(user!.addresses[0].address);
         setValue('address', user!.addresses[0]);
       } else {
-        deleteSession();
-        activeWallet.remove();
+        logout();
       }
     } catch (e) {
       // ignore errors
@@ -154,11 +153,11 @@ export function AccountScreen(): JSX.Element {
 
   const referralItems = referral?.code
     ? [
-        { label: translate('screens/home', 'Volume'), text: Utils.formatAmountCrypto(referral.volume) + ' EUR' },
-        { label: translate('screens/home', 'Credit'), text: Utils.formatAmountCrypto(referral.credit) + ' EUR' },
+        { label: translate('screens/home', 'Volume'), text: Utils.formatAmount(referral.volume) + ' EUR' },
+        { label: translate('screens/home', 'Credit'), text: Utils.formatAmount(referral.credit) + ' EUR' },
         {
           label: translate('screens/home', 'Paid credit'),
-          text: Utils.formatAmountCrypto(referral.paidCredit) + ' EUR',
+          text: Utils.formatAmount(referral.paidCredit) + ' EUR',
         },
         { label: translate('screens/home', 'User count'), text: referral.userCount.toString() },
         { label: translate('screens/home', 'Active user count'), text: referral.activeUserCount.toString() },
@@ -208,8 +207,7 @@ export function AccountScreen(): JSX.Element {
                     placeholder={translate('general/actions', 'Select...')}
                     items={user.addresses}
                     disabled={user.addresses.length === 0}
-                    labelFunc={(item) => item.wallet}
-                    descriptionFunc={(item) => blankedAddress(item.address)}
+                    labelFunc={(item) => blankedAddress(item.address, { width })}
                   />
                 </Form>
               </div>
@@ -237,18 +235,19 @@ export function AccountScreen(): JSX.Element {
             <StyledDataTableExpandableRow
               label={translate('screens/home', 'Total trading volume')}
               expansionItems={
-                totalVolumeItems?.map(({ label, value }) => ({ label, text: value.toFixed(2) + ' CHF' })) ?? []
+                totalVolumeItems?.map(({ label, value }) => ({ label, text: Utils.formatAmount(value) + ' CHF' })) ?? []
               }
             >
-              {totalVolumeSum?.toFixed(2) + ' CHF'}
+              {Utils.formatAmount(totalVolumeSum) + ' CHF'}
             </StyledDataTableExpandableRow>
             <StyledDataTableExpandableRow
               label={translate('screens/home', 'Annual trading volume')}
               expansionItems={
-                annualVolumeItems?.map(({ label, value }) => ({ label, text: value.toFixed(2) + ' CHF' })) ?? []
+                annualVolumeItems?.map(({ label, value }) => ({ label, text: Utils.formatAmount(value) + ' CHF' })) ??
+                []
               }
             >
-              {annualVolumeSum?.toFixed(2) + ' CHF'}
+              {Utils.formatAmount(annualVolumeSum) + ' CHF'}
             </StyledDataTableExpandableRow>
             {transactionItems && transactionItems.length > 0 && (
               <StyledDataTableExpandableRow
@@ -264,9 +263,9 @@ export function AccountScreen(): JSX.Element {
               showBorder
               minWidth={false}
             >
-              <StyledDataTableRow label={translate('screens/home', 'Referral code')}>
+              <StyledDataTableRow label={translate('screens/home', 'Referral link')}>
                 {referral.code}
-                <CopyButton onCopy={() => copy(referral.code!)} />
+                <CopyButton onCopy={() => copy(`${process.env.REACT_APP_REF_URL}${referral.code}`)} />
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
                 {(referral.commission * 100).toFixed(2)}%

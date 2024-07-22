@@ -18,6 +18,21 @@ const urlParamsToRemove = [
   'address',
   'signature',
   'mail',
+  'account-type',
+  'first-name',
+  'last-name',
+  'street',
+  'house-number',
+  'zip',
+  'city',
+  'country',
+  'organization-name',
+  'organization-street',
+  'organization-house-number',
+  'organization-zip',
+  'organization-city',
+  'organization-country',
+  'phone',
   'wallet',
   'wallets',
   'refcode',
@@ -26,6 +41,7 @@ const urlParamsToRemove = [
   'redirect',
   'type',
   'redirect-uri',
+  'auto-start',
   'mode',
   'blockchain',
   'blockchains',
@@ -49,6 +65,21 @@ export interface AppParams {
   address?: string;
   signature?: string;
   mail?: string;
+  accountType?: string;
+  firstName?: string;
+  lastName?: string;
+  street?: string;
+  houseNumber?: string;
+  zip?: string;
+  city?: string;
+  country?: string;
+  organizationName?: string;
+  organizationStreet?: string;
+  organizationHouseNumber?: string;
+  organizationZip?: string;
+  organizationCity?: string;
+  organizationCountry?: string;
+  phone?: string;
   wallet?: string;
   wallets?: string;
   refcode?: string;
@@ -57,6 +88,7 @@ export interface AppParams {
   redirect?: string;
   type?: string;
   redirectUri?: string;
+  autoStart?: string;
   mode?: string;
   blockchain?: string;
   blockchains?: string;
@@ -242,6 +274,21 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           address: getParameter(query, 'address'),
           signature: getParameter(query, 'signature'),
           mail: getParameter(query, 'mail'),
+          accountType: getParameter(query, 'account-type'),
+          firstName: getParameter(query, 'first-name'),
+          lastName: getParameter(query, 'last-name'),
+          street: getParameter(query, 'street'),
+          houseNumber: getParameter(query, 'house-number'),
+          zip: getParameter(query, 'zip'),
+          city: getParameter(query, 'city'),
+          country: getParameter(query, 'country'),
+          organizationName: getParameter(query, 'organization-name'),
+          organizationStreet: getParameter(query, 'organization-street'),
+          organizationHouseNumber: getParameter(query, 'organization-house-number'),
+          organizationZip: getParameter(query, 'organization-zip'),
+          organizationCity: getParameter(query, 'organization-city'),
+          organizationCountry: getParameter(query, 'organization-country'),
+          phone: getParameter(query, 'phone'),
           wallet: getParameter(query, 'wallet'),
           wallets: getParameter(query, 'wallets'),
           refcode: getParameter(query, 'refcode'),
@@ -250,6 +297,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),
           redirectUri: getParameter(query, 'redirect-uri'),
+          autoStart: getParameter(query, 'auto-start'),
           mode: getParameter(query, 'mode'),
           blockchain: Object.values(Blockchain).find(
             (b) => b.toLowerCase() === getParameter(query, 'blockchain')?.toLowerCase(),

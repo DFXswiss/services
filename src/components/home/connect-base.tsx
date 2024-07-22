@@ -89,7 +89,7 @@ export function ConnectBase({
       ? switchBlockchain(account.blockchain)
       : logout().then(() =>
           'session' in account
-            ? setSession(wallet, account.blockchain, account.session)
+            ? setSession(account.session, wallet, account.blockchain)
             : login(
                 wallet,
                 account.address,
