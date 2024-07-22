@@ -29,7 +29,8 @@ export function useKycHelper(): KycHelperInterface {
   const stepMap: Record<KycStepName, string> = {
     [KycStepName.CONTACT_DATA]: 'Contact data',
     [KycStepName.PERSONAL_DATA]: 'Personal data',
-    [KycStepName.NATIONALITY_DATA]: 'Nationality data', // TODO: Add to KycStepName
+    [(KycStepName as any).NATIONALITY_DATA]: 'Nationality data', // TODO: Add to KycStepName
+    [(KycStepName as any).COMMERCIAL_REGISTER]: 'Commercial register', // TODO: Add to KycStepName
     [KycStepName.IDENT]: 'Identification',
     [KycStepName.FINANCIAL_DATA]: 'Additional data',
     [KycStepName.DOCUMENT_UPLOAD]: 'Document upload',

@@ -42,6 +42,7 @@ import {
   StyledDataTableRow,
   StyledDropdown,
   StyledDropdownMultiChoice,
+  StyledFileUpload,
   StyledHorizontalStack,
   StyledIconButton,
   StyledInput,
@@ -62,7 +63,7 @@ import { useGeoLocation } from '../hooks/geo-location.hook';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { delay } from '../util/utils';
+import { delay, toBase64 } from '../util/utils';
 import { IframeMessageType } from './kyc-redirect.screen';
 
 enum Mode {
@@ -422,8 +423,11 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.PERSONAL_DATA:
       return <PersonalData {...props} />;
 
-    case KycStepName.NATIONALITY_DATA:
+    case (KycStepName as any).NATIONALITY_DATA: // TODO: remove any
       return <NationalityData {...props} />;
+
+    case (KycStepName as any).COMMERCIAL_REGISTER: // TODO: remove any
+      return <CommercialRegister {...props} />;
 
     case KycStepName.IDENT:
       return <Ident {...props} />;
@@ -433,6 +437,9 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.DOCUMENT_UPLOAD:
       return <DocumentUpload {...props} />;
+
+    default:
+      return <></>;
   }
 }
 
@@ -764,6 +771,10 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
   );
 }
 
+interface KycNationalityData {
+  country: Country;
+}
+
 function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { getCountries } = useKyc();
@@ -784,10 +795,10 @@ function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack 
     control,
     handleSubmit,
     formState: { isValid, errors },
-  } = useForm<KycPersonalData>({ mode: 'onTouched' });
+  } = useForm<KycNationalityData>({ mode: 'onTouched' });
 
   // TODO: add setNationalityData to useKyc hook
-  function setNationalityData(_code: string, _url: string, _data: KycPersonalData): Promise<KycResult> {
+  function setNationalityData(_code: string, _url: string, _data: KycNationalityData): Promise<KycResult> {
     return new Promise((resolve, _reject) => {
       setTimeout(() => {
         resolve({ status: KycStepStatus.COMPLETED });
@@ -795,7 +806,7 @@ function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack 
     });
   }
 
-  function onSubmit(data: KycPersonalData) {
+  function onSubmit(data: KycNationalityData) {
     if (!step.session) return;
 
     setIsUpdating(true);
@@ -832,6 +843,92 @@ function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack 
               matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
             />
           )}
+        </StyledVerticalStack>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUpdating || isLoading}
+        />
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+interface FormDataRegister {
+  file: File;
+}
+
+interface KycCommercialRegisterData {
+  file: string;
+  fileName?: string;
+}
+
+function CommercialRegister({ rootRef, code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<FormDataRegister>({ mode: 'onTouched' });
+
+  // TODO: add setCommercialRegister to useKyc hook
+  function setCommercialRegister(_code: string, _url: string, _data: KycCommercialRegisterData): Promise<KycResult> {
+    return new Promise((resolve, _reject) => {
+      setTimeout(() => {
+        resolve({ status: KycStepStatus.COMPLETED });
+      }, 1000);
+    });
+  }
+
+  async function onSubmit(data: FormDataRegister) {
+    if (!step.session) return;
+
+    const commercialRegisterData = { file: data.file && (await toBase64(data.file)), fileName: data.file?.name };
+    if (!commercialRegisterData.file) {
+      setError('No file selected');
+      return;
+    }
+
+    setIsUpdating(true);
+    setError(undefined);
+    setCommercialRegister(code, step.session.url, commercialRegisterData as KycCommercialRegisterData)
+      .then(() => (mode === Mode.KYC ? onDone() : onBack()))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    commercialRegister: Validations.Required,
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Commercial Register')}
+          </p>
+          <StyledFileUpload
+            name="commercialRegister"
+            label={translate('screens/support', 'File')}
+            placeholder={translate('general/actions', 'Drop files here')}
+            buttonLabel={translate('general/actions', 'Browse')}
+            full
+          />
         </StyledVerticalStack>
 
         {error && (
