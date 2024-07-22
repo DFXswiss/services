@@ -1,4 +1,4 @@
-import { ApiError, Asset, Blockchain, Fiat, useApi, useUserContext } from '@dfx.swiss/react';
+import { ApiError, Blockchain, PaymentRoutesDto, usePaymentRoutes, useUserContext } from '@dfx.swiss/react';
 import {
   CopyButton,
   StyledDataTable,
@@ -12,77 +12,20 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { ErrorHint } from '../components/error-hint';
 
-export interface MinAmount {
-  amount: number;
-  asset: string;
-}
-
-export interface DepositDto {
-  id: number;
-  address: string;
-  blockchains: Blockchain[];
-}
-
-export interface BuyRoute {
-  id: number;
-  active: boolean;
-  iban: string;
-  asset: Asset;
-  bankUsage: string;
-  volume: number;
-  annualVolume: number;
-  fee: number;
-  minDeposits: MinAmount[];
-  minFee: MinAmount;
-}
-
-export interface SellRoute {
-  id: number;
-  active: boolean;
-  deposit: DepositDto;
-  iban: string;
-  currency: Fiat;
-  volume: number;
-  annualVolume: number;
-  fee: number;
-  minDeposits: MinAmount[];
-  minFee: MinAmount;
-}
-
-export interface SwapRoute {
-  id: number;
-  active: boolean;
-  asset: Asset;
-  deposit: DepositDto;
-  volume: number;
-  annualVolume: number;
-  fee: number;
-  minDeposits: MinAmount[];
-  minFee: MinAmount;
-}
-
-export interface RoutesDto {
-  buy: BuyRoute[];
-  sell: SellRoute[];
-  swap: SwapRoute[];
-}
-
-export type Route = BuyRoute | SellRoute | SwapRoute;
-
 export function PaymentRoutes(): JSX.Element {
-  const { call } = useApi();
   const { translate } = useSettingsContext();
-  const [routes, setRoutes] = useState<RoutesDto>();
+  const [routes, setRoutes] = useState<PaymentRoutesDto>();
   const rootRef = useRef<HTMLDivElement>(null);
   const { user } = useUserContext();
   const { toString } = useBlockchain();
+  const { getPaymentRoutes } = usePaymentRoutes();
 
   const [error, setError] = useState<string>();
 
   useEffect(() => {
     if (!user) return;
-    getRoutes()
-      .then((routes: RoutesDto) => {
+    getPaymentRoutes()
+      .then((routes: PaymentRoutesDto) => {
         routes.buy = routes.buy.filter((route) => route.active);
         routes.sell = routes.sell.filter((route) => route.active);
         routes.swap = routes.swap.filter((route) => route.active);
@@ -90,10 +33,6 @@ export function PaymentRoutes(): JSX.Element {
       })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   }, [user]);
-
-  async function getRoutes(): Promise<RoutesDto> {
-    return call({ url: '/route', method: 'GET' });
-  }
 
   return (
     <Layout title={translate('screens/payment', 'Payment routes')} onBack={undefined} textStart rootRef={rootRef}>
