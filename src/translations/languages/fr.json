@@ -311,7 +311,7 @@
     "Reference": "Objet du paiement",
     "Transaction Details": "Détails de la transaction",
     "Asset": "Actif",
-    "Deposit Address": "Adresse de dépôt",
+    "Deposit address": "Adresse de dépôt",
     "Beneficiary bank account": "Compte bancaire du bénéficiaire",
     "Beneficiary name": "Nom du bénéficiaire",
 
@@ -357,6 +357,7 @@
 
     "Failure reason": "Cause de l'erreur",
     "Unknown": "Inconnu",
+    "Annual volume": "Volume annuel",
     "Daily limit exceeded": "Limite journalière dépassée",
     "Annual limit exceeded": "Limite annuelle dépassée",
     "Account holder mismatch": "Le titulaire du compte ne correspond pas",
@@ -401,6 +402,9 @@
     "The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.": "Le taux de change de {{rate}} {{currency}}/{{asset}} est fixé pour {{timer}}, après quoi il sera recalculé.",
     "Please send the specified amount to the address below.": "Veuillez envoyer le montant spécifié à l'adresse ci-dessous.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales.",
+
+    "Payment routes": "Itinéraires de paiement",
+    "Purpose of payment": "Objet du paiement",
 
     "Cointracking": "Cointracking",
     "Saved": "Enregistré",

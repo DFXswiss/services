@@ -21,6 +21,7 @@ import { KycRedirectScreen } from './screens/kyc-redirect.screen';
 import { KycScreen } from './screens/kyc.screen';
 import { LimitScreen } from './screens/limit.screen';
 import { LinkScreen } from './screens/link.screen';
+import { PaymentRoutes } from './screens/payment-routes.screen';
 import { SellInfoScreen } from './screens/sell-info.screen';
 import { SupportIssueScreen } from './screens/support-issue.screen';
 import { SupportScreen } from './screens/support.screen';
@@ -83,6 +84,10 @@ export const Routes = [
   {
     path: '/swap',
     element: withSuspense(<SwapScreen />),
+  },
+  {
+    path: '/routes',
+    element: <PaymentRoutes />,
   },
   {
     path: '/kyc',
