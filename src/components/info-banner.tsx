@@ -4,24 +4,30 @@ import { useEffect, useState } from 'react';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useStore } from 'src/hooks/store.hook';
 
+const testBanner = { de: 'A new message DE', en: 'A new message EN', fr: 'A new message FR', it: 'A new message IT' };
+
 export function InfoBannerComponent(): JSX.Element {
   const { infoBanner: infoBannerStore } = useStore();
   const { getInfoBanner } = useSettings();
   const { language } = useSettingsContext();
 
   const [bannerText, setBannerText] = useState<string>();
+  const [hash, setHash] = useState<string | undefined>(infoBannerStore.get());
 
   useEffect(() => {
-    if (language && infoBannerStore.get() === undefined) {
+    if (language) {
       getInfoBanner().then((infoBanner) => {
-        setBannerText(infoBanner?.[language.symbol.toLowerCase() as keyof InfoBanner]);
+        if (infoBanner?.en === hash) return;
+        setBannerText(infoBanner?.[language.symbol.toLowerCase() as keyof InfoBanner] ?? infoBanner?.en);
+        setHash(infoBanner?.en);
+        infoBannerStore.remove();
       });
     }
   }, [language]);
 
   function closeBanner() {
     setBannerText(undefined);
-    infoBannerStore.set('hidden');
+    hash && infoBannerStore.set(hash);
   }
 
   return bannerText ? (
