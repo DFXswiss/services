@@ -1,3 +1,4 @@
+import { InfoBanner } from '@dfx.swiss/react';
 import { AppParams } from '../contexts/app-handling.context';
 import { WalletType } from '../contexts/wallet.context';
 
@@ -12,7 +13,7 @@ export interface StoreInterface {
   balances: StoreItem<string>;
   language: StoreItem<string>;
   activeWallet: StoreItem<WalletType>;
-  infoBanner: StoreItem<string>;
+  infoBanner: StoreItem<InfoBanner>;
   queryParams: StoreItem<AppParams>;
 }
 
@@ -72,8 +73,8 @@ export function useStore(): StoreInterface {
       remove: () => remove(StoreKey.ACTIVE_WALLET),
     },
     infoBanner: {
-      get: () => get(StoreKey.INFO_BANNER),
-      set: (value: string) => set(StoreKey.INFO_BANNER, value),
+      get: () => getJson(StoreKey.INFO_BANNER),
+      set: (value: InfoBanner) => setJson(StoreKey.INFO_BANNER, value),
       remove: () => remove(StoreKey.INFO_BANNER),
     },
     queryParams: {

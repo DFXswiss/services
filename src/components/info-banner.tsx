@@ -9,28 +9,26 @@ export function InfoBannerComponent(): JSX.Element {
   const { getInfoBanner } = useSettings();
   const { language } = useSettingsContext();
 
-  const [bannerText, setBannerText] = useState<string>();
-  const [hash, setHash] = useState<string | undefined>(infoBannerStore.get());
+  const [infoBanner, setInfoBanner] = useState<InfoBanner>();
 
   useEffect(() => {
-    if (language) {
-      getInfoBanner().then((infoBanner) => {
-        if (infoBanner?.en === hash) return;
-        setBannerText(infoBanner?.[language.symbol.toLowerCase() as keyof InfoBanner] ?? infoBanner?.en);
-        setHash(infoBanner?.en);
-        infoBannerStore.remove();
-      });
-    }
-  }, [language]);
+    getInfoBanner().then((infoBanner) => {
+      if (JSON.stringify(infoBanner) === JSON.stringify(infoBannerStore.get())) return;
+      setInfoBanner(infoBanner);
+      infoBannerStore.remove();
+    });
+  }, []);
 
   function closeBanner() {
-    setBannerText(undefined);
-    hash && infoBannerStore.set(hash);
+    setInfoBanner(undefined);
+    infoBanner && infoBannerStore.set(infoBanner);
   }
 
-  return bannerText ? (
+  return infoBanner ? (
     <div className="flex flex-row justify-center items-center w-full p-3.5 bg-dfxRed-100">
-      <p className="font-semibold text-sm px-8">{bannerText}</p>
+      <p className="font-semibold text-sm px-8">
+        {infoBanner?.[language?.symbol.toLowerCase() as keyof InfoBanner] ?? infoBanner?.en}
+      </p>
       <div onClick={() => closeBanner()} className="absolute right-4">
         <DfxIcon icon={IconVariant.CLOSE} color={IconColor.WHITE} />
       </div>
