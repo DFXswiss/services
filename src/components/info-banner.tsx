@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useStore } from 'src/hooks/store.hook';
 
-const testBanner = { de: 'A new message DE', en: 'A new message EN', fr: 'A new message FR', it: 'A new message IT' };
-
 export function InfoBannerComponent(): JSX.Element {
   const { infoBanner: infoBannerStore } = useStore();
   const { getInfoBanner } = useSettings();
