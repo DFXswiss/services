@@ -29,7 +29,7 @@ export function InfoBannerComponent(): JSX.Element {
       <p className="font-semibold text-sm px-8">
         {infoBanner?.[language?.symbol.toLowerCase() as keyof InfoBanner] ?? infoBanner?.en}
       </p>
-      <div onClick={() => closeBanner()} className="absolute right-4">
+      <div onClick={() => closeBanner()} className="absolute right-4 cursor-pointer">
         <DfxIcon icon={IconVariant.CLOSE} color={IconColor.WHITE} />
       </div>
     </div>
