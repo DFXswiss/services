@@ -6,7 +6,6 @@ import {
   useLanguage,
   useLanguageContext,
   UserData,
-  useUser,
   useUserContext,
 } from '@dfx.swiss/react';
 import browserLang from 'browser-lang';
@@ -49,7 +48,12 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { languages } = useLanguageContext();
   const { currencies } = useFiatContext();
   const { getDefaultLanguage } = useLanguage();
-  const { user, changeLanguage: changeUserLanguage, changeMail: changeUserMail } = useUserContext();
+  const {
+    user,
+    changeLanguage: changeUserLanguage,
+    changeMail: changeUserMail,
+    changeCurrency: changeUserCurrency,
+  } = useUserContext();
   const { language: storedLanguage } = useStore();
   const { getCountries, setData } = useKyc();
   const {
@@ -74,7 +78,6 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   } = useAppParams();
   const { isInitialized } = useAppHandlingContext();
   const { t } = useTranslation();
-  const { changeUser } = useUser();
 
   const [language, setLanguage] = useState<Language>();
   const [currency, setCurrency] = useState<Fiat>();
@@ -172,7 +175,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   function changeCurrency(newCurrency: Fiat) {
     if (!currencies?.some((c) => c.id === newCurrency.id) || currency?.id === newCurrency.id) return;
 
-    changeUser({ currency: newCurrency } as any);
+    changeUserCurrency(newCurrency);
   }
 
   function translate(key: string, defaultValue: string, interpolation?: Record<string, string | number>): string {

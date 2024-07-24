@@ -86,7 +86,7 @@ interface CustomAmountError {
 export default function SellScreen(): JSX.Element {
   useAddressGuard();
 
-  const { translate, translateError } = useSettingsContext();
+  const { translate, translateError, currency: prefCurrency } = useSettingsContext();
   const { isInitialized, closeServices } = useAppHandlingContext();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
@@ -184,9 +184,9 @@ export default function SellScreen(): JSX.Element {
   }, [assetIn, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
-    const currency = getCurrency(currencies, assetOut) ?? getDefaultCurrency(currencies);
+    const currency = getCurrency(currencies, assetOut) ?? getCurrency(currencies, prefCurrency?.name);
     if (currency) setVal('currency', currency);
-  }, [assetOut, getCurrency, currencies]);
+  }, [assetOut, getCurrency, prefCurrency, currencies]);
 
   useEffect(() => {
     if (amountIn) setVal('amount', amountIn);

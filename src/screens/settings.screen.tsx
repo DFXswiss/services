@@ -1,4 +1,4 @@
-import { Fiat, Language, useApiSession, useFiatContext, useUser, useUserContext } from '@dfx.swiss/react';
+import { Fiat, Language, useFiatContext, useUserContext } from '@dfx.swiss/react';
 import {
   AlignContent,
   DfxIcon,
@@ -34,8 +34,7 @@ export default function SettingsScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { activeWallet } = useStore();
   const { width } = useWindowContext();
-  const { changeUserAddress, deleteUserAddress, deleteUserAccount, renameUserAddress } = useUser();
-  const { updateSession, deleteSession } = useApiSession();
+  const { deleteAddress, deleteAccount, renameAddress } = useUserContext();
 
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -84,59 +83,30 @@ export default function SettingsScreen(): JSX.Element {
     document.addEventListener('mousedown', handleClick);
 
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [menuRef]);
+  }, [menuAddress, menuRef]);
 
   function toggleMenuAddress(address?: string) {
     setMenuAddress((menuAddress) => (menuAddress !== address ? address : undefined));
   }
 
   async function onCloseOverlay(result?: any): Promise<void> {
-    if (result) {
+    if (menuAddress && result) {
       switch (overlayType) {
         case OverlayType.DELETE_ADDRESS:
-          // onDeleteAddress(result);
+          deleteAddress(menuAddress);
+          menuAddress === user?.activeAddress?.address && activeWallet.remove();
           break;
         case OverlayType.DELETE_ACCOUNT:
-          // onDeleteAccount();
+          deleteAccount();
+          activeWallet.remove();
           break;
         case OverlayType.RENAME_ADDRESS:
-          await renameAddress(result);
+          await renameAddress(menuAddress, result);
           break;
       }
     }
     setOverlayType(OverlayType.NONE);
     toggleMenuAddress();
-  }
-
-  async function onDeleteAddress(_address?: string): Promise<void> {
-    // TODO: Support address parameter
-    deleteUserAddress().then(() => {
-      if (user!.addresses.length > 0) {
-        onSwitchUser(user!.addresses[0].address);
-      } else {
-        deleteSession();
-        activeWallet.remove();
-      }
-    });
-  }
-
-  async function onDeleteAccount(): Promise<void> {
-    deleteUserAccount().then(() => {
-      deleteSession();
-      activeWallet.remove();
-    });
-  }
-
-  async function onSwitchUser(address: string): Promise<void> {
-    changeUserAddress(address).then(({ accessToken }) => {
-      updateSession(accessToken);
-      activeWallet.remove();
-    });
-  }
-
-  async function renameAddress(label: string): Promise<void> {
-    if (!menuAddress) return;
-    await renameUserAddress(menuAddress, label);
   }
 
   const title = OverlayHeader[overlayType]
@@ -208,7 +178,7 @@ export default function SettingsScreen(): JSX.Element {
                           >
                             {translate('general/actions', 'Copy')}
                           </button>
-                          <button
+                          {/* <button
                             className="hover:bg-dfxGray-300  w-full text-left px-4 py-2"
                             onClick={() => {
                               console.log('open explorer');
@@ -216,7 +186,7 @@ export default function SettingsScreen(): JSX.Element {
                             }}
                           >
                             {translate('general/actions', 'Open Explorer')}
-                          </button>
+                          </button> */}
                           <button
                             className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
                             onClick={() => setOverlayType(OverlayType.RENAME_ADDRESS)}

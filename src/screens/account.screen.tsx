@@ -29,6 +29,7 @@ import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { useStore } from 'src/hooks/store.hook';
 import { blankedAddress } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -46,12 +47,12 @@ export default function AccountScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
+  const { activeWallet } = useStore();
   const { getRef } = useUser();
   const { width } = useWindowContext();
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
-  const { changeUserAddress } = useUser();
-  const { setSession } = useWalletContext();
+  const { changeAddress } = useUserContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
@@ -80,7 +81,11 @@ export default function AccountScreen(): JSX.Element {
 
   useEffect(() => {
     if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address) {
-      onSwitchUser(selectedAddress.address);
+      changeAddress(selectedAddress.address)
+        .then(() => activeWallet.remove())
+        .catch(() => {
+          // ignore errors
+        });
     }
   }, [selectedAddress]);
 
@@ -109,11 +114,6 @@ export default function AccountScreen(): JSX.Element {
       .catch(() => {
         // ignore errors
       });
-  }
-
-  async function onSwitchUser(address: string): Promise<void> {
-    const { accessToken } = await changeUserAddress(address);
-    setSession(accessToken);
   }
 
   const title = isEmbedded ? translate('screens/home', 'DFX services') : translate('screens/home', 'Account');

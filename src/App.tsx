@@ -44,11 +44,11 @@ export const Routes = [
   },
   {
     path: '/account',
-    element: <AccountScreen />,
+    element: withSuspense(<AccountScreen />),
   },
   {
     path: 'settings',
-    element: <SettingsScreen />,
+    element: withSuspense(<SettingsScreen />),
   },
   {
     path: '/login',
@@ -64,7 +64,7 @@ export const Routes = [
   },
   {
     path: '/buy',
-    element: <BuyScreen />,
+    element: withSuspense(<BuyScreen />),
   },
   {
     path: '/buy/info',
