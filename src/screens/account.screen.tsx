@@ -3,7 +3,6 @@ import {
   Referral,
   UserAddress,
   Utils,
-  useApiSession,
   useSessionContext,
   useTransaction,
   useUser,
@@ -26,10 +25,10 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { useStore } from 'src/hooks/store.hook';
 import { blankedAddress } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -40,7 +39,7 @@ interface FormData {
   address: UserAddress;
 }
 
-export function AccountScreen(): JSX.Element {
+export default function AccountScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
   const { limitToString, levelToString } = useKycHelper();
@@ -48,11 +47,11 @@ export function AccountScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
   const { getRef } = useUser();
-  const { canClose, isEmbedded, width } = useAppHandlingContext();
+  const { width } = useWindowContext();
+  const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
-  const { activeWallet } = useStore();
   const { changeUserAddress } = useUser();
-  const { updateSession } = useApiSession();
+  const { setSession } = useWalletContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
@@ -114,13 +113,12 @@ export function AccountScreen(): JSX.Element {
 
   async function onSwitchUser(address: string): Promise<void> {
     const { accessToken } = await changeUserAddress(address);
-    updateSession(accessToken);
-    activeWallet.remove();
+    setSession(accessToken);
   }
 
   const title = isEmbedded ? translate('screens/home', 'DFX services') : translate('screens/home', 'Account');
-  const hasBackButton = Boolean(canClose && !isEmbedded);
-  const image = 'https://content.dfx.swiss/img/v1/services/berge.png';
+  const hasBackButton = canClose && !isEmbedded;
+  const image = 'https://content.dfx.swiss/img/v1/services/berge.jpg';
 
   const transactionItems = transactions?.map((t) => ({
     label: new Date(t.date as Date).toLocaleString(),

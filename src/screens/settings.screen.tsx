@@ -15,8 +15,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { OverlayContent, OverlayHeader, OverlayType } from 'src/components/home/address-delete';
 import { Layout } from 'src/components/layout';
-import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useWindowContext } from 'src/contexts/window.context';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useStore } from 'src/hooks/store.hook';
 import { blankedAddress } from 'src/util/utils';
@@ -26,14 +26,14 @@ interface FormData {
   currency: Fiat;
 }
 
-export function SettingsScreen(): JSX.Element {
+export default function SettingsScreen(): JSX.Element {
   const { translate, language, currency, availableLanguages, changeLanguage, changeCurrency } = useSettingsContext();
   const { currencies } = useFiatContext();
   const { user } = useUserContext();
   const { copy } = useClipboard();
   const rootRef = useRef<HTMLDivElement>(null);
   const { activeWallet } = useStore();
-  const { width } = useAppHandlingContext();
+  const { width } = useWindowContext();
   const { changeUserAddress, deleteUserAddress, deleteUserAccount, renameUserAddress } = useUser();
   const { updateSession, deleteSession } = useApiSession();
 

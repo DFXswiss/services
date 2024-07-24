@@ -14,8 +14,8 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
-import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useTxHelper } from 'src/hooks/tx-helper.hook';
@@ -78,7 +78,7 @@ function PaymentInformationText({
   const { copy } = useClipboard();
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
-  const { width } = useAppHandlingContext();
+  const { width } = useWindowContext();
   const [showContract, setShowContract] = useState(false);
 
   const asset = 'asset' in paymentInfo ? paymentInfo.asset : paymentInfo.sourceAsset;

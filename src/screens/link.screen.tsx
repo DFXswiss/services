@@ -32,7 +32,7 @@ import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from '../hooks/navigation.hook';
 
-export function LinkScreen(): JSX.Element {
+export default function LinkScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { getKycInfo, continueKyc, setContactData } = useKyc();
   const { user, reloadUser } = useUserContext();

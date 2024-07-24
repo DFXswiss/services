@@ -22,7 +22,7 @@ import { useClipboard } from '../hooks/clipboard.hook';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
-export function TfaScreen(): JSX.Element {
+export default function TfaScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { user } = useUserContext();
   const { getKycInfo, setup2fa, verify2fa } = useKyc();

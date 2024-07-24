@@ -313,7 +313,7 @@
     "Reference": "Objet du paiement",
     "Transaction Details": "Détails de la transaction",
     "Asset": "Actif",
-    "Deposit Address": "Adresse de dépôt",
+    "Deposit address": "Adresse de dépôt",
     "Beneficiary bank account": "Compte bancaire du bénéficiaire",
     "Beneficiary name": "Nom du bénéficiaire",
 
@@ -359,6 +359,7 @@
 
     "Failure reason": "Cause de l'erreur",
     "Unknown": "Inconnu",
+    "Annual volume": "Volume annuel",
     "Daily limit exceeded": "Limite journalière dépassée",
     "Annual limit exceeded": "Limite annuelle dépassée",
     "Account holder mismatch": "Le titulaire du compte ne correspond pas",
@@ -404,14 +405,17 @@
     "Please send the specified amount to the address below.": "Veuillez envoyer le montant spécifié à l'adresse ci-dessous.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales.",
 
+    "Payment routes": "Itinéraires de paiement",
+    "Purpose of payment": "Objet du paiement",
+
     "Cointracking": "Cointracking",
     "Saved": "Enregistré",
     "Cointracking Link (read rights)": "Lien Cointracking (droits de lecture)",
     "Cointracking homepage": "Page d'accueil Cointracking",
     "You can link your DFX account to your Cointracking account.": "Vous pouvez lier votre compte DFX à votre compte Cointracking.",
     "Generate API key": "Générer une clé API",
-    "API key": "Clé API",
-    "API secret": "Secret API",
+    "API key": "API-key",
+    "API secret": "API-secret",
     "Delete API key": "Supprimer la clé API",
     "Import filter": "Filtre d'importation",
     "All": "Tous",

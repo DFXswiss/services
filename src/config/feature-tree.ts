@@ -1602,7 +1602,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin',
     header: 'Frankencoin',
     description: 'Buy and sell Frankencoin Assets',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'buy',
@@ -1636,7 +1636,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy',
     header: 'Blockchain',
     description: 'Select a blockchain to buy Frankencoin Assets',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'ethereum',
@@ -1673,7 +1673,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-sell',
     header: 'Blockchain',
     description: 'Select a blockchain to sell Frankencoin Assets',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'ethereum',
@@ -1710,7 +1710,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy-ethereum',
     header: 'Buy Frankencoin Assets on Ethereum',
     description: 'Buy Frankencoin Assets on Ethereum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'eth',
@@ -1767,7 +1767,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy-polygon',
     header: 'Buy Frankencoin Assets on Ethereum',
     description: 'Buy Frankencoin Assets on Ethereum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'matic',
@@ -1824,7 +1824,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy-arbitrum',
     header: 'Buy Frankencoin Assets on Ethereum',
     description: 'Buy Frankencoin Assets on Ethereum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'eth',
@@ -1874,7 +1874,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy-optimism',
     header: 'Buy Frankencoin Assets on Ethereum',
     description: 'Buy Frankencoin Assets on Ethereum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'eth',
@@ -1924,7 +1924,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-sell-ethereum',
     header: 'Sell Frankencoin Assets on Ethereum',
     description: 'Sell Frankencoin Assets on Ethereum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'eth',
@@ -1981,7 +1981,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-sell-polygon',
     header: 'Sell Frankencoin Assets on Ethereum',
     description: 'Sell Frankencoin Assets on Ethereum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'matic',
@@ -2038,7 +2038,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-sell-arbitrum',
     header: 'Sell Frankencoin Assets on Ethereum',
     description: 'Sell Frankencoin Assets on Ethereum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'matic',
@@ -2088,7 +2088,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-sell-optimism',
     header: 'Sell Frankencoin Assets on Ethereum',
     description: 'Sell Frankencoin Assets on Ethereum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'matic',
@@ -2138,7 +2138,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-wallets',
     header: 'Frankencoin Assets on Ethereum',
     description: 'Buy and Sell Frankencoin Assets on Ethereum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'metamask',
@@ -2178,7 +2178,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-hw-wallets',
     header: 'Frankencoin Assets on Ethereum',
     description: 'Buy and Sell Frankencoin Assets on Ethereum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
         id: 'bitbox',
@@ -3658,7 +3658,7 @@ export const FeatureTree: Page[] = [
     id: 'onramper',
     header: 'OnRamper x DFX',
     description: 'Buy and sell crypto directly into your wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/OnRamper.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/OnRamper.jpg',
     tiles: [
       {
         id: 'dfx-wallet',
@@ -4802,7 +4802,7 @@ export const FeatureTree: Page[] = [
     id: 'chainreport',
     header: 'Chainreport x DFX',
     description: 'Buy and sell Crypto directly on your Account!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/chainreport.png',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/chainreport.jpg',
     tiles: [
       {
         id: 'buy',

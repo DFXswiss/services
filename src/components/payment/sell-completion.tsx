@@ -12,6 +12,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
+import { useWindowContext } from 'src/contexts/window.context';
 import { CloseType, useAppHandlingContext } from '../../contexts/app-handling.context';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { useClipboard } from '../../hooks/clipboard.hook';
@@ -26,7 +27,8 @@ interface SellCompletionProps {
 export function SellCompletion({ paymentInfo, navigateOnClose, txId }: SellCompletionProps): JSX.Element {
   const { copy } = useClipboard();
   const { translate } = useSettingsContext();
-  const { closeServices, width } = useAppHandlingContext();
+  const { closeServices } = useAppHandlingContext();
+  const { width } = useWindowContext();
 
   const [isClosed, setIsClosed] = useState(false);
 

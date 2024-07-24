@@ -1,7 +1,6 @@
 import {
   Fiat,
   Language,
-  useFiat,
   useFiatContext,
   useKyc,
   useLanguage,
@@ -50,7 +49,6 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { languages } = useLanguageContext();
   const { currencies } = useFiatContext();
   const { getDefaultLanguage } = useLanguage();
-  const { getDefaultCurrency } = useFiat();
   const { user, changeLanguage: changeUserLanguage, changeMail: changeUserMail } = useUserContext();
   const { language: storedLanguage } = useStore();
   const { getCountries, setData } = useKyc();
@@ -90,7 +88,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     const browserLanguage = browserLang({ languages: appLanguages.map((l) => l.toLowerCase()), fallback: 'en' });
     const customLanguage =
       lang?.toUpperCase() ?? user?.language.symbol ?? storedLanguage.get() ?? browserLanguage.toUpperCase();
-    const customCurrency = (user as any)?.currency; // ?? getDefaultCurrency(currencies);
+    const customCurrency = (user as any)?.currency;
     const newAppLanguage =
       availableLanguages.find((l) => l.symbol === customLanguage) ?? getDefaultLanguage(availableLanguages);
 

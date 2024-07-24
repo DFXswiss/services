@@ -38,6 +38,8 @@ import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
+import { useWindowContext } from 'src/contexts/window.context';
+import { blankedAddress } from 'src/util/utils';
 import { NameEdit } from '../components/edit/name.edit';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
@@ -56,7 +58,6 @@ import { useBlockchain } from '../hooks/blockchain.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { blankedAddress } from '../util/utils';
 
 interface Address {
   address: string;
@@ -74,7 +75,7 @@ interface FormData {
 
 const EmbeddedWallet = 'CakeWallet';
 
-export function BuyScreen(): JSX.Element {
+export default function BuyScreen(): JSX.Element {
   useAddressGuard();
 
   const { translate, translateError } = useSettingsContext();
@@ -105,7 +106,8 @@ export function BuyScreen(): JSX.Element {
   const scrollRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const { toString } = useBlockchain();
-  const { isEmbedded, isDfxHosted, isInitialized, width } = useAppHandlingContext();
+  const { width } = useWindowContext();
+  const { isEmbedded, isDfxHosted, isInitialized } = useAppHandlingContext();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
@@ -144,7 +146,7 @@ export function BuyScreen(): JSX.Element {
     session?.address && blockchains?.length
       ? [
           ...blockchains.map((b) => ({
-            address: blankedAddress(session.address ?? '', { width }),
+            address: session.address ?? '',
             label: toString(b),
             chain: b,
           })),
@@ -476,7 +478,7 @@ export function BuyScreen(): JSX.Element {
                       rootRef={rootRef}
                       name="address"
                       items={addressItems}
-                      labelFunc={(item) => item.address}
+                      labelFunc={(item) => blankedAddress(item.address, { width })}
                       descriptionFunc={(item) => item.label}
                       full
                       forceEnable

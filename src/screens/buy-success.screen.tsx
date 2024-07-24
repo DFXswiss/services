@@ -10,7 +10,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
-export function BuySuccessScreen(): JSX.Element {
+export default function BuySuccessScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { user } = useUserContext();

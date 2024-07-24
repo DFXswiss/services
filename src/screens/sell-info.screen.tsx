@@ -54,7 +54,7 @@ interface Timer {
   seconds: number;
 }
 
-export function SellInfoScreen(): JSX.Element {
+export default function SellInfoScreen(): JSX.Element {
   useAddressGuard();
 
   const { translate } = useSettingsContext();
