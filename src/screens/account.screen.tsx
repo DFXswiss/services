@@ -138,7 +138,7 @@ export default function AccountScreen(): JSX.Element {
     ? translate('screens/home', 'DFX services')
     : translate('screens/home', 'Account');
   const hasBackButton = showWalletDeleteOverlay || (canClose && !isEmbedded);
-  const image = 'https://content.dfx.swiss/img/v1/services/berge.png';
+  const image = 'https://content.dfx.swiss/img/v1/services/berge.jpg';
 
   const transactionItems = transactions?.map((t) => ({
     label: new Date(t.date as Date).toLocaleString(),

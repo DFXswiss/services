@@ -131,7 +131,7 @@ export default function HomeScreen(): JSX.Element {
   const title = translate('screens/home', currentPage?.header ?? (currentPage?.dfxStyle ? 'DFX services' : ' '));
   const image =
     currentPage?.bottomImage ??
-    (currentPage?.dfxStyle ? 'https://content.dfx.swiss/img/v1/services/berge.png' : undefined);
+    (currentPage?.dfxStyle ? 'https://content.dfx.swiss/img/v1/services/berge.jpg' : undefined);
 
   const hasBackButton =
     (canClose && !isEmbedded) || connectTo != null || (currentPageId != null && currentPageId !== appParams.mode);
