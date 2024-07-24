@@ -1,4 +1,4 @@
-import { Fiat, Language, useApiSession, useBuy, useUser, useUserContext } from '@dfx.swiss/react';
+import { Fiat, Language, useApiSession, useFiatContext, useUser, useUserContext } from '@dfx.swiss/react';
 import {
   AlignContent,
   DfxIcon,
@@ -13,7 +13,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { DeleteOverlay, DeleteOverlayType } from 'src/components/home/address-delete';
+import { OverlayContent, OverlayHeader, OverlayType } from 'src/components/home/address-delete';
 import { Layout } from 'src/components/layout';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -27,20 +27,20 @@ interface FormData {
 }
 
 export function SettingsScreen(): JSX.Element {
-  const { translate, language, availableLanguages, changeLanguage } = useSettingsContext();
+  const { translate, language, currency, availableLanguages, changeLanguage, changeCurrency } = useSettingsContext();
+  const { currencies } = useFiatContext();
   const { user } = useUserContext();
-  const { currencies } = useBuy();
   const { copy } = useClipboard();
   const rootRef = useRef<HTMLDivElement>(null);
   const { activeWallet } = useStore();
   const { width } = useAppHandlingContext();
-  const { changeUserAddress, deleteUserAddress, deleteUserAccount } = useUser();
+  const { changeUserAddress, deleteUserAddress, deleteUserAccount, renameUserAddress } = useUser();
   const { updateSession, deleteSession } = useApiSession();
 
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  const [showMenu, setShowMenu] = useState<string>();
-  const [showDeleteOverlay, setShowDeleteOverlay] = useState<DeleteOverlayType>(DeleteOverlayType.NONE);
+  const [menuAddress, setMenuAddress] = useState<string>();
+  const [overlayType, setOverlayType] = useState<OverlayType>(OverlayType.NONE);
 
   const {
     control,
@@ -51,12 +51,16 @@ export function SettingsScreen(): JSX.Element {
   const selectedCurrency = useWatch({ control, name: 'currency' });
 
   useEffect(() => {
+    if (user) console.log('Current user', user);
+  }, [user]);
+
+  useEffect(() => {
     if (language && !selectedLanguage) setValue('language', language);
   }, [language]);
 
   useEffect(() => {
-    if (currencies && !selectedCurrency) setValue('currency', currencies[0]);
-  }, [currencies]);
+    if (currency && !selectedCurrency) setValue('currency', currency);
+  }, [currency]);
 
   useEffect(() => {
     if (selectedLanguage && selectedLanguage?.id !== language?.id) {
@@ -65,9 +69,15 @@ export function SettingsScreen(): JSX.Element {
   }, [selectedLanguage]);
 
   useEffect(() => {
+    if (selectedCurrency && selectedCurrency?.id !== currency?.id) {
+      changeCurrency(selectedCurrency);
+    }
+  }, [selectedCurrency]);
+
+  useEffect(() => {
     function handleClick(event: MouseEvent) {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        setShowMenu(undefined);
+      if (menuAddress && !menuRef.current?.contains(event.target as Node)) {
+        toggleMenuAddress();
       }
     }
 
@@ -76,26 +86,26 @@ export function SettingsScreen(): JSX.Element {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [menuRef]);
 
-  function toggleMenu(address: string) {
-    if (showMenu === address) {
-      setShowMenu(undefined);
-    } else {
-      setShowMenu(address);
-    }
+  function toggleMenuAddress(address?: string) {
+    setMenuAddress((menuAddress) => (menuAddress !== address ? address : undefined));
   }
 
-  async function onDelete(response: boolean): Promise<void> {
-    if (response) {
-      switch (showDeleteOverlay) {
-        case DeleteOverlayType.ADDRESS:
-          onDeleteAddress();
+  async function onCloseOverlay(result?: any): Promise<void> {
+    if (result) {
+      switch (overlayType) {
+        case OverlayType.DELETE_ADDRESS:
+          // onDeleteAddress(result);
           break;
-        case DeleteOverlayType.ACCOUNT:
-          onDeleteAccount();
+        case OverlayType.DELETE_ACCOUNT:
+          // onDeleteAccount();
+          break;
+        case OverlayType.RENAME_ADDRESS:
+          await renameAddress(result);
           break;
       }
     }
-    setShowDeleteOverlay(DeleteOverlayType.NONE);
+    setOverlayType(OverlayType.NONE);
+    toggleMenuAddress();
   }
 
   async function onDeleteAddress(_address?: string): Promise<void> {
@@ -124,21 +134,19 @@ export function SettingsScreen(): JSX.Element {
     });
   }
 
-  const title =
-    showDeleteOverlay === DeleteOverlayType.ADDRESS
-      ? `${translate('general/actions', 'Delete Address')}?`
-      : showDeleteOverlay === DeleteOverlayType.ACCOUNT
-      ? `${translate('general/actions', 'Delete Account')}?`
-      : translate('screens/settings', 'Settings');
+  async function renameAddress(label: string): Promise<void> {
+    if (!menuAddress) return;
+    await renameUserAddress(menuAddress, label);
+  }
+
+  const title = OverlayHeader[overlayType]
+    ? `${translate('general/actions', OverlayHeader[overlayType])}?`
+    : translate('screens/settings', 'Settings');
 
   return (
-    <Layout
-      title={title}
-      rootRef={rootRef}
-      onBack={showDeleteOverlay ? () => setShowDeleteOverlay(DeleteOverlayType.NONE) : undefined}
-    >
-      {showDeleteOverlay ? (
-        <DeleteOverlay type={showDeleteOverlay} onClose={onDelete} address={user?.activeAddress?.address} />
+    <Layout title={title} rootRef={rootRef} onBack={overlayType ? () => setOverlayType(OverlayType.NONE) : undefined}>
+      {overlayType ? (
+        <OverlayContent type={overlayType} onClose={onCloseOverlay} address={menuAddress} />
       ) : (
         <StyledVerticalStack full gap={8}>
           <StyledVerticalStack full gap={4}>
@@ -172,7 +180,7 @@ export function SettingsScreen(): JSX.Element {
                 <StyledDataTableRow key={address.address}>
                   <div className="flex flex-col items-start gap-1">
                     <div className="flex flex-row gap-2 font-semibold">
-                      {address.wallet}
+                      {(address as any).label ?? address.wallet}
                       {address.address === user.activeAddress?.address && (
                         <div className="flex bg-dfxGray-400 font-bold rounded-sm px-1.5 text-2xs items-center justify-center">
                           {translate('screens/settings', 'Active').toUpperCase()}
@@ -182,10 +190,10 @@ export function SettingsScreen(): JSX.Element {
                     <div className="text-xs text-dfxGray-700">{blankedAddress(address.address, { width })}</div>
                   </div>
                   <div className="relative flex items-center">
-                    <button onClick={() => toggleMenu(address.address)}>
+                    <button onClick={() => toggleMenuAddress(address.address)}>
                       <DfxIcon icon={IconVariant.THREE_DOTS_VERT} color={IconColor.BLUE} />
                     </button>
-                    {showMenu === address.address && (
+                    {menuAddress === address.address && (
                       <div
                         ref={menuRef}
                         className="absolute right-5 top-3 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip"
@@ -195,7 +203,7 @@ export function SettingsScreen(): JSX.Element {
                             className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
                             onClick={() => {
                               copy(address.address);
-                              setShowMenu(undefined);
+                              toggleMenuAddress();
                             }}
                           >
                             {translate('general/actions', 'Copy')}
@@ -204,26 +212,20 @@ export function SettingsScreen(): JSX.Element {
                             className="hover:bg-dfxGray-300  w-full text-left px-4 py-2"
                             onClick={() => {
                               console.log('open explorer');
-                              setShowMenu(undefined);
+                              toggleMenuAddress();
                             }}
                           >
                             {translate('general/actions', 'Open Explorer')}
                           </button>
                           <button
                             className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-                            onClick={() => {
-                              console.log('rename address');
-                              setShowMenu(undefined);
-                            }}
+                            onClick={() => setOverlayType(OverlayType.RENAME_ADDRESS)}
                           >
                             {translate('general/actions', 'Rename')}
                           </button>
                           <button
                             className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-                            onClick={() => {
-                              setShowDeleteOverlay(DeleteOverlayType.ADDRESS);
-                              setShowMenu(undefined);
-                            }}
+                            onClick={() => setOverlayType(OverlayType.DELETE_ADDRESS)}
                           >
                             {translate('general/actions', 'Delete')}
                           </button>
@@ -235,8 +237,8 @@ export function SettingsScreen(): JSX.Element {
               ))}
             </StyledDataTable>
             <StyledButton
-              label={translate('general/actions', 'Delete Account')}
-              onClick={() => setShowDeleteOverlay(DeleteOverlayType.ACCOUNT)}
+              label={translate('general/actions', 'Delete account')}
+              onClick={() => setOverlayType(OverlayType.DELETE_ACCOUNT)}
             />
           </StyledVerticalStack>
         </StyledVerticalStack>
