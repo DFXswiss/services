@@ -37,7 +37,7 @@ interface FormData {
   documentProof?: File;
 }
 
-export function LimitScreen(): JSX.Element {
+export default function LimitScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { user } = useUserContext();
   const { navigate } = useNavigation();

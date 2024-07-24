@@ -42,7 +42,7 @@ function getMode(pathName: string): SpecialMode | undefined {
 
 type Page = { page: string; allowedTiles: string[] | undefined };
 
-export function HomeScreen(): JSX.Element {
+export default function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isLoggedIn } = useSessionContext();
   const { session, authenticationToken } = useAuthContext();

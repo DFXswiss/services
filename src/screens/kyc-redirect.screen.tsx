@@ -6,7 +6,7 @@ import { useNavigation } from '../hooks/navigation.hook';
 
 export const IframeMessageType = 'dfx-iframe-message';
 
-export function KycRedirectScreen(): JSX.Element {
+export default function KycRedirectScreen(): JSX.Element {
   const { sendMessage, isUsedByIframe } = useIframe();
   const { search } = useLocation();
   const { navigate } = useNavigation();

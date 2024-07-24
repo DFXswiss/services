@@ -75,7 +75,7 @@ interface FormData {
 
 const EmbeddedWallet = 'CakeWallet';
 
-export function BuyScreen(): JSX.Element {
+export default function BuyScreen(): JSX.Element {
   useAddressGuard();
 
   const { translate, translateError } = useSettingsContext();

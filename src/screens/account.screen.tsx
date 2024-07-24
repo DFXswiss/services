@@ -3,7 +3,6 @@ import {
   Referral,
   UserAddress,
   Utils,
-  useApiSession,
   useSessionContext,
   useTransaction,
   useUser,
@@ -41,7 +40,7 @@ interface FormData {
   address: UserAddress;
 }
 
-export function AccountScreen(): JSX.Element {
+export default function AccountScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
   const { limitToString, levelToString } = useKycHelper();
@@ -53,7 +52,6 @@ export function AccountScreen(): JSX.Element {
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
   const { changeUserAddress, deleteUserAddress } = useUser();
-  const { deleteSession } = useApiSession();
   const { setSession } = useWalletContext();
 
   const rootRef = useRef<HTMLDivElement>(null);

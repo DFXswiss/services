@@ -25,7 +25,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
-export function BankAccountsScreen(): JSX.Element {
+export default function BankAccountsScreen(): JSX.Element {
   useUserGuard('/login');
 
   const { navigate } = useNavigation();

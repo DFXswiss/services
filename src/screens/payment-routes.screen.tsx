@@ -12,7 +12,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { ErrorHint } from '../components/error-hint';
 
-export function PaymentRoutes(): JSX.Element {
+export default function PaymentRoutes(): JSX.Element {
   const { translate } = useSettingsContext();
   const [routes, setRoutes] = useState<PaymentRoutesDto>();
   const rootRef = useRef<HTMLDivElement>(null);
