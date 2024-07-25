@@ -105,7 +105,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     const browserLanguage = browserLang({ languages: appLanguages.map((l) => l.toLowerCase()), fallback: 'en' });
     const customLanguage =
       lang?.toUpperCase() ?? user?.language.symbol ?? storedLanguage.get() ?? browserLanguage.toUpperCase();
-    const customCurrency = (user as any)?.currency;
+    const customCurrency = user?.currency;
     const newAppLanguage =
       availableLanguages.find((l) => l.symbol === customLanguage) ?? getDefaultLanguage(availableLanguages);
 

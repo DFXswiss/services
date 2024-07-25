@@ -163,7 +163,7 @@ export default function SettingsScreen(): JSX.Element {
                     <StyledDataTableRow key={address.address}>
                       <div className="flex flex-col items-start gap-1">
                         <div className="flex flex-row gap-2 font-semibold">
-                          {(address as any).label ?? address.wallet}
+                          {address.label ?? address.wallet}
                           {address.address === user.activeAddress?.address && (
                             <div className="flex bg-dfxGray-400 font-bold rounded-sm px-1.5 text-2xs items-center justify-center">
                               {translate('screens/settings', 'Active').toUpperCase()}
