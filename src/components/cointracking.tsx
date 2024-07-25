@@ -43,7 +43,7 @@ const equalKeys = (a: TransactionFilterKey[] | undefined, b: TransactionFilterKe
   !(a || b) || (a && b && a.length === b.length && a.every((v) => b.includes(v)));
 
 export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTMLDivElement> }) {
-  const { reloadUser, filterCT, keyCT, generateKeyCT, deleteKeyCT, updateFilterCT } = useUserContext();
+  const { filterCT, keyCT, generateKeyCT, deleteKeyCT, updateFilterCT } = useUserContext();
   const { lang } = useAppParams();
   const { translate } = useSettingsContext();
   const { width } = useWindowContext();

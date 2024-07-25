@@ -34,11 +34,11 @@ export default function SettingsScreen(): JSX.Element {
   const { currencies } = useFiatContext();
   const { user, isUserLoading } = useUserContext();
   const { copy } = useClipboard();
-  const rootRef = useRef<HTMLDivElement>(null);
   const { activeWallet } = useStore();
   const { width } = useWindowContext();
   const { deleteAddress, deleteAccount, renameAddress } = useUserContext();
 
+  const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const [menuAddress, setMenuAddress] = useState<string>();
@@ -75,16 +75,18 @@ export default function SettingsScreen(): JSX.Element {
   }, [selectedCurrency]);
 
   useEffect(() => {
-    function handleClick(event: MouseEvent) {
-      if (menuAddress && !overlayType && !menuRef.current?.contains(event.target as Node)) {
-        toggleMenuAddress();
+    const element = rootRef?.current ?? document;
+    if (element) {
+      function closeMenu(event: Event) {
+        if (menuAddress && !overlayType && !menuRef.current?.contains(event.target as Node)) {
+          toggleMenuAddress();
+        }
       }
+
+      element.addEventListener('mousedown', closeMenu);
+      return () => element.removeEventListener('mousedown', closeMenu);
     }
-
-    document.addEventListener('mousedown', handleClick);
-
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [menuAddress, overlayType, menuRef]);
+  }, [menuAddress, overlayType, rootRef, menuRef]);
 
   function toggleMenuAddress(address?: string) {
     setMenuAddress((menuAddress) => (menuAddress !== address ? address : undefined));
