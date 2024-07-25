@@ -30,7 +30,7 @@ import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useStore } from 'src/hooks/store.hook';
-import { blankedAddress } from 'src/util/utils';
+import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -173,7 +173,7 @@ export default function AccountScreen(): JSX.Element {
                   <StyledDropdown
                     name="address"
                     placeholder={translate('general/actions', 'Select...')}
-                    items={user.addresses.sort((a, b) => a.address.localeCompare(b.address))}
+                    items={user.addresses.sort(sortAddressesByBlockchain)}
                     disabled={user.addresses.length === 0}
                     labelFunc={(item) => blankedAddress(item.address, { width })}
                   />

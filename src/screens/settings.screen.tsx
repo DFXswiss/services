@@ -22,7 +22,7 @@ import { useWindowContext } from 'src/contexts/window.context';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useStore } from 'src/hooks/store.hook';
-import { blankedAddress } from 'src/util/utils';
+import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 
 interface FormData {
   language: Language;
@@ -157,41 +157,39 @@ export default function SettingsScreen(): JSX.Element {
                 label={translate('screens/settings', 'Your Wallets')}
                 alignContent={AlignContent.BETWEEN}
               >
-                {user?.addresses
-                  .sort((a, b) => a.address.localeCompare(b.address))
-                  .map((address) => (
-                    <StyledDataTableRow key={address.address}>
-                      <div className="flex flex-col items-start gap-1">
-                        <div className="flex flex-row gap-2 font-semibold">
-                          {address.label ?? address.wallet}
-                          {address.address === user.activeAddress?.address && (
-                            <div className="flex bg-dfxGray-400 font-bold rounded-sm px-1.5 text-2xs items-center justify-center">
-                              {translate('screens/settings', 'Active').toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-xs text-dfxGray-700">{blankedAddress(address.address, { width })}</div>
+                {user?.addresses.sort(sortAddressesByBlockchain).map((address) => (
+                  <StyledDataTableRow key={address.address}>
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex flex-row gap-2 font-semibold">
+                        {address.label ?? address.wallet}
+                        {address.address === user.activeAddress?.address && (
+                          <div className="flex bg-dfxGray-400 font-bold rounded-sm px-1.5 text-2xs items-center justify-center">
+                            {translate('screens/settings', 'Active').toUpperCase()}
+                          </div>
+                        )}
                       </div>
-                      <div className="relative flex items-center">
-                        <button onClick={() => toggleMenuAddress(address.address)}>
-                          <DfxIcon icon={IconVariant.THREE_DOTS_VERT} color={IconColor.BLUE} />
-                        </button>
-                        {menuAddress === address.address && (
-                          <div
-                            ref={menuRef}
-                            className="absolute right-5 top-3 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip"
-                          >
-                            <div className="flex flex-col divide-y-0.5 divide-dfxGray-400 items-start bg-dfxGray-100 w-36">
-                              <button
-                                className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-                                onClick={() => {
-                                  copy(address.address);
-                                  toggleMenuAddress();
-                                }}
-                              >
-                                {translate('general/actions', 'Copy')}
-                              </button>
-                              {/* <button
+                      <div className="text-xs text-dfxGray-700">{blankedAddress(address.address, { width })}</div>
+                    </div>
+                    <div className="relative flex items-center">
+                      <button onClick={() => toggleMenuAddress(address.address)}>
+                        <DfxIcon icon={IconVariant.THREE_DOTS_VERT} color={IconColor.BLUE} />
+                      </button>
+                      {menuAddress === address.address && (
+                        <div
+                          ref={menuRef}
+                          className="absolute right-5 top-3 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip"
+                        >
+                          <div className="flex flex-col divide-y-0.5 divide-dfxGray-400 items-start bg-dfxGray-100 w-36">
+                            <button
+                              className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
+                              onClick={() => {
+                                copy(address.address);
+                                toggleMenuAddress();
+                              }}
+                            >
+                              {translate('general/actions', 'Copy')}
+                            </button>
+                            {/* <button
                             className="hover:bg-dfxGray-300  w-full text-left px-4 py-2"
                             onClick={() => {
                               console.log('open explorer');
@@ -200,24 +198,24 @@ export default function SettingsScreen(): JSX.Element {
                           >
                             {translate('general/actions', 'Open Explorer')}
                           </button> */}
-                              <button
-                                className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-                                onClick={() => setOverlayType(OverlayType.RENAME_ADDRESS)}
-                              >
-                                {translate('general/actions', 'Rename')}
-                              </button>
-                              <button
-                                className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-                                onClick={() => setOverlayType(OverlayType.DELETE_ADDRESS)}
-                              >
-                                {translate('general/actions', 'Delete')}
-                              </button>
-                            </div>
+                            <button
+                              className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
+                              onClick={() => setOverlayType(OverlayType.RENAME_ADDRESS)}
+                            >
+                              {translate('general/actions', 'Rename')}
+                            </button>
+                            <button
+                              className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
+                              onClick={() => setOverlayType(OverlayType.DELETE_ADDRESS)}
+                            >
+                              {translate('general/actions', 'Delete')}
+                            </button>
                           </div>
-                        )}
-                      </div>
-                    </StyledDataTableRow>
-                  ))}
+                        </div>
+                      )}
+                    </div>
+                  </StyledDataTableRow>
+                ))}
               </StyledDataTable>
               <StyledButton
                 label={translate('general/actions', 'Delete account')}
