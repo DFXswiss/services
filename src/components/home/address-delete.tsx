@@ -11,6 +11,8 @@ import {
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
+import { useWindowContext } from 'src/contexts/window.context';
+import { blankedAddress } from 'src/util/utils';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { ErrorHint } from '../error-hint';
 
@@ -48,7 +50,7 @@ export function OverlayContent({ type, onClose, address }: OverlayContentProps):
     case OverlayType.DELETE_ACCOUNT:
       return <DeleteAccountOverlay onClose={onClose} />;
     case OverlayType.RENAME_ADDRESS:
-      return <RenameAddressOverlay onClose={onClose} address={address} />;
+      return <RenameAddressOverlay onClose={onClose} />;
     default:
       return <></>;
   }
@@ -56,13 +58,16 @@ export function OverlayContent({ type, onClose, address }: OverlayContentProps):
 
 export function DeleteAddressOverlay({ onClose, address }: OverlayProps): JSX.Element {
   const { translate } = useSettingsContext();
+  const { width } = useWindowContext();
+
+  const formattedAddress = blankedAddress(address ?? '', { width });
 
   return (
     <>
       <p className="text-dfxBlue-800 mb-2">
-        <Trans i18nKey="screens/settings.delete" values={{ address }}>
-          Are you sure you want to delete the address <strong>{address}</strong> from your DFX account? This action is
-          irreversible.
+        <Trans i18nKey="screens/settings.delete" values={{ address: formattedAddress }}>
+          Are you sure you want to delete the address <strong>{formattedAddress}</strong> from your DFX account? This
+          action is irreversible.
         </Trans>
       </p>
       <StyledHorizontalStack>

@@ -184,8 +184,11 @@ export default function SellScreen(): JSX.Element {
   }, [assetIn, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
-    const currency = getCurrency(currencies, assetOut) ?? getCurrency(currencies, prefCurrency?.name);
-    if (currency) setVal('currency', currency);
+    const currency =
+      getCurrency(currencies, assetOut) ??
+      getCurrency(currencies, prefCurrency?.name) ??
+      getDefaultCurrency(currencies);
+    if (prefCurrency && currency) setVal('currency', currency);
   }, [assetOut, getCurrency, prefCurrency, currencies]);
 
   useEffect(() => {

@@ -50,10 +50,6 @@ export default function SettingsScreen(): JSX.Element {
   const selectedCurrency = useWatch({ control, name: 'currency' });
 
   useEffect(() => {
-    if (user) console.log('Current user', user);
-  }, [user]);
-
-  useEffect(() => {
     if (language && !selectedLanguage) setValue('language', language);
   }, [language]);
 
@@ -75,7 +71,7 @@ export default function SettingsScreen(): JSX.Element {
 
   useEffect(() => {
     function handleClick(event: MouseEvent) {
-      if (menuAddress && !menuRef.current?.contains(event.target as Node)) {
+      if (menuAddress && !overlayType && !menuRef.current?.contains(event.target as Node)) {
         toggleMenuAddress();
       }
     }
@@ -83,7 +79,7 @@ export default function SettingsScreen(): JSX.Element {
     document.addEventListener('mousedown', handleClick);
 
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [menuAddress, menuRef]);
+  }, [menuAddress, overlayType, menuRef]);
 
   function toggleMenuAddress(address?: string) {
     setMenuAddress((menuAddress) => (menuAddress !== address ? address : undefined));
@@ -114,7 +110,7 @@ export default function SettingsScreen(): JSX.Element {
     : translate('screens/settings', 'Settings');
 
   return (
-    <Layout title={title} rootRef={rootRef} onBack={overlayType ? () => setOverlayType(OverlayType.NONE) : undefined}>
+    <Layout title={title} rootRef={rootRef} onBack={overlayType ? () => onCloseOverlay() : undefined}>
       {overlayType ? (
         <OverlayContent type={overlayType} onClose={onCloseOverlay} address={menuAddress} />
       ) : (
@@ -126,7 +122,7 @@ export default function SettingsScreen(): JSX.Element {
                 label={translate('screens/settings', 'Language')}
                 smallLabel={true}
                 placeholder={translate('general/actions', 'Select...')}
-                items={Object.values(availableLanguages)}
+                items={availableLanguages}
                 labelFunc={(item) => item.name}
                 descriptionFunc={(item) => item.foreignName}
               />
@@ -138,7 +134,7 @@ export default function SettingsScreen(): JSX.Element {
                 label={translate('screens/settings', 'Currency')}
                 smallLabel={true}
                 placeholder={translate('general/actions', 'Select...')}
-                items={Object.values(currencies || [])}
+                items={currencies ?? []}
                 labelFunc={(item) => item.name}
               />
             </Form>
