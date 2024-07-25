@@ -173,7 +173,7 @@ export default function AccountScreen(): JSX.Element {
                   <StyledDropdown
                     name="address"
                     placeholder={translate('general/actions', 'Select...')}
-                    items={user.addresses}
+                    items={user.addresses.sort((a, b) => a.address.localeCompare(b.address))}
                     disabled={user.addresses.length === 0}
                     labelFunc={(item) => blankedAddress(item.address, { width })}
                   />
