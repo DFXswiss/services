@@ -191,15 +191,17 @@ export default function SettingsScreen(): JSX.Element {
                             >
                               {translate('general/actions', 'Copy')}
                             </button>
-                            {/* <button
-                            className="hover:bg-dfxGray-300  w-full text-left px-4 py-2"
-                            onClick={() => {
-                              console.log('open explorer');
-                              toggleMenuAddress();
-                            }}
-                          >
-                            {translate('general/actions', 'Open Explorer')}
-                          </button> */}
+                            {address.explorerUrl && (
+                              <button
+                                className="hover:bg-dfxGray-300  w-full text-left px-4 py-2"
+                                onClick={() => {
+                                  window.open(address.explorerUrl, '_blank');
+                                  toggleMenuAddress();
+                                }}
+                              >
+                                {translate('general/actions', 'Open Explorer')}
+                              </button>
+                            )}
                             <button
                               className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
                               onClick={() => setOverlayType(OverlayType.RENAME_ADDRESS)}
