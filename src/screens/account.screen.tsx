@@ -14,6 +14,8 @@ import {
   Form,
   IconVariant,
   SpinnerSize,
+  StyledButton,
+  StyledButtonWidth,
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
@@ -255,6 +257,11 @@ export default function AccountScreen(): JSX.Element {
               </StyledDataTableRow>
             </StyledDataTable>
           )}
+          <StyledButton
+            label={translate('screens/settings', 'Settings')}
+            onClick={() => navigate('/settings')}
+            width={StyledButtonWidth.FULL}
+          />
         </StyledVerticalStack>
       )}
       {image && (
