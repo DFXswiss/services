@@ -18,6 +18,7 @@ import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useClipboard } from 'src/hooks/clipboard.hook';
+import { useUserGuard } from 'src/hooks/guard.hook';
 import { useStore } from 'src/hooks/store.hook';
 import { blankedAddress } from 'src/util/utils';
 
@@ -40,6 +41,8 @@ export default function SettingsScreen(): JSX.Element {
 
   const [menuAddress, setMenuAddress] = useState<string>();
   const [overlayType, setOverlayType] = useState<OverlayType>(OverlayType.NONE);
+
+  useUserGuard('/login');
 
   const {
     control,
@@ -86,18 +89,20 @@ export default function SettingsScreen(): JSX.Element {
   }
 
   async function onCloseOverlay(result?: any): Promise<void> {
-    if (menuAddress && result) {
+    if (result) {
       switch (overlayType) {
         case OverlayType.DELETE_ADDRESS:
+          if (!menuAddress) break;
           deleteAddress(menuAddress);
           menuAddress === user?.activeAddress?.address && activeWallet.remove();
+          break;
+        case OverlayType.RENAME_ADDRESS:
+          if (!menuAddress) break;
+          await renameAddress(menuAddress, result);
           break;
         case OverlayType.DELETE_ACCOUNT:
           deleteAccount();
           activeWallet.remove();
-          break;
-        case OverlayType.RENAME_ADDRESS:
-          await renameAddress(menuAddress, result);
           break;
       }
     }
