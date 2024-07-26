@@ -49,7 +49,7 @@ export const Navigation = forwardRef<HTMLDivElement, NavigationIframeProps>(
     return title || !isEmbedded ? (
       <div
         className={`flex w-full h-12 px-4 py-5 items-center justify-center ${
-          params.headless !== 'true' ? 'bg-dfxGray-300' : ''
+          params.headless !== 'true' ? 'relative bg-dfxGray-300' : ''
         }`}
         ref={ref}
       >

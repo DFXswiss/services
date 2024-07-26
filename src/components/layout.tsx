@@ -49,7 +49,11 @@ export function Layout({
 
   return (
     <div id="app-root" className="h-full flex flex-col" ref={rootRef} onClick={onClick}>
-      {pathname.startsWith('/support') && <InfoBannerComponent />}
+      {pathname.startsWith('/support') && (
+        <div className="relative">
+          <InfoBannerComponent />
+        </div>
+      )}
 
       <Navigation
         ref={navRef}
