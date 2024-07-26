@@ -63,7 +63,8 @@
     "test": "react-app-rewired test --watchAll=false --passWithNoTests",
     "eject": "react-scripts eject",
     "serve": "serve build -l 4000",
-    "analyze": "source-map-explorer 'build/static/js/*.js'"
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "start-widget": "env-cmd -f .env.loc node start-widget.js"
   },
   "overrides": {
     "react-scripts": {
