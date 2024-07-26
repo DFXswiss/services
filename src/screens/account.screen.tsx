@@ -194,7 +194,7 @@ export default function AccountScreen(): JSX.Element {
           onClose={(r) => (r ? onDeleteUser() : setShowWalletDeleteOverlay(false))}
         />
       ) : (
-        <StyledVerticalStack gap={4} center full marginY={4}>
+        <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
           {/* Wallet Selector */}
           {user?.addresses && (
             <div className="w-full bg-dfxGray-300 p-2 rounded-md">
