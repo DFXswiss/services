@@ -42,7 +42,7 @@ function getMode(pathName: string): SpecialMode | undefined {
 
 type Page = { page: string; allowedTiles: string[] | undefined };
 
-export function HomeScreen(): JSX.Element {
+export default function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isLoggedIn } = useSessionContext();
   const { session, authenticationToken } = useAuthContext();
@@ -131,7 +131,7 @@ export function HomeScreen(): JSX.Element {
   const title = translate('screens/home', currentPage?.header ?? (currentPage?.dfxStyle ? 'DFX services' : ' '));
   const image =
     currentPage?.bottomImage ??
-    (currentPage?.dfxStyle ? 'https://content.dfx.swiss/img/v1/services/berge.png' : undefined);
+    (currentPage?.dfxStyle ? 'https://content.dfx.swiss/img/v1/services/berge.jpg' : undefined);
 
   const hasBackButton =
     (canClose && !isEmbedded) || connectTo != null || (currentPageId != null && currentPageId !== appParams.mode);

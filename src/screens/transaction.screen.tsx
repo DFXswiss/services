@@ -49,13 +49,13 @@ import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress } from '../util/utils';
 
-export function TransactionScreen(): JSX.Element {
+export default function TransactionScreen(): JSX.Element {
   const { id } = useParams();
 
   return id && id.startsWith('T') ? <TransactionStatus /> : <TransactionList />;
 }
 
-export function TransactionStatus(): JSX.Element {
+function TransactionStatus(): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { id } = useParams();
@@ -118,7 +118,7 @@ export function TransactionStatus(): JSX.Element {
   );
 }
 
-export function TransactionList(): JSX.Element {
+function TransactionList(): JSX.Element {
   useUserGuard('/login');
 
   const { navigate } = useNavigation();

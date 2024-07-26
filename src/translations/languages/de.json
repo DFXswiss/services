@@ -311,7 +311,8 @@
     "Reference": "Verwendungszweck",
     "Transaction Details": "Transaktionsdetails",
     "Asset": "Asset",
-    "Deposit Address": "Einzahlungsadresse",
+    "Deposit address": "Einzahlungsadresse",
+    "Deposit blockchains": "Einzahlungs-Blockchains",
     "Beneficiary bank account": "Begünstigten-Bankkonto",
     "Beneficiary name": "Name des Begünstigten",
 
@@ -357,6 +358,7 @@
 
     "Failure reason": "Fehlerursache",
     "Unknown": "Unbekannt",
+    "Annual volume": "Jährliches Volumen",
     "Daily limit exceeded": "Tageslimit überschritten",
     "Annual limit exceeded": "Jahreslimit überschritten",
     "Account holder mismatch": "Kontoinhaber stimmt nicht überein",
@@ -401,6 +403,9 @@
     "The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.": "Der Wechselkurs von {{rate}} {{currency}}/{{asset}} ist für {{timer}} festgelegt, danach wird er neu berechnet.",
     "Please send the specified amount to the address below.": "Bitte sende den angegebenen Betrag an die unten stehende Adresse.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst.",
+
+    "Payment routes": "Payment Routen",
+    "Purpose of payment": "Zahlungszweck",
 
     "Cointracking": "Cointracking",
     "Saved": "Gespeichert",

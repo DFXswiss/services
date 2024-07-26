@@ -11,7 +11,7 @@ import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from '../hooks/navigation.hook';
 
-export function BuyFailureScreen(): JSX.Element {
+export default function BuyFailureScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const header = translate('screens/payment', 'Your payment has failed. Please try again.');

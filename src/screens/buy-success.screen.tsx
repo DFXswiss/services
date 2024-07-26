@@ -10,13 +10,13 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
-export function BuySuccessScreen(): JSX.Element {
+export default function BuySuccessScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
   const [params] = useSearchParams();
   const { getTransactionByCkoId } = useTransaction();
-  const { canClose, closeServices } = useAppHandlingContext();
+  const { closeServices } = useAppHandlingContext();
 
   const [error, setError] = useState<string>();
 
@@ -29,8 +29,8 @@ export function BuySuccessScreen(): JSX.Element {
   }, [ckoId]);
 
   useEffect(() => {
-    if (ckoId && canClose) closeServices({ type: CloseType.BUY, isComplete: true }, false);
-  }, [ckoId, canClose]);
+    if (ckoId) closeServices({ type: CloseType.BUY, isComplete: true }, false);
+  }, [ckoId]);
 
   function fetchCkoTx(id: string) {
     getTransactionByCkoId(id)

@@ -3,7 +3,6 @@ import {
   Referral,
   UserAddress,
   Utils,
-  useApiSession,
   useSessionContext,
   useTransaction,
   useUser,
@@ -41,7 +40,7 @@ interface FormData {
   address: UserAddress;
 }
 
-export function AccountScreen(): JSX.Element {
+export default function AccountScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
   const { limitToString, levelToString } = useKycHelper();
@@ -53,7 +52,6 @@ export function AccountScreen(): JSX.Element {
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
   const { changeUserAddress, deleteUserAddress } = useUser();
-  const { deleteSession } = useApiSession();
   const { setSession } = useWalletContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -140,7 +138,7 @@ export function AccountScreen(): JSX.Element {
     ? translate('screens/home', 'DFX services')
     : translate('screens/home', 'Account');
   const hasBackButton = showWalletDeleteOverlay || (canClose && !isEmbedded);
-  const image = 'https://content.dfx.swiss/img/v1/services/berge.png';
+  const image = 'https://content.dfx.swiss/img/v1/services/berge.jpg';
 
   const transactionItems = transactions?.map((t) => ({
     label: new Date(t.date as Date).toLocaleString(),
@@ -196,7 +194,7 @@ export function AccountScreen(): JSX.Element {
           onClose={(r) => (r ? onDeleteUser() : setShowWalletDeleteOverlay(false))}
         />
       ) : (
-        <StyledVerticalStack gap={4} center full marginY={4}>
+        <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
           {/* Wallet Selector */}
           {user?.addresses && (
             <div className="w-full bg-dfxGray-300 p-2 rounded-md">

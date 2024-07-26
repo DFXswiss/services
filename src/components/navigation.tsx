@@ -23,12 +23,12 @@ interface FormData {
 }
 
 interface BackButtonProps extends PropsWithChildren {
-  title?: string;
-  backButton?: boolean;
   onBack?: () => void;
 }
 
 interface NavigationIframeProps extends BackButtonProps {
+  title?: string;
+  backButton?: boolean;
   isOpen: boolean;
   setIsOpen: (value: SetStateAction<boolean>) => void;
 }
@@ -48,16 +48,23 @@ export const Navigation = forwardRef<HTMLDivElement, NavigationIframeProps>(
 
     return title || !isEmbedded ? (
       <div
-        className={`flex w-full h-12 px-4 py-5 ${
-          params.headless !== 'true'
-            ? 'relative items-center justify-between bg-dfxGray-300'
-            : 'absolute justify-end z-10'
+        className={`flex w-full h-12 px-4 py-5 items-center justify-center ${
+          params.headless !== 'true' ? 'relative bg-dfxGray-300' : ''
         }`}
         ref={ref}
       >
-        {params.headless !== 'true' && <BackButton title={title} backButton={backButton} onBack={onBack} />}
+        {params.headless !== 'true' && (
+          <>
+            {backButton && <BackButton onBack={onBack} />}
+            {title ? (
+              <div className="text-dfxBlue-800 font-bold text-lg mx-8 line-clamp-1 select-none">{title}</div>
+            ) : (
+              !isEmbedded && <DfxLogo />
+            )}
+          </>
+        )}
 
-        <div className="absolute right-4">
+        <div className="absolute right-4 z-10">
           <MenuIcon icon={isOpen ? IconVariant.CLOSE : IconVariant.MENU} setIsNavigationOpen={setIsOpen} />
         </div>
 
@@ -69,8 +76,8 @@ export const Navigation = forwardRef<HTMLDivElement, NavigationIframeProps>(
   },
 );
 
-function BackButton({ title, backButton, onBack }: BackButtonProps): JSX.Element {
-  const { isEmbedded, closeServices } = useAppHandlingContext();
+function BackButton({ onBack }: BackButtonProps): JSX.Element {
+  const { closeServices } = useAppHandlingContext();
   const { pathname } = useLocation();
   const { navigate } = useNavigation();
 
@@ -83,19 +90,8 @@ function BackButton({ title, backButton, onBack }: BackButtonProps): JSX.Element
   }
 
   return (
-    <button
-      className="text-dfxBlue-800 font-bold text-lg flex flex-row flex-grow flex-shrink-0 items-center justify-center"
-      onClick={onBack ?? onClick}
-      disabled={!backButton}
-    >
-      <div className="absolute left-4">
-        {backButton && (
-          <div className="ml-2">
-            <DfxIcon icon={IconVariant.BACK} color={IconColor.BLUE} size={IconSize.LG} />
-          </div>
-        )}
-      </div>
-      {title ? title : !isEmbedded && <DfxLogo />}
+    <button className="absolute left-4 pl-2" onClick={onBack ?? onClick}>
+      <DfxIcon icon={IconVariant.BACK} color={IconColor.BLUE} size={IconSize.LG} />
     </button>
   );
 }

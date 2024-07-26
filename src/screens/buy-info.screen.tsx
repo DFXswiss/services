@@ -34,7 +34,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 
-export function BuyInfoScreen(): JSX.Element {
+export default function BuyInfoScreen(): JSX.Element {
   useAddressGuard();
 
   const { translate } = useSettingsContext();

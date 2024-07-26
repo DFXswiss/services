@@ -43,7 +43,7 @@ interface FormData {
 
 const AddAccount = 'Add bank account';
 
-export function TransactionMissingScreen(): JSX.Element {
+export default function TransactionMissingScreen(): JSX.Element {
   useUserGuard('/login');
   useKycLevelGuard(KycLevel.Link, '/contact');
 

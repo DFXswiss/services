@@ -37,7 +37,7 @@ interface FormData {
   file?: File;
 }
 
-export function SupportIssueScreen(): JSX.Element {
+export default function SupportIssueScreen(): JSX.Element {
   useUserGuard('/login');
   useKycLevelGuard(KycLevel.Link, '/contact');
 

@@ -9,28 +9,29 @@ import { BalanceContextProvider } from './contexts/balance.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { WindowContextProvider } from './contexts/window.context';
-import { AccountScreen } from './screens/account.screen';
-import { BankAccountsScreen } from './screens/bank-accounts.screen';
-import { BuyFailureScreen } from './screens/buy-failure.screen';
-import { BuyInfoScreen } from './screens/buy-info.screen';
-import { BuySuccessScreen } from './screens/buy-success.screen';
-import { BuyScreen } from './screens/buy.screen';
-import { ErrorScreen } from './screens/error.screen';
-import { HomeScreen } from './screens/home.screen';
-import { KycRedirectScreen } from './screens/kyc-redirect.screen';
-import { KycScreen } from './screens/kyc.screen';
-import { LimitScreen } from './screens/limit.screen';
-import { LinkScreen } from './screens/link.screen';
-import { SellInfoScreen } from './screens/sell-info.screen';
-import { SupportIssueScreen } from './screens/support-issue.screen';
-import { SupportScreen } from './screens/support.screen';
-import { TfaScreen } from './screens/tfa.screen';
-import { TransactionMissingScreen } from './screens/transaction-missing.screen';
-import { TransactionScreen } from './screens/transaction.screen';
+import ErrorScreen from './screens/error.screen';
+import HomeScreen from './screens/home.screen';
 import { setupLanguages } from './translations';
 
 const SellScreen = lazy(() => import('./screens/sell.screen'));
 const SwapScreen = lazy(() => import('./screens/swap.screen'));
+const AccountScreen = lazy(() => import('./screens/account.screen'));
+const BankAccountsScreen = lazy(() => import('./screens/bank-accounts.screen'));
+const BuyFailureScreen = lazy(() => import('./screens/buy-failure.screen'));
+const BuyInfoScreen = lazy(() => import('./screens/buy-info.screen'));
+const BuySuccessScreen = lazy(() => import('./screens/buy-success.screen'));
+const BuyScreen = lazy(() => import('./screens/buy.screen'));
+const KycRedirectScreen = lazy(() => import('./screens/kyc-redirect.screen'));
+const KycScreen = lazy(() => import('./screens/kyc.screen'));
+const LimitScreen = lazy(() => import('./screens/limit.screen'));
+const LinkScreen = lazy(() => import('./screens/link.screen'));
+const PaymentRoutes = lazy(() => import('./screens/payment-routes.screen'));
+const SellInfoScreen = lazy(() => import('./screens/sell-info.screen'));
+const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
+const SupportScreen = lazy(() => import('./screens/support.screen'));
+const TfaScreen = lazy(() => import('./screens/tfa.screen'));
+const TransactionMissingScreen = lazy(() => import('./screens/transaction-missing.screen'));
+const TransactionScreen = lazy(() => import('./screens/transaction.screen'));
 
 setupLanguages();
 
@@ -42,7 +43,7 @@ export const Routes = [
   },
   {
     path: '/account',
-    element: <AccountScreen />,
+    element: withSuspense(<AccountScreen />),
   },
   {
     path: '/login',
@@ -58,19 +59,19 @@ export const Routes = [
   },
   {
     path: '/buy',
-    element: <BuyScreen />,
+    element: withSuspense(<BuyScreen />),
   },
   {
     path: '/buy/info',
-    element: <BuyInfoScreen />,
+    element: withSuspense(<BuyInfoScreen />),
   },
   {
     path: '/buy/success',
-    element: <BuySuccessScreen />,
+    element: withSuspense(<BuySuccessScreen />),
   },
   {
     path: '/buy/failure',
-    element: <BuyFailureScreen />,
+    element: withSuspense(<BuyFailureScreen />),
   },
   {
     path: '/sell',
@@ -78,82 +79,86 @@ export const Routes = [
   },
   {
     path: '/sell/info',
-    element: <SellInfoScreen />,
+    element: withSuspense(<SellInfoScreen />),
   },
   {
     path: '/swap',
     element: withSuspense(<SwapScreen />),
   },
   {
+    path: '/routes',
+    element: withSuspense(<PaymentRoutes />),
+  },
+  {
     path: '/kyc',
-    element: <KycScreen />,
+    element: withSuspense(<KycScreen />),
     isKycScreen: true,
   },
   {
     path: '/kyc/redirect',
-    element: <KycRedirectScreen />,
+    element: withSuspense(<KycRedirectScreen />),
     isKycScreen: true,
   },
   {
     path: '/profile',
-    element: <KycScreen />,
+    element: withSuspense(<KycScreen />),
     isKycScreen: true,
   },
   {
     path: '/contact',
-    element: <KycScreen />,
+    element: withSuspense(<KycScreen />),
     isKycScreen: true,
   },
   {
     path: '/link',
-    element: <LinkScreen />,
+    element: withSuspense(<LinkScreen />),
     isKycScreen: true,
   },
   {
     path: '/2fa',
-    element: <TfaScreen />,
+    element: withSuspense(<TfaScreen />),
     isKycScreen: true,
   },
   {
     path: '/limit',
-    element: <LimitScreen />,
+    element: withSuspense(<LimitScreen />),
     isKycScreen: true,
   },
   {
     path: '/tx',
-    element: <TransactionScreen />,
+    element: withSuspense(<TransactionScreen />),
   },
   {
     path: '/tx/:id',
-    element: <TransactionScreen />,
+    element: withSuspense(<TransactionScreen />),
   },
   {
     path: '/tx/:id/assign',
-    element: <TransactionScreen />,
+    element: withSuspense(<TransactionScreen />),
   },
   {
     path: '/support',
-    element: <SupportScreen />,
+    element: withSuspense(<SupportScreen />),
   },
   {
     path: '/support/issue',
-    element: <SupportIssueScreen />,
+    element: withSuspense(<SupportIssueScreen />),
   },
   {
     path: '/support/issue/tx',
-    element: <TransactionScreen />,
+    element: withSuspense(<TransactionScreen />),
   },
   {
     path: '/support/issue/tx-missing',
-    element: <TransactionMissingScreen />,
+    element: withSuspense(<TransactionMissingScreen />),
   },
   {
     path: '/support/issue/tx/:id',
-    element: <SupportIssueScreen />,
+    element: withSuspense(<SupportIssueScreen />),
   },
   {
     path: '/bank-accounts',
-    element: <BankAccountsScreen />,
+    element: withSuspense(<BankAccountsScreen />),
   },
 ];
 

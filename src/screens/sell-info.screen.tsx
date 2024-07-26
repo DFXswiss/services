@@ -20,7 +20,6 @@ import {
 } from '@dfx.swiss/react';
 import {
   AlignContent,
-  CopyButton,
   IconColor,
   SpinnerSize,
   SpinnerVariant,
@@ -35,7 +34,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { useWalletContext } from 'src/contexts/wallet.context';
@@ -54,7 +52,7 @@ interface Timer {
   seconds: number;
 }
 
-export function SellInfoScreen(): JSX.Element {
+export default function SellInfoScreen(): JSX.Element {
   useAddressGuard();
 
   const { translate } = useSettingsContext();
@@ -296,7 +294,6 @@ export function SellInfoScreen(): JSX.Element {
                   {paymentInfo.beneficiary.name && (
                     <StyledDataTableRow label={translate('screens/payment', 'Beneficiary name')}>
                       {paymentInfo.beneficiary.name}
-                      <CopyButton onCopy={() => copy(paymentInfo.beneficiary.name)} />
                     </StyledDataTableRow>
                   )}
                 </StyledDataTable>
