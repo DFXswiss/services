@@ -423,10 +423,10 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.PERSONAL_DATA:
       return <PersonalData {...props} />;
 
-    case (KycStepName as any).NATIONALITY_DATA: // TODO: remove any
+    case 'NationalityData' as any: // TODO: remove as any
       return <NationalityData {...props} />;
 
-    case (KycStepName as any).COMMERCIAL_REGISTER: // TODO: remove any
+    case 'CommercialRegister' as any: // TODO: remove any
       return <CommercialRegister {...props} />;
 
     case KycStepName.IDENT:
@@ -772,7 +772,40 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
 }
 
 interface KycNationalityData {
-  country: Country;
+  nationality: Country;
+}
+
+// TODO: Remove this
+export interface CallConfig {
+  url: string;
+  code: string;
+  method: 'GET' | 'PUT' | 'POST' | 'DELETE';
+  data?: any;
+  noJson?: boolean;
+}
+
+// TODO: Remove this
+async function call<T>(config: CallConfig): Promise<T> {
+  return fetch(config.url, buildInit(config)).then((response) => {
+    if (response.ok) {
+      return response.json().catch(() => undefined);
+    }
+    return response.json().then((body) => {
+      throw body;
+    });
+  });
+}
+
+// TODO: Remove this
+function buildInit({ code, method, data, noJson }: CallConfig): RequestInit {
+  return {
+    method: method,
+    headers: {
+      ...(noJson ? undefined : { 'Content-Type': 'application/json' }),
+      'x-kyc-code': code,
+    },
+    body: noJson ? data : JSON.stringify(data),
+  };
 }
 
 function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
@@ -798,12 +831,8 @@ function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack 
   } = useForm<KycNationalityData>({ mode: 'onTouched' });
 
   // TODO: add setNationalityData to useKyc hook
-  function setNationalityData(_code: string, _url: string, _data: KycNationalityData): Promise<KycResult> {
-    return new Promise((resolve, _reject) => {
-      setTimeout(() => {
-        resolve({ status: KycStepStatus.COMPLETED });
-      }, 1000);
-    });
+  function setNationalityData(code: string, url: string, data: KycNationalityData): Promise<KycResult> {
+    return call({ url, code, method: 'PUT', data });
   }
 
   function onSubmit(data: KycNationalityData) {
@@ -833,8 +862,9 @@ function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack 
           ) : (
             <StyledSearchDropdown
               rootRef={rootRef}
+              full
               name="nationality"
-              autocomplete="country"
+              autocomplete="nationality"
               label=""
               placeholder={translate('general/actions', 'Select...')}
               items={countries}
@@ -886,12 +916,8 @@ function CommercialRegister({ rootRef, code, mode, isLoading, step, onDone, onBa
   } = useForm<FormDataRegister>({ mode: 'onTouched' });
 
   // TODO: add setCommercialRegister to useKyc hook
-  function setCommercialRegister(_code: string, _url: string, _data: KycCommercialRegisterData): Promise<KycResult> {
-    return new Promise((resolve, _reject) => {
-      setTimeout(() => {
-        resolve({ status: KycStepStatus.COMPLETED });
-      }, 1000);
-    });
+  function setCommercialRegister(code: string, url: string, data: KycCommercialRegisterData): Promise<KycResult> {
+    return call({ url, code, method: 'PUT', data });
   }
 
   async function onSubmit(data: FormDataRegister) {
@@ -912,7 +938,7 @@ function CommercialRegister({ rootRef, code, mode, isLoading, step, onDone, onBa
   }
 
   const rules = Utils.createRules({
-    commercialRegister: Validations.Required,
+    file: Validations.Required,
   });
 
   return (
@@ -923,7 +949,7 @@ function CommercialRegister({ rootRef, code, mode, isLoading, step, onDone, onBa
             {translate('screens/kyc', 'Commercial Register')}
           </p>
           <StyledFileUpload
-            name="commercialRegister"
+            name="file"
             label={translate('screens/support', 'File')}
             placeholder={translate('general/actions', 'Drop files here')}
             buttonLabel={translate('general/actions', 'Browse')}

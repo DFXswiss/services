@@ -26,14 +26,16 @@ export function useKycHelper(): KycHelperInterface {
     [LimitPeriod.YEAR]: 'per year',
   };
 
-  const stepMap: Record<KycStepName, string> = {
+  const stepMap: Record<KycStepName | string, string> = {
+    // TODO: remove '| string' type when all steps are added
     [KycStepName.CONTACT_DATA]: 'Contact data',
     [KycStepName.PERSONAL_DATA]: 'Personal data',
-    [(KycStepName as any).NATIONALITY_DATA]: 'Nationality data', // TODO: Add to KycStepName
-    [(KycStepName as any).COMMERCIAL_REGISTER]: 'Commercial register', // TODO: Add to KycStepName
+    NationalityData: 'Nationality data', // TODO: Add to KycStepName
+    CommercialRegister: 'Commercial register', // TODO: Add to KycStepName
     [KycStepName.IDENT]: 'Identification',
     [KycStepName.FINANCIAL_DATA]: 'Additional data',
     [KycStepName.DOCUMENT_UPLOAD]: 'Document upload',
+    DfxApproval: 'DFX approval', // TODO: Add to KycStepName
   };
 
   const typeMap: Record<KycStepType, string> = {
