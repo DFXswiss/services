@@ -15,7 +15,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { OverlayContent, OverlayHeader, OverlayType } from 'src/components/home/address-delete';
+import { OverlayContent, OverlayHeader, OverlayType } from 'src/components/home/settings-overlays';
 import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
