@@ -30,8 +30,12 @@ export function useKycHelper(): KycHelperInterface {
     // TODO: remove '| string' type when all steps are added
     [KycStepName.CONTACT_DATA]: 'Contact data',
     [KycStepName.PERSONAL_DATA]: 'Personal data',
+    LegalEntity: 'Legal entity', // TODO: Add to KycStepName
+    StockRegister: 'Stock register', // TODO: Add to KycStepName
     NationalityData: 'Nationality data', // TODO: Add to KycStepName
     CommercialRegister: 'Commercial register', // TODO: Add to KycStepName
+    SignatoryPower: 'Signatory power', // TODO: Add to KycStepName
+    Authority: 'Authority', // TODO: Add to KycStepName
     [KycStepName.IDENT]: 'Identification',
     [KycStepName.FINANCIAL_DATA]: 'Additional data',
     [KycStepName.DOCUMENT_UPLOAD]: 'Document upload',
