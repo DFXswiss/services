@@ -151,8 +151,8 @@ export function RenameAddressOverlay({ onClose }: OverlayProps): JSX.Element {
         <StyledInput
           name="label"
           autocomplete="label"
-          label={translate('screens/kyc', 'Name')}
-          placeholder={translate('screens/kyc', 'Name')}
+          label={translate('screens/kyc', 'Label')}
+          placeholder={translate('screens/kyc', 'Label')}
           full
           smallLabel
         />
