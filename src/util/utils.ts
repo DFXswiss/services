@@ -1,3 +1,5 @@
+import { UserAddress } from '@dfx.swiss/react';
+
 export function isDefined<T>(item: T | undefined): item is T {
   return item != null;
 }
@@ -29,7 +31,7 @@ export function blankedAddress(
   address: string,
   { displayLength = 24, width }: { displayLength?: number; width?: number } = {},
 ): string {
-  if (width) displayLength = Math.min(Math.floor((width * 0.5) / 10), address.length);
+  if (width) displayLength = Math.min(Math.floor((width * 0.6) / 10), address.length);
   const offset0x = /^0x/.test(address) ? 2 : 0;
   displayLength -= offset0x;
   return address.length - offset0x > displayLength
@@ -51,4 +53,8 @@ export function openPdfFromString(pdf: string) {
   const file = new Blob([byteArray], { type: 'application/pdf;base64' });
   const fileURL = URL.createObjectURL(file);
   window.open(fileURL);
+}
+
+export function sortAddressesByBlockchain(a: UserAddress, b: UserAddress): number {
+  return a.blockchains[0].localeCompare(b.blockchains[0]);
 }

@@ -196,7 +196,7 @@ function Content({
             <ConnectInstructions
               steps={steps}
               params={{ device: 'Trezor' }}
-              img={addresses ? undefined : 'https://content.dfx.swiss/img/v1/services/trezorready_en.png'}
+              img={addresses ? undefined : 'https://content.dfx.swiss/img/v1/services/trezorready_en.jpg'}
             />
           )}
 

@@ -84,7 +84,7 @@ const RequiredKycLevel = {
   [Mode.PROFILE]: KycLevel.Sell,
 };
 
-export function KycScreen(): JSX.Element {
+export default function KycScreen(): JSX.Element {
   const { clearParams } = useNavigation();
   const { translate, changeLanguage, processingKycData } = useSettingsContext();
   const { user, reloadUser } = useUserContext();

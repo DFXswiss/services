@@ -5,6 +5,7 @@ import { useAppParams } from '../hooks/app-params.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useSift } from '../hooks/sift.hook';
 import { isNode } from '../util/utils';
+import { InfoBannerComponent } from './info-banner';
 import { Navigation } from './navigation';
 
 interface LayoutProps extends PropsWithChildren {
@@ -48,6 +49,12 @@ export function Layout({
 
   return (
     <div id="app-root" className="h-full flex flex-col" ref={rootRef} onClick={onClick}>
+      {pathname.startsWith('/support') && (
+        <div className="relative">
+          <InfoBannerComponent />
+        </div>
+      )}
+
       <Navigation
         ref={navRef}
         title={title}

@@ -156,7 +156,6 @@ interface AppHandlingContextInterface {
   setRedirectPath: (path?: string) => void;
   canClose: boolean;
   service?: Service;
-  width?: number;
 }
 
 interface AppHandlingContextProps extends PropsWithChildren {
@@ -164,7 +163,6 @@ interface AppHandlingContextProps extends PropsWithChildren {
   service?: Service;
   params?: AppParams;
   router: Router;
-  width?: number;
   closeCallback?: (data: CloseMessageData) => void;
 }
 
@@ -431,10 +429,8 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       setRedirectPath,
       canClose: redirectUri != null,
       service: props.service,
-      width: props.width,
     }),
     [
-      props.width,
       props.isWidget,
       props.service,
       isUsedByIframe,

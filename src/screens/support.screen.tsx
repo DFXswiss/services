@@ -8,7 +8,7 @@ import { Warning } from 'src/components/warning';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useNavigation } from '../hooks/navigation.hook';
 
-export function SupportScreen(): JSX.Element {
+export default function SupportScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { translate, language } = useSettingsContext();
   const rootRef = useRef<HTMLDivElement>(null);

@@ -38,6 +38,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
 import CoinTracking from 'src/components/cointracking';
+import { useWindowContext } from 'src/contexts/window.context';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, toPaymentStateLabel } from '../config/labels';
@@ -48,13 +49,13 @@ import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress } from '../util/utils';
 
-export function TransactionScreen(): JSX.Element {
+export default function TransactionScreen(): JSX.Element {
   const { id } = useParams();
 
   return id && id.startsWith('T') ? <TransactionStatus /> : <TransactionList />;
 }
 
-export function TransactionStatus(): JSX.Element {
+function TransactionStatus(): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { id } = useParams();
@@ -117,7 +118,7 @@ export function TransactionStatus(): JSX.Element {
   );
 }
 
-export function TransactionList(): JSX.Element {
+function TransactionList(): JSX.Element {
   useUserGuard('/login');
 
   const { navigate } = useNavigation();
@@ -133,8 +134,8 @@ export function TransactionList(): JSX.Element {
   const { id } = useParams();
   const { toString } = useBlockchain();
   const { pathname } = useLocation();
-  const { width } = useAppHandlingContext();
 
+  const { width } = useWindowContext();
   const rootRef = useRef<HTMLDivElement>(null);
   const txRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -393,11 +394,13 @@ export function TransactionList(): JSX.Element {
                                         onClick={() => navigate('/kyc')}
                                       />
                                     )}
-                                    <StyledButton
-                                      color={StyledButtonColor.STURDY_WHITE}
-                                      label={translate('screens/payment', 'Report an issue')}
-                                      onClick={() => navigate(`/support/issue/tx/${tx.id}`)}
-                                    />
+                                    {isSupport && (
+                                      <StyledButton
+                                        color={StyledButtonColor.STURDY_WHITE}
+                                        label={translate('screens/payment', 'Report an issue')}
+                                        onClick={() => navigate(`/support/issue/tx/${tx.id}`)}
+                                      />
+                                    )}
                                   </StyledVerticalStack>
                                 </StyledCollapsible>
                               </div>
@@ -426,7 +429,7 @@ interface TxInfoProps {
 function TxInfo({ tx }: TxInfoProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
-  const { width } = useAppHandlingContext();
+  const { width } = useWindowContext();
 
   const paymentMethod = [tx.inputPaymentMethod, tx.outputPaymentMethod].find(
     (p) => p !== CryptoPaymentMethod.CRYPTO,

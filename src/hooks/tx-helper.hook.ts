@@ -100,6 +100,8 @@ export function useTxHelper(): TxHelperInterface {
       createTransactionMetaMask,
       createTransactionWalletConnect,
       sendPayment,
+      activeWallet,
+      session,
     ],
   );
 }

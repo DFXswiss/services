@@ -9,8 +9,10 @@
     "Ok": "Ok",
     "Cancel": "Annullare",
     "Finish": "Finitura",
+    "Copy": "Copia",
     "Save": "Salvare",
     "Delete": "Eliminare",
+    "Rename": "Rinominare",
     "Login": "Login",
     "Logout": "Logout",
     "Back": "Indietro",
@@ -22,8 +24,11 @@
     "No": "No",
     "Drop files here": "Lasciare i file qui",
     "Browse": "Sfogliare",
-    "Delete Address": "Elimina l'indirizzo",
-    "Copy Address": "Copia l'indirizzo"
+    "Rename address": "Rinominare l'indirizzo",
+    "Delete address": "Elimina l'indirizzo",
+    "Delete account": "Elimina l'account",
+    "Copy Address": "Copia l'indirizzo",
+    "Open Explorer": "Apri Explorer"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -235,9 +240,7 @@
     "Credit": "Credito",
     "Paid credit": "Credito pagato",
     "User count": "Conteggio utenti",
-    "Active user count": "Conteggio utenti attivi",
-
-    "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile."
+    "Active user count": "Conteggio utenti attivi"
   },
   "screens/buy": {
     "You spend": "Si spende",
@@ -311,7 +314,8 @@
     "Reference": "Scopo del pagamento",
     "Transaction Details": "Dettagli della transazione",
     "Asset": "Attività",
-    "Deposit Address": "Indirizzo di deposito",
+    "Deposit address": "Indirizzo di deposito",
+    "Deposit blockchains": "Blockchain di deposito",
     "Beneficiary bank account": "Conto bancario del beneficiario",
     "Beneficiary name": "Nome del beneficiario",
 
@@ -357,6 +361,7 @@
 
     "Failure reason": "Causa dell'errore",
     "Unknown": "Sconosciuto",
+    "Annual volume": "Volume annuale",
     "Daily limit exceeded": "Limite giornaliero superato",
     "Annual limit exceeded": "Limite annuale superato",
     "Account holder mismatch": "Il titolare del conto non corrisponde",
@@ -402,14 +407,17 @@
     "Please send the specified amount to the address below.": "Si prega di inviare l'importo specificato all'indirizzo sottostante.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
 
+    "Payment routes": "Modalità di pagamento",
+    "Purpose of payment": "Scopo del pagamento",
+
     "Cointracking": "Cointracking",
     "Saved": "Salvato",
     "Cointracking Link (read rights)": "Collegamento Cointracking (diritti di lettura)",
     "Cointracking homepage": "Homepage di Cointracking",
     "You can link your DFX account to your Cointracking account.": "Puoi collegare il tuo account DFX al tuo account Cointracking.",
     "Generate API key": "Genera chiave API",
-    "API key": "Chiave API",
-    "API secret": "Segreto API",
+    "API key": "API-key",
+    "API secret": "API-secret",
     "Delete API key": "Elimina chiave API",
     "Import filter": "Filtro di importazione",
     "All": "Tutti",
@@ -468,6 +476,17 @@
     "If you have a specific question or problem, you can submit a ticket here.": "Se avete una domanda o un problema specifico, potete inviare un ticket qui.",
     "Join now": "Unisciti ora",
     "Please be cautious. We will never contact you first. Beware of scams.": "Si prega di essere cauti. Non ti contatteremo mai per primi. Attenzione alle truffe."
+  },
+  "screens/settings": {
+    "Settings": "Impostazioni",
+    "Your Wallets": "I tuoi portafogli",
+    "Active": "Attivo",
+    "Language": "Lingua",
+    "Currency": "Valuta",
+    "Label": "Etichetta",
+
+    "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile.",
+    "Deleting your account is irreversible. Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "La cancellazione del tuo account è irreversibile. I tuoi dati rimarranno sui nostri server temporaneamente prima della cancellazione definitiva. Se hai domande, contatta il nostro team di supporto."
   },
   "navigation/links": {
     "Buy": "Comprare",

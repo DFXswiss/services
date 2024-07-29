@@ -1,3 +1,4 @@
+import { InfoBanner } from '@dfx.swiss/react';
 import { AppParams } from '../contexts/app-handling.context';
 import { WalletType } from '../contexts/wallet.context';
 
@@ -12,6 +13,7 @@ export interface StoreInterface {
   balances: StoreItem<string>;
   language: StoreItem<string>;
   activeWallet: StoreItem<WalletType>;
+  infoBanner: StoreItem<InfoBanner>;
   queryParams: StoreItem<AppParams>;
 }
 
@@ -21,6 +23,7 @@ enum StoreKey {
   BALANCES = 'dfx.srv.balances',
   LANGUAGE = 'dfx.srv.language',
   ACTIVE_WALLET = 'dfx.srv.activeWallet',
+  INFO_BANNER = 'dfx.srv.infoBanner',
   QUERY_PARAMS = 'dfx.srv.queryParams',
 }
 
@@ -68,6 +71,11 @@ export function useStore(): StoreInterface {
       get: () => get(StoreKey.ACTIVE_WALLET) as WalletType,
       set: (value: WalletType) => set(StoreKey.ACTIVE_WALLET, value),
       remove: () => remove(StoreKey.ACTIVE_WALLET),
+    },
+    infoBanner: {
+      get: () => getJson(StoreKey.INFO_BANNER),
+      set: (value: InfoBanner) => setJson(StoreKey.INFO_BANNER, value),
+      remove: () => remove(StoreKey.INFO_BANNER),
     },
     queryParams: {
       get: () => getJson<AppParams>(StoreKey.QUERY_PARAMS),

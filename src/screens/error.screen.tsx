@@ -4,7 +4,7 @@ import { useNavigation } from 'src/hooks/navigation.hook';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 
-export function ErrorScreen(): JSX.Element {
+export default function ErrorScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const [params] = useSearchParams();

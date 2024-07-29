@@ -1,4 +1,4 @@
-import { ApiError, TransactionFilterKey, useUser, useUserContext } from '@dfx.swiss/react';
+import { ApiError, TransactionFilterKey, useUserContext } from '@dfx.swiss/react';
 import {
   AlignContent,
   Form,
@@ -16,8 +16,8 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from './error-hint';
@@ -43,50 +43,48 @@ const equalKeys = (a: TransactionFilterKey[] | undefined, b: TransactionFilterKe
   !(a || b) || (a && b && a.length === b.length && a.every((v) => b.includes(v)));
 
 export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTMLDivElement> }) {
-  const { user, reloadUser } = useUserContext();
+  const { filterCT, keyCT, generateKeyCT, deleteKeyCT, updateFilterCT } = useUserContext();
   const { lang } = useAppParams();
   const { translate } = useSettingsContext();
-  const { width } = useAppHandlingContext();
-  const { apiFilterCT, apiKeyCT } = user?.activeAddress ?? {};
-  const { generateCTApiKey, deleteCTApiKey, updateCTApiFilter } = useUser();
+  const { width } = useWindowContext();
   const [error, setError] = useState<string>();
   const [isKeyLoading, setIsKeyLoading] = useState(false);
-  const [apiSecret, setApiSecret] = useState<string | undefined>(undefined);
   const [showNotification, setShowNotification] = useState(false);
+  const [apiSecret, setApiSecret] = useState<string | undefined>(undefined);
 
   const filterOptions = [
     {
       key: 'all',
-      label: translate('screens/payment', 'All'),
-      value: translate('screens/payment', 'Transfer all data'),
+      label: 'All',
+      value: 'Transfer all data',
     },
     {
       key: 'filtered',
-      label: translate('screens/payment', 'Filtered'),
-      value: translate('screens/payment', 'Transfer filtered data'),
+      label: 'Filtered',
+      value: 'Transfer filtered data',
     },
   ] as FilterMode[];
 
   const filterTypes = [
     {
       key: 'buy',
-      label: translate('screens/payment', 'Buy'),
-      value: translate('screens/payment', 'Buy transactions'),
+      label: 'Buy',
+      value: 'Buy transactions',
     },
     {
       key: 'sell',
-      label: translate('screens/payment', 'Sell'),
-      value: translate('screens/payment', 'Sell transactions'),
+      label: 'Sell',
+      value: 'Sell transactions',
     },
     {
       key: 'staking',
-      label: translate('screens/payment', 'Staking'),
-      value: translate('screens/payment', 'Staking transactions'),
+      label: 'Staking',
+      value: 'Staking transactions',
     },
     {
       key: 'ref',
-      label: translate('screens/payment', 'Referral'),
-      value: translate('screens/payment', 'Referral rewards'),
+      label: 'Referral',
+      value: 'Referral rewards',
     },
   ] as Filter[];
 
@@ -101,23 +99,23 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
 
   useEffect(() => {
     if (!filter) {
-      setValue('filterMode', filterOptions[apiFilterCT?.length ? 1 : 0]);
+      setValue('filterMode', filterOptions[filterCT?.length ? 1 : 0]);
       setValue(
         'filter',
-        filterTypes.filter((f) => apiFilterCT?.includes(f.key)),
+        filterTypes.filter((f) => filterCT?.includes(f.key)),
       );
     }
-  }, [apiFilterCT]);
+  }, [filterCT]);
 
   useEffect(() => {
-    if (filterMode === 'all' && apiFilterCT?.length) {
+    if (filterMode === 'all' && filterCT?.length) {
       setValue('filter', undefined);
       updateFilter();
     }
   }, [filterMode]);
 
   useEffect(() => {
-    if (filter && !equalKeys(apiFilterCT, filter)) {
+    if (filter && !equalKeys(filterCT, filter)) {
       updateFilter(filter);
     }
   }, [filter]);
@@ -135,26 +133,21 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
 
   const onGenerateKey = () => {
     setIsKeyLoading(true);
-    generateCTApiKey(apiFilterCT)
-      .then((keys) => {
-        reloadUser();
-        setApiSecret(keys.secret);
-      })
+    generateKeyCT(filterCT)
+      .then((keys) => setApiSecret(keys?.secret))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsKeyLoading(false));
   };
 
   const onDeleteKey = () => {
     setIsKeyLoading(true);
-    deleteCTApiKey()
-      .then(() => reloadUser())
+    deleteKeyCT()
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsKeyLoading(false));
   };
 
   const updateFilter = (types?: TransactionFilterKey[]) => {
-    updateCTApiFilter(types)
-      .then(() => reloadUser())
+    updateFilterCT(types)
       .then(() => toggleNotification())
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   };
@@ -173,7 +166,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
             onClick={onOpenCt}
             color={StyledButtonColor.STURDY_WHITE}
           />
-          {apiKeyCT == null ? (
+          {keyCT == null ? (
             <StyledVerticalStack gap={3} full>
               <StyledButton
                 label={translate('screens/payment', 'Generate API key')}
@@ -186,8 +179,8 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
               <StyledDataTable alignContent={AlignContent.RIGHT} minWidth={false}>
                 <StyledDataTableRow label={translate('screens/payment', 'API key')}>
                   <div className="flex flex-row gap-2">
-                    <p>{blankedAddress(apiKeyCT, { width })}</p>
-                    <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(apiKeyCT ?? '')} />
+                    <p>{blankedAddress(keyCT, { width })}</p>
+                    <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(keyCT ?? '')} />
                   </div>
                 </StyledDataTableRow>
                 {apiSecret && (
@@ -222,8 +215,8 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
                 rootRef={rootRef}
                 placeholder={translate('general/actions', 'Select...')}
                 items={filterOptions}
-                labelFunc={(item) => item.label}
-                descriptionFunc={(item) => item.value}
+                labelFunc={(item) => translate('screens/payment', item.label)}
+                descriptionFunc={(item) => translate('screens/payment', item.value)}
               />
               {filterMode === 'filtered' && (
                 <StyledDropdownMultiChoice
@@ -231,8 +224,8 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
                   rootRef={rootRef}
                   placeholder={translate('general/actions', 'Select data to import...')}
                   items={filterTypes}
-                  labelFunc={(item) => item.label}
-                  descriptionFunc={(item) => item.value}
+                  labelFunc={(item) => translate('screens/payment', item.label)}
+                  descriptionFunc={(item) => translate('screens/payment', item.value)}
                 />
               )}
             </StyledVerticalStack>
