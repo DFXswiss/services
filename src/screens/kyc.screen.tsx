@@ -457,7 +457,7 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.DOCUMENT_UPLOAD:
       return <DocumentUpload {...props} />;
 
-    default:
+    case KycStepName.DFX_APPROVAL:
       return <></>;
   }
 }
@@ -790,7 +790,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
   );
 }
 
-function LegalEntityData({ rootRef, code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
+function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setLegalEntityData } = useKyc();
   const { legalEntityToString } = useKycHelper();
@@ -810,7 +810,7 @@ function LegalEntityData({ rootRef, code, mode, isLoading, step, onDone, onBack 
     setIsUpdating(true);
     setError(undefined);
     setLegalEntityData(code, step.session.url, data)
-      .then(() => (mode === Mode.KYC ? onDone() : onBack()))
+      .then(onDone)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
   }
@@ -856,7 +856,7 @@ function LegalEntityData({ rootRef, code, mode, isLoading, step, onDone, onBack 
   );
 }
 
-function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
+function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setNationalityData } = useKyc();
   const { getCountries } = useKyc();
@@ -885,7 +885,7 @@ function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack 
     setIsUpdating(true);
     setError(undefined);
     setNationalityData(code, step.session.url, data)
-      .then(() => (mode === Mode.KYC ? onDone() : onBack()))
+      .then(onDone)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
   }
@@ -942,7 +942,7 @@ interface FormDataFile {
   file: File;
 }
 
-function FileUpload({ code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
+function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { nameToString } = useKycHelper();
   const { setFileData } = useKyc();
@@ -968,7 +968,7 @@ function FileUpload({ code, mode, isLoading, step, onDone, onBack }: EditProps):
     setIsUpdating(true);
     setError(undefined);
     setFileData(code, step.session.url, fileData as KycFileData)
-      .then(() => (mode === Mode.KYC ? onDone() : onBack()))
+      .then(onDone)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
   }
@@ -1012,7 +1012,7 @@ function FileUpload({ code, mode, isLoading, step, onDone, onBack }: EditProps):
   );
 }
 
-function SignatoryPowerData({ rootRef, code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
+function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setSignatoryPowerData } = useKyc();
   const { signatoryPowerToString } = useKycHelper();
@@ -1032,7 +1032,7 @@ function SignatoryPowerData({ rootRef, code, mode, isLoading, step, onDone, onBa
     setIsUpdating(true);
     setError(undefined);
     setSignatoryPowerData(code, step.session.url, data)
-      .then(() => (mode === Mode.KYC ? onDone() : onBack()))
+      .then(onDone)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
   }
