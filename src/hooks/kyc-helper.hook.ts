@@ -34,10 +34,10 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepName.PERSONAL_DATA]: 'Personal data',
     [KycStepName.LEGAL_ENTITY]: 'Legal entity',
     [KycStepName.STOCK_REGISTER]: 'Stock register',
-    [KycStepName.NATIONALITY_DATA]: 'Nationality data',
+    [KycStepName.NATIONALITY_DATA]: 'Nationality',
     [KycStepName.COMMERCIAL_REGISTER]: 'Commercial register',
     [KycStepName.SIGNATORY_POWER]: 'Signatory power',
-    [KycStepName.AUTHORITY]: 'Authority',
+    [KycStepName.AUTHORITY]: 'Power of Attorney',
     [KycStepName.IDENT]: 'Identification',
     [KycStepName.FINANCIAL_DATA]: 'Additional data',
     [KycStepName.DOCUMENT_UPLOAD]: 'Document upload',
@@ -90,11 +90,11 @@ export function useKycHelper(): KycHelperInterface {
   function legalEntityToString(entity: LegalEntity): string {
     switch (entity) {
       case LegalEntity.PUBLIC_LIMITED_COMPANY:
-        return 'Public Limited Company';
+        return translate('screens/kyc', 'Public Limited Company');
       case LegalEntity.LIMITED_LIABILITY_COMPANY:
-        return 'Limited Liability Company';
+        return translate('screens/kyc', 'Limited Liability Company');
       case LegalEntity.LIFE_INSURANCE:
-        return 'Life Insurance';
+        return translate('screens/kyc', 'Life Insurance');
       default:
         return entity;
     }
@@ -103,11 +103,11 @@ export function useKycHelper(): KycHelperInterface {
   function signatoryPowerToString(power: SignatoryPower): string {
     switch (power) {
       case SignatoryPower.SINGLE:
-        return 'Authorized to sign individually';
+        return translate('screens/kyc', 'Authorized to sign individually');
       case SignatoryPower.DOUBLE:
-        return 'Authorized to sign jointly';
+        return translate('screens/kyc', 'Authorized to sign jointly');
       case SignatoryPower.NONE:
-        return 'No signing authorization';
+        return translate('screens/kyc', 'No signing authorization');
     }
   }
 

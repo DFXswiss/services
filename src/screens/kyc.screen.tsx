@@ -824,7 +824,7 @@ function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps):
       <StyledVerticalStack gap={6} full center>
         <StyledVerticalStack gap={2} full center>
           <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-            {translate('screens/kyc', 'Legal Entity')}
+            {translate('screens/kyc', 'Legal entity')}
           </p>
           <StyledDropdown
             rootRef={rootRef}
@@ -833,7 +833,7 @@ function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps):
             label=""
             placeholder={translate('general/actions', 'Select...')}
             items={Object.values(LegalEntity)}
-            labelFunc={(item) => translate('screens/kyc', legalEntityToString(item))}
+            labelFunc={(item) => legalEntityToString(item)}
           />
         </StyledVerticalStack>
 
@@ -1055,7 +1055,7 @@ function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProp
             label=""
             placeholder={translate('general/actions', 'Select...')}
             items={Object.values(SignatoryPower)}
-            labelFunc={(item) => translate('screens/kyc', signatoryPowerToString(item))}
+            labelFunc={(item) => signatoryPowerToString(item)}
           />
         </StyledVerticalStack>
 
