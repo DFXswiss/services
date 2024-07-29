@@ -9,7 +9,6 @@ import {
   KycInfo,
   KycLevel,
   KycPersonalData,
-  KycResult,
   KycSession,
   KycStep,
   KycStepName,
@@ -51,6 +50,14 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import {
+  KycFileData,
+  KycLegalEntityData,
+  KycNationalityData,
+  KycSignatoryPowerData,
+  LegalEntity,
+  SignatoryPower,
+} from '@dfx.swiss/react/dist/definitions/kyc';
 import { RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
@@ -423,22 +430,22 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.PERSONAL_DATA:
       return <PersonalData {...props} />;
 
-    case 'LegalEntity' as any: // TODO: remove as any
-      return <LegalEntity {...props} />;
+    case KycStepName.LEGAL_ENTITY:
+      return <LegalEntityData {...props} />;
 
-    case 'StockRegister' as any: // TODO: remove as any
+    case KycStepName.STOCK_REGISTER:
       return <FileUpload {...props} />;
 
-    case 'NationalityData' as any: // TODO: remove as any
+    case KycStepName.NATIONALITY_DATA:
       return <NationalityData {...props} />;
 
-    case 'CommercialRegister' as any: // TODO: remove any
+    case KycStepName.COMMERCIAL_REGISTER:
       return <FileUpload {...props} />;
 
-    case 'SignatoryPower' as any: // TODO: remove any
-      return <SignatoryPower {...props} />;
+    case KycStepName.SIGNATORY_POWER:
+      return <SignatoryPowerData {...props} />;
 
-    case 'Authority' as any: // TODO: remove any
+    case KycStepName.AUTHORITY:
       return <FileUpload {...props} />;
 
     case KycStepName.IDENT:
@@ -783,98 +790,10 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
   );
 }
 
-// TODO: Add this to packages
-interface KycNationalityData {
-  nationality: Country;
-}
-
-// TODO: Add this to packages
-interface KycLegalEntityData {
-  legalEntity: LegalEntityType;
-}
-
-// TODO: Add this to packages
-interface KycSignatoryPowerData {
-  signatoryPower: SignatoryPowerType;
-}
-
-// TODO: Add this to packages
-enum LegalEntityType {
-  PUBLIC_LIMITED_COMPANY = 'PublicLimitedCompany',
-  LIMITED_LIABILITY_COMPANY = 'LimitedLiabilityCompany',
-  ASSOCIATION = 'Association',
-  FOUNDATION = 'Foundation',
-  LIFE_INSURANCE = 'LifeInsurance',
-  TRUST = 'Trust',
-  OTHER = 'Other',
-}
-
-function legalEntityToString(entity: LegalEntityType): string {
-  switch (entity) {
-    case LegalEntityType.PUBLIC_LIMITED_COMPANY:
-      return 'Public Limited Company';
-    case LegalEntityType.LIMITED_LIABILITY_COMPANY:
-      return 'Limited Liability Company';
-    case LegalEntityType.LIFE_INSURANCE:
-      return 'Life Insurance';
-    default:
-      return entity;
-  }
-}
-
-// TODO: Add this to packages
-enum SignatoryPowerType {
-  SINGLE = 'Single',
-  DOUBLE = 'Double',
-  NONE = 'None',
-}
-
-function signatoryPowerToString(power: SignatoryPowerType): string {
-  switch (power) {
-    case SignatoryPowerType.SINGLE:
-      return 'Authorized to sign individually';
-    case SignatoryPowerType.DOUBLE:
-      return 'Authorized to sign jointly';
-    case SignatoryPowerType.NONE:
-      return 'No signing authorization';
-  }
-}
-
-// TODO: Remove this
-export interface CallConfig {
-  url: string;
-  code: string;
-  method: 'GET' | 'PUT' | 'POST' | 'DELETE';
-  data?: any;
-  noJson?: boolean;
-}
-
-// TODO: Remove this
-async function call<T>(config: CallConfig): Promise<T> {
-  return fetch(config.url, buildInit(config)).then((response) => {
-    if (response.ok) {
-      return response.json().catch(() => undefined);
-    }
-    return response.json().then((body) => {
-      throw body;
-    });
-  });
-}
-
-// TODO: Remove this
-function buildInit({ code, method, data, noJson }: CallConfig): RequestInit {
-  return {
-    method: method,
-    headers: {
-      ...(noJson ? undefined : { 'Content-Type': 'application/json' }),
-      'x-kyc-code': code,
-    },
-    body: noJson ? data : JSON.stringify(data),
-  };
-}
-
-function LegalEntity({ rootRef, code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
+function LegalEntityData({ rootRef, code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
+  const { setLegalEntityData } = useKyc();
+  const { legalEntityToString } = useKycHelper();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
@@ -884,11 +803,6 @@ function LegalEntity({ rootRef, code, mode, isLoading, step, onDone, onBack }: E
     handleSubmit,
     formState: { isValid, errors },
   } = useForm<KycLegalEntityData>({ mode: 'onTouched' });
-
-  // TODO: add setLegalEntityData to useKyc hook
-  function setLegalEntityData(code: string, url: string, data: KycLegalEntityData): Promise<KycResult> {
-    return call({ url, code, method: 'PUT', data });
-  }
 
   function onSubmit(data: KycLegalEntityData) {
     if (!step.session) return;
@@ -918,7 +832,7 @@ function LegalEntity({ rootRef, code, mode, isLoading, step, onDone, onBack }: E
             full
             label=""
             placeholder={translate('general/actions', 'Select...')}
-            items={Object.values(LegalEntityType)}
+            items={Object.values(LegalEntity)}
             labelFunc={(item) => translate('screens/kyc', legalEntityToString(item))}
           />
         </StyledVerticalStack>
@@ -944,6 +858,7 @@ function LegalEntity({ rootRef, code, mode, isLoading, step, onDone, onBack }: E
 
 function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
+  const { setNationalityData } = useKyc();
   const { getCountries } = useKyc();
 
   const [isCountryLoading, setIsCountryLoading] = useState(true);
@@ -963,11 +878,6 @@ function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack 
     handleSubmit,
     formState: { isValid, errors },
   } = useForm<KycNationalityData>({ mode: 'onTouched' });
-
-  // TODO: add setNationalityData to useKyc hook
-  function setNationalityData(code: string, url: string, data: KycNationalityData): Promise<KycResult> {
-    return call({ url, code, method: 'PUT', data });
-  }
 
   function onSubmit(data: KycNationalityData) {
     if (!step.session) return;
@@ -1028,19 +938,14 @@ function NationalityData({ rootRef, code, mode, isLoading, step, onDone, onBack 
   );
 }
 
-// TODO: Add this to packages
 interface FormDataFile {
   file: File;
-}
-// TODO: Add this to packages
-interface KycFileData {
-  file: string;
-  fileName?: string;
 }
 
 function FileUpload({ code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { nameToString } = useKycHelper();
+  const { setFileData } = useKyc();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
@@ -1050,11 +955,6 @@ function FileUpload({ code, mode, isLoading, step, onDone, onBack }: EditProps):
     handleSubmit,
     formState: { isValid, errors },
   } = useForm<FormDataFile>({ mode: 'onTouched' });
-
-  // TODO: add setCommercialRegister to useKyc hook
-  function setFileData(code: string, url: string, data: KycFileData): Promise<KycResult> {
-    return call({ url, code, method: 'PUT', data });
-  }
 
   async function onSubmit(data: FormDataFile) {
     if (!step.session) return;
@@ -1112,8 +1012,10 @@ function FileUpload({ code, mode, isLoading, step, onDone, onBack }: EditProps):
   );
 }
 
-function SignatoryPower({ rootRef, code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
+function SignatoryPowerData({ rootRef, code, mode, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
+  const { setSignatoryPowerData } = useKyc();
+  const { signatoryPowerToString } = useKycHelper();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
@@ -1123,11 +1025,6 @@ function SignatoryPower({ rootRef, code, mode, isLoading, step, onDone, onBack }
     handleSubmit,
     formState: { isValid, errors },
   } = useForm<KycSignatoryPowerData>({ mode: 'onTouched' });
-
-  // TODO: add setSignatoryPowerData to useKyc hook
-  function setSignatoryPowerData(code: string, url: string, data: KycSignatoryPowerData): Promise<KycResult> {
-    return call({ url, code, method: 'PUT', data });
-  }
 
   function onSubmit(data: KycSignatoryPowerData) {
     if (!step.session) return;
@@ -1157,7 +1054,7 @@ function SignatoryPower({ rootRef, code, mode, isLoading, step, onDone, onBack }
             full
             label=""
             placeholder={translate('general/actions', 'Select...')}
-            items={Object.values(SignatoryPowerType)}
+            items={Object.values(SignatoryPower)}
             labelFunc={(item) => translate('screens/kyc', signatoryPowerToString(item))}
           />
         </StyledVerticalStack>

@@ -1,4 +1,5 @@
 import { KycLevel, KycStepName, KycStepType, LimitPeriod, TradingLimit, Utils, useUserContext } from '@dfx.swiss/react';
+import { LegalEntity, SignatoryPower } from '@dfx.swiss/react/dist/definitions/kyc';
 import { useMemo } from 'react';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from './navigation.hook';
@@ -14,6 +15,8 @@ interface KycHelperInterface {
   limitToString: (limit: TradingLimit) => string;
   nameToString: (stepName: KycStepName) => string;
   typeToString: (stepType: KycStepType) => string;
+  legalEntityToString: (entity: LegalEntity) => string;
+  signatoryPowerToString: (power: SignatoryPower) => string;
 }
 
 export function useKycHelper(): KycHelperInterface {
@@ -26,20 +29,19 @@ export function useKycHelper(): KycHelperInterface {
     [LimitPeriod.YEAR]: 'per year',
   };
 
-  const stepMap: Record<KycStepName | string, string> = {
-    // TODO: remove '| string' type when all steps are added
+  const stepMap: Record<KycStepName, string> = {
     [KycStepName.CONTACT_DATA]: 'Contact data',
     [KycStepName.PERSONAL_DATA]: 'Personal data',
-    LegalEntity: 'Legal entity', // TODO: Add to KycStepName
-    StockRegister: 'Stock register', // TODO: Add to KycStepName
-    NationalityData: 'Nationality data', // TODO: Add to KycStepName
-    CommercialRegister: 'Commercial register', // TODO: Add to KycStepName
-    SignatoryPower: 'Signatory power', // TODO: Add to KycStepName
-    Authority: 'Authority', // TODO: Add to KycStepName
+    [KycStepName.LEGAL_ENTITY]: 'Legal entity',
+    [KycStepName.STOCK_REGISTER]: 'Stock register',
+    [KycStepName.NATIONALITY_DATA]: 'Nationality data',
+    [KycStepName.COMMERCIAL_REGISTER]: 'Commercial register',
+    [KycStepName.SIGNATORY_POWER]: 'Signatory power',
+    [KycStepName.AUTHORITY]: 'Authority',
     [KycStepName.IDENT]: 'Identification',
     [KycStepName.FINANCIAL_DATA]: 'Additional data',
     [KycStepName.DOCUMENT_UPLOAD]: 'Document upload',
-    DfxApproval: 'DFX approval', // TODO: Add to KycStepName
+    [KycStepName.DFX_APPROVAL]: 'DFX approval',
   };
 
   const typeMap: Record<KycStepType, string> = {
@@ -85,6 +87,30 @@ export function useKycHelper(): KycHelperInterface {
     return translate('screens/kyc', typeMap[stepType]);
   }
 
+  function legalEntityToString(entity: LegalEntity): string {
+    switch (entity) {
+      case LegalEntity.PUBLIC_LIMITED_COMPANY:
+        return 'Public Limited Company';
+      case LegalEntity.LIMITED_LIABILITY_COMPANY:
+        return 'Limited Liability Company';
+      case LegalEntity.LIFE_INSURANCE:
+        return 'Life Insurance';
+      default:
+        return entity;
+    }
+  }
+
+  function signatoryPowerToString(power: SignatoryPower): string {
+    switch (power) {
+      case SignatoryPower.SINGLE:
+        return 'Authorized to sign individually';
+      case SignatoryPower.DOUBLE:
+        return 'Authorized to sign jointly';
+      case SignatoryPower.NONE:
+        return 'No signing authorization';
+    }
+  }
+
   return useMemo(
     () => ({
       start,
@@ -96,6 +122,8 @@ export function useKycHelper(): KycHelperInterface {
       limitToString,
       nameToString,
       typeToString,
+      legalEntityToString,
+      signatoryPowerToString,
     }),
     [user, translate],
   );
