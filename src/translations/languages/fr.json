@@ -9,8 +9,10 @@
     "Ok": "Ok",
     "Cancel": "Annuler",
     "Finish": "Terminé",
+    "Copy": "Copier",
     "Save": "Économiser",
     "Delete": "Supprimer",
+    "Rename": "Renommer",
     "Login": "Login",
     "Logout": "Logout",
     "Back": "Retour",
@@ -22,8 +24,11 @@
     "No": "Non",
     "Drop files here": "Déposer des fichiers ici",
     "Browse": "Parcourir",
-    "Delete Address": "Supprimer l'adresse",
-    "Copy Address": "Copier l'adresse"
+    "Rename address": "Renommer l'adresse",
+    "Delete address": "Supprimer l'adresse",
+    "Delete account": "Supprimer le compte",
+    "Copy Address": "Copier l'adresse",
+    "Open Explorer": "Ouvrir l'explorateur"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -235,9 +240,7 @@
     "Credit": "Crédit",
     "Paid credit": "Crédit payé",
     "User count": "Nombre d'utilisateurs",
-    "Active user count": "Nombre d'utilisateurs actifs",
-
-    "delete": "Êtes-vous sûr de vouloir supprimer l'adresse <1>{{address}}</1> de votre compte DFX ? Cette action est irréversible."
+    "Active user count": "Nombre d'utilisateurs actifs"
   },
   "screens/buy": {
     "You spend": "Vous dépensez",
@@ -473,6 +476,17 @@
     "If you have a specific question or problem, you can submit a ticket here.": "Si vous avez une question ou un problème spécifique, vous pouvez soumettre un ticket ici.",
     "Join now": "Rejoignez maintenant",
     "Please be cautious. We will never contact you first. Beware of scams.": "Soyez prudent. Nous ne vous contacterons jamais en premier. Méfiez-vous des arnaques."
+  },
+  "screens/settings": {
+    "Settings": "Paramètres",
+    "Your Wallets": "Vos Portefeuilles",
+    "Active": "Actif",
+    "Language": "Langue",
+    "Currency": "Devise",
+    "Label": "Étiquette",
+
+    "delete": "Êtes-vous sûr de vouloir supprimer l'adresse <1>{{address}}</1> de votre compte DFX ? Cette action est irréversible.",
+    "Deleting your account is irreversible. Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "La suppression de votre compte est irréversible. Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support."
   },
   "navigation/links": {
     "Buy": "Acheter",
