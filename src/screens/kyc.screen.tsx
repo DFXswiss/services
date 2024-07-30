@@ -122,7 +122,7 @@ export default function KycScreen(): JSX.Element {
   useUserGuard('/login', !kycCode);
 
   useEffect(() => {
-    if (info) changeLanguage(info.language);
+    if (!user && info) changeLanguage(info.language);
   }, [info]);
 
   useEffect(() => {
