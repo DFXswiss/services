@@ -41,6 +41,7 @@ import {
   StyledDataTableRow,
   StyledDropdown,
   StyledDropdownMultiChoice,
+  StyledFileUpload,
   StyledHorizontalStack,
   StyledIconButton,
   StyledInput,
@@ -49,6 +50,14 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import {
+  KycFileData,
+  KycLegalEntityData,
+  KycNationalityData,
+  KycSignatoryPowerData,
+  LegalEntity,
+  SignatoryPower,
+} from '@dfx.swiss/react/dist/definitions/kyc';
 import { RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
@@ -61,7 +70,7 @@ import { useGeoLocation } from '../hooks/geo-location.hook';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { delay } from '../util/utils';
+import { delay, toBase64 } from '../util/utils';
 import { IframeMessageType } from './kyc-redirect.screen';
 
 enum Mode {
@@ -421,6 +430,24 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.PERSONAL_DATA:
       return <PersonalData {...props} />;
 
+    case KycStepName.LEGAL_ENTITY:
+      return <LegalEntityData {...props} />;
+
+    case KycStepName.STOCK_REGISTER:
+      return <FileUpload {...props} />;
+
+    case KycStepName.NATIONALITY_DATA:
+      return <NationalityData {...props} />;
+
+    case KycStepName.COMMERCIAL_REGISTER:
+      return <FileUpload {...props} />;
+
+    case KycStepName.SIGNATORY_POWER:
+      return <SignatoryPowerData {...props} />;
+
+    case KycStepName.AUTHORITY:
+      return <FileUpload {...props} />;
+
     case KycStepName.IDENT:
       return <Ident {...props} />;
 
@@ -429,6 +456,9 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.DOCUMENT_UPLOAD:
       return <DocumentUpload {...props} />;
+
+    case KycStepName.DFX_APPROVAL:
+      return <></>;
   }
 }
 
@@ -755,6 +785,294 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
               />
             </>
           ))}
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { setLegalEntityData } = useKyc();
+  const { legalEntityToString } = useKycHelper();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<KycLegalEntityData>({ mode: 'onTouched' });
+
+  function onSubmit(data: KycLegalEntityData) {
+    if (!step.session) return;
+
+    setIsUpdating(true);
+    setError(undefined);
+    setLegalEntityData(code, step.session.url, data)
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    legalEntity: Validations.Required,
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full center>
+          <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Legal entity')}
+          </p>
+          <StyledDropdown
+            rootRef={rootRef}
+            name="legalEntity"
+            full
+            label=""
+            placeholder={translate('general/actions', 'Select...')}
+            items={Object.values(LegalEntity)}
+            labelFunc={(item) => legalEntityToString(item)}
+          />
+        </StyledVerticalStack>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUpdating || isLoading}
+        />
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { setNationalityData } = useKyc();
+  const { getCountries } = useKyc();
+
+  const [isCountryLoading, setIsCountryLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+  const [countries, setCountries] = useState<Country[]>([]);
+
+  useEffect(() => {
+    getCountries(code)
+      .then(setCountries)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsCountryLoading(false));
+  }, []);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<KycNationalityData>({ mode: 'onTouched' });
+
+  function onSubmit(data: KycNationalityData) {
+    if (!step.session) return;
+
+    setIsUpdating(true);
+    setError(undefined);
+    setNationalityData(code, step.session.url, data)
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    nationality: Validations.Required,
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full center>
+          <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Nationality')}
+          </p>
+          {isCountryLoading ? (
+            <StyledLoadingSpinner size={SpinnerSize.LG} />
+          ) : (
+            <StyledSearchDropdown
+              rootRef={rootRef}
+              full
+              name="nationality"
+              autocomplete="nationality"
+              label=""
+              placeholder={translate('general/actions', 'Select...')}
+              items={countries}
+              labelFunc={(item) => item.name}
+              filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+              matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+            />
+          )}
+        </StyledVerticalStack>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUpdating || isLoading}
+        />
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+interface FormDataFile {
+  file: File;
+}
+
+function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { nameToString } = useKycHelper();
+  const { setFileData } = useKyc();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<FormDataFile>({ mode: 'onTouched' });
+
+  async function onSubmit(data: FormDataFile) {
+    if (!step.session) return;
+
+    const fileData = { file: data.file && (await toBase64(data.file)), fileName: data.file?.name };
+    if (!fileData.file) {
+      setError('No file selected');
+      return;
+    }
+
+    setIsUpdating(true);
+    setError(undefined);
+    setFileData(code, step.session.url, fileData as KycFileData)
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    file: Validations.Required,
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', nameToString(step.name))}
+          </p>
+          <StyledFileUpload
+            name="file"
+            label=""
+            placeholder={translate('general/actions', 'Drop files here')}
+            buttonLabel={translate('general/actions', 'Browse')}
+            full
+          />
+        </StyledVerticalStack>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUpdating || isLoading}
+        />
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { setSignatoryPowerData } = useKyc();
+  const { signatoryPowerToString } = useKycHelper();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<KycSignatoryPowerData>({ mode: 'onTouched' });
+
+  function onSubmit(data: KycSignatoryPowerData) {
+    if (!step.session) return;
+
+    setIsUpdating(true);
+    setError(undefined);
+    setSignatoryPowerData(code, step.session.url, data)
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    signatoryPower: Validations.Required,
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full center>
+          <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Signatory power')}
+          </p>
+          <StyledDropdown
+            rootRef={rootRef}
+            name="signatoryPower"
+            full
+            label=""
+            placeholder={translate('general/actions', 'Select...')}
+            items={Object.values(SignatoryPower)}
+            labelFunc={(item) => signatoryPowerToString(item)}
+          />
+        </StyledVerticalStack>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUpdating || isLoading}
+        />
       </StyledVerticalStack>
     </Form>
   );
