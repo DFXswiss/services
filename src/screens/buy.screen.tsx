@@ -78,7 +78,7 @@ const EmbeddedWallet = 'CakeWallet';
 export default function BuyScreen(): JSX.Element {
   useAddressGuard();
 
-  const { translate, translateError } = useSettingsContext();
+  const { translate, translateError, currency: prefCurrency } = useSettingsContext();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
   const { currencies, receiveFor } = useBuy();
@@ -192,9 +192,10 @@ export default function BuyScreen(): JSX.Element {
     const currency =
       getCurrency(availableCurrencies, selectedCurrency?.name) ??
       getCurrency(availableCurrencies, assetIn) ??
+      getCurrency(availableCurrencies, prefCurrency?.name) ??
       getDefaultCurrency(availableCurrencies);
-    if (currency) setVal('currency', currency);
-  }, [assetIn, getCurrency, currencies, selectedPaymentMethod]);
+    if (prefCurrency && currency) setVal('currency', currency);
+  }, [assetIn, getCurrency, prefCurrency, currencies, selectedPaymentMethod]);
 
   useEffect(() => {
     const selectedMethod =

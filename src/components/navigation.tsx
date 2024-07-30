@@ -1,26 +1,19 @@
-import { Language, useAuthContext, useSessionContext } from '@dfx.swiss/react';
+import { useAuthContext, useSessionContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
-  Form,
   IconColor,
   IconSize,
   IconVariant,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
-  StyledDropdown,
 } from '@dfx.swiss/react-components';
-import { PropsWithChildren, SetStateAction, forwardRef, useEffect } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { PropsWithChildren, SetStateAction, forwardRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from '../hooks/navigation.hook';
 import { NavigationLink } from './navigation-link';
-
-interface FormData {
-  language: Language;
-}
 
 interface BackButtonProps extends PropsWithChildren {
   onBack?: () => void;
@@ -115,21 +108,8 @@ function MenuIcon({ icon, setIsNavigationOpen }: IconContentProps): JSX.Element 
 function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JSX.Element {
   const { navigate } = useNavigation();
   const { authenticationToken, session } = useAuthContext();
-  const { translate, language, availableLanguages, changeLanguage } = useSettingsContext();
+  const { translate } = useSettingsContext();
   const { isLoggedIn, logout: apiLogout } = useSessionContext();
-
-  const {
-    control,
-    formState: { errors },
-  } = useForm<FormData>({ defaultValues: { language } });
-  const selectedLanguage = useWatch({ control, name: 'language' });
-
-  useEffect(() => {
-    if (selectedLanguage?.id !== language?.id) {
-      changeLanguage(selectedLanguage);
-      setIsNavigationOpen(false);
-    }
-  }, [selectedLanguage]);
 
   async function login() {
     navigate('/login');
@@ -183,6 +163,12 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
           />
           <NavigationLink
             icon={IconVariant.SETTINGS}
+            label={translate('screens/settings', 'Settings')}
+            url="/settings"
+            target="_self"
+          />
+          <NavigationLink
+            icon={IconVariant.SETTINGS}
             label={translate('navigation/links', 'My DFX')}
             url={
               authenticationToken && session?.address
@@ -217,19 +203,6 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             label={translate('navigation/links', 'Imprint')}
             url={process.env.REACT_APP_IMP_URL}
           />
-
-          <div className="mt-4">
-            <Form control={control} errors={errors}>
-              <StyledDropdown
-                name="language"
-                label=""
-                placeholder={translate('general/actions', 'Select...')}
-                items={Object.values(availableLanguages)}
-                labelFunc={(item) => item.name}
-                descriptionFunc={(item) => item.foreignName}
-              />
-            </Form>
-          </div>
 
           <StyledButton
             className="mt-4"

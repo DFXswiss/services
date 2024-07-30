@@ -14,6 +14,8 @@ import {
   Form,
   IconVariant,
   SpinnerSize,
+  StyledButton,
+  StyledButtonWidth,
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
@@ -25,12 +27,12 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { AddressDelete } from 'src/components/home/address-delete';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress } from 'src/util/utils';
+import { useStore } from 'src/hooks/store.hook';
+import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -45,19 +47,18 @@ export default function AccountScreen(): JSX.Element {
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
   const { limitToString, levelToString } = useKycHelper();
   const { navigate } = useNavigation();
-  const { logout, isLoggedIn } = useSessionContext();
+  const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
+  const { activeWallet } = useStore();
   const { getRef } = useUser();
   const { width } = useWindowContext();
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized } = useWalletContext();
-  const { changeUserAddress, deleteUserAddress } = useUser();
-  const { setSession } = useWalletContext();
+  const { changeAddress } = useUserContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setRefferal] = useState<Referral | undefined>();
-  const [showWalletDeleteOverlay, setShowWalletDeleteOverlay] = useState(false);
 
   useUserGuard('/login');
 
@@ -82,7 +83,11 @@ export default function AccountScreen(): JSX.Element {
 
   useEffect(() => {
     if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address) {
-      onSwitchUser(selectedAddress.address);
+      changeAddress(selectedAddress.address)
+        .then(() => activeWallet.remove())
+        .catch(() => {
+          // ignore errors
+        });
     }
   }, [selectedAddress]);
 
@@ -113,31 +118,8 @@ export default function AccountScreen(): JSX.Element {
       });
   }
 
-  async function onSwitchUser(address: string): Promise<void> {
-    const { accessToken } = await changeUserAddress(address);
-    setSession(accessToken);
-  }
-
-  async function onDeleteUser(): Promise<void> {
-    try {
-      await deleteUserAddress();
-      if (user!.addresses.length > 0) {
-        onSwitchUser(user!.addresses[0].address);
-        setValue('address', user!.addresses[0]);
-      } else {
-        logout();
-      }
-    } catch (e) {
-      // ignore errors
-    }
-  }
-
-  const title = showWalletDeleteOverlay
-    ? `${translate('general/actions', 'Delete Address')}?`
-    : isEmbedded
-    ? translate('screens/home', 'DFX services')
-    : translate('screens/home', 'Account');
-  const hasBackButton = showWalletDeleteOverlay || (canClose && !isEmbedded);
+  const title = isEmbedded ? translate('screens/home', 'DFX services') : translate('screens/home', 'Account');
+  const hasBackButton = canClose && !isEmbedded;
   const image = 'https://content.dfx.swiss/img/v1/services/berge.jpg';
 
   const transactionItems = transactions?.map((t) => ({
@@ -178,21 +160,11 @@ export default function AccountScreen(): JSX.Element {
   const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + item.value, 0);
 
   return (
-    <Layout
-      title={title}
-      backButton={hasBackButton}
-      rootRef={rootRef}
-      onBack={showWalletDeleteOverlay ? () => setShowWalletDeleteOverlay(false) : undefined}
-    >
+    <Layout title={title} backButton={hasBackButton} rootRef={rootRef}>
       {!isInitialized || !isLoggedIn || isUserLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
-      ) : showWalletDeleteOverlay ? (
-        <AddressDelete
-          address={selectedAddress.address}
-          onClose={(r) => (r ? onDeleteUser() : setShowWalletDeleteOverlay(false))}
-        />
       ) : (
         <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
           {/* Wallet Selector */}
@@ -203,20 +175,13 @@ export default function AccountScreen(): JSX.Element {
                   <StyledDropdown
                     name="address"
                     placeholder={translate('general/actions', 'Select...')}
-                    items={user.addresses}
+                    items={user.addresses.sort(sortAddressesByBlockchain)}
                     disabled={user.addresses.length === 0}
                     labelFunc={(item) => blankedAddress(item.address, { width })}
                   />
                 </Form>
               </div>
               <div className="flex flex-row  gap-2 w-full justify-end items-center text-dfxGray-800 text-xs pt-1.5 pr-1.5">
-                <button
-                  onClick={() => setShowWalletDeleteOverlay(true)}
-                  className="cursor-pointer hover:text-dfxRed-150"
-                >
-                  {translate('general/actions', 'Delete Address')}
-                </button>
-                {' | '}
                 <button onClick={() => copy(selectedAddress.address)} className="cursor-pointer hover:text-dfxRed-150">
                   {translate('general/actions', 'Copy Address')}
                 </button>
@@ -292,6 +257,11 @@ export default function AccountScreen(): JSX.Element {
               </StyledDataTableRow>
             </StyledDataTable>
           )}
+          <StyledButton
+            label={translate('screens/settings', 'Settings')}
+            onClick={() => navigate('/settings')}
+            width={StyledButtonWidth.FULL}
+          />
         </StyledVerticalStack>
       )}
       {image && (

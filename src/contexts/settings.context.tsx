@@ -1,4 +1,15 @@
-import { Language, useKyc, useLanguage, useLanguageContext, UserData, useUserContext } from '@dfx.swiss/react';
+import {
+  Fiat,
+  InfoBanner,
+  Language,
+  useFiatContext,
+  useKyc,
+  useLanguage,
+  useLanguageContext,
+  UserData,
+  useSettings,
+  useUserContext,
+} from '@dfx.swiss/react';
 import browserLang from 'browser-lang';
 import i18n from 'i18next';
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
@@ -18,10 +29,14 @@ const ValidationErrors: Record<string, string> = {
 interface SettingsInterface {
   availableLanguages: Language[];
   language?: Language;
+  currency?: Fiat;
   changeLanguage: (language: Language) => void;
+  changeCurrency: (currency: Fiat) => void;
   translate: (key: string, defaultValue: string, interpolation?: Record<string, string | number>) => string;
   translateError: (key: string) => string;
   processingKycData: boolean;
+  infoBanner?: InfoBanner;
+  closeInfoBanner: () => void;
   // generic storage
   get: <T>(key: string) => T | undefined;
   put: <T>(key: string, value: T | undefined) => void;
@@ -35,9 +50,15 @@ export function useSettingsContext(): SettingsInterface {
 
 export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { languages } = useLanguageContext();
+  const { currencies } = useFiatContext();
   const { getDefaultLanguage } = useLanguage();
-  const { user, changeLanguage: changeUserLanguage, changeMail: changeUserMail } = useUserContext();
-  const { language: storedLanguage } = useStore();
+  const {
+    user,
+    changeLanguage: changeUserLanguage,
+    changeMail: changeUserMail,
+    changeCurrency: changeUserCurrency,
+  } = useUserContext();
+  const { language: storedLanguage, infoBanner: storedInfoBanner } = useStore();
   const { getCountries, setData } = useKyc();
   const {
     lang,
@@ -61,23 +82,36 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   } = useAppParams();
   const { isInitialized } = useAppHandlingContext();
   const { t } = useTranslation();
+  const { getInfoBanner } = useSettings();
 
   const [language, setLanguage] = useState<Language>();
+  const [currency, setCurrency] = useState<Fiat>();
   const [store, setStore] = useState<Record<string, any>>({});
   const [processingKycData, setProcessingKycData] = useState(true);
+  const [infoBanner, setInfoBanner] = useState<InfoBanner>();
 
   const appLanguages = ['DE', 'EN', 'FR', 'IT'];
   const availableLanguages = languages?.filter((l) => appLanguages.includes(l.symbol)) ?? [];
 
   useEffect(() => {
+    getInfoBanner().then((infoBanner) => {
+      if (JSON.stringify(infoBanner) === JSON.stringify(storedInfoBanner.get())) return;
+      setInfoBanner(infoBanner);
+      storedInfoBanner.remove();
+    });
+  }, []);
+
+  useEffect(() => {
     const browserLanguage = browserLang({ languages: appLanguages.map((l) => l.toLowerCase()), fallback: 'en' });
     const customLanguage =
       lang?.toUpperCase() ?? user?.language.symbol ?? storedLanguage.get() ?? browserLanguage.toUpperCase();
+    const customCurrency = user?.currency;
     const newAppLanguage =
       availableLanguages.find((l) => l.symbol === customLanguage) ?? getDefaultLanguage(availableLanguages);
 
     newAppLanguage && newAppLanguage.id !== language?.id && changeAppLanguage(newAppLanguage);
-  }, [user, lang, languages]);
+    customCurrency && customCurrency.id !== currency?.id && setCurrency(customCurrency);
+  }, [user, lang, languages, currencies]);
 
   useEffect(() => {
     if (user && mail && user.mail !== mail) changeUserMail(mail);
@@ -138,6 +172,11 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     isInitialized,
   ]);
 
+  function closeInfoBanner() {
+    setInfoBanner(undefined);
+    infoBanner && storedInfoBanner.set(infoBanner);
+  }
+
   function changeAppLanguage(lang: Language) {
     setLanguage(lang);
     i18n.changeLanguage(lang.symbol.toLowerCase());
@@ -150,6 +189,12 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     setParams({ lang: undefined });
     changeAppLanguage(lang);
     changeUserLanguage(lang);
+  }
+
+  function changeCurrency(newCurrency: Fiat) {
+    if (!currencies?.some((c) => c.id === newCurrency.id) || currency?.id === newCurrency.id) return;
+
+    changeUserCurrency(newCurrency);
   }
 
   function translate(key: string, defaultValue: string, interpolation?: Record<string, string | number>): string {
@@ -172,10 +217,14 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     () => ({
       availableLanguages,
       language,
+      currency,
       changeLanguage,
+      changeCurrency,
       translate,
       translateError,
       processingKycData,
+      infoBanner,
+      closeInfoBanner,
       get,
       put,
     }),

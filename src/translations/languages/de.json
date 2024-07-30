@@ -9,8 +9,10 @@
     "Ok": "Ok",
     "Cancel": "Abbrechen",
     "Finish": "Fertig",
+    "Copy": "Kopieren",
     "Save": "Speichern",
     "Delete": "Löschen",
+    "Rename": "Umbenennen",
     "Login": "Login",
     "Logout": "Logout",
     "Back": "Zurück",
@@ -22,8 +24,11 @@
     "No": "Nein",
     "Drop files here": "Dateien hier ablegen",
     "Browse": "Durchsuchen",
-    "Delete Address": "Adresse löschen",
-    "Copy Address": "Adresse kopieren"
+    "Rename address": "Adresse umbenennen",
+    "Delete address": "Adresse löschen",
+    "Delete account": "Konto löschen",
+    "Copy Address": "Adresse kopieren",
+    "Open Explorer": "Explorer öffnen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -54,6 +59,20 @@
     "Identification": "Identifikation",
     "Additional data": "Zusätzliche Daten",
     "Document upload": "Dokument-Upload",
+    "Legal entity": "Juristische Person",
+    "Nationality": "Nationalität",
+    "Stock register": "Aktienbuch",
+    "Commercial register": "Handelsregister",
+    "Signatory power": "Unterschriftsberechtigung",
+    "Power of Attorney": "Vollmacht",
+    "DFX approval": "DFX-Genehmigung",
+
+    "Public Limited Company": "Aktiengesellschaft",
+    "Limited Liability Company": "Gesellschaft mit beschränkter Haftung",
+    "Life Insurance": "Lebensversicherung",
+    "Authorized to sign individually": "Einzelunterschriftberechtigt",
+    "Authorized to sign jointly": "Unterschriftsberechtigt zu zweit",
+    "No signing authorization": "Keine Unterschriftsberechtigung",
 
     "auto": "auto",
     "video": "video",
@@ -235,9 +254,7 @@
     "Credit": "Guthaben",
     "Paid credit": "Ausgezahltes Guthaben",
     "User count": "Anzahl Benutzer",
-    "Active user count": "Anzahl aktiver Benutzer",
-
-    "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen."
+    "Active user count": "Anzahl aktiver Benutzer"
   },
   "screens/buy": {
     "You spend": "Du zahlst",
@@ -473,6 +490,17 @@
     "If you have a specific question or problem, you can submit a ticket here.": "Wenn Du eine spezifische Frage oder ein Problem hast, kannst Du hier ein Ticket einreichen.",
     "Join now": "Jetzt beitreten",
     "Please be cautious. We will never contact you first. Beware of scams.": "Bitte sei vorsichtig. Wir werden Dich niemals zuerst kontaktieren. Sei wachsam gegenüber Betrugsversuchen."
+  },
+  "screens/settings": {
+    "Settings": "Einstellungen",
+    "Your Wallets": "Deine Wallets",
+    "Active": "Aktiv",
+    "Language": "Sprache",
+    "Currency": "Währung",
+    "Label": "Bezeichnung",
+
+    "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen.",
+    "Deleting your account is irreversible. Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Das Löschen Deines Kontos ist unwiderruflich. Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team."
   },
   "navigation/links": {
     "Buy": "Kaufen",

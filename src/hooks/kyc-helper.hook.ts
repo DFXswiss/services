@@ -1,4 +1,5 @@
 import { KycLevel, KycStepName, KycStepType, LimitPeriod, TradingLimit, Utils, useUserContext } from '@dfx.swiss/react';
+import { LegalEntity, SignatoryPower } from '@dfx.swiss/react/dist/definitions/kyc';
 import { useMemo } from 'react';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from './navigation.hook';
@@ -14,6 +15,8 @@ interface KycHelperInterface {
   limitToString: (limit: TradingLimit) => string;
   nameToString: (stepName: KycStepName) => string;
   typeToString: (stepType: KycStepType) => string;
+  legalEntityToString: (entity: LegalEntity) => string;
+  signatoryPowerToString: (power: SignatoryPower) => string;
 }
 
 export function useKycHelper(): KycHelperInterface {
@@ -29,9 +32,16 @@ export function useKycHelper(): KycHelperInterface {
   const stepMap: Record<KycStepName, string> = {
     [KycStepName.CONTACT_DATA]: 'Contact data',
     [KycStepName.PERSONAL_DATA]: 'Personal data',
+    [KycStepName.LEGAL_ENTITY]: 'Legal entity',
+    [KycStepName.STOCK_REGISTER]: 'Stock register',
+    [KycStepName.NATIONALITY_DATA]: 'Nationality',
+    [KycStepName.COMMERCIAL_REGISTER]: 'Commercial register',
+    [KycStepName.SIGNATORY_POWER]: 'Signatory power',
+    [KycStepName.AUTHORITY]: 'Power of Attorney',
     [KycStepName.IDENT]: 'Identification',
     [KycStepName.FINANCIAL_DATA]: 'Additional data',
     [KycStepName.DOCUMENT_UPLOAD]: 'Document upload',
+    [KycStepName.DFX_APPROVAL]: 'DFX approval',
   };
 
   const typeMap: Record<KycStepType, string> = {
@@ -77,6 +87,30 @@ export function useKycHelper(): KycHelperInterface {
     return translate('screens/kyc', typeMap[stepType]);
   }
 
+  function legalEntityToString(entity: LegalEntity): string {
+    switch (entity) {
+      case LegalEntity.PUBLIC_LIMITED_COMPANY:
+        return translate('screens/kyc', 'Public Limited Company');
+      case LegalEntity.LIMITED_LIABILITY_COMPANY:
+        return translate('screens/kyc', 'Limited Liability Company');
+      case LegalEntity.LIFE_INSURANCE:
+        return translate('screens/kyc', 'Life Insurance');
+      default:
+        return entity;
+    }
+  }
+
+  function signatoryPowerToString(power: SignatoryPower): string {
+    switch (power) {
+      case SignatoryPower.SINGLE:
+        return translate('screens/kyc', 'Authorized to sign individually');
+      case SignatoryPower.DOUBLE:
+        return translate('screens/kyc', 'Authorized to sign jointly');
+      case SignatoryPower.NONE:
+        return translate('screens/kyc', 'No signing authorization');
+    }
+  }
+
   return useMemo(
     () => ({
       start,
@@ -88,6 +122,8 @@ export function useKycHelper(): KycHelperInterface {
       limitToString,
       nameToString,
       typeToString,
+      legalEntityToString,
+      signatoryPowerToString,
     }),
     [user, translate],
   );

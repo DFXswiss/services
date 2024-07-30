@@ -1,4 +1,4 @@
-import { ApiError, TransactionFilterKey, useUser, useUserContext } from '@dfx.swiss/react';
+import { ApiError, TransactionFilterKey, useUserContext } from '@dfx.swiss/react';
 import {
   AlignContent,
   Form,
@@ -43,16 +43,14 @@ const equalKeys = (a: TransactionFilterKey[] | undefined, b: TransactionFilterKe
   !(a || b) || (a && b && a.length === b.length && a.every((v) => b.includes(v)));
 
 export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTMLDivElement> }) {
-  const { user, reloadUser } = useUserContext();
+  const { filterCT, keyCT, generateKeyCT, deleteKeyCT, updateFilterCT } = useUserContext();
   const { lang } = useAppParams();
   const { translate } = useSettingsContext();
   const { width } = useWindowContext();
-  const { apiFilterCT, apiKeyCT } = user?.activeAddress ?? {};
-  const { generateCTApiKey, deleteCTApiKey, updateCTApiFilter } = useUser();
   const [error, setError] = useState<string>();
   const [isKeyLoading, setIsKeyLoading] = useState(false);
-  const [apiSecret, setApiSecret] = useState<string | undefined>(undefined);
   const [showNotification, setShowNotification] = useState(false);
+  const [apiSecret, setApiSecret] = useState<string | undefined>(undefined);
 
   const filterOptions = [
     {
@@ -101,23 +99,23 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
 
   useEffect(() => {
     if (!filter) {
-      setValue('filterMode', filterOptions[apiFilterCT?.length ? 1 : 0]);
+      setValue('filterMode', filterOptions[filterCT?.length ? 1 : 0]);
       setValue(
         'filter',
-        filterTypes.filter((f) => apiFilterCT?.includes(f.key)),
+        filterTypes.filter((f) => filterCT?.includes(f.key)),
       );
     }
-  }, [apiFilterCT]);
+  }, [filterCT]);
 
   useEffect(() => {
-    if (filterMode === 'all' && apiFilterCT?.length) {
+    if (filterMode === 'all' && filterCT?.length) {
       setValue('filter', undefined);
       updateFilter();
     }
   }, [filterMode]);
 
   useEffect(() => {
-    if (filter && !equalKeys(apiFilterCT, filter)) {
+    if (filter && !equalKeys(filterCT, filter)) {
       updateFilter(filter);
     }
   }, [filter]);
@@ -135,26 +133,21 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
 
   const onGenerateKey = () => {
     setIsKeyLoading(true);
-    generateCTApiKey(apiFilterCT)
-      .then((keys) => {
-        reloadUser();
-        setApiSecret(keys.secret);
-      })
+    generateKeyCT(filterCT)
+      .then((keys) => setApiSecret(keys?.secret))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsKeyLoading(false));
   };
 
   const onDeleteKey = () => {
     setIsKeyLoading(true);
-    deleteCTApiKey()
-      .then(() => reloadUser())
+    deleteKeyCT()
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsKeyLoading(false));
   };
 
   const updateFilter = (types?: TransactionFilterKey[]) => {
-    updateCTApiFilter(types)
-      .then(() => reloadUser())
+    updateFilterCT(types)
       .then(() => toggleNotification())
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   };
@@ -173,7 +166,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
             onClick={onOpenCt}
             color={StyledButtonColor.STURDY_WHITE}
           />
-          {apiKeyCT == null ? (
+          {keyCT == null ? (
             <StyledVerticalStack gap={3} full>
               <StyledButton
                 label={translate('screens/payment', 'Generate API key')}
@@ -186,8 +179,8 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
               <StyledDataTable alignContent={AlignContent.RIGHT} minWidth={false}>
                 <StyledDataTableRow label={translate('screens/payment', 'API key')}>
                   <div className="flex flex-row gap-2">
-                    <p>{blankedAddress(apiKeyCT, { width })}</p>
-                    <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(apiKeyCT ?? '')} />
+                    <p>{blankedAddress(keyCT, { width })}</p>
+                    <StyledIconButton icon={IconVariant.COPY} onClick={() => copy(keyCT ?? '')} />
                   </div>
                 </StyledDataTableRow>
                 {apiSecret && (
