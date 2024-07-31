@@ -1,6 +1,7 @@
 {
   "general/actions": {
     "Select...": "Choisir...",
+    "Select": "Choisir",
     "Search...": "Recherche...",
     "Start": "Lancer",
     "Next": "Suivant",

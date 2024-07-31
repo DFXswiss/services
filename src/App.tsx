@@ -149,18 +149,18 @@ export const Routes = [
     path: '/support/issue',
     element: withSuspense(<SupportIssueScreen />),
   },
-  {
-    path: '/support/issue/tx',
-    element: withSuspense(<TransactionScreen />),
-  },
+  // {
+  //   path: '/support/issue/tx',
+  //   element: withSuspense(<TransactionScreen />),
+  // },
   {
     path: '/support/issue/tx-missing',
     element: withSuspense(<TransactionMissingScreen />),
   },
-  {
-    path: '/support/issue/tx/:id',
-    element: withSuspense(<SupportIssueScreen />),
-  },
+  // {
+  //   path: '/support/issue/tx/:id',
+  //   element: withSuspense(<SupportIssueScreen />),
+  // },
   {
     path: '/bank-accounts',
     element: withSuspense(<BankAccountsScreen />),

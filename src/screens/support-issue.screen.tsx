@@ -2,6 +2,7 @@ import { ApiError, KycLevel, Utils, Validations, useSupport } from '@dfx.swiss/r
 import {
   Form,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
   StyledDropdown,
   StyledFileUpload,
@@ -11,7 +12,7 @@ import {
 import { CreateSupportIssue, SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { IssueReasonLabels, IssueTypeLabels } from '../config/labels';
@@ -19,6 +20,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { toBase64 } from '../util/utils';
+import { TransactionList } from './transaction.screen';
 
 const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.GENERIC_ISSUE]: [SupportIssueReason.OTHER],
@@ -31,7 +33,7 @@ const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
 interface FormData {
   type: SupportIssueType;
   name: string;
-  transaction: string;
+  transaction: number;
   reason: SupportIssueReason;
   message: string;
   file?: File;
@@ -41,7 +43,6 @@ export default function SupportIssueScreen(): JSX.Element {
   useUserGuard('/login');
   useKycLevelGuard(KycLevel.Link, '/contact');
 
-  const { id } = useParams();
   const { pathname } = useLocation();
   const { navigate } = useNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -51,38 +52,22 @@ export default function SupportIssueScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [issueCreated, setIssueCreated] = useState(false);
+  const [selectTransaction, setSelectTransaction] = useState(false);
 
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
     setValue,
-  } = useForm<FormData>({
-    mode: 'onTouched',
-    defaultValues: {
-      type: pathname.includes('/tx') ? SupportIssueType.TRANSACTION_ISSUE : undefined,
-    },
-  });
+  } = useForm<FormData>({ mode: 'onTouched' });
   const selectedType = useWatch({ control, name: 'type' });
 
   const types = Object.values(SupportIssueType).filter((t) => t !== SupportIssueType.LIMIT_REQUEST);
   const reasons = IssueReasons[selectedType] ?? [];
 
   useEffect(() => {
-    id && setValue('transaction', id);
-  }, [id]);
-
-  useEffect(() => {
     reasons.length === 1 && setValue('reason', reasons[0]);
   }, [reasons]);
-
-  useEffect(() => {
-    if (selectedType === SupportIssueType.TRANSACTION_ISSUE) {
-      if (!id) navigate('/support/issue/tx');
-    } else {
-      navigate('/support/issue');
-    }
-  }, [selectedType]);
 
   async function onSubmit(data: FormData) {
     setIsLoading(true);
@@ -97,8 +82,8 @@ export default function SupportIssueScreen(): JSX.Element {
         fileName: data.file?.name,
       };
 
-      if (data.type === SupportIssueType.TRANSACTION_ISSUE && id) {
-        request.transaction = { id: +id };
+      if (data.type === SupportIssueType.TRANSACTION_ISSUE && data.transaction) {
+        request.transaction = { id: +data.transaction };
       }
 
       await createIssue(request);
@@ -111,6 +96,11 @@ export default function SupportIssueScreen(): JSX.Element {
     }
   }
 
+  function onSelectTransaction(id: number) {
+    setValue('transaction', id);
+    setSelectTransaction(false);
+  }
+
   function onDone() {
     navigate('/account');
   }
@@ -118,6 +108,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const rules = Utils.createRules({
     type: Validations.Required,
     name: Validations.Required,
+    transaction: Validations.Required,
     reason: Validations.Required,
     message: Validations.Required,
   });
@@ -137,6 +128,17 @@ export default function SupportIssueScreen(): JSX.Element {
             isLoading={isLoading}
           />
         </StyledVerticalStack>
+      ) : selectTransaction ? (
+        <>
+          <p className="text-dfxGray-700">
+            {translate(
+              'screens/support',
+              'For which transaction would you like to create an issue? Select the relevant transaction or click on "{{text}}".',
+              { text: translate('screens/payment', 'My transaction is missing') },
+            )}
+          </p>
+          <TransactionList isSupport={true} onSelectTransaction={onSelectTransaction} setError={setError} />
+        </>
       ) : (
         <Form
           control={control}
@@ -157,15 +159,23 @@ export default function SupportIssueScreen(): JSX.Element {
             />
 
             {selectedType === SupportIssueType.TRANSACTION_ISSUE && (
-              <StyledDropdown<string>
-                rootRef={rootRef}
-                label={translate('screens/payment', 'Transaction')}
-                items={[]}
-                labelFunc={(item) => `${translate('screens/payment', 'Transaction')} ${item}`}
-                name="transaction"
-                placeholder={translate('general/actions', 'Select...')}
-                full
-              />
+              <StyledVerticalStack gap={3.5} full center>
+                <StyledDropdown<string>
+                  rootRef={rootRef}
+                  label={translate('screens/payment', 'Transaction')}
+                  items={[]}
+                  labelFunc={(item) => `${translate('screens/payment', 'Transaction')} ${item}`}
+                  name="transaction"
+                  placeholder={translate('general/actions', 'Select...')}
+                  full
+                />
+                <StyledButton
+                  label={translate('general/actions', 'Select transaction')}
+                  onClick={() => setSelectTransaction(true)}
+                  width={StyledButtonWidth.FULL}
+                  color={StyledButtonColor.STURDY_WHITE}
+                />
+              </StyledVerticalStack>
             )}
 
             {reasons.length > 1 && (
