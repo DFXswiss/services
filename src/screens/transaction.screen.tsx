@@ -272,13 +272,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
 
   return (
     <StyledVerticalStack gap={4} full center>
-      <StyledButton
-        color={StyledButtonColor.BLUE}
-        width={StyledButtonWidth.FULL}
-        label={translate('screens/payment', 'My transaction is missing')}
-        onClick={() => navigate('/support/issue/tx-missing')}
-      />
-      <StyledVerticalStack full center className="pt-1">
+      <StyledVerticalStack full center className="pt-2.5">
         <div className="relative w-full">
           <h2 className="text-dfxGray-700 mb-2 flex-1">{translate('screens/payment', 'Your Transactions')}</h2>
 
