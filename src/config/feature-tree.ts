@@ -722,8 +722,13 @@ export const FeatureTree: Page[] = [
         },
       },
       {
-        id: 'taproot',
-        img: 'taproot',
+        id: 'monero',
+        img: 'monero',
+        disabled: true,
+      },
+      {
+        id: 'solana',
+        img: 'solanachain',
         disabled: true,
       },
     ],
