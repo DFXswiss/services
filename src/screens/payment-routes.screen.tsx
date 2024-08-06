@@ -263,20 +263,15 @@ export default function PaymentRoutes(): JSX.Element {
           {paymentLinks?.length ? (
             <StyledVerticalStack gap={2} full>
               {paymentLinks.map((link) => {
-                const paymentLinkId = link.externalId ?? link.id;
-
                 return (
-                  <div
-                    key={paymentLinkId}
-                    ref={(el) => paymentLinkRefs.current && (paymentLinkRefs.current[paymentLinkId] = el)}
-                  >
+                  <div key={link.id} ref={(el) => paymentLinkRefs.current && (paymentLinkRefs.current[link.id] = el)}>
                     <StyledCollapsible
                       full
                       titleContent={
                         <div className="flex flex-row justify-between gap-2 items-center">
                           <div className="flex flex-col items-start text-left">
                             <div className="font-bold leading-none">
-                              {`${translate('screens/payment', 'Payment link')} ${paymentLinkId}`}
+                              {`${translate('screens/payment', 'Payment link')} ${link.id}`}
                             </div>
                             <div className="leading-none mt-1 text-dfxGray-700">
                               {`${translate('screens/payment', 'Route')} ${link.routeId}`}
@@ -289,8 +284,13 @@ export default function PaymentRoutes(): JSX.Element {
                       <StyledVerticalStack full gap={4}>
                         <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                           <StyledDataTableRow label={translate('screens/payment', 'ID')}>
-                            <p>{paymentLinkId}</p>
+                            <p>{link.id}</p>
                           </StyledDataTableRow>
+                          {link.externalId && (
+                            <StyledDataTableRow label={translate('screens/payment', 'External ID')}>
+                              <p>{link.externalId}</p>
+                            </StyledDataTableRow>
+                          )}
                           <StyledDataTableRow label={translate('screens/payment', 'Route ID')}>
                             <p>{link.routeId}</p>
                           </StyledDataTableRow>
@@ -309,7 +309,11 @@ export default function PaymentRoutes(): JSX.Element {
                               expansionItems={[
                                 {
                                   label: translate('screens/payment', 'ID'),
-                                  text: (link.payment?.externalId ?? link.payment.id).toString(),
+                                  text: link.payment.id.toString(),
+                                },
+                                {
+                                  label: translate('screens/payment', 'External ID'),
+                                  text: (link.payment.externalId ?? '-').toString(),
                                 },
                                 {
                                   label: translate('screens/payment', 'Mode'),
@@ -458,7 +462,6 @@ function CreatePaymentLink({ onDone }: CreatePaymentLinkOverlayProps): JSX.Eleme
       url: '/paymentLink',
       method: 'POST',
       data: request,
-      noJson: true,
     });
   }
 
