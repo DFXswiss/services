@@ -168,16 +168,6 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             target="_self"
           />
           <NavigationLink
-            icon={IconVariant.SETTINGS}
-            label={translate('navigation/links', 'My DFX')}
-            url={
-              authenticationToken && session?.address
-                ? `${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`
-                : '/my-dfx'
-            }
-            target={authenticationToken ? '_blank' : '_self'}
-          />
-          <NavigationLink
             icon={IconVariant.HOME}
             label={translate('navigation/links', 'DFX.swiss')}
             url={process.env.REACT_APP_DFX_URL}

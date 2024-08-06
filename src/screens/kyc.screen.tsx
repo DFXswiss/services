@@ -63,6 +63,7 @@ import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { useAppParams } from 'src/hooks/app-params.hook';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -94,6 +95,7 @@ export default function KycScreen(): JSX.Element {
   const { navigate, goBack } = useNavigation();
   const { logout } = useSessionContext();
   const { isInitialized, params, setParams } = useAppHandlingContext();
+  const { lang } = useAppParams();
 
   const [info, setInfo] = useState<KycInfo | KycSession>();
   const [isLoading, setIsLoading] = useState(true);
@@ -122,8 +124,8 @@ export default function KycScreen(): JSX.Element {
   useUserGuard('/login', !kycCode);
 
   useEffect(() => {
-    if (info) changeLanguage(info.language);
-  }, [info]);
+    if (!lang && info) changeLanguage(info.language);
+  }, [info, lang]);
 
   useEffect(() => {
     if (!isInitialized) return;
