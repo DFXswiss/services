@@ -1,4 +1,4 @@
-import { useAuthContext, useSessionContext } from '@dfx.swiss/react';
+import { useSessionContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
   IconColor,
@@ -107,7 +107,6 @@ function MenuIcon({ icon, setIsNavigationOpen }: IconContentProps): JSX.Element 
 
 function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JSX.Element {
   const { navigate } = useNavigation();
-  const { authenticationToken, session } = useAuthContext();
   const { translate } = useSettingsContext();
   const { isLoggedIn, logout: apiLogout } = useSessionContext();
 
