@@ -136,7 +136,7 @@ export default function KycScreen(): JSX.Element {
     if (confirmCode) {
       setConfirmMail(true);
       call<string>({
-        url: `/auth/mail/confirm${confirmCode}`,
+        url: `/auth/mail/confirm?code=${confirmCode}`,
         method: 'GET',
       })
         .then((redirectURL) => {
