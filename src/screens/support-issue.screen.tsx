@@ -75,9 +75,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const [error, setError] = useState<string>();
   const [issueCreated, setIssueCreated] = useState(false);
 
-  const params = new URLSearchParams(search);
-  const paramKycCode = params.get('code');
-  const kycCode = paramKycCode ?? user?.kyc.hash;
+  const kycComplete = user?.kyc.level && user?.kyc.level >= KycLevel.Completed;
 
   const {
     control,
@@ -93,7 +91,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const selectedType = useWatch({ control, name: 'type' });
   const investmentDate = useWatch({ control, name: 'investmentDate' });
 
-  const types = Object.values(SupportIssueType);
+  const types = Object.values(SupportIssueType).filter((t) => t !== SupportIssueType.LIMIT_REQUEST || kycComplete);
   const reasons = IssueReasons[selectedType] ?? [];
 
   useEffect(() => {
@@ -107,8 +105,6 @@ export default function SupportIssueScreen(): JSX.Element {
   useEffect(() => {
     if (selectedType === SupportIssueType.TRANSACTION_ISSUE) {
       if (!id) navigate('/support/issue/tx');
-    } else if (selectedType === SupportIssueType.LIMIT_REQUEST) {
-      if (!kycCode) navigate('/kyc');
     }
   }, [selectedType]);
 
