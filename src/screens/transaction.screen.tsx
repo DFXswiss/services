@@ -51,11 +51,73 @@ import { blankedAddress } from '../util/utils';
 
 export default function TransactionScreen(): JSX.Element {
   const { id } = useParams();
+  const { pathname } = useLocation();
+  const { navigate } = useNavigation();
+  const { translate } = useSettingsContext();
+  const { getTransactionCsv } = useTransaction();
+  const rootRef = useRef<HTMLDivElement>(null);
 
-  return id && id.startsWith('T') ? <TransactionStatus /> : <TransactionList />;
+  const [showCoinTracking, setShowCoinTracking] = useState(false);
+  const [isCsvLoading, setIsCsvLoading] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const isTransaction = id && id.startsWith('T');
+
+  function exportCsv() {
+    setIsCsvLoading(true);
+    getTransactionCsv()
+      .then((url) => window.open(url, '_blank'))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsCsvLoading(false));
+  }
+
+  const title = isTransaction
+    ? translate('screens/payment', 'Transaction status')
+    : showCoinTracking
+    ? translate('screens/payment', 'Cointracking Link (read rights)')
+    : translate('screens/payment', 'Transactions');
+
+  const onBack = isTransaction
+    ? () => navigate('/tx')
+    : showCoinTracking
+    ? () => setShowCoinTracking(false)
+    : undefined;
+
+  return (
+    <Layout rootRef={rootRef} title={title} onBack={onBack}>
+      {error ? (
+        <ErrorHint message={error} />
+      ) : isTransaction ? (
+        <TransactionStatus setError={setError} />
+      ) : showCoinTracking ? (
+        <CoinTracking rootRef={rootRef} />
+      ) : (
+        <>
+          <StyledButton
+            color={StyledButtonColor.STURDY_WHITE}
+            width={StyledButtonWidth.FULL}
+            label={translate('screens/payment', 'Cointracking')}
+            onClick={() => setShowCoinTracking(!showCoinTracking)}
+          />
+          <StyledButton
+            color={StyledButtonColor.STURDY_WHITE}
+            width={StyledButtonWidth.FULL}
+            label={translate('screens/payment', 'Export CSV')}
+            isLoading={isCsvLoading}
+            onClick={exportCsv}
+          />
+          <TransactionList isSupport={false} setError={setError} />
+        </>
+      )}
+    </Layout>
+  );
 }
 
-function TransactionStatus(): JSX.Element {
+interface TransactionStatusProps {
+  setError: (error: string) => void;
+}
+
+function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { id } = useParams();
@@ -63,10 +125,7 @@ function TransactionStatus(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { setRedirectPath } = useAppHandlingContext();
 
-  const rootRef = useRef<HTMLDivElement>(null);
-
   const [transaction, setTransaction] = useState<Transaction>();
-  const [error, setError] = useState<string>();
 
   useEffect(() => {
     const fetchTransaction = () => {
@@ -95,41 +154,35 @@ function TransactionStatus(): JSX.Element {
     }
   }
 
-  return (
-    <Layout rootRef={rootRef} title={translate('screens/payment', 'Transaction status')} onBack={() => navigate('/tx')}>
-      {error ? (
-        <ErrorHint message={error} />
-      ) : transaction ? (
-        <StyledVerticalStack gap={6} full>
-          <TxInfo tx={transaction} />
+  return transaction ? (
+    <StyledVerticalStack gap={6} full>
+      <TxInfo tx={transaction} />
 
-          {transaction.state === TransactionState.UNASSIGNED && (
-            <StyledButton
-              label={translate('screens/payment', 'Assign transaction')}
-              onClick={assignTransaction}
-              width={StyledButtonWidth.FULL}
-            />
-          )}
-        </StyledVerticalStack>
-      ) : (
-        <StyledLoadingSpinner size={SpinnerSize.LG} />
+      {transaction.state === TransactionState.UNASSIGNED && (
+        <StyledButton
+          label={translate('screens/payment', 'Assign transaction')}
+          onClick={assignTransaction}
+          width={StyledButtonWidth.FULL}
+        />
       )}
-    </Layout>
+    </StyledVerticalStack>
+  ) : (
+    <StyledLoadingSpinner size={SpinnerSize.LG} />
   );
 }
 
-function TransactionList(): JSX.Element {
+interface TransactionListProps extends TransactionStatusProps {
+  isSupport: boolean;
+  onSelectTransaction?: (txId: number) => void;
+}
+
+export function TransactionList({ isSupport, setError, onSelectTransaction }: TransactionListProps): JSX.Element {
   useUserGuard('/login');
 
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
-  const {
-    getDetailTransactions,
-    getUnassignedTransactions,
-    getTransactionCsv,
-    getTransactionTargets,
-    setTransactionTarget,
-  } = useTransaction();
+  const { getDetailTransactions, getUnassignedTransactions, getTransactionTargets, setTransactionTarget } =
+    useTransaction();
   const { isLoggedIn } = useSessionContext();
   const { id } = useParams();
   const { toString } = useBlockchain();
@@ -141,14 +194,9 @@ function TransactionList(): JSX.Element {
 
   const [transactions, setTransactions] = useState<Record<string, DetailTransaction[]>>();
   const [transactionTargets, setTransactionTargets] = useState<TransactionTarget[]>();
-  const [isCsvLoading, setIsCsvLoading] = useState(false);
   const [isTargetsLoading, setIsTargetsLoading] = useState(false);
   const [isTransactionLoading, setIsTransactionLoading] = useState(false);
-  const [error, setError] = useState<string>();
   const [editTransaction, setEditTransaction] = useState<number>();
-  const [showCoinTracking, setShowCoinTracking] = useState(false);
-
-  const isSupport = pathname.includes('/support');
 
   useEffect(() => {
     if (id) setTimeout(() => txRefs.current[id]?.scrollIntoView());
@@ -191,14 +239,6 @@ function TransactionList(): JSX.Element {
     target: Validations.Required,
   });
 
-  function exportCsv() {
-    setIsCsvLoading(true);
-    getTransactionCsv()
-      .then((url) => window.open(url, '_blank'))
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsCsvLoading(false));
-  }
-
   async function assignTransaction(txId: number) {
     if (!transactionTargets) {
       setIsTargetsLoading(true);
@@ -229,196 +269,137 @@ function TransactionList(): JSX.Element {
   }
 
   const transactionList = transactions && Object.entries(transactions);
-  const title = isSupport
-    ? translate('screens/support', 'Support issue')
-    : showCoinTracking
-    ? translate('screens/payment', 'Cointracking Link (read rights)')
-    : translate('screens/payment', 'Transactions');
 
   return (
-    <Layout rootRef={rootRef} title={title} onBack={showCoinTracking ? () => setShowCoinTracking(false) : undefined}>
-      {showCoinTracking ? (
-        <CoinTracking rootRef={rootRef} />
-      ) : (
-        <StyledVerticalStack gap={4} full center>
-          {error ? (
-            <div>
-              <ErrorHint message={error} />
+    <StyledVerticalStack gap={4} full center>
+      <StyledVerticalStack full center className="pt-2.5">
+        <div className="relative w-full">
+          <h2 className="text-dfxGray-700 mb-2 flex-1">{translate('screens/payment', 'Your Transactions')}</h2>
+
+          {transactions && (
+            <div className="absolute right-0 top-1">
+              <StyledIconButton onClick={loadTransactions} icon={IconVariant.RELOAD} />
             </div>
-          ) : (
-            <>
-              {isSupport ? (
-                <p className="text-dfxGray-700">
-                  {translate(
-                    'screens/support',
-                    'For which transaction would you like to create an issue? Select the relevant transaction or click on "{{text}}".',
-                    { text: translate('screens/payment', 'My transaction is missing') },
-                  )}
-                </p>
-              ) : (
-                <>
-                  <StyledButton
-                    color={StyledButtonColor.STURDY_WHITE}
-                    width={StyledButtonWidth.FULL}
-                    label={translate('screens/payment', 'Cointracking')}
-                    onClick={() => setShowCoinTracking(!showCoinTracking)}
-                  />
-                  <StyledButton
-                    color={StyledButtonColor.STURDY_WHITE}
-                    width={StyledButtonWidth.FULL}
-                    label={translate('screens/payment', 'Export CSV')}
-                    isLoading={isCsvLoading}
-                    onClick={exportCsv}
-                  />
-                </>
-              )}
-              <StyledButton
-                color={StyledButtonColor.BLUE}
-                width={StyledButtonWidth.FULL}
-                label={translate('screens/payment', 'My transaction is missing')}
-                onClick={() => navigate('/support/issue/tx-missing')}
-              />
-              <StyledVerticalStack full center className="pt-1">
-                <div className="relative w-full">
-                  <h2 className="text-dfxGray-700 mb-2 flex-1">{translate('screens/payment', 'Your Transactions')}</h2>
-
-                  {transactions && (
-                    <div className="absolute right-0 top-1">
-                      <StyledIconButton onClick={loadTransactions} icon={IconVariant.RELOAD} />
-                    </div>
-                  )}
-                </div>
-
-                {transactionList ? (
-                  transactionList.length === 0 ? (
-                    <p className="text-dfxGray-700">{translate('screens/payment', 'No transactions found')}</p>
-                  ) : (
-                    transactionList.map(([date, list]) => (
-                      <div key={date} className="w-full mb-2">
-                        <p className="text-dfxGray-700">{date}</p>
-                        <StyledVerticalStack gap={2} full>
-                          {list.map((tx) => {
-                            const isUnassigned = tx.state === TransactionState.UNASSIGNED;
-
-                            const icon =
-                              !isUnassigned &&
-                              (tx.type === TransactionType.SELL
-                                ? [tx.inputAsset, tx.outputAsset]
-                                : [tx.outputAsset, tx.inputAsset]
-                              )
-                                .map((a) => a?.replace(/^d/, '') as AssetIconVariant)
-                                .find((a) => Object.values(AssetIconVariant).includes(a));
-
-                            return (
-                              <div key={tx.id} ref={(el) => txRefs.current && (txRefs.current[tx.id] = el)}>
-                                <StyledCollapsible
-                                  full
-                                  isExpanded={id ? +id === tx.id : undefined}
-                                  titleContent={
-                                    <div className="flex flex-row gap-2 items-center">
-                                      {icon ? (
-                                        <DfxAssetIcon asset={icon as AssetIconVariant} />
-                                      ) : (
-                                        <DfxIcon icon={IconVariant.HELP} size={IconSize.LG} />
-                                      )}
-                                      <div className="flex flex-col items-start text-left">
-                                        <div className="font-bold leading-none">
-                                          {translate('screens/payment', tx.type)}
-                                        </div>
-                                        <div className={`leading-none ${isUnassigned && 'text-dfxRed-100'}`}>
-                                          {translate('screens/payment', toPaymentStateLabel(tx.state))}
-                                        </div>
-                                      </div>
-                                      <div className="ml-auto">
-                                        {tx.inputAsset ? `${tx.inputAmount ?? ''} ${tx.inputAsset}` : ''}
-                                        {tx.inputAsset && tx.outputAsset ? ' → ' : ''}
-                                        {tx.outputAsset ? `${tx.outputAmount ?? ''} ${tx.outputAsset}` : ''}
-                                      </div>
-                                    </div>
-                                  }
-                                >
-                                  <StyledVerticalStack full gap={4}>
-                                    <TxInfo tx={tx} />
-
-                                    {isUnassigned &&
-                                      (editTransaction === tx.id ? (
-                                        <Form
-                                          control={control}
-                                          errors={errors}
-                                          rules={rules}
-                                          onSubmit={handleSubmit(onSubmit)}
-                                        >
-                                          <StyledVerticalStack gap={3} full>
-                                            <p className="text-dfxGray-700 mt-4">
-                                              {translate('screens/payment', 'Reference')}
-                                            </p>
-                                            <StyledDropdown<TransactionTarget>
-                                              rootRef={rootRef}
-                                              items={transactionTargets ?? []}
-                                              labelFunc={(item) => `${item.bankUsage}`}
-                                              placeholder={translate('general/actions', 'Select...')}
-                                              descriptionFunc={(item) =>
-                                                `${toString(item.asset.blockchain)}/${item.asset.name} ${blankedAddress(
-                                                  item.address,
-                                                  { width },
-                                                )}`
-                                              }
-                                              full
-                                              name="target"
-                                            />
-                                            <StyledButton
-                                              type="submit"
-                                              isLoading={isTransactionLoading}
-                                              disabled={!isValid}
-                                              label={translate('screens/payment', 'Assign transaction')}
-                                              onClick={handleSubmit(onSubmit)}
-                                            />
-                                          </StyledVerticalStack>
-                                        </Form>
-                                      ) : (
-                                        <StyledButton
-                                          isLoading={isTargetsLoading}
-                                          label={translate('screens/payment', 'Assign transaction')}
-                                          onClick={() => assignTransaction(tx.id)}
-                                        />
-                                      ))}
-                                    {tx.outputTxUrl && (
-                                      <StyledButton
-                                        label={translate('screens/payment', 'Show on block explorer')}
-                                        onClick={() => window.open(tx.outputTxUrl, '_blank', 'noreferrer')}
-                                      />
-                                    )}
-                                    {tx.state === TransactionState.KYC_REQUIRED && (
-                                      <StyledButton
-                                        label={translate('screens/kyc', 'Complete KYC')}
-                                        onClick={() => navigate('/kyc')}
-                                      />
-                                    )}
-                                    {isSupport && (
-                                      <StyledButton
-                                        color={StyledButtonColor.STURDY_WHITE}
-                                        label={translate('screens/payment', 'Report an issue')}
-                                        onClick={() => navigate(`/support/issue/tx/${tx.id}`)}
-                                      />
-                                    )}
-                                  </StyledVerticalStack>
-                                </StyledCollapsible>
-                              </div>
-                            );
-                          })}
-                        </StyledVerticalStack>
-                      </div>
-                    ))
-                  )
-                ) : (
-                  <StyledLoadingSpinner size={SpinnerSize.LG} />
-                )}
-              </StyledVerticalStack>
-            </>
           )}
-        </StyledVerticalStack>
-      )}
-    </Layout>
+        </div>
+
+        {transactionList ? (
+          transactionList.length === 0 ? (
+            <p className="text-dfxGray-700">{translate('screens/payment', 'No transactions found')}</p>
+          ) : (
+            transactionList.map(([date, list]) => (
+              <div key={date} className="w-full mb-2">
+                <p className="text-dfxGray-700">{date}</p>
+                <StyledVerticalStack gap={2} full>
+                  {list.map((tx) => {
+                    const isUnassigned = tx.state === TransactionState.UNASSIGNED;
+
+                    const icon =
+                      !isUnassigned &&
+                      (tx.type === TransactionType.SELL
+                        ? [tx.inputAsset, tx.outputAsset]
+                        : [tx.outputAsset, tx.inputAsset]
+                      )
+                        .map((a) => a?.replace(/^d/, '') as AssetIconVariant)
+                        .find((a) => Object.values(AssetIconVariant).includes(a));
+
+                    return (
+                      <div key={tx.id} ref={(el) => txRefs.current && (txRefs.current[tx.id] = el)}>
+                        <StyledCollapsible
+                          full
+                          isExpanded={id ? +id === tx.id : undefined}
+                          titleContent={
+                            <div className="flex flex-row gap-2 items-center">
+                              {icon ? (
+                                <DfxAssetIcon asset={icon as AssetIconVariant} />
+                              ) : (
+                                <DfxIcon icon={IconVariant.HELP} size={IconSize.LG} />
+                              )}
+                              <div className="flex flex-col items-start text-left">
+                                <div className="font-bold leading-none">{translate('screens/payment', tx.type)}</div>
+                                <div className={`leading-none ${isUnassigned && 'text-dfxRed-100'}`}>
+                                  {translate('screens/payment', toPaymentStateLabel(tx.state))}
+                                </div>
+                              </div>
+                              <div className="ml-auto">
+                                {tx.inputAsset ? `${tx.inputAmount ?? ''} ${tx.inputAsset}` : ''}
+                                {tx.inputAsset && tx.outputAsset ? ' → ' : ''}
+                                {tx.outputAsset ? `${tx.outputAmount ?? ''} ${tx.outputAsset}` : ''}
+                              </div>
+                            </div>
+                          }
+                        >
+                          <StyledVerticalStack full gap={4}>
+                            <TxInfo tx={tx} />
+
+                            {isUnassigned &&
+                              (editTransaction === tx.id ? (
+                                <Form control={control} errors={errors} rules={rules} onSubmit={handleSubmit(onSubmit)}>
+                                  <StyledVerticalStack gap={3} full>
+                                    <p className="text-dfxGray-700 mt-4">{translate('screens/payment', 'Reference')}</p>
+                                    <StyledDropdown<TransactionTarget>
+                                      rootRef={rootRef}
+                                      items={transactionTargets ?? []}
+                                      labelFunc={(item) => `${item.bankUsage}`}
+                                      placeholder={translate('general/actions', 'Select...')}
+                                      descriptionFunc={(item) =>
+                                        `${toString(item.asset.blockchain)}/${item.asset.name} ${blankedAddress(
+                                          item.address,
+                                          { width },
+                                        )}`
+                                      }
+                                      full
+                                      name="target"
+                                    />
+                                    <StyledButton
+                                      type="submit"
+                                      isLoading={isTransactionLoading}
+                                      disabled={!isValid}
+                                      label={translate('screens/payment', 'Assign transaction')}
+                                      onClick={handleSubmit(onSubmit)}
+                                    />
+                                  </StyledVerticalStack>
+                                </Form>
+                              ) : (
+                                <StyledButton
+                                  isLoading={isTargetsLoading}
+                                  label={translate('screens/payment', 'Assign transaction')}
+                                  onClick={() => assignTransaction(tx.id)}
+                                />
+                              ))}
+                            {tx.outputTxUrl && (
+                              <StyledButton
+                                label={translate('screens/payment', 'Show on block explorer')}
+                                onClick={() => window.open(tx.outputTxUrl, '_blank', 'noreferrer')}
+                              />
+                            )}
+                            {tx.state === TransactionState.KYC_REQUIRED && (
+                              <StyledButton
+                                label={translate('screens/kyc', 'Complete KYC')}
+                                onClick={() => navigate('/kyc')}
+                              />
+                            )}
+                            {isSupport && (
+                              <StyledButton
+                                color={StyledButtonColor.STURDY_WHITE}
+                                label={translate('general/actions', 'Select')}
+                                onClick={() => onSelectTransaction && onSelectTransaction(tx.id)}
+                              />
+                            )}
+                          </StyledVerticalStack>
+                        </StyledCollapsible>
+                      </div>
+                    );
+                  })}
+                </StyledVerticalStack>
+              </div>
+            ))
+          )
+        ) : (
+          <StyledLoadingSpinner size={SpinnerSize.LG} />
+        )}
+      </StyledVerticalStack>
+    </StyledVerticalStack>
   );
 }
 
