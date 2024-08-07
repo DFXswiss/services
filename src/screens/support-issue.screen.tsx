@@ -130,12 +130,11 @@ export default function SupportIssueScreen(): JSX.Element {
       }
 
       if (data.type === SupportIssueType.LIMIT_REQUEST && data.limit) {
-        (request as any).limitRequest = {
-          // TODO: Add limitRequest to packages
+        request.limitRequest = {
           limit: data.limit,
           investmentDate: data.investmentDate,
           fundOrigin: data.fundOrigin,
-          fundOriginText: data.fundOriginText,
+          fundOriginText: data.fundOriginText ?? '',
         };
       }
 
