@@ -168,7 +168,7 @@ export default function AccountScreen(): JSX.Element {
       ) : (
         <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
           {/* Wallet Selector */}
-          {user?.addresses && (
+          {user?.addresses.length ? (
             <div className="w-full bg-dfxGray-300 p-2 rounded-md">
               <div className="bg-white w-full rounded-md">
                 <Form control={control} errors={errors}>
@@ -187,6 +187,8 @@ export default function AccountScreen(): JSX.Element {
                 </button>
               </div>
             </div>
+          ) : (
+            <></>
           )}
           {/* User Data */}
           <StyledDataTable
