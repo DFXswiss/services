@@ -1,5 +1,5 @@
-import { Blockchain, useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
-import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import { ApiError, Blockchain, useApi, useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
+import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -50,14 +50,16 @@ export default function HomeScreen(): JSX.Element {
   const { hasSession, canClose, service, isEmbedded, redirectPath, closeServices } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
   const { navigate } = useNavigation();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { getPage, getWallet, setOptions } = useFeatureTree();
   const appParams = useAppParams();
+  const { call } = useApi();
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [connectTo, setConnectTo] = useState<Wallet>();
   const [loginSuccessful, setLoginSuccessful] = useState(false);
   const [pages, setPages] = useState(new Stack<Page>());
+  const [mailLogin, setMailLogin] = useState(false);
 
   const currentPageId = pages.current?.page;
   const allowedTiles = pages.current?.allowedTiles;
@@ -65,6 +67,8 @@ export default function HomeScreen(): JSX.Element {
 
   const selectedBlockchain = (connectTo?.blockchain ?? appParams.blockchain) as Blockchain | undefined;
   const specialMode = getMode(pathname);
+  const urlParams = new URLSearchParams(search);
+  const code = urlParams.get('code');
 
   useEffect(() => {
     if (isInitialized && isLoggedIn && user && loginSuccessful) {
@@ -75,6 +79,27 @@ export default function HomeScreen(): JSX.Element {
       }
     }
   }, [isInitialized, isLoggedIn, user, activeWallet, loginSuccessful, hasSession]);
+
+  useEffect(() => {
+    console.log('code', code);
+    if (code) {
+      setMailLogin(true);
+      call<string>({
+        url: `/auth/mail/redirect?code=${code}`,
+        method: 'GET',
+      })
+        .then((redirectURL) => {
+          console.log('redirectURL', redirectURL);
+          navigate(redirectURL);
+        })
+        .catch((error: ApiError) => {
+          console.log('error', error);
+        })
+        .finally(() => {
+          setMailLogin(false);
+        });
+    }
+  }, [code]);
 
   useEffect(() => {
     const mode = specialMode ? SpecialModes[specialMode] : appParams.mode;
@@ -147,6 +172,11 @@ export default function HomeScreen(): JSX.Element {
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
+      ) : mailLogin ? (
+        <StyledVerticalStack gap={6} full center>
+          <StyledLoadingSpinner size={SpinnerSize.LG} />
+          <p className="text-dfxGray-700">{translate('screens/kyc', 'Logging in...')} </p>
+        </StyledVerticalStack>
       ) : (
         <div className="z-1 flex flex-grow flex-col items-center w-full">
           {connectTo ? (
