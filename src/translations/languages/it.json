@@ -254,7 +254,8 @@
     "Credit": "Credito",
     "Paid credit": "Credito pagato",
     "User count": "Conteggio utenti",
-    "Active user count": "Conteggio utenti attivi"
+    "Active user count": "Conteggio utenti attivi",
+    "Active wallet": "Portafoglio attivo"
   },
   "screens/buy": {
     "You spend": "Si spende",
