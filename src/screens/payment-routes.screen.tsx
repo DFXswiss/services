@@ -44,11 +44,22 @@ import { useUserGuard } from 'src/hooks/guard.hook';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
+interface FormData {
+  routeId: number;
+  externalId: string;
+  paymentType: RouteType;
+  paymentMode: PaymentLinkPaymentMode;
+  paymentAmount: string;
+  paymentExternalId: string;
+  paymentCurrency: Fiat;
+  paymentExpiryDate: Date;
+}
+
 export default function PaymentRoutes(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
-  const { paymentRoutes, paymentLinksLoading, paymentLinks, cancelPaymentLinkPayment, error } =
+  const { paymentRoutes, paymentLinksLoading, paymentLinks, updatePaymentLink, cancelPaymentLinkPayment, error } =
     usePaymentRoutesContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -58,6 +69,10 @@ export default function PaymentRoutes(): JSX.Element {
   const [showCreatePaymentOverlay, setShowCreatePaymentOverlay] = useState<string | undefined>(undefined);
 
   useUserGuard('/login');
+
+  function prependLnurl(lnurl: string): string {
+    return `https://services.dfx.swiss/?lightning=${lnurl}`;
+  }
 
   return (
     <Layout
@@ -207,6 +222,11 @@ export default function PaymentRoutes(): JSX.Element {
                       }
                     >
                       <StyledVerticalStack full gap={4}>
+                        <div className="flex w-full items-center justify-center">
+                          <div className="w-48 py-3">
+                            <QrCopy data={prependLnurl(link.lnurl)} />
+                          </div>
+                        </div>
                         <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                           <StyledDataTableRow label={translate('screens/payment', 'ID')}>
                             <p>{link.id}</p>
@@ -279,7 +299,7 @@ export default function PaymentRoutes(): JSX.Element {
                         {link.payment?.status === PaymentLinkPaymentStatus.PENDING && (
                           <div className="flex w-full items-center justify-center">
                             <div className="w-48 py-3">
-                              <QrCopy data={link.payment.lnurl} />
+                              <QrCopy data={prependLnurl(link.payment.lnurl)} />
                             </div>
                           </div>
                         )}
@@ -302,6 +322,22 @@ export default function PaymentRoutes(): JSX.Element {
                               color={StyledButtonColor.STURDY_WHITE}
                             />
                           )}
+                        {link.payment?.status !== PaymentLinkPaymentStatus.PENDING &&
+                          link.status === PaymentLinkStatus.ACTIVE && (
+                            <StyledButton
+                              label={translate('screens/payment', 'Deactivate')}
+                              onClick={() => updatePaymentLink({ status: PaymentLinkStatus.INACTIVE }, +link.id)}
+                              color={StyledButtonColor.STURDY_WHITE}
+                            />
+                          )}
+
+                        {link.status === PaymentLinkStatus.INACTIVE && (
+                          <StyledButton
+                            label={translate('screens/payment', 'Activate')}
+                            onClick={() => updatePaymentLink({ status: PaymentLinkStatus.ACTIVE }, +link.id)}
+                            color={StyledButtonColor.STURDY_WHITE}
+                          />
+                        )}
                       </StyledVerticalStack>
                     </StyledCollapsible>
                   </div>
@@ -320,17 +356,6 @@ export default function PaymentRoutes(): JSX.Element {
       )}
     </Layout>
   );
-}
-
-interface FormData {
-  routeId: number;
-  externalId: string;
-  paymentType: RouteType;
-  paymentMode: PaymentLinkPaymentMode;
-  paymentAmount: string;
-  paymentExternalId: string;
-  paymentCurrency: Fiat;
-  paymentExpiryDate: Date;
 }
 
 enum RouteType {

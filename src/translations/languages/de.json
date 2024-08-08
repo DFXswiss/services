@@ -445,6 +445,8 @@
     "Payment type": "Zahlungsart",
     "With payment": "Mit Zahlung",
     "Without payment": "Ohne Zahlung",
+    "Activate": "Aktivieren",
+    "Deactivate": "Deaktivieren",
 
     "Cointracking": "Cointracking",
     "Saved": "Gespeichert",
