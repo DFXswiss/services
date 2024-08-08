@@ -54,6 +54,7 @@ const urlParamsToRemove = [
   'payment-method',
   'bank-account',
   'external-transaction-id',
+  'merge-code',
 ];
 
 export interface AppParams {
@@ -101,6 +102,7 @@ export interface AppParams {
   paymentMethod?: string;
   bankAccount?: string;
   externalTransactionId?: string;
+  mergeCode?: string;
 }
 
 export enum CloseType {
@@ -312,6 +314,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           paymentMethod: getParameter(query, 'payment-method'),
           bankAccount: getParameter(query, 'bank-account'),
           externalTransactionId: getParameter(query, 'external-transaction-id'),
+          mergeCode: getParameter(query, 'merge-code'),
         };
   }
 

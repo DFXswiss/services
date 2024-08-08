@@ -96,7 +96,7 @@ export default function KycScreen(): JSX.Element {
   const { navigate, goBack } = useNavigation();
   const { logout } = useSessionContext();
   const { isInitialized, params, setParams } = useAppHandlingContext();
-  const { lang } = useAppParams();
+  const { lang, mergeCode } = useAppParams();
   const { call } = useApi();
 
   const [info, setInfo] = useState<KycInfo | KycSession>();
@@ -107,7 +107,7 @@ export default function KycScreen(): JSX.Element {
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
   const [showLinkHint, setShowLinkHint] = useState(false);
-  const [confirmMail, setConfirmMail] = useState(false);
+  const [isMerging, setIsMerging] = useState(false);
 
   const mode = pathname.includes('/profile') ? Mode.PROFILE : pathname.includes('/contact') ? Mode.CONTACT : Mode.KYC;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -123,7 +123,6 @@ export default function KycScreen(): JSX.Element {
   const kycCode = paramKycCode ?? user?.kyc.hash;
   const redirectUri = urlParams.get('kyc-redirect');
   const client = urlParams.get('client') ?? undefined;
-  const confirmCode = urlParams.get('confirm-code');
 
   useUserGuard('/login', !kycCode);
 
@@ -132,26 +131,28 @@ export default function KycScreen(): JSX.Element {
   }, [info, lang]);
 
   useEffect(() => {
-    console.log('confirm-code', confirmCode);
-    if (confirmCode) {
-      setConfirmMail(true);
-      call<string>({
-        url: `/auth/mail/confirm?code=${confirmCode}`,
+    console.log('mergeCode before call', mergeCode);
+    if (mergeCode && !isMerging) {
+      setIsMerging(true);
+      call({
+        url: `auth/mail/confirm?code=${mergeCode}`,
         method: 'GET',
       })
-        .then((redirectURL) => {
+        .then((redirectURL: any) => {
           console.log('redirectURL', redirectURL);
-          navigate(redirectURL);
+          setParams({ mergeCode: undefined });
+          if (redirectURL) navigate(redirectURL);
         })
         .catch((error: ApiError) => {
           console.log('error', error);
           setError(error.message ?? 'Unknown error');
         })
         .finally(() => {
-          setConfirmMail(false);
+          setIsMerging(false);
         });
     }
-  }, [confirmCode]);
+    console.log('mergeCode after call', mergeCode);
+  }, [mergeCode]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -338,7 +339,7 @@ export default function KycScreen(): JSX.Element {
             isLoading={isLoading}
           />
         </StyledVerticalStack>
-      ) : confirmMail ? (
+      ) : isMerging ? (
         <StyledVerticalStack gap={6} full center>
           <StyledLoadingSpinner size={SpinnerSize.LG} />
           <p className="text-dfxGray-700">{translate('screens/kyc', 'Merging your accounts...')} </p>
