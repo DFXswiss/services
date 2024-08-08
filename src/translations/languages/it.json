@@ -1,6 +1,7 @@
 {
   "general/actions": {
     "Select...": "Selezionare...",
+    "Select": "Selezionare",
     "Search...": "Ricerca...",
     "Start": "Iniziare",
     "Next": "Avanti",
@@ -62,7 +63,7 @@
     "Document upload": "Caricamento del documento",
     "Legal entity": "Persona giuridica",
     "Nationality": "Nazionalità",
-    "Stock register": "Registro delle azioni",
+    "Shareholder register": "Registro degli azionisti",
     "Commercial register": "Registro commerciale",
     "Signatory power": "Potere di firma",
     "Power of Attorney": "Procura",
@@ -400,6 +401,7 @@
     "CHF abroad not allowed": "CHF all'estero non ammessi",
     "Asset requires KYC": "Attività richiede KYC",
     "Card name mismatch": "Il nome sulla carta non corrisponde",
+    "Address deleted": "Indirizzo cancellato",
 
     "Payment method": "Metodo di pagamento",
     "Standard bank transaction": "Transazione bancaria standard",
@@ -524,7 +526,7 @@
     "Label": "Etichetta",
 
     "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile.",
-    "Deleting your account is irreversible. Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "La cancellazione del tuo account è irreversibile. I tuoi dati rimarranno sui nostri server temporaneamente prima della cancellazione definitiva. Se hai domande, contatta il nostro team di supporto."
+    "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "I tuoi dati rimarranno sui nostri server temporaneamente prima della cancellazione definitiva. Se hai domande, contatta il nostro team di supporto."
   },
   "navigation/links": {
     "Buy": "Comprare",

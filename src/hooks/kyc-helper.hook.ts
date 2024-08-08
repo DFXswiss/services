@@ -33,7 +33,7 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepName.CONTACT_DATA]: 'Contact data',
     [KycStepName.PERSONAL_DATA]: 'Personal data',
     [KycStepName.LEGAL_ENTITY]: 'Legal entity',
-    [KycStepName.STOCK_REGISTER]: 'Stock register',
+    [KycStepName.STOCK_REGISTER]: 'Shareholder register',
     [KycStepName.NATIONALITY_DATA]: 'Nationality',
     [KycStepName.COMMERCIAL_REGISTER]: 'Commercial register',
     [KycStepName.SIGNATORY_POWER]: 'Signatory power',

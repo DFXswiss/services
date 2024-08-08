@@ -95,7 +95,7 @@ export function DeleteAccountOverlay({ onClose }: OverlayProps): JSX.Element {
       <p className="text-dfxBlue-800 mb-2">
         {translate(
           'screens/settings',
-          'Deleting your account is irreversible. Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.',
+          'Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.',
         )}
       </p>
       <StyledHorizontalStack>
