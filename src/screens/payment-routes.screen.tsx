@@ -2,12 +2,8 @@ import {
   ApiError,
   Blockchain,
   Fiat,
-  PaymentRoute,
-  PaymentRoutesDto,
-  useApi,
   useFiatContext,
-  usePaymentRoutes,
-  useUserContext,
+  usePaymentRoutesContext,
   Utils,
   Validations,
 } from '@dfx.swiss/react';
@@ -29,113 +25,43 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import {
+  CreatePaymentLink,
+  CreatePaymentLinkPayment,
+  PaymentLinkPaymentMode,
+  PaymentLinkPaymentStatus,
+  PaymentLinkStatus,
+} from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Layout } from 'src/components/layout';
 import { QrCopy } from 'src/components/payment/qr-copy';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
+import { useUserGuard } from 'src/hooks/guard.hook';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
-enum PaymentLinkStatus {
-  ACTIVE = 'Active',
-  INACTIVE = 'Inactive',
-}
-
-enum PaymentLinkPaymentStatus {
-  PENDING = 'Pending',
-  COMPLETED = 'Completed',
-  CANCELLED = 'Cancelled',
-  EXPIRED = 'Expired',
-}
-
-interface PaymentLink {
-  id: string;
-  routeId: string;
-  externalId?: string;
-  status: PaymentLinkStatus;
-  url: string;
-  lnurl: string;
-  payment?: PaymentLinkPaymentDto;
-}
-
-interface PaymentLinkPaymentDto {
-  id: string;
-  externalId?: string;
-  status: PaymentLinkPaymentStatus;
-  amount: number;
-  currency: Fiat;
-  mode: PaymentLinkPaymentMode;
-  expiryDate: Date;
-  url: string;
-  lnurl: string;
-}
-
 export default function PaymentRoutes(): JSX.Element {
   const { translate } = useSettingsContext();
-  const { user } = useUserContext();
   const { toString } = useBlockchain();
-  const { getPaymentRoutes } = usePaymentRoutes();
-  const { call } = useApi();
   const { width } = useWindowContext();
+  const { paymentRoutes, paymentLinksLoading, paymentLinks, cancelPaymentLinkPayment, error } =
+    usePaymentRoutesContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const [routes, setRoutes] = useState<PaymentRoutesDto>();
-  const [paymentLinks, setPaymentLinks] = useState<PaymentLink[]>();
-  const [error, setError] = useState<string>();
   const [showCreatePaymentLinkOverlay, setShowCreatePaymentLinkOverlay] = useState(false);
   const [showCreatePaymentOverlay, setShowCreatePaymentOverlay] = useState<string | undefined>(undefined);
 
-  function sortRoutes(a: PaymentRoute, b: PaymentRoute): number {
-    if ('asset' in a && 'asset' in b) {
-      return a.asset.blockchain.localeCompare(b.asset.blockchain);
-    } else if ('currency' in a && 'currency' in b) {
-      return a.currency.name.localeCompare(b.currency.name);
-    } else {
-      return 0;
-    }
-  }
-
-  useEffect(() => {
-    if (!user) return;
-    getPaymentRoutes()
-      .then((routes: PaymentRoutesDto) => {
-        routes.buy = routes.buy.filter((route) => route.active).sort(sortRoutes);
-        routes.sell = routes.sell.filter((route) => route.active).sort(sortRoutes);
-        routes.swap = routes.swap.filter((route) => route.active).sort(sortRoutes);
-        setRoutes(routes);
-      })
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
-
-    getPaymentLinks()
-      .then(setPaymentLinks)
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
-  }, [user]);
-
-  async function getPaymentLinks(): Promise<PaymentLink[]> {
-    const links = await call<PaymentLink | PaymentLink[]>({
-      url: '/paymentLink',
-      method: 'GET',
-    });
-
-    return Array.isArray(links) ? links : [links];
-  }
-
-  async function cancelPayment(id: number, externalId?: number): Promise<void> {
-    await call({
-      url: `/paymentLink/payment?id=${id}`, // &externalId=${externalId}`,
-      method: 'DELETE',
-    });
-  }
+  useUserGuard('/login');
 
   return (
     <Layout
-      title={translate('screens/payment', showCreatePaymentLinkOverlay ? 'Create new route' : 'Payments')}
+      title={translate('screens/payment', showCreatePaymentLinkOverlay ? 'Create new route' : 'Payment routes')}
       onBack={
         showCreatePaymentLinkOverlay
           ? () => setShowCreatePaymentLinkOverlay(false)
@@ -148,18 +74,17 @@ export default function PaymentRoutes(): JSX.Element {
     >
       {error ? (
         <ErrorHint message={error} />
-      ) : !routes ? (
-        <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : showCreatePaymentLinkOverlay ? (
-        <CreatePaymentLink onDone={() => setShowCreatePaymentLinkOverlay(false)} />
+        <CreatePaymentLinkOverlay onDone={() => setShowCreatePaymentLinkOverlay(false)} />
       ) : showCreatePaymentOverlay !== undefined ? (
         <CreatePaymentOverlay id={showCreatePaymentOverlay} onDone={() => setShowCreatePaymentOverlay(undefined)} />
+      ) : !paymentRoutes || paymentLinksLoading ? (
+        <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={5}>
-          <h2 className="ml-3.5 text-dfxGray-700">Payment Routes</h2>
-          {routes?.buy.length ? (
+          {paymentRoutes?.buy.length ? (
             <StyledDataTable label={translate('screens/payment', 'Buy')}>
-              {routes.buy.map<JSX.Element>((route) => (
+              {paymentRoutes?.buy.map<JSX.Element>((route) => (
                 <StyledDataTableExpandableRow
                   label={`${route.asset.blockchain} / ${route.asset.name}`}
                   expansionItems={[
@@ -188,9 +113,9 @@ export default function PaymentRoutes(): JSX.Element {
           ) : (
             <></>
           )}
-          {routes?.sell.length ? (
+          {paymentRoutes?.sell.length ? (
             <StyledDataTable label={translate('screens/payment', 'Sell')}>
-              {routes.sell.map<JSX.Element>((route) => (
+              {paymentRoutes?.sell.map<JSX.Element>((route) => (
                 <StyledDataTableExpandableRow
                   label={`${route.currency.name} / ${route.iban}`}
                   expansionItems={[
@@ -224,9 +149,9 @@ export default function PaymentRoutes(): JSX.Element {
           ) : (
             <></>
           )}
-          {routes?.swap.length ? (
+          {paymentRoutes?.swap.length ? (
             <StyledDataTable label={translate('screens/payment', 'Swap')}>
-              {routes.swap.map<JSX.Element>((route) => (
+              {paymentRoutes?.swap.map<JSX.Element>((route) => (
                 <StyledDataTableExpandableRow
                   label={`${route.asset.blockchain} / ${route.asset.name}`}
                   expansionItems={[
@@ -259,7 +184,7 @@ export default function PaymentRoutes(): JSX.Element {
           ) : (
             <></>
           )}
-          <h2 className="ml-3.5 text-dfxGray-700">Payment Links</h2>
+          <h2 className="ml-3.5 text-dfxGray-700">{translate('screens/payment', 'Payment links')}</h2>
           {paymentLinks?.length ? (
             <StyledVerticalStack gap={2} full>
               {paymentLinks.map((link) => {
@@ -274,10 +199,10 @@ export default function PaymentRoutes(): JSX.Element {
                               {`${translate('screens/payment', 'Payment link')} ${link.id}`}
                             </div>
                             <div className="leading-none mt-1 text-dfxGray-700">
-                              {`${translate('screens/payment', 'Route')} ${link.routeId}`}
+                              {`${translate('screens/payment', 'Payment route')} ${link.routeId}`}
                             </div>
                           </div>
-                          <div>{link.status}</div>
+                          <div>{translate('screens/payment', link.status)}</div>
                         </div>
                       }
                     >
@@ -291,11 +216,11 @@ export default function PaymentRoutes(): JSX.Element {
                               <p>{link.externalId}</p>
                             </StyledDataTableRow>
                           )}
-                          <StyledDataTableRow label={translate('screens/payment', 'Route ID')}>
+                          <StyledDataTableRow label={translate('screens/payment', 'Payment route')}>
                             <p>{link.routeId}</p>
                           </StyledDataTableRow>
-                          <StyledDataTableRow label={translate('screens/payment', 'Status')}>
-                            <p>{link.status}</p>
+                          <StyledDataTableRow label={translate('screens/payment', 'State')}>
+                            <p>{translate('screens/payment', link.status)}</p>
                           </StyledDataTableRow>
                           <StyledDataTableRow label={translate('screens/payment', 'LNURL')}>
                             <p>{blankedAddress(link.lnurl, { width })}</p>
@@ -317,18 +242,18 @@ export default function PaymentRoutes(): JSX.Element {
                                 },
                                 {
                                   label: translate('screens/payment', 'Mode'),
-                                  text: link.payment.mode,
+                                  text: translate('screens/payment', link.payment.mode),
                                 },
                                 {
                                   label: translate('screens/payment', 'Amount'),
                                   text: `${link.payment.amount.toString()} ${link.payment.currency.name}`,
                                 },
                                 {
-                                  label: translate('screens/payment', 'Status'),
-                                  text: link.payment.status,
+                                  label: translate('screens/payment', 'State'),
+                                  text: translate('screens/payment', link.payment.status),
                                 },
                                 {
-                                  label: translate('screens/payment', 'Expiry Date'),
+                                  label: translate('screens/payment', 'Expiry date'),
                                   text: new Date(link.payment.expiryDate).toLocaleString(),
                                 },
                                 {
@@ -345,7 +270,9 @@ export default function PaymentRoutes(): JSX.Element {
                                 },
                               ]}
                             >
-                              <p className="font-semibold">{link.payment.status.toUpperCase()}</p>
+                              <p className="font-semibold">
+                                {translate('screens/payment', link.payment.status).toUpperCase()}
+                              </p>
                             </StyledDataTableExpandableRow>
                           )}
                         </StyledDataTable>
@@ -362,7 +289,7 @@ export default function PaymentRoutes(): JSX.Element {
                               link.payment.status,
                             )) && (
                             <StyledButton
-                              label={translate('screens/payment', 'CREATE PAYMENT')}
+                              label={translate('screens/payment', 'Create payment')}
                               onClick={() => setShowCreatePaymentOverlay(link.id)}
                               color={StyledButtonColor.STURDY_WHITE}
                             />
@@ -370,8 +297,8 @@ export default function PaymentRoutes(): JSX.Element {
                         {link.status === PaymentLinkStatus.ACTIVE &&
                           link.payment?.status === PaymentLinkPaymentStatus.PENDING && (
                             <StyledButton
-                              label={translate('screens/payment', 'CANCEL PAYMENT')}
-                              onClick={() => cancelPayment(+link.id)}
+                              label={translate('screens/payment', 'Cancel payment')}
+                              onClick={() => cancelPaymentLinkPayment(+link.id)}
                               color={StyledButtonColor.STURDY_WHITE}
                             />
                           )}
@@ -385,7 +312,7 @@ export default function PaymentRoutes(): JSX.Element {
             <></>
           )}
           <StyledButton
-            label={translate('screens/payment', 'Create new payment link')}
+            label={translate('screens/payment', 'Create payment link')}
             width={StyledButtonWidth.FULL}
             onClick={() => setShowCreatePaymentLinkOverlay(true)}
           />
@@ -403,7 +330,7 @@ interface FormData {
   paymentAmount: string;
   paymentExternalId: string;
   paymentCurrency: Fiat;
-  paymentexpiryDate: Date;
+  paymentExpiryDate: Date;
 }
 
 enum RouteType {
@@ -411,38 +338,18 @@ enum RouteType {
   WITHOUT_PAYMENT = 'Without payment',
 }
 
-enum PaymentLinkPaymentMode {
-  SINGLE = 'Single',
-  MULTIPLE = 'Multiple',
-}
-
-interface CreatePaymentLinkPayment {
-  mode: PaymentLinkPaymentMode;
-  amount: number;
-  externalId: string;
-  currency: Fiat;
-  expiryDate: Date;
-}
-
-interface CreatePaymentLink {
-  routeId?: number;
-  externalId?: string;
-  payment?: CreatePaymentLinkPayment;
-}
-
 interface CreatePaymentLinkOverlayProps {
   onDone: () => void;
 }
 
-function CreatePaymentLink({ onDone }: CreatePaymentLinkOverlayProps): JSX.Element {
+function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
+  const { createPaymentLink } = usePaymentRoutesContext();
   const { currencies } = useFiatContext();
-  const { call } = useApi();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const [issueCreated, setIssueCreated] = useState(false);
 
   const {
     control,
@@ -456,14 +363,6 @@ function CreatePaymentLink({ onDone }: CreatePaymentLinkOverlayProps): JSX.Eleme
     },
   });
   const selectedType = useWatch({ control, name: 'paymentType' });
-
-  async function createPaymentLink(request: CreatePaymentLink) {
-    await call({
-      url: '/paymentLink',
-      method: 'POST',
-      data: request,
-    });
-  }
 
   async function onSubmit(data: FormData) {
     setIsLoading(true);
@@ -480,12 +379,12 @@ function CreatePaymentLink({ onDone }: CreatePaymentLinkOverlayProps): JSX.Eleme
           amount: +data.paymentAmount,
           externalId: data.paymentExternalId,
           currency: data.paymentCurrency,
-          expiryDate: data.paymentexpiryDate,
+          expiryDate: data.paymentExpiryDate,
         };
       }
 
       await createPaymentLink(request);
-      setIssueCreated(true);
+      onDone();
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
@@ -503,120 +402,107 @@ function CreatePaymentLink({ onDone }: CreatePaymentLinkOverlayProps): JSX.Eleme
 
   return (
     <>
-      {issueCreated ? (
-        <StyledVerticalStack gap={6} full>
-          <p className="text-dfxGray-700">{translate('screens/support', 'Payment creation successful.')}</p>
+      <Form
+        control={control}
+        rules={rules}
+        errors={errors}
+        onSubmit={handleSubmit(onSubmit)}
+        translate={translateError}
+      >
+        <StyledVerticalStack gap={6} full center>
+          <StyledInput
+            name="routeId"
+            autocomplete="routeId"
+            label={translate('screens/payment', 'Route ID')}
+            placeholder={translate('screens/payment', 'Route ID')}
+            full
+            smallLabel
+          />
+
+          <StyledInput
+            name="externalId"
+            autocomplete="externalId"
+            label={translate('screens/payment', 'External ID')}
+            placeholder={translate('screens/payment', 'External ID')}
+            full
+            smallLabel
+          />
+
+          <StyledDropdown
+            name="paymentType"
+            label={translate('screens/payment', 'Payment type')}
+            full
+            smallLabel
+            items={Object.values(RouteType)}
+            labelFunc={(item) => translate('screens/payment', item)}
+          />
+
+          {selectedType === RouteType.WITH_PAYMENT && (
+            <>
+              <StyledDropdown
+                rootRef={rootRef}
+                name="paymentMode"
+                label={translate('screens/payment', 'Mode')}
+                smallLabel
+                full
+                placeholder={translate('general/actions', 'Select...')}
+                items={Object.values(PaymentLinkPaymentMode)}
+                labelFunc={(item) => translate('screens/payment', item)}
+              />
+
+              <StyledInput
+                name="paymentAmount"
+                autocomplete="paymentAmount"
+                label={translate('screens/payment', 'Amount')}
+                smallLabel
+                placeholder={'0.00'}
+                full
+              />
+
+              <StyledInput
+                name="paymentExternalId"
+                autocomplete="paymentExternalId"
+                label={translate('screens/payment', 'Payment ID')}
+                placeholder={translate('screens/payment', 'Payment ID')}
+                full
+                smallLabel
+              />
+
+              <StyledDropdown
+                name="paymentCurrency"
+                label={translate('screens/settings', 'Currency')}
+                full
+                smallLabel={true}
+                placeholder={translate('general/actions', 'Select...')}
+                items={currencies ?? []}
+                labelFunc={(item) => item.name}
+              />
+
+              <StyledInput
+                name="paymentExpiryDate"
+                label={translate('screens/payment', 'Date')}
+                placeholder={new Date().toISOString().split('T')[0]}
+                full
+              />
+            </>
+          )}
+
+          {error && (
+            <div>
+              <ErrorHint message={error} />
+            </div>
+          )}
 
           <StyledButton
-            label={translate('general/actions', 'Ok')}
-            onClick={onDone}
+            type="submit"
+            label={translate('general/actions', 'Create')}
+            onClick={handleSubmit(onSubmit)}
             width={StyledButtonWidth.FULL}
+            disabled={!isValid}
             isLoading={isLoading}
           />
         </StyledVerticalStack>
-      ) : (
-        <Form
-          control={control}
-          rules={rules}
-          errors={errors}
-          onSubmit={handleSubmit(onSubmit)}
-          translate={translateError}
-        >
-          <StyledVerticalStack gap={6} full center>
-            <StyledInput
-              name="routeId"
-              autocomplete="routeId"
-              label={translate('screens/payment', 'Route ID')}
-              placeholder={translate('screens/payment', 'Route ID')}
-              full
-              smallLabel
-            />
-
-            <StyledInput
-              name="externalId"
-              autocomplete="externalId"
-              label={translate('screens/payment', 'External ID')}
-              placeholder={translate('screens/payment', 'External ID')}
-              full
-              smallLabel
-            />
-
-            <StyledDropdown
-              name="paymentType"
-              label={translate('screens/payment', 'Payment Type')}
-              full
-              smallLabel
-              items={Object.values(RouteType)}
-              labelFunc={(item) => translate('screens/payment', item)}
-            />
-
-            {selectedType === RouteType.WITH_PAYMENT && (
-              <>
-                <StyledDropdown
-                  rootRef={rootRef}
-                  name="paymentMode"
-                  label={translate('screens/payment', 'Mode')}
-                  smallLabel
-                  full
-                  placeholder={translate('general/actions', 'Select...')}
-                  items={Object.values(PaymentLinkPaymentMode)}
-                  labelFunc={(item) => translate('screens/payment', item)}
-                />
-
-                <StyledInput
-                  name="paymentAmount"
-                  autocomplete="paymentAmount"
-                  label={translate('screens/payment', 'Amount')}
-                  smallLabel
-                  placeholder={'0.00'}
-                  full
-                />
-
-                <StyledInput
-                  name="paymentExternalId"
-                  autocomplete="paymentExternalId"
-                  label={translate('screens/payment', 'Payment ID')}
-                  placeholder={translate('screens/payment', 'Payment ID')}
-                  full
-                  smallLabel
-                />
-
-                <StyledDropdown
-                  name="paymentCurrency"
-                  label={translate('screens/settings', 'Currency')}
-                  full
-                  smallLabel={true}
-                  placeholder={translate('general/actions', 'Select...')}
-                  items={currencies ?? []}
-                  labelFunc={(item) => item.name}
-                />
-
-                <StyledInput
-                  name="paymentData"
-                  label={translate('screens/support', 'Date')}
-                  placeholder={new Date().toISOString().split('T')[0]}
-                  full
-                />
-              </>
-            )}
-
-            {error && (
-              <div>
-                <ErrorHint message={error} />
-              </div>
-            )}
-
-            <StyledButton
-              type="submit"
-              label={translate('general/actions', 'Next')}
-              onClick={handleSubmit(onSubmit)}
-              width={StyledButtonWidth.FULL}
-              disabled={!isValid}
-              isLoading={isLoading}
-            />
-          </StyledVerticalStack>
-        </Form>
-      )}
+      </Form>
     </>
   );
 }
@@ -628,12 +514,11 @@ interface CreatePaymentOverlayProps extends CreatePaymentLinkOverlayProps {
 function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
+  const { createPaymentLinkPayment } = usePaymentRoutesContext();
   const { currencies } = useFiatContext();
-  const { call } = useApi();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const [issueCreated, setIssueCreated] = useState(false);
 
   const {
     control,
@@ -644,14 +529,6 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
     mode: 'onTouched',
   });
 
-  async function createPayment(request: CreatePaymentLinkPayment) {
-    await call({
-      url: `/paymentLink/payment?id=${id}`,
-      method: 'POST',
-      data: request,
-    });
-  }
-
   async function onSubmit(data: FormData) {
     setIsLoading(true);
 
@@ -661,11 +538,11 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
         amount: +data.paymentAmount,
         externalId: data.paymentExternalId,
         currency: data.paymentCurrency,
-        expiryDate: data.paymentexpiryDate,
+        expiryDate: data.paymentExpiryDate,
       };
 
-      await createPayment(request);
-      setIssueCreated(true);
+      await createPaymentLinkPayment(request, +id);
+      onDone();
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
@@ -683,91 +560,76 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
 
   return (
     <>
-      {issueCreated ? (
-        <StyledVerticalStack gap={6} full>
-          <p className="text-dfxGray-700">
-            {translate('screens/support', 'The issue has been successfully submitted. You will be contacted by email.')}
-          </p>
+      <Form
+        control={control}
+        rules={rules}
+        errors={errors}
+        onSubmit={handleSubmit(onSubmit)}
+        translate={translateError}
+      >
+        <StyledVerticalStack gap={6} full center>
+          <StyledDropdown
+            rootRef={rootRef}
+            name="paymentMode"
+            label={translate('screens/payment', 'Mode')}
+            smallLabel
+            full
+            placeholder={translate('general/actions', 'Select...')}
+            items={Object.values(PaymentLinkPaymentMode)}
+            labelFunc={(item) => translate('screens/payment', item)}
+          />
+
+          <StyledInput
+            name="paymentAmount"
+            autocomplete="paymentAmount"
+            label={translate('screens/payment', 'Amount')}
+            smallLabel
+            placeholder={'0.00'}
+            full
+          />
+
+          <StyledInput
+            name="paymentExternalId"
+            autocomplete="paymentExternalId"
+            label={translate('screens/payment', 'Payment ID')}
+            placeholder={translate('screens/payment', 'Payment ID')}
+            full
+            smallLabel
+          />
+
+          <StyledDropdown
+            name="paymentCurrency"
+            label={translate('screens/settings', 'Currency')}
+            full
+            smallLabel={true}
+            placeholder={translate('general/actions', 'Select...')}
+            items={currencies ?? []}
+            labelFunc={(item) => item.name}
+          />
+
+          <StyledInput
+            name="paymentExpiryDate"
+            label={translate('screens/payment', 'Date')}
+            placeholder={new Date().toISOString().split('T')[0]}
+            full
+          />
+
+          {error && (
+            <div>
+              <ErrorHint message={error} />
+            </div>
+          )}
 
           <StyledButton
-            label={translate('general/actions', 'Ok')}
-            onClick={onDone}
+            type="submit"
+            label={translate('general/actions', 'Create')}
+            onClick={handleSubmit(onSubmit)}
             width={StyledButtonWidth.FULL}
+            disabled={!isValid}
             isLoading={isLoading}
           />
         </StyledVerticalStack>
-      ) : (
-        <Form
-          control={control}
-          rules={rules}
-          errors={errors}
-          onSubmit={handleSubmit(onSubmit)}
-          translate={translateError}
-        >
-          <StyledVerticalStack gap={6} full center>
-            <StyledDropdown
-              rootRef={rootRef}
-              name="paymentMode"
-              label={translate('screens/payment', 'Mode')}
-              smallLabel
-              full
-              placeholder={translate('general/actions', 'Select...')}
-              items={Object.values(PaymentLinkPaymentMode)}
-              labelFunc={(item) => translate('screens/payment', item)}
-            />
-
-            <StyledInput
-              name="paymentAmount"
-              autocomplete="paymentAmount"
-              label={translate('screens/payment', 'Amount')}
-              smallLabel
-              placeholder={'0.00'}
-              full
-            />
-
-            <StyledInput
-              name="paymentExternalId"
-              autocomplete="paymentExternalId"
-              label={translate('screens/payment', 'Payment ID')}
-              placeholder={translate('screens/payment', 'Payment ID')}
-              full
-              smallLabel
-            />
-
-            <StyledDropdown
-              name="paymentCurrency"
-              label={translate('screens/settings', 'Currency')}
-              full
-              smallLabel={true}
-              placeholder={translate('general/actions', 'Select...')}
-              items={currencies ?? []}
-              labelFunc={(item) => item.name}
-            />
-
-            <StyledInput
-              name="paymentData"
-              label={translate('screens/support', 'Date')}
-              placeholder={new Date().toISOString().split('T')[0]}
-              full
-            />
-
-            {error && (
-              <div>
-                <ErrorHint message={error} />
-              </div>
-            )}
-
-            <StyledButton
-              type="submit"
-              label={translate('general/actions', 'Next')}
-              onClick={handleSubmit(onSubmit)}
-              width={StyledButtonWidth.FULL}
-              disabled={!isValid}
-              isLoading={isLoading}
-            />
-          </StyledVerticalStack>
-        </Form>
-      )}
+      </Form>
     </>
   );
 }
