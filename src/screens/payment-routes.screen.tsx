@@ -74,6 +74,10 @@ export default function PaymentRoutes(): JSX.Element {
     return `https://services.dfx.swiss/?lightning=${lnurl}`;
   }
 
+  function formatURL(url: string): string {
+    return url.split('dfx.swiss')[1];
+  }
+
   return (
     <Layout
       title={translate('screens/payment', showCreatePaymentLinkOverlay ? 'Create new route' : 'Payment routes')}
@@ -225,6 +229,9 @@ export default function PaymentRoutes(): JSX.Element {
                         <div className="flex w-full items-center justify-center">
                           <div className="w-48 py-3">
                             <QrCopy data={prependLnurl(link.lnurl)} />
+                            <p className="text-center rounded-sm font-semibold bg-dfxGray-300 mt-1">
+                              {translate('screens/payment', 'Payment link')}
+                            </p>
                           </div>
                         </div>
                         <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
@@ -246,7 +253,7 @@ export default function PaymentRoutes(): JSX.Element {
                             <p>{blankedAddress(link.lnurl, { width })}</p>
                           </StyledDataTableRow>
                           <StyledDataTableRow label={translate('screens/payment', 'URL')}>
-                            <StyledLink label={blankedAddress(link.url, { width })} url={link.url} dark />
+                            <StyledLink label={formatURL(link.url)} url={link.url} dark />
                           </StyledDataTableRow>
                           {link.payment != null && (
                             <StyledDataTableExpandableRow
@@ -284,9 +291,9 @@ export default function PaymentRoutes(): JSX.Element {
                                 },
                                 {
                                   label: translate('screens/payment', 'URL'),
-                                  text: link.payment.url.split('dfx.swiss')[1],
+                                  text: formatURL(link.payment.url),
                                   icon: IconVariant.OPEN_IN_NEW,
-                                  onClick: () => window.open(link.url, '_blank'),
+                                  onClick: () => window.open(link.payment?.url, '_blank'),
                                 },
                               ]}
                             >
@@ -300,6 +307,9 @@ export default function PaymentRoutes(): JSX.Element {
                           <div className="flex w-full items-center justify-center">
                             <div className="w-48 py-3">
                               <QrCopy data={prependLnurl(link.payment.lnurl)} />
+                              <p className="text-center rounded-sm font-semibold bg-dfxGray-300 mt-1">
+                                {translate('screens/payment', 'Payment')}
+                              </p>
                             </div>
                           </div>
                         )}
