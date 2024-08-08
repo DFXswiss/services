@@ -105,6 +105,7 @@ export default function PaymentRoutes(): JSX.Element {
             <StyledDataTable label={translate('screens/payment', 'Buy')}>
               {paymentRoutes?.buy.map<JSX.Element>((route) => (
                 <StyledDataTableExpandableRow
+                  key={route.id}
                   label={`${route.asset.blockchain} / ${route.asset.name}`}
                   expansionItems={[
                     { label: translate('screens/payment', 'Asset'), text: route.asset.name },
@@ -136,6 +137,7 @@ export default function PaymentRoutes(): JSX.Element {
             <StyledDataTable label={translate('screens/payment', 'Sell')}>
               {paymentRoutes?.sell.map<JSX.Element>((route) => (
                 <StyledDataTableExpandableRow
+                  key={route.id}
                   label={`${route.currency.name} / ${route.iban}`}
                   expansionItems={[
                     { label: translate('screens/payment', 'ID'), text: route.id.toString() },
@@ -172,6 +174,7 @@ export default function PaymentRoutes(): JSX.Element {
             <StyledDataTable label={translate('screens/payment', 'Swap')}>
               {paymentRoutes?.swap.map<JSX.Element>((route) => (
                 <StyledDataTableExpandableRow
+                  key={route.id}
                   label={`${route.asset.blockchain} / ${route.asset.name}`}
                   expansionItems={[
                     { label: translate('screens/payment', 'Asset'), text: route.asset.name },
