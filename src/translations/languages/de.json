@@ -256,7 +256,8 @@
     "Credit": "Guthaben",
     "Paid credit": "Ausgezahltes Guthaben",
     "User count": "Anzahl Benutzer",
-    "Active user count": "Anzahl aktiver Benutzer"
+    "Active user count": "Anzahl aktiver Benutzer",
+    "Active wallet": "Aktive Wallet"
   },
   "screens/buy": {
     "You spend": "Du zahlst",
