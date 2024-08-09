@@ -58,7 +58,15 @@ export default function PaymentRoutes(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
-  const { paymentRoutes, paymentLinks, updatePaymentLink, cancelPaymentLinkPayment, error } = usePaymentRoutesContext();
+  const {
+    paymentRoutes,
+    paymentLinks,
+    paymentRoutesLoading,
+    paymentLinksLoading,
+    updatePaymentLink,
+    cancelPaymentLinkPayment,
+    error,
+  } = usePaymentRoutesContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -123,7 +131,7 @@ export default function PaymentRoutes(): JSX.Element {
         <CreatePaymentLinkOverlay onDone={onDone} />
       ) : showCreatePaymentOverlay !== undefined ? (
         <CreatePaymentOverlay id={showCreatePaymentOverlay} onDone={onDone} />
-      ) : !paymentRoutes ? (
+      ) : paymentRoutesLoading || (paymentLinksLoading && !isUpdatingPaymentLink.length) ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={5} className="select-none">
@@ -232,9 +240,9 @@ export default function PaymentRoutes(): JSX.Element {
           ) : (
             <></>
           )}
-          <h2 className="ml-3.5 text-dfxGray-700">{translate('screens/payment', 'Payment Links')}</h2>
           {paymentLinks?.length ? (
             <StyledVerticalStack gap={2} full>
+              <h2 className="ml-3.5 mb-1.5 text-dfxGray-700">{translate('screens/payment', 'Payment Links')}</h2>
               {paymentLinks.map((link) => {
                 return (
                   <div key={link.id} ref={(el) => paymentLinkRefs.current && (paymentLinkRefs.current[link.id] = el)}>
@@ -391,11 +399,15 @@ export default function PaymentRoutes(): JSX.Element {
           ) : (
             <></>
           )}
-          <StyledButton
-            label={translate('screens/payment', 'Create Payment Link')}
-            width={StyledButtonWidth.FULL}
-            onClick={() => setShowCreatePaymentLinkOverlay(true)}
-          />
+          {paymentRoutes?.sell.length ? (
+            <StyledButton
+              label={translate('screens/payment', 'Create Payment Link')}
+              width={StyledButtonWidth.FULL}
+              onClick={() => setShowCreatePaymentLinkOverlay(true)}
+            />
+          ) : (
+            <></>
+          )}
         </StyledVerticalStack>
       )}
     </Layout>
