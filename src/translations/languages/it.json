@@ -1,6 +1,7 @@
 {
   "general/actions": {
     "Select...": "Selezionare...",
+    "Select": "Selezionare",
     "Search...": "Ricerca...",
     "Start": "Iniziare",
     "Next": "Avanti",
@@ -17,6 +18,7 @@
     "Logout": "Logout",
     "Back": "Indietro",
     "Proceed": "Procedi",
+    "Create": "Creare",
     "Retry": "Riprovare",
     "Connect": "Collegare",
     "Continue in Trezor Connect": "Continua in Trezor Connect",
@@ -254,7 +256,8 @@
     "Credit": "Credito",
     "Paid credit": "Credito pagato",
     "User count": "Conteggio utenti",
-    "Active user count": "Conteggio utenti attivi"
+    "Active user count": "Conteggio utenti attivi",
+    "Active wallet": "Portafoglio attivo"
   },
   "screens/buy": {
     "You spend": "Si spende",
@@ -350,6 +353,7 @@
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} a {{to}} a {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",
+    "External ID": "ID esterno",
     "Date": "Data",
     "Input": "Input",
     "Input TX": "Input TX",
@@ -369,6 +373,9 @@
     "KYC required": "KYC necessario",
     "Fee to high": "Tassa elevata",
     "Completed": "Completato",
+    "Pending": "In attesa",
+    "Cancelled": "Annullato",
+    "Expired": "Scaduto",
     "Failed": "Fallito",
     "Returned": "Restituito",
     "Unassigned": "Non assegnato",
@@ -423,7 +430,26 @@
     "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
 
     "Payment routes": "Modalità di pagamento",
+    "Payment route": "Modalità di pagamento",
     "Purpose of payment": "Scopo del pagamento",
+    "Payment Links": "Payment Links",
+    "Payment Link": "Payment Link",
+    "Payment": "Pagamento",
+    "Payment ID": "ID di pagamento",
+    "Mode": "Modalità",
+    "Expiry date": "Data di scadenza",
+    "Single": "Singolo",
+    "Multiple": "Multiplo",
+    "Active": "Attivo",
+    "Inactive": "Inattivo",
+    "Create Payment Link": "Crea un Payment Link",
+    "Create payment": "Crea pagamento",
+    "Cancel payment": "Annulla pagamento",
+    "Payment type": "Tipo di pagamento",
+    "With payment": "Con pagamento",
+    "Without payment": "Senza pagamento",
+    "Activate": "Attivare",
+    "Deactivate": "Disattivare",
 
     "Cointracking": "Cointracking",
     "Saved": "Salvato",

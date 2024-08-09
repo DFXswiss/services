@@ -1,6 +1,7 @@
 {
   "general/actions": {
     "Select...": "Choisir...",
+    "Select": "Choisir",
     "Search...": "Recherche...",
     "Start": "Lancer",
     "Next": "Suivant",
@@ -17,6 +18,7 @@
     "Logout": "Logout",
     "Back": "Retour",
     "Proceed": "Continuer",
+    "Create": "Créer",
     "Retry": "Réessayer",
     "Connect": "Connecter",
     "Continue in Trezor Connect": "Continuer dans Trezor Connect",
@@ -254,7 +256,8 @@
     "Credit": "Crédit",
     "Paid credit": "Crédit payé",
     "User count": "Nombre d'utilisateurs",
-    "Active user count": "Nombre d'utilisateurs actifs"
+    "Active user count": "Nombre d'utilisateurs actifs",
+    "Active wallet": "Portefeuille actif"
   },
   "screens/buy": {
     "You spend": "Vous dépensez",
@@ -350,6 +353,7 @@
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} vers {{to}} à {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",
+    "External ID": "ID externe",
     "Date": "Date",
     "Input": "Input",
     "Input TX": "Input TX",
@@ -369,6 +373,9 @@
     "KYC required": "KYC nécessaire",
     "Fee to high": "Frais élevés",
     "Completed": "Terminé",
+    "Pending": "En attente",
+    "Cancelled": "Annulé",
+    "Expired": "Expiré",
     "Failed": "Échec",
     "Returned": "Retourné",
     "Unassigned": "Non attribué",
@@ -423,7 +430,26 @@
     "Please note that by using this service you automatically accept our terms and conditions.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales.",
 
     "Payment routes": "Itinéraires de paiement",
+    "Payment route": "Itinéraire de paiement",
     "Purpose of payment": "Objet du paiement",
+    "Payment Links": "Payment Links",
+    "Payment Link": "Payment Link",
+    "Payment": "Paiement",
+    "Payment ID": "ID de paiement",
+    "Mode": "Mode",
+    "Expiry date": "Date d'expiration",
+    "Single": "Unique",
+    "Multiple": "Multiples",
+    "Active": "Actif",
+    "Inactive": "Inactif",
+    "Create Payment Link": "Créer un Payment Link",
+    "Create payment": "Créer un paiement",
+    "Cancel payment": "Annuler le paiement",
+    "Payment type": "Type de paiement",
+    "With payment": "Avec paiement",
+    "Without payment": "Sans paiement",
+    "Activate": "Activer",
+    "Deactivate": "Désactiver",
 
     "Cointracking": "Cointracking",
     "Saved": "Enregistré",
