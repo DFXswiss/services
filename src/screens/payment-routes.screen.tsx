@@ -134,7 +134,7 @@ export default function PaymentRoutes(): JSX.Element {
       ) : paymentRoutesLoading || (paymentLinksLoading && !isUpdatingPaymentLink.length) ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
-        <StyledVerticalStack full gap={5} className="select-none">
+        <StyledVerticalStack full gap={5}>
           {paymentRoutes?.buy.length ? (
             <StyledDataTable label={translate('screens/payment', 'Buy')}>
               {paymentRoutes?.buy.map<JSX.Element>((route) => (
@@ -489,7 +489,7 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
         onSubmit={handleSubmit(onSubmit)}
         translate={translateError}
       >
-        <StyledVerticalStack gap={6} full center className="select-none">
+        <StyledVerticalStack gap={6} full center>
           <StyledInput
             name="routeId"
             autocomplete="routeId"
@@ -646,7 +646,7 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
         onSubmit={handleSubmit(onSubmit)}
         translate={translateError}
       >
-        <StyledVerticalStack gap={6} full center className="select-none">
+        <StyledVerticalStack gap={6} full center>
           <StyledDropdown
             rootRef={rootRef}
             name="paymentMode"
