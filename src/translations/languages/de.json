@@ -73,6 +73,11 @@
     "Public Limited Company": "Aktiengesellschaft",
     "Limited Liability Company": "Gesellschaft mit beschränkter Haftung",
     "Life Insurance": "Lebensversicherung",
+    "Association": "Verein",
+    "Foundation": "Stiftung",
+    "Trust": "Treuhand",
+    "Other": "Andere",
+
     "Authorized to sign individually": "Einzelunterschriftberechtigt",
     "Authorized to sign jointly": "Unterschriftsberechtigt zu zweit",
     "No signing authorization": "Keine Unterschriftsberechtigung",

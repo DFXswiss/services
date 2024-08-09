@@ -73,6 +73,11 @@
     "Public Limited Company": "Société anonyme",
     "Limited Liability Company": "Société à responsabilité limitée",
     "Life Insurance": "Assurance-vie",
+    "Association": "Association",
+    "Foundation": "Fondation",
+    "Trust": "Fiducie",
+    "Other": "Autre",
+
     "Authorized to sign individually": "Autorisé à signer individuellement",
     "Authorized to sign jointly": "Autorisé à signer conjointement",
     "No signing authorization": "Pas d'autorisation de signature",
