@@ -1,14 +1,18 @@
 import {
   ApiError,
   Bank,
+  FundOrigin,
   Iban,
+  InvestmentDate,
   KycLevel,
+  Limit,
   Utils,
   Validations,
   useBank,
   useBankAccount,
   useSessionContext,
   useSupport,
+  useUserContext,
 } from '@dfx.swiss/react';
 import {
   Form,
@@ -25,7 +29,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
-import { IssueReasonLabels, IssueTypeLabels } from '../config/labels';
+import {
+  DateLabels,
+  IssueReasonLabels,
+  IssueTypeLabels,
+  LimitLabels,
+  OriginFutureLabels,
+  OriginNowLabels,
+} from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -53,6 +64,10 @@ interface FormData {
   transaction: number;
   reason: SupportIssueReason;
   message: string;
+  limit: Limit;
+  investmentDate: InvestmentDate;
+  fundOrigin: FundOrigin;
+  fundOriginText?: string;
   file?: File;
 }
 
@@ -66,6 +81,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { createIssue } = useSupport();
   const { translate, translateError } = useSettingsContext();
+  const { user } = useUserContext();
   const { isLoggedIn } = useSessionContext();
   const { getIbans } = useBankAccount();
   const { getBanks } = useBank();
@@ -77,6 +93,8 @@ export default function SupportIssueScreen(): JSX.Element {
   const [accounts, setAccounts] = useState<Iban[]>();
   const [banks, setBanks] = useState<Bank[]>();
 
+  const kycComplete = user?.kyc.level && user?.kyc.level >= KycLevel.Completed;
+
   const {
     control,
     handleSubmit,
@@ -85,11 +103,12 @@ export default function SupportIssueScreen(): JSX.Element {
     setValue,
   } = useForm<FormData>({ mode: 'onTouched' });
   const selectedType = useWatch({ control, name: 'type' });
+  const investmentDate = useWatch({ control, name: 'investmentDate' });
   const selectedReason = useWatch({ control, name: 'reason' });
   const selectedTransaction = useWatch({ control, name: 'transaction' });
   const selectedSender = useWatch({ control, name: 'senderIban' });
 
-  const types = Object.values(SupportIssueType).filter((t) => t !== SupportIssueType.LIMIT_REQUEST);
+  const types = Object.values(SupportIssueType).filter((t) => t !== SupportIssueType.LIMIT_REQUEST || kycComplete);
   const reasons = IssueReasons[selectedType] ?? [];
 
   useEffect(() => {
@@ -138,6 +157,15 @@ export default function SupportIssueScreen(): JSX.Element {
         }
       }
 
+      if (data.type === SupportIssueType.LIMIT_REQUEST && data.limit) {
+        request.limitRequest = {
+          limit: data.limit,
+          investmentDate: data.investmentDate,
+          fundOrigin: data.fundOrigin,
+          fundOriginText: data.fundOriginText,
+        };
+      }
+
       await createIssue(request);
 
       setIssueCreated(true);
@@ -166,6 +194,9 @@ export default function SupportIssueScreen(): JSX.Element {
     transaction: Validations.Required,
     reason: Validations.Required,
     message: Validations.Required,
+    limit: Validations.Required,
+    investmentDate: Validations.Required,
+    fundOrigin: Validations.Required,
   });
 
   return (
@@ -301,6 +332,55 @@ export default function SupportIssueScreen(): JSX.Element {
               placeholder={`${translate('screens/kyc', 'John')} ${translate('screens/kyc', 'Doe')}`}
               full
             />
+
+            {selectedType === SupportIssueType.LIMIT_REQUEST && (
+              <>
+                <StyledDropdown<Limit>
+                  rootRef={rootRef}
+                  label={translate('screens/limit', 'Investment volume')}
+                  items={Object.values(Limit).filter((i) => typeof i !== 'string') as number[]}
+                  labelFunc={(item) => LimitLabels[item]}
+                  name="limit"
+                  placeholder={translate('general/actions', 'Select...')}
+                  full
+                />
+
+                <StyledDropdown<InvestmentDate>
+                  rootRef={rootRef}
+                  label={translate('screens/limit', 'Investment date')}
+                  items={Object.values(InvestmentDate)}
+                  labelFunc={(item) => translate('screens/limit', DateLabels[item])}
+                  name="investmentDate"
+                  placeholder={translate('general/actions', 'Select...')}
+                  full
+                />
+
+                <StyledDropdown<FundOrigin>
+                  rootRef={rootRef}
+                  label={translate('screens/limit', 'Origin of funds')}
+                  items={Object.values(FundOrigin)}
+                  labelFunc={(item) =>
+                    translate(
+                      'screens/limit',
+                      investmentDate === InvestmentDate.FUTURE ? OriginFutureLabels[item] : OriginNowLabels[item],
+                    )
+                  }
+                  name="fundOrigin"
+                  placeholder={translate('general/actions', 'Select...')}
+                  full
+                />
+
+                <StyledInput
+                  name="fundOriginText"
+                  label={`${translate('screens/limit', 'Origin of funds')} (${translate(
+                    'screens/limit',
+                    'free text',
+                  )})`}
+                  multiLine
+                  full
+                />
+              </>
+            )}
 
             <StyledInput name="message" label={translate('screens/support', 'Description')} multiLine full />
 

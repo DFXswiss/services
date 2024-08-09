@@ -24,7 +24,6 @@ const BuySuccessScreen = lazy(() => import('./screens/buy-success.screen'));
 const BuyScreen = lazy(() => import('./screens/buy.screen'));
 const KycRedirectScreen = lazy(() => import('./screens/kyc-redirect.screen'));
 const KycScreen = lazy(() => import('./screens/kyc.screen'));
-const LimitScreen = lazy(() => import('./screens/limit.screen'));
 const LinkScreen = lazy(() => import('./screens/link.screen'));
 const PaymentRoutes = lazy(() => import('./screens/payment-routes.screen'));
 const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
@@ -126,11 +125,6 @@ export const Routes = [
   {
     path: '/2fa',
     element: withSuspense(<TfaScreen />),
-    isKycScreen: true,
-  },
-  {
-    path: '/limit',
-    element: withSuspense(<LimitScreen />),
     isKycScreen: true,
   },
   {
