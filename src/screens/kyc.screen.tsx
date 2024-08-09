@@ -20,6 +20,7 @@ import {
   Utils,
   Validations,
   isStepDone,
+  useApi,
   useKyc,
   useSessionContext,
   useUserContext,
@@ -95,7 +96,8 @@ export default function KycScreen(): JSX.Element {
   const { navigate, goBack } = useNavigation();
   const { logout } = useSessionContext();
   const { isInitialized, params, setParams } = useAppHandlingContext();
-  const { lang } = useAppParams();
+  const { lang, mergeCode } = useAppParams();
+  const { call } = useApi();
 
   const [info, setInfo] = useState<KycInfo | KycSession>();
   const [isLoading, setIsLoading] = useState(true);
@@ -105,6 +107,7 @@ export default function KycScreen(): JSX.Element {
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
   const [showLinkHint, setShowLinkHint] = useState(false);
+  const [isMerging, setIsMerging] = useState(false);
 
   const mode = pathname.includes('/profile') ? Mode.PROFILE : pathname.includes('/contact') ? Mode.CONTACT : Mode.KYC;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -126,6 +129,30 @@ export default function KycScreen(): JSX.Element {
   useEffect(() => {
     if (!lang && info) changeLanguage(info.language);
   }, [info, lang]);
+
+  useEffect(() => {
+    console.log('mergeCode before call', mergeCode);
+    if (mergeCode && !isMerging) {
+      setIsMerging(true);
+      call({
+        url: `auth/mail/confirm?code=${mergeCode}`,
+        method: 'GET',
+      })
+        .then((redirectURL: any) => {
+          console.log('redirectURL', redirectURL);
+          setParams({ mergeCode: undefined });
+          if (redirectURL) navigate(redirectURL);
+        })
+        .catch((error: ApiError) => {
+          console.log('error', error);
+          setError(error.message ?? 'Unknown error');
+        })
+        .finally(() => {
+          setIsMerging(false);
+        });
+    }
+    console.log('mergeCode after call', mergeCode);
+  }, [mergeCode]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -311,6 +338,11 @@ export default function KycScreen(): JSX.Element {
             onClick={retryLink}
             isLoading={isLoading}
           />
+        </StyledVerticalStack>
+      ) : isMerging ? (
+        <StyledVerticalStack gap={6} full center>
+          <StyledLoadingSpinner size={SpinnerSize.LG} />
+          <p className="text-dfxGray-700">{translate('screens/kyc', 'Merging your accounts...')} </p>
         </StyledVerticalStack>
       ) : consentClient ? (
         <StyledVerticalStack gap={6} full>
