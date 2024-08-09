@@ -39,6 +39,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useUserGuard } from 'src/hooks/guard.hook';
+import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
@@ -91,10 +92,6 @@ export default function PaymentRoutes(): JSX.Element {
       setTimeout(() => paymentLinkRefs.current[id]?.scrollIntoView());
       setExpandedRef(id);
     }
-  }
-
-  function prependLnurl(lnurl: string): string {
-    return `https://services.dfx.swiss/?lightning=${lnurl}`;
   }
 
   function formatURL(url: string): string {
@@ -261,7 +258,7 @@ export default function PaymentRoutes(): JSX.Element {
                       <StyledVerticalStack full gap={4}>
                         <div className="flex w-full items-center justify-center">
                           <div className="w-48 py-3">
-                            <QrCopy data={prependLnurl(link.lnurl)} />
+                            <QrCopy data={Lnurl.prependLnurl(link.lnurl)} />
                             <p className="text-center rounded-sm font-semibold bg-dfxGray-300 mt-1">
                               {translate('screens/payment', 'Payment Link')}
                             </p>
@@ -340,7 +337,7 @@ export default function PaymentRoutes(): JSX.Element {
                         {link.payment?.status === PaymentLinkPaymentStatus.PENDING && (
                           <div className="flex w-full items-center justify-center">
                             <div className="w-48 py-3">
-                              <QrCopy data={prependLnurl(link.payment.lnurl)} />
+                              <QrCopy data={Lnurl.prependLnurl(link.payment.lnurl)} />
                               <p className="text-center rounded-sm font-semibold bg-dfxGray-300 mt-1">
                                 {translate('screens/payment', 'Payment')}
                               </p>
