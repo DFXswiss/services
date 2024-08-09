@@ -130,7 +130,7 @@ export default function SupportIssueScreen(): JSX.Element {
           limit: data.limit,
           investmentDate: data.investmentDate,
           fundOrigin: data.fundOrigin,
-          fundOriginText: data.fundOriginText ?? '',
+          fundOriginText: data.fundOriginText,
         };
       }
 
