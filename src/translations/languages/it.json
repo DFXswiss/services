@@ -30,7 +30,8 @@
     "Delete address": "Elimina l'indirizzo",
     "Delete account": "Elimina l'account",
     "Copy Address": "Copia l'indirizzo",
-    "Open Explorer": "Apri Explorer"
+    "Open Explorer": "Apri Explorer",
+    "Select transaction": "Selezionare la transazione"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -496,6 +497,9 @@
     "Other": "Altro",
     "Funds not received": "Fondi non ricevuti",
     "Transaction missing": "Transazione mancante",
+
+    "Transaction ID": "ID della transazione",
+    "Select a transaction to proceed with": "Selezionare una transazione per procedere",
 
     "Name": "Nome",
     "Description": "Descrizione",
