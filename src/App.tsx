@@ -27,11 +27,11 @@ const KycScreen = lazy(() => import('./screens/kyc.screen'));
 const LimitScreen = lazy(() => import('./screens/limit.screen'));
 const LinkScreen = lazy(() => import('./screens/link.screen'));
 const PaymentRoutes = lazy(() => import('./screens/payment-routes.screen'));
+const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
 const SellInfoScreen = lazy(() => import('./screens/sell-info.screen'));
 const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
 const SupportScreen = lazy(() => import('./screens/support.screen'));
 const TfaScreen = lazy(() => import('./screens/tfa.screen'));
-const TransactionMissingScreen = lazy(() => import('./screens/transaction-missing.screen'));
 const TransactionScreen = lazy(() => import('./screens/transaction.screen'));
 
 setupLanguages();
@@ -95,6 +95,10 @@ export const Routes = [
     element: withSuspense(<PaymentRoutes />),
   },
   {
+    path: '/payment-link',
+    element: withSuspense(<PaymentLinkScreen />),
+  },
+  {
     path: '/kyc',
     element: withSuspense(<KycScreen />),
     isKycScreen: true,
@@ -147,18 +151,6 @@ export const Routes = [
   },
   {
     path: '/support/issue',
-    element: withSuspense(<SupportIssueScreen />),
-  },
-  {
-    path: '/support/issue/tx',
-    element: withSuspense(<TransactionScreen />),
-  },
-  {
-    path: '/support/issue/tx-missing',
-    element: withSuspense(<TransactionMissingScreen />),
-  },
-  {
-    path: '/support/issue/tx/:id',
     element: withSuspense(<SupportIssueScreen />),
   },
   {

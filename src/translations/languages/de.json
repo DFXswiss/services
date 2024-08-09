@@ -1,6 +1,7 @@
 {
   "general/actions": {
     "Select...": "Auswählen...",
+    "Select": "Auswählen",
     "Search...": "Suchen...",
     "Start": "Starten",
     "Next": "Weiter",
@@ -17,6 +18,7 @@
     "Logout": "Logout",
     "Back": "Zurück",
     "Proceed": "Fortfahren",
+    "Create": "Erstellen",
     "Retry": "Erneut versuchen",
     "Connect": "Verbinden",
     "Continue in Trezor Connect": "Weiter zu Trezor Connect",
@@ -61,7 +63,7 @@
     "Document upload": "Dokument-Upload",
     "Legal entity": "Juristische Person",
     "Nationality": "Nationalität",
-    "Stock register": "Aktienbuch",
+    "Shareholder register": "Aktienbuch",
     "Commercial register": "Handelsregister",
     "Signatory power": "Unterschriftsberechtigung",
     "Power of Attorney": "Vollmacht",
@@ -254,7 +256,8 @@
     "Credit": "Guthaben",
     "Paid credit": "Ausgezahltes Guthaben",
     "User count": "Anzahl Benutzer",
-    "Active user count": "Anzahl aktiver Benutzer"
+    "Active user count": "Anzahl aktiver Benutzer",
+    "Active wallet": "Aktive Wallet"
   },
   "screens/buy": {
     "You spend": "Du zahlst",
@@ -350,6 +353,7 @@
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} zu {{to}} bei {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",
+    "External ID": "Externe ID",
     "Date": "Datum",
     "Input": "Input",
     "Input TX": "Input TX",
@@ -369,6 +373,9 @@
     "KYC required": "KYC benötigt",
     "Fee to high": "Gebühr zu hoch",
     "Completed": "Abgeschlossen",
+    "Pending": "Ausstehend",
+    "Cancelled": "Abgebrochen",
+    "Expired": "Abgelaufen",
     "Failed": "Gescheitert",
     "Returned": "Zurückgeschickt",
     "Unassigned": "Nicht zugeordnet",
@@ -395,6 +402,7 @@
     "CHF abroad not allowed": "CHF im Ausland nicht erlaubt",
     "Asset requires KYC": "Asset erfordert KYC",
     "Card name mismatch": "Kartenname stimmt nicht überein",
+    "Address deleted": "Adresse gelöscht",
 
     "Payment method": "Zahlungsmethode",
     "Standard bank transaction": "Standard-Banktransaktion",
@@ -422,7 +430,26 @@
     "Please note that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst.",
 
     "Payment routes": "Payment Routen",
+    "Payment route": "Payment Route",
     "Purpose of payment": "Zahlungszweck",
+    "Payment Links": "Payment Links",
+    "Payment Link": "Payment Link",
+    "Payment": "Zahlung",
+    "Payment ID": "Zahlungs-ID",
+    "Mode": "Modus",
+    "Expiry date": "Ablaufdatum",
+    "Single": "Einzel",
+    "Multiple": "Mehrere",
+    "Active": "Aktiv",
+    "Inactive": "Inaktiv",
+    "Create Payment Link": "Payment Link erstellen",
+    "Create payment": "Zahlung erstellen",
+    "Cancel payment": "Zahlung abbrechen",
+    "Payment type": "Zahlungsart",
+    "With payment": "Mit Zahlung",
+    "Without payment": "Ohne Zahlung",
+    "Activate": "Aktivieren",
+    "Deactivate": "Deaktivieren",
 
     "Cointracking": "Cointracking",
     "Saved": "Gespeichert",
@@ -500,7 +527,7 @@
     "Label": "Bezeichnung",
 
     "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen.",
-    "Deleting your account is irreversible. Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Das Löschen Deines Kontos ist unwiderruflich. Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team."
+    "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team."
   },
   "navigation/links": {
     "Buy": "Kaufen",

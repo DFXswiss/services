@@ -1,7 +1,19 @@
-import { ApiError, KycLevel, Utils, Validations, useSupport } from '@dfx.swiss/react';
+import {
+  ApiError,
+  Bank,
+  Iban,
+  KycLevel,
+  Utils,
+  Validations,
+  useBank,
+  useBankAccount,
+  useSessionContext,
+  useSupport,
+} from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
   StyledDropdown,
   StyledFileUpload,
@@ -11,18 +23,22 @@ import {
 import { CreateSupportIssue, SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useLocation, useParams } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { IssueReasonLabels, IssueTypeLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { toBase64 } from '../util/utils';
+import { blankedAddress, toBase64 } from '../util/utils';
+import { TransactionList } from './transaction.screen';
 
 const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.GENERIC_ISSUE]: [SupportIssueReason.OTHER],
-  [SupportIssueType.TRANSACTION_ISSUE]: [SupportIssueReason.OTHER, SupportIssueReason.FUNDS_NOT_RECEIVED],
+  [SupportIssueType.TRANSACTION_ISSUE]: [
+    SupportIssueReason.OTHER,
+    SupportIssueReason.FUNDS_NOT_RECEIVED,
+    SupportIssueReason.TRANSACTION_MISSING,
+  ],
   [SupportIssueType.KYC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.LIMIT_REQUEST]: [SupportIssueReason.OTHER],
   [SupportIssueType.PARTNERSHIP_REQUEST]: [SupportIssueReason.OTHER],
@@ -30,59 +46,72 @@ const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
 
 interface FormData {
   type: SupportIssueType;
+  senderIban: string;
+  receiverIban: string;
+  date: string;
   name: string;
-  transaction: string;
+  transaction: number;
   reason: SupportIssueReason;
   message: string;
   file?: File;
 }
 
+const AddAccount = 'Add bank account';
+
 export default function SupportIssueScreen(): JSX.Element {
   useUserGuard('/login');
   useKycLevelGuard(KycLevel.Link, '/contact');
 
-  const { id } = useParams();
-  const { pathname } = useLocation();
   const { navigate } = useNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
   const { createIssue } = useSupport();
   const { translate, translateError } = useSettingsContext();
+  const { isLoggedIn } = useSessionContext();
+  const { getIbans } = useBankAccount();
+  const { getBanks } = useBank();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [issueCreated, setIssueCreated] = useState(false);
+  const [selectTransaction, setSelectTransaction] = useState(false);
+  const [accounts, setAccounts] = useState<Iban[]>();
+  const [banks, setBanks] = useState<Bank[]>();
 
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
+    resetField,
     setValue,
-  } = useForm<FormData>({
-    mode: 'onTouched',
-    defaultValues: {
-      type: pathname.includes('/tx') ? SupportIssueType.TRANSACTION_ISSUE : undefined,
-    },
-  });
+  } = useForm<FormData>({ mode: 'onTouched' });
   const selectedType = useWatch({ control, name: 'type' });
+  const selectedReason = useWatch({ control, name: 'reason' });
+  const selectedTransaction = useWatch({ control, name: 'transaction' });
+  const selectedSender = useWatch({ control, name: 'senderIban' });
 
   const types = Object.values(SupportIssueType).filter((t) => t !== SupportIssueType.LIMIT_REQUEST);
   const reasons = IssueReasons[selectedType] ?? [];
 
   useEffect(() => {
-    id && setValue('transaction', id);
-  }, [id]);
+    if (selectedSender === AddAccount) navigate('/bank-accounts');
+  }, [selectedSender]);
 
   useEffect(() => {
-    reasons.length === 1 && setValue('reason', reasons[0]);
-  }, [reasons]);
-
-  useEffect(() => {
-    if (selectedType === SupportIssueType.TRANSACTION_ISSUE) {
-      if (!id) navigate('/support/issue/tx');
+    if (selectedReason === SupportIssueReason.TRANSACTION_MISSING) {
+      resetField('transaction');
     } else {
-      navigate('/support/issue');
+      resetField('senderIban');
+      resetField('receiverIban');
+      resetField('date');
     }
-  }, [selectedType]);
+  }, [selectedReason]);
+
+  useEffect(() => {
+    if (isLoggedIn)
+      Promise.all([getIbans().then(setAccounts), getBanks().then(setBanks)]).catch((error: ApiError) =>
+        setError(error.message ?? 'Unknown error'),
+      );
+  }, [isLoggedIn]);
 
   async function onSubmit(data: FormData) {
     setIsLoading(true);
@@ -97,8 +126,16 @@ export default function SupportIssueScreen(): JSX.Element {
         fileName: data.file?.name,
       };
 
-      if (data.type === SupportIssueType.TRANSACTION_ISSUE && id) {
-        request.transaction = { id: +id };
+      if (data.type === SupportIssueType.TRANSACTION_ISSUE) {
+        if (data.reason !== SupportIssueReason.TRANSACTION_MISSING) {
+          request.transaction = { id: +data.transaction };
+        } else {
+          request.transaction = {
+            senderIban: data.senderIban,
+            receiverIban: data.receiverIban,
+            date: new Date(data.date),
+          };
+        }
       }
 
       await createIssue(request);
@@ -111,13 +148,22 @@ export default function SupportIssueScreen(): JSX.Element {
     }
   }
 
+  function onSelectTransaction(id: number) {
+    setValue('transaction', id);
+    setSelectTransaction(false);
+  }
+
   function onDone() {
     navigate('/account');
   }
 
   const rules = Utils.createRules({
     type: Validations.Required,
+    senderIban: Validations.Required,
+    receiverIban: Validations.Required,
+    date: [Validations.Required, Validations.Custom((date) => (/\d{4}-\d{2}-\d{2}/g.test(date) ? true : 'pattern'))],
     name: Validations.Required,
+    transaction: Validations.Required,
     reason: Validations.Required,
     message: Validations.Required,
   });
@@ -137,6 +183,26 @@ export default function SupportIssueScreen(): JSX.Element {
             isLoading={isLoading}
           />
         </StyledVerticalStack>
+      ) : selectTransaction ? (
+        <>
+          <p className="text-dfxGray-700">
+            {translate(
+              'screens/support',
+              'For which transaction would you like to create an issue? Select the relevant transaction or click on "{{text}}".',
+              { text: translate('screens/payment', 'My transaction is missing') },
+            )}
+          </p>
+          <StyledButton
+            color={StyledButtonColor.BLUE}
+            width={StyledButtonWidth.FULL}
+            label={translate('screens/payment', 'My transaction is missing')}
+            onClick={() => {
+              setValue('reason', SupportIssueReason.TRANSACTION_MISSING);
+              setSelectTransaction(false);
+            }}
+          />
+          <TransactionList isSupport={true} onSelectTransaction={onSelectTransaction} setError={setError} />
+        </>
       ) : (
         <Form
           control={control}
@@ -156,18 +222,6 @@ export default function SupportIssueScreen(): JSX.Element {
               full
             />
 
-            {selectedType === SupportIssueType.TRANSACTION_ISSUE && (
-              <StyledDropdown<string>
-                rootRef={rootRef}
-                label={translate('screens/payment', 'Transaction')}
-                items={[]}
-                labelFunc={(item) => `${translate('screens/payment', 'Transaction')} ${item}`}
-                name="transaction"
-                placeholder={translate('general/actions', 'Select...')}
-                full
-              />
-            )}
-
             {reasons.length > 1 && (
               <StyledDropdown<SupportIssueReason>
                 rootRef={rootRef}
@@ -179,6 +233,66 @@ export default function SupportIssueScreen(): JSX.Element {
                 full
               />
             )}
+
+            {selectedType === SupportIssueType.TRANSACTION_ISSUE &&
+              selectedReason &&
+              (selectedReason !== SupportIssueReason.TRANSACTION_MISSING ? (
+                <StyledVerticalStack gap={3.5} full center>
+                  <p className="w-full text-left text-dfxBlue-800 text-base font-semibold pl-3.5 -mb-1">
+                    {translate('screens/payment', 'Transaction')}
+                  </p>
+                  {selectedTransaction && (
+                    <StyledDropdown<string>
+                      rootRef={rootRef}
+                      items={[]}
+                      labelFunc={(item) => `${translate('screens/payment', 'Transaction')} ${item}`}
+                      name="transaction"
+                      full
+                    />
+                  )}
+                  <StyledButton
+                    label={translate('general/actions', 'Select transaction')}
+                    onClick={() => setSelectTransaction(true)}
+                    width={StyledButtonWidth.FULL}
+                    color={StyledButtonColor.STURDY_WHITE}
+                  />
+                </StyledVerticalStack>
+              ) : accounts && banks ? (
+                <>
+                  <StyledDropdown<string>
+                    rootRef={rootRef}
+                    label={translate('screens/support', 'Sender IBAN')}
+                    items={[
+                      ...accounts.map((a) => Utils.formatIban(a.iban) ?? ''),
+                      'No IBAN, only account number',
+                      AddAccount,
+                    ]}
+                    labelFunc={(item) => translate('screens/iban', item)}
+                    name="senderIban"
+                    placeholder={translate('general/actions', 'Select...')}
+                    full
+                  />
+
+                  <StyledDropdown<string>
+                    rootRef={rootRef}
+                    label={translate('screens/support', 'Receiver IBAN')}
+                    items={banks.map((b) => blankedAddress(Utils.formatIban(b.iban) ?? '', { displayLength: 18 }))}
+                    labelFunc={(item) => item}
+                    name="receiverIban"
+                    placeholder={translate('general/actions', 'Select...')}
+                    full
+                  />
+
+                  <StyledInput
+                    name="date"
+                    label={translate('screens/support', 'Date of the transaction')}
+                    placeholder={new Date().toISOString().split('T')[0]}
+                    full
+                  />
+                </>
+              ) : (
+                <></>
+              ))}
 
             <StyledInput
               name="name"
