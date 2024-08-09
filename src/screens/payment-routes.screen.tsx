@@ -1,7 +1,12 @@
 import {
   ApiError,
   Blockchain,
+  CreatePaymentLink,
+  CreatePaymentLinkPayment,
   Fiat,
+  PaymentLinkPaymentMode,
+  PaymentLinkPaymentStatus,
+  PaymentLinkStatus,
   useFiatContext,
   usePaymentRoutesContext,
   Utils,
@@ -25,13 +30,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import {
-  CreatePaymentLink,
-  CreatePaymentLinkPayment,
-  PaymentLinkPaymentMode,
-  PaymentLinkPaymentStatus,
-  PaymentLinkStatus,
-} from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -45,7 +43,7 @@ import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
 interface FormData {
-  routeId: number;
+  routeId: string;
   externalId: string;
   paymentType: RouteType;
   paymentMode: PaymentLinkPaymentMode;
@@ -59,16 +57,41 @@ export default function PaymentRoutes(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
-  const { paymentRoutes, paymentLinksLoading, paymentLinks, updatePaymentLink, cancelPaymentLinkPayment, error } =
-    usePaymentRoutesContext();
+  const { paymentRoutes, paymentLinks, updatePaymentLink, cancelPaymentLinkPayment, error } = usePaymentRoutesContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [showCreatePaymentLinkOverlay, setShowCreatePaymentLinkOverlay] = useState(false);
-  const [showCreatePaymentOverlay, setShowCreatePaymentOverlay] = useState<string | undefined>(undefined);
+  const [showCreatePaymentOverlay, setShowCreatePaymentOverlay] = useState<string>();
+  const [isUpdatingPaymentLink, setIsUpdatingPaymentLink] = useState<string[]>([]);
+  const [expandedRef, setExpandedRef] = useState<string>();
 
   useUserGuard('/login');
+
+  async function togglePaymentLinkStatus(id: string, status: PaymentLinkStatus) {
+    setIsUpdatingPaymentLink((prev) => [...prev, id]);
+    updatePaymentLink({ status }, +id).finally(() => {
+      setIsUpdatingPaymentLink((prev) => prev.filter((i) => i !== id));
+    });
+  }
+
+  async function cancelPayment(id: string) {
+    setIsUpdatingPaymentLink((prev) => [...prev, id]);
+    cancelPaymentLinkPayment(+id).finally(() => {
+      setIsUpdatingPaymentLink((prev) => prev.filter((i) => i !== id));
+    });
+  }
+
+  function onDone(id?: string) {
+    setShowCreatePaymentLinkOverlay(false);
+    setShowCreatePaymentOverlay(undefined);
+
+    if (id) {
+      setTimeout(() => paymentLinkRefs.current[id]?.scrollIntoView());
+      setExpandedRef(id);
+    }
+  }
 
   function prependLnurl(lnurl: string): string {
     return `https://services.dfx.swiss/?lightning=${lnurl}`;
@@ -78,9 +101,15 @@ export default function PaymentRoutes(): JSX.Element {
     return url.split('dfx.swiss')[1];
   }
 
+  const title = showCreatePaymentLinkOverlay
+    ? 'Create Payment Link'
+    : showCreatePaymentOverlay
+    ? 'Create payment'
+    : 'Payment routes';
+
   return (
     <Layout
-      title={translate('screens/payment', showCreatePaymentLinkOverlay ? 'Create new route' : 'Payment routes')}
+      title={translate('screens/payment', title)}
       onBack={
         showCreatePaymentLinkOverlay
           ? () => setShowCreatePaymentLinkOverlay(false)
@@ -94,13 +123,13 @@ export default function PaymentRoutes(): JSX.Element {
       {error ? (
         <ErrorHint message={error} />
       ) : showCreatePaymentLinkOverlay ? (
-        <CreatePaymentLinkOverlay onDone={() => setShowCreatePaymentLinkOverlay(false)} />
+        <CreatePaymentLinkOverlay onDone={onDone} />
       ) : showCreatePaymentOverlay !== undefined ? (
-        <CreatePaymentOverlay id={showCreatePaymentOverlay} onDone={() => setShowCreatePaymentOverlay(undefined)} />
-      ) : !paymentRoutes || paymentLinksLoading ? (
+        <CreatePaymentOverlay id={showCreatePaymentOverlay} onDone={onDone} />
+      ) : !paymentRoutes ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
-        <StyledVerticalStack full gap={5}>
+        <StyledVerticalStack full gap={5} className="select-none">
           {paymentRoutes?.buy.length ? (
             <StyledDataTable label={translate('screens/payment', 'Buy')}>
               {paymentRoutes?.buy.map<JSX.Element>((route) => (
@@ -206,7 +235,7 @@ export default function PaymentRoutes(): JSX.Element {
           ) : (
             <></>
           )}
-          <h2 className="ml-3.5 text-dfxGray-700">{translate('screens/payment', 'Payment links')}</h2>
+          <h2 className="ml-3.5 text-dfxGray-700">{translate('screens/payment', 'Payment Links')}</h2>
           {paymentLinks?.length ? (
             <StyledVerticalStack gap={2} full>
               {paymentLinks.map((link) => {
@@ -214,11 +243,12 @@ export default function PaymentRoutes(): JSX.Element {
                   <div key={link.id} ref={(el) => paymentLinkRefs.current && (paymentLinkRefs.current[link.id] = el)}>
                     <StyledCollapsible
                       full
+                      isExpanded={expandedRef ? expandedRef === link.id : undefined}
                       titleContent={
                         <div className="flex flex-row justify-between gap-2 items-center">
                           <div className="flex flex-col items-start text-left">
                             <div className="font-bold leading-none">
-                              {`${translate('screens/payment', 'Payment link')} ${link.id}`}
+                              {`${translate('screens/payment', 'Payment Link')} ${link.id}`}
                             </div>
                             <div className="leading-none mt-1 text-dfxGray-700">
                               {`${translate('screens/payment', 'Payment route')} ${link.routeId}`}
@@ -233,7 +263,7 @@ export default function PaymentRoutes(): JSX.Element {
                           <div className="w-48 py-3">
                             <QrCopy data={prependLnurl(link.lnurl)} />
                             <p className="text-center rounded-sm font-semibold bg-dfxGray-300 mt-1">
-                              {translate('screens/payment', 'Payment link')}
+                              {translate('screens/payment', 'Payment Link')}
                             </p>
                           </div>
                         </div>
@@ -261,6 +291,7 @@ export default function PaymentRoutes(): JSX.Element {
                           {link.payment != null && (
                             <StyledDataTableExpandableRow
                               label={translate('screens/payment', 'Payment')}
+                              isExpanded={expandedRef ? expandedRef === link.id : undefined}
                               expansionItems={[
                                 {
                                   label: translate('screens/payment', 'ID'),
@@ -331,24 +362,27 @@ export default function PaymentRoutes(): JSX.Element {
                           link.payment?.status === PaymentLinkPaymentStatus.PENDING && (
                             <StyledButton
                               label={translate('screens/payment', 'Cancel payment')}
-                              onClick={() => cancelPaymentLinkPayment(+link.id)}
+                              onClick={() => cancelPayment(link.id)}
                               color={StyledButtonColor.STURDY_WHITE}
+                              isLoading={isUpdatingPaymentLink.includes(link.id)}
                             />
                           )}
                         {link.payment?.status !== PaymentLinkPaymentStatus.PENDING &&
                           link.status === PaymentLinkStatus.ACTIVE && (
                             <StyledButton
                               label={translate('screens/payment', 'Deactivate')}
-                              onClick={() => updatePaymentLink({ status: PaymentLinkStatus.INACTIVE }, +link.id)}
+                              onClick={() => togglePaymentLinkStatus(link.id, PaymentLinkStatus.INACTIVE)}
                               color={StyledButtonColor.STURDY_WHITE}
+                              isLoading={isUpdatingPaymentLink.includes(link.id)}
                             />
                           )}
 
                         {link.status === PaymentLinkStatus.INACTIVE && (
                           <StyledButton
                             label={translate('screens/payment', 'Activate')}
-                            onClick={() => updatePaymentLink({ status: PaymentLinkStatus.ACTIVE }, +link.id)}
+                            onClick={() => togglePaymentLinkStatus(link.id, PaymentLinkStatus.ACTIVE)}
                             color={StyledButtonColor.STURDY_WHITE}
+                            isLoading={isUpdatingPaymentLink.includes(link.id)}
                           />
                         )}
                       </StyledVerticalStack>
@@ -361,7 +395,7 @@ export default function PaymentRoutes(): JSX.Element {
             <></>
           )}
           <StyledButton
-            label={translate('screens/payment', 'Create payment link')}
+            label={translate('screens/payment', 'Create Payment Link')}
             width={StyledButtonWidth.FULL}
             onClick={() => setShowCreatePaymentLinkOverlay(true)}
           />
@@ -377,7 +411,7 @@ enum RouteType {
 }
 
 interface CreatePaymentLinkOverlayProps {
-  onDone: () => void;
+  onDone: (id?: string) => void;
 }
 
 function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JSX.Element {
@@ -393,7 +427,6 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
     control,
     handleSubmit,
     formState: { errors, isValid },
-    setValue,
   } = useForm<FormData>({
     mode: 'onTouched',
     defaultValues: {
@@ -407,8 +440,8 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
 
     try {
       const request: CreatePaymentLink = {
-        routeId: data.routeId,
-        externalId: data.externalId,
+        routeId: data.routeId ? +data.routeId : undefined,
+        externalId: data.externalId ? data.externalId : undefined,
       };
 
       if (data.paymentType === RouteType.WITH_PAYMENT) {
@@ -421,8 +454,8 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
         };
       }
 
-      await createPaymentLink(request);
-      onDone();
+      const paymentLink = await createPaymentLink(request);
+      onDone(paymentLink?.id);
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
@@ -447,7 +480,7 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
         onSubmit={handleSubmit(onSubmit)}
         translate={translateError}
       >
-        <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={6} full center className="select-none">
           <StyledInput
             name="routeId"
             autocomplete="routeId"
@@ -562,7 +595,6 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
     control,
     handleSubmit,
     formState: { errors, isValid },
-    setValue,
   } = useForm<FormData>({
     mode: 'onTouched',
   });
@@ -580,7 +612,7 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
       };
 
       await createPaymentLinkPayment(request, +id);
-      onDone();
+      onDone(id);
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
@@ -605,7 +637,7 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
         onSubmit={handleSubmit(onSubmit)}
         translate={translateError}
       >
-        <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={6} full center className="select-none">
           <StyledDropdown
             rootRef={rootRef}
             name="paymentMode"
