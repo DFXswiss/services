@@ -95,8 +95,14 @@ export function useKycHelper(): KycHelperInterface {
         return translate('screens/kyc', 'Limited Liability Company');
       case LegalEntity.LIFE_INSURANCE:
         return translate('screens/kyc', 'Life Insurance');
-      default:
-        return entity;
+      case LegalEntity.ASSOCIATION:
+        return translate('screens/kyc', 'Association');
+      case LegalEntity.FOUNDATION:
+        return translate('screens/kyc', 'Foundation');
+      case LegalEntity.TRUST:
+        return translate('screens/kyc', 'Trust');
+      case LegalEntity.OTHER:
+        return translate('screens/kyc', 'Other');
     }
   }
 

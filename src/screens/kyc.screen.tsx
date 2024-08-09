@@ -955,6 +955,7 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
   const {
     control,
     handleSubmit,
+    resetField,
     formState: { isValid, errors },
   } = useForm<FormDataFile>({ mode: 'onTouched' });
 
@@ -972,7 +973,10 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
     setFileData(code, step.session.url, fileData as KycFileData)
       .then(onDone)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsUpdating(false));
+      .finally(() => {
+        setIsUpdating(false);
+        resetField('file');
+      });
   }
 
   const rules = Utils.createRules({

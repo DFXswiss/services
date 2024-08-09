@@ -30,7 +30,8 @@
     "Delete address": "Adresse löschen",
     "Delete account": "Konto löschen",
     "Copy Address": "Adresse kopieren",
-    "Open Explorer": "Explorer öffnen"
+    "Open Explorer": "Explorer öffnen",
+    "Select transaction": "Transaktion auswählen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -72,6 +73,11 @@
     "Public Limited Company": "Aktiengesellschaft",
     "Limited Liability Company": "Gesellschaft mit beschränkter Haftung",
     "Life Insurance": "Lebensversicherung",
+    "Association": "Verein",
+    "Foundation": "Stiftung",
+    "Trust": "Treuhand",
+    "Other": "Andere",
+
     "Authorized to sign individually": "Einzelunterschriftberechtigt",
     "Authorized to sign jointly": "Unterschriftsberechtigt zu zweit",
     "No signing authorization": "Keine Unterschriftsberechtigung",
@@ -496,6 +502,9 @@
     "Other": "Andere",
     "Funds not received": "Zahlung nicht erhalten",
     "Transaction missing": "Transaktion fehlt",
+
+    "Transaction ID": "Transaktions-ID",
+    "Select a transaction to proceed with": "Wähle eine Transaktion aus, um fortzufahren",
 
     "Name": "Name",
     "Description": "Beschreibung",
