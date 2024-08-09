@@ -1,4 +1,4 @@
-import { ApiError, useApi } from '@dfx.swiss/react';
+import { ApiError, PaymentLinkPayRequest, useLnUrl } from '@dfx.swiss/react';
 import {
   AlignContent,
   SpinnerSize,
@@ -18,43 +18,40 @@ import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
-export interface LnurlPayRequest {
-  tag: string;
-  callback: string;
-  minSendable: number;
-  maxSendable: number;
-  metadata: string;
-}
-
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { width } = useWindowContext();
   const { search } = useLocation();
-  const { call } = useApi();
+  const { getLnUrlPayment } = useLnUrl();
 
-  const [lnurlPayRequest, setLnurlPayRequest] = useState<any>();
+  const [lnurlPayRequest, setLnurlPayRequest] = useState<PaymentLinkPayRequest>();
   const [error, setError] = useState<string>();
 
   const urlParams = new URLSearchParams(search);
+  if (!urlParams.has('lightning')) {
+    navigate('/', { replace: true });
+  }
+
   const paramLNURL = urlParams.get('lightning');
 
   useEffect(() => {
     const apiEndpoint = paramLNURL && Lnurl.decode(paramLNURL)?.split('/').pop();
-    call<LnurlPayRequest>({
-      url: `lnurlp/${apiEndpoint}`,
-      method: 'GET',
-    })
+    if (!apiEndpoint) {
+      setError('Invalid payment link.');
+      return;
+    }
+    getLnUrlPayment(apiEndpoint)
       .then(setLnurlPayRequest)
       .catch((e) => setError((e as ApiError).message ?? 'Unknown error'));
   }, [paramLNURL]);
 
   const filteredTransferAmounts = lnurlPayRequest?.transferAmounts
     .filter(
-      (item: any) =>
+      (item) =>
         (item.method === 'Lightning' && item.asset === 'BTC') || (item.method === 'Ethereum' && item.asset === 'ZCHF'),
     )
-    .map((item: any) => ({
+    .map((item) => ({
       ...item,
       method: item.method === 'Ethereum' ? 'EVM' : item.method,
     }));
@@ -85,15 +82,16 @@ export default function PaymentLinkScreen(): JSX.Element {
             <StyledDataTableRow label={translate('screens/payment', 'Name')}>
               <div>{JSON.parse(lnurlPayRequest.metadata)[0][1]}</div>
             </StyledDataTableRow>
-            {(filteredTransferAmounts.length > 0 ? filteredTransferAmounts : lnurlPayRequest.transferAmounts).map(
-              (item: any, index: number) => (
-                <StyledDataTableRow key={index} label={item.method}>
-                  <p>
-                    {item.amount} {item.asset}
-                  </p>
-                </StyledDataTableRow>
-              ),
-            )}
+            {(filteredTransferAmounts && filteredTransferAmounts.length > 0
+              ? filteredTransferAmounts
+              : lnurlPayRequest.transferAmounts
+            ).map((item, index) => (
+              <StyledDataTableRow key={index} label={item.method}>
+                <p>
+                  {item.amount} {item.asset}
+                </p>
+              </StyledDataTableRow>
+            ))}
           </StyledDataTable>
         </StyledVerticalStack>
       )}

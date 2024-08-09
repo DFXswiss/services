@@ -8,8 +8,8 @@ export class Lnurl {
   }
 
   static decode(lnurl: string): string | undefined {
-    const decoded = bech32.decode(lnurl, 1023);
     try {
+      const decoded = bech32.decode(lnurl, 1023);
       return Buffer.from(bech32.fromWords(decoded.words)).toString('utf8');
     } catch (e) {
       return undefined;
