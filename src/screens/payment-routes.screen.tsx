@@ -44,7 +44,7 @@ import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
 interface FormData {
-  routeId: string;
+  routeId: RouteIdSelectData;
   externalId: string;
   paymentType: RouteType;
   paymentMode: PaymentLinkPaymentMode;
@@ -52,6 +52,11 @@ interface FormData {
   paymentExternalId: string;
   paymentCurrency: Fiat;
   paymentExpiryDate: Date;
+}
+
+interface RouteIdSelectData {
+  id: string;
+  description: string;
 }
 
 export default function PaymentRoutes(): JSX.Element {
@@ -428,6 +433,7 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
   const { translate, translateError } = useSettingsContext();
   const { createPaymentLink } = usePaymentRoutesContext();
   const { currencies } = useFiatContext();
+  const { paymentRoutes } = usePaymentRoutesContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -449,7 +455,7 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
 
     try {
       const request: CreatePaymentLink = {
-        routeId: data.routeId ? +data.routeId : undefined,
+        routeId: data.routeId ? +data.routeId.id : undefined,
         externalId: data.externalId ? data.externalId : undefined,
       };
 
@@ -480,6 +486,13 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
     paymentExpiryDate: Validations.Required,
   });
 
+  const availablePaymentRoutes: RouteIdSelectData[] = paymentRoutes
+    ? paymentRoutes?.sell?.map((route) => ({
+        id: route.id.toString(),
+        description: `${route.currency.name} / ${route.iban}`,
+      }))
+    : [];
+
   return (
     <>
       <Form
@@ -490,11 +503,13 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
         translate={translateError}
       >
         <StyledVerticalStack gap={6} full center>
-          <StyledInput
+          <StyledDropdown<RouteIdSelectData>
             name="routeId"
-            autocomplete="routeId"
             label={translate('screens/payment', 'Route ID')}
             placeholder={translate('screens/payment', 'Route ID')}
+            items={availablePaymentRoutes}
+            labelFunc={(item) => item.id}
+            descriptionFunc={(item) => item.description}
             full
             smallLabel
           />
