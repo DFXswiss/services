@@ -43,7 +43,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 
     fetch(decodedUrl)
       .then((response) => {
-        if (!response.ok) setError('Invalid payment link.');
+        if (!response.ok) setError(`Error ${response.status}: ${response.statusText}`);
         return response.json();
       })
       .then((data) => setLnurlPayRequest(data))
