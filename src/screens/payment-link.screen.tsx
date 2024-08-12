@@ -1,4 +1,4 @@
-import { ApiError, PaymentLinkPayRequest, useLnUrl } from '@dfx.swiss/react';
+import { ApiError, PaymentLinkPayRequest } from '@dfx.swiss/react';
 import {
   AlignContent,
   SpinnerSize,
@@ -23,7 +23,6 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { width } = useWindowContext();
   const { search } = useLocation();
-  const { getLnUrlPayment } = useLnUrl();
 
   const [lnurlPayRequest, setLnurlPayRequest] = useState<PaymentLinkPayRequest>();
   const [error, setError] = useState<string>();
@@ -36,13 +35,18 @@ export default function PaymentLinkScreen(): JSX.Element {
   const paramLNURL = urlParams.get('lightning');
 
   useEffect(() => {
-    const apiEndpoint = paramLNURL && Lnurl.decode(paramLNURL)?.split('/').pop();
-    if (!apiEndpoint) {
+    const decodedUrl = paramLNURL && Lnurl.decode(paramLNURL);
+    if (!decodedUrl) {
       setError('Invalid payment link.');
       return;
     }
-    getLnUrlPayment(apiEndpoint)
-      .then(setLnurlPayRequest)
+
+    fetch(decodedUrl)
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        return response.json();
+      })
+      .then((data) => setLnurlPayRequest(data))
       .catch((e) => setError((e as ApiError).message ?? 'Unknown error'));
   }, [paramLNURL]);
 
