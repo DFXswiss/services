@@ -44,7 +44,7 @@ import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
 interface FormData {
-  routeId: string;
+  routeId: RouteIdSelectData;
   externalId: string;
   paymentType: RouteType;
   paymentMode: PaymentLinkPaymentMode;
@@ -52,6 +52,11 @@ interface FormData {
   paymentExternalId: string;
   paymentCurrency: Fiat;
   paymentExpiryDate: Date;
+}
+
+interface RouteIdSelectData {
+  id: string;
+  description: string;
 }
 
 export default function PaymentRoutes(): JSX.Element {
@@ -134,7 +139,7 @@ export default function PaymentRoutes(): JSX.Element {
       ) : paymentRoutesLoading || (paymentLinksLoading && !isUpdatingPaymentLink.length) ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
-        <StyledVerticalStack full gap={5} className="select-none">
+        <StyledVerticalStack full gap={5}>
           {paymentRoutes?.buy.length ? (
             <StyledDataTable label={translate('screens/payment', 'Buy')}>
               {paymentRoutes?.buy.map<JSX.Element>((route) => (
@@ -253,7 +258,7 @@ export default function PaymentRoutes(): JSX.Element {
                         <div className="flex flex-row justify-between gap-2 items-center">
                           <div className="flex flex-col items-start text-left">
                             <div className="font-bold leading-none">
-                              {`${translate('screens/payment', 'Payment Link')} ${link.id}`}
+                              {link.externalId ?? `${translate('screens/payment', 'Payment Link')} ${link.id}`}
                             </div>
                             <div className="leading-none mt-1 text-dfxGray-700">
                               {`${translate('screens/payment', 'Payment route')} ${link.routeId}`}
@@ -428,6 +433,7 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
   const { translate, translateError } = useSettingsContext();
   const { createPaymentLink } = usePaymentRoutesContext();
   const { currencies } = useFiatContext();
+  const { paymentRoutes } = usePaymentRoutesContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -449,7 +455,7 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
 
     try {
       const request: CreatePaymentLink = {
-        routeId: data.routeId ? +data.routeId : undefined,
+        routeId: data.routeId ? +data.routeId.id : undefined,
         externalId: data.externalId ? data.externalId : undefined,
       };
 
@@ -480,6 +486,13 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
     paymentExpiryDate: Validations.Required,
   });
 
+  const availablePaymentRoutes: RouteIdSelectData[] = paymentRoutes
+    ? paymentRoutes?.sell?.map((route) => ({
+        id: route.id.toString(),
+        description: `${route.currency.name} / ${route.iban}`,
+      }))
+    : [];
+
   return (
     <>
       <Form
@@ -489,12 +502,14 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
         onSubmit={handleSubmit(onSubmit)}
         translate={translateError}
       >
-        <StyledVerticalStack gap={6} full center className="select-none">
-          <StyledInput
+        <StyledVerticalStack gap={6} full center>
+          <StyledDropdown<RouteIdSelectData>
             name="routeId"
-            autocomplete="routeId"
             label={translate('screens/payment', 'Route ID')}
             placeholder={translate('screens/payment', 'Route ID')}
+            items={availablePaymentRoutes}
+            labelFunc={(item) => item.id}
+            descriptionFunc={(item) => item.description}
             full
             smallLabel
           />
@@ -646,7 +661,7 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
         onSubmit={handleSubmit(onSubmit)}
         translate={translateError}
       >
-        <StyledVerticalStack gap={6} full center className="select-none">
+        <StyledVerticalStack gap={6} full center>
           <StyledDropdown
             rootRef={rootRef}
             name="paymentMode"
