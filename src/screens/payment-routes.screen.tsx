@@ -139,7 +139,7 @@ export default function PaymentRoutes(): JSX.Element {
       ) : paymentRoutesLoading || (paymentLinksLoading && !isUpdatingPaymentLink.length) ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
-        <StyledVerticalStack full gap={5} className="select-none">
+        <StyledVerticalStack full gap={5}>
           {paymentRoutes?.buy.length ? (
             <StyledDataTable label={translate('screens/payment', 'Buy')}>
               {paymentRoutes?.buy.map<JSX.Element>((route) => (
@@ -258,7 +258,7 @@ export default function PaymentRoutes(): JSX.Element {
                         <div className="flex flex-row justify-between gap-2 items-center">
                           <div className="flex flex-col items-start text-left">
                             <div className="font-bold leading-none">
-                              {`${translate('screens/payment', 'Payment Link')} ${link.id}`}
+                              {link.externalId ?? `${translate('screens/payment', 'Payment Link')} ${link.id}`}
                             </div>
                             <div className="leading-none mt-1 text-dfxGray-700">
                               {`${translate('screens/payment', 'Payment route')} ${link.routeId}`}
@@ -502,7 +502,7 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
         onSubmit={handleSubmit(onSubmit)}
         translate={translateError}
       >
-        <StyledVerticalStack gap={6} full center className="select-none">
+        <StyledVerticalStack gap={6} full center>
           <StyledDropdown<RouteIdSelectData>
             name="routeId"
             label={translate('screens/payment', 'Route ID')}
@@ -661,7 +661,7 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
         onSubmit={handleSubmit(onSubmit)}
         translate={translateError}
       >
-        <StyledVerticalStack gap={6} full center className="select-none">
+        <StyledVerticalStack gap={6} full center>
           <StyledDropdown
             rootRef={rootRef}
             name="paymentMode"
