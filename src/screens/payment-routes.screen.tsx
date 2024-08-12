@@ -327,18 +327,6 @@ export default function PaymentRoutes(): JSX.Element {
                                   label: translate('screens/payment', 'Expiry date'),
                                   text: new Date(link.payment.expiryDate).toLocaleString(),
                                 },
-                                {
-                                  label: translate('screens/payment', 'LNURL'),
-                                  text: blankedAddress(link.payment.lnurl, { width }),
-                                  icon: IconVariant.COPY,
-                                  onClick: () => copy(link.lnurl),
-                                },
-                                {
-                                  label: translate('screens/payment', 'URL'),
-                                  text: formatURL(link.payment.url),
-                                  icon: IconVariant.OPEN_IN_NEW,
-                                  onClick: () => window.open(link.payment?.url, '_blank'),
-                                },
                               ]}
                             >
                               <p className="font-semibold">
@@ -347,16 +335,6 @@ export default function PaymentRoutes(): JSX.Element {
                             </StyledDataTableExpandableRow>
                           )}
                         </StyledDataTable>
-                        {link.payment?.status === PaymentLinkPaymentStatus.PENDING && (
-                          <div className="flex w-full items-center justify-center">
-                            <div className="w-48 py-3">
-                              <QrCopy data={Lnurl.prependLnurl(link.payment.lnurl)} />
-                              <p className="text-center rounded-sm font-semibold bg-dfxGray-300 mt-1">
-                                {translate('screens/payment', 'Payment')}
-                              </p>
-                            </div>
-                          </div>
-                        )}
                         {link.status === PaymentLinkStatus.ACTIVE &&
                           (!link.payment ||
                             [PaymentLinkPaymentStatus.CANCELLED, PaymentLinkPaymentStatus.EXPIRED].includes(
