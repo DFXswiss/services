@@ -17,7 +17,6 @@ import {
 import {
   Form,
   StyledButton,
-  StyledButtonColor,
   StyledButtonWidth,
   StyledDropdown,
   StyledFileUpload,
@@ -122,7 +121,10 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [selectedSender]);
 
   useEffect(() => {
-    if (selectedTransaction?.id === selectTxButtonLabel) setSelectTransaction(true);
+    if (selectedTransaction?.id === selectTxButtonLabel) {
+      setSelectTransaction(true);
+      resetField('transaction');
+    }
   }, [selectedTransaction]);
 
   useEffect(() => {
@@ -210,7 +212,11 @@ export default function SupportIssueScreen(): JSX.Element {
   });
 
   return (
-    <Layout title={translate('screens/support', 'Support issue')} rootRef={rootRef}>
+    <Layout
+      title={translate('screens/support', 'Support issue')}
+      rootRef={rootRef}
+      onBack={selectTransaction ? () => setSelectTransaction(false) : undefined}
+    >
       {issueCreated ? (
         <StyledVerticalStack gap={6} full>
           <p className="text-dfxGray-700">
@@ -227,21 +233,8 @@ export default function SupportIssueScreen(): JSX.Element {
       ) : selectTransaction ? (
         <>
           <p className="text-dfxGray-700">
-            {translate(
-              'screens/support',
-              'For which transaction would you like to create an issue? Select the relevant transaction or click on "{{text}}".',
-              { text: translate('screens/payment', 'My transaction is missing') },
-            )}
+            {translate('screens/support', 'Select the transaction for which you would like to create an issue.')}
           </p>
-          <StyledButton
-            color={StyledButtonColor.BLUE}
-            width={StyledButtonWidth.FULL}
-            label={translate('screens/payment', 'My transaction is missing')}
-            onClick={() => {
-              setValue('reason', SupportIssueReason.TRANSACTION_MISSING);
-              setSelectTransaction(false);
-            }}
-          />
           <TransactionList isSupport={true} onSelectTransaction={onSelectTransaction} setError={setError} />
         </>
       ) : (

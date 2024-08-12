@@ -510,7 +510,7 @@
     "Description": "Description",
     "File": "Fichier",
 
-    "For which transaction would you like to create an issue? Select the relevant transaction or click on \"{{text}}\".": "Pour quelle transaction souhaitez-vous créer un problème ? Sélectionnez la transaction concernée ou cliquez sur \"{{text}}\".",
+    "Select the transaction for which you would like to create an issue.": "Sélectionnez la transaction pour laquelle vous souhaitez créer un problème.",
     "Please provide us with all relevant information about the transaction you are missing.": "Veuillez nous fournir toutes les informations pertinentes concernant la transaction manquante.",
     "Sender IBAN": "IBAN de l'expéditeur",
     "Receiver IBAN": "IBAN du destinataire",
