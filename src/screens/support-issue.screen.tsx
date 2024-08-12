@@ -61,7 +61,7 @@ interface FormData {
   receiverIban: string;
   date: string;
   name: string;
-  transaction: number;
+  transaction: SelectTransactionFormData;
   reason: SupportIssueReason;
   message: string;
   limit: Limit;
@@ -71,7 +71,13 @@ interface FormData {
   file?: File;
 }
 
+interface SelectTransactionFormData {
+  id: string;
+  description: string;
+}
+
 const AddAccount = 'Add bank account';
+const selectTxButtonLabel = 'Select transaction';
 
 export default function SupportIssueScreen(): JSX.Element {
   useUserGuard('/login');
@@ -114,6 +120,10 @@ export default function SupportIssueScreen(): JSX.Element {
   useEffect(() => {
     if (selectedSender === AddAccount) navigate('/bank-accounts');
   }, [selectedSender]);
+
+  useEffect(() => {
+    if (selectedTransaction?.id === selectTxButtonLabel) setSelectTransaction(true);
+  }, [selectedTransaction]);
 
   useEffect(() => {
     if (selectedReason === SupportIssueReason.TRANSACTION_MISSING) {
@@ -177,7 +187,7 @@ export default function SupportIssueScreen(): JSX.Element {
   }
 
   function onSelectTransaction(id: number) {
-    setValue('transaction', id);
+    setValue('transaction', { id: id.toString(), description: 'Transaction ID' });
     setSelectTransaction(false);
   }
 
@@ -272,20 +282,14 @@ export default function SupportIssueScreen(): JSX.Element {
                   <p className="w-full text-left text-dfxBlue-800 text-base font-semibold pl-3.5 -mb-1">
                     {translate('screens/payment', 'Transaction')}
                   </p>
-                  {selectedTransaction && (
-                    <StyledDropdown<string>
-                      rootRef={rootRef}
-                      items={[]}
-                      labelFunc={(item) => `${translate('screens/payment', 'Transaction')} ${item}`}
-                      name="transaction"
-                      full
-                    />
-                  )}
-                  <StyledButton
-                    label={translate('general/actions', 'Select transaction')}
-                    onClick={() => setSelectTransaction(true)}
-                    width={StyledButtonWidth.FULL}
-                    color={StyledButtonColor.STURDY_WHITE}
+                  <StyledDropdown<SelectTransactionFormData>
+                    rootRef={rootRef}
+                    name="transaction"
+                    items={[{ id: selectTxButtonLabel, description: 'Select a transaction to proceed with' }]}
+                    labelFunc={(item) => translate('general/actions', item.id)}
+                    descriptionFunc={(item) => translate('screens/support', item.description)}
+                    full
+                    forceEnable
                   />
                 </StyledVerticalStack>
               ) : accounts && banks ? (
