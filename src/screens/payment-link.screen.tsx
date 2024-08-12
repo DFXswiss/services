@@ -1,4 +1,4 @@
-import { ApiError, PaymentLinkPayRequest, useLnUrl } from '@dfx.swiss/react';
+import { ApiError, PaymentLinkPayRequest } from '@dfx.swiss/react';
 import {
   AlignContent,
   SpinnerSize,
@@ -18,12 +18,13 @@ import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
+const noPaymentErrorMessage = 'No pending payment found';
+
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { width } = useWindowContext();
   const { search } = useLocation();
-  const { getLnUrlPayment } = useLnUrl();
 
   const [lnurlPayRequest, setLnurlPayRequest] = useState<PaymentLinkPayRequest>();
   const [error, setError] = useState<string>();
@@ -36,15 +37,29 @@ export default function PaymentLinkScreen(): JSX.Element {
   const paramLNURL = urlParams.get('lightning');
 
   useEffect(() => {
-    const apiEndpoint = paramLNURL && Lnurl.decode(paramLNURL)?.split('/').pop();
-    if (!apiEndpoint) {
+    const decodedUrl = paramLNURL && Lnurl.decode(paramLNURL);
+    if (!decodedUrl) {
       setError('Invalid payment link.');
       return;
     }
-    getLnUrlPayment(apiEndpoint)
-      .then(setLnurlPayRequest)
-      .catch((e) => setError((e as ApiError).message ?? 'Unknown error'));
+
+    fetchData(decodedUrl);
   }, [paramLNURL]);
+
+  async function fetchData(url: string) {
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.error) throw data;
+        setError(undefined);
+        setLnurlPayRequest(data);
+      })
+      .catch((e) => {
+        const errorMessage = (e as ApiError).message ?? 'Unknown error';
+        if (errorMessage === noPaymentErrorMessage) setTimeout(() => fetchData(url), 1000);
+        setError(errorMessage);
+      });
+  }
 
   const filteredTransferAmounts = lnurlPayRequest?.transferAmounts
     .filter(
@@ -59,7 +74,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   return (
     <Layout backButton={false}>
       {error ? (
-        <ErrorHint message={error} />
+        <PaymentErrorHint message={error} />
       ) : !lnurlPayRequest || !paramLNURL ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
@@ -98,3 +113,14 @@ export default function PaymentLinkScreen(): JSX.Element {
     </Layout>
   );
 }
+
+const PaymentErrorHint = ({ message }: { message: string }): JSX.Element => {
+  return message === noPaymentErrorMessage ? (
+    <>
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
+      <p className="text-dfxGray-800 text-sm pt-3">{message}</p>
+    </>
+  ) : (
+    <ErrorHint message={message} />
+  );
+};
