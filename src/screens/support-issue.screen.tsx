@@ -149,7 +149,7 @@ export default function SupportIssueScreen(): JSX.Element {
       const request: CreateSupportIssue = {
         type: data.type,
         name: data.name,
-        reason: data.reason,
+        reason: data.reason ?? SupportIssueReason.OTHER,
         message: data.message,
         file: data.file && (await toBase64(data.file)),
         fileName: data.file?.name,
