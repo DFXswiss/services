@@ -26,6 +26,7 @@ import {
 import { CreateSupportIssue, SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { useAppParams } from 'src/hooks/app-params.hook';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import {
@@ -78,6 +79,22 @@ interface SelectTransactionFormData {
 const AddAccount = 'Add bank account';
 const selectTxButtonLabel = 'Select transaction';
 
+const formDefaultValues = {
+  type: undefined,
+  senderIban: undefined,
+  receiverIban: undefined,
+  date: undefined,
+  name: undefined,
+  transaction: undefined,
+  reason: undefined,
+  message: undefined,
+  limit: undefined,
+  investmentDate: undefined,
+  fundOrigin: undefined,
+  fundOriginText: undefined,
+  file: undefined,
+};
+
 export default function SupportIssueScreen(): JSX.Element {
   useUserGuard('/login');
   useKycLevelGuard(KycLevel.Link, '/contact');
@@ -90,6 +107,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { getIbans } = useBankAccount();
   const { getBanks } = useBank();
+  const { issueType, setParams } = useAppParams();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -104,38 +122,47 @@ export default function SupportIssueScreen(): JSX.Element {
     control,
     handleSubmit,
     formState: { errors, isValid },
-    resetField,
+    reset,
     setValue,
-  } = useForm<FormData>({ mode: 'onTouched' });
+  } = useForm<FormData>({ mode: 'onTouched', defaultValues: formDefaultValues });
   const selectedType = useWatch({ control, name: 'type' });
   const investmentDate = useWatch({ control, name: 'investmentDate' });
   const selectedReason = useWatch({ control, name: 'reason' });
   const selectedTransaction = useWatch({ control, name: 'transaction' });
   const selectedSender = useWatch({ control, name: 'senderIban' });
 
-  const types = Object.values(SupportIssueType).filter((t) => t !== SupportIssueType.LIMIT_REQUEST || kycComplete);
+  const availableIssues = Object.values(SupportIssueType).filter(
+    (t) => t !== SupportIssueType.LIMIT_REQUEST || kycComplete,
+  );
   const reasons = IssueReasons[selectedType] ?? [];
+
+  useEffect(() => {
+    if (!issueType) return;
+
+    const isAvailableIssue = availableIssues.find((t) => t === issueType);
+    if (isAvailableIssue) setValue('type', isAvailableIssue);
+    else if (issueType === SupportIssueType.LIMIT_REQUEST) !kycComplete && navigate('/kyc');
+
+    setParams({ type: undefined });
+  }, [issueType]);
 
   useEffect(() => {
     if (selectedSender === AddAccount) navigate('/bank-accounts');
   }, [selectedSender]);
 
   useEffect(() => {
-    if (selectedTransaction?.id === selectTxButtonLabel) {
-      setSelectTransaction(true);
-      resetField('transaction');
-    }
+    if (selectedTransaction?.id === selectTxButtonLabel) setSelectTransaction(true);
   }, [selectedTransaction]);
 
   useEffect(() => {
-    if (selectedReason === SupportIssueReason.TRANSACTION_MISSING) {
-      resetField('transaction');
-    } else {
-      resetField('senderIban');
-      resetField('receiverIban');
-      resetField('date');
+    if (selectedReason && selectedType === SupportIssueType.TRANSACTION_ISSUE) {
+      reset({ ...formDefaultValues, type: selectedType, reason: selectedReason });
     }
   }, [selectedReason]);
+
+  useEffect(() => {
+    selectedType && reset({ ...formDefaultValues, type: selectedType });
+  }, [selectedType]);
 
   useEffect(() => {
     if (isLoggedIn)
@@ -159,7 +186,7 @@ export default function SupportIssueScreen(): JSX.Element {
 
       if (data.type === SupportIssueType.TRANSACTION_ISSUE) {
         if (data.reason !== SupportIssueReason.TRANSACTION_MISSING) {
-          request.transaction = { id: +data.transaction };
+          request.transaction = { id: +data.transaction.id };
         } else {
           request.transaction = {
             senderIban: data.senderIban,
@@ -215,7 +242,14 @@ export default function SupportIssueScreen(): JSX.Element {
     <Layout
       title={translate('screens/support', 'Support issue')}
       rootRef={rootRef}
-      onBack={selectTransaction ? () => setSelectTransaction(false) : undefined}
+      onBack={
+        selectTransaction
+          ? () => {
+              setSelectTransaction(false);
+              reset({ ...formDefaultValues, type: selectedType, reason: selectedReason });
+            }
+          : undefined
+      }
     >
       {issueCreated ? (
         <StyledVerticalStack gap={6} full>
@@ -249,7 +283,7 @@ export default function SupportIssueScreen(): JSX.Element {
             <StyledDropdown<SupportIssueType>
               rootRef={rootRef}
               label={translate('screens/support', 'Issue type')}
-              items={types}
+              items={availableIssues}
               labelFunc={(item) => item && translate('screens/support', IssueTypeLabels[item])}
               name="type"
               placeholder={translate('general/actions', 'Select...')}

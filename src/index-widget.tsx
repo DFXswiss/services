@@ -48,6 +48,7 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   externalTransactionId: 'string',
   onClose: 'function',
   service: 'string',
+  issueType: 'string',
 };
 
 const DfxServices = createWebComponent(MainWidget, { shadow: 'closed', props });
