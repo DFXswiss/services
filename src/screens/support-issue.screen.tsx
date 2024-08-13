@@ -1,31 +1,44 @@
 import {
   ApiError,
   Bank,
+  FundOrigin,
   Iban,
+  InvestmentDate,
   KycLevel,
+  Limit,
   Utils,
   Validations,
   useBank,
   useBankAccount,
   useSessionContext,
   useSupport,
+  useUserContext,
 } from '@dfx.swiss/react';
 import {
   Form,
+  SpinnerSize,
   StyledButton,
-  StyledButtonColor,
   StyledButtonWidth,
   StyledDropdown,
   StyledFileUpload,
   StyledInput,
+  StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { CreateSupportIssue, SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
-import { IssueReasonLabels, IssueTypeLabels } from '../config/labels';
+import {
+  DateLabels,
+  IssueReasonLabels,
+  IssueTypeLabels,
+  LimitLabels,
+  OriginFutureLabels,
+  OriginNowLabels,
+} from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -53,6 +66,10 @@ interface FormData {
   transaction: SelectTransactionFormData;
   reason: SupportIssueReason;
   message: string;
+  limit: Limit;
+  investmentDate: InvestmentDate;
+  fundOrigin: FundOrigin;
+  fundOriginText?: string;
   file?: File;
 }
 
@@ -64,6 +81,22 @@ interface SelectTransactionFormData {
 const AddAccount = 'Add bank account';
 const selectTxButtonLabel = 'Select transaction';
 
+const formDefaultValues = {
+  type: undefined,
+  senderIban: undefined,
+  receiverIban: undefined,
+  date: undefined,
+  name: undefined,
+  transaction: undefined,
+  reason: undefined,
+  message: undefined,
+  limit: undefined,
+  investmentDate: undefined,
+  fundOrigin: undefined,
+  fundOriginText: undefined,
+  file: undefined,
+};
+
 export default function SupportIssueScreen(): JSX.Element {
   useUserGuard('/login');
   useKycLevelGuard(KycLevel.Link, '/contact');
@@ -72,31 +105,56 @@ export default function SupportIssueScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { createIssue } = useSupport();
   const { translate, translateError } = useSettingsContext();
+  const { user, isUserLoading } = useUserContext();
   const { isLoggedIn } = useSessionContext();
   const { getIbans } = useBankAccount();
   const { getBanks } = useBank();
+  const [urlParams, setUrlParams] = useSearchParams();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [issueCreated, setIssueCreated] = useState(false);
   const [selectTransaction, setSelectTransaction] = useState(false);
   const [accounts, setAccounts] = useState<Iban[]>();
+  const [isKycComplete, setIsKycComplete] = useState<boolean>();
   const [banks, setBanks] = useState<Bank[]>();
 
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
-    resetField,
+    reset,
     setValue,
-  } = useForm<FormData>({ mode: 'onTouched' });
+  } = useForm<FormData>({ mode: 'onTouched', defaultValues: formDefaultValues });
   const selectedType = useWatch({ control, name: 'type' });
+  const investmentDate = useWatch({ control, name: 'investmentDate' });
   const selectedReason = useWatch({ control, name: 'reason' });
   const selectedTransaction = useWatch({ control, name: 'transaction' });
   const selectedSender = useWatch({ control, name: 'senderIban' });
 
-  const types = Object.values(SupportIssueType).filter((t) => t !== SupportIssueType.LIMIT_REQUEST);
+  const issues = Object.values(SupportIssueType);
   const reasons = IssueReasons[selectedType] ?? [];
+
+  useEffect(() => {
+    const kycCompleted = user && user.kyc.level >= KycLevel.Completed;
+
+    if (kycCompleted === false && selectedType === SupportIssueType.LIMIT_REQUEST) {
+      navigate('/kyc');
+      return;
+    }
+
+    setIsKycComplete(kycCompleted);
+  }, [user, selectedType]);
+
+  useEffect(() => {
+    const issueTypeParam = urlParams.get('issue-type');
+    const issueType = issueTypeParam && issues.find((t) => t === issueTypeParam);
+    if (issueType) setValue('type', issueType);
+    if (issueTypeParam) {
+      urlParams.delete('issue-type');
+      setUrlParams(urlParams);
+    }
+  }, [urlParams]);
 
   useEffect(() => {
     if (selectedSender === AddAccount) navigate('/bank-accounts');
@@ -107,14 +165,14 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [selectedTransaction]);
 
   useEffect(() => {
-    if (selectedReason === SupportIssueReason.TRANSACTION_MISSING) {
-      resetField('transaction');
-    } else {
-      resetField('senderIban');
-      resetField('receiverIban');
-      resetField('date');
+    if (selectedReason && selectedType === SupportIssueType.TRANSACTION_ISSUE) {
+      reset({ ...formDefaultValues, type: selectedType, reason: selectedReason });
     }
   }, [selectedReason]);
+
+  useEffect(() => {
+    selectedType && reset({ ...formDefaultValues, type: selectedType });
+  }, [selectedType]);
 
   useEffect(() => {
     if (isLoggedIn)
@@ -130,7 +188,7 @@ export default function SupportIssueScreen(): JSX.Element {
       const request: CreateSupportIssue = {
         type: data.type,
         name: data.name,
-        reason: data.reason,
+        reason: data.reason ?? SupportIssueReason.OTHER,
         message: data.message,
         file: data.file && (await toBase64(data.file)),
         fileName: data.file?.name,
@@ -138,7 +196,7 @@ export default function SupportIssueScreen(): JSX.Element {
 
       if (data.type === SupportIssueType.TRANSACTION_ISSUE) {
         if (data.reason !== SupportIssueReason.TRANSACTION_MISSING) {
-          request.transaction = { id: +data.transaction };
+          request.transaction = { id: +data.transaction.id };
         } else {
           request.transaction = {
             senderIban: data.senderIban,
@@ -146,6 +204,15 @@ export default function SupportIssueScreen(): JSX.Element {
             date: new Date(data.date),
           };
         }
+      }
+
+      if (data.type === SupportIssueType.LIMIT_REQUEST && data.limit) {
+        request.limitRequest = {
+          limit: data.limit,
+          investmentDate: data.investmentDate,
+          fundOrigin: data.fundOrigin,
+          fundOriginText: data.fundOriginText,
+        };
       }
 
       await createIssue(request);
@@ -176,11 +243,27 @@ export default function SupportIssueScreen(): JSX.Element {
     transaction: Validations.Required,
     reason: Validations.Required,
     message: Validations.Required,
+    limit: Validations.Required,
+    investmentDate: Validations.Required,
+    fundOrigin: Validations.Required,
   });
 
   return (
-    <Layout title={translate('screens/support', 'Support issue')} rootRef={rootRef}>
-      {issueCreated ? (
+    <Layout
+      title={translate('screens/support', 'Support issue')}
+      rootRef={rootRef}
+      onBack={
+        selectTransaction
+          ? () => {
+              setSelectTransaction(false);
+              reset({ ...formDefaultValues, type: selectedType, reason: selectedReason });
+            }
+          : undefined
+      }
+    >
+      {selectedType === SupportIssueType.LIMIT_REQUEST && isKycComplete === undefined ? (
+        <StyledLoadingSpinner size={SpinnerSize.LG} />
+      ) : issueCreated ? (
         <StyledVerticalStack gap={6} full>
           <p className="text-dfxGray-700">
             {translate('screens/support', 'The issue has been successfully submitted. You will be contacted by email.')}
@@ -196,21 +279,8 @@ export default function SupportIssueScreen(): JSX.Element {
       ) : selectTransaction ? (
         <>
           <p className="text-dfxGray-700">
-            {translate(
-              'screens/support',
-              'For which transaction would you like to create an issue? Select the relevant transaction or click on "{{text}}".',
-              { text: translate('screens/payment', 'My transaction is missing') },
-            )}
+            {translate('screens/support', 'Select the transaction for which you would like to create an issue.')}
           </p>
-          <StyledButton
-            color={StyledButtonColor.BLUE}
-            width={StyledButtonWidth.FULL}
-            label={translate('screens/payment', 'My transaction is missing')}
-            onClick={() => {
-              setValue('reason', SupportIssueReason.TRANSACTION_MISSING);
-              setSelectTransaction(false);
-            }}
-          />
           <TransactionList isSupport={true} onSelectTransaction={onSelectTransaction} setError={setError} />
         </>
       ) : (
@@ -225,7 +295,7 @@ export default function SupportIssueScreen(): JSX.Element {
             <StyledDropdown<SupportIssueType>
               rootRef={rootRef}
               label={translate('screens/support', 'Issue type')}
-              items={types}
+              items={issues.filter((t) => t !== SupportIssueType.LIMIT_REQUEST || isKycComplete)}
               labelFunc={(item) => item && translate('screens/support', IssueTypeLabels[item])}
               name="type"
               placeholder={translate('general/actions', 'Select...')}
@@ -305,6 +375,55 @@ export default function SupportIssueScreen(): JSX.Element {
               placeholder={`${translate('screens/kyc', 'John')} ${translate('screens/kyc', 'Doe')}`}
               full
             />
+
+            {selectedType === SupportIssueType.LIMIT_REQUEST && (
+              <>
+                <StyledDropdown<Limit>
+                  rootRef={rootRef}
+                  label={translate('screens/limit', 'Investment volume')}
+                  items={Object.values(Limit).filter((i) => typeof i !== 'string') as number[]}
+                  labelFunc={(item) => LimitLabels[item]}
+                  name="limit"
+                  placeholder={translate('general/actions', 'Select...')}
+                  full
+                />
+
+                <StyledDropdown<InvestmentDate>
+                  rootRef={rootRef}
+                  label={translate('screens/limit', 'Investment date')}
+                  items={Object.values(InvestmentDate)}
+                  labelFunc={(item) => translate('screens/limit', DateLabels[item])}
+                  name="investmentDate"
+                  placeholder={translate('general/actions', 'Select...')}
+                  full
+                />
+
+                <StyledDropdown<FundOrigin>
+                  rootRef={rootRef}
+                  label={translate('screens/limit', 'Origin of funds')}
+                  items={Object.values(FundOrigin)}
+                  labelFunc={(item) =>
+                    translate(
+                      'screens/limit',
+                      investmentDate === InvestmentDate.FUTURE ? OriginFutureLabels[item] : OriginNowLabels[item],
+                    )
+                  }
+                  name="fundOrigin"
+                  placeholder={translate('general/actions', 'Select...')}
+                  full
+                />
+
+                <StyledInput
+                  name="fundOriginText"
+                  label={`${translate('screens/limit', 'Origin of funds')} (${translate(
+                    'screens/limit',
+                    'free text',
+                  )})`}
+                  multiLine
+                  full
+                />
+              </>
+            )}
 
             <StyledInput name="message" label={translate('screens/support', 'Description')} multiLine full />
 
