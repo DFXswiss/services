@@ -209,7 +209,10 @@ export default function AccountScreen(): JSX.Element {
               <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
                 <div className="flex flex-row gap-1 items-center">
                   <p>{limitToString(user.tradingLimit)}</p>
-                  <StyledIconButton icon={IconVariant.ARROW_UP} onClick={() => navigate('/kyc')} />
+                  <StyledIconButton
+                    icon={IconVariant.ARROW_UP}
+                    onClick={() => navigate('/support/issue?issue-type=LimitRequest')}
+                  />
                 </div>
               </StyledDataTableRow>
             </StyledDataTable>

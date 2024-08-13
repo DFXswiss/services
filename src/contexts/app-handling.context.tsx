@@ -219,12 +219,22 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     return Boolean(params?.session || (params?.address && params.signature));
   }
 
+  function removeSession(params: AppParams): AppParams {
+    const copy = { ...params };
+
+    delete copy.address;
+    delete copy.signature;
+    delete copy.session;
+
+    return copy;
+  }
+
   function loadQueryParams(): AppParams {
     let queryParams = extractUrlParams(props.params);
 
     const storedParams = storeQueryParams.get();
     if ((paramsIsNotEmpty(queryParams) && !paramsHasSession(storedParams)) || paramsHasSession(queryParams)) {
-      storeQueryParams.set(queryParams);
+      storeQueryParams.set(removeSession(queryParams));
     } else {
       queryParams = storedParams ?? {};
     }
