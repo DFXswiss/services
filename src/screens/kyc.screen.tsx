@@ -243,7 +243,7 @@ export default function KycScreen(): JSX.Element {
   }
 
   function onContinue() {
-    return allStepsCompleted ? navigate('/support/issue?issue-type=LimitRequest') : onLoad(true);
+    return allStepsCompleted ? navigate('/support/issue?issue-type=LimitRequest') : onLoad(true); // TODO: fix
   }
 
   function onConsent(client: string) {
