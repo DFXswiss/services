@@ -1,6 +1,7 @@
 import { ApiError, PaymentLinkPayRequest } from '@dfx.swiss/react';
 import {
   AlignContent,
+  CopyButton,
   Form,
   SpinnerSize,
   StyledDataTable,
@@ -9,9 +10,10 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useLocation } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { QrCopy } from 'src/components/payment/qr-copy';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -51,17 +53,14 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { width } = useWindowContext();
-  const { search } = useLocation();
+  const [urlParams] = useSearchParams();
 
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [lnurlPayRequest, setLnurlPayRequest] = useState<PaymentLinkPayRequest>();
+  const [lightningParam, setLightningParam] = useState<string>();
+  const [lnQrCodeLabel, setLnQrCodeLabel] = useState<string>();
+  const [lnQrCode, setLnQrCode] = useState<string>();
   const [error, setError] = useState<string>();
-
-  const urlParams = new URLSearchParams(search);
-  if (!urlParams.has('lightning')) {
-    navigate('/', { replace: true });
-  }
-
-  const paramLNURL = urlParams.get('lightning');
 
   const {
     control,
@@ -74,14 +73,50 @@ export default function PaymentLinkScreen(): JSX.Element {
   const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
 
   useEffect(() => {
-    const decodedUrl = paramLNURL && Lnurl.decode(paramLNURL);
-    if (!decodedUrl) {
-      setError('Invalid payment link.');
-      return;
-    }
+    if (!urlParams.has('lightning')) {
+      navigate('/', { replace: true });
+    } else {
+      const param = urlParams.get('lightning');
+      const decodedUrl = param && Lnurl.decode(param);
 
-    fetchData(decodedUrl);
-  }, [paramLNURL]);
+      if (!decodedUrl) {
+        setError('Invalid payment link.');
+        return;
+      }
+
+      fetchData(decodedUrl);
+      setLightningParam(param);
+    }
+  }, [urlParams]);
+
+  useEffect(() => {
+    if (!lnurlPayRequest) return;
+    switch (selectedPaymentMethod.label) {
+      case 'OpenCryptoPay.io':
+        setLnQrCode(lightningParam);
+        setLnQrCodeLabel('LNURL');
+        break;
+      case 'Bitcoin Lightning':
+        setIsLoading(true);
+        const callbackWithMinSendable = `${lnurlPayRequest.callback}/?amount=${lnurlPayRequest.minSendable}`;
+        fetch(callbackWithMinSendable)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.error) throw data;
+            setError(undefined);
+            setLnQrCode(data.pr);
+            setLnQrCodeLabel('LNR');
+          })
+          .catch((e) => {
+            const errorMessage = (e as ApiError).message ?? 'Unknown error';
+            setError(errorMessage);
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+        break;
+    }
+  }, [lnurlPayRequest, selectedPaymentMethod]);
 
   async function fetchData(url: string) {
     fetch(url)
@@ -114,10 +149,10 @@ export default function PaymentLinkScreen(): JSX.Element {
     <Layout backButton={false}>
       {error ? (
         <PaymentErrorHint message={error} />
-      ) : !lnurlPayRequest || !paramLNURL ? (
+      ) : !lnurlPayRequest || !lnQrCode ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
-        <StyledVerticalStack full gap={4}>
+        <StyledVerticalStack full gap={4} center>
           <Form control={control} errors={errors}>
             <StyledDropdown<PaymentMethod>
               name="paymentMethod"
@@ -132,11 +167,15 @@ export default function PaymentLinkScreen(): JSX.Element {
           </Form>
           {methodIsEthereumUri ? (
             <p className="text-dfxGray-700 mt-4">{translate('screens/payment', 'This method is not yet available')}</p>
+          ) : isLoading ? (
+            <div className="mt-4">
+              <StyledLoadingSpinner size={SpinnerSize.LG} />
+            </div>
           ) : (
             <>
               <div className="flex w-full items-center justify-center">
                 <div className="w-48 py-3">
-                  <QrCopy data={Lnurl.prependLnurl(paramLNURL)} />
+                  <QrCopy data={lnQrCode} />
                   <p className="text-center rounded-sm font-semibold bg-dfxGray-300 text-dfxBlue-800 mt-1">
                     {translate('screens/payment', 'Payment Link')}
                   </p>
@@ -146,8 +185,9 @@ export default function PaymentLinkScreen(): JSX.Element {
                 <StyledDataTableRow label={translate('screens/payment', 'State')}>
                   <p className="font-semibold">{translate('screens/payment', 'Pending').toUpperCase()}</p>
                 </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/payment', 'LNURL')}>
-                  <p>{blankedAddress(paramLNURL, { width })}</p>
+                <StyledDataTableRow label={lnQrCodeLabel}>
+                  <p>{blankedAddress(lnQrCode, { width })}</p>
+                  <CopyButton onCopy={() => copy(lnQrCode)} />
                 </StyledDataTableRow>
                 <StyledDataTableRow label={translate('screens/payment', 'Name')}>
                   <div>{JSON.parse(lnurlPayRequest.metadata)[0][1]}</div>
