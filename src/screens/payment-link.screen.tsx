@@ -121,8 +121,8 @@ export default function PaymentLinkScreen(): JSX.Element {
           <Form control={control} errors={errors}>
             <StyledDropdown<PaymentMethod>
               name="paymentMethod"
-              label={translate('screens/payment', 'Payment Method')}
-              placeholder={translate('screens/payment', 'Payment Method')}
+              label={translate('screens/payment', 'Payment method')}
+              placeholder={translate('screens/payment', 'Payment method')}
               items={paymentMethods}
               labelFunc={(item) => item.label}
               descriptionFunc={(item) => translate('screens/payment', item.description)}
