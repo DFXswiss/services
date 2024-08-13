@@ -456,6 +456,11 @@
     "Without payment": "Senza pagamento",
     "Activate": "Attivare",
     "Deactivate": "Disattivare",
+    "This method is not yet available": "Questo metodo non è ancora disponibile",
+
+    "Pay with FrankencoinPay, Bitcoin Lightning LNURL": "Paga con FrankencoinPay, Bitcoin Lightning LNURL",
+    "Pay with a Bolt 11 Invoice": "Paga con una fattura Bolt 11",
+    "Pay with a standard Ethereum Wallet": "Paga con un portafoglio Ethereum standard",
 
     "Cointracking": "Cointracking",
     "Saved": "Salvato",
