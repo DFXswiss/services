@@ -69,7 +69,6 @@ interface FormData {
   limit: Limit;
   investmentDate: InvestmentDate;
   fundOrigin: FundOrigin;
-  fundOriginText?: string;
   file?: File;
 }
 
@@ -93,7 +92,6 @@ const formDefaultValues = {
   limit: undefined,
   investmentDate: undefined,
   fundOrigin: undefined,
-  fundOriginText: undefined,
   file: undefined,
 };
 
@@ -105,7 +103,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { createIssue } = useSupport();
   const { translate, translateError } = useSettingsContext();
-  const { user, isUserLoading } = useUserContext();
+  const { user } = useUserContext();
   const { isLoggedIn } = useSessionContext();
   const { getIbans } = useBankAccount();
   const { getBanks } = useBank();
@@ -211,7 +209,7 @@ export default function SupportIssueScreen(): JSX.Element {
           limit: data.limit,
           investmentDate: data.investmentDate,
           fundOrigin: data.fundOrigin,
-          fundOriginText: data.fundOriginText,
+          fundOriginText: data.message,
         };
       }
 
@@ -412,20 +410,19 @@ export default function SupportIssueScreen(): JSX.Element {
                   placeholder={translate('general/actions', 'Select...')}
                   full
                 />
-
-                <StyledInput
-                  name="fundOriginText"
-                  label={`${translate('screens/limit', 'Origin of funds')} (${translate(
-                    'screens/limit',
-                    'free text',
-                  )})`}
-                  multiLine
-                  full
-                />
               </>
             )}
 
-            <StyledInput name="message" label={translate('screens/support', 'Description')} multiLine full />
+            <StyledInput
+              name="message"
+              label={
+                selectedType === SupportIssueType.LIMIT_REQUEST
+                  ? `${translate('screens/limit', 'Origin of funds')} (${translate('screens/limit', 'free text')})`
+                  : translate('screens/support', 'Description')
+              }
+              multiLine
+              full
+            />
 
             <StyledFileUpload
               name="file"
