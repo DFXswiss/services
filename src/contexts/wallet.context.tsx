@@ -89,6 +89,7 @@ interface WalletInterface {
     key?: string,
   ) => Promise<void>;
   setSession: (session: string, wallet?: WalletType, blockchain?: Blockchain) => Promise<void>;
+  setWallet: (wallet?: WalletType) => void;
   activeWallet: WalletType | undefined;
 }
 
@@ -201,6 +202,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       switchBlockchain: setActiveBlockchain,
       login,
       setSession,
+      setWallet,
       activeWallet,
     }),
     [isInitialized, isSessionInitialized, isParamsInitialized, activeWallet, activeBlockchain, api, appParams],
