@@ -1,4 +1,4 @@
-import { ApiError, PaymentLinkPayRequest } from '@dfx.swiss/react';
+import { ApiError, Blockchain, PaymentLinkPayRequest } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -115,6 +115,26 @@ export default function PaymentLinkScreen(): JSX.Element {
             setIsLoading(false);
           });
         break;
+      case 'Ethereum URI':
+        setIsLoading(true);
+        const ethTransferAmount = lnurlPayRequest.transferAmounts.find((item) => item.method === Blockchain.ETHEREUM);
+        const callbackWithParams = `${lnurlPayRequest.callback}/?amount=${ethTransferAmount?.amount}&asset=${ethTransferAmount?.asset}&method=${ethTransferAmount?.method}`;
+        fetch(callbackWithParams)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.error) throw data;
+            setError(undefined);
+            setLnQrCode(data.uri);
+            setLnQrCodeLabel('URI');
+          })
+          .catch((e) => {
+            const errorMessage = (e as ApiError).message ?? 'Unknown error';
+            setError(errorMessage);
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+        break;
     }
   }, [lnurlPayRequest, selectedPaymentMethod]);
 
@@ -143,8 +163,6 @@ export default function PaymentLinkScreen(): JSX.Element {
       method: item.method === 'Ethereum' ? 'EVM' : item.method,
     }));
 
-  const methodIsEthereumUri = selectedPaymentMethod.label === 'Ethereum URI';
-
   return (
     <Layout backButton={false}>
       {error ? (
@@ -165,9 +183,7 @@ export default function PaymentLinkScreen(): JSX.Element {
               smallLabel
             />
           </Form>
-          {methodIsEthereumUri ? (
-            <p className="text-dfxGray-700 mt-4">{translate('screens/payment', 'This method is not yet available')}</p>
-          ) : isLoading ? (
+          {isLoading ? (
             <div className="mt-4">
               <StyledLoadingSpinner size={SpinnerSize.LG} />
             </div>
