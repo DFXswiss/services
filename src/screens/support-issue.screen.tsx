@@ -28,7 +28,7 @@ import {
 import { CreateSupportIssue, SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useLocation } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import {
@@ -109,18 +109,15 @@ export default function SupportIssueScreen(): JSX.Element {
   const { isLoggedIn } = useSessionContext();
   const { getIbans } = useBankAccount();
   const { getBanks } = useBank();
-  const { search } = useLocation();
+  const [urlParams, setUrlParams] = useSearchParams();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [issueCreated, setIssueCreated] = useState(false);
   const [selectTransaction, setSelectTransaction] = useState(false);
   const [accounts, setAccounts] = useState<Iban[]>();
+  const [isKycComplete, setIsKycComplete] = useState<boolean>();
   const [banks, setBanks] = useState<Bank[]>();
-
-  const urlParams = new URLSearchParams(search);
-  const issueType = urlParams.get('issue-type');
-  // TODO: remove from URL params
 
   const {
     control,
@@ -136,17 +133,28 @@ export default function SupportIssueScreen(): JSX.Element {
   const selectedSender = useWatch({ control, name: 'senderIban' });
 
   const issues = Object.values(SupportIssueType);
-  const urlIssueType = issueType && issues.find((t) => t === issueType);
-  const isLimitRequest = urlIssueType === SupportIssueType.LIMIT_REQUEST;
-  const kycComplete = user?.kyc.level !== undefined && user?.kyc.level >= KycLevel.Completed;
-  const availableIssues = issues.filter((t) => t !== SupportIssueType.LIMIT_REQUEST || kycComplete);
   const reasons = IssueReasons[selectedType] ?? [];
 
   useEffect(() => {
-    if (!urlIssueType) return;
-    if (!isLimitRequest) setValue('type', urlIssueType);
-    if (user) kycComplete ? setValue('type', urlIssueType) : navigate('/kyc');
-  }, [urlIssueType, user]);
+    const kycCompleted = user && user.kyc.level >= KycLevel.Completed;
+
+    if (kycCompleted === false && selectedType === SupportIssueType.LIMIT_REQUEST) {
+      navigate('/kyc');
+      return;
+    }
+
+    setIsKycComplete(kycCompleted);
+  }, [user, selectedType]);
+
+  useEffect(() => {
+    const issueTypeParam = urlParams.get('issue-type');
+    const issueType = issueTypeParam && issues.find((t) => t === issueTypeParam);
+    if (issueType) setValue('type', issueType);
+    if (issueTypeParam) {
+      urlParams.delete('issue-type');
+      setUrlParams(urlParams);
+    }
+  }, [urlParams]);
 
   useEffect(() => {
     if (selectedSender === AddAccount) navigate('/bank-accounts');
@@ -253,7 +261,7 @@ export default function SupportIssueScreen(): JSX.Element {
           : undefined
       }
     >
-      {isLimitRequest && !user ? (
+      {selectedType === SupportIssueType.LIMIT_REQUEST && isKycComplete === undefined ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : issueCreated ? (
         <StyledVerticalStack gap={6} full>
@@ -287,7 +295,7 @@ export default function SupportIssueScreen(): JSX.Element {
             <StyledDropdown<SupportIssueType>
               rootRef={rootRef}
               label={translate('screens/support', 'Issue type')}
-              items={availableIssues}
+              items={issues.filter((t) => t !== SupportIssueType.LIMIT_REQUEST || isKycComplete)}
               labelFunc={(item) => item && translate('screens/support', IssueTypeLabels[item])}
               name="type"
               placeholder={translate('general/actions', 'Select...')}
