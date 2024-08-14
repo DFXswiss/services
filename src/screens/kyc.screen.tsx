@@ -21,6 +21,7 @@ import {
   Validations,
   isStepDone,
   useApi,
+  useAuthContext,
   useKyc,
   useSessionContext,
   useUserContext,
@@ -95,6 +96,7 @@ export default function KycScreen(): JSX.Element {
   const { pathname, search } = useLocation();
   const { navigate, goBack } = useNavigation();
   const { logout } = useSessionContext();
+  const { setAuthenticationToken } = useAuthContext();
   const { isInitialized, params, setParams } = useAppHandlingContext();
   const { lang, mergeCode } = useAppParams();
   const { call } = useApi();
@@ -126,33 +128,38 @@ export default function KycScreen(): JSX.Element {
 
   useUserGuard('/login', !kycCode);
 
+  interface MergeRedirect {
+    redirectUrl: string;
+    accessToken: string;
+  }
+
   useEffect(() => {
     if (!lang && info) changeLanguage(info.language);
   }, [info, lang]);
 
   useEffect(() => {
-    console.log('mergeCode before call', mergeCode);
-    if (mergeCode && !isMerging) {
+    if (mergeCode && !paramKycCode && user?.kyc.level === 0) {
       setIsMerging(true);
-      call({
+      call<MergeRedirect>({
         url: `auth/mail/confirm?code=${mergeCode}`,
         method: 'GET',
       })
-        .then((redirectURL: any) => {
-          console.log('redirectURL', redirectURL);
-          setParams({ mergeCode: undefined });
-          if (redirectURL) navigate(redirectURL);
+        .then(({ redirectUrl, accessToken }: MergeRedirect) => {
+          setAuthenticationToken(accessToken);
+          return redirectUrl;
+        })
+        .then((redirectUrl: string) => {
+          navigate(redirectUrl.replace(window.location.origin, ''));
         })
         .catch((error: ApiError) => {
-          console.log('error', error);
           setError(error.message ?? 'Unknown error');
         })
         .finally(() => {
+          setParams({ mergeCode: undefined });
           setIsMerging(false);
         });
     }
-    console.log('mergeCode after call', mergeCode);
-  }, [mergeCode]);
+  }, [mergeCode, user]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -243,7 +250,7 @@ export default function KycScreen(): JSX.Element {
     }
   }
 
-  function callKyc<T>(call: () => Promise<T>): Promise<T> {
+  async function callKyc<T>(call: () => Promise<T>): Promise<T> {
     return call().catch((e: ApiError) => {
       if (e.statusCode === 401 && 'switchToCode' in e) {
         setIsLoading(true);
