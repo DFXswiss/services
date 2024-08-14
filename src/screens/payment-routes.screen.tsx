@@ -9,6 +9,7 @@ import {
   PaymentLinkStatus,
   useFiatContext,
   usePaymentRoutesContext,
+  useUserContext,
   Utils,
   Validations,
 } from '@dfx.swiss/react';
@@ -63,6 +64,7 @@ export default function PaymentRoutes(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
+  const { user } = useUserContext();
   const {
     paymentRoutes,
     paymentLinks,
@@ -382,7 +384,7 @@ export default function PaymentRoutes(): JSX.Element {
           ) : (
             <></>
           )}
-          {paymentRoutes?.sell.length ? (
+          {paymentRoutes?.sell.length && user?.paymentLink.active ? (
             <StyledButton
               label={translate('screens/payment', 'Create Payment Link')}
               width={StyledButtonWidth.FULL}
