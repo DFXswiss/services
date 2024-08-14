@@ -34,6 +34,11 @@ interface PaymentMethod {
   description: string;
 }
 
+interface PaymentResponse {
+  paymentIdentifier: string;
+  paymentIdentifierLabel: string;
+}
+
 const paymentMethods: PaymentMethod[] = [
   {
     label: 'OpenCryptoPay.io',
@@ -53,14 +58,17 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { width } = useWindowContext();
-  const [urlParams] = useSearchParams();
+  const [urlParams, setUrlParams] = useSearchParams();
 
+  const [paymentLinkPayRequest, setPaymentLinkPayRequest] = useState<PaymentLinkPayRequest>();
+  const [genericPaymentResponse, setGenericPaymentResponse] = useState<PaymentResponse>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [lnurlPayRequest, setLnurlPayRequest] = useState<PaymentLinkPayRequest>();
-  const [lightningParam, setLightningParam] = useState<string>();
-  const [lnQrCodeLabel, setLnQrCodeLabel] = useState<string>();
-  const [lnQrCode, setLnQrCode] = useState<string>();
   const [error, setError] = useState<string>();
+
+  const [lightningParam, setLightningParam] = useState(() => {
+    const savedState = sessionStorage.getItem('lightningParam');
+    return savedState ? JSON.parse(savedState) : '';
+  });
 
   const {
     control,
@@ -73,43 +81,47 @@ export default function PaymentLinkScreen(): JSX.Element {
   const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
 
   useEffect(() => {
-    if (!urlParams.has('lightning')) {
+    const param = urlParams.get('lightning') || lightningParam;
+    if (!param) {
       navigate('/', { replace: true });
-    } else {
-      const param = urlParams.get('lightning');
-      const decodedUrl = param && Lnurl.decode(param);
-
-      if (!decodedUrl) {
-        setError('Invalid payment link.');
-        return;
-      }
-
-      fetchData(decodedUrl);
-      setLightningParam(param);
+      return;
     }
-  }, [urlParams]);
+
+    const decodedUrl = Lnurl.decode(param);
+    if (!decodedUrl) {
+      setError('Invalid payment link.');
+      return;
+    }
+
+    fetchInitial(decodedUrl);
+
+    if (!lightningParam) {
+      setLightningParam(param);
+      sessionStorage.setItem('lightningParam', JSON.stringify(param));
+
+      urlParams.delete('lightning');
+      setUrlParams(urlParams);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!lnurlPayRequest) return;
+    if (!paymentLinkPayRequest || !lightningParam) return;
     switch (selectedPaymentMethod.label) {
       case 'OpenCryptoPay.io':
-        setLnQrCode(lightningParam);
-        setLnQrCodeLabel('LNURL');
+        setGenericPaymentResponse({
+          paymentIdentifier: lightningParam,
+          paymentIdentifierLabel: 'LNURL',
+        });
         break;
       case 'Bitcoin Lightning':
         setIsLoading(true);
-        const callbackWithMinSendable = `${lnurlPayRequest.callback}/?amount=${lnurlPayRequest.minSendable}`;
-        fetch(callbackWithMinSendable)
-          .then((response) => response.json())
+        const callbackWithMinSendable = `${paymentLinkPayRequest.callback}/?amount=${paymentLinkPayRequest.minSendable}`;
+        fetchDataApi(callbackWithMinSendable)
           .then((data) => {
-            if (data.error) throw data;
-            setError(undefined);
-            setLnQrCode(data.pr);
-            setLnQrCodeLabel('LNR');
-          })
-          .catch((e) => {
-            const errorMessage = (e as ApiError).message ?? 'Unknown error';
-            setError(errorMessage);
+            setGenericPaymentResponse({
+              paymentIdentifier: data.pr,
+              paymentIdentifierLabel: 'LNR',
+            });
           })
           .finally(() => {
             setIsLoading(false);
@@ -117,43 +129,48 @@ export default function PaymentLinkScreen(): JSX.Element {
         break;
       case 'Ethereum URI':
         setIsLoading(true);
-        const ethTransferAmount = lnurlPayRequest.transferAmounts.find((item) => item.method === Blockchain.ETHEREUM);
-        const callbackWithParams = `${lnurlPayRequest.callback}/?amount=${ethTransferAmount?.amount}&asset=${ethTransferAmount?.asset}&method=${ethTransferAmount?.method}`;
-        fetch(callbackWithParams)
-          .then((response) => response.json())
+        const ethTransferAmount = paymentLinkPayRequest.transferAmounts.find(
+          (item) => item.method === Blockchain.ETHEREUM,
+        );
+        const callbackWithParams = `${paymentLinkPayRequest.callback}/?amount=${ethTransferAmount?.amount}&asset=${ethTransferAmount?.asset}&method=${ethTransferAmount?.method}`;
+        fetchDataApi(callbackWithParams)
           .then((data) => {
-            if (data.error) throw data;
-            setError(undefined);
-            setLnQrCode(data.uri);
-            setLnQrCodeLabel('URI');
-          })
-          .catch((e) => {
-            const errorMessage = (e as ApiError).message ?? 'Unknown error';
-            setError(errorMessage);
+            setGenericPaymentResponse({
+              paymentIdentifier: data.uri,
+              paymentIdentifierLabel: 'URI',
+            });
           })
           .finally(() => {
             setIsLoading(false);
           });
         break;
     }
-  }, [lnurlPayRequest, selectedPaymentMethod]);
+  }, [paymentLinkPayRequest, selectedPaymentMethod]);
 
-  async function fetchData(url: string) {
-    fetch(url)
-      .then((response) => response.json())
+  async function fetchInitial(url: string) {
+    fetchDataApi(url, true)
       .then((data) => {
-        if (data.error) throw data;
         setError(undefined);
-        setLnurlPayRequest(data);
+        setPaymentLinkPayRequest(data);
       })
       .catch((e) => {
-        const errorMessage = (e as ApiError).message ?? 'Unknown error';
-        if (errorMessage === noPaymentErrorMessage) setTimeout(() => fetchData(url), 1000);
-        setError(errorMessage);
+        if (e.message === noPaymentErrorMessage) setTimeout(() => fetchInitial(url), 1000);
       });
   }
 
-  const filteredTransferAmounts = lnurlPayRequest?.transferAmounts
+  async function fetchDataApi(url: string, rethrow = false): Promise<any> {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.error) {
+      setError((data as ApiError).message ?? 'Unknown error');
+      if (rethrow) throw data;
+    }
+
+    setError(undefined);
+    return data;
+  }
+
+  const filteredTransferAmounts = paymentLinkPayRequest?.transferAmounts
     .filter(
       (item) =>
         (item.method === 'Lightning' && item.asset === 'BTC') || (item.method === 'Ethereum' && item.asset === 'ZCHF'),
@@ -167,7 +184,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     <Layout backButton={false}>
       {error ? (
         <PaymentErrorHint message={error} />
-      ) : !lnurlPayRequest || !lnQrCode ? (
+      ) : !paymentLinkPayRequest || !genericPaymentResponse ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center>
@@ -191,7 +208,7 @@ export default function PaymentLinkScreen(): JSX.Element {
             <>
               <div className="flex w-full items-center justify-center">
                 <div className="w-48 py-3">
-                  <QrCopy data={lnQrCode} />
+                  <QrCopy data={genericPaymentResponse.paymentIdentifier} />
                   <p className="text-center rounded-sm font-semibold bg-dfxGray-300 text-dfxBlue-800 mt-1">
                     {translate('screens/payment', 'Payment Link')}
                   </p>
@@ -201,16 +218,16 @@ export default function PaymentLinkScreen(): JSX.Element {
                 <StyledDataTableRow label={translate('screens/payment', 'State')}>
                   <p className="font-semibold">{translate('screens/payment', 'Pending').toUpperCase()}</p>
                 </StyledDataTableRow>
-                <StyledDataTableRow label={lnQrCodeLabel}>
-                  <p>{blankedAddress(lnQrCode, { width })}</p>
-                  <CopyButton onCopy={() => copy(lnQrCode)} />
+                <StyledDataTableRow label={genericPaymentResponse.paymentIdentifierLabel}>
+                  <p>{blankedAddress(genericPaymentResponse.paymentIdentifier, { width })}</p>
+                  <CopyButton onCopy={() => copy(genericPaymentResponse.paymentIdentifier)} />
                 </StyledDataTableRow>
                 <StyledDataTableRow label={translate('screens/payment', 'Name')}>
-                  <div>{JSON.parse(lnurlPayRequest.metadata)[0][1]}</div>
+                  <div>{JSON.parse(paymentLinkPayRequest.metadata)[0][1]}</div>
                 </StyledDataTableRow>
                 {(filteredTransferAmounts && filteredTransferAmounts.length > 0
                   ? filteredTransferAmounts
-                  : lnurlPayRequest.transferAmounts
+                  : paymentLinkPayRequest.transferAmounts
                 ).map((item, index) => (
                   <StyledDataTableRow key={index} label={item.method}>
                     <p>
