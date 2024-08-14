@@ -7,6 +7,7 @@ import {
   PaymentLinkPaymentMode,
   PaymentLinkPaymentStatus,
   PaymentLinkStatus,
+  SellRoute,
   useFiatContext,
   usePaymentRoutesContext,
   Utils,
@@ -31,7 +32,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Layout } from 'src/components/layout';
 import { QrCopy } from 'src/components/payment/qr-copy';
@@ -111,6 +112,9 @@ export default function PaymentRoutes(): JSX.Element {
     return url.split('dfx.swiss')[1];
   }
 
+  const hasRoutes =
+    paymentRoutes && Boolean(paymentRoutes?.buy.length || paymentRoutes?.sell.length || paymentRoutes?.swap.length);
+
   const title = showCreatePaymentLinkOverlay
     ? 'Create Payment Link'
     : showCreatePaymentOverlay
@@ -138,6 +142,8 @@ export default function PaymentRoutes(): JSX.Element {
         <CreatePaymentOverlay id={showCreatePaymentOverlay} onDone={onDone} />
       ) : paymentRoutesLoading || (paymentLinksLoading && !isUpdatingPaymentLink.length) ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
+      ) : hasRoutes === false ? (
+        <p className="text-dfxGray-700">{translate('screens/payment', 'You have no payment routes yet')}</p>
       ) : (
         <StyledVerticalStack full gap={5}>
           {paymentRoutes?.buy.length ? (
@@ -419,6 +425,7 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isValid },
   } = useForm<FormData>({
     mode: 'onTouched',
@@ -426,7 +433,12 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
       paymentType: RouteType.WITHOUT_PAYMENT,
     },
   });
+
   const selectedType = useWatch({ control, name: 'paymentType' });
+
+  useEffect(() => {
+    if (paymentRoutes?.sell.length === 1) setValue('routeId', routeToRouteIdSelectData(paymentRoutes.sell[0]));
+  }, [paymentRoutes]);
 
   async function onSubmit(data: FormData) {
     setIsLoading(true);
@@ -456,6 +468,13 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
     }
   }
 
+  function routeToRouteIdSelectData(route: SellRoute): RouteIdSelectData {
+    return {
+      id: route.id.toString(),
+      description: `${route.currency.name} / ${route.iban}`,
+    };
+  }
+
   const rules = Utils.createRules({
     paymentMode: Validations.Required,
     paymentAmount: Validations.Required,
@@ -464,12 +483,7 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
     paymentExpiryDate: Validations.Required,
   });
 
-  const availablePaymentRoutes: RouteIdSelectData[] = paymentRoutes
-    ? paymentRoutes?.sell?.map((route) => ({
-        id: route.id.toString(),
-        description: `${route.currency.name} / ${route.iban}`,
-      }))
-    : [];
+  const availablePaymentRoutes: RouteIdSelectData[] = paymentRoutes?.sell?.map(routeToRouteIdSelectData) ?? [];
 
   return (
     <>
