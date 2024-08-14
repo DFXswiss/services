@@ -2,7 +2,7 @@ import { DfxContextProvider } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
 import { Suspense, lazy } from 'react';
-import { Navigate, RouteObject, RouterProvider, useLocation } from 'react-router-dom';
+import { Navigate, RouteObject, RouterProvider } from 'react-router-dom';
 import { Layout } from './components/layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
@@ -35,15 +35,6 @@ const TfaScreen = lazy(() => import('./screens/tfa.screen'));
 const TransactionScreen = lazy(() => import('./screens/transaction.screen'));
 
 setupLanguages();
-
-const RedirectToPaymentLink = () => {
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const lightning = params.get('lightning');
-  const newUrl = `/payment-link?lightning=${lightning}`;
-
-  return <Navigate to={newUrl} />;
-};
 
 export const Routes = [
   {
@@ -105,7 +96,7 @@ export const Routes = [
   },
   {
     path: '/pl',
-    element: <RedirectToPaymentLink />,
+    element: <Navigate to={`/payment-link${window.location.search}`} />,
   },
   {
     path: '/payment-link',
