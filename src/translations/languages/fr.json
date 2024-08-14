@@ -456,11 +456,11 @@
     "Without payment": "Sans paiement",
     "Activate": "Activer",
     "Deactivate": "Désactiver",
-    "This method is not yet available": "Cette méthode n'est pas encore disponible",
 
     "Pay with FrankencoinPay, Bitcoin Lightning LNURL": "Payer avec FrankencoinPay, Bitcoin Lightning LNURL",
     "Pay with a Bolt 11 Invoice": "Payer avec une facture Bolt 11",
     "Pay with a standard Ethereum Wallet": "Payer avec un portefeuille Ethereum standard",
+    "You have no payment routes yet": "Vous n'avez pas encore d'itinéraires de paiement",
 
     "Cointracking": "Cointracking",
     "Saved": "Enregistré",
@@ -515,7 +515,7 @@
     "Description": "Description",
     "File": "Fichier",
 
-    "For which transaction would you like to create an issue? Select the relevant transaction or click on \"{{text}}\".": "Pour quelle transaction souhaitez-vous créer un problème ? Sélectionnez la transaction concernée ou cliquez sur \"{{text}}\".",
+    "Select the transaction for which you would like to create an issue.": "Sélectionnez la transaction pour laquelle vous souhaitez créer un problème.",
     "Please provide us with all relevant information about the transaction you are missing.": "Veuillez nous fournir toutes les informations pertinentes concernant la transaction manquante.",
     "Sender IBAN": "IBAN de l'expéditeur",
     "Receiver IBAN": "IBAN du destinataire",

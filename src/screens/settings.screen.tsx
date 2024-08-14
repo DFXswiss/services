@@ -18,10 +18,10 @@ import { useForm, useWatch } from 'react-hook-form';
 import { OverlayContent, OverlayHeader, OverlayType } from 'src/components/home/settings-overlays';
 import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useUserGuard } from 'src/hooks/guard.hook';
-import { useStore } from 'src/hooks/store.hook';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 
 interface FormData {
@@ -34,7 +34,7 @@ export default function SettingsScreen(): JSX.Element {
   const { currencies } = useFiatContext();
   const { user, isUserLoading } = useUserContext();
   const { copy } = useClipboard();
-  const { activeWallet } = useStore();
+  const { setWallet } = useWalletContext();
   const { width } = useWindowContext();
   const { deleteAddress, deleteAccount, renameAddress } = useUserContext();
 
@@ -98,7 +98,7 @@ export default function SettingsScreen(): JSX.Element {
         case OverlayType.DELETE_ADDRESS:
           if (!menuAddress) break;
           deleteAddress(menuAddress);
-          menuAddress === user?.activeAddress?.address && activeWallet.remove();
+          menuAddress === user?.activeAddress?.address && setWallet();
           break;
         case OverlayType.RENAME_ADDRESS:
           if (!menuAddress) break;
@@ -106,7 +106,7 @@ export default function SettingsScreen(): JSX.Element {
           break;
         case OverlayType.DELETE_ACCOUNT:
           deleteAccount();
-          activeWallet.remove();
+          setWallet();
           break;
       }
     }

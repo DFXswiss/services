@@ -29,7 +29,6 @@ import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { useStore } from 'src/hooks/store.hook';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -47,11 +46,10 @@ export default function AccountScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
-  const { activeWallet } = useStore();
   const { getRef } = useUser();
   const { width } = useWindowContext();
   const { canClose, isEmbedded } = useAppHandlingContext();
-  const { isInitialized } = useWalletContext();
+  const { isInitialized, setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -82,7 +80,7 @@ export default function AccountScreen(): JSX.Element {
   useEffect(() => {
     if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address) {
       changeAddress(selectedAddress.address)
-        .then(() => activeWallet.remove())
+        .then(() => setWallet())
         .catch(() => {
           // ignore errors
         });
@@ -209,7 +207,10 @@ export default function AccountScreen(): JSX.Element {
               <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
                 <div className="flex flex-row gap-1 items-center">
                   <p>{limitToString(user.tradingLimit)}</p>
-                  <StyledIconButton icon={IconVariant.ARROW_UP} onClick={() => navigate('/kyc')} />
+                  <StyledIconButton
+                    icon={IconVariant.ARROW_UP}
+                    onClick={() => navigate('/support/issue?issue-type=LimitRequest')}
+                  />
                 </div>
               </StyledDataTableRow>
             </StyledDataTable>

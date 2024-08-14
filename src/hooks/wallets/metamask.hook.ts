@@ -174,11 +174,11 @@ export function useMetaMask(): MetaMaskInterface {
   async function readBalance(asset: Asset, address?: string): Promise<AssetBalance> {
     if (!address || !asset) return { asset, amount: 0 };
 
-    if (asset.type === AssetType.COIN) {
-      return web3.eth.getBalance(address).then((balance) => ({ asset, amount: toUsableNumber(balance).toNumber() }));
-    }
-
     try {
+      if (asset.type === AssetType.COIN) {
+        return web3.eth.getBalance(address).then((balance) => ({ asset, amount: toUsableNumber(balance).toNumber() }));
+      }
+
       const tokenContract = createContract(asset.chainId);
       const decimals = await tokenContract.methods.decimals().call();
       return await tokenContract.methods
