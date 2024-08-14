@@ -95,10 +95,12 @@ export default function PaymentLinkScreen(): JSX.Element {
 
     fetchInitial(decodedUrl);
 
-    if (!lightningParam) {
+    if (param !== lightningParam) {
       setLightningParam(param);
       sessionStorage.setItem('lightningParam', JSON.stringify(param));
+    }
 
+    if (urlParams.has('lightning')) {
       urlParams.delete('lightning');
       setUrlParams(urlParams);
     }
