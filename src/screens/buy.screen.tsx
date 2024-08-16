@@ -31,7 +31,6 @@ import {
   StyledLink,
   StyledLoadingSpinner,
   StyledSearchDropdown,
-  StyledTextBox,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
@@ -70,6 +69,7 @@ interface FormData {
   currency: Fiat;
   paymentMethod: FiatPaymentMethod;
   asset: Asset;
+  targetAmount: string;
   address: Address;
 }
 
@@ -90,6 +90,7 @@ export default function BuyScreen(): JSX.Element {
     assetIn,
     assetOut,
     amountIn,
+    amountOut,
     blockchain,
     paymentMethod,
     externalTransactionId,
@@ -123,15 +124,12 @@ export default function BuyScreen(): JSX.Element {
   const [validatedData, setValidatedData] = useState<BuyPaymentInfo>();
 
   // form
-  const { control, handleSubmit, setValue, resetField } = useForm<FormData>({
-    defaultValues: {
-      amount: '100',
-    },
-  });
+  const { control, handleSubmit, setValue, resetField } = useForm<FormData>();
 
   const selectedAmount = useWatch({ control, name: 'amount' });
   const selectedCurrency = useWatch({ control, name: 'currency' });
   const selectedAsset = useWatch({ control, name: 'asset' });
+  const selectedTargetAmount = useWatch({ control, name: 'targetAmount' });
   const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
   const selectedAddress = useWatch({ control, name: 'address' });
 
@@ -207,8 +205,12 @@ export default function BuyScreen(): JSX.Element {
   }, [availablePaymentMethods, paymentMethod]);
 
   useEffect(() => {
-    if (amountIn) setVal('amount', amountIn);
-  }, [amountIn]);
+    if (amountIn) {
+      setVal('amount', amountIn);
+    } else if (amountOut) {
+      setVal('targetAmount', amountOut);
+    }
+  }, [amountIn, amountOut]);
 
   useEffect(() => setAddress(), [session?.address, translate]);
 
@@ -235,15 +237,30 @@ export default function BuyScreen(): JSX.Element {
   }, [selectedAmount]);
 
   // data validation/fetch
-  useEffect(() => updateData(), [selectedAmount, selectedCurrency, selectedAsset, selectedPaymentMethod]);
+  useEffect(() => {
+    const requiresUpdate =
+      !validatedData ||
+      selectedAmount !== paymentInfo?.amount?.toString() ||
+      selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString() ||
+      selectedCurrency?.name !== paymentInfo?.currency.name ||
+      selectedAsset?.name !== paymentInfo?.asset?.name ||
+      selectedPaymentMethod !== validatedData?.paymentMethod;
+    requiresUpdate && updateData();
+  }, [isLoading, selectedAmount, selectedCurrency, selectedAsset, selectedTargetAmount, selectedPaymentMethod]);
 
   function updateData() {
+    const targetAmountChanged =
+      selectedTargetAmount && selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString();
+    console.log('>>>>>>>>>>> targetAmountChanged', selectedAmount, selectedTargetAmount, targetAmountChanged);
+
     const data = validateData({
-      amount: selectedAmount,
+      amount: targetAmountChanged ? undefined : selectedAmount,
       currency: selectedCurrency,
       asset: selectedAsset,
+      targetAmount: targetAmountChanged || selectedAmount === undefined ? selectedTargetAmount : undefined,
       paymentMethod: selectedPaymentMethod,
     });
+
     setValidatedData(data);
   }
 
@@ -271,15 +288,16 @@ export default function BuyScreen(): JSX.Element {
           // load exact price
           if (buy) {
             setIsPriceLoading(true);
-            receiveFor({ ...data, exactPrice: true })
-              .then((info) => {
-                if (isRunning) {
-                  setPaymentInfo(info);
-                  setIsPriceLoading(false);
-                }
-              })
-              .catch(console.error);
+            return receiveFor({ ...data, exactPrice: true });
           }
+        }
+      })
+      .then((info) => {
+        if (isRunning && info) {
+          setVal('amount', info.amount.toString());
+          setVal('targetAmount', info.estimatedAmount.toString());
+          setPaymentInfo(info);
+          setIsPriceLoading(false);
         }
       })
       .catch((error: ApiError) => {
@@ -293,7 +311,7 @@ export default function BuyScreen(): JSX.Element {
     return () => {
       isRunning = false;
     };
-  }, [useDebounce(validatedData, 500)]);
+  }, [useDebounce(validatedData, 700)]);
 
   function validateBuy(buy: Buy): void {
     setCustomAmountError(undefined);
@@ -328,12 +346,21 @@ export default function BuyScreen(): JSX.Element {
     }
   }
 
-  function validateData({ amount: amountStr, currency, asset, paymentMethod }: Partial<FormData> = {}):
-    | BuyPaymentInfo
-    | undefined {
+  function validateData({
+    amount: amountStr,
+    currency,
+    asset,
+    targetAmount: targetAmountStr,
+    paymentMethod,
+  }: Partial<FormData> = {}): BuyPaymentInfo | undefined {
     const amount = Number(amountStr);
-    if (amount > 0 && asset != null && currency != null && paymentMethod != null) {
-      return { amount, currency, asset, paymentMethod };
+    const targetAmount = Number(targetAmountStr);
+    if (asset != null && currency != null && paymentMethod != null) {
+      return amount > 0
+        ? { amount, currency, asset, paymentMethod }
+        : targetAmount > 0
+        ? { currency, asset, targetAmount, paymentMethod }
+        : undefined;
     }
   }
 
@@ -379,7 +406,15 @@ export default function BuyScreen(): JSX.Element {
   const rules = Utils.createRules({
     asset: Validations.Required,
     currency: Validations.Required,
-    amount: Validations.Required,
+    // either amount or targetAmount must be set
+    // amount: Validations.Custom((value) => {
+    //   if (!selectedTargetAmount && !value) return 'Please enter an amount';
+    //   return true;
+    // }),
+    // targetAmount: Validations.Custom((value) => {
+    //   if (!selectedAmount && !value) return 'Please enter an amount';
+    //   return true;
+    // }),
   });
 
   const title = showsCompletion
@@ -449,6 +484,9 @@ export default function BuyScreen(): JSX.Element {
                   <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
                   <StyledHorizontalStack gap={1}>
                     <div className="flex-[3_1_9rem]">
+                      <StyledInput type="number" name="targetAmount" full />
+                    </div>
+                    {/* <div className="flex-[3_1_9rem]">
                       <StyledTextBox
                         text={
                           paymentInfo && !isLoading ? `≈ ${Utils.formatAmountCrypto(paymentInfo.estimatedAmount)}` : ' '
@@ -456,7 +494,7 @@ export default function BuyScreen(): JSX.Element {
                         loading={!isLoading && isPriceLoading}
                         full
                       />
-                    </div>
+                    </div> */}
                     <div className="flex-[1_0_9rem]">
                       <StyledSearchDropdown<Asset>
                         rootRef={rootRef}
