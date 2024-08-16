@@ -71,7 +71,11 @@ export default function BuyInfoScreen(): JSX.Element {
   useEffect(() => fetchData(), [asset, currency, amountIn, amountOut]);
 
   function fetchData() {
-    if (!(asset && currency && (amountIn || amountOut))) return;
+    if (!(asset && currency && (amountIn || amountOut))) {
+      const inputIsComplete = (amountIn || amountOut) && assetIn && assetOut;
+      !inputIsComplete && setErrorMessage('Missing required information');
+      return;
+    }
 
     setErrorMessage(undefined);
 
@@ -132,10 +136,6 @@ export default function BuyInfoScreen(): JSX.Element {
     <Layout textStart backButton={false} scrollRef={scrollRef}>
       {showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose={false} />
-      ) : isLoading ? (
-        <div className="mt-4">
-          <StyledLoadingSpinner size={SpinnerSize.LG} />
-        </div>
       ) : errorMessage ? (
         <StyledVerticalStack center className="text-center">
           <ErrorHint message={errorMessage} />
@@ -148,6 +148,10 @@ export default function BuyInfoScreen(): JSX.Element {
             color={StyledButtonColor.STURDY_WHITE}
           />
         </StyledVerticalStack>
+      ) : isLoading ? (
+        <div className="mt-4">
+          <StyledLoadingSpinner size={SpinnerSize.LG} />
+        </div>
       ) : customAmountError ? (
         <>
           <StyledInfoText invertedIcon>{customAmountError}</StyledInfoText>
