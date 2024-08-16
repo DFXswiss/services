@@ -2,7 +2,7 @@ import { DfxContextProvider } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
 import { Suspense, lazy } from 'react';
-import { RouteObject, RouterProvider } from 'react-router-dom';
+import { Navigate, RouteObject, RouterProvider } from 'react-router-dom';
 import { Layout } from './components/layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
@@ -92,6 +92,10 @@ export const Routes = [
   {
     path: '/routes',
     element: withSuspense(<PaymentRoutes />),
+  },
+  {
+    path: '/pl',
+    element: <Navigate to={`/payment-link${window.location.search}`} />,
   },
   {
     path: '/payment-link',
