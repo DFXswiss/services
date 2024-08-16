@@ -1,14 +1,19 @@
-import { ApiError, PaymentLinkPayRequest } from '@dfx.swiss/react';
+import { ApiError, Blockchain, PaymentLinkPayRequest } from '@dfx.swiss/react';
 import {
   AlignContent,
+  CopyButton,
+  Form,
   SpinnerSize,
   StyledDataTable,
   StyledDataTableRow,
+  StyledDropdown,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useForm, useWatch } from 'react-hook-form';
+import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { QrCopy } from 'src/components/payment/qr-copy';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -20,48 +25,154 @@ import { Layout } from '../components/layout';
 
 const noPaymentErrorMessage = 'No pending payment found';
 
+interface FormData {
+  paymentMethod: PaymentMethod;
+}
+
+interface PaymentMethod {
+  label: string;
+  description: string;
+}
+
+interface PaymentResponse {
+  paymentIdentifier: string;
+  paymentIdentifierLabel: string;
+}
+
+const paymentMethods: PaymentMethod[] = [
+  {
+    label: 'OpenCryptoPay.io',
+    description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
+  },
+  {
+    label: 'Bitcoin Lightning',
+    description: 'Pay with a Bolt 11 Invoice',
+  },
+  {
+    label: 'Ethereum URI',
+    description: 'Pay with a standard Ethereum Wallet',
+  },
+];
+
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { width } = useWindowContext();
-  const { search } = useLocation();
+  const [urlParams, setUrlParams] = useSearchParams();
 
-  const [lnurlPayRequest, setLnurlPayRequest] = useState<PaymentLinkPayRequest>();
+  const [paymentLinkPayRequest, setPaymentLinkPayRequest] = useState<PaymentLinkPayRequest>();
+  const [genericPaymentResponse, setGenericPaymentResponse] = useState<PaymentResponse>();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
 
-  const urlParams = new URLSearchParams(search);
-  if (!urlParams.has('lightning')) {
-    navigate('/', { replace: true });
-  }
+  const [lightningParam, setLightningParam] = useState(() => {
+    const savedState = sessionStorage.getItem('lightningParam');
+    return savedState ? JSON.parse(savedState) : '';
+  });
 
-  const paramLNURL = urlParams.get('lightning');
+  const {
+    control,
+    formState: { errors },
+  } = useForm<FormData>({
+    mode: 'onTouched',
+    defaultValues: { paymentMethod: paymentMethods[0] },
+  });
+
+  const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
 
   useEffect(() => {
-    const decodedUrl = paramLNURL && Lnurl.decode(paramLNURL);
+    const param = urlParams.get('lightning') || lightningParam;
+    if (!param) {
+      navigate('/', { replace: true });
+      return;
+    }
+
+    const decodedUrl = Lnurl.decode(param);
     if (!decodedUrl) {
       setError('Invalid payment link.');
       return;
     }
 
-    fetchData(decodedUrl);
-  }, [paramLNURL]);
+    fetchInitial(decodedUrl);
 
-  async function fetchData(url: string) {
-    fetch(url)
-      .then((response) => response.json())
+    if (param !== lightningParam) {
+      setLightningParam(param);
+      sessionStorage.setItem('lightningParam', JSON.stringify(param));
+    }
+
+    if (urlParams.has('lightning')) {
+      urlParams.delete('lightning');
+      setUrlParams(urlParams);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!paymentLinkPayRequest || !lightningParam) return;
+    switch (selectedPaymentMethod.label) {
+      case 'OpenCryptoPay.io':
+        setGenericPaymentResponse({
+          paymentIdentifier: lightningParam,
+          paymentIdentifierLabel: 'LNURL',
+        });
+        break;
+      case 'Bitcoin Lightning':
+        setIsLoading(true);
+        const callbackWithMinSendable = `${paymentLinkPayRequest.callback}/?amount=${paymentLinkPayRequest.minSendable}`;
+        fetchDataApi(callbackWithMinSendable)
+          .then((data) => {
+            setGenericPaymentResponse({
+              paymentIdentifier: data.pr,
+              paymentIdentifierLabel: 'LNR',
+            });
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+        break;
+      case 'Ethereum URI':
+        setIsLoading(true);
+        const ethTransferAmount = paymentLinkPayRequest.transferAmounts.find(
+          (item) => item.method === Blockchain.ETHEREUM,
+        );
+        const callbackWithParams = `${paymentLinkPayRequest.callback}/?amount=${ethTransferAmount?.amount}&asset=${ethTransferAmount?.asset}&method=${ethTransferAmount?.method}`;
+        fetchDataApi(callbackWithParams)
+          .then((data) => {
+            setGenericPaymentResponse({
+              paymentIdentifier: data.uri,
+              paymentIdentifierLabel: 'URI',
+            });
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+        break;
+    }
+  }, [paymentLinkPayRequest, selectedPaymentMethod]);
+
+  async function fetchInitial(url: string) {
+    fetchDataApi(url, true)
       .then((data) => {
-        if (data.error) throw data;
         setError(undefined);
-        setLnurlPayRequest(data);
+        setPaymentLinkPayRequest(data);
       })
       .catch((e) => {
-        const errorMessage = (e as ApiError).message ?? 'Unknown error';
-        if (errorMessage === noPaymentErrorMessage) setTimeout(() => fetchData(url), 1000);
-        setError(errorMessage);
+        if (e.message === noPaymentErrorMessage) setTimeout(() => fetchInitial(url), 1000);
       });
   }
 
-  const filteredTransferAmounts = lnurlPayRequest?.transferAmounts
+  async function fetchDataApi(url: string, rethrow = false): Promise<any> {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.error) {
+      setError((data as ApiError).message ?? 'Unknown error');
+      if (rethrow) throw data;
+    }
+
+    setError(undefined);
+    return data;
+  }
+
+  const filteredTransferAmounts = paymentLinkPayRequest?.transferAmounts
     .filter(
       (item) =>
         (item.method === 'Lightning' && item.asset === 'BTC') || (item.method === 'Ethereum' && item.asset === 'ZCHF'),
@@ -75,39 +186,60 @@ export default function PaymentLinkScreen(): JSX.Element {
     <Layout backButton={false}>
       {error ? (
         <PaymentErrorHint message={error} />
-      ) : !lnurlPayRequest || !paramLNURL ? (
+      ) : !paymentLinkPayRequest || !genericPaymentResponse ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
-        <StyledVerticalStack full gap={4}>
-          <div className="flex w-full items-center justify-center">
-            <div className="w-48 py-3">
-              <QrCopy data={Lnurl.prependLnurl(paramLNURL)} />
-              <p className="text-center rounded-sm font-semibold bg-dfxGray-300 text-dfxBlue-800 mt-1">
-                {translate('screens/payment', 'Payment Link')}
-              </p>
+        <StyledVerticalStack full gap={4} center>
+          <Form control={control} errors={errors}>
+            <StyledDropdown<PaymentMethod>
+              name="paymentMethod"
+              label={translate('screens/payment', 'Payment method')}
+              placeholder={translate('screens/payment', 'Payment method')}
+              items={paymentMethods}
+              labelFunc={(item) => item.label}
+              descriptionFunc={(item) => translate('screens/payment', item.description)}
+              full
+              smallLabel
+            />
+          </Form>
+          {isLoading ? (
+            <div className="mt-4">
+              <StyledLoadingSpinner size={SpinnerSize.LG} />
             </div>
-          </div>
-          <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-            <StyledDataTableRow label={translate('screens/payment', 'State')}>
-              <p className="font-semibold">{translate('screens/payment', 'Pending').toUpperCase()}</p>
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/payment', 'LNURL')}>
-              <p>{blankedAddress(paramLNURL, { width })}</p>
-            </StyledDataTableRow>
-            <StyledDataTableRow label={translate('screens/payment', 'Name')}>
-              <div>{JSON.parse(lnurlPayRequest.metadata)[0][1]}</div>
-            </StyledDataTableRow>
-            {(filteredTransferAmounts && filteredTransferAmounts.length > 0
-              ? filteredTransferAmounts
-              : lnurlPayRequest.transferAmounts
-            ).map((item, index) => (
-              <StyledDataTableRow key={index} label={item.method}>
-                <p>
-                  {item.amount} {item.asset}
-                </p>
-              </StyledDataTableRow>
-            ))}
-          </StyledDataTable>
+          ) : (
+            <>
+              <div className="flex w-full items-center justify-center">
+                <div className="w-48 py-3">
+                  <QrCopy data={genericPaymentResponse.paymentIdentifier} />
+                  <p className="text-center rounded-sm font-semibold bg-dfxGray-300 text-dfxBlue-800 mt-1">
+                    {translate('screens/payment', 'Payment Link')}
+                  </p>
+                </div>
+              </div>
+              <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                <StyledDataTableRow label={translate('screens/payment', 'State')}>
+                  <p className="font-semibold">{translate('screens/payment', 'Pending').toUpperCase()}</p>
+                </StyledDataTableRow>
+                <StyledDataTableRow label={genericPaymentResponse.paymentIdentifierLabel}>
+                  <p>{blankedAddress(genericPaymentResponse.paymentIdentifier, { width })}</p>
+                  <CopyButton onCopy={() => copy(genericPaymentResponse.paymentIdentifier)} />
+                </StyledDataTableRow>
+                <StyledDataTableRow label={translate('screens/payment', 'Name')}>
+                  <div>{JSON.parse(paymentLinkPayRequest.metadata)[0][1]}</div>
+                </StyledDataTableRow>
+                {(filteredTransferAmounts && filteredTransferAmounts.length > 0
+                  ? filteredTransferAmounts
+                  : paymentLinkPayRequest.transferAmounts
+                ).map((item, index) => (
+                  <StyledDataTableRow key={index} label={item.method}>
+                    <p>
+                      {item.amount} {item.asset}
+                    </p>
+                  </StyledDataTableRow>
+                ))}
+              </StyledDataTable>
+            </>
+          )}
         </StyledVerticalStack>
       )}
     </Layout>
