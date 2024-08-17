@@ -264,9 +264,9 @@ export default function BuyScreen(): JSX.Element {
       asset: selectedAsset,
       targetAmount: targetChanged || selectedAmount === undefined ? selectedTargetAmount : undefined,
       paymentMethod: selectedPaymentMethod,
-    }) as ValidatedData;
+    });
 
-    setValidatedData({ ...data, targetChanged });
+    data && setValidatedData({ ...data, targetChanged });
   }
 
   useEffect(() => {
