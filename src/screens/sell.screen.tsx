@@ -5,6 +5,7 @@ import {
   Blockchain,
   Fiat,
   Sell,
+  SellPaymentInfo,
   TransactionError,
   TransactionType,
   Utils,
@@ -34,12 +35,11 @@ import {
   StyledLoadingSpinner,
   StyledModalButton,
   StyledSearchDropdown,
-  StyledTextBox,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useRef, useState } from 'react';
-import { Controller, DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+import { Controller, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { AddressSwitch } from 'src/components/payment/address-switch';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -73,6 +73,7 @@ interface FormData {
   currency: Fiat;
   asset: Asset;
   amount: string;
+  targetAmount: string;
   address: Address;
 }
 
@@ -81,6 +82,10 @@ interface CustomAmountError {
   defaultValue: string;
   interpolation?: Record<string, string | number> | undefined;
   hideInfos: boolean;
+}
+
+interface ValidatedData extends SellPaymentInfo {
+  targetChanged?: boolean;
 }
 
 export default function SellScreen(): JSX.Element {
@@ -103,6 +108,7 @@ export default function SellScreen(): JSX.Element {
     assetIn,
     assetOut,
     amountIn,
+    amountOut,
     bankAccount,
     blockchain,
     externalTransactionId,
@@ -130,6 +136,7 @@ export default function SellScreen(): JSX.Element {
   const [sellTxId, setSellTxId] = useState<string>();
   const [bankAccountSelection, setBankAccountSelection] = useState(false);
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
+  const [validatedData, setValidatedData] = useState<ValidatedData>();
 
   useEffect(() => {
     availableAssets && getBalances(availableAssets).then(setBalances);
@@ -138,10 +145,11 @@ export default function SellScreen(): JSX.Element {
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
 
-  const data = useWatch({ control });
   const selectedBankAccount = useWatch({ control, name: 'bankAccount' });
   const selectedAsset = useWatch({ control, name: 'asset' });
   const enteredAmount = useWatch({ control, name: 'amount' });
+  const selectedCurrency = useWatch({ control, name: 'currency' });
+  const selectedTargetAmount = useWatch({ control, name: 'targetAmount' });
   const selectedAddress = useWatch({ control, name: 'address' });
 
   const availableBalance = selectedAsset && findBalance(selectedAsset);
@@ -192,8 +200,12 @@ export default function SellScreen(): JSX.Element {
   }, [assetOut, getCurrency, prefCurrency, currencies]);
 
   useEffect(() => {
-    if (amountIn) setVal('amount', amountIn);
-  }, [amountIn]);
+    if (amountIn) {
+      setVal('amount', amountIn);
+    } else if (amountOut) {
+      setVal('targetAmount', amountOut);
+    }
+  }, [amountIn, amountOut]);
 
   useEffect(() => setAddress(), [session?.address, translate]);
 
@@ -238,25 +250,47 @@ export default function SellScreen(): JSX.Element {
     }
   }, [enteredAmount]);
 
-  // data validation
-  const validatedData = validateData(useDebounce(data, 500));
-  const dataValid = validatedData != null;
+  // Spend data changed
+  useEffect(() => {
+    const requiresUpdate =
+      enteredAmount !== paymentInfo?.amount?.toString() || selectedAsset?.name !== paymentInfo?.asset.name;
+    requiresUpdate && updateData(false);
+  }, [enteredAmount, selectedAsset]);
+
+  // Get data changed
+  useEffect(() => {
+    const requiresUpdate =
+      selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString() ||
+      selectedCurrency?.name !== paymentInfo?.currency?.name ||
+      selectedBankAccount?.iban !== validatedData?.iban;
+    requiresUpdate && updateData(true);
+  }, [selectedTargetAmount, selectedCurrency, selectedBankAccount]);
+
+  function updateData(targetChanged?: boolean) {
+    const data = validateData({
+      amount: targetChanged ? undefined : enteredAmount,
+      currency: selectedCurrency,
+      asset: selectedAsset,
+      targetAmount: targetChanged || enteredAmount === undefined ? selectedTargetAmount : undefined,
+      bankAccount: selectedBankAccount,
+    });
+
+    data && setValidatedData({ ...data, targetChanged });
+  }
 
   useEffect(() => {
     let isRunning = true;
 
     setErrorMessage(undefined);
 
-    if (!dataValid) {
+    if (!validatedData) {
       setPaymentInfo(undefined);
       setIsLoading(false);
       setIsPriceLoading(false);
       return;
     }
 
-    const amount = Number(validatedData.amount);
-    const { asset, currency, bankAccount } = validatedData;
-    const data = { iban: bankAccount.iban, currency, amount, asset, externalTransactionId };
+    const data: SellPaymentInfo = { ...validatedData, externalTransactionId };
 
     setIsLoading(true);
     receiveFor(data)
@@ -268,15 +302,17 @@ export default function SellScreen(): JSX.Element {
           // load exact price
           if (sell) {
             setIsPriceLoading(true);
-            receiveFor({ ...data, exactPrice: true })
-              .then((info) => {
-                if (isRunning) {
-                  setPaymentInfo(info);
-                  setIsPriceLoading(false);
-                }
-              })
-              .catch(console.error);
+            return receiveFor({ ...data, exactPrice: true });
           }
+        }
+      })
+      .then((info) => {
+        if (isRunning && info) {
+          validatedData.targetChanged
+            ? setVal('amount', info.amount.toString())
+            : setVal('targetAmount', info.estimatedAmount.toString());
+          setPaymentInfo(info);
+          setIsPriceLoading(false);
         }
       })
       .catch((error: ApiError) => {
@@ -294,7 +330,7 @@ export default function SellScreen(): JSX.Element {
     return () => {
       isRunning = false;
     };
-  }, [validatedData]);
+  }, [useDebounce(validatedData, 700)]);
 
   function validateSell(sell: Sell): void {
     setCustomAmountError(undefined);
@@ -351,9 +387,21 @@ export default function SellScreen(): JSX.Element {
     }
   }
 
-  function validateData(data?: DeepPartial<FormData>): FormData | undefined {
-    if (data && Number(data.amount) > 0 && data.asset != null && data.bankAccount != null && data.currency != null) {
-      return data as FormData;
+  function validateData({
+    amount: amountStr,
+    currency,
+    asset,
+    targetAmount: targetAmountStr,
+    bankAccount,
+  }: Partial<FormData> = {}): SellPaymentInfo | undefined {
+    const amount = Number(amountStr);
+    const targetAmount = Number(targetAmountStr);
+    if (asset != null && currency != null && bankAccount != null) {
+      return amount > 0
+        ? { amount, currency, asset, iban: bankAccount.iban }
+        : targetAmount > 0
+        ? { currency, asset, targetAmount, iban: bankAccount.iban }
+        : undefined;
     }
   }
 
@@ -367,7 +415,7 @@ export default function SellScreen(): JSX.Element {
   }
 
   async function updateBankAccount(): Promise<BankAccount> {
-    return updateAccount(selectedBankAccount.id, { preferredCurrency: data.currency as Fiat });
+    return updateAccount(selectedBankAccount.id, { preferredCurrency: selectedCurrency as Fiat });
   }
 
   function getPaymentInfoString(paymentInfo: Sell, selectedBankAccount: BankAccount): string {
@@ -522,13 +570,7 @@ export default function SellScreen(): JSX.Element {
                 <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
                 <StyledHorizontalStack gap={1}>
                   <div className="flex-[3_1_9rem]">
-                    <StyledTextBox
-                      text={
-                        paymentInfo && !isLoading ? `≈ ${Utils.formatAmountCrypto(paymentInfo.estimatedAmount)}` : ' '
-                      }
-                      loading={!isLoading && isPriceLoading}
-                      full
-                    />
+                    <StyledInput type="number" name="targetAmount" full />
                   </div>
                   <div className="flex-[1_0_9rem]">
                     <StyledDropdown<Fiat>
