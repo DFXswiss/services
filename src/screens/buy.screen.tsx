@@ -73,6 +73,10 @@ interface FormData {
   address: Address;
 }
 
+interface ValidatedData extends BuyPaymentInfo {
+  targetChanged?: boolean;
+}
+
 const EmbeddedWallet = 'CakeWallet';
 
 export default function BuyScreen(): JSX.Element {
@@ -121,7 +125,7 @@ export default function BuyScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [isPriceLoading, setIsPriceLoading] = useState(false);
   const [isContinue, setIsContinue] = useState(false);
-  const [validatedData, setValidatedData] = useState<BuyPaymentInfo>();
+  const [validatedData, setValidatedData] = useState<ValidatedData>();
 
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>();
@@ -236,32 +240,33 @@ export default function BuyScreen(): JSX.Element {
     }
   }, [selectedAmount]);
 
-  // data validation/fetch
+  // Spend data changed
   useEffect(() => {
     const requiresUpdate =
-      !validatedData ||
       selectedAmount !== paymentInfo?.amount?.toString() ||
-      selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString() ||
       selectedCurrency?.name !== paymentInfo?.currency.name ||
-      selectedAsset?.name !== paymentInfo?.asset?.name ||
       selectedPaymentMethod !== validatedData?.paymentMethod;
-    requiresUpdate && updateData();
-  }, [isLoading, selectedAmount, selectedCurrency, selectedAsset, selectedTargetAmount, selectedPaymentMethod]);
+    requiresUpdate && updateData(false);
+  }, [selectedAmount, selectedCurrency, selectedPaymentMethod]);
 
-  function updateData() {
-    const targetAmountChanged =
-      selectedTargetAmount && selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString();
-    console.log('>>>>>>>>>>> targetAmountChanged', selectedAmount, selectedTargetAmount, targetAmountChanged);
+  // Get data changed
+  useEffect(() => {
+    const requiresUpdate =
+      selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString() ||
+      selectedAsset?.name !== paymentInfo?.asset?.name;
+    requiresUpdate && updateData(true);
+  }, [selectedTargetAmount, selectedAsset]);
 
+  function updateData(targetChanged?: boolean) {
     const data = validateData({
-      amount: targetAmountChanged ? undefined : selectedAmount,
+      amount: targetChanged ? undefined : selectedAmount,
       currency: selectedCurrency,
       asset: selectedAsset,
-      targetAmount: targetAmountChanged || selectedAmount === undefined ? selectedTargetAmount : undefined,
+      targetAmount: targetChanged || selectedAmount === undefined ? selectedTargetAmount : undefined,
       paymentMethod: selectedPaymentMethod,
-    });
+    }) as ValidatedData;
 
-    setValidatedData(data);
+    setValidatedData({ ...data, targetChanged });
   }
 
   useEffect(() => {
@@ -294,8 +299,9 @@ export default function BuyScreen(): JSX.Element {
       })
       .then((info) => {
         if (isRunning && info) {
-          setVal('amount', info.amount.toString());
-          setVal('targetAmount', info.estimatedAmount.toString());
+          validatedData.targetChanged
+            ? setVal('amount', info.amount.toString())
+            : setVal('targetAmount', info.estimatedAmount.toString());
           setPaymentInfo(info);
           setIsPriceLoading(false);
         }
@@ -406,15 +412,6 @@ export default function BuyScreen(): JSX.Element {
   const rules = Utils.createRules({
     asset: Validations.Required,
     currency: Validations.Required,
-    // either amount or targetAmount must be set
-    // amount: Validations.Custom((value) => {
-    //   if (!selectedTargetAmount && !value) return 'Please enter an amount';
-    //   return true;
-    // }),
-    // targetAmount: Validations.Custom((value) => {
-    //   if (!selectedAmount && !value) return 'Please enter an amount';
-    //   return true;
-    // }),
   });
 
   const title = showsCompletion
@@ -486,15 +483,6 @@ export default function BuyScreen(): JSX.Element {
                     <div className="flex-[3_1_9rem]">
                       <StyledInput type="number" name="targetAmount" full />
                     </div>
-                    {/* <div className="flex-[3_1_9rem]">
-                      <StyledTextBox
-                        text={
-                          paymentInfo && !isLoading ? `≈ ${Utils.formatAmountCrypto(paymentInfo.estimatedAmount)}` : ' '
-                        }
-                        loading={!isLoading && isPriceLoading}
-                        full
-                      />
-                    </div> */}
                     <div className="flex-[1_0_9rem]">
                       <StyledSearchDropdown<Asset>
                         rootRef={rootRef}
