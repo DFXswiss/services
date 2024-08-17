@@ -62,6 +62,11 @@ import { useNavigation } from '../hooks/navigation.hook';
 import { useTxHelper } from '../hooks/tx-helper.hook';
 import { blankedAddress } from '../util/utils';
 
+enum Side {
+  SPEND = 'SPEND',
+  GET = 'GET',
+}
+
 interface Address {
   address: string;
   label: string;
@@ -85,7 +90,7 @@ interface CustomAmountError {
 }
 
 interface ValidatedData extends SellPaymentInfo {
-  targetChanged?: boolean;
+  sideToUpdate?: Side;
 }
 
 export default function SellScreen(): JSX.Element {
@@ -126,8 +131,7 @@ export default function SellScreen(): JSX.Element {
   const [customAmountError, setCustomAmountError] = useState<CustomAmountError>();
   const [errorMessage, setErrorMessage] = useState<string>();
   const [kycError, setKycError] = useState<TransactionError>();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isPriceLoading, setIsPriceLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<Side>();
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [balances, setBalances] = useState<AssetBalance[]>();
@@ -254,7 +258,7 @@ export default function SellScreen(): JSX.Element {
   useEffect(() => {
     const requiresUpdate =
       enteredAmount !== paymentInfo?.amount?.toString() || selectedAsset?.name !== paymentInfo?.asset.name;
-    requiresUpdate && updateData(false);
+    requiresUpdate && updateData(Side.GET);
   }, [enteredAmount, selectedAsset]);
 
   // Get data changed
@@ -263,19 +267,19 @@ export default function SellScreen(): JSX.Element {
       selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString() ||
       selectedCurrency?.name !== paymentInfo?.currency?.name ||
       selectedBankAccount?.iban !== validatedData?.iban;
-    requiresUpdate && updateData(true);
+    requiresUpdate && updateData(Side.SPEND);
   }, [selectedTargetAmount, selectedCurrency, selectedBankAccount]);
 
-  function updateData(targetChanged?: boolean) {
+  function updateData(sideToUpdate?: Side) {
     const data = validateData({
-      amount: targetChanged ? undefined : enteredAmount,
+      amount: sideToUpdate === Side.GET ? enteredAmount : undefined,
       currency: selectedCurrency,
       asset: selectedAsset,
-      targetAmount: targetChanged || enteredAmount === undefined ? selectedTargetAmount : undefined,
+      targetAmount: sideToUpdate === Side.SPEND || enteredAmount === undefined ? selectedTargetAmount : undefined,
       bankAccount: selectedBankAccount,
     });
 
-    data && setValidatedData({ ...data, targetChanged });
+    data && setValidatedData({ ...data, sideToUpdate });
   }
 
   useEffect(() => {
@@ -285,14 +289,13 @@ export default function SellScreen(): JSX.Element {
 
     if (!validatedData) {
       setPaymentInfo(undefined);
-      setIsLoading(false);
-      setIsPriceLoading(false);
+      setIsLoading(undefined);
       return;
     }
 
     const data: SellPaymentInfo = { ...validatedData, externalTransactionId };
 
-    setIsLoading(true);
+    setIsLoading(validatedData.sideToUpdate);
     receiveFor(data)
       .then((sell) => {
         if (isRunning) {
@@ -301,18 +304,16 @@ export default function SellScreen(): JSX.Element {
 
           // load exact price
           if (sell) {
-            setIsPriceLoading(true);
             return receiveFor({ ...data, exactPrice: true });
           }
         }
       })
       .then((info) => {
         if (isRunning && info) {
-          validatedData.targetChanged
+          validatedData.sideToUpdate === Side.SPEND
             ? setVal('amount', info.amount.toString())
             : setVal('targetAmount', info.estimatedAmount.toString());
           setPaymentInfo(info);
-          setIsPriceLoading(false);
         }
       })
       .catch((error: ApiError) => {
@@ -325,7 +326,7 @@ export default function SellScreen(): JSX.Element {
           }
         }
       })
-      .finally(() => isRunning && setIsLoading(false));
+      .finally(() => isRunning && setIsLoading(undefined));
 
     return () => {
       isRunning = false;
@@ -531,6 +532,8 @@ export default function SellScreen(): JSX.Element {
                           customAmountError.interpolation,
                         )
                       }
+                      loading={isLoading === Side.SPEND}
+                      disabled={isLoading === Side.SPEND}
                       full
                     />
                   </div>
@@ -570,7 +573,13 @@ export default function SellScreen(): JSX.Element {
                 <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
                 <StyledHorizontalStack gap={1}>
                   <div className="flex-[3_1_9rem]">
-                    <StyledInput type="number" name="targetAmount" full />
+                    <StyledInput
+                      type="number"
+                      name="targetAmount"
+                      loading={isLoading === Side.GET}
+                      disabled={isLoading === Side.GET}
+                      full
+                    />
                   </div>
                   <div className="flex-[1_0_9rem]">
                     <StyledDropdown<Fiat>
