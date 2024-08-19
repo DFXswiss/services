@@ -10,7 +10,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { useDeferredPromise } from '../../../hooks/deferred-promise.hook';
-import { QrCopy } from '../../payment/qr-copy';
+import { QrCopy } from '../../payment/qr-code';
 import { ConnectBase } from '../connect-base';
 import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../connect-shared';
 

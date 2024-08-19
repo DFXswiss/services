@@ -20,7 +20,7 @@ import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { blankedAddress } from 'src/util/utils';
-import { QrCopy } from './qr-copy';
+import { QrCopy } from './qr-code';
 
 interface PaymentInformationContentProps {
   info: Sell | Swap;
