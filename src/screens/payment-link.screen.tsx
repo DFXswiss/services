@@ -96,7 +96,12 @@ const compatibleWallets = [
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/1.webp',
   },
   {
-    name: 'Wallet of Satoshi',
+    name: 'Cake Wallet',
+    websiteUrl: 'https://cakewallet.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/4.webp',
+  },
+  {
+    name: 'WoS',
     websiteUrl: 'https://www.walletofsatoshi.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/2.webp',
   },
@@ -104,11 +109,6 @@ const compatibleWallets = [
     name: 'Phoenix',
     websiteUrl: 'https://phoenix.acinq.co/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/3.webp',
-  },
-  {
-    name: 'Cake Wallet',
-    websiteUrl: 'https://cakewallet.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/4.webp',
   },
 ];
 
@@ -358,7 +358,7 @@ function CompatibleWallets(): JSX.Element {
       <p className="text-base pt-3 pb-3 text-dfxGray-700">
         Scan the QR-Code with a compatible wallet to complete the payment.
       </p>
-      <div className="flex flex-row justify-center gap-4">
+      <div className="flex flex-row justify-center gap-4 flex-wrap">
         {compatibleWallets.map((wallet) => (
           <div
             key={wallet.name}
