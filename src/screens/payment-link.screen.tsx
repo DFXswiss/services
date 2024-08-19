@@ -1,9 +1,10 @@
-import { ApiError, Blockchain } from '@dfx.swiss/react';
+import { ApiError, Blockchain, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
   Form,
   SpinnerSize,
+  StyledCollapsible,
   StyledDataTable,
   StyledDataTableRow,
   StyledDropdown,
@@ -87,6 +88,29 @@ const paymentIdentifierLabelMap: Record<string, string> = {
   'FrankencoinPay.com': 'LNURL',
   'Bitcoin Lightning': 'LNR',
 };
+
+const compatibleWallets = [
+  {
+    name: 'Frankencoin',
+    websiteUrl: 'https://frankencoin.app/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/1.webp',
+  },
+  {
+    name: 'Wallet of Satoshi',
+    websiteUrl: 'https://www.walletofsatoshi.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/2.webp',
+  },
+  {
+    name: 'Phoenix',
+    websiteUrl: 'https://phoenix.acinq.co/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/3.webp',
+  },
+  {
+    name: 'Cake Wallet',
+    websiteUrl: 'https://cakewallet.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/4.webp',
+  },
+];
 
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -226,6 +250,13 @@ export default function PaymentLinkScreen(): JSX.Element {
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center>
+          <div className="flex flex-col w-full justify-center">
+            <p className="text-dfxGray-700 font-semibold text-base">{payRequest.displayName}</p>
+            <p className="text-xl pt-4 pb-3 font-bold text-dfxBlue-800">
+              {payRequest.requestedAmount.asset}{' '}
+              {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
+            </p>
+          </div>
           <Form control={control} errors={errors}>
             <StyledVerticalStack full gap={4} center>
               <StyledDropdown<PaymentMethod>
@@ -266,28 +297,42 @@ export default function PaymentLinkScreen(): JSX.Element {
             </div>
           ) : (
             <>
-              <div className="flex w-full items-center justify-center">
-                <div className="w-48 py-3">
-                  <QrBasic data={paymentIdentifier} />
+              <StyledCollapsible
+                full
+                titleContent={
+                  <div className="flex flex-row justify-between gap-2 items-center">
+                    <div className="flex flex-col items-start text-left">
+                      <div className="font-bold leading-none">
+                        {translate('screens/payment', 'Additional information')}
+                      </div>
+                    </div>
+                  </div>
+                }
+              >
+                <div className="flex w-full items-center justify-center">
+                  <div className="w-48 py-3">
+                    <QrBasic data={paymentIdentifier} />
+                  </div>
                 </div>
-              </div>
-              <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                  <p className="font-semibold">{translate('screens/payment', 'Pending').toUpperCase()}</p>
-                </StyledDataTableRow>
-                <StyledDataTableRow label={paymentIdentifierLabelMap[paymentIdentifier] ?? 'URI'}>
-                  <p>{blankedAddress(paymentIdentifier, { width })}</p>
-                  <CopyButton onCopy={() => copy(paymentIdentifier)} />
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/payment', 'Name')}>
-                  <div>{JSON.parse(payRequest.metadata)[0][1]}</div>
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                  <p>
-                    {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
-                  </p>
-                </StyledDataTableRow>
-              </StyledDataTable>
+                <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                  <StyledDataTableRow label={translate('screens/payment', 'State')}>
+                    <p className="font-semibold">{translate('screens/payment', 'Pending').toUpperCase()}</p>
+                  </StyledDataTableRow>
+                  <StyledDataTableRow label={paymentIdentifierLabelMap[paymentIdentifier] ?? 'URI'}>
+                    <p>{blankedAddress(paymentIdentifier, { width })}</p>
+                    <CopyButton onCopy={() => copy(paymentIdentifier)} />
+                  </StyledDataTableRow>
+                  <StyledDataTableRow label={translate('screens/payment', 'Name')}>
+                    <div>{JSON.parse(payRequest.metadata)[0][1]}</div>
+                  </StyledDataTableRow>
+                  <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
+                    <p>
+                      {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
+                    </p>
+                  </StyledDataTableRow>
+                </StyledDataTable>
+              </StyledCollapsible>
+              <CompatibleWallets />
             </>
           )}
         </StyledVerticalStack>
@@ -306,3 +351,31 @@ const PaymentErrorHint = ({ message }: { message: string }): JSX.Element => {
     <ErrorHint message={message} />
   );
 };
+
+function CompatibleWallets(): JSX.Element {
+  return (
+    <div className="flex flex-col w-full gap-3 px-5">
+      <p className="text-base pt-3 pb-3 text-dfxGray-700">
+        Scan the QR-Code with a compatible wallet to complete the payment.
+      </p>
+      <div className="flex flex-row justify-center gap-4">
+        {compatibleWallets.map((wallet) => (
+          <div
+            key={wallet.name}
+            className="flex flex-col items-center gap-1.5 cursor-pointer"
+            onClick={() => window.open(wallet.websiteUrl)}
+          >
+            <img
+              className="border border-dfxGray-400 shadow-md bg-white rounded-md overflow-clip"
+              src={wallet.iconUrl}
+              alt={wallet.name}
+              width="80"
+              height="80"
+            />
+            <p className="text-center text-xs font-semibold text-dfxGray-600 w-[80px]">{wallet.name}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
