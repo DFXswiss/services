@@ -300,11 +300,12 @@ export default function PaymentLinkScreen(): JSX.Element {
               <StyledCollapsible
                 full
                 titleContent={
-                  <div className="flex flex-row justify-between gap-2 items-center">
+                  <div className="flex flex-col items-start text-left">
                     <div className="flex flex-col items-start text-left">
-                      <div className="font-bold leading-none">
-                        {translate('screens/payment', 'Additional information')}
-                      </div>
+                      <div className="font-bold leading-none">{translate('screens/payment', 'Payment details')}</div>
+                    </div>
+                    <div className="leading-none mt-1 text-dfxGray-700">
+                      {`${translate('screens/payment', 'Your payment details at a glance')}`}
                     </div>
                   </div>
                 }

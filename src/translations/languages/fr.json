@@ -458,6 +458,8 @@
     "Activate": "Activer",
     "Deactivate": "Désactiver",
 
+    "Payment details": "Détails du paiement",
+    "Your payment details at a glance": "Vos détails de paiement en un coup d'œil",
     "{{blockchain}} address": "Adresse {{blockchain}}",
     "Pay with FrankencoinPay, Bitcoin Lightning LNURL": "Payer avec FrankencoinPay, Bitcoin Lightning LNURL",
     "Pay with a Bolt 11 Invoice": "Payer avec une facture Bolt 11",
