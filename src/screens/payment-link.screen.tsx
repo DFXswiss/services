@@ -20,7 +20,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress } from 'src/util/utils';
+import { blankedAddress, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 const noPaymentErrorMessage = 'No pending payment found';
@@ -159,19 +159,20 @@ export default function PaymentLinkScreen(): JSX.Element {
         setPaymentIdentifier(lightningParam);
         break;
       case 'Bitcoin Lightning':
-        // TODO: Use Utils.url
-        callback = `${payRequest.callback}/?amount=${payRequest.minSendable}`;
+        callback = url(payRequest.callback, new URLSearchParams({ amount: payRequest.minSendable.toString() }));
         callback !== callbackUrl && setCallbackUrl(callback);
         break;
       default:
-        // TODO: Properly check for the respective Blockhains
         const assets = payRequest.transferAmounts.find((item) => item.method === selectedPaymentMethod.id)?.assets;
         const asset = assets?.find((item) => item.asset === selectedEthereumUriAsset)?.asset ?? assets?.[0]?.asset;
         if (!asset) {
           setError('No asset found for this payment method');
           return;
         }
-        callback = `${payRequest.callback}/?quote=${payRequest.quote.id}&method=${selectedPaymentMethod.id}&asset=${asset}`;
+        callback = url(
+          payRequest.callback,
+          new URLSearchParams({ quote: payRequest.quote.id, method: selectedPaymentMethod.id, asset }),
+        );
         callback !== callbackUrl && setCallbackUrl(callback);
         asset !== selectedEthereumUriAsset && setValue('asset', asset);
         break;
