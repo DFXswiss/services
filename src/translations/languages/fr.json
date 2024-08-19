@@ -457,9 +457,10 @@
     "Activate": "Activer",
     "Deactivate": "Désactiver",
 
+    "{{blockchain}} address": "Adresse {{blockchain}}",
     "Pay with FrankencoinPay, Bitcoin Lightning LNURL": "Payer avec FrankencoinPay, Bitcoin Lightning LNURL",
     "Pay with a Bolt 11 Invoice": "Payer avec une facture Bolt 11",
-    "Pay with a standard Ethereum Wallet": "Payer avec un portefeuille Ethereum standard",
+    "Pay to a {{blockchain}} Blockchain address": "Payer à une adresse blockchain {{blockchain}}",
     "You have no payment routes yet": "Vous n'avez pas encore d'itinéraires de paiement",
 
     "Cointracking": "Cointracking",

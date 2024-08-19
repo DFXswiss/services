@@ -31,13 +31,9 @@ interface FormData {
 }
 
 interface PaymentMethod {
+  id: string;
   label: string;
   description: string;
-}
-
-interface PaymentResponse {
-  paymentIdentifier: string;
-  paymentIdentifierLabel: string;
 }
 
 interface Quote {
@@ -70,22 +66,27 @@ export interface PaymentLinkPayRequest {
 
 const paymentMethods: PaymentMethod[] = [
   {
+    id: 'OpenCryptoPay.io',
     label: 'OpenCryptoPay.io',
     description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
   },
   {
+    id: 'FrankencoinPay.com',
     label: 'FrankencoinPay.com',
     description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
   },
   {
+    id: 'Bitcoin Lightning',
     label: 'Bitcoin Lightning',
     description: 'Pay with a Bolt 11 Invoice',
   },
-  {
-    label: 'Ethereum URI',
-    description: 'Pay with a standard Ethereum Wallet',
-  },
 ];
+
+const paymentIdentifierLabelMap: Record<string, string> = {
+  'OpenCryptoPay.io': 'LNURL',
+  'FrankencoinPay.com': 'LNURL',
+  'Bitcoin Lightning': 'LNR',
+};
 
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -93,8 +94,9 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { width } = useWindowContext();
   const [urlParams, setUrlParams] = useSearchParams();
 
-  const [paymentLinkPayRequest, setPaymentLinkPayRequest] = useState<PaymentLinkPayRequest>();
-  const [genericPaymentResponse, setGenericPaymentResponse] = useState<PaymentResponse>();
+  const [callbackUrl, setCallbackUrl] = useState<string>();
+  const [payRequest, setPayRequest] = useState<PaymentLinkPayRequest>();
+  const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
 
@@ -106,6 +108,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const {
     control,
     setValue,
+    resetField,
     formState: { errors },
   } = useForm<FormData>({
     mode: 'onTouched',
@@ -142,59 +145,57 @@ export default function PaymentLinkScreen(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (!paymentLinkPayRequest || !lightningParam) return;
+    resetField('asset');
+  }, [selectedPaymentMethod]);
 
-    setGenericPaymentResponse(undefined);
-    switch (selectedPaymentMethod.label) {
+  useEffect(() => {
+    if (!payRequest || !lightningParam) return;
+
+    let callback: string;
+    setPaymentIdentifier(undefined);
+    switch (selectedPaymentMethod.id) {
       case 'OpenCryptoPay.io':
       case 'FrankencoinPay.com':
-        setGenericPaymentResponse({
-          paymentIdentifier: lightningParam,
-          paymentIdentifierLabel: 'LNURL',
-        });
+        setPaymentIdentifier(lightningParam);
         break;
       case 'Bitcoin Lightning':
-        setIsLoading(true);
-        const callbackWithMinSendable = `${paymentLinkPayRequest.callback}/?amount=${paymentLinkPayRequest.minSendable}`;
-        fetchDataApi(callbackWithMinSendable)
-          .then((data) => {
-            data &&
-              setGenericPaymentResponse({
-                paymentIdentifier: data.pr,
-                paymentIdentifierLabel: 'LNR',
-              });
-          })
-          .finally(() => {
-            setIsLoading(false);
-          });
+        // TODO: Use Utils.url
+        callback = `${payRequest.callback}/?amount=${payRequest.minSendable}`;
+        callback !== callbackUrl && setCallbackUrl(callback);
         break;
-      case 'Ethereum URI':
-        setIsLoading(true);
-        const callbackWithParams = `${paymentLinkPayRequest.callback}/?quote=${paymentLinkPayRequest.quote.id}&method=Ethereum&asset=${selectedEthereumUriAsset}`;
-        fetchDataApi(callbackWithParams)
-          .then((data) => {
-            data &&
-              setGenericPaymentResponse({
-                paymentIdentifier: data.uri,
-                paymentIdentifierLabel: 'URI',
-              });
-          })
-          .finally(() => {
-            setIsLoading(false);
-          });
+      default:
+        // TODO: Properly check for the respective Blockhains
+        const assets = payRequest.transferAmounts.find((item) => item.method === selectedPaymentMethod.id)?.assets;
+        const asset = assets?.find((item) => item.asset === selectedEthereumUriAsset)?.asset ?? assets?.[0]?.asset;
+        if (!asset) {
+          setError('No asset found for this payment method');
+          return;
+        }
+        callback = `${payRequest.callback}/?quote=${payRequest.quote.id}&method=${selectedPaymentMethod.id}&asset=${asset}`;
+        callback !== callbackUrl && setCallbackUrl(callback);
+        asset !== selectedEthereumUriAsset && setValue('asset', asset);
         break;
     }
-  }, [paymentLinkPayRequest, selectedPaymentMethod, selectedEthereumUriAsset]);
+  }, [payRequest, selectedPaymentMethod, selectedEthereumUriAsset]);
+
+  useEffect(() => {
+    if (!callbackUrl) return;
+
+    setIsLoading(true);
+    fetchDataApi(callbackUrl)
+      .then((data) => {
+        data && setPaymentIdentifier(data.uri ?? data.pr);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [callbackUrl]);
 
   async function fetchInitial(url: string) {
     fetchDataApi(url, true)
       .then((data: PaymentLinkPayRequest) => {
         setError(undefined);
-        setPaymentLinkPayRequest(data);
-        setValue(
-          'asset',
-          data?.transferAmounts.find((item) => item.method === Blockchain.ETHEREUM)?.assets[0].asset ?? '',
-        );
+        setPayRequest(data);
       })
       .catch((e) => {
         if (e.message === noPaymentErrorMessage) setTimeout(() => fetchInitial(url), 1000);
@@ -214,11 +215,13 @@ export default function PaymentLinkScreen(): JSX.Element {
     return data;
   }
 
+  const assetsList = payRequest?.transferAmounts.find((item) => item.method === selectedPaymentMethod.id)?.assets;
+
   return (
     <Layout backButton={false}>
       {error ? (
         <PaymentErrorHint message={error} />
-      ) : !paymentLinkPayRequest || !genericPaymentResponse ? (
+      ) : !payRequest ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center>
@@ -226,32 +229,37 @@ export default function PaymentLinkScreen(): JSX.Element {
             <StyledVerticalStack full gap={4} center>
               <StyledDropdown<PaymentMethod>
                 name="paymentMethod"
-                placeholder={translate('screens/payment', 'Payment method')}
-                items={paymentMethods}
-                labelFunc={(item) => item.label}
+                items={[
+                  ...paymentMethods,
+                  ...payRequest.transferAmounts.map((item) => ({
+                    id: item.method,
+                    label: translate('screens/payment', '{{blockchain}} address', {
+                      blockchain: item.method,
+                    }),
+                    description: translate('screens/payment', 'Pay to a {{blockchain}} Blockchain address', {
+                      blockchain: item.method,
+                    }),
+                  })),
+                ]}
+                labelFunc={(item) => translate('screens/payment', item.label)}
                 descriptionFunc={(item) => translate('screens/payment', item.description)}
                 full
                 smallLabel
               />
 
-              {selectedPaymentMethod.label === 'Ethereum URI' && (
+              {assetsList && (
                 <StyledDropdown<string>
                   name="asset"
-                  placeholder={translate('screens/payment', 'Payment method')}
-                  items={
-                    paymentLinkPayRequest.transferAmounts
-                      .find((item) => item.method === Blockchain.ETHEREUM)
-                      ?.assets.map((item) => item.asset) ?? []
-                  }
+                  items={assetsList?.map((item) => item.asset) ?? []}
                   labelFunc={(item) => item}
-                  descriptionFunc={() => Blockchain.ETHEREUM}
+                  descriptionFunc={() => selectedPaymentMethod.id ?? ''}
                   full
                   smallLabel
                 />
               )}
             </StyledVerticalStack>
           </Form>
-          {isLoading ? (
+          {isLoading || !paymentIdentifier ? (
             <div className="mt-4">
               <StyledLoadingSpinner size={SpinnerSize.LG} />
             </div>
@@ -259,7 +267,7 @@ export default function PaymentLinkScreen(): JSX.Element {
             <>
               <div className="flex w-full items-center justify-center">
                 <div className="w-48 py-3">
-                  <QrCopy data={genericPaymentResponse.paymentIdentifier} />
+                  <QrCopy data={paymentIdentifier} />
                   <p className="text-center rounded-sm font-semibold bg-dfxGray-300 text-dfxBlue-800 mt-1">
                     {translate('screens/payment', 'Payment Link')}
                   </p>
@@ -269,16 +277,16 @@ export default function PaymentLinkScreen(): JSX.Element {
                 <StyledDataTableRow label={translate('screens/payment', 'State')}>
                   <p className="font-semibold">{translate('screens/payment', 'Pending').toUpperCase()}</p>
                 </StyledDataTableRow>
-                <StyledDataTableRow label={genericPaymentResponse.paymentIdentifierLabel}>
-                  <p>{blankedAddress(genericPaymentResponse.paymentIdentifier, { width })}</p>
-                  <CopyButton onCopy={() => copy(genericPaymentResponse.paymentIdentifier)} />
+                <StyledDataTableRow label={paymentIdentifierLabelMap[paymentIdentifier] ?? 'URI'}>
+                  <p>{blankedAddress(paymentIdentifier, { width })}</p>
+                  <CopyButton onCopy={() => copy(paymentIdentifier)} />
                 </StyledDataTableRow>
                 <StyledDataTableRow label={translate('screens/payment', 'Name')}>
-                  <div>{JSON.parse(paymentLinkPayRequest.metadata)[0][1]}</div>
+                  <div>{JSON.parse(payRequest.metadata)[0][1]}</div>
                 </StyledDataTableRow>
                 <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
                   <p>
-                    {paymentLinkPayRequest.requestedAmount.amount} {paymentLinkPayRequest.requestedAmount.asset}
+                    {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
                   </p>
                 </StyledDataTableRow>
               </StyledDataTable>
