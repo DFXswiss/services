@@ -264,15 +264,17 @@ export default function PaymentLinkScreen(): JSX.Element {
                 name="paymentMethod"
                 items={[
                   ...paymentMethods,
-                  ...payRequest.transferAmounts.map((item) => ({
-                    id: item.method,
-                    label: translate('screens/payment', '{{blockchain}} address', {
-                      blockchain: item.method,
-                    }),
-                    description: translate('screens/payment', 'Pay to a {{blockchain}} Blockchain address', {
-                      blockchain: item.method,
-                    }),
-                  })),
+                  ...payRequest.transferAmounts
+                    .filter((item) => item.method !== 'Lightning')
+                    .map((item) => ({
+                      id: item.method,
+                      label: translate('screens/payment', '{{blockchain}} address', {
+                        blockchain: item.method,
+                      }),
+                      description: translate('screens/payment', 'Pay to a {{blockchain}} Blockchain address', {
+                        blockchain: item.method,
+                      }),
+                    })),
                 ]}
                 labelFunc={(item) => translate('screens/payment', item.label)}
                 descriptionFunc={(item) => translate('screens/payment', item.description)}
