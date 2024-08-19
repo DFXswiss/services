@@ -45,6 +45,10 @@ const paymentMethods: PaymentMethod[] = [
     description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
   },
   {
+    label: 'FrankencoinPay.com',
+    description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
+  },
+  {
     label: 'Bitcoin Lightning',
     description: 'Pay with a Bolt 11 Invoice',
   },
@@ -110,6 +114,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     if (!paymentLinkPayRequest || !lightningParam) return;
     switch (selectedPaymentMethod.label) {
       case 'OpenCryptoPay.io':
+      case 'FrankencoinPay.com':
         setGenericPaymentResponse({
           paymentIdentifier: lightningParam,
           paymentIdentifierLabel: 'LNURL',
