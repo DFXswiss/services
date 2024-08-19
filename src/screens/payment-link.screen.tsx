@@ -250,9 +250,10 @@ export default function PaymentLinkScreen(): JSX.Element {
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center>
-          <div className="flex flex-col w-full justify-center">
-            <p className="text-dfxGray-700 font-semibold text-base">{payRequest.displayName}</p>
-            <p className="text-xl pt-4 pb-3 font-bold text-dfxBlue-800">
+          <div className="flex flex-col w-full gap-3 pb-2.5 justify-center">
+            <p className="text-dfxGray-700 font-bold text-xl">{payRequest.displayName}</p>
+            <div className="w-full h-[1px] bg-gradient-to-r bg-dfxGray-500 from-white via-dfxGray-500 to-white" />
+            <p className="text-[22px] font-bold text-dfxBlue-800">
               {payRequest.requestedAmount.asset}{' '}
               {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
             </p>
@@ -299,6 +300,7 @@ export default function PaymentLinkScreen(): JSX.Element {
             <>
               <StyledCollapsible
                 full
+                isExpanded={true}
                 titleContent={
                   <div className="flex flex-col items-start text-left">
                     <div className="flex flex-col items-start text-left">
