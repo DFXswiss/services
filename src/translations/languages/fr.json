@@ -465,6 +465,7 @@
     "Pay with a Bolt 11 Invoice": "Payer avec une facture Bolt 11",
     "Pay to a {{blockchain}} Blockchain address": "Payer à une adresse blockchain {{blockchain}}",
     "You have no payment routes yet": "Vous n'avez pas encore d'itinéraires de paiement",
+    "Scan the QR-Code with a compatible wallet to complete the payment.": "Scannez le code QR avec un portefeuille compatible pour finaliser le paiement.",
 
     "Cointracking": "Cointracking",
     "Saved": "Enregistré",

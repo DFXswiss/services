@@ -358,10 +358,12 @@ const PaymentErrorHint = ({ message }: { message: string }): JSX.Element => {
 };
 
 function CompatibleWallets(): JSX.Element {
+  const { translate } = useSettingsContext();
+
   return (
     <div className="flex flex-col w-full gap-3 px-5">
       <p className="text-base pt-3 pb-3 text-dfxGray-700">
-        Scan the QR-Code with a compatible wallet to complete the payment.
+        {translate('screens/payment', 'Scan the QR-Code with a compatible wallet to complete the payment.')}
       </p>
       <div className="flex flex-row justify-center gap-4 flex-wrap">
         {compatibleWallets.map((wallet) => (
