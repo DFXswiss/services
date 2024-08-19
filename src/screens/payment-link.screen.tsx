@@ -144,6 +144,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   useEffect(() => {
     if (!paymentLinkPayRequest || !lightningParam) return;
 
+    setGenericPaymentResponse(undefined);
     switch (selectedPaymentMethod.label) {
       case 'OpenCryptoPay.io':
       case 'FrankencoinPay.com':
@@ -157,10 +158,11 @@ export default function PaymentLinkScreen(): JSX.Element {
         const callbackWithMinSendable = `${paymentLinkPayRequest.callback}/?amount=${paymentLinkPayRequest.minSendable}`;
         fetchDataApi(callbackWithMinSendable)
           .then((data) => {
-            setGenericPaymentResponse({
-              paymentIdentifier: data.pr,
-              paymentIdentifierLabel: 'LNR',
-            });
+            data &&
+              setGenericPaymentResponse({
+                paymentIdentifier: data.pr,
+                paymentIdentifierLabel: 'LNR',
+              });
           })
           .finally(() => {
             setIsLoading(false);
@@ -171,10 +173,11 @@ export default function PaymentLinkScreen(): JSX.Element {
         const callbackWithParams = `${paymentLinkPayRequest.callback}/?quote=${paymentLinkPayRequest.quote.id}&method=Ethereum&asset=${selectedEthereumUriAsset}`;
         fetchDataApi(callbackWithParams)
           .then((data) => {
-            setGenericPaymentResponse({
-              paymentIdentifier: data.uri,
-              paymentIdentifierLabel: 'URI',
-            });
+            data &&
+              setGenericPaymentResponse({
+                paymentIdentifier: data.uri,
+                paymentIdentifierLabel: 'URI',
+              });
           })
           .finally(() => {
             setIsLoading(false);
@@ -204,6 +207,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     if (data.error) {
       setError((data as ApiError).message ?? 'Unknown error');
       if (rethrow) throw data;
+      return undefined;
     }
 
     setError(undefined);
