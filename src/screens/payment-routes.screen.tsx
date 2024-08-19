@@ -16,6 +16,7 @@ import {
 } from '@dfx.swiss/react';
 import {
   AlignContent,
+  CopyButton,
   Form,
   IconVariant,
   SpinnerSize,
@@ -36,7 +37,7 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Layout } from 'src/components/layout';
-import { QrCopy } from 'src/components/payment/qr-copy';
+import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
@@ -279,10 +280,7 @@ export default function PaymentRoutes(): JSX.Element {
                       <StyledVerticalStack full gap={4}>
                         <div className="flex w-full items-center justify-center">
                           <div className="w-48 py-3">
-                            <QrCopy data={Lnurl.prependLnurl(link.lnurl)} />
-                            <p className="text-center rounded-sm font-semibold bg-dfxGray-300 mt-1">
-                              {translate('screens/payment', 'Payment Link')}
-                            </p>
+                            <QrBasic data={Lnurl.prependLnurl(link.lnurl)} />
                           </div>
                         </div>
                         <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
@@ -299,6 +297,10 @@ export default function PaymentRoutes(): JSX.Element {
                           </StyledDataTableRow>
                           <StyledDataTableRow label={translate('screens/payment', 'State')}>
                             <p>{translate('screens/payment', link.status)}</p>
+                          </StyledDataTableRow>
+                          <StyledDataTableRow label={translate('screens/payment', 'Link')}>
+                            <p>{blankedAddress(Lnurl.prependLnurl(link.lnurl), { width })}</p>
+                            <CopyButton onCopy={() => copy(Lnurl.prependLnurl(link.lnurl))} />
                           </StyledDataTableRow>
                           <StyledDataTableRow label={translate('screens/payment', 'LNURL')}>
                             <p>{blankedAddress(link.lnurl, { width })}</p>

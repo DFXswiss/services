@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
-import { QrCopy } from 'src/components/payment/qr-copy';
+import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -268,10 +268,7 @@ export default function PaymentLinkScreen(): JSX.Element {
             <>
               <div className="flex w-full items-center justify-center">
                 <div className="w-48 py-3">
-                  <QrCopy data={paymentIdentifier} />
-                  <p className="text-center rounded-sm font-semibold bg-dfxGray-300 text-dfxBlue-800 mt-1">
-                    {translate('screens/payment', 'Payment Link')}
-                  </p>
+                  <QrBasic data={paymentIdentifier} />
                 </div>
               </div>
               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
