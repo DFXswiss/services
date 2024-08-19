@@ -1,4 +1,4 @@
-import { ApiError, Blockchain, PaymentLinkPayRequest } from '@dfx.swiss/react';
+import { ApiError, Blockchain } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -27,6 +27,7 @@ const noPaymentErrorMessage = 'No pending payment found';
 
 interface FormData {
   paymentMethod: PaymentMethod;
+  asset: string;
 }
 
 interface PaymentMethod {
@@ -37,6 +38,34 @@ interface PaymentMethod {
 interface PaymentResponse {
   paymentIdentifier: string;
   paymentIdentifierLabel: string;
+}
+
+interface Quote {
+  id: string;
+  expiration: Date;
+}
+
+interface Amount {
+  asset: string;
+  amount: number;
+}
+
+export type TransferMethod = Blockchain;
+export interface TransferInfo {
+  method: TransferMethod;
+  minFee: number;
+  assets: Amount[];
+}
+export interface PaymentLinkPayRequest {
+  tag: string;
+  callback: string;
+  minSendable: number;
+  maxSendable: number;
+  metadata: string;
+  displayName: string;
+  quote: Quote;
+  requestedAmount: Amount;
+  transferAmounts: TransferInfo[];
 }
 
 const paymentMethods: PaymentMethod[] = [
@@ -76,6 +105,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   const {
     control,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     mode: 'onTouched',
@@ -83,6 +113,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   });
 
   const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
+  const selectedEthereumUriAsset = useWatch({ control, name: 'asset' });
 
   useEffect(() => {
     const param = urlParams.get('lightning') || lightningParam;
@@ -112,6 +143,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   useEffect(() => {
     if (!paymentLinkPayRequest || !lightningParam) return;
+
     switch (selectedPaymentMethod.label) {
       case 'OpenCryptoPay.io':
       case 'FrankencoinPay.com':
@@ -136,10 +168,7 @@ export default function PaymentLinkScreen(): JSX.Element {
         break;
       case 'Ethereum URI':
         setIsLoading(true);
-        const ethTransferAmount = paymentLinkPayRequest.transferAmounts.find(
-          (item) => item.method === Blockchain.ETHEREUM,
-        );
-        const callbackWithParams = `${paymentLinkPayRequest.callback}/?amount=${ethTransferAmount?.amount}&asset=${ethTransferAmount?.asset}&method=${ethTransferAmount?.method}`;
+        const callbackWithParams = `${paymentLinkPayRequest.callback}/?quote=${paymentLinkPayRequest.quote.id}&method=Ethereum&asset=${selectedEthereumUriAsset}`;
         fetchDataApi(callbackWithParams)
           .then((data) => {
             setGenericPaymentResponse({
@@ -152,13 +181,17 @@ export default function PaymentLinkScreen(): JSX.Element {
           });
         break;
     }
-  }, [paymentLinkPayRequest, selectedPaymentMethod]);
+  }, [paymentLinkPayRequest, selectedPaymentMethod, selectedEthereumUriAsset]);
 
   async function fetchInitial(url: string) {
     fetchDataApi(url, true)
-      .then((data) => {
+      .then((data: PaymentLinkPayRequest) => {
         setError(undefined);
         setPaymentLinkPayRequest(data);
+        setValue(
+          'asset',
+          data?.transferAmounts.find((item) => item.method === Blockchain.ETHEREUM)?.assets[0].asset ?? '',
+        );
       })
       .catch((e) => {
         if (e.message === noPaymentErrorMessage) setTimeout(() => fetchInitial(url), 1000);
@@ -177,16 +210,6 @@ export default function PaymentLinkScreen(): JSX.Element {
     return data;
   }
 
-  const filteredTransferAmounts = paymentLinkPayRequest?.transferAmounts
-    .filter(
-      (item) =>
-        (item.method === 'Lightning' && item.asset === 'BTC') || (item.method === 'Ethereum' && item.asset === 'ZCHF'),
-    )
-    .map((item) => ({
-      ...item,
-      method: item.method === 'Ethereum' ? 'EVM' : item.method,
-    }));
-
   return (
     <Layout backButton={false}>
       {error ? (
@@ -196,16 +219,33 @@ export default function PaymentLinkScreen(): JSX.Element {
       ) : (
         <StyledVerticalStack full gap={4} center>
           <Form control={control} errors={errors}>
-            <StyledDropdown<PaymentMethod>
-              name="paymentMethod"
-              label={translate('screens/payment', 'Payment method')}
-              placeholder={translate('screens/payment', 'Payment method')}
-              items={paymentMethods}
-              labelFunc={(item) => item.label}
-              descriptionFunc={(item) => translate('screens/payment', item.description)}
-              full
-              smallLabel
-            />
+            <StyledVerticalStack full gap={4} center>
+              <StyledDropdown<PaymentMethod>
+                name="paymentMethod"
+                placeholder={translate('screens/payment', 'Payment method')}
+                items={paymentMethods}
+                labelFunc={(item) => item.label}
+                descriptionFunc={(item) => translate('screens/payment', item.description)}
+                full
+                smallLabel
+              />
+
+              {selectedPaymentMethod.label === 'Ethereum URI' && (
+                <StyledDropdown<string>
+                  name="asset"
+                  placeholder={translate('screens/payment', 'Payment method')}
+                  items={
+                    paymentLinkPayRequest.transferAmounts
+                      .find((item) => item.method === Blockchain.ETHEREUM)
+                      ?.assets.map((item) => item.asset) ?? []
+                  }
+                  labelFunc={(item) => item}
+                  descriptionFunc={() => Blockchain.ETHEREUM}
+                  full
+                  smallLabel
+                />
+              )}
+            </StyledVerticalStack>
           </Form>
           {isLoading ? (
             <div className="mt-4">
@@ -232,16 +272,11 @@ export default function PaymentLinkScreen(): JSX.Element {
                 <StyledDataTableRow label={translate('screens/payment', 'Name')}>
                   <div>{JSON.parse(paymentLinkPayRequest.metadata)[0][1]}</div>
                 </StyledDataTableRow>
-                {(filteredTransferAmounts && filteredTransferAmounts.length > 0
-                  ? filteredTransferAmounts
-                  : paymentLinkPayRequest.transferAmounts
-                ).map((item, index) => (
-                  <StyledDataTableRow key={index} label={item.method}>
-                    <p>
-                      {item.amount} {item.asset}
-                    </p>
-                  </StyledDataTableRow>
-                ))}
+                <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
+                  <p>
+                    {paymentLinkPayRequest.requestedAmount.amount} {paymentLinkPayRequest.requestedAmount.asset}
+                  </p>
+                </StyledDataTableRow>
               </StyledDataTable>
             </>
           )}
