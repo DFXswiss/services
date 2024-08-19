@@ -337,7 +337,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                   </StyledDataTableRow>
                 </StyledDataTable>
               </StyledCollapsible>
-              <CompatibleWallets />
+              {['OpenCryptoPay.io', 'FrankencoinPay.com'].includes(selectedPaymentMethod.id) && <CompatibleWallets />}
             </>
           )}
         </StyledVerticalStack>
