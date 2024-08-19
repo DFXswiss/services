@@ -15,7 +15,11 @@ export function QrCopy({ data }: QrCopyProps): JSX.Element {
       >
         <CopyButton onCopy={() => copy(data)} />
       </div>
-      <QRCode className="mx-auto h-auto w-full max-w-[15rem]" value={data} fgColor={'#072440'} />
+      <QrBasic data={data} />
     </div>
   );
+}
+
+export function QrBasic({ data }: QrCopyProps): JSX.Element {
+  return <QRCode className="mx-auto h-auto w-full max-w-[15rem] rounded-sm" value={data} fgColor={'#072440'} />;
 }
