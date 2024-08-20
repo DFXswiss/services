@@ -250,11 +250,11 @@ export default function PaymentLinkScreen(): JSX.Element {
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center>
-          <div className="flex flex-col w-full gap-3 pb-2.5 justify-center">
-            <p className="text-dfxGray-700 font-bold text-xl">{payRequest.displayName}</p>
+          <div className="flex flex-col w-full gap-6 py-8 justify-center">
+            <p className="text-dfxBlue-800 font-bold text-xl">{payRequest.displayName}</p>
             <div className="w-full h-[1px] bg-gradient-to-r bg-dfxGray-500 from-white via-dfxGray-500 to-white" />
-            <p className="text-[22px] font-bold text-dfxBlue-800">
-              {payRequest.requestedAmount.asset}{' '}
+            <p className="text-xl font-bold text-dfxBlue-800">
+              <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
               {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
             </p>
           </div>
@@ -302,20 +302,19 @@ export default function PaymentLinkScreen(): JSX.Element {
             <>
               <StyledCollapsible
                 full
-                isExpanded={true}
                 titleContent={
-                  <div className="flex flex-col items-start text-left">
+                  <div className="flex flex-col items-start gap-1.5 text-left">
                     <div className="flex flex-col items-start text-left">
                       <div className="font-bold leading-none">{translate('screens/payment', 'Payment details')}</div>
                     </div>
-                    <div className="leading-none mt-1 text-dfxGray-700">
+                    <div className="leading-none text-dfxGray-800 text-xs">
                       {`${translate('screens/payment', 'Your payment details at a glance')}`}
                     </div>
                   </div>
                 }
               >
                 <div className="flex w-full items-center justify-center">
-                  <div className="w-48 py-3">
+                  <div className="w-48 pt-3 pb-7">
                     <QrBasic data={paymentIdentifier} />
                   </div>
                 </div>
@@ -365,21 +364,21 @@ function CompatibleWallets(): JSX.Element {
       <p className="text-base pt-3 pb-3 text-dfxGray-700">
         {translate('screens/payment', 'Scan the QR-Code with a compatible wallet to complete the payment.')}
       </p>
-      <div className="flex flex-row justify-center gap-4 flex-wrap">
+      <div className="flex flex-row justify-center gap-4 flex-nowrap">
         {compatibleWallets.map((wallet) => (
           <div
             key={wallet.name}
-            className="flex flex-col items-center gap-1.5 cursor-pointer"
+            className="flex flex-col items-center gap-2 cursor-pointer"
             onClick={() => window.open(wallet.websiteUrl)}
+            style={{ flex: '1 1 0', maxWidth: '120px', minWidth: '0' }}
           >
             <img
               className="border border-dfxGray-400 shadow-md bg-white rounded-md overflow-clip"
               src={wallet.iconUrl}
               alt={wallet.name}
-              width="80"
-              height="80"
+              style={{ width: '100%', height: 'auto' }}
             />
-            <p className="text-center text-xs font-semibold text-dfxGray-600 w-[80px]">{wallet.name}</p>
+            <p className="text-center font-semibold text-dfxGray-600 w-full text-2xs sm:text-xs">{wallet.name}</p>
           </div>
         ))}
       </div>
