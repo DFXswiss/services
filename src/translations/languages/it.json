@@ -440,6 +440,7 @@
     "Purpose of payment": "Scopo del pagamento",
     "Payment Links": "Payment Links",
     "Payment Link": "Payment Link",
+    "Link": "Link",
     "Payment": "Pagamento",
     "Payment ID": "ID di pagamento",
     "Mode": "Modalità",
@@ -457,10 +458,14 @@
     "Activate": "Attivare",
     "Deactivate": "Disattivare",
 
+    "Payment details": "Dettagli del pagamento",
+    "Your payment details at a glance": "I tuoi dettagli di pagamento a colpo d’occhio",
+    "{{blockchain}} address": "Indirizzo {{blockchain}}",
     "Pay with FrankencoinPay, Bitcoin Lightning LNURL": "Paga con FrankencoinPay, Bitcoin Lightning LNURL",
     "Pay with a Bolt 11 Invoice": "Paga con una fattura Bolt 11",
-    "Pay with a standard Ethereum Wallet": "Paga con un portafoglio Ethereum standard",
+    "Pay to a {{blockchain}} Blockchain address": "Paga a un indirizzo blockchain {{blockchain}}",
     "You have no payment routes yet": "Non hai ancora nessuna modalità di pagamento",
+    "Scan the QR-Code with a compatible wallet to complete the payment.": "Scansiona il codice QR con un portafoglio compatibile per completare il pagamento.",
 
     "Cointracking": "Cointracking",
     "Saved": "Salvato",
