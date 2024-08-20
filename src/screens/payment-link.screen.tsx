@@ -314,7 +314,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                 }
               >
                 <div className="flex w-full items-center justify-center">
-                  <div className="w-48 py-3">
+                  <div className="w-48 pt-3 pb-7">
                     <QrBasic data={paymentIdentifier} />
                   </div>
                 </div>
