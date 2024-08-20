@@ -33,9 +33,10 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { ControlProps } from '@dfx.swiss/react-components/dist/stories/form/Form';
 import copy from 'copy-to-clipboard';
-import { useEffect, useRef, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { forwardRef, useEffect, useRef, useState } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Layout } from 'src/components/layout';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -569,11 +570,10 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
                 labelFunc={(item) => item.name}
               />
 
-              <StyledInput
+              <DateAndTimePicker
                 name="paymentExpiryDate"
-                label={translate('screens/payment', 'Date')}
-                placeholder={new Date().toISOString().split('T')[0]}
-                full
+                label={translate('screens/payment', 'Expires at')}
+                smallLabel
               />
             </>
           )}
@@ -697,12 +697,7 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
             labelFunc={(item) => item.name}
           />
 
-          <StyledInput
-            name="paymentExpiryDate"
-            label={translate('screens/payment', 'Date')}
-            placeholder={new Date().toISOString().split('T')[0]}
-            full
-          />
+          <DateAndTimePicker name="paymentExpiryDate" label={translate('screens/payment', 'Expires at')} smallLabel />
 
           {error && (
             <div>
@@ -723,3 +718,134 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
     </>
   );
 }
+
+interface DateAndTimePickerProps extends ControlProps {
+  label?: string;
+  hideLabel?: boolean;
+  smallLabel?: boolean;
+}
+
+interface DateAndTimePickerContentProps extends DateAndTimePickerProps {
+  onChange: (date: Date) => void;
+  value: Date | null;
+}
+
+const DateAndTimePicker = forwardRef<HTMLDivElement, DateAndTimePickerProps>((props: DateAndTimePickerProps, ref) => {
+  return (
+    <Controller
+      control={props.control}
+      render={({ field: { onChange, value } }) => <Content {...props} onChange={onChange} value={value} />}
+      name={props.name}
+      rules={props.rules}
+    />
+  );
+});
+
+const Content = forwardRef<HTMLInputElement, DateAndTimePickerContentProps>(
+  (
+    {
+      control,
+      name,
+      label,
+      rules,
+      disabled = false,
+      error,
+      hideLabel,
+      smallLabel,
+      onChange,
+      value,
+      ...props
+    }: DateAndTimePickerContentProps,
+    ref,
+  ) => {
+    const [selectedDateTime, setSelectedDateTime] = useState<string>('');
+
+    useEffect(() => {
+      const toLocalISOString = (date: Date) => {
+        const tzoffset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
+        return new Date(date.getTime() - tzoffset).toISOString().slice(0, 19); // Remove the 'Z' at the end
+      };
+
+      if (value) {
+        const localISOTime = toLocalISOString(value);
+        setSelectedDateTime(localISOTime);
+      } else {
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        now.setMinutes(now.getMinutes() + 1);
+        now.setSeconds(0);
+
+        const defaultDateTime = toLocalISOString(now);
+        setSelectedDateTime(defaultDateTime);
+        onChange(now);
+      }
+    }, [value, onChange]);
+
+    const handleDateTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const dateTime = event.target.value;
+      setSelectedDateTime(dateTime);
+
+      const newDate = new Date(dateTime);
+      if (!isNaN(newDate.getTime())) {
+        onChange(newDate);
+      }
+    };
+
+    return (
+      <>
+        <style>
+          {`
+          input::-webkit-datetime-edit-day-field:focus,
+          input::-webkit-datetime-edit-month-field:focus,
+          input::-webkit-datetime-edit-year-field:focus {
+              background-color: #f5516c;
+              color: white;
+              outline: none;
+          }
+
+          input::-webkit-datetime-edit-hour-field:focus,
+          input::-webkit-datetime-edit-minute-field:focus,
+          input::-webkit-datetime-edit-second-field:focus {
+              background-color: #f5516c;
+              color: white;
+              outline: none;
+          }
+
+          .custom-date-input,
+          .custom-time-input {
+            color: #2a4365; /* text-dfxBlue-800 color */
+          }
+
+          .custom-date-input::placeholder,
+          .custom-time-input::placeholder {
+            color: #a0aec0; /* text-dfxGray-600 color */
+          }
+        `}
+        </style>
+        <div {...props} className="flex flex-col gap-4 w-full">
+          <div className="flex flex-row gap-4">
+            <div className="flex-1">
+              {label && (
+                <label
+                  hidden={hideLabel}
+                  className={`text-start ${smallLabel ? 'text-sm' : 'text-base'} font-semibold pl-3 text-dfxBlue-800`}
+                >
+                  {label}
+                </label>
+              )}
+              <div className="h-1" />
+              <input
+                ref={ref}
+                type="datetime-local"
+                value={selectedDateTime}
+                onChange={handleDateTimeChange}
+                step="1"
+                className="custom-date-input text-base font-normal rounded-md p-4 w-full bg-white border border-dfxGray-500 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  },
+);
