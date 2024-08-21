@@ -486,7 +486,7 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
   const walletNames = wallets ?? Object.keys(compatibleWallets);
 
   return (
-    <div className="flex flex-col w-full gap-3 px-5">
+    <div className="flex flex-col w-full gap-4 px-5">
       {header && (
         <div className="flex flex-row items-center gap-2">
           <div className="flex-grow bg-gradient-to-r from-white to-dfxGray-600 h-[1px]" />
