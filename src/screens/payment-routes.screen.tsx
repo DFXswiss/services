@@ -74,6 +74,31 @@ interface RouteIdSelectData {
   description: string;
 }
 
+function formatAddress({
+  street,
+  houseNumber,
+  zip,
+  city,
+  country,
+}: {
+  street?: string;
+  houseNumber?: string;
+  zip?: string;
+  city?: string;
+  country?: string;
+}): string | undefined {
+  const streetAddress = `${street ?? ''} ${houseNumber ?? ''}`.trim();
+  const remainder = [`${zip ?? ''}`.trim(), `${city ?? ''}`.trim(), `${country ?? ''}`.trim()].filter(
+    (part) => part.length > 0,
+  );
+
+  let location = streetAddress;
+  if (streetAddress.length > 0 && remainder.length > 0) location += ', ';
+  location += remainder.join(' ').trim();
+
+  return location.length > 0 ? location : undefined;
+}
+
 export default function PaymentRoutes(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
@@ -276,7 +301,10 @@ export default function PaymentRoutes(): JSX.Element {
           {paymentLinks?.length ? (
             <StyledVerticalStack gap={2} full>
               <h2 className="ml-3.5 mb-1.5 text-dfxGray-700">{translate('screens/payment', 'Payment Links')}</h2>
-              {paymentLinks.map((link) => {
+              {paymentLinks.map((link: any) => {
+                {
+                  /** TODO: add new fields to packages, remove `: any`*/
+                }
                 return (
                   <div key={link.id} ref={(el) => paymentLinkRefs.current && (paymentLinkRefs.current[link.id] = el)}>
                     <StyledCollapsible
@@ -327,6 +355,42 @@ export default function PaymentRoutes(): JSX.Element {
                           <StyledDataTableRow label={translate('screens/payment', 'URL')}>
                             <StyledLink label={formatURL(link.url)} url={link.url} dark />
                           </StyledDataTableRow>
+                          {link.recipient && (
+                            <StyledDataTableExpandableRow
+                              label={translate('screens/payment', 'Recipient')}
+                              expansionItems={[
+                                { label: translate('screens/support', 'Name'), text: link.recipient.name },
+                                {
+                                  label: translate('screens/home', 'Address'),
+                                  text: formatAddress({ ...link.recipient.address }),
+                                },
+                                {
+                                  label: translate('screens/kyc', 'Phone number'),
+                                  text: link.recipient.phone,
+                                },
+                                {
+                                  label: translate('screens/kyc', 'Email address'),
+                                  text: link.recipient.email,
+                                },
+                                {
+                                  label: translate('screens/kyc', 'Website'),
+                                  text: link.recipient.website,
+                                  // open absolute URL in new tab
+                                  onClick: () => {
+                                    const url =
+                                      link.recipient.website.startsWith('http://') ||
+                                      link.recipient.website.startsWith('https://')
+                                        ? link.recipient.website
+                                        : `https://${link.recipient.website}`;
+
+                                    window.open(url, '_blank');
+                                  },
+                                },
+                              ].filter((item) => item.text)}
+                            >
+                              {link.recipient.name && <p>{link.recipient.name}</p>}
+                            </StyledDataTableExpandableRow>
+                          )}
                           {link.payment != null && (
                             <StyledDataTableExpandableRow
                               label={translate('screens/payment', 'Payment')}
@@ -537,21 +601,6 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
       id: route.id.toString(),
       description: `${route.currency.name} / ${route.iban}`,
     };
-  }
-
-  function formatLocation(data: FormData): string | undefined {
-    const streetAddress = `${data.recipientStreet ?? ''} ${data.recipientHouseNumber ?? ''}`.trim();
-    const remainder = [
-      `${data.recipientZip ?? ''}`.trim(),
-      `${data.recipientCity ?? ''}`.trim(),
-      `${data.recipientCountry?.symbol ?? ''}`.trim(),
-    ].filter((part) => part.length > 0);
-
-    let location = streetAddress;
-    if (streetAddress.length > 0 && remainder.length > 0) location += ', ';
-    location += remainder.join(' ').trim();
-
-    return location.length > 0 ? location : undefined;
   }
 
   const rules = Utils.createRules({
@@ -773,7 +822,17 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
                   discreet={!hasRecipientData}
                   expansionItems={[
                     { label: translate('screens/support', 'Name'), text: data.recipientName ?? naString },
-                    { label: translate('screens/home', 'Address'), text: formatLocation(data) ?? naString },
+                    {
+                      label: translate('screens/home', 'Address'),
+                      text:
+                        formatAddress({
+                          street: data.recipientStreet,
+                          houseNumber: data.recipientHouseNumber,
+                          zip: data.recipientZip,
+                          city: data.recipientCity,
+                          country: data.recipientCountry?.name,
+                        }) ?? naString,
+                    },
                     { label: translate('screens/kyc', 'Phone number'), text: data.recipientPhone ?? naString },
                     { label: translate('screens/kyc', 'Email address'), text: data.recipientEmail ?? naString },
                     { label: translate('screens/kyc', 'Website'), text: data.recipientWebsite ?? naString },
