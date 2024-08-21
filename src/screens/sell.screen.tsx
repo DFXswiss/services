@@ -331,7 +331,7 @@ export default function SellScreen(): JSX.Element {
     return () => {
       isRunning = false;
     };
-  }, [useDebounce(validatedData, 700)]);
+  }, [useDebounce(validatedData, 500)]);
 
   function validateSell(sell: Sell): void {
     setCustomAmountError(undefined);

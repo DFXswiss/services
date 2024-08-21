@@ -132,7 +132,9 @@ export default function BuyScreen(): JSX.Element {
   const [validatedData, setValidatedData] = useState<ValidatedData>();
 
   // form
-  const { control, handleSubmit, setValue, resetField } = useForm<FormData>();
+  const { control, handleSubmit, setValue, resetField } = useForm<FormData>({
+    defaultValues: { amount: '100' },
+  });
 
   const selectedAmount = useWatch({ control, name: 'amount' });
   const selectedCurrency = useWatch({ control, name: 'currency' });
@@ -318,7 +320,7 @@ export default function BuyScreen(): JSX.Element {
     return () => {
       isRunning = false;
     };
-  }, [useDebounce(validatedData, 700)]);
+  }, [useDebounce(validatedData, 500)]);
 
   function validateBuy(buy: Buy): void {
     setCustomAmountError(undefined);
