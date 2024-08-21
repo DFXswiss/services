@@ -409,7 +409,7 @@ export default function PaymentRoutes(): JSX.Element {
                                 },
                                 {
                                   label: translate('screens/payment', 'Amount'),
-                                  text: `${link.payment.amount.toString()} ${link.payment.currency.name}`,
+                                  text: `${link.payment.amount.toString()} ${link.payment.currency}`,
                                 },
                                 {
                                   label: translate('screens/payment', 'State'),
@@ -579,9 +579,9 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
           mode: data.paymentMode,
           amount: +data.paymentAmount,
           externalId: data.paymentExternalId,
-          currency: data.paymentCurrency,
+          currency: data.paymentCurrency.name,
           expiryDate: data.paymentExpiryDate,
-        };
+        } as any;
       }
 
       const paymentLink = await createPaymentLink(request);
@@ -948,9 +948,9 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
         mode: data.paymentMode,
         amount: +data.paymentAmount,
         externalId: data.paymentExternalId,
-        currency: data.paymentCurrency,
+        currency: data.paymentCurrency.name,
         expiryDate: data.paymentExpiryDate,
-      };
+      } as any;
 
       await createPaymentLinkPayment(request, +id);
       onDone(id);
