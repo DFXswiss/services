@@ -413,7 +413,7 @@ export default function PaymentLinkScreen(): JSX.Element {
               <StyledCollapsible
                 full
                 titleContent={
-                  <div className="flex flex-col items-start gap-1.5 text-left">
+                  <div className="flex flex-col items-start gap-1.5 text-left -my-1">
                     <div className="flex flex-col items-start text-left">
                       <div className="font-bold leading-none">{translate('screens/payment', 'Payment details')}</div>
                     </div>
@@ -494,7 +494,7 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
           <div className="flex-grow bg-gradient-to-r from-dfxGray-600 to-white h-[1px]" />
         </div>
       )}
-      <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 justify-center">
+      <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 place-items-center gap-4 justify-end">
         {walletNames.map((walletName) => {
           const wallet = compatibleWallets[walletName];
 
