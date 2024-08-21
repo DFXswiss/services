@@ -89,163 +89,138 @@ const paymentIdentifierLabelMap: Record<string, string> = {
   'Bitcoin Lightning': 'LNR',
 };
 
-const compatibleWallets = [
-  {
-    name: 'Alby',
+const compatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: string; recommended?: boolean } } = {
+  Alby: {
     websiteUrl: 'https://getalby.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Alby.webp',
   },
-  {
-    name: 'BareBitcoin',
+  BareBitcoin: {
     websiteUrl: 'https://barebitcoin.no/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BareBitcoin.webp',
   },
-  {
-    name: 'Bipa',
+  Bipa: {
     websiteUrl: 'https://bipa.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bipa.webp',
   },
-  {
-    name: 'BitBanana',
+  BitBanana: {
     websiteUrl: 'https://bitbanana.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BitBanana.webp',
   },
-  {
-    name: 'Bitkit',
+  Bitkit: {
     websiteUrl: 'https://bitkit.to/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bitkit.webp',
   },
-  {
-    name: 'Blixt',
+  Blixt: {
     websiteUrl: 'https://blixtwallet.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blixt.webp',
   },
-  {
-    name: 'BlueWallet',
+  BlueWallet: {
     websiteUrl: 'https://bluewallet.io/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BlueWallet.webp',
   },
-  {
-    name: 'Breez',
+  Breez: {
     websiteUrl: 'https://breez.technology/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Breez.webp',
   },
-  {
-    name: 'BTCPayServer',
+  BTCPayServer: {
     websiteUrl: 'https://btcpayserver.org/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCPayServer.webp',
   },
-  {
-    name: 'Cake Wallet',
+  'Cake Wallet': {
     websiteUrl: 'https://cakewallet.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/4.webp',
+    recommended: true,
   },
-  {
-    name: 'CoinCorner',
+  CoinCorner: {
     websiteUrl: 'https://www.coincorner.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CoinCorner.webp',
   },
-  {
-    name: 'Coinos',
+  Coinos: {
     websiteUrl: 'https://coinos.io/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/coinos.webp',
   },
-  {
-    name: 'Electrum',
+  Electrum: {
     websiteUrl: 'https://electrum.org/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Electrum.webp',
   },
-  {
-    name: 'Fountain',
+  Fountain: {
     websiteUrl: 'https://fountainplatform.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Fountain.webp',
   },
-  {
-    name: 'Frankencoin',
+  Frankencoin: {
     websiteUrl: 'https://frankencoin.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Frankencoin.webp',
+    recommended: true,
   },
-  {
-    name: 'Galoy',
+  Galoy: {
     websiteUrl: 'https://galoy.io/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Galoy.webp',
   },
-  {
-    name: 'Geyser',
+  Geyser: {
     websiteUrl: 'https://geyser.fund/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Geyser.webp',
   },
-  {
-    name: 'LifPay',
+  LifPay: {
     websiteUrl: 'https://lifpay.me/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LifPay.webp',
   },
-  {
-    name: 'LightningTipBot',
+  LightningTipBot: {
     websiteUrl: 'https://github.com/LightningTipBot/LightningTipBot',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LightningTopBot.webp',
   },
-  {
-    name: 'LipaWallet',
+  LipaWallet: {
     websiteUrl: 'https://lipa.swiss/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/lipawallet.webp',
   },
-  {
-    name: 'LNbits',
+  LNbits: {
     websiteUrl: 'https://lnbits.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LNbits.webp',
   },
-  {
-    name: 'Machankura',
+  Machankura: {
     websiteUrl: 'https://8333.mobi/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Machankura.webp',
   },
-  {
-    name: 'Muun',
+  Muun: {
     websiteUrl: 'https://muun.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/muun.webp',
   },
-  {
-    name: 'OneKey',
+  OneKey: {
     websiteUrl: 'https://onekey.so/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/OneKey.webp',
   },
-  {
-    name: 'Phoenix',
+  Phoenix: {
     websiteUrl: 'https://phoenix.acinq.co/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Phoenix.webp',
+    recommended: true,
   },
-  {
-    name: 'PouchPH',
+  PouchPH: {
     websiteUrl: 'https://pouch.ph/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Pouchph.webp',
   },
-  {
-    name: 'River',
+  River: {
     websiteUrl: 'https://river.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/River.webp',
   },
-  {
-    name: 'ShockWallet',
+  ShockWallet: {
     websiteUrl: 'https://shockwallet.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/ShockWallet.webp',
   },
-  {
-    name: 'Wallet of Satoshi',
+  'Wallet of Satoshi': {
     websiteUrl: 'https://www.walletofsatoshi.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/WalletofSatoshi.webp',
+    recommended: true,
   },
-  {
-    name: 'ZEBEDEE',
+  ZEBEDEE: {
     websiteUrl: 'https://zbd.gg/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/ZEBEDEE.webp',
   },
-  {
-    name: 'Zeus',
+  Zeus: {
     websiteUrl: 'https://zeusln.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Zeus.webp',
   },
-];
+};
+
+const recommendedWallets = ['Frankencoin', 'Cake Wallet', 'Wallet of Satoshi', 'Phoenix'];
 
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -471,7 +446,18 @@ export default function PaymentLinkScreen(): JSX.Element {
                   </StyledDataTableRow>
                 </StyledDataTable>
               </StyledCollapsible>
-              {['OpenCryptoPay.io', 'FrankencoinPay.com'].includes(selectedPaymentMethod.id) && <CompatibleWallets />}
+              {['OpenCryptoPay.io', 'FrankencoinPay.com'].includes(selectedPaymentMethod.id) && (
+                <StyledVerticalStack full gap={8} center>
+                  <p className="text-base pt-3 text-dfxGray-700">
+                    {translate('screens/payment', 'Scan the QR-Code with a compatible wallet to complete the payment.')}
+                  </p>
+                  <WalletGrid
+                    wallets={recommendedWallets}
+                    header={translate('screens/payment', 'Recommended wallets')}
+                  />
+                  <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
+                </StyledVerticalStack>
+              )}
             </>
           )}
         </StyledVerticalStack>
@@ -491,41 +477,54 @@ const PaymentErrorHint = ({ message }: { message: string }): JSX.Element => {
   );
 };
 
-function CompatibleWallets(): JSX.Element {
-  const { translate } = useSettingsContext();
+interface WalletGridProps {
+  wallets?: string[];
+  header?: string;
+}
+
+function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
+  const walletNames = wallets ?? Object.keys(compatibleWallets);
 
   return (
     <div className="flex flex-col w-full gap-3 px-5">
-      <p className="text-base pt-3 pb-3 text-dfxGray-700">
-        {translate('screens/payment', 'Scan the QR-Code with a compatible wallet to complete the payment.')}
-      </p>
+      {header && (
+        <div className="flex flex-row items-center gap-2">
+          <div className="flex-grow bg-gradient-to-r from-white to-dfxGray-600 h-[1px]" />
+          <p className="text-xs text-dfxGray-700 whitespace-nowrap">{header.toUpperCase()}</p>
+          <div className="flex-grow bg-gradient-to-r from-dfxGray-600 to-white h-[1px]" />
+        </div>
+      )}
       <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 justify-center">
-        {compatibleWallets.map((wallet) => (
-          <div
-            key={wallet.name}
-            className="flex flex-col items-center gap-2 cursor-pointer"
-            onClick={() => window.open(wallet.websiteUrl)}
-            style={{ flex: '1 1 0', maxWidth: '120px', minWidth: '0' }}
-          >
-            <img
-              className="border border-dfxGray-400 shadow-md bg-white rounded-md overflow-clip"
-              src={wallet.iconUrl}
-              alt={wallet.name}
-              style={{ width: '100%', height: 'auto' }}
-            />
-            <p
-              className="text-center font-semibold text-dfxGray-600 w-full text-2xs sm:text-xs truncate"
-              style={{
-                maxWidth: '100%',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
+        {walletNames.map((walletName) => {
+          const wallet = compatibleWallets[walletName];
+
+          return (
+            <div
+              key={walletName}
+              className="flex flex-col items-center gap-2 cursor-pointer"
+              onClick={() => window.open(wallet.websiteUrl)}
+              style={{ flex: '1 1 0', maxWidth: '120px', minWidth: '0' }}
             >
-              {wallet.name}
-            </p>
-          </div>
-        ))}
+              <img
+                className="border border-dfxGray-400 shadow-md bg-white rounded-md overflow-clip"
+                src={wallet.iconUrl}
+                alt={walletName}
+                style={{ width: '100%', height: 'auto' }}
+              />
+              <p
+                className="text-center font-semibold text-dfxGray-600 w-full text-2xs sm:text-xs truncate"
+                style={{
+                  maxWidth: '100%',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {walletName}
+              </p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
