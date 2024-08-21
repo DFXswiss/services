@@ -96,7 +96,9 @@ export default function PaymentRoutes(): JSX.Element {
   const [showCreatePaymentOverlay, setShowCreatePaymentOverlay] = useState<string>();
   const [isUpdatingPaymentLink, setIsUpdatingPaymentLink] = useState<string[]>([]);
   const [expandedRef, setExpandedRef] = useState<string>();
-  const [paymentLinkCreateTitle, setPaymentLinkCreateTitle] = useState<string>();
+  const [createPaymentLinkStep, setCreatePaymentLinkStep] = useState<CreatePaymentLinkStep>(
+    CreatePaymentLinkStep.ROUTE,
+  );
 
   useUserGuard('/login');
 
@@ -132,8 +134,8 @@ export default function PaymentRoutes(): JSX.Element {
     paymentRoutes && Boolean(paymentRoutes?.buy.length || paymentRoutes?.sell.length || paymentRoutes?.swap.length);
 
   const title =
-    showCreatePaymentLinkOverlay && paymentLinkCreateTitle
-      ? `Payment Link: ${translate('screens/payment', paymentLinkCreateTitle)}`
+    showCreatePaymentLinkOverlay && createPaymentLinkStep !== undefined
+      ? `Payment Link: ${translate('screens/payment', createPaymentLinkStepToTitleMap[createPaymentLinkStep])}`
       : showCreatePaymentOverlay
       ? 'Create payment'
       : 'Payment routes';
@@ -142,8 +144,11 @@ export default function PaymentRoutes(): JSX.Element {
     <Layout
       title={translate('screens/payment', title)}
       onBack={
-        showCreatePaymentLinkOverlay
-          ? () => setShowCreatePaymentLinkOverlay(false)
+        showCreatePaymentLinkOverlay && createPaymentLinkStep !== undefined
+          ? () =>
+              createPaymentLinkStep !== CreatePaymentLinkStep.ROUTE
+                ? setCreatePaymentLinkStep(createPaymentLinkStep - 1)
+                : setShowCreatePaymentLinkOverlay(false)
           : showCreatePaymentOverlay !== undefined
           ? () => setShowCreatePaymentOverlay(undefined)
           : undefined
@@ -154,7 +159,7 @@ export default function PaymentRoutes(): JSX.Element {
       {error ? (
         <ErrorHint message={error} />
       ) : showCreatePaymentLinkOverlay ? (
-        <CreatePaymentLinkOverlay setTitle={setPaymentLinkCreateTitle} onDone={onDone} />
+        <CreatePaymentLinkOverlay step={createPaymentLinkStep} setStep={setCreatePaymentLinkStep} onDone={onDone} />
       ) : showCreatePaymentOverlay !== undefined ? (
         <CreatePaymentOverlay id={showCreatePaymentOverlay} onDone={onDone} />
       ) : paymentRoutesLoading || (paymentLinksLoading && !isUpdatingPaymentLink.length) ? (
@@ -429,7 +434,8 @@ enum CreatePaymentLinkStep {
 }
 
 interface CreatePaymentLinkOverlayProps {
-  setTitle: (title: string) => void;
+  step: CreatePaymentLinkStep;
+  setStep: (title: CreatePaymentLinkStep) => void;
   onDone: (id?: string) => void;
 }
 
@@ -437,10 +443,10 @@ const createPaymentLinkStepToTitleMap = {
   [CreatePaymentLinkStep.ROUTE]: 'Route',
   [CreatePaymentLinkStep.RECIPIENT]: 'Recipient',
   [CreatePaymentLinkStep.PAYMENT]: 'Payment',
-  [CreatePaymentLinkStep.DONE]: 'Overview',
+  [CreatePaymentLinkStep.DONE]: 'Summary',
 };
 
-function CreatePaymentLinkOverlay({ setTitle, onDone }: CreatePaymentLinkOverlayProps): JSX.Element {
+function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOverlayProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
   const { createPaymentLink } = usePaymentRoutesContext();
@@ -450,7 +456,7 @@ function CreatePaymentLinkOverlay({ setTitle, onDone }: CreatePaymentLinkOverlay
 
   const [countries, setCountries] = useState<Country[]>([]);
   const [isCountryLoading, setIsCountryLoading] = useState(true);
-  const [step, setStep] = useState(CreatePaymentLinkStep.ROUTE);
+  // const [step, setStep] = useState(CreatePaymentLinkStep.ROUTE);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -458,6 +464,8 @@ function CreatePaymentLinkOverlay({ setTitle, onDone }: CreatePaymentLinkOverlay
     watch,
     control,
     handleSubmit,
+    reset,
+    getValues,
     setValue,
     formState: { errors, isValid },
   } = useForm<FormData>({
@@ -467,12 +475,12 @@ function CreatePaymentLinkOverlay({ setTitle, onDone }: CreatePaymentLinkOverlay
   const data = watch();
 
   useEffect(() => {
-    const maxIdRoute = paymentRoutes?.sell.reduce((prev, current) => (prev.id > current.id ? prev : current));
+    const maxIdRoute = paymentRoutes?.sell.reduce((prev, current) => (prev.id < current.id ? prev : current));
     if (maxIdRoute) setValue('routeId', routeToRouteIdSelectData(maxIdRoute));
   }, [paymentRoutes]);
 
   useEffect(() => {
-    setTitle(createPaymentLinkStepToTitleMap[step]);
+    setError(undefined);
   }, [step]);
 
   useEffect(() => {
@@ -489,9 +497,21 @@ function CreatePaymentLinkOverlay({ setTitle, onDone }: CreatePaymentLinkOverlay
       const request: CreatePaymentLink = {
         routeId: data.routeId ? +data.routeId.id : undefined,
         externalId: data.externalId ? data.externalId : undefined,
-      };
+        recipient: {
+          name: data.recipientName,
+          address: {
+            street: data.recipientStreet,
+            houseNumber: data.recipientHouseNumber,
+            zip: data.recipientZip,
+            city: data.recipientCity,
+            country: data.recipientCountry?.symbol,
+          },
+          phone: data.recipientPhone,
+          email: data.recipientEmail,
+          website: data.recipientWebsite,
+        },
+      } as CreatePaymentLink;
 
-      // TODO: This check can be non-null but the rest could be null
       if (data.paymentMode) {
         request.payment = {
           mode: data.paymentMode,
@@ -504,6 +524,8 @@ function CreatePaymentLinkOverlay({ setTitle, onDone }: CreatePaymentLinkOverlay
 
       const paymentLink = await createPaymentLink(request);
       onDone(paymentLink?.id);
+      setStep(CreatePaymentLinkStep.ROUTE);
+      reset();
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
@@ -519,15 +541,6 @@ function CreatePaymentLinkOverlay({ setTitle, onDone }: CreatePaymentLinkOverlay
   }
 
   const rules = Utils.createRules({
-    recipientName: Validations.Required,
-    recipientStreet: Validations.Required,
-    recipientHouseNumber: Validations.Required,
-    recipientZip: Validations.Required,
-    recipientCity: Validations.Required,
-    recipientCountry: Validations.Required,
-    recipientPhone: Validations.Required,
-    recipientEmail: Validations.Required,
-    recipientWebsite: Validations.Required,
     paymentMode: Validations.Required,
     paymentAmount: Validations.Required,
     paymentExternalId: Validations.Required,
@@ -536,6 +549,19 @@ function CreatePaymentLinkOverlay({ setTitle, onDone }: CreatePaymentLinkOverlay
   });
 
   const availablePaymentRoutes: RouteIdSelectData[] = paymentRoutes?.sell?.map(routeToRouteIdSelectData) ?? [];
+
+  const naString = translate('screens/payment', 'N/A');
+  const hasRecipientData = Boolean(
+    data.recipientName ||
+      data.recipientStreet ||
+      data.recipientHouseNumber ||
+      data.recipientZip ||
+      data.recipientCity ||
+      data.recipientCountry ||
+      data.recipientPhone ||
+      data.recipientEmail ||
+      data.recipientWebsite,
+  );
 
   return (
     <>
@@ -711,68 +737,50 @@ function CreatePaymentLinkOverlay({ setTitle, onDone }: CreatePaymentLinkOverlay
           {/** Summary of the submitted data */}
           {step === CreatePaymentLinkStep.DONE && (
             <StyledVerticalStack center full gap={2}>
-              <StyledDataTable
-                label={translate('screens/payment', 'Route')}
-                alignContent={AlignContent.RIGHT}
-                showBorder
-                minWidth={false}
-              >
+              <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                 <StyledDataTableRow label={translate('screens/payment', 'Route ID')}>
                   <DataField value={data.routeId?.id} />
                 </StyledDataTableRow>
                 <StyledDataTableRow label={translate('screens/payment', 'External ID')}>
-                  <DataField value={data.externalId} />
+                  <p className="text-dfxBlue-600">{data.externalId ?? naString}</p>
                 </StyledDataTableRow>
-              </StyledDataTable>
-              <StyledDataTable
-                label={translate('screens/payment', 'Recipient')}
-                alignContent={AlignContent.RIGHT}
-                showBorder
-                minWidth={false}
-              >
-                <StyledDataTableRow label={translate('screens/support', 'Name')}>
-                  <DataField value={data.recipientName} />
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/kyc', 'Street address')}>
-                  <DataField value={data.recipientStreet && `${data.recipientStreet} ${data.recipientHouseNumber}`} />
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/kyc', 'ZIP code')}>
-                  <DataField value={data.recipientZip} />
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/kyc', 'City')}>
-                  <DataField value={data.recipientCity} />
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/kyc', 'Country')}>
-                  <DataField value={data.recipientCountry?.symbol} />
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/kyc', 'Phone number')}>
-                  <DataField value={data.recipientPhone} />
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/kyc', 'Email address')}>
-                  <DataField value={data.recipientEmail} />
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/payment', 'Website')}>
-                  <DataField value={data.recipientWebsite} />
-                </StyledDataTableRow>
-              </StyledDataTable>
-              <StyledDataTable
-                label={translate('screens/payment', 'Payment')}
-                alignContent={AlignContent.RIGHT}
-                showBorder
-                minWidth={false}
-              >
-                <StyledDataTableRow label={translate('screens/payment', 'Mode')}>
-                  <DataField value={data.paymentMode && translate('screens/payment', data.paymentMode)} />
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/payment', 'External ID')}>
-                  <DataField value={data.paymentExternalId} />
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                  <DataField value={data.paymentAmount && `${data.paymentAmount} ${data.paymentCurrency?.name}`} />
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/payment', 'Expiry date')}>
-                  <DataField value={data.paymentExpiryDate?.toLocaleString()} />
-                </StyledDataTableRow>
+                <StyledDataTableExpandableRow
+                  label={translate('screens/payment', 'Recipient')}
+                  isExpanded={hasRecipientData}
+                  discreet={!hasRecipientData}
+                  expansionItems={[
+                    { label: translate('screens/support', 'Name'), text: data.recipientName ?? naString },
+                    {
+                      label: translate('screens/kyc', 'Street address'),
+                      text: data.recipientStreet
+                        ? `${data.recipientStreet} ${data.recipientHouseNumber ?? ''}`
+                        : naString,
+                    },
+                    { label: translate('screens/kyc', 'ZIP code'), text: data.recipientZip ?? naString },
+                    { label: translate('screens/kyc', 'City'), text: data.recipientCity ?? naString },
+                    { label: translate('screens/kyc', 'Country'), text: data.recipientCountry?.symbol ?? naString },
+                    { label: translate('screens/kyc', 'Phone number'), text: data.recipientPhone ?? naString },
+                    { label: translate('screens/kyc', 'Email address'), text: data.recipientEmail ?? naString },
+                    { label: translate('screens/payment', 'Website'), text: data.recipientWebsite ?? naString },
+                  ]}
+                />
+                <StyledDataTableExpandableRow
+                  label={translate('screens/payment', 'Payment')}
+                  isExpanded={data.paymentMode ? true : false}
+                  discreet={!data.paymentMode}
+                  expansionItems={[
+                    { label: translate('screens/payment', 'Mode'), text: data.paymentMode ?? naString },
+                    { label: translate('screens/payment', 'External ID'), text: data.paymentExternalId ?? naString },
+                    {
+                      label: translate('screens/payment', 'Amount'),
+                      text: data.paymentAmount ? `${data.paymentAmount} ${data.paymentCurrency?.name}` : naString,
+                    },
+                    {
+                      label: translate('screens/payment', 'Expiry date'),
+                      text: data.paymentExpiryDate?.toLocaleString() ?? naString,
+                    },
+                  ]}
+                />
               </StyledDataTable>
             </StyledVerticalStack>
           )}
@@ -796,7 +804,17 @@ function CreatePaymentLinkOverlay({ setTitle, onDone }: CreatePaymentLinkOverlay
               {!isValid && (
                 <StyledButton
                   label={translate('general/actions', 'Skip')}
-                  onClick={() => setStep(step + 1)}
+                  onClick={() => {
+                    setStep(step + 1);
+                    reset({
+                      ...getValues(),
+                      paymentMode: undefined,
+                      paymentAmount: undefined,
+                      paymentExternalId: undefined,
+                      paymentCurrency: undefined,
+                      paymentExpiryDate: undefined,
+                    });
+                  }}
                   width={StyledButtonWidth.FULL}
                   color={StyledButtonColor.STURDY_WHITE}
                 />
