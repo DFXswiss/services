@@ -456,7 +456,6 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
 
   const [countries, setCountries] = useState<Country[]>([]);
   const [isCountryLoading, setIsCountryLoading] = useState(true);
-  // const [step, setStep] = useState(CreatePaymentLinkStep.ROUTE);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -562,6 +561,7 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
       data.recipientEmail ||
       data.recipientWebsite,
   );
+  const skipRecipientData = Boolean(!hasRecipientData && step === CreatePaymentLinkStep.RECIPIENT);
 
   return (
     <>
@@ -734,7 +734,6 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
               />
             </>
           )}
-          {/** Summary of the submitted data */}
           {step === CreatePaymentLinkStep.DONE && (
             <StyledVerticalStack center full gap={2}>
               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
@@ -801,19 +800,33 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
             />
           ) : (
             <div className="flex flex-col w-full gap-4">
-              {!isValid && (
+              {(!isValid || skipRecipientData) && (
                 <StyledButton
                   label={translate('general/actions', 'Skip')}
                   onClick={() => {
                     setStep(step + 1);
-                    reset({
-                      ...getValues(),
-                      paymentMode: undefined,
-                      paymentAmount: undefined,
-                      paymentExternalId: undefined,
-                      paymentCurrency: undefined,
-                      paymentExpiryDate: undefined,
-                    });
+                    step === CreatePaymentLinkStep.PAYMENT &&
+                      reset({
+                        ...getValues(),
+                        paymentMode: undefined,
+                        paymentAmount: undefined,
+                        paymentExternalId: undefined,
+                        paymentCurrency: undefined,
+                        paymentExpiryDate: undefined,
+                      });
+                    step === CreatePaymentLinkStep.RECIPIENT &&
+                      reset({
+                        ...getValues(),
+                        recipientName: undefined,
+                        recipientStreet: undefined,
+                        recipientHouseNumber: undefined,
+                        recipientZip: undefined,
+                        recipientCity: undefined,
+                        recipientCountry: undefined,
+                        recipientPhone: undefined,
+                        recipientEmail: undefined,
+                        recipientWebsite: undefined,
+                      });
                   }}
                   width={StyledButtonWidth.FULL}
                   color={StyledButtonColor.STURDY_WHITE}
@@ -823,7 +836,7 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
                 label={translate('general/actions', 'Next')}
                 onClick={() => setStep(step + 1)}
                 width={StyledButtonWidth.FULL}
-                disabled={!isValid}
+                disabled={!isValid || skipRecipientData}
               />
             </div>
           )}
