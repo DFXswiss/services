@@ -475,6 +475,8 @@
     "Pay to a {{blockchain}} Blockchain address": "Paga a un indirizzo blockchain {{blockchain}}",
     "You have no payment routes yet": "Non hai ancora nessuna modalità di pagamento",
     "Scan the QR-Code with a compatible wallet to complete the payment.": "Scansiona il codice QR con un portafoglio compatibile per completare il pagamento.",
+    "Recommended wallets": "Portafogli consigliati",
+    "Other compatible wallets": "Altri portafogli compatibili",
 
     "Cointracking": "Cointracking",
     "Saved": "Salvato",
