@@ -87,16 +87,14 @@ function formatAddress({
   city?: string;
   country?: string;
 }): string | undefined {
-  const streetAddress = `${street ?? ''} ${houseNumber ?? ''}`.trim();
-  const remainder = [`${zip ?? ''}`.trim(), `${city ?? ''}`.trim(), `${country ?? ''}`.trim()].filter(
-    (part) => part.length > 0,
-  );
+  const streetAddress = filterAndJoin([street, houseNumber], ' ');
+  const remainder = filterAndJoin([zip, city, country], ' ');
+  const location = filterAndJoin([streetAddress, remainder], ', ');
+  return location || undefined;
+}
 
-  let location = streetAddress;
-  if (streetAddress.length > 0 && remainder.length > 0) location += ', ';
-  location += remainder.join(' ').trim();
-
-  return location.length > 0 ? location : undefined;
+function filterAndJoin(items: (string | undefined)[], separator?: string): string {
+  return items.filter((i) => i).join(separator);
 }
 
 export default function PaymentRoutes(): JSX.Element {
