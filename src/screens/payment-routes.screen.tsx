@@ -720,7 +720,6 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
 }
 
 interface DateAndTimePickerProps extends ControlProps {
-  label?: string;
   hideLabel?: boolean;
   smallLabel?: boolean;
 }
@@ -748,7 +747,7 @@ const Content = forwardRef<HTMLInputElement, DateAndTimePickerContentProps>(
       name,
       label,
       rules,
-      disabled = false,
+      disabled,
       error,
       hideLabel,
       smallLabel,
@@ -798,7 +797,7 @@ const Content = forwardRef<HTMLInputElement, DateAndTimePickerContentProps>(
           input::-webkit-datetime-edit-day-field:focus,
           input::-webkit-datetime-edit-month-field:focus,
           input::-webkit-datetime-edit-year-field:focus {
-              background-color: #f5516c;
+              background-color: #f5516c; /* text-dfxRed-100 */
               color: white;
               outline: none;
           }
@@ -813,12 +812,12 @@ const Content = forwardRef<HTMLInputElement, DateAndTimePickerContentProps>(
 
           .custom-date-input,
           .custom-time-input {
-            color: #2a4365; /* text-dfxBlue-800 color */
+            color: ${error ? '#f5516c' : '#2a4365'}; /* text-dfxRed-100 or text-dfxBlue-800 */
           }
 
           .custom-date-input::placeholder,
           .custom-time-input::placeholder {
-            color: #a0aec0; /* text-dfxGray-600 color */
+            color: #a0aec0; /* text-dfxGray-600 */
           }
         `}
         </style>
@@ -840,11 +839,15 @@ const Content = forwardRef<HTMLInputElement, DateAndTimePickerContentProps>(
                 value={selectedDateTime}
                 onChange={handleDateTimeChange}
                 step="1"
-                className="custom-date-input text-base font-normal rounded-md p-4 w-full bg-white border border-dfxGray-500 focus:outline-none"
+                disabled={disabled}
+                className={`custom-date-input text-base font-normal rounded-md p-4 w-full bg-white border border-dfxGray-500 focus:outline-dfxBlue-800 ${
+                  disabled ? 'opacity-50 cursor-not-allowed focus:outline-none' : ''
+                }`}
               />
             </div>
           </div>
         </div>
+        {error && <p className="text-start text-sm text-dfxRed-100 pl-3">{error?.message}</p>}
       </>
     );
   },
