@@ -1,6 +1,7 @@
 import {
   ApiError,
   Blockchain,
+  Country,
   CreatePaymentLink,
   CreatePaymentLinkPayment,
   Fiat,
@@ -8,6 +9,7 @@ import {
   PaymentLinkPaymentStatus,
   PaymentLinkStatus,
   SellRoute,
+  useCountry,
   useFiatContext,
   usePaymentRoutesContext,
   useUserContext,
@@ -28,14 +30,17 @@ import {
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledHorizontalStack,
   StyledInput,
   StyledLink,
   StyledLoadingSpinner,
+  StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { ControlProps } from '@dfx.swiss/react-components/dist/stories/form/Form';
 import copy from 'copy-to-clipboard';
-import { useEffect, useRef, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { forwardRef, useEffect, useRef, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { Layout } from 'src/components/layout';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -49,7 +54,15 @@ import { ErrorHint } from '../components/error-hint';
 interface FormData {
   routeId: RouteIdSelectData;
   externalId: string;
-  paymentType: RouteType;
+  recipientName: string;
+  recipientStreet: string;
+  recipientHouseNumber: string;
+  recipientZip: string;
+  recipientCity: string;
+  recipientCountry: Country;
+  recipientPhone: string;
+  recipientEmail: string;
+  recipientWebsite: string;
   paymentMode: PaymentLinkPaymentMode;
   paymentAmount: string;
   paymentExternalId: string;
@@ -60,6 +73,29 @@ interface FormData {
 interface RouteIdSelectData {
   id: string;
   description: string;
+}
+
+function formatAddress({
+  street,
+  houseNumber,
+  zip,
+  city,
+  country,
+}: {
+  street?: string;
+  houseNumber?: string;
+  zip?: string;
+  city?: string;
+  country?: string;
+}): string | undefined {
+  const streetAddress = filterAndJoin([street, houseNumber], ' ');
+  const remainder = filterAndJoin([zip, city, country], ' ');
+  const location = filterAndJoin([streetAddress, remainder], ', ');
+  return location || undefined;
+}
+
+function filterAndJoin(items: (string | undefined)[], separator?: string): string {
+  return items.filter((i) => i).join(separator);
 }
 
 export default function PaymentRoutes(): JSX.Element {
@@ -84,6 +120,9 @@ export default function PaymentRoutes(): JSX.Element {
   const [showCreatePaymentOverlay, setShowCreatePaymentOverlay] = useState<string>();
   const [isUpdatingPaymentLink, setIsUpdatingPaymentLink] = useState<string[]>([]);
   const [expandedRef, setExpandedRef] = useState<string>();
+  const [createPaymentLinkStep, setCreatePaymentLinkStep] = useState<CreatePaymentLinkStep>(
+    CreatePaymentLinkStep.ROUTE,
+  );
 
   useUserGuard('/login');
 
@@ -118,18 +157,22 @@ export default function PaymentRoutes(): JSX.Element {
   const hasRoutes =
     paymentRoutes && Boolean(paymentRoutes?.buy.length || paymentRoutes?.sell.length || paymentRoutes?.swap.length);
 
-  const title = showCreatePaymentLinkOverlay
-    ? 'Create Payment Link'
-    : showCreatePaymentOverlay
-    ? 'Create payment'
-    : 'Payment routes';
+  const title =
+    showCreatePaymentLinkOverlay && createPaymentLinkStep !== undefined
+      ? `Payment Link: ${translate('screens/payment', createPaymentLinkStepToTitleMap[createPaymentLinkStep])}`
+      : showCreatePaymentOverlay
+      ? 'Create payment'
+      : 'Payment routes';
 
   return (
     <Layout
       title={translate('screens/payment', title)}
       onBack={
-        showCreatePaymentLinkOverlay
-          ? () => setShowCreatePaymentLinkOverlay(false)
+        showCreatePaymentLinkOverlay && createPaymentLinkStep !== undefined
+          ? () =>
+              createPaymentLinkStep !== CreatePaymentLinkStep.ROUTE
+                ? setCreatePaymentLinkStep(createPaymentLinkStep - 1)
+                : setShowCreatePaymentLinkOverlay(false)
           : showCreatePaymentOverlay !== undefined
           ? () => setShowCreatePaymentOverlay(undefined)
           : undefined
@@ -140,7 +183,7 @@ export default function PaymentRoutes(): JSX.Element {
       {error ? (
         <ErrorHint message={error} />
       ) : showCreatePaymentLinkOverlay ? (
-        <CreatePaymentLinkOverlay onDone={onDone} />
+        <CreatePaymentLinkOverlay step={createPaymentLinkStep} setStep={setCreatePaymentLinkStep} onDone={onDone} />
       ) : showCreatePaymentOverlay !== undefined ? (
         <CreatePaymentOverlay id={showCreatePaymentOverlay} onDone={onDone} />
       ) : paymentRoutesLoading || (paymentLinksLoading && !isUpdatingPaymentLink.length) ? (
@@ -257,7 +300,10 @@ export default function PaymentRoutes(): JSX.Element {
           {paymentLinks?.length ? (
             <StyledVerticalStack gap={2} full>
               <h2 className="ml-3.5 mb-1.5 text-dfxGray-700">{translate('screens/payment', 'Payment Links')}</h2>
-              {paymentLinks.map((link) => {
+              {paymentLinks.map((link: any) => {
+                {
+                  /** TODO: add new fields to packages, remove `: any`*/
+                }
                 return (
                   <div key={link.id} ref={(el) => paymentLinkRefs.current && (paymentLinkRefs.current[link.id] = el)}>
                     <StyledCollapsible
@@ -308,6 +354,42 @@ export default function PaymentRoutes(): JSX.Element {
                           <StyledDataTableRow label={translate('screens/payment', 'URL')}>
                             <StyledLink label={formatURL(link.url)} url={link.url} dark />
                           </StyledDataTableRow>
+                          {link.recipient && (
+                            <StyledDataTableExpandableRow
+                              label={translate('screens/payment', 'Recipient')}
+                              expansionItems={[
+                                { label: translate('screens/support', 'Name'), text: link.recipient.name },
+                                {
+                                  label: translate('screens/home', 'Address'),
+                                  text: formatAddress({ ...link.recipient.address }),
+                                },
+                                {
+                                  label: translate('screens/kyc', 'Phone number'),
+                                  text: link.recipient.phone,
+                                },
+                                {
+                                  label: translate('screens/kyc', 'Email address'),
+                                  text: link.recipient.email,
+                                },
+                                {
+                                  label: translate('screens/kyc', 'Website'),
+                                  text: link.recipient.website,
+                                  // open absolute URL in new tab
+                                  onClick: () => {
+                                    const url =
+                                      link.recipient.website.startsWith('http://') ||
+                                      link.recipient.website.startsWith('https://')
+                                        ? link.recipient.website
+                                        : `https://${link.recipient.website}`;
+
+                                    window.open(url, '_blank');
+                                  },
+                                },
+                              ].filter((item) => item.text)}
+                            >
+                              {link.recipient.name && <p>{link.recipient.name}</p>}
+                            </StyledDataTableExpandableRow>
+                          )}
                           {link.payment != null && (
                             <StyledDataTableExpandableRow
                               label={translate('screens/payment', 'Payment')}
@@ -407,42 +489,68 @@ export default function PaymentRoutes(): JSX.Element {
   );
 }
 
-enum RouteType {
-  WITH_PAYMENT = 'With payment',
-  WITHOUT_PAYMENT = 'Without payment',
+enum CreatePaymentLinkStep {
+  ROUTE,
+  RECIPIENT,
+  PAYMENT,
+  DONE,
 }
 
 interface CreatePaymentLinkOverlayProps {
+  step: CreatePaymentLinkStep;
+  setStep: (title: CreatePaymentLinkStep) => void;
   onDone: (id?: string) => void;
 }
 
-function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JSX.Element {
+const createPaymentLinkStepToTitleMap = {
+  [CreatePaymentLinkStep.ROUTE]: 'Route',
+  [CreatePaymentLinkStep.RECIPIENT]: 'Recipient',
+  [CreatePaymentLinkStep.PAYMENT]: 'Payment',
+  [CreatePaymentLinkStep.DONE]: 'Summary',
+};
+
+function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOverlayProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
   const { createPaymentLink } = usePaymentRoutesContext();
   const { currencies } = useFiatContext();
+  const { getCountries } = useCountry();
   const { paymentRoutes } = usePaymentRoutesContext();
 
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [isCountryLoading, setIsCountryLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
   const {
+    watch,
     control,
     handleSubmit,
+    reset,
+    getValues,
     setValue,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm<FormData>({
     mode: 'onTouched',
-    defaultValues: {
-      paymentType: RouteType.WITHOUT_PAYMENT,
-    },
   });
 
-  const selectedType = useWatch({ control, name: 'paymentType' });
+  const data = watch();
 
   useEffect(() => {
-    if (paymentRoutes?.sell.length === 1) setValue('routeId', routeToRouteIdSelectData(paymentRoutes.sell[0]));
+    const maxIdRoute = paymentRoutes?.sell.reduce((prev, current) => (prev.id < current.id ? prev : current));
+    if (maxIdRoute) setValue('routeId', routeToRouteIdSelectData(maxIdRoute));
   }, [paymentRoutes]);
+
+  useEffect(() => {
+    setError(undefined);
+  }, [step]);
+
+  useEffect(() => {
+    getCountries()
+      .then(setCountries)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsCountryLoading(false));
+  }, []);
 
   async function onSubmit(data: FormData) {
     setIsLoading(true);
@@ -451,9 +559,22 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
       const request: CreatePaymentLink = {
         routeId: data.routeId ? +data.routeId.id : undefined,
         externalId: data.externalId ? data.externalId : undefined,
-      };
+        recipient: {
+          name: data.recipientName,
+          address: {
+            street: data.recipientStreet,
+            houseNumber: data.recipientHouseNumber,
+            zip: data.recipientZip,
+            city: data.recipientCity,
+            country: data.recipientCountry?.symbol,
+          },
+          phone: data.recipientPhone,
+          email: data.recipientEmail,
+          website: data.recipientWebsite,
+        },
+      } as CreatePaymentLink;
 
-      if (data.paymentType === RouteType.WITH_PAYMENT) {
+      if (data.paymentMode) {
         request.payment = {
           mode: data.paymentMode,
           amount: +data.paymentAmount,
@@ -465,6 +586,8 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
 
       const paymentLink = await createPaymentLink(request);
       onDone(paymentLink?.id);
+      setStep(CreatePaymentLinkStep.ROUTE);
+      reset();
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
@@ -489,6 +612,29 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
 
   const availablePaymentRoutes: RouteIdSelectData[] = paymentRoutes?.sell?.map(routeToRouteIdSelectData) ?? [];
 
+  const naString = translate('screens/payment', 'N/A');
+  const hasRecipientData = Boolean(
+    data.recipientName ||
+      data.recipientStreet ||
+      data.recipientHouseNumber ||
+      data.recipientZip ||
+      data.recipientCity ||
+      data.recipientCountry ||
+      data.recipientPhone ||
+      data.recipientEmail ||
+      data.recipientWebsite,
+  );
+  const hasPaymentData = Boolean(
+    data.paymentMode &&
+      data.paymentAmount !== undefined &&
+      data.paymentExternalId !== undefined &&
+      data.paymentCurrency &&
+      data.paymentExpiryDate,
+  );
+
+  const skipRecipientData = Boolean(!hasRecipientData && step === CreatePaymentLinkStep.RECIPIENT);
+  const skipPaymentData = Boolean(!hasPaymentData && step === CreatePaymentLinkStep.PAYMENT);
+
   return (
     <>
       <Form
@@ -499,36 +645,119 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
         translate={translateError}
       >
         <StyledVerticalStack gap={6} full center>
-          <StyledDropdown<RouteIdSelectData>
-            name="routeId"
-            label={translate('screens/payment', 'Route ID')}
-            placeholder={translate('screens/payment', 'Route ID')}
-            items={availablePaymentRoutes}
-            labelFunc={(item) => item.id}
-            descriptionFunc={(item) => item.description}
-            full
-            smallLabel
-          />
+          {step === CreatePaymentLinkStep.ROUTE && (
+            <StyledVerticalStack gap={6} full center>
+              <StyledDropdown<RouteIdSelectData>
+                name="routeId"
+                label={translate('screens/payment', 'Route ID')}
+                placeholder={translate('screens/payment', 'Route ID')}
+                items={availablePaymentRoutes}
+                labelFunc={(item) => item.id}
+                descriptionFunc={(item) => item.description}
+                full
+                smallLabel
+              />
 
-          <StyledInput
-            name="externalId"
-            autocomplete="externalId"
-            label={translate('screens/payment', 'External ID')}
-            placeholder={translate('screens/payment', 'External ID')}
-            full
-            smallLabel
-          />
-
-          <StyledDropdown
-            name="paymentType"
-            label={translate('screens/payment', 'Payment type')}
-            full
-            smallLabel
-            items={Object.values(RouteType)}
-            labelFunc={(item) => translate('screens/payment', item)}
-          />
-
-          {selectedType === RouteType.WITH_PAYMENT && (
+              <StyledInput
+                name="externalId"
+                autocomplete="externalId"
+                label={translate('screens/payment', 'External ID')}
+                placeholder={translate('screens/payment', 'External ID')}
+                full
+                smallLabel
+              />
+            </StyledVerticalStack>
+          )}
+          {step === CreatePaymentLinkStep.RECIPIENT &&
+            (isCountryLoading ? (
+              <StyledLoadingSpinner size={SpinnerSize.LG} />
+            ) : (
+              <StyledVerticalStack gap={2} full>
+                <StyledInput
+                  name="recipientName"
+                  autocomplete="name"
+                  label={translate('screens/kyc', 'Name')}
+                  placeholder={translate('screens/kyc', 'John Smith')}
+                  full
+                  smallLabel
+                />
+                <StyledHorizontalStack gap={2}>
+                  <StyledInput
+                    name="recipientStreet"
+                    autocomplete="street"
+                    label={translate('screens/kyc', 'Street')}
+                    placeholder={translate('screens/kyc', 'Street')}
+                    full
+                    smallLabel
+                  />
+                  <StyledInput
+                    name="recipientHouseNumber"
+                    autocomplete="house-number"
+                    label={translate('screens/kyc', 'House nr.')}
+                    placeholder="xx"
+                    small
+                    smallLabel
+                  />
+                </StyledHorizontalStack>
+                <StyledHorizontalStack gap={2}>
+                  <StyledInput
+                    name="recipientZip"
+                    autocomplete="zip"
+                    label={translate('screens/kyc', 'ZIP code')}
+                    placeholder="12345"
+                    small
+                    smallLabel
+                  />
+                  <StyledInput
+                    name="recipientCity"
+                    autocomplete="city"
+                    label={translate('screens/kyc', 'City')}
+                    placeholder="Berlin"
+                    full
+                    smallLabel
+                  />
+                </StyledHorizontalStack>
+                <StyledSearchDropdown
+                  rootRef={rootRef}
+                  name="recipientCountry"
+                  autocomplete="country"
+                  label={translate('screens/kyc', 'Country')}
+                  placeholder={translate('general/actions', 'Select...')}
+                  items={countries}
+                  labelFunc={(item) => item.name}
+                  filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+                  matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+                  smallLabel
+                />
+                <StyledInput
+                  name="recipientPhone"
+                  autocomplete="phone"
+                  type="tel"
+                  label={translate('screens/kyc', 'Phone number')}
+                  placeholder="+49 12345678"
+                  smallLabel
+                />
+                <StyledInput
+                  name="recipientEmail"
+                  autocomplete="email"
+                  type="email"
+                  label={translate('screens/kyc', 'Email address')}
+                  placeholder={translate('screens/kyc', 'example@mail.com')}
+                  smallLabel
+                  full
+                />
+                <StyledInput
+                  name="recipientWebsite"
+                  autocomplete="website"
+                  type="url"
+                  label={translate('screens/kyc', 'Website')}
+                  placeholder={translate('screens/kyc', 'https://example.com')}
+                  smallLabel
+                  full
+                />
+              </StyledVerticalStack>
+            ))}
+          {step === CreatePaymentLinkStep.PAYMENT && (
             <>
               <StyledDropdown
                 rootRef={rootRef}
@@ -569,13 +798,63 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
                 labelFunc={(item) => item.name}
               />
 
-              <StyledInput
+              <DateAndTimePicker
                 name="paymentExpiryDate"
-                label={translate('screens/payment', 'Date')}
-                placeholder={new Date().toISOString().split('T')[0]}
-                full
+                label={translate('screens/payment', 'Expires at')}
+                smallLabel
               />
             </>
+          )}
+          {step === CreatePaymentLinkStep.DONE && (
+            <StyledVerticalStack center full gap={2}>
+              <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                <StyledDataTableRow label={translate('screens/payment', 'Route ID')}>
+                  <p className="font-semibold">{data.routeId?.id ?? naString}</p>
+                </StyledDataTableRow>
+                <StyledDataTableRow label={translate('screens/payment', 'External ID')}>
+                  <p className="text-dfxBlue-600">{data.externalId ?? naString}</p>
+                </StyledDataTableRow>
+                <StyledDataTableExpandableRow
+                  label={translate('screens/payment', 'Recipient')}
+                  isExpanded={hasRecipientData}
+                  discreet={!hasRecipientData}
+                  expansionItems={[
+                    { label: translate('screens/support', 'Name'), text: data.recipientName ?? naString },
+                    {
+                      label: translate('screens/home', 'Address'),
+                      text:
+                        formatAddress({
+                          street: data.recipientStreet,
+                          houseNumber: data.recipientHouseNumber,
+                          zip: data.recipientZip,
+                          city: data.recipientCity,
+                          country: data.recipientCountry?.name,
+                        }) ?? naString,
+                    },
+                    { label: translate('screens/kyc', 'Phone number'), text: data.recipientPhone ?? naString },
+                    { label: translate('screens/kyc', 'Email address'), text: data.recipientEmail ?? naString },
+                    { label: translate('screens/kyc', 'Website'), text: data.recipientWebsite ?? naString },
+                  ]}
+                />
+                <StyledDataTableExpandableRow
+                  label={translate('screens/payment', 'Payment')}
+                  isExpanded={data.paymentMode ? true : false}
+                  discreet={!data.paymentMode}
+                  expansionItems={[
+                    { label: translate('screens/payment', 'Mode'), text: data.paymentMode ?? naString },
+                    { label: translate('screens/payment', 'External ID'), text: data.paymentExternalId ?? naString },
+                    {
+                      label: translate('screens/payment', 'Amount'),
+                      text: data.paymentAmount ? `${data.paymentAmount} ${data.paymentCurrency?.name}` : naString,
+                    },
+                    {
+                      label: translate('screens/payment', 'Expiry date'),
+                      text: data.paymentExpiryDate?.toLocaleString() ?? naString,
+                    },
+                  ]}
+                />
+              </StyledDataTable>
+            </StyledVerticalStack>
           )}
 
           {error && (
@@ -584,22 +863,64 @@ function CreatePaymentLinkOverlay({ onDone }: CreatePaymentLinkOverlayProps): JS
             </div>
           )}
 
-          <StyledButton
-            type="submit"
-            label={translate('general/actions', 'Create')}
-            onClick={handleSubmit(onSubmit)}
-            width={StyledButtonWidth.FULL}
-            disabled={!isValid}
-            isLoading={isLoading}
-          />
+          {step === CreatePaymentLinkStep.DONE ? (
+            <StyledButton
+              type="submit"
+              label={translate('general/actions', 'Create')}
+              onClick={handleSubmit(onSubmit)}
+              width={StyledButtonWidth.FULL}
+              isLoading={isLoading}
+            />
+          ) : (
+            <div className="flex flex-col w-full gap-4">
+              {(skipPaymentData || skipRecipientData) && (
+                <StyledButton
+                  label={translate('general/actions', 'Skip')}
+                  onClick={() => {
+                    reset({
+                      ...getValues(),
+                      ...(!hasPaymentData && {
+                        paymentMode: undefined,
+                        paymentAmount: undefined,
+                        paymentExternalId: undefined,
+                        paymentCurrency: undefined,
+                        paymentExpiryDate: undefined,
+                      }),
+                      ...(!hasRecipientData && {
+                        recipientName: undefined,
+                        recipientStreet: undefined,
+                        recipientHouseNumber: undefined,
+                        recipientZip: undefined,
+                        recipientCity: undefined,
+                        recipientCountry: undefined,
+                        recipientPhone: undefined,
+                        recipientEmail: undefined,
+                        recipientWebsite: undefined,
+                      }),
+                    });
+                    setStep(step + 1);
+                  }}
+                  width={StyledButtonWidth.FULL}
+                  color={StyledButtonColor.STURDY_WHITE}
+                />
+              )}
+              <StyledButton
+                label={translate('general/actions', 'Next')}
+                onClick={() => setStep(step + 1)}
+                width={StyledButtonWidth.FULL}
+                disabled={skipPaymentData || skipRecipientData}
+              />
+            </div>
+          )}
         </StyledVerticalStack>
       </Form>
     </>
   );
 }
 
-interface CreatePaymentOverlayProps extends CreatePaymentLinkOverlayProps {
+interface CreatePaymentOverlayProps {
   id: string;
+  onDone: (id?: string) => void;
 }
 
 function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.Element {
@@ -697,12 +1018,7 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
             labelFunc={(item) => item.name}
           />
 
-          <StyledInput
-            name="paymentExpiryDate"
-            label={translate('screens/payment', 'Date')}
-            placeholder={new Date().toISOString().split('T')[0]}
-            full
-          />
+          <DateAndTimePicker name="paymentExpiryDate" label={translate('screens/payment', 'Expires at')} smallLabel />
 
           {error && (
             <div>
@@ -723,3 +1039,137 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
     </>
   );
 }
+
+interface DateAndTimePickerProps extends ControlProps {
+  hideLabel?: boolean;
+  smallLabel?: boolean;
+}
+
+interface DateAndTimePickerContentProps extends DateAndTimePickerProps {
+  onChange: (date: Date) => void;
+  value: Date | null;
+}
+
+const DateAndTimePicker = forwardRef<HTMLDivElement, DateAndTimePickerProps>((props: DateAndTimePickerProps, ref) => {
+  return (
+    <Controller
+      control={props.control}
+      render={({ field: { onChange, value } }) => <Content {...props} onChange={onChange} value={value} />}
+      name={props.name}
+      rules={props.rules}
+    />
+  );
+});
+
+const Content = forwardRef<HTMLInputElement, DateAndTimePickerContentProps>(
+  (
+    {
+      control,
+      name,
+      label,
+      rules,
+      disabled,
+      error,
+      hideLabel,
+      smallLabel,
+      onChange,
+      value,
+      ...props
+    }: DateAndTimePickerContentProps,
+    ref,
+  ) => {
+    const [selectedDateTime, setSelectedDateTime] = useState<string>('');
+
+    useEffect(() => {
+      const toLocalISOString = (date: Date) => {
+        const tzoffset = date.getTimezoneOffset() * 60000;
+        return new Date(date.getTime() - tzoffset).toISOString().slice(0, -5);
+      };
+
+      if (value) {
+        const localISOTime = toLocalISOString(value);
+        setSelectedDateTime(localISOTime);
+      } else {
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        now.setMinutes(now.getMinutes() + 1);
+        now.setSeconds(0);
+
+        const defaultDateTime = toLocalISOString(now);
+        setSelectedDateTime(defaultDateTime);
+        onChange(now);
+      }
+    }, [value, onChange]);
+
+    const handleDateTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const dateTime = event.target.value;
+      setSelectedDateTime(dateTime);
+
+      const newDate = new Date(dateTime);
+      if (!isNaN(newDate.getTime())) {
+        onChange(newDate);
+      }
+    };
+
+    return (
+      <>
+        <style>
+          {`
+          input::-webkit-datetime-edit-day-field:focus,
+          input::-webkit-datetime-edit-month-field:focus,
+          input::-webkit-datetime-edit-year-field:focus {
+              background-color: #f5516c; /* text-dfxRed-100 */
+              color: white;
+              outline: none;
+          }
+
+          input::-webkit-datetime-edit-hour-field:focus,
+          input::-webkit-datetime-edit-minute-field:focus,
+          input::-webkit-datetime-edit-second-field:focus {
+              background-color: #f5516c;
+              color: white;
+              outline: none;
+          }
+
+          .custom-date-input,
+          .custom-time-input {
+            color: ${error ? '#f5516c' : '#2a4365'}; /* text-dfxRed-100 or text-dfxBlue-800 */
+          }
+
+          .custom-date-input::placeholder,
+          .custom-time-input::placeholder {
+            color: #a0aec0; /* text-dfxGray-600 */
+          }
+        `}
+        </style>
+        <div {...props} className="flex flex-col gap-4 w-full">
+          <div className="flex flex-row gap-4">
+            <div className="flex-1">
+              {label && (
+                <label
+                  hidden={hideLabel}
+                  className={`text-start ${smallLabel ? 'text-sm' : 'text-base'} font-semibold pl-3 text-dfxBlue-800`}
+                >
+                  {label}
+                </label>
+              )}
+              <div className="h-1" />
+              <input
+                ref={ref}
+                type="datetime-local"
+                value={selectedDateTime}
+                onChange={handleDateTimeChange}
+                step="1"
+                disabled={disabled}
+                className={`custom-date-input text-base font-normal rounded-md p-4 w-full bg-white border border-dfxGray-500 focus:outline-dfxBlue-800 ${
+                  disabled ? 'opacity-50 cursor-not-allowed focus:outline-none' : ''
+                }`}
+              />
+            </div>
+          </div>
+        </div>
+        {error && <p className="text-start text-sm text-dfxRed-100 pl-3">{error?.message}</p>}
+      </>
+    );
+  },
+);

@@ -91,9 +91,49 @@ const paymentIdentifierLabelMap: Record<string, string> = {
 
 const compatibleWallets = [
   {
-    name: 'Frankencoin',
-    websiteUrl: 'https://frankencoin.app/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/1.webp',
+    name: 'Alby',
+    websiteUrl: 'https://getalby.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Alby.webp',
+  },
+  {
+    name: 'BareBitcoin',
+    websiteUrl: 'https://barebitcoin.no/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BareBitcoin.webp',
+  },
+  {
+    name: 'Bipa',
+    websiteUrl: 'https://bipa.app/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bipa.webp',
+  },
+  {
+    name: 'BitBanana',
+    websiteUrl: 'https://bitbanana.app/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BitBanana.webp',
+  },
+  {
+    name: 'Bitkit',
+    websiteUrl: 'https://bitkit.to/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bitkit.webp',
+  },
+  {
+    name: 'Blixt',
+    websiteUrl: 'https://blixtwallet.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blixt.webp',
+  },
+  {
+    name: 'BlueWallet',
+    websiteUrl: 'https://bluewallet.io/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BlueWallet.webp',
+  },
+  {
+    name: 'Breez',
+    websiteUrl: 'https://breez.technology/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Breez.webp',
+  },
+  {
+    name: 'BTCPayServer',
+    websiteUrl: 'https://btcpayserver.org/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCPayServer.webp',
   },
   {
     name: 'Cake Wallet',
@@ -101,14 +141,109 @@ const compatibleWallets = [
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/4.webp',
   },
   {
-    name: 'WoS',
-    websiteUrl: 'https://www.walletofsatoshi.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/2.webp',
+    name: 'CoinCorner',
+    websiteUrl: 'https://www.coincorner.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CoinCorner.webp',
+  },
+  {
+    name: 'Coinos',
+    websiteUrl: 'https://coinos.io/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/coinos.webp',
+  },
+  {
+    name: 'Electrum',
+    websiteUrl: 'https://electrum.org/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Electrum.webp',
+  },
+  {
+    name: 'Fountain',
+    websiteUrl: 'https://fountainplatform.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Fountain.webp',
+  },
+  {
+    name: 'Frankencoin',
+    websiteUrl: 'https://frankencoin.app/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Frankencoin.webp',
+  },
+  {
+    name: 'Galoy',
+    websiteUrl: 'https://galoy.io/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Galoy.webp',
+  },
+  {
+    name: 'Geyser',
+    websiteUrl: 'https://geyser.fund/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Geyser.webp',
+  },
+  {
+    name: 'LifPay',
+    websiteUrl: 'https://lifpay.me/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LifPay.webp',
+  },
+  {
+    name: 'LightningTipBot',
+    websiteUrl: 'https://github.com/LightningTipBot/LightningTipBot',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LightningTopBot.webp',
+  },
+  {
+    name: 'LipaWallet',
+    websiteUrl: 'https://lipa.swiss/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/lipawallet.webp',
+  },
+  {
+    name: 'LNbits',
+    websiteUrl: 'https://lnbits.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LNbits.webp',
+  },
+  {
+    name: 'Machankura',
+    websiteUrl: 'https://8333.mobi/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Machankura.webp',
+  },
+  {
+    name: 'Muun',
+    websiteUrl: 'https://muun.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/muun.webp',
+  },
+  {
+    name: 'OneKey',
+    websiteUrl: 'https://onekey.so/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/OneKey.webp',
   },
   {
     name: 'Phoenix',
     websiteUrl: 'https://phoenix.acinq.co/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/3.webp',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Phoenix.webp',
+  },
+  {
+    name: 'PouchPH',
+    websiteUrl: 'https://pouch.ph/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Pouchph.webp',
+  },
+  {
+    name: 'River',
+    websiteUrl: 'https://river.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/River.webp',
+  },
+  {
+    name: 'ShockWallet',
+    websiteUrl: 'https://shockwallet.app/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/ShockWallet.webp',
+  },
+  {
+    name: 'Wallet of Satoshi',
+    websiteUrl: 'https://www.walletofsatoshi.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/WalletofSatoshi.webp',
+  },
+  {
+    name: 'ZEBEDEE',
+    websiteUrl: 'https://zbd.gg/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/ZEBEDEE.webp',
+  },
+  {
+    name: 'Zeus',
+    websiteUrl: 'https://zeusln.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Zeus.webp',
   },
 ];
 
@@ -250,11 +385,11 @@ export default function PaymentLinkScreen(): JSX.Element {
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center>
-          <div className="flex flex-col w-full gap-3 pb-2.5 justify-center">
-            <p className="text-dfxGray-700 font-bold text-xl">{payRequest.displayName}</p>
+          <div className="flex flex-col w-full gap-6 py-8 justify-center">
+            <p className="text-dfxBlue-800 font-bold text-xl">{payRequest.displayName}</p>
             <div className="w-full h-[1px] bg-gradient-to-r bg-dfxGray-500 from-white via-dfxGray-500 to-white" />
-            <p className="text-[22px] font-bold text-dfxBlue-800">
-              {payRequest.requestedAmount.asset}{' '}
+            <p className="text-xl font-bold text-dfxBlue-800">
+              <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
               {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
             </p>
           </div>
@@ -302,20 +437,19 @@ export default function PaymentLinkScreen(): JSX.Element {
             <>
               <StyledCollapsible
                 full
-                isExpanded={true}
                 titleContent={
-                  <div className="flex flex-col items-start text-left">
+                  <div className="flex flex-col items-start gap-1.5 text-left">
                     <div className="flex flex-col items-start text-left">
                       <div className="font-bold leading-none">{translate('screens/payment', 'Payment details')}</div>
                     </div>
-                    <div className="leading-none mt-1 text-dfxGray-700">
+                    <div className="leading-none text-dfxGray-800 text-xs">
                       {`${translate('screens/payment', 'Your payment details at a glance')}`}
                     </div>
                   </div>
                 }
               >
                 <div className="flex w-full items-center justify-center">
-                  <div className="w-48 py-3">
+                  <div className="w-48 pt-3 pb-7">
                     <QrBasic data={paymentIdentifier} />
                   </div>
                 </div>
@@ -365,21 +499,31 @@ function CompatibleWallets(): JSX.Element {
       <p className="text-base pt-3 pb-3 text-dfxGray-700">
         {translate('screens/payment', 'Scan the QR-Code with a compatible wallet to complete the payment.')}
       </p>
-      <div className="flex flex-row justify-center gap-4 flex-wrap">
+      <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 justify-center">
         {compatibleWallets.map((wallet) => (
           <div
             key={wallet.name}
-            className="flex flex-col items-center gap-1.5 cursor-pointer"
+            className="flex flex-col items-center gap-2 cursor-pointer"
             onClick={() => window.open(wallet.websiteUrl)}
+            style={{ flex: '1 1 0', maxWidth: '120px', minWidth: '0' }}
           >
             <img
               className="border border-dfxGray-400 shadow-md bg-white rounded-md overflow-clip"
               src={wallet.iconUrl}
               alt={wallet.name}
-              width="80"
-              height="80"
+              style={{ width: '100%', height: 'auto' }}
             />
-            <p className="text-center text-xs font-semibold text-dfxGray-600 w-[80px]">{wallet.name}</p>
+            <p
+              className="text-center font-semibold text-dfxGray-600 w-full text-2xs sm:text-xs truncate"
+              style={{
+                maxWidth: '100%',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {wallet.name}
+            </p>
           </div>
         ))}
       </div>
