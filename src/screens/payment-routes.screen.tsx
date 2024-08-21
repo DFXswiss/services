@@ -761,8 +761,8 @@ const Content = forwardRef<HTMLInputElement, DateAndTimePickerContentProps>(
 
     useEffect(() => {
       const toLocalISOString = (date: Date) => {
-        const tzoffset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
-        return new Date(date.getTime() - tzoffset).toISOString().slice(0, 19); // Remove the 'Z' at the end
+        const tzoffset = date.getTimezoneOffset() * 60000;
+        return new Date(date.getTime() - tzoffset).toISOString().slice(0, -5);
       };
 
       if (value) {
