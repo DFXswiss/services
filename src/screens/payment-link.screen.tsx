@@ -490,7 +490,7 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
       {header && (
         <div className="flex flex-row items-center gap-2">
           <div className="flex-grow bg-gradient-to-r from-white to-dfxGray-600 h-[1px]" />
-          <p className="text-xs text-dfxGray-700 whitespace-nowrap">{header.toUpperCase()}</p>
+          <p className="text-xs font-medium text-dfxGray-600 whitespace-nowrap">{header.toUpperCase()}</p>
           <div className="flex-grow bg-gradient-to-r from-dfxGray-600 to-white h-[1px]" />
         </div>
       )}
