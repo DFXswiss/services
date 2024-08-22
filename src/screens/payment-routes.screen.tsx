@@ -398,9 +398,7 @@ export default function PaymentRoutes(): JSX.Element {
                                 },
                               ]}
                             >
-                              <p className="font-semibold">
-                                {translate('screens/payment', link.payment.status).toUpperCase()}
-                              </p>
+                              <p>{translate('screens/payment', link.payment.status)}</p>
                             </StyledDataTableExpandableRow>
                           )}
                         </StyledDataTable>

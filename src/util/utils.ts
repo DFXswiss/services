@@ -73,8 +73,8 @@ export function formatLocationAddress({
   country?: string;
 }): string | undefined {
   const streetAddress = filterAndJoin([street, houseNumber], ' ');
-  const remainder = filterAndJoin([zip, city, country], ' ');
-  const location = filterAndJoin([streetAddress, remainder], ', ');
+  const zipCity = filterAndJoin([zip, city], ' ');
+  const location = filterAndJoin([streetAddress, zipCity, country], ', ');
   return location || undefined;
 }
 

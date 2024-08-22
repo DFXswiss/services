@@ -429,7 +429,9 @@ export default function PaymentLinkScreen(): JSX.Element {
                 titleContent={
                   <div className="flex flex-col items-start gap-1.5 text-left -my-1">
                     <div className="flex flex-col items-start text-left">
-                      <div className="font-bold leading-none">{translate('screens/payment', 'Payment details')}</div>
+                      <div className="font-semibold leading-none">
+                        {translate('screens/payment', 'Payment details')}
+                      </div>
                     </div>
                     <div className="leading-none text-dfxGray-800 text-xs">
                       {`${translate('screens/payment', 'Your payment details at a glance')}`}
@@ -439,7 +441,7 @@ export default function PaymentLinkScreen(): JSX.Element {
               >
                 <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                   <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                    <p className="font-semibold">{translate('screens/payment', 'Pending').toUpperCase()}</p>
+                    <p>{translate('screens/payment', 'Pending')}</p>
                   </StyledDataTableRow>
                   <StyledDataTableRow label={paymentIdentifierLabelMap[selectedPaymentMethod.id] ?? 'URI'}>
                     <p>{blankedAddress(paymentIdentifier, { width })}</p>
@@ -457,7 +459,6 @@ export default function PaymentLinkScreen(): JSX.Element {
                     <StyledDataTableExpandableRow
                       label={translate('screens/payment', 'Recipient')}
                       expansionItems={[
-                        { label: translate('screens/support', 'Name'), text: payRequest.recipient.name },
                         {
                           label: translate('screens/home', 'Address'),
                           text: formatLocationAddress({ ...payRequest.recipient.address }) ?? '',
@@ -485,9 +486,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           },
                         },
                       ].filter((item) => item.text)}
-                    >
-                      {payRequest.recipient.name && <p>{payRequest.recipient.name}</p>}
-                    </StyledDataTableExpandableRow>
+                    />
                   )}
                 </StyledDataTable>
                 <div className="flex w-full items-center justify-center">
