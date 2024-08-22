@@ -6,6 +6,7 @@ import {
   SpinnerSize,
   StyledCollapsible,
   StyledDataTable,
+  StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
   StyledLoadingSpinner,
@@ -452,25 +453,41 @@ export default function PaymentLinkScreen(): JSX.Element {
                   <StyledDataTableRow label={translate('screens/payment', 'Name')}>
                     <p>{JSON.parse(payRequest.metadata)[0][1]}</p>
                   </StyledDataTableRow>
-                  {payRequest.recipient.address && (
-                    <StyledDataTableRow label={translate('screens/payment', 'Address')}>
-                      <p>{formatLocationAddress({ ...payRequest.recipient.address })}</p>
-                    </StyledDataTableRow>
-                  )}
-                  {payRequest.recipient.phone && (
-                    <StyledDataTableRow label={translate('screens/kyc', 'Phone number')}>
-                      <p>{payRequest.recipient.phone}</p>
-                    </StyledDataTableRow>
-                  )}
-                  {payRequest.recipient.mail && (
-                    <StyledDataTableRow label={translate('screens/kyc', 'Email address')}>
-                      <p>{payRequest.recipient.mail}</p>
-                    </StyledDataTableRow>
-                  )}
-                  {payRequest.recipient.website && (
-                    <StyledDataTableRow label={translate('screens/kyc', 'Website')}>
-                      <p>{payRequest.recipient.website}</p>
-                    </StyledDataTableRow>
+                  {payRequest.recipient && (
+                    <StyledDataTableExpandableRow
+                      label={translate('screens/payment', 'Recipient')}
+                      expansionItems={[
+                        { label: translate('screens/support', 'Name'), text: payRequest.recipient.name },
+                        {
+                          label: translate('screens/home', 'Address'),
+                          text: formatLocationAddress({ ...payRequest.recipient.address }) ?? '',
+                        },
+                        {
+                          label: translate('screens/kyc', 'Phone number'),
+                          text: payRequest.recipient.phone,
+                        },
+                        {
+                          label: translate('screens/kyc', 'Email address'),
+                          text: payRequest.recipient.mail,
+                        },
+                        {
+                          label: translate('screens/kyc', 'Website'),
+                          text: payRequest.recipient.website,
+                          // open absolute URL in new tab
+                          onClick: () => {
+                            const url =
+                              payRequest.recipient.website.startsWith('http://') ||
+                              payRequest.recipient.website.startsWith('https://')
+                                ? payRequest.recipient.website
+                                : `https://${payRequest.recipient.website}`;
+
+                            window.open(url, '_blank');
+                          },
+                        },
+                      ].filter((item) => item.text)}
+                    >
+                      {payRequest.recipient.name && <p>{payRequest.recipient.name}</p>}
+                    </StyledDataTableExpandableRow>
                   )}
                 </StyledDataTable>
                 <div className="flex w-full items-center justify-center">
