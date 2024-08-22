@@ -20,6 +20,7 @@ import {
   AlignContent,
   CopyButton,
   Form,
+  IconVariant,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
@@ -31,7 +32,6 @@ import {
   StyledDropdown,
   StyledHorizontalStack,
   StyledInput,
-  StyledLink,
   StyledLoadingSpinner,
   StyledSearchDropdown,
   StyledVerticalStack,
@@ -47,7 +47,7 @@ import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress } from 'src/util/utils';
+import { blankedAddress, formatLocationAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
 interface FormData {
@@ -75,29 +75,6 @@ interface RouteIdSelectData {
 }
 
 type RouteType = 'buy' | 'sell' | 'swap';
-
-function formatAddress({
-  street,
-  houseNumber,
-  zip,
-  city,
-  country,
-}: {
-  street?: string;
-  houseNumber?: string;
-  zip?: string;
-  city?: string;
-  country?: string;
-}): string | undefined {
-  const streetAddress = filterAndJoin([street, houseNumber], ' ');
-  const remainder = filterAndJoin([zip, city, country], ' ');
-  const location = filterAndJoin([streetAddress, remainder], ', ');
-  return location || undefined;
-}
-
-function filterAndJoin(items: (string | undefined)[], separator?: string): string {
-  return items.filter((i) => i).join(separator);
-}
 
 export default function PaymentRoutes(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -164,10 +141,6 @@ export default function PaymentRoutes(): JSX.Element {
       setTimeout(() => paymentLinkRefs.current[id]?.scrollIntoView());
       setExpandedRef(id);
     }
-  }
-
-  function formatURL(url: string): string {
-    return url.split('dfx.swiss')[1];
   }
 
   const hasRoutes =
@@ -323,11 +296,6 @@ export default function PaymentRoutes(): JSX.Element {
                       }
                     >
                       <StyledVerticalStack full gap={4}>
-                        <div className="flex w-full items-center justify-center">
-                          <div className="w-48 py-3">
-                            <QrBasic data={Lnurl.prependLnurl(link.lnurl)} />
-                          </div>
-                        </div>
                         <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                           <StyledDataTableRow label={translate('screens/payment', 'ID')}>
                             <p>{link.id}</p>
@@ -343,16 +311,33 @@ export default function PaymentRoutes(): JSX.Element {
                           <StyledDataTableRow label={translate('screens/payment', 'State')}>
                             <p>{translate('screens/payment', link.status)}</p>
                           </StyledDataTableRow>
-                          <StyledDataTableRow label={translate('screens/payment', 'Link')}>
-                            <p>{blankedAddress(Lnurl.prependLnurl(link.lnurl), { width })}</p>
-                            <CopyButton onCopy={() => copy(Lnurl.prependLnurl(link.lnurl))} />
-                          </StyledDataTableRow>
-                          <StyledDataTableRow label={translate('screens/payment', 'LNURL')}>
-                            <p>{blankedAddress(link.lnurl, { width })}</p>
-                          </StyledDataTableRow>
-                          <StyledDataTableRow label={translate('screens/payment', 'URL')}>
-                            <StyledLink label={formatURL(link.url)} url={link.url} dark />
-                          </StyledDataTableRow>
+                          <StyledDataTableExpandableRow
+                            label="LNURL"
+                            expansionItems={[
+                              {
+                                label: translate('screens/payment', 'Link'),
+                                text: blankedAddress(Lnurl.prependLnurl(link.lnurl), { width }),
+                                icon: IconVariant.COPY,
+                                onClick: () => copy(Lnurl.prependLnurl(link.lnurl)),
+                              },
+                              {
+                                label: 'LNURL',
+                                text: blankedAddress(link.lnurl, { width, scale: 0.8 }),
+                                icon: IconVariant.COPY,
+                                onClick: () => copy(link.lnurl),
+                              },
+                              {
+                                label: translate('screens/payment', 'LNURL decoded'),
+                                text: blankedAddress(link.url, { width }),
+                                icon: IconVariant.COPY,
+                                onClick: () => copy(link.url),
+                              },
+                            ]}
+                          >
+                            <p className="text-right overflow-ellipsis">
+                              {blankedAddress(link.lnurl, { width, scale: 0.8 })}
+                            </p>
+                          </StyledDataTableExpandableRow>
                           {link.recipient && (
                             <StyledDataTableExpandableRow
                               label={translate('screens/payment', 'Recipient')}
@@ -360,7 +345,7 @@ export default function PaymentRoutes(): JSX.Element {
                                 { label: translate('screens/support', 'Name'), text: link.recipient.name },
                                 {
                                   label: translate('screens/home', 'Address'),
-                                  text: formatAddress({ ...link.recipient.address }),
+                                  text: formatLocationAddress({ ...link.recipient.address }),
                                 },
                                 {
                                   label: translate('screens/kyc', 'Phone number'),
@@ -368,7 +353,7 @@ export default function PaymentRoutes(): JSX.Element {
                                 },
                                 {
                                   label: translate('screens/kyc', 'Email address'),
-                                  text: link.recipient.email,
+                                  text: link.recipient.mail,
                                 },
                                 {
                                   label: translate('screens/kyc', 'Website'),
@@ -420,12 +405,15 @@ export default function PaymentRoutes(): JSX.Element {
                                 },
                               ]}
                             >
-                              <p className="font-semibold">
-                                {translate('screens/payment', link.payment.status).toUpperCase()}
-                              </p>
+                              <p>{translate('screens/payment', link.payment.status)}</p>
                             </StyledDataTableExpandableRow>
                           )}
                         </StyledDataTable>
+                        <div className="flex w-full items-center justify-center">
+                          <div className="w-48 py-3">
+                            <QrBasic data={Lnurl.prependLnurl(link.lnurl)} />
+                          </div>
+                        </div>
                         {link.status === PaymentLinkStatus.ACTIVE &&
                           (!link.payment ||
                             [PaymentLinkPaymentStatus.CANCELLED, PaymentLinkPaymentStatus.EXPIRED].includes(
@@ -625,7 +613,7 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
             country: data.recipientCountry?.symbol,
           },
           phone: data.recipientPhone,
-          email: data.recipientEmail,
+          mail: data.recipientEmail,
           website: data.recipientWebsite,
         },
       } as CreatePaymentLink;
@@ -879,7 +867,7 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
                     {
                       label: translate('screens/home', 'Address'),
                       text:
-                        formatAddress({
+                        formatLocationAddress({
                           street: data.recipientStreet,
                           houseNumber: data.recipientHouseNumber,
                           zip: data.recipientZip,

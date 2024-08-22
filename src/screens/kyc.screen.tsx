@@ -698,7 +698,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                   name="phone"
                   autocomplete="phone"
                   type="tel"
-                  label={translate('screens/kyc', 'Phone number')}
+                  label={translate('screens/kyc', 'Mobile number')}
                   placeholder="+49 12345678"
                   smallLabel
                 />

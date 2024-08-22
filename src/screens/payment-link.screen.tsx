@@ -6,6 +6,7 @@ import {
   SpinnerSize,
   StyledCollapsible,
   StyledDataTable,
+  StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
   StyledLoadingSpinner,
@@ -21,7 +22,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress, url } from 'src/util/utils';
+import { blankedAddress, formatLocationAddress, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 const noPaymentErrorMessage = 'No pending payment found';
@@ -61,6 +62,19 @@ export interface PaymentLinkPayRequest {
   metadata: string;
   displayName: string;
   quote: Quote;
+  recipient: {
+    address: {
+      city: string;
+      country: string;
+      houseNumber: string;
+      street: string;
+      zip: string;
+    };
+    name: string;
+    mail: string;
+    phone: string;
+    website: string;
+  };
   requestedAmount: Amount;
   transferAmounts: TransferInfo[];
 }
@@ -415,7 +429,9 @@ export default function PaymentLinkScreen(): JSX.Element {
                 titleContent={
                   <div className="flex flex-col items-start gap-1.5 text-left -my-1">
                     <div className="flex flex-col items-start text-left">
-                      <div className="font-bold leading-none">{translate('screens/payment', 'Payment details')}</div>
+                      <div className="font-semibold leading-none">
+                        {translate('screens/payment', 'Payment details')}
+                      </div>
                     </div>
                     <div className="leading-none text-dfxGray-800 text-xs">
                       {`${translate('screens/payment', 'Your payment details at a glance')}`}
@@ -423,28 +439,61 @@ export default function PaymentLinkScreen(): JSX.Element {
                   </div>
                 }
               >
-                <div className="flex w-full items-center justify-center">
-                  <div className="w-48 pt-3 pb-7">
-                    <QrBasic data={paymentIdentifier} />
-                  </div>
-                </div>
                 <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                   <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                    <p className="font-semibold">{translate('screens/payment', 'Pending').toUpperCase()}</p>
+                    <p>{translate('screens/payment', 'Pending')}</p>
                   </StyledDataTableRow>
-                  <StyledDataTableRow label={paymentIdentifierLabelMap[paymentIdentifier] ?? 'URI'}>
+                  <StyledDataTableRow label={paymentIdentifierLabelMap[selectedPaymentMethod.id] ?? 'URI'}>
                     <p>{blankedAddress(paymentIdentifier, { width })}</p>
                     <CopyButton onCopy={() => copy(paymentIdentifier)} />
-                  </StyledDataTableRow>
-                  <StyledDataTableRow label={translate('screens/payment', 'Name')}>
-                    <div>{JSON.parse(payRequest.metadata)[0][1]}</div>
                   </StyledDataTableRow>
                   <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
                     <p>
                       {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
                     </p>
                   </StyledDataTableRow>
+                  <StyledDataTableRow label={translate('screens/payment', 'Name')}>
+                    <p>{JSON.parse(payRequest.metadata)[0][1]}</p>
+                  </StyledDataTableRow>
+                  {payRequest.recipient && (
+                    <StyledDataTableExpandableRow
+                      label={translate('screens/payment', 'Recipient')}
+                      expansionItems={[
+                        {
+                          label: translate('screens/home', 'Address'),
+                          text: formatLocationAddress({ ...payRequest.recipient.address }) ?? '',
+                        },
+                        {
+                          label: translate('screens/kyc', 'Phone number'),
+                          text: payRequest.recipient.phone,
+                        },
+                        {
+                          label: translate('screens/kyc', 'Email address'),
+                          text: payRequest.recipient.mail,
+                        },
+                        {
+                          label: translate('screens/kyc', 'Website'),
+                          text: payRequest.recipient.website,
+                          // open absolute URL in new tab
+                          onClick: () => {
+                            const url =
+                              payRequest.recipient.website.startsWith('http://') ||
+                              payRequest.recipient.website.startsWith('https://')
+                                ? payRequest.recipient.website
+                                : `https://${payRequest.recipient.website}`;
+
+                            window.open(url, '_blank');
+                          },
+                        },
+                      ].filter((item) => item.text)}
+                    />
+                  )}
                 </StyledDataTable>
+                <div className="flex w-full items-center justify-center">
+                  <div className="w-48 pb-3 pt-7">
+                    <QrBasic data={paymentIdentifier} />
+                  </div>
+                </div>
               </StyledCollapsible>
               {['OpenCryptoPay.io', 'FrankencoinPay.com'].includes(selectedPaymentMethod.id) && (
                 <StyledVerticalStack full gap={8} center>

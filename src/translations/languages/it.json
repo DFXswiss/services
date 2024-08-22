@@ -113,6 +113,7 @@
     "example@mail.com": "example@mail.com",
     "Website": "Sito web",
     "https://example.com": "https://esempio.it",
+    "Mobile number": "Numero di cellulare",
     "Phone number": "Numero di telefono",
     "Organization Information": "Informazioni sull'organizzazione",
     "Organization name": "Nome dell'organizzazione",
@@ -389,6 +390,7 @@
     "Failed": "Fallito",
     "Returned": "Restituito",
     "Unassigned": "Non assegnato",
+    "LNURL decoded": "LNURL decodificato",
 
     "Failure reason": "Causa dell'errore",
     "Unknown": "Sconosciuto",
@@ -413,6 +415,7 @@
     "Asset requires KYC": "Attività richiede KYC",
     "Card name mismatch": "Il nome sulla carta non corrisponde",
     "Address deleted": "Indirizzo cancellato",
+    "Video identification required": "È necessaria l'identificazione video",
 
     "Payment method": "Metodo di pagamento",
     "Standard bank transaction": "Transazione bancaria standard",

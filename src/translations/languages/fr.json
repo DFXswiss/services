@@ -113,7 +113,8 @@
     "example@mail.com": "exempel@mail.fr",
     "Website": "Site web",
     "https://example.com": "https://exemple.fr",
-    "Phone number": "Numéro de téléphone portable",
+    "Mobile number": "Numéro de portable",
+    "Phone number": "Numéro de téléphone",
     "Organization Information": "Organisation",
     "Organization name": "Nom de l'organisation",
     "Example inc.": "Exempel SARL & Co. KG",
@@ -389,6 +390,7 @@
     "Failed": "Échec",
     "Returned": "Retourné",
     "Unassigned": "Non attribué",
+    "LNURL decoded": "LNURL décodé",
 
     "Failure reason": "Cause de l'erreur",
     "Unknown": "Inconnu",
@@ -413,6 +415,7 @@
     "Asset requires KYC": "Actif nécessite KYC",
     "Card name mismatch": "Le nom sur la carte ne correspond pas",
     "Address deleted": "Adresse supprimée",
+    "Video identification required": "Identification par vidéo nécessaire",
 
     "Payment method": "Mode de paiement",
     "Standard bank transaction": "Transaction bancaire standard",
