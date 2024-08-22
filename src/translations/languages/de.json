@@ -390,6 +390,7 @@
     "Failed": "Gescheitert",
     "Returned": "Zurückgeschickt",
     "Unassigned": "Nicht zugeordnet",
+    "LNURL decoded": "LNURL dekodiert",
 
     "Failure reason": "Fehlerursache",
     "Unknown": "Unbekannt",
