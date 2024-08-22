@@ -1,6 +1,5 @@
 import {
   ApiError,
-  Blockchain,
   Country,
   CreatePaymentLink,
   CreatePaymentLinkPayment,
@@ -9,6 +8,7 @@ import {
   PaymentLinkPaymentStatus,
   PaymentLinkStatus,
   SellRoute,
+  useApi,
   useCountry,
   useFiatContext,
   usePaymentRoutesContext,
@@ -20,7 +20,6 @@ import {
   AlignContent,
   CopyButton,
   Form,
-  IconVariant,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
@@ -75,6 +74,8 @@ interface RouteIdSelectData {
   description: string;
 }
 
+type RouteType = 'buy' | 'sell' | 'swap';
+
 function formatAddress({
   street,
   houseNumber,
@@ -112,6 +113,7 @@ export default function PaymentRoutes(): JSX.Element {
     cancelPaymentLinkPayment,
     error,
   } = usePaymentRoutesContext();
+  const { call } = useApi();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -119,6 +121,7 @@ export default function PaymentRoutes(): JSX.Element {
   const [showCreatePaymentLinkOverlay, setShowCreatePaymentLinkOverlay] = useState(false);
   const [showCreatePaymentOverlay, setShowCreatePaymentOverlay] = useState<string>();
   const [isUpdatingPaymentLink, setIsUpdatingPaymentLink] = useState<string[]>([]);
+  const [isDeletingRoute, setIsDeletingRoute] = useState<string[]>([]);
   const [expandedRef, setExpandedRef] = useState<string>();
   const [createPaymentLinkStep, setCreatePaymentLinkStep] = useState<CreatePaymentLinkStep>(
     CreatePaymentLinkStep.ROUTE,
@@ -130,6 +133,19 @@ export default function PaymentRoutes(): JSX.Element {
     setIsUpdatingPaymentLink((prev) => [...prev, id]);
     updatePaymentLink({ status }, +id).finally(() => {
       setIsUpdatingPaymentLink((prev) => prev.filter((i) => i !== id));
+    });
+  }
+
+  async function deleteRoute(id: number, type: RouteType) {
+    const url = `${type}/${id}`;
+    setIsDeletingRoute((prev) => [...prev, url]);
+    // TODO: add to usePaymentRoutesContext and update the paymentRoutes state
+    call({
+      url: url,
+      method: 'PUT',
+      data: { active: false },
+    }).finally(() => {
+      setIsDeletingRoute((prev) => prev.filter((i) => i !== url));
     });
   }
 
@@ -164,22 +180,18 @@ export default function PaymentRoutes(): JSX.Element {
       ? 'Create payment'
       : 'Payment routes';
 
+  const onBack =
+    showCreatePaymentLinkOverlay && createPaymentLinkStep !== undefined
+      ? () =>
+          createPaymentLinkStep !== CreatePaymentLinkStep.ROUTE
+            ? setCreatePaymentLinkStep(createPaymentLinkStep - 1)
+            : setShowCreatePaymentLinkOverlay(false)
+      : showCreatePaymentOverlay !== undefined
+      ? () => setShowCreatePaymentOverlay(undefined)
+      : undefined;
+
   return (
-    <Layout
-      title={translate('screens/payment', title)}
-      onBack={
-        showCreatePaymentLinkOverlay && createPaymentLinkStep !== undefined
-          ? () =>
-              createPaymentLinkStep !== CreatePaymentLinkStep.ROUTE
-                ? setCreatePaymentLinkStep(createPaymentLinkStep - 1)
-                : setShowCreatePaymentLinkOverlay(false)
-          : showCreatePaymentOverlay !== undefined
-          ? () => setShowCreatePaymentOverlay(undefined)
-          : undefined
-      }
-      textStart
-      rootRef={rootRef}
-    >
+    <Layout title={translate('screens/payment', title)} onBack={onBack} textStart rootRef={rootRef}>
       {error ? (
         <ErrorHint message={error} />
       ) : showCreatePaymentLinkOverlay ? (
@@ -193,107 +205,94 @@ export default function PaymentRoutes(): JSX.Element {
       ) : (
         <StyledVerticalStack full gap={5}>
           {paymentRoutes?.buy.length ? (
-            <StyledDataTable label={translate('screens/payment', 'Buy')}>
+            <StyledVerticalStack gap={2} full>
+              <h2 className="ml-3.5 mb-1.5 text-dfxGray-700">{translate('screens/payment', 'Buy')}</h2>
               {paymentRoutes?.buy.map<JSX.Element>((route) => (
-                <StyledDataTableExpandableRow
-                  key={route.id}
-                  label={`${route.asset.blockchain} / ${route.asset.name}`}
-                  expansionItems={[
-                    { label: translate('screens/payment', 'Asset'), text: route.asset.name },
-                    { label: translate('screens/home', 'Blockchain'), text: route.asset.blockchain },
-                    {
-                      label: translate('screens/payment', 'Purpose of payment'),
-                      text: route.bankUsage,
-                      icon: IconVariant.COPY,
-                      onClick: () => copy(route.bankUsage),
-                    },
-                    {
-                      label: translate('screens/home', 'Volume'),
-                      text: `${route.volume} CHF`,
-                    },
-                    {
-                      label: translate('screens/payment', 'Annual volume'),
-                      text: `${route.annualVolume} CHF`,
-                    },
-                  ]}
-                >
-                  {route.bankUsage}
-                </StyledDataTableExpandableRow>
+                <div key={route.id}>
+                  <RouteComponent
+                    title={`${translate('screens/payment', 'Route')} ${route.id}`}
+                    subTitle={`${route.asset.blockchain} / ${route.asset.name}`}
+                    adjacentText={translate('screens/payment', route.bankUsage)}
+                    items={[
+                      { label: translate('screens/payment', 'ID'), text: route.id.toString() },
+                      { label: translate('screens/payment', 'Asset'), text: route.asset.name },
+                      { label: translate('screens/home', 'Blockchain'), text: route.asset.blockchain },
+                      { label: translate('screens/payment', 'Purpose of payment'), text: route.bankUsage, copy: true },
+                      { label: translate('screens/home', 'Volume'), text: `${route.volume} CHF` },
+                      { label: translate('screens/payment', 'Annual volume'), text: `${route.annualVolume} CHF` },
+                    ]}
+                    deleteRoute={() => deleteRoute(route.id, 'buy')}
+                    isDeletingRoute={isDeletingRoute.includes(`buy/${route.id}`)}
+                  />
+                </div>
               ))}
-            </StyledDataTable>
+            </StyledVerticalStack>
           ) : (
             <></>
           )}
           {paymentRoutes?.sell.length ? (
-            <StyledDataTable label={translate('screens/payment', 'Sell')}>
+            <StyledVerticalStack gap={2} full>
+              <h2 className="ml-3.5 mb-1.5 text-dfxGray-700">{translate('screens/payment', 'Sell')}</h2>
               {paymentRoutes?.sell.map<JSX.Element>((route) => (
-                <StyledDataTableExpandableRow
-                  key={route.id}
-                  label={`${route.currency.name} / ${route.iban}`}
-                  expansionItems={[
-                    { label: translate('screens/payment', 'ID'), text: route.id.toString() },
-                    { label: translate('screens/payment', 'Currency'), text: route.currency.name },
-                    { label: translate('screens/payment', 'IBAN'), text: route.iban },
-                    {
-                      label: translate('screens/payment', 'Deposit address'),
-                      text: blankedAddress(route.deposit.address, { width }),
-                    },
-                    {
-                      label: translate('screens/payment', 'Deposit blockchains'),
-                      text: route.deposit.blockchains.map((blockchain: Blockchain) => toString(blockchain)).join(', '),
-                    },
-                    {
-                      label: translate('screens/home', 'Volume'),
-                      text: `${route.volume} CHF`,
-                    },
-                    {
-                      label: translate('screens/payment', 'Annual volume'),
-                      text: `${route.annualVolume} CHF`,
-                    },
-                  ]}
-                >
-                  <p className="text-right overflow-ellipsis">
-                    {route.deposit.blockchains.map((blockchain: Blockchain) => toString(blockchain)).join(', ')}
-                  </p>
-                </StyledDataTableExpandableRow>
+                <div key={route.id}>
+                  <RouteComponent
+                    title={`${translate('screens/payment', 'Route')} ${route.id}`}
+                    subTitle={`${route.currency.name} / ${route.iban}`}
+                    adjacentText={route.deposit.blockchains.map(toString).join(', ')}
+                    items={[
+                      { label: translate('screens/payment', 'ID'), text: route.id.toString() },
+                      { label: translate('screens/payment', 'Currency'), text: route.currency.name },
+                      { label: translate('screens/payment', 'IBAN'), text: route.iban },
+                      {
+                        label: translate('screens/payment', 'Deposit address'),
+                        text: blankedAddress(route.deposit.address, { width: width && width * 0.8 }),
+                      },
+                      {
+                        label: translate('screens/payment', 'Deposit blockchains'),
+                        text: route.deposit.blockchains.map(toString).join(', '),
+                      },
+                      { label: translate('screens/home', 'Volume'), text: `${route.volume} CHF` },
+                      { label: translate('screens/payment', 'Annual volume'), text: `${route.annualVolume} CHF` },
+                    ]}
+                    deleteRoute={() => deleteRoute(route.id, 'sell')}
+                    isDeletingRoute={isDeletingRoute.includes(`sell/${route.id}`)}
+                  />
+                </div>
               ))}
-            </StyledDataTable>
+            </StyledVerticalStack>
           ) : (
             <></>
           )}
           {paymentRoutes?.swap.length ? (
-            <StyledDataTable label={translate('screens/payment', 'Swap')}>
+            <StyledVerticalStack gap={2} full>
+              <h2 className="ml-3.5 mb-1.5 text-dfxGray-700">{translate('screens/payment', 'Swap')}</h2>
               {paymentRoutes?.swap.map<JSX.Element>((route) => (
-                <StyledDataTableExpandableRow
-                  key={route.id}
-                  label={`${route.asset.blockchain} / ${route.asset.name}`}
-                  expansionItems={[
-                    { label: translate('screens/payment', 'Asset'), text: route.asset.name },
-                    { label: translate('screens/home', 'Blockchain'), text: route.asset.blockchain },
-                    {
-                      label: translate('screens/payment', 'Deposit address'),
-                      text: blankedAddress(route.deposit.address, { width }),
-                    },
-                    {
-                      label: translate('screens/payment', 'Deposit blockchains'),
-                      text: route.deposit.blockchains.map((blockchain: Blockchain) => toString(blockchain)).join(', '),
-                    },
-                    {
-                      label: translate('screens/home', 'Volume'),
-                      text: `${route.volume} CHF`,
-                    },
-                    {
-                      label: translate('screens/payment', 'Annual volume'),
-                      text: `${route.annualVolume} CHF`,
-                    },
-                  ]}
-                >
-                  <p className="text-right overflow-ellipsis">
-                    {route.deposit.blockchains.map((blockchain: Blockchain) => toString(blockchain)).join(', ')}
-                  </p>
-                </StyledDataTableExpandableRow>
+                <div key={route.id}>
+                  <RouteComponent
+                    title={`${translate('screens/payment', 'Route')} ${route.id}`}
+                    subTitle={`${route.asset.blockchain} / ${route.asset.name}`}
+                    adjacentText={route.deposit.blockchains.map(toString).join(', ')}
+                    items={[
+                      { label: translate('screens/payment', 'ID'), text: route.id.toString() },
+                      { label: translate('screens/payment', 'Asset'), text: route.asset.name },
+                      { label: translate('screens/home', 'Blockchain'), text: route.asset.blockchain },
+                      {
+                        label: translate('screens/payment', 'Deposit address'),
+                        text: blankedAddress(route.deposit.address, { width: width && width * 0.8 }),
+                      },
+                      {
+                        label: translate('screens/payment', 'Deposit blockchains'),
+                        text: route.deposit.blockchains.map(toString).join(', '),
+                      },
+                      { label: translate('screens/home', 'Volume'), text: `${route.volume} CHF` },
+                      { label: translate('screens/payment', 'Annual volume'), text: `${route.annualVolume} CHF` },
+                    ]}
+                    deleteRoute={() => deleteRoute(route.id, 'swap')}
+                    isDeletingRoute={isDeletingRoute.includes(`swap/${route.id}`)}
+                  />
+                </div>
               ))}
-            </StyledDataTable>
+            </StyledVerticalStack>
           ) : (
             <></>
           )}
@@ -486,6 +485,63 @@ export default function PaymentRoutes(): JSX.Element {
         </StyledVerticalStack>
       )}
     </Layout>
+  );
+}
+
+interface RouteComponentProps {
+  title: string;
+  subTitle: string;
+  adjacentText: string;
+  items: {
+    label: string;
+    text: string;
+    copy?: boolean;
+  }[];
+  deleteRoute: () => void;
+  isDeletingRoute: boolean;
+}
+
+function RouteComponent({
+  title,
+  subTitle,
+  adjacentText,
+  items,
+  deleteRoute,
+  isDeletingRoute,
+}: RouteComponentProps): JSX.Element {
+  const { translate } = useSettingsContext();
+  const { width } = useWindowContext();
+
+  return (
+    <StyledCollapsible
+      full
+      titleContent={
+        <div className="flex flex-row justify-between gap-2 items-center">
+          <div className="flex flex-col items-start text-left">
+            <div className="font-bold leading-none">{title}</div>
+            <div className="leading-none mt-1 text-dfxGray-700">{subTitle}</div>
+          </div>
+          <p className="overflow-ellipsis">{blankedAddress(adjacentText, { width })}</p>
+        </div>
+      }
+    >
+      <StyledVerticalStack full gap={4}>
+        <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+          {items.map((item) => (
+            <StyledDataTableRow key={item.label} label={item.label}>
+              <p>{item.text}</p>
+              {item.copy && <CopyButton onCopy={() => copy(item.text)} />}
+            </StyledDataTableRow>
+          ))}
+        </StyledDataTable>
+        <StyledButton
+          label={translate('general/actions', 'Delete')}
+          onClick={deleteRoute}
+          color={StyledButtonColor.STURDY_WHITE}
+          isLoading={isDeletingRoute}
+        />
+      </StyledVerticalStack>
+    </StyledCollapsible>
   );
 }
 
