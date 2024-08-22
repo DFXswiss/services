@@ -369,7 +369,7 @@ export default function PaymentRoutes(): JSX.Element {
                                 },
                                 {
                                   label: translate('screens/kyc', 'Email address'),
-                                  text: link.recipient.email,
+                                  text: link.recipient.mail,
                                 },
                                 {
                                   label: translate('screens/kyc', 'Website'),
@@ -569,7 +569,7 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
             country: data.recipientCountry?.symbol,
           },
           phone: data.recipientPhone,
-          email: data.recipientEmail,
+          mail: data.recipientEmail,
           website: data.recipientWebsite,
         },
       } as CreatePaymentLink;
