@@ -48,7 +48,7 @@ import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress } from 'src/util/utils';
+import { blankedAddress, formatLocationAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
 interface FormData {
@@ -73,29 +73,6 @@ interface FormData {
 interface RouteIdSelectData {
   id: string;
   description: string;
-}
-
-function formatAddress({
-  street,
-  houseNumber,
-  zip,
-  city,
-  country,
-}: {
-  street?: string;
-  houseNumber?: string;
-  zip?: string;
-  city?: string;
-  country?: string;
-}): string | undefined {
-  const streetAddress = filterAndJoin([street, houseNumber], ' ');
-  const remainder = filterAndJoin([zip, city, country], ' ');
-  const location = filterAndJoin([streetAddress, remainder], ', ');
-  return location || undefined;
-}
-
-function filterAndJoin(items: (string | undefined)[], separator?: string): string {
-  return items.filter((i) => i).join(separator);
 }
 
 export default function PaymentRoutes(): JSX.Element {
@@ -361,7 +338,7 @@ export default function PaymentRoutes(): JSX.Element {
                                 { label: translate('screens/support', 'Name'), text: link.recipient.name },
                                 {
                                   label: translate('screens/home', 'Address'),
-                                  text: formatAddress({ ...link.recipient.address }),
+                                  text: formatLocationAddress({ ...link.recipient.address }),
                                 },
                                 {
                                   label: translate('screens/kyc', 'Phone number'),
@@ -823,7 +800,7 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
                     {
                       label: translate('screens/home', 'Address'),
                       text:
-                        formatAddress({
+                        formatLocationAddress({
                           street: data.recipientStreet,
                           houseNumber: data.recipientHouseNumber,
                           zip: data.recipientZip,

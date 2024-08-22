@@ -21,7 +21,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress, url } from 'src/util/utils';
+import { blankedAddress, formatLocationAddress, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 const noPaymentErrorMessage = 'No pending payment found';
@@ -61,6 +61,19 @@ export interface PaymentLinkPayRequest {
   metadata: string;
   displayName: string;
   quote: Quote;
+  recipient: {
+    address: {
+      city: string;
+      country: string;
+      houseNumber: string;
+      street: string;
+      zip: string;
+    };
+    name: string;
+    mail: string;
+    phone: string;
+    website: string;
+  };
   requestedAmount: Amount;
   transferAmounts: TransferInfo[];
 }
@@ -423,28 +436,48 @@ export default function PaymentLinkScreen(): JSX.Element {
                   </div>
                 }
               >
-                <div className="flex w-full items-center justify-center">
-                  <div className="w-48 pt-3 pb-7">
-                    <QrBasic data={paymentIdentifier} />
-                  </div>
-                </div>
                 <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                   <StyledDataTableRow label={translate('screens/payment', 'State')}>
                     <p className="font-semibold">{translate('screens/payment', 'Pending').toUpperCase()}</p>
                   </StyledDataTableRow>
-                  <StyledDataTableRow label={paymentIdentifierLabelMap[paymentIdentifier] ?? 'URI'}>
+                  <StyledDataTableRow label={paymentIdentifierLabelMap[selectedPaymentMethod.id] ?? 'URI'}>
                     <p>{blankedAddress(paymentIdentifier, { width })}</p>
                     <CopyButton onCopy={() => copy(paymentIdentifier)} />
-                  </StyledDataTableRow>
-                  <StyledDataTableRow label={translate('screens/payment', 'Name')}>
-                    <div>{JSON.parse(payRequest.metadata)[0][1]}</div>
                   </StyledDataTableRow>
                   <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
                     <p>
                       {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
                     </p>
                   </StyledDataTableRow>
+                  <StyledDataTableRow label={translate('screens/payment', 'Name')}>
+                    <p>{JSON.parse(payRequest.metadata)[0][1]}</p>
+                  </StyledDataTableRow>
+                  {payRequest.recipient.address && (
+                    <StyledDataTableRow label={translate('screens/payment', 'Address')}>
+                      <p>{formatLocationAddress({ ...payRequest.recipient.address })}</p>
+                    </StyledDataTableRow>
+                  )}
+                  {payRequest.recipient.phone && (
+                    <StyledDataTableRow label={translate('screens/kyc', 'Phone number')}>
+                      <p>{payRequest.recipient.phone}</p>
+                    </StyledDataTableRow>
+                  )}
+                  {payRequest.recipient.mail && (
+                    <StyledDataTableRow label={translate('screens/kyc', 'Email address')}>
+                      <p>{payRequest.recipient.mail}</p>
+                    </StyledDataTableRow>
+                  )}
+                  {payRequest.recipient.website && (
+                    <StyledDataTableRow label={translate('screens/kyc', 'Website')}>
+                      <p>{payRequest.recipient.website}</p>
+                    </StyledDataTableRow>
+                  )}
                 </StyledDataTable>
+                <div className="flex w-full items-center justify-center">
+                  <div className="w-48 pb-3 pt-7">
+                    <QrBasic data={paymentIdentifier} />
+                  </div>
+                </div>
               </StyledCollapsible>
               {['OpenCryptoPay.io', 'FrankencoinPay.com'].includes(selectedPaymentMethod.id) && (
                 <StyledVerticalStack full gap={8} center>
