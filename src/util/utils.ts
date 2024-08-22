@@ -58,3 +58,26 @@ export function openPdfFromString(pdf: string) {
 export function sortAddressesByBlockchain(a: UserAddress, b: UserAddress): number {
   return a.blockchains[0].localeCompare(b.blockchains[0]);
 }
+
+export function formatLocationAddress({
+  street,
+  houseNumber,
+  zip,
+  city,
+  country,
+}: {
+  street?: string;
+  houseNumber?: string;
+  zip?: string;
+  city?: string;
+  country?: string;
+}): string | undefined {
+  const streetAddress = filterAndJoin([street, houseNumber], ' ');
+  const zipCity = filterAndJoin([zip, city], ' ');
+  const location = filterAndJoin([streetAddress, zipCity, country], ', ');
+  return location || undefined;
+}
+
+function filterAndJoin(items: (string | undefined)[], separator?: string): string {
+  return items.filter((i) => i).join(separator);
+}
