@@ -7,8 +7,8 @@ import {
   PaymentLinkPaymentMode,
   PaymentLinkPaymentStatus,
   PaymentLinkStatus,
+  PaymentRouteType,
   SellRoute,
-  useApi,
   useCountry,
   useFiatContext,
   usePaymentRoutesContext,
@@ -74,8 +74,6 @@ interface RouteIdSelectData {
   description: string;
 }
 
-type RouteType = 'buy' | 'sell' | 'swap';
-
 export default function PaymentRoutes(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
@@ -88,9 +86,9 @@ export default function PaymentRoutes(): JSX.Element {
     paymentLinksLoading,
     updatePaymentLink,
     cancelPaymentLinkPayment,
+    deletePaymentRoute,
     error,
   } = usePaymentRoutesContext();
-  const { call } = useApi();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -113,16 +111,10 @@ export default function PaymentRoutes(): JSX.Element {
     });
   }
 
-  async function deleteRoute(id: number, type: RouteType) {
-    const url = `${type}/${id}`;
-    setIsDeletingRoute((prev) => [...prev, url]);
-    // TODO: add to usePaymentRoutesContext and update the paymentRoutes state
-    call({
-      url: url,
-      method: 'PUT',
-      data: { active: false },
-    }).finally(() => {
-      setIsDeletingRoute((prev) => prev.filter((i) => i !== url));
+  async function deleteRoute(id: number, type: PaymentRouteType) {
+    setIsDeletingRoute((prev) => [...prev, routeKey(id, type)]);
+    deletePaymentRoute(id, type).finally(() => {
+      setIsDeletingRoute((prev) => prev.filter((i) => i !== routeKey(id, type)));
     });
   }
 
@@ -141,6 +133,10 @@ export default function PaymentRoutes(): JSX.Element {
       setTimeout(() => paymentLinkRefs.current[id]?.scrollIntoView());
       setExpandedRef(id);
     }
+  }
+
+  function routeKey(id: number, type: PaymentRouteType): string {
+    return `${type}/${id}`;
   }
 
   const hasRoutes =
@@ -171,7 +167,7 @@ export default function PaymentRoutes(): JSX.Element {
         <CreatePaymentLinkOverlay step={createPaymentLinkStep} setStep={setCreatePaymentLinkStep} onDone={onDone} />
       ) : showCreatePaymentOverlay !== undefined ? (
         <CreatePaymentOverlay id={showCreatePaymentOverlay} onDone={onDone} />
-      ) : paymentRoutesLoading || (paymentLinksLoading && !isUpdatingPaymentLink.length) ? (
+      ) : (paymentRoutesLoading || paymentLinksLoading) && !(isUpdatingPaymentLink.length || isDeletingRoute.length) ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : hasRoutes === false ? (
         <p className="text-dfxGray-700">{translate('screens/payment', 'You have no payment routes yet')}</p>
@@ -195,7 +191,7 @@ export default function PaymentRoutes(): JSX.Element {
                       { label: translate('screens/payment', 'Annual volume'), text: `${route.annualVolume} CHF` },
                     ]}
                     deleteRoute={() => deleteRoute(route.id, 'buy')}
-                    isDeletingRoute={isDeletingRoute.includes(`buy/${route.id}`)}
+                    isDeletingRoute={isDeletingRoute.includes(routeKey(route.id, 'buy'))}
                   />
                 </div>
               ))}
@@ -228,7 +224,7 @@ export default function PaymentRoutes(): JSX.Element {
                       { label: translate('screens/payment', 'Annual volume'), text: `${route.annualVolume} CHF` },
                     ]}
                     deleteRoute={() => deleteRoute(route.id, 'sell')}
-                    isDeletingRoute={isDeletingRoute.includes(`sell/${route.id}`)}
+                    isDeletingRoute={isDeletingRoute.includes(routeKey(route.id, 'sell'))}
                   />
                 </div>
               ))}
@@ -261,7 +257,7 @@ export default function PaymentRoutes(): JSX.Element {
                       { label: translate('screens/payment', 'Annual volume'), text: `${route.annualVolume} CHF` },
                     ]}
                     deleteRoute={() => deleteRoute(route.id, 'swap')}
-                    isDeletingRoute={isDeletingRoute.includes(`swap/${route.id}`)}
+                    isDeletingRoute={isDeletingRoute.includes(routeKey(route.id, 'swap'))}
                   />
                 </div>
               ))}
