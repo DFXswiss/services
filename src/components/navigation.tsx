@@ -23,6 +23,7 @@ interface NavigationIframeProps extends BackButtonProps {
   title?: string;
   backButton?: boolean;
   isOpen: boolean;
+  small?: boolean;
   setIsOpen: (value: SetStateAction<boolean>) => void;
 }
 
@@ -37,9 +38,8 @@ interface NavigationMenuContentProps {
 }
 
 export const Navigation = forwardRef<HTMLDivElement, NavigationIframeProps>(
-  ({ title, backButton = true, onBack, isOpen, setIsOpen }: NavigationIframeProps, ref): JSX.Element => {
+  ({ title, backButton = true, onBack, isOpen, setIsOpen, small = false }: NavigationIframeProps, ref): JSX.Element => {
     const { params, isEmbedded } = useAppHandlingContext();
-    const { pathname } = useLocation();
 
     return title || !isEmbedded ? (
       <div
@@ -63,7 +63,7 @@ export const Navigation = forwardRef<HTMLDivElement, NavigationIframeProps>(
           <MenuIcon icon={isOpen ? IconVariant.CLOSE : IconVariant.MENU} setIsNavigationOpen={setIsOpen} />
         </div>
 
-        {isOpen && <NavigationMenu setIsNavigationOpen={setIsOpen} small={pathname === '/payment-link'} />}
+        {isOpen && <NavigationMenu setIsNavigationOpen={setIsOpen} small={small} />}
       </div>
     ) : (
       <></>
