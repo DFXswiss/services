@@ -367,7 +367,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const assetsList = payRequest?.transferAmounts.find((item) => item.method === selectedPaymentMethod.id)?.assets;
 
   return (
-    <Layout backButton={false}>
+    <Layout backButton={false} smallMenu>
       {error ? (
         <PaymentErrorHint message={error} />
       ) : !payRequest ? (

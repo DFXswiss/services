@@ -16,6 +16,7 @@ interface LayoutProps extends PropsWithChildren {
   rootRef?: Ref<HTMLDivElement>;
   scrollRef?: Ref<HTMLDivElement>;
   noPadding?: boolean;
+  smallMenu?: boolean;
 }
 
 export function Layout({
@@ -27,6 +28,7 @@ export function Layout({
   rootRef,
   scrollRef,
   noPadding,
+  smallMenu,
 }: LayoutProps): JSX.Element {
   useSift();
 
@@ -62,6 +64,7 @@ export function Layout({
         onBack={onBack}
         isOpen={isNavigationOpen}
         setIsOpen={setIsNavigationOpen}
+        small={smallMenu}
       />
 
       <div className="flex flex-col flex-grow overflow-auto" ref={scrollRef}>
