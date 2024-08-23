@@ -40,6 +40,8 @@ import { ControlProps } from '@dfx.swiss/react-components/dist/stories/form/Form
 import copy from 'copy-to-clipboard';
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { Trans } from 'react-i18next';
+import { ConfirmationOverlay } from 'src/components/home/settings-overlays';
 import { Layout } from 'src/components/layout';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -74,6 +76,11 @@ interface RouteIdSelectData {
   description: string;
 }
 
+interface DeletePaymentRoute {
+  id: number;
+  type: PaymentRouteType;
+}
+
 export default function PaymentRoutes(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
@@ -98,6 +105,7 @@ export default function PaymentRoutes(): JSX.Element {
   const [isUpdatingPaymentLink, setIsUpdatingPaymentLink] = useState<string[]>([]);
   const [isDeletingRoute, setIsDeletingRoute] = useState<string[]>([]);
   const [expandedRef, setExpandedRef] = useState<string>();
+  const [deleteRoute, setDeleteRoute] = useState<DeletePaymentRoute>();
   const [createPaymentLinkStep, setCreatePaymentLinkStep] = useState<CreatePaymentLinkStep>(
     CreatePaymentLinkStep.ROUTE,
   );
@@ -111,11 +119,16 @@ export default function PaymentRoutes(): JSX.Element {
     });
   }
 
-  async function deleteRoute(id: number, type: PaymentRouteType) {
-    setIsDeletingRoute((prev) => [...prev, routeKey(id, type)]);
-    deletePaymentRoute(id, type).finally(() => {
-      setIsDeletingRoute((prev) => prev.filter((i) => i !== routeKey(id, type)));
-    });
+  async function onDeleteRoute(result: boolean) {
+    if (result && deleteRoute) {
+      const { id, type } = deleteRoute;
+      setIsDeletingRoute((prev) => [...prev, routeKey(id, type)]);
+      deletePaymentRoute(id, type).finally(() => {
+        setIsDeletingRoute((prev) => prev.filter((i) => i !== routeKey(id, type)));
+      });
+    }
+
+    setDeleteRoute(undefined);
   }
 
   async function cancelPayment(id: string) {
@@ -147,6 +160,8 @@ export default function PaymentRoutes(): JSX.Element {
       ? `Payment Link: ${translate('screens/payment', createPaymentLinkStepToTitleMap[createPaymentLinkStep])}`
       : showCreatePaymentOverlay
       ? 'Create payment'
+      : deleteRoute
+      ? 'Delete payment route?'
       : 'Payment routes';
 
   const onBack =
@@ -157,6 +172,8 @@ export default function PaymentRoutes(): JSX.Element {
             : setShowCreatePaymentLinkOverlay(false)
       : showCreatePaymentOverlay !== undefined
       ? () => setShowCreatePaymentOverlay(undefined)
+      : deleteRoute
+      ? () => onDeleteRoute(false)
       : undefined;
 
   return (
@@ -167,6 +184,24 @@ export default function PaymentRoutes(): JSX.Element {
         <CreatePaymentLinkOverlay step={createPaymentLinkStep} setStep={setCreatePaymentLinkStep} onDone={onDone} />
       ) : showCreatePaymentOverlay !== undefined ? (
         <CreatePaymentOverlay id={showCreatePaymentOverlay} onDone={onDone} />
+      ) : deleteRoute ? (
+        <ConfirmationOverlay
+          messageContent={
+            <p className="text-dfxBlue-800 mb-2 text-center">
+              <Trans
+                i18nKey="screens/payment.deleteRoute"
+                values={{ type: deleteRoute.type.toUpperCase(), id: deleteRoute.id }}
+              >
+                Are you sure you want to delete your <strong>{deleteRoute.type.toUpperCase()}</strong> route with{' '}
+                <strong>ID {deleteRoute.id.toString()}</strong>?
+              </Trans>
+            </p>
+          }
+          cancelLabel={translate('general/actions', 'Cancel')}
+          confirmLabel={translate('general/actions', 'Delete')}
+          onCancel={() => onDeleteRoute(false)}
+          onConfirm={() => onDeleteRoute(true)}
+        />
       ) : (paymentRoutesLoading || paymentLinksLoading) && !(isUpdatingPaymentLink.length || isDeletingRoute.length) ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : hasRoutes === false ? (
@@ -190,7 +225,7 @@ export default function PaymentRoutes(): JSX.Element {
                       { label: translate('screens/home', 'Volume'), text: `${route.volume} CHF` },
                       { label: translate('screens/payment', 'Annual volume'), text: `${route.annualVolume} CHF` },
                     ]}
-                    deleteRoute={() => deleteRoute(route.id, 'buy')}
+                    deleteRoute={() => setDeleteRoute({ id: route.id, type: 'buy' })}
                     isDeletingRoute={isDeletingRoute.includes(routeKey(route.id, 'buy'))}
                   />
                 </div>
@@ -223,7 +258,7 @@ export default function PaymentRoutes(): JSX.Element {
                       { label: translate('screens/home', 'Volume'), text: `${route.volume} CHF` },
                       { label: translate('screens/payment', 'Annual volume'), text: `${route.annualVolume} CHF` },
                     ]}
-                    deleteRoute={() => deleteRoute(route.id, 'sell')}
+                    deleteRoute={() => setDeleteRoute({ id: route.id, type: 'sell' })}
                     isDeletingRoute={isDeletingRoute.includes(routeKey(route.id, 'sell'))}
                   />
                 </div>
@@ -256,7 +291,7 @@ export default function PaymentRoutes(): JSX.Element {
                       { label: translate('screens/home', 'Volume'), text: `${route.volume} CHF` },
                       { label: translate('screens/payment', 'Annual volume'), text: `${route.annualVolume} CHF` },
                     ]}
-                    deleteRoute={() => deleteRoute(route.id, 'swap')}
+                    deleteRoute={() => setDeleteRoute({ id: route.id, type: 'swap' })}
                     isDeletingRoute={isDeletingRoute.includes(routeKey(route.id, 'swap'))}
                   />
                 </div>
