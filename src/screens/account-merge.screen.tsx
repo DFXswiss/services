@@ -1,14 +1,6 @@
 import { ApiError, useApi, useAuthContext } from '@dfx.swiss/react';
-import {
-  IconVariant,
-  SpinnerSize,
-  StyledButton,
-  StyledButtonColor,
-  StyledHorizontalStack,
-  StyledLoadingSpinner,
-  StyledVerticalStack,
-} from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
+import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -26,7 +18,6 @@ export default function AccountMerge() {
   const { call } = useApi();
 
   const [urlParams, setUrlParams] = useSearchParams();
-  const [error, setError] = useState<string>();
 
   const mergeCode = urlParams.get('merge-code');
 
@@ -44,12 +35,7 @@ export default function AccountMerge() {
           navigate(`/kyc?code=${kycHash}`);
         })
         .catch((error: ApiError) => {
-          // error "Merge request is already completed
-          if (error.statusCode === 409) {
-            navigate('/kyc');
-            return;
-          }
-          setError(error.message ?? 'Unknown error');
+          navigate(`/error?msg=${error.message}`);
         });
     } else {
       navigate('/kyc');
@@ -63,29 +49,10 @@ export default function AccountMerge() {
 
   return (
     <Layout>
-      {error ? (
-        <StyledVerticalStack center gap={5} marginY={5}>
-          <div>
-            <h2 className="text-dfxBlue-800">{translate('screens/error', 'Oh, sorry something went wrong')}</h2>
-            <p className="text-dfxGray-700">{error}</p>
-          </div>
-
-          <StyledHorizontalStack gap={4}>
-            <StyledButton
-              icon={IconVariant.HELP}
-              label={translate('navigation/links', 'Support')}
-              color={StyledButtonColor.GRAY_OUTLINE}
-              onClick={() => navigate('/support')}
-            />
-            <StyledButton label={translate('general/actions', 'Back')} onClick={() => navigate('/kyc')} />
-          </StyledHorizontalStack>
-        </StyledVerticalStack>
-      ) : (
-        <StyledVerticalStack gap={6} full center>
-          <StyledLoadingSpinner size={SpinnerSize.LG} />
-          <p className="text-dfxGray-700">{translate('screens/kyc', 'Merging your accounts...')} </p>
-        </StyledVerticalStack>
-      )}
+      <StyledVerticalStack gap={6} full center>
+        <StyledLoadingSpinner size={SpinnerSize.LG} />
+        <p className="text-dfxGray-700">{translate('screens/kyc', 'Merging your accounts...')} </p>
+      </StyledVerticalStack>
     </Layout>
   );
 }
