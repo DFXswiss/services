@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { useResizeObserver } from '../../../hooks/resize-observer.hook';
 import { DeepWallet, useWalletConnect } from '../../../hooks/wallets/wallet-connect.hook';
-import { QrCopy } from '../../payment/qr-copy';
+import { QrCopy } from '../../payment/qr-code';
 import { ConnectBase } from '../connect-base';
 import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../connect-shared';
 

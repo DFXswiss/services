@@ -7,9 +7,18 @@ export class Lnurl {
     return bech32.encode('LNURL', words, 1023).toUpperCase();
   }
 
-  static decode(lnurl: string): string {
-    const decoded = bech32.decode(lnurl, 1023);
-    return Buffer.from(bech32.fromWords(decoded.words)).toString('utf8');
+  static decode(lnurl: string): string | undefined {
+    try {
+      const decoded = bech32.decode(lnurl, 1023);
+      return Buffer.from(bech32.fromWords(decoded.words)).toString('utf8');
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  static prependLnurl(lnurl: string): string {
+    const baseDomain = `${window.location.protocol}//${window.location.host}`;
+    return `${baseDomain}/pl/?lightning=${lnurl}`;
   }
 
   static addressToLnurl(address: string): string {

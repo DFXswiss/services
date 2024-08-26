@@ -1,6 +1,7 @@
 {
   "general/actions": {
     "Select...": "Choisir...",
+    "Select": "Choisir",
     "Search...": "Recherche...",
     "Start": "Lancer",
     "Next": "Suivant",
@@ -17,7 +18,9 @@
     "Logout": "Logout",
     "Back": "Retour",
     "Proceed": "Continuer",
+    "Create": "Créer",
     "Retry": "Réessayer",
+    "Skip": "Passer",
     "Connect": "Connecter",
     "Continue in Trezor Connect": "Continuer dans Trezor Connect",
     "Yes": "Oui",
@@ -28,7 +31,8 @@
     "Delete address": "Supprimer l'adresse",
     "Delete account": "Supprimer le compte",
     "Copy Address": "Copier l'adresse",
-    "Open Explorer": "Ouvrir l'explorateur"
+    "Open Explorer": "Ouvrir l'explorateur",
+    "Select transaction": "Sélectionner la transaction"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -61,7 +65,7 @@
     "Document upload": "Téléchargement de documents",
     "Legal entity": "Personne juridique",
     "Nationality": "Nationalité",
-    "Stock register": "Registre des actions",
+    "Shareholder register": "Registre des actionnaires",
     "Commercial register": "Registre du commerce",
     "Signatory power": "Pouvoir de signature",
     "Power of Attorney": "Procuration",
@@ -70,6 +74,11 @@
     "Public Limited Company": "Société anonyme",
     "Limited Liability Company": "Société à responsabilité limitée",
     "Life Insurance": "Assurance-vie",
+    "Association": "Association",
+    "Foundation": "Fondation",
+    "Trust": "Fiducie",
+    "Other": "Autre",
+
     "Authorized to sign individually": "Autorisé à signer individuellement",
     "Authorized to sign jointly": "Autorisé à signer conjointement",
     "No signing authorization": "Pas d'autorisation de signature",
@@ -92,6 +101,7 @@
     "Personal Information": "Informations personnelles",
     "First name": "Prénom",
     "John": "Jean",
+    "John Doe": "Jean Dupont",
     "Last name": "Nom de famille",
     "Doe": "Exemple",
     "Street": "Rue",
@@ -101,7 +111,10 @@
     "Country": "Pay",
     "Email address": "Adresse e-mail",
     "example@mail.com": "exempel@mail.fr",
-    "Phone number": "Numéro de téléphone portable",
+    "Website": "Site web",
+    "https://example.com": "https://exemple.fr",
+    "Mobile number": "Numéro de portable",
+    "Phone number": "Numéro de téléphone",
     "Organization Information": "Organisation",
     "Organization name": "Nom de l'organisation",
     "Example inc.": "Exempel SARL & Co. KG",
@@ -254,7 +267,8 @@
     "Credit": "Crédit",
     "Paid credit": "Crédit payé",
     "User count": "Nombre d'utilisateurs",
-    "Active user count": "Nombre d'utilisateurs actifs"
+    "Active user count": "Nombre d'utilisateurs actifs",
+    "Active wallet": "Portefeuille actif"
   },
   "screens/buy": {
     "You spend": "Vous dépensez",
@@ -350,6 +364,7 @@
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} vers {{to}} à {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",
+    "External ID": "ID externe",
     "Date": "Date",
     "Input": "Input",
     "Input TX": "Input TX",
@@ -369,9 +384,13 @@
     "KYC required": "KYC nécessaire",
     "Fee to high": "Frais élevés",
     "Completed": "Terminé",
+    "Pending": "En attente",
+    "Cancelled": "Annulé",
+    "Expired": "Expiré",
     "Failed": "Échec",
     "Returned": "Retourné",
     "Unassigned": "Non attribué",
+    "LNURL decoded": "LNURL décodé",
 
     "Failure reason": "Cause de l'erreur",
     "Unknown": "Inconnu",
@@ -395,6 +414,8 @@
     "CHF abroad not allowed": "CHF à l'étranger pas autorisés",
     "Asset requires KYC": "Actif nécessite KYC",
     "Card name mismatch": "Le nom sur la carte ne correspond pas",
+    "Address deleted": "Adresse supprimée",
+    "Video identification required": "Identification par vidéo nécessaire",
 
     "Payment method": "Mode de paiement",
     "Standard bank transaction": "Transaction bancaire standard",
@@ -422,7 +443,43 @@
     "Please note that by using this service you automatically accept our terms and conditions.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales.",
 
     "Payment routes": "Itinéraires de paiement",
+    "Payment route": "Itinéraire de paiement",
     "Purpose of payment": "Objet du paiement",
+    "Payment Links": "Payment Links",
+    "Payment Link": "Payment Link",
+    "Link": "Lien",
+    "Payment": "Paiement",
+    "Payment ID": "ID de paiement",
+    "Mode": "Mode",
+    "Expiry date": "Date d'expiration",
+    "Single": "Unique",
+    "Multiple": "Multiples",
+    "Active": "Actif",
+    "Inactive": "Inactif",
+    "Create Payment Link": "Créer un Payment Link",
+    "Create payment": "Créer un paiement",
+    "Cancel payment": "Annuler le paiement",
+    "Payment type": "Type de paiement",
+    "With payment": "Avec paiement",
+    "Without payment": "Sans paiement",
+    "Activate": "Activer",
+    "Deactivate": "Désactiver",
+    "Expires at": "Expire à",
+
+    "Route": "Route",
+    "Summary": "Résumé",
+    "N/A": "N/A",
+
+    "Payment details": "Détails du paiement",
+    "Your payment details at a glance": "Vos détails de paiement en un coup d'œil",
+    "{{blockchain}} address": "Adresse {{blockchain}}",
+    "Pay with FrankencoinPay, Bitcoin Lightning LNURL": "Payer avec FrankencoinPay, Bitcoin Lightning LNURL",
+    "Pay with a Bolt 11 Invoice": "Payer avec une facture Bolt 11",
+    "Pay to a {{blockchain}} Blockchain address": "Payer à une adresse blockchain {{blockchain}}",
+    "You have no payment routes yet": "Vous n'avez pas encore d'itinéraires de paiement",
+    "Scan the QR-Code with a compatible wallet to complete the payment.": "Scannez le code QR avec un portefeuille compatible pour finaliser le paiement.",
+    "Recommended wallets": "Portefeuilles recommandés",
+    "Other compatible wallets": "Autres portefeuilles compatibles",
 
     "Cointracking": "Cointracking",
     "Saved": "Enregistré",
@@ -470,11 +527,14 @@
     "Funds not received": "Fonds non reçus",
     "Transaction missing": "Transaction manquante",
 
+    "Transaction ID": "ID de transaction",
+    "Select a transaction to proceed with": "Sélectionnez une transaction pour continuer",
+
     "Name": "Nom",
     "Description": "Description",
     "File": "Fichier",
 
-    "For which transaction would you like to create an issue? Select the relevant transaction or click on \"{{text}}\".": "Pour quelle transaction souhaitez-vous créer un problème ? Sélectionnez la transaction concernée ou cliquez sur \"{{text}}\".",
+    "Select the transaction for which you would like to create an issue.": "Sélectionnez la transaction pour laquelle vous souhaitez créer un problème.",
     "Please provide us with all relevant information about the transaction you are missing.": "Veuillez nous fournir toutes les informations pertinentes concernant la transaction manquante.",
     "Sender IBAN": "IBAN de l'expéditeur",
     "Receiver IBAN": "IBAN du destinataire",
@@ -500,7 +560,7 @@
     "Label": "Étiquette",
 
     "delete": "Êtes-vous sûr de vouloir supprimer l'adresse <1>{{address}}</1> de votre compte DFX ? Cette action est irréversible.",
-    "Deleting your account is irreversible. Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "La suppression de votre compte est irréversible. Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support."
+    "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support."
   },
   "navigation/links": {
     "Buy": "Acheter",

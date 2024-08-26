@@ -2,7 +2,7 @@ import { DfxContextProvider } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
 import { Suspense, lazy } from 'react';
-import { RouteObject, RouterProvider } from 'react-router-dom';
+import { Navigate, RouteObject, RouterProvider } from 'react-router-dom';
 import { Layout } from './components/layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
@@ -24,14 +24,13 @@ const BuySuccessScreen = lazy(() => import('./screens/buy-success.screen'));
 const BuyScreen = lazy(() => import('./screens/buy.screen'));
 const KycRedirectScreen = lazy(() => import('./screens/kyc-redirect.screen'));
 const KycScreen = lazy(() => import('./screens/kyc.screen'));
-const LimitScreen = lazy(() => import('./screens/limit.screen'));
 const LinkScreen = lazy(() => import('./screens/link.screen'));
 const PaymentRoutes = lazy(() => import('./screens/payment-routes.screen'));
+const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
 const SellInfoScreen = lazy(() => import('./screens/sell-info.screen'));
 const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
 const SupportScreen = lazy(() => import('./screens/support.screen'));
 const TfaScreen = lazy(() => import('./screens/tfa.screen'));
-const TransactionMissingScreen = lazy(() => import('./screens/transaction-missing.screen'));
 const TransactionScreen = lazy(() => import('./screens/transaction.screen'));
 
 setupLanguages();
@@ -95,6 +94,14 @@ export const Routes = [
     element: withSuspense(<PaymentRoutes />),
   },
   {
+    path: '/pl',
+    element: <Navigate to={`/payment-link${window.location.search}`} />,
+  },
+  {
+    path: '/payment-link',
+    element: withSuspense(<PaymentLinkScreen />),
+  },
+  {
     path: '/kyc',
     element: withSuspense(<KycScreen />),
     isKycScreen: true,
@@ -125,11 +132,6 @@ export const Routes = [
     isKycScreen: true,
   },
   {
-    path: '/limit',
-    element: withSuspense(<LimitScreen />),
-    isKycScreen: true,
-  },
-  {
     path: '/tx',
     element: withSuspense(<TransactionScreen />),
   },
@@ -147,18 +149,6 @@ export const Routes = [
   },
   {
     path: '/support/issue',
-    element: withSuspense(<SupportIssueScreen />),
-  },
-  {
-    path: '/support/issue/tx',
-    element: withSuspense(<TransactionScreen />),
-  },
-  {
-    path: '/support/issue/tx-missing',
-    element: withSuspense(<TransactionMissingScreen />),
-  },
-  {
-    path: '/support/issue/tx/:id',
     element: withSuspense(<SupportIssueScreen />),
   },
   {

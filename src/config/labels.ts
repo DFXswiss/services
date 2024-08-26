@@ -59,6 +59,8 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.CHF_ABROAD_NOT_ALLOWED]: 'CHF abroad not allowed',
   [TransactionFailureReason.ASSET_KYC_NEEDED]: 'Asset requires KYC',
   [TransactionFailureReason.CARD_NAME_MISMATCH]: 'Card name mismatch',
+  [TransactionFailureReason.USER_DELETED]: 'Address deleted',
+  [TransactionFailureReason.VIDEO_IDENT_NEEDED]: 'Video identification required',
 };
 
 // --- Limit increase requestS --- //
