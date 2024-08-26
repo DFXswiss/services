@@ -141,7 +141,9 @@
     "Increase limit": "Aumenta il limite",
     "Start video identification": "Iniziare l'identificazione video",
     "I am already verified with DFX": "Sono già verificato con DFX",
-    "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Autorizzo DFX a trasmettere i miei dati KYC a {{client}}."
+    "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Autorizzo DFX a trasmettere i miei dati KYC a {{client}}.",
+
+    "Merging your accounts...": "Unione dei vostri account..."
   },
   "screens/2fa": {
     "2FA": "2FA",
@@ -179,7 +181,7 @@
     "Document proof": "Prova dei documenti"
   },
   "screens/error": {
-    "Oh sorry something went wrong": "Oh, scusate, qualcosa è andato storto",
+    "Oh, sorry something went wrong": "Oh, scusate, qualcosa è andato storto",
 
     "Please return to the previous page. If this problem persists, please contact our support.": "Tornare alla pagina precedente. Se il problema persiste, contattare l'assistenza."
   },
