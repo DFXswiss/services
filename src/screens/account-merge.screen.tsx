@@ -15,8 +15,8 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 
 interface MergeRedirect {
-  redirectUrl: string;
-  accessToken: string;
+  kycHash: string;
+  accessToken?: string;
 }
 
 export default function AccountMerge() {
@@ -36,12 +36,12 @@ export default function AccountMerge() {
         url: `auth/mail/confirm?code=${mergeCode}`,
         method: 'GET',
       })
-        .then(({ redirectUrl, accessToken }: MergeRedirect) => {
+        .then(({ kycHash, accessToken }: MergeRedirect) => {
           setAuthenticationToken(accessToken);
-          return redirectUrl;
+          return kycHash;
         })
-        .then((redirectUrl: string) => {
-          navigate(redirectUrl.replace(window.location.origin, ''));
+        .then((kycHash: string) => {
+          navigate(`/kyc?code=${kycHash}`);
         })
         .catch((error: ApiError) => {
           // error "Merge request is already completed
@@ -51,6 +51,8 @@ export default function AccountMerge() {
           }
           setError(error.message ?? 'Unknown error');
         });
+    } else {
+      navigate('/kyc');
     }
 
     if (urlParams.has('merge-code')) {
