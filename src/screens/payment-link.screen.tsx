@@ -367,7 +367,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const assetsList = payRequest?.transferAmounts.find((item) => item.method === selectedPaymentMethod.id)?.assets;
 
   return (
-    <Layout backButton={false}>
+    <Layout backButton={false} smallMenu>
       {error ? (
         <PaymentErrorHint message={error} />
       ) : !payRequest ? (
@@ -444,7 +444,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                     <p>{translate('screens/payment', 'Pending')}</p>
                   </StyledDataTableRow>
                   <StyledDataTableRow label={paymentIdentifierLabelMap[selectedPaymentMethod.id] ?? 'URI'}>
-                    <p>{blankedAddress(paymentIdentifier, { width })}</p>
+                    <p>{blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
                     <CopyButton onCopy={() => copy(paymentIdentifier)} />
                   </StyledDataTableRow>
                   <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
@@ -452,13 +452,14 @@ export default function PaymentLinkScreen(): JSX.Element {
                       {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
                     </p>
                   </StyledDataTableRow>
-                  <StyledDataTableRow label={translate('screens/payment', 'Name')}>
-                    <p>{JSON.parse(payRequest.metadata)[0][1]}</p>
-                  </StyledDataTableRow>
                   {payRequest.recipient && (
                     <StyledDataTableExpandableRow
                       label={translate('screens/payment', 'Recipient')}
                       expansionItems={[
+                        {
+                          label: translate('screens/support', 'Name'),
+                          text: payRequest.recipient.name,
+                        },
                         {
                           label: translate('screens/home', 'Address'),
                           text: formatLocationAddress({ ...payRequest.recipient.address }) ?? '',
