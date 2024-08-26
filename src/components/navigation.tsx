@@ -1,4 +1,4 @@
-import { useAuthContext, useSessionContext } from '@dfx.swiss/react';
+import { useSessionContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
   IconColor,
@@ -23,6 +23,7 @@ interface NavigationIframeProps extends BackButtonProps {
   title?: string;
   backButton?: boolean;
   isOpen: boolean;
+  small?: boolean;
   setIsOpen: (value: SetStateAction<boolean>) => void;
 }
 
@@ -33,10 +34,11 @@ interface IconContentProps {
 
 interface NavigationMenuContentProps {
   setIsNavigationOpen: (value: SetStateAction<boolean>) => void;
+  small?: boolean;
 }
 
 export const Navigation = forwardRef<HTMLDivElement, NavigationIframeProps>(
-  ({ title, backButton = true, onBack, isOpen, setIsOpen }: NavigationIframeProps, ref): JSX.Element => {
+  ({ title, backButton = true, onBack, isOpen, setIsOpen, small = false }: NavigationIframeProps, ref): JSX.Element => {
     const { params, isEmbedded } = useAppHandlingContext();
 
     return title || !isEmbedded ? (
@@ -61,7 +63,7 @@ export const Navigation = forwardRef<HTMLDivElement, NavigationIframeProps>(
           <MenuIcon icon={isOpen ? IconVariant.CLOSE : IconVariant.MENU} setIsNavigationOpen={setIsOpen} />
         </div>
 
-        {isOpen && <NavigationMenu setIsNavigationOpen={setIsOpen} />}
+        {isOpen && <NavigationMenu setIsNavigationOpen={setIsOpen} small={small} />}
       </div>
     ) : (
       <></>
@@ -105,9 +107,8 @@ function MenuIcon({ icon, setIsNavigationOpen }: IconContentProps): JSX.Element 
   );
 }
 
-function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JSX.Element {
+function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuContentProps): JSX.Element {
   const { navigate } = useNavigation();
-  const { authenticationToken, session } = useAuthContext();
   const { translate } = useSettingsContext();
   const { isLoggedIn, logout: apiLogout } = useSessionContext();
 
@@ -125,48 +126,53 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
     <nav>
       <div className="absolute top-14 right-2 border-1 drop-shadow-md w-64 z-20 flex flex-col bg-dfxGray-300">
         <div className="mx-4 py-4 text-dfxGray-800">
-          <NavigationLink
-            icon={IconVariant.BANK}
-            label={translate('navigation/links', 'Buy')}
-            url="/buy"
-            target="_self"
-          />
-          <NavigationLink
-            icon={IconVariant.SELL}
-            label={translate('navigation/links', 'Sell')}
-            url="/sell"
-            target="_self"
-          />
-          <NavigationLink
-            icon={IconVariant.SWAP}
-            label={translate('navigation/links', 'Swap')}
-            url="/swap"
-            target="_self"
-          />
-          <NavigationLink
-            icon={IconVariant.ACCOUNT}
-            label={translate('screens/home', 'Account')}
-            url="/account"
-            target="_self"
-          />
-          <NavigationLink
-            icon={IconVariant.TRANSACTIONS}
-            label={translate('screens/payment', 'Transactions')}
-            url="/tx"
-            target="_self"
-          />
-          <NavigationLink
-            icon={IconVariant.KYC}
-            label={translate('navigation/links', 'KYC')}
-            url="/kyc"
-            target="_self"
-          />
-          <NavigationLink
-            icon={IconVariant.SETTINGS}
-            label={translate('screens/settings', 'Settings')}
-            url="/settings"
-            target="_self"
-          />
+          {!small && (
+            <>
+              <NavigationLink
+                icon={IconVariant.BANK}
+                label={translate('navigation/links', 'Buy')}
+                url="/buy"
+                target="_self"
+              />
+              <NavigationLink
+                icon={IconVariant.SELL}
+                label={translate('navigation/links', 'Sell')}
+                url="/sell"
+                target="_self"
+              />
+              <NavigationLink
+                icon={IconVariant.SWAP}
+                label={translate('navigation/links', 'Swap')}
+                url="/swap"
+                target="_self"
+              />
+              <NavigationLink
+                icon={IconVariant.ACCOUNT}
+                label={translate('screens/home', 'Account')}
+                url="/account"
+                target="_self"
+              />
+              <NavigationLink
+                icon={IconVariant.TRANSACTIONS}
+                label={translate('screens/payment', 'Transactions')}
+                url="/tx"
+                target="_self"
+              />
+              <NavigationLink
+                icon={IconVariant.KYC}
+                label={translate('navigation/links', 'KYC')}
+                url="/kyc"
+                target="_self"
+              />
+              <NavigationLink
+                icon={IconVariant.SETTINGS}
+                label={translate('screens/settings', 'Settings')}
+                url="/settings"
+                target="_self"
+              />
+            </>
+          )}
+
           <NavigationLink
             icon={IconVariant.HOME}
             label={translate('navigation/links', 'DFX.swiss')}
@@ -200,6 +206,7 @@ function NavigationMenu({ setIsNavigationOpen }: NavigationMenuContentProps): JS
             onClick={isLoggedIn ? logout : login}
             color={StyledButtonColor.STURDY_WHITE}
             width={StyledButtonWidth.FULL}
+            hidden={small && !isLoggedIn}
           />
         </div>
       </div>

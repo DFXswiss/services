@@ -14,8 +14,6 @@ import {
   Form,
   IconVariant,
   SpinnerSize,
-  StyledButton,
-  StyledButtonWidth,
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
@@ -31,7 +29,6 @@ import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { useStore } from 'src/hooks/store.hook';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -49,11 +46,10 @@ export default function AccountScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading } = useUserContext();
-  const { activeWallet } = useStore();
   const { getRef } = useUser();
   const { width } = useWindowContext();
   const { canClose, isEmbedded } = useAppHandlingContext();
-  const { isInitialized } = useWalletContext();
+  const { isInitialized, setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -84,7 +80,7 @@ export default function AccountScreen(): JSX.Element {
   useEffect(() => {
     if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address) {
       changeAddress(selectedAddress.address)
-        .then(() => activeWallet.remove())
+        .then(() => setWallet())
         .catch(() => {
           // ignore errors
         });
@@ -167,29 +163,6 @@ export default function AccountScreen(): JSX.Element {
         </div>
       ) : (
         <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
-          {/* Wallet Selector */}
-          {user?.addresses.length ? (
-            <div className="w-full bg-dfxGray-300 p-2 rounded-md">
-              <div className="bg-white w-full rounded-md">
-                <Form control={control} errors={errors}>
-                  <StyledDropdown
-                    name="address"
-                    placeholder={translate('general/actions', 'Select...')}
-                    items={user.addresses.sort(sortAddressesByBlockchain)}
-                    disabled={user.addresses.length === 0}
-                    labelFunc={(item) => blankedAddress(item.address, { width })}
-                  />
-                </Form>
-              </div>
-              <div className="flex flex-row  gap-2 w-full justify-end items-center text-dfxGray-800 text-xs pt-1.5 pr-1.5">
-                <button onClick={() => copy(selectedAddress.address)} className="cursor-pointer hover:text-dfxRed-150">
-                  {translate('general/actions', 'Copy Address')}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <></>
-          )}
           {/* User Data */}
           <StyledDataTable
             label={translate('screens/home', 'Activity')}
@@ -221,6 +194,48 @@ export default function AccountScreen(): JSX.Element {
               />
             )}
           </StyledDataTable>
+          {user && (
+            <StyledDataTable
+              label={translate('screens/home', 'KYC')}
+              alignContent={AlignContent.RIGHT}
+              showBorder
+              minWidth={false}
+            >
+              <StyledDataTableRow label={translate('screens/home', 'Level')}>
+                <p>{levelToString(user.kyc.level)}</p>
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
+                <div className="flex flex-row gap-1 items-center">
+                  <p>{limitToString(user.tradingLimit)}</p>
+                  <StyledIconButton
+                    icon={IconVariant.ARROW_UP}
+                    onClick={() => navigate('/support/issue?issue-type=LimitRequest')}
+                  />
+                </div>
+              </StyledDataTableRow>
+            </StyledDataTable>
+          )}
+          <div className="border-b my-2.5 border-dfxGray-400 w-full"></div>
+          {/* Wallet Selector */}
+          {user?.addresses.length ? (
+            <div className="bg-white w-full rounded-md mb-2">
+              <h2 className="text-center text-dfxBlue-800 text-sm font-semibold ml-3.5 mb-1.5">
+                {translate('screens/home', 'Active wallet')}
+              </h2>
+              <Form control={control} errors={errors}>
+                <StyledDropdown
+                  name="address"
+                  placeholder={translate('general/actions', 'Select...')}
+                  items={user.addresses.sort(sortAddressesByBlockchain)}
+                  disabled={user.addresses.length === 0}
+                  labelFunc={(item) => blankedAddress(item.address, { width })}
+                  descriptionFunc={(item) => item.label ?? item.wallet}
+                />
+              </Form>
+            </div>
+          ) : (
+            <></>
+          )}
           {referral?.code && (
             <StyledDataTable
               label={translate('screens/home', 'Referral')}
@@ -241,29 +256,6 @@ export default function AccountScreen(): JSX.Element {
               />
             </StyledDataTable>
           )}
-          {user && (
-            <StyledDataTable
-              label={translate('screens/home', 'KYC')}
-              alignContent={AlignContent.RIGHT}
-              showBorder
-              minWidth={false}
-            >
-              <StyledDataTableRow label={translate('screens/home', 'Level')}>
-                <p>{levelToString(user.kyc.level)}</p>
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
-                <div className="flex flex-row gap-1 items-center">
-                  <p>{limitToString(user.tradingLimit)}</p>
-                  <StyledIconButton icon={IconVariant.ARROW_UP} onClick={() => navigate('/kyc')} />
-                </div>
-              </StyledDataTableRow>
-            </StyledDataTable>
-          )}
-          <StyledButton
-            label={translate('screens/settings', 'Settings')}
-            onClick={() => navigate('/settings')}
-            width={StyledButtonWidth.FULL}
-          />
         </StyledVerticalStack>
       )}
       {image && (

@@ -277,7 +277,7 @@ export default function KycScreen(): JSX.Element {
   }
 
   function onContinue() {
-    return allStepsCompleted ? navigate('/limit') : onLoad(true);
+    return allStepsCompleted ? navigate('/support/issue?issue-type=LimitRequest') : onLoad(true);
   }
 
   function onConsent(client: string) {
@@ -737,7 +737,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                   name="phone"
                   autocomplete="phone"
                   type="tel"
-                  label={translate('screens/kyc', 'Phone number')}
+                  label={translate('screens/kyc', 'Mobile number')}
                   placeholder="+49 12345678"
                   smallLabel
                 />
@@ -994,6 +994,7 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
   const {
     control,
     handleSubmit,
+    resetField,
     formState: { isValid, errors },
   } = useForm<FormDataFile>({ mode: 'onTouched' });
 
@@ -1011,7 +1012,10 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
     setFileData(code, step.session.url, fileData as KycFileData)
       .then(onDone)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsUpdating(false));
+      .finally(() => {
+        setIsUpdating(false);
+        resetField('file');
+      });
   }
 
   const rules = Utils.createRules({

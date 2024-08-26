@@ -33,7 +33,7 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepName.CONTACT_DATA]: 'Contact data',
     [KycStepName.PERSONAL_DATA]: 'Personal data',
     [KycStepName.LEGAL_ENTITY]: 'Legal entity',
-    [KycStepName.STOCK_REGISTER]: 'Stock register',
+    [KycStepName.STOCK_REGISTER]: 'Shareholder register',
     [KycStepName.NATIONALITY_DATA]: 'Nationality',
     [KycStepName.COMMERCIAL_REGISTER]: 'Commercial register',
     [KycStepName.SIGNATORY_POWER]: 'Signatory power',
@@ -48,6 +48,16 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepType.AUTO]: 'auto',
     [KycStepType.VIDEO]: 'video',
     [KycStepType.MANUAL]: 'manual',
+  };
+
+  const legalEntityMap: Record<LegalEntity, string> = {
+    [LegalEntity.PUBLIC_LIMITED_COMPANY]: 'Public Limited Company',
+    [LegalEntity.LIMITED_LIABILITY_COMPANY]: 'Limited Liability Company',
+    [LegalEntity.LIFE_INSURANCE]: 'Life Insurance',
+    [LegalEntity.ASSOCIATION]: 'Association',
+    [LegalEntity.FOUNDATION]: 'Foundation',
+    [LegalEntity.TRUST]: 'Trust',
+    [LegalEntity.OTHER]: 'Other',
   };
 
   const limit = user && limitToString(user.tradingLimit);
@@ -87,18 +97,9 @@ export function useKycHelper(): KycHelperInterface {
     return translate('screens/kyc', typeMap[stepType]);
   }
 
-  function legalEntityToString(entity: LegalEntity): string {
-    switch (entity) {
-      case LegalEntity.PUBLIC_LIMITED_COMPANY:
-        return translate('screens/kyc', 'Public Limited Company');
-      case LegalEntity.LIMITED_LIABILITY_COMPANY:
-        return translate('screens/kyc', 'Limited Liability Company');
-      case LegalEntity.LIFE_INSURANCE:
-        return translate('screens/kyc', 'Life Insurance');
-      default:
-        return entity;
-    }
-  }
+  const legalEntityToString = (entity: LegalEntity): string => {
+    return translate('screens/kyc', legalEntityMap[entity]);
+  };
 
   function signatoryPowerToString(power: SignatoryPower): string {
     switch (power) {
