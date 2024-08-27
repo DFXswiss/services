@@ -16,8 +16,8 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
-import { ConfirmationOverlay, RenameAddressOverlay } from 'src/components/home/settings-overlays';
 import { Layout } from 'src/components/layout';
+import { ConfirmationOverlay, RenameAddressOverlay } from 'src/components/overlays';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';

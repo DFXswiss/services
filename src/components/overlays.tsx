@@ -10,8 +10,8 @@ import {
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useSettingsContext } from '../../contexts/settings.context';
-import { ErrorHint } from '../error-hint';
+import { useSettingsContext } from '../contexts/settings.context';
+import { ErrorHint } from './error-hint';
 
 interface ConfirmationOverlayProps {
   message?: string;

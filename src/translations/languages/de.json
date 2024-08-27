@@ -469,6 +469,7 @@
     "Route": "Route",
     "Summary": "Zusammenfassung",
     "N/A": "N/A",
+    "delete": "Bist Du sicher, dass Du Deine <1>{{type}}-Zahlungsroute</1> mit der <1>ID {{id}}</1> löschen möchtest?",
 
     "Payment details": "Zahlungsdetails",
     "Your payment details at a glance": "Deine Zahlungsdetails auf einen Blick",

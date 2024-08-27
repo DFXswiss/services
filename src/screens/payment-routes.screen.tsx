@@ -41,8 +41,8 @@ import copy from 'copy-to-clipboard';
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
-import { ConfirmationOverlay } from 'src/components/home/settings-overlays';
 import { Layout } from 'src/components/layout';
+import { ConfirmationOverlay } from 'src/components/overlays';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -189,10 +189,10 @@ export default function PaymentRoutes(): JSX.Element {
           messageContent={
             <p className="text-dfxBlue-800 mb-2 text-center">
               <Trans
-                i18nKey="screens/payment.deleteRoute"
+                i18nKey="screens/payment.delete"
                 values={{ type: deleteRoute.type.toUpperCase(), id: deleteRoute.id }}
               >
-                Are you sure you want to delete your <strong>{deleteRoute.type.toUpperCase()}</strong> route with{' '}
+                Are you sure you want to delete your <strong>{deleteRoute.type.toUpperCase()} route</strong> with{' '}
                 <strong>ID {deleteRoute.id.toString()}</strong>?
               </Trans>
             </p>
