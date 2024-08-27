@@ -128,24 +128,7 @@ export default function ChatScreen(): JSX.Element {
     }
 
     e.stopPropagation();
-    const menuWidth = 150; // Assume a fixed width for the menu
-    const menuHeight = 100; // Assume a fixed height for the menu
-    const { clientX, clientY } = e;
-
-    let left = clientX;
-    let top = clientY;
-
-    // Check if the menu would overflow the right side of the screen
-    if (left + menuWidth > window.innerWidth) {
-      left = window.innerWidth - menuWidth;
-    }
-
-    // Check if the menu would overflow the bottom of the screen
-    if (top + menuHeight > window.innerHeight) {
-      top = window.innerHeight - menuHeight;
-    }
-
-    setMenuPosition({ top, left });
+    setMenuPosition({ top: e.clientY, left: e.clientX });
     setClickedMessage(message);
   };
 
@@ -240,8 +223,16 @@ export default function ChatScreen(): JSX.Element {
           </div>
         </div>
         {clickedMessage && (
-          <div style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }} className="absolute">
-            <div className="flex flex-row border border-dfxGray-400 shadow-md z-10 bg-white rounded-full overflow-clip h-10 mb-1">
+          <div
+            style={{
+              top: menuPosition.top,
+              left: menuPosition.left,
+              transform: `${menuPosition.left > window.innerWidth / 2 ? 'translateX(-100%)' : 'translateX(0)'}
+                ${menuPosition.top > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)'}`,
+            }}
+            className="absolute pointer-events-none"
+          >
+            <div className="flex flex-row border border-dfxGray-400 shadow-md z-10 bg-white rounded-full overflow-clip h-10 mb-1 pointer-events-auto">
               {emojiSet.map((emoji, index) => (
                 <button
                   key={index}
@@ -252,7 +243,7 @@ export default function ChatScreen(): JSX.Element {
                 </button>
               ))}
             </div>
-            <div className="w-36 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip text-dfxBlue-800">
+            <div className="w-36 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip text-dfxBlue-800 pointer-events-auto">
               <div className="flex flex-col divide-y-0.5 divide-dfxGray-400 items-start bg-dfxGray-100 w-36">
                 <button
                   className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
