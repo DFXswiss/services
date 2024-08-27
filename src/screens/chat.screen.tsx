@@ -13,6 +13,7 @@ interface SupportMessage {
   sender: string;
   status: 'sent' | 'received' | 'read';
   replyTo?: string;
+  reactions?: Reaction[];
 }
 
 interface SupportIssue {
@@ -23,16 +24,22 @@ interface SupportIssue {
   status: 'active' | 'closed';
 }
 
+interface Reaction {
+  emoji: string;
+  users: string[];
+}
+
 const initialChat: SupportIssue = {
   id: '1',
   messages: [
     {
       id: '1',
-      message: 'Hello',
+      message: 'Hello, I have a question',
       media: [],
       date: '2021-10-10T10:10:10',
       sender: 'user',
       status: 'read',
+      reactions: [{ emoji: '👍', users: ['user'] }],
     },
     {
       id: '2',
@@ -72,6 +79,8 @@ const initialChat: SupportIssue = {
   date: '2021-10-10T10:10:10',
   status: 'active',
 };
+
+const emojiSet = ['👍', '❤️', '😂', '😮', '😢', '👏'];
 
 export default function ChatScreen(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -140,8 +149,40 @@ export default function ChatScreen(): JSX.Element {
     setClickedMessage(message);
   };
 
+  const handleEmojiClick = (messageId: string, emoji: string, e?: React.MouseEvent<HTMLDivElement>) => {
+    e?.stopPropagation();
+
+    setChat((prevChat) => {
+      const messageIndex = prevChat.messages.findIndex((m) => m.id === messageId);
+      if (messageIndex === -1) return prevChat;
+
+      const message = prevChat.messages[messageIndex];
+      if (!message.reactions) message.reactions = [];
+      const reactionIndex = message.reactions?.findIndex((r) => r.emoji === emoji);
+      if (reactionIndex === -1) {
+        message.reactions.push({ emoji, users: ['user'] });
+      } else {
+        const userIndex = message.reactions[reactionIndex].users.indexOf('user');
+        if (userIndex === -1) {
+          message.reactions[reactionIndex].users.push('user');
+        } else {
+          message.reactions[reactionIndex].users.splice(userIndex, 1);
+          if (message.reactions[reactionIndex].users.length === 0) {
+            message.reactions.splice(reactionIndex, 1);
+          }
+        }
+      }
+
+      prevChat.messages[messageIndex] = message;
+      console.log(message);
+      return { ...prevChat };
+    });
+
+    setClickedMessage(undefined);
+  };
+
   return (
-    <Layout title="Ticket #1390" noPadding>
+    <Layout title="Ticket 1390" noPadding>
       <div className="flex flex-col gap-2 w-full h-full">
         <div className="flex flex-col flex-grow gap-1 h-0 overflow-auto p-3.5">
           {chat.messages.map((message, index) => {
@@ -152,6 +193,7 @@ export default function ChatScreen(): JSX.Element {
                 key={message.id}
                 hasHeader={isNewSender}
                 replyToMessage={chat.messages.find((m) => m.id === message.replyTo)}
+                handleEmojiClick={handleEmojiClick}
                 onClick={(e) => handleChatBubbleClick(e, message)}
                 {...message}
               />
@@ -198,28 +240,38 @@ export default function ChatScreen(): JSX.Element {
           </div>
         </div>
         {clickedMessage && (
-          <div
-            style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
-            className="absolute w-36 right-5 top-3 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip text-dfxBlue-800"
-          >
-            <div className="flex flex-col divide-y-0.5 divide-dfxGray-400 items-start bg-dfxGray-100 w-36">
-              <button
-                className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-                onClick={() => {
-                  console.log('Copy');
-                }}
-              >
-                {translate('general/actions', 'Copy')}
-              </button>
-              <button
-                className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-                onClick={() => {
-                  setReplyToMessage(clickedMessage);
-                  setClickedMessage(undefined);
-                }}
-              >
-                {translate('general/actions', 'Reply')}
-              </button>
+          <div style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }} className="absolute">
+            <div className="flex flex-row border border-dfxGray-400 shadow-md z-10 bg-white rounded-full overflow-clip h-10 mb-1">
+              {emojiSet.map((emoji, index) => (
+                <button
+                  key={index}
+                  className="hover:bg-dfxGray-300 w-10 text-lg flex items-center justify-center"
+                  onClick={() => handleEmojiClick(clickedMessage.id, emoji)}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            <div className="w-36 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip text-dfxBlue-800">
+              <div className="flex flex-col divide-y-0.5 divide-dfxGray-400 items-start bg-dfxGray-100 w-36">
+                <button
+                  className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
+                  onClick={() => {
+                    console.log('Copy');
+                  }}
+                >
+                  {translate('general/actions', 'Copy')}
+                </button>
+                <button
+                  className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
+                  onClick={() => {
+                    setReplyToMessage(clickedMessage);
+                    setClickedMessage(undefined);
+                  }}
+                >
+                  {translate('general/actions', 'Reply')}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -231,17 +283,21 @@ export default function ChatScreen(): JSX.Element {
 interface ChatBubbleProps extends SupportMessage {
   hasHeader: boolean;
   replyToMessage?: SupportMessage;
+  handleEmojiClick?: (messageId: string, emoji: string, e?: React.MouseEvent<HTMLDivElement>) => void;
   onClick?: (e?: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 function ChatBubble({
+  id,
   message,
   media,
   date,
   sender,
   status,
+  reactions,
   hasHeader,
   replyToMessage,
+  handleEmojiClick,
   onClick,
 }: ChatBubbleProps): JSX.Element {
   const isUser = sender === 'user';
@@ -289,14 +345,28 @@ function ChatBubble({
             />
           ))}
         {message && <p className="leading-snug text-sm px-3">{message}</p>}
-        <span className="text-xs italic text-end text-gray-500 block px-3 -mt-0.5">
-          {new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-          {status === 'read' ? (
-            <RiCheckDoubleFill className="inline-block text-base ml-1 mb-0.5" />
-          ) : (
-            <RiCheckFill className="inline-block text-base ml-1 mb-0.5" />
-          )}
-        </span>
+        <div className="flex flex-row justify-between items-center px-3 -mt-0.5">
+          <div className="flex flex-row">
+            {reactions?.map((reaction, index) => (
+              <div
+                key={index}
+                onClick={(e) => handleEmojiClick && handleEmojiClick(id, reaction.emoji, e)}
+                className="flex flex-row gap-1.5 mr-1 rounded-full px-2 py-0.5 bg-white/20 text-sm cursor-pointer"
+              >
+                <span>{reaction.emoji}</span>
+                {reaction.users.length > 0 && <span className="font-semibold">{reaction.users.length}</span>}
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-row text-xs italic text-end text-gray-500">
+            {new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+            {status === 'read' ? (
+              <RiCheckDoubleFill className="inline-block text-base ml-1 mb-0.5" />
+            ) : (
+              <RiCheckFill className="inline-block text-base ml-1 mb-0.5" />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
