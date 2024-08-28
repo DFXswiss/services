@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { BsReply } from 'react-icons/bs';
-import { MdOutlineCancel } from 'react-icons/md';
+import { HiOutlineDownload, HiOutlinePaperClip } from 'react-icons/hi';
+import { MdOutlineCancel, MdOutlineClose, MdSend } from 'react-icons/md';
 import { RiCheckDoubleFill, RiCheckFill } from 'react-icons/ri';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { Layout } from '../components/layout';
@@ -8,7 +9,7 @@ import { Layout } from '../components/layout';
 interface SupportMessage {
   id: string;
   message?: string;
-  media?: string[];
+  media?: MediaFile[];
   date: string;
   sender: string;
   status: 'sent' | 'received' | 'read';
@@ -27,6 +28,13 @@ interface SupportIssue {
 interface Reaction {
   emoji: string;
   users: string[];
+}
+
+interface MediaFile {
+  name: string;
+  url: string;
+  type: string;
+  size: number;
 }
 
 const initialChat: SupportIssue = {
@@ -52,7 +60,14 @@ const initialChat: SupportIssue = {
     {
       id: '3',
       message: 'How can I help you, today?',
-      media: ['https://gratisography.com/wp-content/uploads/2024/01/gratisography-cyber-kitty-800x525.jpg'],
+      media: [
+        {
+          name: 'image.jpg',
+          url: 'https://gratisography.com/wp-content/uploads/2024/01/gratisography-cyber-kitty-800x525.jpg',
+          type: 'image/jpeg',
+          size: 123456,
+        },
+      ],
       date: '2021-10-10T10:10:10',
       sender: 'agent',
       status: 'received',
@@ -68,7 +83,14 @@ const initialChat: SupportIssue = {
     {
       id: '5',
       message: undefined,
-      media: ['https://assistanteplus.fr/wp-content/uploads/2022/04/chat-midjourney.webp'],
+      media: [
+        {
+          name: 'image.jpg',
+          url: 'https://assistanteplus.fr/wp-content/uploads/2022/04/chat-midjourney.webp',
+          type: 'image/webp',
+          size: 123456,
+        },
+      ],
       date: '2021-10-10T10:10:10',
       sender: 'user',
       status: 'read',
@@ -87,6 +109,7 @@ export default function ChatScreen(): JSX.Element {
 
   const [chat, setChat] = useState<SupportIssue>(initialChat);
   const [inputValue, setInputValue] = useState<string>('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [clickedMessage, setClickedMessage] = useState<SupportMessage>();
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [replyToMessage, setReplyToMessage] = useState<SupportMessage>();
@@ -100,12 +123,17 @@ export default function ChatScreen(): JSX.Element {
   }, [chat.messages]);
 
   const handleSend = () => {
-    if (inputValue.trim() === '') return;
+    if (inputValue.trim() === '' && selectedFiles.length === 0) return;
 
     const newMessage: SupportMessage = {
       id: (chat.messages.length + 1).toString(),
       message: inputValue,
-      media: [],
+      media: selectedFiles.map((file) => ({
+        name: file.name,
+        url: URL.createObjectURL(file), // Temporary URL for preview
+        type: file.type,
+        size: file.size,
+      })),
       date: new Date().toISOString(),
       sender: 'user',
       status: 'sent',
@@ -118,7 +146,16 @@ export default function ChatScreen(): JSX.Element {
     }));
 
     setInputValue('');
+    setSelectedFiles([]);
     setReplyToMessage(undefined);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+
+    if (files && files.length > 0) {
+      setSelectedFiles((prevFiles) => [...prevFiles, ...Array.from(files)]);
+    }
   };
 
   const handleChatBubbleClick = (e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessage) => {
@@ -191,7 +228,7 @@ export default function ChatScreen(): JSX.Element {
               <div className="w-1 h-full bg-dfxBlue-800" />
               <div className="flex flex-row flex-grow px-2 py-1">
                 <img
-                  src={replyToMessage.media?.[0]}
+                  src={replyToMessage.media?.[0].url}
                   alt="Media"
                   className="rounded-sm max-h-10 object-cover"
                   style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
@@ -209,16 +246,32 @@ export default function ChatScreen(): JSX.Element {
               </button>
             </div>
           )}
-          <div className="flex flex-row">
+          {selectedFiles.length > 0 && (
+            <div className="flex flex-row gap-2">
+              {selectedFiles.map((file, index) => (
+                <div key={index} className="flex flex-row gap-1.5 items-center bg-dfxGray-800/20 rounded-md p-2">
+                  <HiOutlinePaperClip className="text-dfxGray-800 text-lg" />
+                  <p className="text-dfxGray-800">{file.name}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex flex-row items-center space-x-2">
+            <label className="flex items-center p-2 cursor-pointer">
+              <HiOutlinePaperClip className="text-2xl text-dfxGray-800" />
+              <input type="file" multiple onChange={handleFileChange} className="hidden" />
+            </label>
+
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              className="flex-grow p-4 bg-dfxGray-300 rounded-lg text-dfxGray-800 outline-none"
+              className="flex-grow px-2 bg-dfxGray-300 rounded-lg text-dfxGray-800 outline-none"
               placeholder="Type a message..."
             />
-            <button onClick={handleSend} className="p-4 bg-[#24A1DE] rounded-lg">
-              {translate('general/actions', 'Send')}
+
+            <button onClick={handleSend} className="items-center p-2 cursor-pointer">
+              <MdSend className="text-2xl text-dfxBlue-800" />
             </button>
           </div>
         </div>
@@ -291,6 +344,32 @@ function ChatBubble({
   handleEmojiClick,
   onClick,
 }: ChatBubbleProps): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
+
+  const handlePreview = (
+    e: React.MouseEvent<HTMLImageElement | HTMLVideoElement | HTMLDivElement>,
+    file: MediaFile,
+  ) => {
+    e.stopPropagation();
+
+    setSelectedFile(file);
+  };
+
+  const handleDownload = (e: React.MouseEvent<HTMLButtonElement | HTMLAudioElement, MouseEvent>, file: MediaFile) => {
+    e.stopPropagation();
+
+    // Create an anchor element and trigger download directly
+    const link = document.createElement('a');
+    link.href = file.url;
+    link.download = file.name;
+    link.target = '_blank'; // Open in a new tab to avoid navigating away
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const isUser = sender === 'user';
   const hasMedia = !!media?.length;
 
@@ -310,7 +389,7 @@ function ChatBubble({
             <div className="w-1 h-full bg-white" />
             <div className="flex flex-row flex-grow px-2 py-1">
               <img
-                src={replyToMessage.media?.[0]}
+                src={replyToMessage.media?.[0].url}
                 alt="Media"
                 className="rounded-sm max-h-10 object-cover"
                 style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
@@ -326,15 +405,110 @@ function ChatBubble({
           <p className="font-semibold text-sm text-dfxRed-150 px-3">{sender}</p>
         )}
         {hasMedia &&
-          media.map((url, index) => (
-            <img
-              key={index}
-              src={url}
-              alt="Media"
-              className="rounded-sm mb-1 max-h-40 object-cover"
-              style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
-            />
-          ))}
+          media.map((file, index) => {
+            const fileType = file.type.split('/')[0];
+            switch (fileType) {
+              case 'image':
+                return (
+                  <img
+                    key={index}
+                    src={file.url}
+                    alt={file.name}
+                    className="rounded-sm mb-1 max-h-40 object-cover"
+                    style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
+                    onClick={(e) => handlePreview(e, file)}
+                  />
+                );
+              case 'video':
+                return (
+                  <video
+                    key={index}
+                    controls
+                    className="rounded-sm mb-1 max-h-40 object-cover"
+                    style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
+                    onClick={(e) => handlePreview(e, file)}
+                  >
+                    <source src={file.url} type={file.type} />
+                    {translate('general/messages', 'Your browser does not support the video tag.')}
+                  </video>
+                );
+              case 'audio':
+                return (
+                  <audio
+                    key={index}
+                    controls
+                    className="rounded-sm mb-1"
+                    style={{ maxWidth: '100%', width: 'auto' }}
+                    onClick={(e) => handleDownload(e, file)}
+                  >
+                    <source src={file.url} type={file.type} />
+                    {translate('general/messages', 'Your browser does not support the audio element.')}
+                  </audio>
+                );
+              case 'application':
+                return (
+                  <div key={index} className="flex items-center mb-1 p-2" onClick={(e) => handlePreview(e, file)}>
+                    <div className="flex justify-center items-center w-12 h-12 bg-white rounded-md">
+                      <HiOutlinePaperClip className="text-dfxGray-700 text-xl" />
+                    </div>
+                    <div className="flex flex-col mx-2">
+                      <span className="text-white text-sm font-semibold">{file.name}</span>
+                      <span className="text-dfxGray-400 text-xs">{Math.round(file.size / 1024)} KB</span>
+                    </div>
+                  </div>
+                );
+              default:
+                return (
+                  <p key={index} className="mb-1 text-red-500">
+                    {translate('general/messages', 'Unsupported file type')}
+                  </p>
+                );
+            }
+          })}
+        {selectedFile && (
+          <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50 pointer-events-none">
+            <button
+              className="absolute top-3 right-3 text-white pointer-events-auto"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedFile(null);
+              }}
+            >
+              <MdOutlineClose className="text-2xl" />
+            </button>
+            <div className="relative m-4">
+              <div className="rounded-sm overflow-clip">
+                {selectedFile.type.startsWith('image') && (
+                  <img src={selectedFile.url} alt={selectedFile.name} className="max-h-96" />
+                )}
+                {selectedFile.type.startsWith('video') && (
+                  <video controls className="max-h-96">
+                    <source src={selectedFile.url} type={selectedFile.type} />
+                  </video>
+                )}
+                {selectedFile.type.startsWith('application') && (
+                  <div className="text-center">
+                    <HiOutlinePaperClip className="text-dfxGray-700 text-4xl mx-auto mb-4" />
+                    <p className="text-lg font-semibold">{selectedFile.name}</p>
+                    <p>{Math.round(selectedFile.size / 1024)} KB</p>
+                  </div>
+                )}
+              </div>
+              <div className="flex mt-4 items-center justify-center">
+                <a
+                  className="bg-white/30 text-white pl-4 pr-6 py-2 rounded-full font-semibold cursor-pointer pointer-events-auto"
+                  href={selectedFile.url}
+                  // onClick={(e) => handleDownload(e, selectedFile)}
+                >
+                  <div className="flex flex-row gap-2">
+                    <HiOutlineDownload className="text-xl" />
+                    {translate('general/actions', 'Download')}
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
         {message && <p className="leading-snug text-sm px-3">{message}</p>}
         <div className="flex flex-row justify-between items-center px-3 -mt-0.5">
           <div className="flex flex-row">
