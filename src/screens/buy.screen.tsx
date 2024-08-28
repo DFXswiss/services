@@ -260,7 +260,7 @@ export default function BuyScreen(): JSX.Element {
     const requiresUpdate =
       selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString() ||
       selectedAsset?.name !== paymentInfo?.asset?.name;
-    requiresUpdate && updateData(Side.SPEND);
+    requiresUpdate && updateData(!selectedTargetAmount && selectedAmount ? Side.GET : Side.SPEND);
   }, [selectedTargetAmount, selectedAsset]);
 
   function updateData(sideToUpdate?: Side) {
