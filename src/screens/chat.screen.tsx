@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { BsReply } from 'react-icons/bs';
 import { HiOutlineDownload, HiOutlinePaperClip } from 'react-icons/hi';
+import { IoMusicalNotes } from 'react-icons/io5';
 import { MdOutlineCancel, MdOutlineClose, MdSend } from 'react-icons/md';
 import { RiCheckDoubleFill, RiCheckFill } from 'react-icons/ri';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -353,21 +354,9 @@ function ChatBubble({
     file: MediaFile,
   ) => {
     e.stopPropagation();
+    onClick && onClick(undefined);
 
-    setSelectedFile(file);
-  };
-
-  const handleDownload = (e: React.MouseEvent<HTMLButtonElement | HTMLAudioElement, MouseEvent>, file: MediaFile) => {
-    e.stopPropagation();
-
-    // Create an anchor element and trigger download directly
-    const link = document.createElement('a');
-    link.href = file.url;
-    link.download = file.name;
-    link.target = '_blank'; // Open in a new tab to avoid navigating away
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    !selectedFile && setSelectedFile(file);
   };
 
   const isUser = sender === 'user';
@@ -414,7 +403,7 @@ function ChatBubble({
                     key={index}
                     src={file.url}
                     alt={file.name}
-                    className="rounded-sm mb-1 max-h-40 object-cover"
+                    className="rounded-sm mb-1 max-h-40 object-cover cursor-pointer"
                     style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
                     onClick={(e) => handlePreview(e, file)}
                   />
@@ -424,7 +413,7 @@ function ChatBubble({
                   <video
                     key={index}
                     controls
-                    className="rounded-sm mb-1 max-h-40 object-cover"
+                    className="rounded-sm mb-1 max-h-40 object-cover cursor-pointer"
                     style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
                     onClick={(e) => handlePreview(e, file)}
                   >
@@ -434,39 +423,50 @@ function ChatBubble({
                 );
               case 'audio':
                 return (
-                  <audio
+                  <div
                     key={index}
-                    controls
-                    className="rounded-sm mb-1"
-                    style={{ maxWidth: '100%', width: 'auto' }}
-                    onClick={(e) => handleDownload(e, file)}
+                    className="flex items-center mb-1 p-2 cursor-pointer"
+                    onClick={(e) => handlePreview(e, file)}
                   >
-                    <source src={file.url} type={file.type} />
-                    {translate('general/messages', 'Your browser does not support the audio element.')}
-                  </audio>
-                );
-              case 'application':
-                return (
-                  <div key={index} className="flex items-center mb-1 p-2" onClick={(e) => handlePreview(e, file)}>
                     <div className="flex justify-center items-center w-12 h-12 bg-white rounded-md">
-                      <HiOutlinePaperClip className="text-dfxGray-700 text-xl" />
+                      <IoMusicalNotes className="text-dfxGray-700 text-2xl" />
                     </div>
                     <div className="flex flex-col mx-2">
                       <span className="text-white text-sm font-semibold">{file.name}</span>
-                      <span className="text-dfxGray-400 text-xs">{Math.round(file.size / 1024)} KB</span>
+                      <span className="text-dfxGray-400 text-xs">
+                        {file.type.split('/')[1].toUpperCase() ?? file.type} · {Math.round(file.size / 1024)} KB
+                      </span>
                     </div>
                   </div>
                 );
               default:
+                const fileTypeLabel = fileType === 'application' ? file.type.split('/')[1] : fileType;
                 return (
-                  <p key={index} className="mb-1 text-red-500">
-                    {translate('general/messages', 'Unsupported file type')}
-                  </p>
+                  <a
+                    key={index}
+                    href={file.url}
+                    target="_blank"
+                    className="flex items-center mb-1 p-2 cursor-pointer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex justify-center items-center w-12 h-12 bg-white rounded-md">
+                      <HiOutlinePaperClip className="text-dfxGray-700 text-2xl" />
+                    </div>
+                    <div className="flex flex-col mx-2">
+                      <span className="text-white text-sm font-semibold">{file.name}</span>
+                      <span className="text-dfxGray-400 text-xs">
+                        {fileTypeLabel.toUpperCase()} · {Math.round(file.size / 1024)} KB
+                      </span>
+                    </div>
+                  </a>
                 );
             }
           })}
         {selectedFile && (
-          <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50 pointer-events-none">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               className="absolute top-3 right-3 text-white pointer-events-auto"
               onClick={(e) => {
@@ -476,7 +476,7 @@ function ChatBubble({
             >
               <MdOutlineClose className="text-2xl" />
             </button>
-            <div className="relative m-4">
+            <div className="relative m-4 pointer-events-auto">
               <div className="rounded-sm overflow-clip">
                 {selectedFile.type.startsWith('image') && (
                   <img src={selectedFile.url} alt={selectedFile.name} className="max-h-96" />
@@ -485,6 +485,11 @@ function ChatBubble({
                   <video controls className="max-h-96">
                     <source src={selectedFile.url} type={selectedFile.type} />
                   </video>
+                )}
+                {selectedFile.type.startsWith('audio') && (
+                  <audio controls className="max-h-96">
+                    <source src={selectedFile.url} type={selectedFile.type} />
+                  </audio>
                 )}
                 {selectedFile.type.startsWith('application') && (
                   <div className="text-center">
@@ -496,9 +501,8 @@ function ChatBubble({
               </div>
               <div className="flex mt-4 items-center justify-center">
                 <a
-                  className="bg-white/30 text-white pl-4 pr-6 py-2 rounded-full font-semibold cursor-pointer pointer-events-auto"
+                  className="bg-white/30 text-white pl-4 pr-6 py-2 rounded-full font-semibold cursor-pointer"
                   href={selectedFile.url}
-                  // onClick={(e) => handleDownload(e, selectedFile)}
                 >
                   <div className="flex flex-row gap-2">
                     <HiOutlineDownload className="text-xl" />
