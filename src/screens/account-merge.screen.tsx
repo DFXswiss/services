@@ -19,12 +19,12 @@ export default function AccountMerge() {
 
   const [urlParams, setUrlParams] = useSearchParams();
 
-  const mergeCode = urlParams.get('code');
+  const otp = urlParams.get('otp');
 
   useEffect(() => {
-    if (mergeCode) {
+    if (otp) {
       call<MergeRedirect>({
-        url: `auth/mail/confirm?code=${mergeCode}`,
+        url: `auth/mail/confirm?code=${otp}`,
         method: 'GET',
       })
         .then(({ kycHash, accessToken }: MergeRedirect) => {
@@ -38,8 +38,8 @@ export default function AccountMerge() {
       navigate('/kyc');
     }
 
-    if (urlParams.has('code')) {
-      urlParams.delete('code');
+    if (urlParams.has('otp')) {
+      urlParams.delete('otp');
       setUrlParams(urlParams);
     }
   }, []);

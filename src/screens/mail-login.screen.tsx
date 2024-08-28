@@ -17,12 +17,12 @@ export default function MailLoginScreen() {
 
   const [urlParams, setUrlParams] = useSearchParams();
 
-  const code = urlParams.get('code');
+  const otp = urlParams.get('otp');
 
   useEffect(() => {
-    if (code) {
+    if (otp) {
       call<RedirectResponse>({
-        url: `auth/mail/redirect?code=${code}`,
+        url: `auth/mail/redirect?code=${otp}`,
         method: 'GET',
       })
         .then(({ redirectUrl }) => {
@@ -35,8 +35,8 @@ export default function MailLoginScreen() {
       navigate('/login');
     }
 
-    if (urlParams.has('code')) {
-      urlParams.delete('code');
+    if (urlParams.has('otp')) {
+      urlParams.delete('otp');
       setUrlParams(urlParams);
     }
   }, []);
