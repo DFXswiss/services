@@ -15,7 +15,7 @@ export default function ErrorScreen(): JSX.Element {
     <Layout>
       <StyledVerticalStack center gap={5} marginY={5}>
         <div>
-          <h2 className="text-dfxBlue-800">{translate('screens/error', 'Oh, sorry something went wrong')}</h2>
+          <h2 className="text-dfxBlue-800">{translate('screens/error', 'Oh, sorry, something went wrong')}</h2>
           <p className="text-dfxGray-700">
             {error ??
               translate(

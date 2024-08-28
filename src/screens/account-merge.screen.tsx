@@ -29,9 +29,6 @@ export default function AccountMerge() {
       })
         .then(({ kycHash, accessToken }: MergeRedirect) => {
           setAuthenticationToken(accessToken);
-          return kycHash;
-        })
-        .then((kycHash: string) => {
           navigate(`/kyc?code=${kycHash}`);
         })
         .catch((error: ApiError) => {

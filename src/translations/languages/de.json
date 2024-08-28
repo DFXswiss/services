@@ -181,7 +181,7 @@
     "Document proof": "Dokumentennachweis"
   },
   "screens/error": {
-    "Oh, sorry something went wrong": "Entschuldigung, irgendwas hat nicht funktioniert",
+    "Oh, sorry, something went wrong": "Entschuldigung, irgendwas hat nicht funktioniert",
 
     "Please return to the previous page. If this problem persists, please contact our support.": "Bitte kehre zur vorherigen Seite zurück. Wenn dieses Problem weiterhin besteht, wende Dich bitte an unseren Support."
   },

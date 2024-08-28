@@ -181,7 +181,7 @@
     "Document proof": "Preuve de document"
   },
   "screens/error": {
-    "Oh, sorry something went wrong": "Désolé, il y a eu un problème",
+    "Oh, sorry, something went wrong": "Désolé, il y a eu un problème",
 
     "Please return to the previous page. If this problem persists, please contact our support.": "Veuillez revenir à la page précédente. Si le problème persiste, veuillez contacter notre service d'assistance."
   },
