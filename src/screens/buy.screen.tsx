@@ -31,7 +31,6 @@ import {
   StyledLink,
   StyledLoadingSpinner,
   StyledSearchDropdown,
-  StyledTextBox,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
@@ -59,6 +58,11 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
+enum Side {
+  SPEND = 'SPEND',
+  GET = 'GET',
+}
+
 interface Address {
   address: string;
   label: string;
@@ -70,7 +74,12 @@ interface FormData {
   currency: Fiat;
   paymentMethod: FiatPaymentMethod;
   asset: Asset;
+  targetAmount: string;
   address: Address;
+}
+
+interface ValidatedData extends BuyPaymentInfo {
+  sideToUpdate?: Side;
 }
 
 const EmbeddedWallet = 'CakeWallet';
@@ -90,6 +99,7 @@ export default function BuyScreen(): JSX.Element {
     assetIn,
     assetOut,
     amountIn,
+    amountOut,
     blockchain,
     paymentMethod,
     externalTransactionId,
@@ -117,21 +127,19 @@ export default function BuyScreen(): JSX.Element {
   const [showsCompletion, setShowsCompletion] = useState(false);
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
   const [showsNameForm, setShowsNameForm] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isPriceLoading, setIsPriceLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<Side>();
   const [isContinue, setIsContinue] = useState(false);
-  const [validatedData, setValidatedData] = useState<BuyPaymentInfo>();
+  const [validatedData, setValidatedData] = useState<ValidatedData>();
 
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({
-    defaultValues: {
-      amount: '100',
-    },
+    defaultValues: { amount: '100' },
   });
 
   const selectedAmount = useWatch({ control, name: 'amount' });
   const selectedCurrency = useWatch({ control, name: 'currency' });
   const selectedAsset = useWatch({ control, name: 'asset' });
+  const selectedTargetAmount = useWatch({ control, name: 'targetAmount' });
   const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
   const selectedAddress = useWatch({ control, name: 'address' });
 
@@ -207,8 +215,12 @@ export default function BuyScreen(): JSX.Element {
   }, [availablePaymentMethods, paymentMethod]);
 
   useEffect(() => {
-    if (amountIn) setVal('amount', amountIn);
-  }, [amountIn]);
+    if (amountIn) {
+      setVal('amount', amountIn);
+    } else if (amountOut) {
+      setVal('targetAmount', amountOut);
+    }
+  }, [amountIn, amountOut]);
 
   useEffect(() => setAddress(), [session?.address, translate]);
 
@@ -234,17 +246,33 @@ export default function BuyScreen(): JSX.Element {
     }
   }, [selectedAmount]);
 
-  // data validation/fetch
-  useEffect(() => updateData(), [selectedAmount, selectedCurrency, selectedAsset, selectedPaymentMethod]);
+  // Spend data changed
+  useEffect(() => {
+    const requiresUpdate =
+      selectedAmount !== paymentInfo?.amount?.toString() ||
+      selectedCurrency?.name !== paymentInfo?.currency.name ||
+      selectedPaymentMethod !== validatedData?.paymentMethod;
+    requiresUpdate && updateData(Side.GET);
+  }, [selectedAmount, selectedCurrency, selectedPaymentMethod]);
 
-  function updateData() {
+  // Get data changed
+  useEffect(() => {
+    const requiresUpdate =
+      selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString() ||
+      selectedAsset?.name !== paymentInfo?.asset?.name;
+    requiresUpdate && updateData(Side.SPEND);
+  }, [selectedTargetAmount, selectedAsset]);
+
+  function updateData(sideToUpdate?: Side) {
     const data = validateData({
-      amount: selectedAmount,
+      amount: sideToUpdate === Side.GET ? selectedAmount : undefined,
       currency: selectedCurrency,
       asset: selectedAsset,
+      targetAmount: sideToUpdate === Side.SPEND || selectedAmount === undefined ? selectedTargetAmount : undefined,
       paymentMethod: selectedPaymentMethod,
     });
-    setValidatedData(data);
+
+    data && setValidatedData({ ...data, sideToUpdate });
   }
 
   useEffect(() => {
@@ -254,14 +282,13 @@ export default function BuyScreen(): JSX.Element {
 
     if (!validatedData) {
       setPaymentInfo(undefined);
-      setIsLoading(false);
-      setIsPriceLoading(false);
+      setIsLoading(undefined);
       return;
     }
 
     const data: BuyPaymentInfo = { ...validatedData, externalTransactionId };
 
-    setIsLoading(true);
+    setIsLoading(validatedData.sideToUpdate);
     receiveFor(data)
       .then((buy) => {
         if (isRunning) {
@@ -270,16 +297,16 @@ export default function BuyScreen(): JSX.Element {
 
           // load exact price
           if (buy) {
-            setIsPriceLoading(true);
-            receiveFor({ ...data, exactPrice: true })
-              .then((info) => {
-                if (isRunning) {
-                  setPaymentInfo(info);
-                  setIsPriceLoading(false);
-                }
-              })
-              .catch(console.error);
+            return receiveFor({ ...data, exactPrice: true });
           }
+        }
+      })
+      .then((info) => {
+        if (isRunning && info) {
+          validatedData.sideToUpdate === Side.SPEND
+            ? setVal('amount', info.amount.toString())
+            : setVal('targetAmount', info.estimatedAmount.toString());
+          setPaymentInfo(info);
         }
       })
       .catch((error: ApiError) => {
@@ -288,7 +315,7 @@ export default function BuyScreen(): JSX.Element {
           setErrorMessage(error.message ?? 'Unknown error');
         }
       })
-      .finally(() => isRunning && setIsLoading(false));
+      .finally(() => isRunning && setIsLoading(undefined));
 
     return () => {
       isRunning = false;
@@ -328,12 +355,21 @@ export default function BuyScreen(): JSX.Element {
     }
   }
 
-  function validateData({ amount: amountStr, currency, asset, paymentMethod }: Partial<FormData> = {}):
-    | BuyPaymentInfo
-    | undefined {
+  function validateData({
+    amount: amountStr,
+    currency,
+    asset,
+    targetAmount: targetAmountStr,
+    paymentMethod,
+  }: Partial<FormData> = {}): BuyPaymentInfo | undefined {
     const amount = Number(amountStr);
-    if (amount > 0 && asset != null && currency != null && paymentMethod != null) {
-      return { amount, currency, asset, paymentMethod };
+    const targetAmount = Number(targetAmountStr);
+    if (asset != null && currency != null && paymentMethod != null) {
+      return amount > 0
+        ? { amount, currency, asset, paymentMethod }
+        : targetAmount > 0
+        ? { currency, asset, targetAmount, paymentMethod }
+        : undefined;
     }
   }
 
@@ -379,7 +415,6 @@ export default function BuyScreen(): JSX.Element {
   const rules = Utils.createRules({
     asset: Validations.Required,
     currency: Validations.Required,
-    amount: Validations.Required,
   });
 
   const title = showsCompletion
@@ -419,6 +454,8 @@ export default function BuyScreen(): JSX.Element {
                         name="amount"
                         forceError={customAmountError != null}
                         forceErrorMessage={customAmountError}
+                        loading={isLoading === Side.SPEND}
+                        disabled={isLoading === Side.SPEND}
                         full
                       />
                     </div>
@@ -449,11 +486,11 @@ export default function BuyScreen(): JSX.Element {
                   <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
                   <StyledHorizontalStack gap={1}>
                     <div className="flex-[3_1_9rem]">
-                      <StyledTextBox
-                        text={
-                          paymentInfo && !isLoading ? `≈ ${Utils.formatAmountCrypto(paymentInfo.estimatedAmount)}` : ' '
-                        }
-                        loading={!isLoading && isPriceLoading}
+                      <StyledInput
+                        type="number"
+                        name="targetAmount"
+                        loading={isLoading === Side.GET}
+                        disabled={isLoading === Side.GET}
                         full
                       />
                     </div>

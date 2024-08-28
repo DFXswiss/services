@@ -15,8 +15,9 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { OverlayContent, OverlayHeader, OverlayType } from 'src/components/home/settings-overlays';
+import { Trans } from 'react-i18next';
 import { Layout } from 'src/components/layout';
+import { ConfirmationOverlay, RenameAddressOverlay } from 'src/components/overlays';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -28,6 +29,20 @@ interface FormData {
   language: Language;
   currency: Fiat;
 }
+
+enum OverlayType {
+  NONE,
+  DELETE_ADDRESS,
+  DELETE_ACCOUNT,
+  RENAME_ADDRESS,
+}
+
+const OverlayHeader: { [key in OverlayType]: string } = {
+  [OverlayType.NONE]: '',
+  [OverlayType.DELETE_ADDRESS]: 'Delete wallet',
+  [OverlayType.DELETE_ACCOUNT]: 'Delete account',
+  [OverlayType.RENAME_ADDRESS]: 'Rename wallet',
+};
 
 export default function SettingsScreen(): JSX.Element {
   const { translate, language, currency, availableLanguages, changeLanguage, changeCurrency } = useSettingsContext();
@@ -100,13 +115,13 @@ export default function SettingsScreen(): JSX.Element {
           deleteAddress(menuAddress);
           menuAddress === user?.activeAddress?.address && setWallet();
           break;
-        case OverlayType.RENAME_ADDRESS:
-          if (!menuAddress) break;
-          await renameAddress(menuAddress, result);
-          break;
         case OverlayType.DELETE_ACCOUNT:
           deleteAccount();
           setWallet();
+          break;
+        case OverlayType.RENAME_ADDRESS:
+          if (!menuAddress) break;
+          await renameAddress(menuAddress, result);
           break;
       }
     }
@@ -121,7 +136,7 @@ export default function SettingsScreen(): JSX.Element {
   return (
     <Layout title={title} rootRef={rootRef} onBack={overlayType ? () => onCloseOverlay() : undefined}>
       {overlayType ? (
-        <OverlayContent type={overlayType} onClose={onCloseOverlay} address={menuAddress} />
+        <SettingsOverlay overlayType={overlayType} onCloseOverlay={onCloseOverlay} data={menuAddress} />
       ) : (
         <StyledVerticalStack full gap={8}>
           <StyledVerticalStack full gap={4}>
@@ -237,4 +252,54 @@ export default function SettingsScreen(): JSX.Element {
       )}
     </Layout>
   );
+}
+
+interface SettingsOverlayProps {
+  overlayType: OverlayType;
+  onCloseOverlay: (result?: any) => Promise<void>;
+  data?: string;
+}
+
+function SettingsOverlay({ overlayType, onCloseOverlay, data }: SettingsOverlayProps): JSX.Element {
+  const { width } = useWindowContext();
+  const { translate } = useSettingsContext();
+
+  const formattedAddress = blankedAddress(data ?? '', { width });
+
+  switch (overlayType) {
+    case OverlayType.DELETE_ADDRESS:
+      return (
+        <ConfirmationOverlay
+          messageContent={
+            <p className="text-dfxBlue-800 mb-2">
+              <Trans i18nKey="screens/settings.delete" values={{ address: formattedAddress }}>
+                Are you sure you want to delete the address <strong>{formattedAddress}</strong> from your DFX account?
+                This action is irreversible.
+              </Trans>
+            </p>
+          }
+          cancelLabel={translate('general/actions', 'Cancel')}
+          confirmLabel={translate('general/actions', 'Delete')}
+          onCancel={() => onCloseOverlay(false)}
+          onConfirm={() => onCloseOverlay(true)}
+        />
+      );
+    case OverlayType.DELETE_ACCOUNT:
+      return (
+        <ConfirmationOverlay
+          message={translate(
+            'screens/settings',
+            'Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.',
+          )}
+          cancelLabel={translate('general/actions', 'Cancel')}
+          confirmLabel={translate('general/actions', 'Delete')}
+          onCancel={() => onCloseOverlay(false)}
+          onConfirm={() => onCloseOverlay(true)}
+        />
+      );
+    case OverlayType.RENAME_ADDRESS:
+      return <RenameAddressOverlay onClose={onCloseOverlay} />;
+    default:
+      return <></>;
+  }
 }

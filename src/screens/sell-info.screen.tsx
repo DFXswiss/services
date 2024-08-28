@@ -156,7 +156,11 @@ export default function SellInfoScreen(): JSX.Element {
   useEffect(() => fetchData(), [asset, currency, bankAccount, amountIn, amountOut]);
 
   function fetchData() {
-    if (!(asset && currency && bankAccount && (amountIn || amountOut))) return;
+    if (!(asset && currency && bankAccount && (amountIn || amountOut))) {
+      const inputIsComplete = (amountIn || amountOut) && assetIn && assetOut && bankAccountParam;
+      !inputIsComplete && setErrorMessage('Missing required information');
+      return;
+    }
 
     setErrorMessage(undefined);
 
@@ -257,6 +261,8 @@ export default function SellInfoScreen(): JSX.Element {
             color={StyledButtonColor.STURDY_WHITE}
           />
         </StyledVerticalStack>
+      ) : !paymentInfo ? (
+        <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : customAmountError ? (
         <>
           <StyledInfoText invertedIcon>{customAmountError}</StyledInfoText>

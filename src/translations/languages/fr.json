@@ -193,6 +193,8 @@
     "Login to DFX Services": "Login aux services DFX",
     "We have sent an email with further instructions to the address provided.": "Nous avons envoyé un e-mail avec des instructions supplémentaires à l'adresse fournie.",
 
+    "Logging in...": "Connexion en cours...",
+
     "Scan with your wallet": "Scannez avec votre portefeuille",
     "Connect your wallet": "Connectez votre portefeuille",
 
@@ -471,6 +473,7 @@
     "Route": "Route",
     "Summary": "Résumé",
     "N/A": "N/A",
+    "delete": "Êtes-vous sûr de vouloir supprimer votre <1>itinéraire de paiement {{type}}</1> avec l’<1>ID {{id}}</1>?",
 
     "Payment details": "Détails du paiement",
     "Your payment details at a glance": "Vos détails de paiement en un coup d'œil",
