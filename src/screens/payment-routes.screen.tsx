@@ -114,7 +114,7 @@ export default function PaymentRoutes(): JSX.Element {
 
   async function togglePaymentLinkStatus(id: string, status: PaymentLinkStatus) {
     setIsUpdatingPaymentLink((prev) => [...prev, id]);
-    updatePaymentLink({ status }, +id).finally(() => {
+    updatePaymentLink({ status }, id).finally(() => {
       setIsUpdatingPaymentLink((prev) => prev.filter((i) => i !== id));
     });
   }
@@ -133,7 +133,7 @@ export default function PaymentRoutes(): JSX.Element {
 
   async function cancelPayment(id: string) {
     setIsUpdatingPaymentLink((prev) => [...prev, id]);
-    cancelPaymentLinkPayment(+id).finally(() => {
+    cancelPaymentLinkPayment(id).finally(() => {
       setIsUpdatingPaymentLink((prev) => prev.filter((i) => i !== id));
     });
   }
@@ -1027,7 +1027,7 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
         expiryDate: data.paymentExpiryDate,
       } as any;
 
-      await createPaymentLinkPayment(request, +id);
+      await createPaymentLinkPayment(request, id);
       onDone(id);
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
