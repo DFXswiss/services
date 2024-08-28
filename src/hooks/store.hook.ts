@@ -18,7 +18,7 @@ export interface StoreInterface {
 }
 
 enum StoreKey {
-  AUTH_TOKEN = 'dfx.srv.authenticationToken',
+  AUTH_TOKEN = 'dfx.authenticationToken',
   REDIRECT_URI = 'dfx.srv.redirectUri',
   BALANCES = 'dfx.srv.balances',
   LANGUAGE = 'dfx.srv.language',

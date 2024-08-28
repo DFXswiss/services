@@ -141,7 +141,9 @@
     "Increase limit": "Augmenter la limite",
     "Start video identification": "Lancer l'identification par vidéo",
     "I am already verified with DFX": "Je suis déjà vérifié par DFX",
-    "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Par la présente, je charge DFX de transmettre mes données KYC à {{client}}."
+    "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Par la présente, je charge DFX de transmettre mes données KYC à {{client}}.",
+
+    "Merging your accounts...": "Fusion de vos comptes..."
   },
   "screens/2fa": {
     "2FA": "2FA",
@@ -179,7 +181,7 @@
     "Document proof": "Preuve de document"
   },
   "screens/error": {
-    "Oh sorry something went wrong": "Désolé, il y a eu un problème",
+    "Oh, sorry, something went wrong": "Désolé, il y a eu un problème",
 
     "Please return to the previous page. If this problem persists, please contact our support.": "Veuillez revenir à la page précédente. Si le problème persiste, veuillez contacter notre service d'assistance."
   },
