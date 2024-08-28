@@ -32,6 +32,8 @@ const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
 const SupportScreen = lazy(() => import('./screens/support.screen'));
 const TfaScreen = lazy(() => import('./screens/tfa.screen'));
 const TransactionScreen = lazy(() => import('./screens/transaction.screen'));
+const AccountMerge = lazy(() => import('./screens/account-merge.screen'));
+const MailLoginScreen = lazy(() => import('./screens/mail-login.screen'));
 
 setupLanguages();
 
@@ -52,6 +54,10 @@ export const Routes = [
   {
     path: '/login',
     element: <HomeScreen />,
+  },
+  {
+    path: '/mail-login',
+    element: <MailLoginScreen />,
   },
   {
     path: '/connect',
@@ -154,6 +160,10 @@ export const Routes = [
   {
     path: '/bank-accounts',
     element: withSuspense(<BankAccountsScreen />),
+  },
+  {
+    path: '/account-merge',
+    element: withSuspense(<AccountMerge />),
   },
 ];
 

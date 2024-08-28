@@ -216,7 +216,7 @@ export default function KycScreen(): JSX.Element {
     }
   }
 
-  function callKyc<T>(call: () => Promise<T>): Promise<T> {
+  async function callKyc<T>(call: () => Promise<T>): Promise<T> {
     return call().catch((e: ApiError) => {
       if (e.statusCode === 401 && 'switchToCode' in e) {
         setIsLoading(true);
