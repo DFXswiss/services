@@ -19,7 +19,7 @@ export default function AccountMerge() {
 
   const [urlParams, setUrlParams] = useSearchParams();
 
-  const mergeCode = urlParams.get('merge-code');
+  const mergeCode = urlParams.get('code');
 
   useEffect(() => {
     if (mergeCode) {
@@ -38,8 +38,8 @@ export default function AccountMerge() {
       navigate('/kyc');
     }
 
-    if (urlParams.has('merge-code')) {
-      urlParams.delete('merge-code');
+    if (urlParams.has('code')) {
+      urlParams.delete('code');
       setUrlParams(urlParams);
     }
   }, []);
