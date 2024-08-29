@@ -304,7 +304,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     switch (selectedPaymentMethod.id) {
       case 'OpenCryptoPay.io':
       case 'FrankencoinPay.com':
-        setPaymentIdentifier(lightningParam);
+        setPaymentIdentifier(Lnurl.prependLnurl(lightningParam));
         break;
       case 'Bitcoin Lightning':
         callback = url(payRequest.callback, new URLSearchParams({ amount: payRequest.minSendable.toString() }));
@@ -489,12 +489,17 @@ export default function PaymentLinkScreen(): JSX.Element {
                       ].filter((item) => item.text)}
                     />
                   )}
+                  <StyledDataTableExpandableRow
+                    label={translate('screens/payment', 'QR Code')}
+                    expansionContent={
+                      <div className="flex w-full items-center justify-center">
+                        <div className="w-48 py-3">
+                          <QrBasic data={paymentIdentifier} />
+                        </div>
+                      </div>
+                    }
+                  />
                 </StyledDataTable>
-                <div className="flex w-full items-center justify-center">
-                  <div className="w-48 pb-3 pt-7">
-                    <QrBasic data={paymentIdentifier} />
-                  </div>
-                </div>
               </StyledCollapsible>
               {['OpenCryptoPay.io', 'FrankencoinPay.com'].includes(selectedPaymentMethod.id) && (
                 <StyledVerticalStack full gap={8} center>

@@ -57,7 +57,7 @@ export const Routes = [
   },
   {
     path: '/mail-login',
-    element: <MailLoginScreen />,
+    element: withSuspense(<MailLoginScreen />),
   },
   {
     path: '/connect',

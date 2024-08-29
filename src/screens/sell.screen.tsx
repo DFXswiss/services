@@ -257,17 +257,18 @@ export default function SellScreen(): JSX.Element {
   // Spend data changed
   useEffect(() => {
     const requiresUpdate =
-      enteredAmount !== paymentInfo?.amount?.toString() || selectedAsset?.name !== paymentInfo?.asset.name;
+      enteredAmount !== paymentInfo?.amount?.toString() || selectedAsset?.uniqueName !== paymentInfo?.asset.uniqueName;
     requiresUpdate && updateData(Side.GET);
   }, [enteredAmount, selectedAsset]);
 
   // Get data changed
   useEffect(() => {
+    const isSameTargetAmount = selectedTargetAmount === paymentInfo?.estimatedAmount?.toString();
     const requiresUpdate =
-      selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString() ||
+      !isSameTargetAmount ||
       selectedCurrency?.name !== paymentInfo?.currency?.name ||
       selectedBankAccount?.iban !== validatedData?.iban;
-    requiresUpdate && updateData(Side.SPEND);
+    requiresUpdate && updateData(isSameTargetAmount && enteredAmount ? Side.GET : Side.SPEND);
   }, [selectedTargetAmount, selectedCurrency, selectedBankAccount]);
 
   function updateData(sideToUpdate?: Side) {
