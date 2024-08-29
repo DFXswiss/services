@@ -7,7 +7,16 @@ import {
   TransactionFailureReason,
   TransactionState,
 } from '@dfx.swiss/react';
-import { SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
+
+// TODO: Replace with import from packages
+export enum SupportIssueType {
+  GENERIC_ISSUE = 'GenericIssue',
+  TRANSACTION_ISSUE = 'TransactionIssue',
+  KYC_ISSUE = 'KycIssue',
+  LIMIT_REQUEST = 'LimitRequest',
+  PARTNERSHIP_REQUEST = 'PartnershipRequest',
+  NOTIFICATION_OF_CHANGES = 'NotificationOfChanges',
+}
 
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
@@ -103,6 +112,7 @@ export const IssueTypeLabels = {
   [SupportIssueType.KYC_ISSUE]: 'KYC issue',
   [SupportIssueType.LIMIT_REQUEST]: 'Limit increase request',
   [SupportIssueType.PARTNERSHIP_REQUEST]: 'Partnership request',
+  [SupportIssueType.NOTIFICATION_OF_CHANGES]: 'Notification of changes',
 };
 
 export const IssueReasonLabels = {

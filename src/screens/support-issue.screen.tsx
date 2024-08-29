@@ -25,7 +25,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { CreateSupportIssue, SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
+import { CreateSupportIssue, SupportIssueReason } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
@@ -38,6 +38,7 @@ import {
   LimitLabels,
   OriginFutureLabels,
   OriginNowLabels,
+  SupportIssueType,
 } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
@@ -55,6 +56,7 @@ const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.KYC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.LIMIT_REQUEST]: [SupportIssueReason.OTHER],
   [SupportIssueType.PARTNERSHIP_REQUEST]: [SupportIssueReason.OTHER],
+  [SupportIssueType.NOTIFICATION_OF_CHANGES]: [SupportIssueReason.OTHER],
 };
 
 interface FormData {
@@ -184,7 +186,7 @@ export default function SupportIssueScreen(): JSX.Element {
 
     try {
       const request: CreateSupportIssue = {
-        type: data.type,
+        type: data.type as any,
         name: data.name,
         reason: data.reason ?? SupportIssueReason.OTHER,
         message: data.message,
