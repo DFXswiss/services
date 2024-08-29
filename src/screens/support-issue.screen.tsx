@@ -1,11 +1,14 @@
 import {
   ApiError,
   Bank,
+  CreateSupportIssue,
   FundOrigin,
   Iban,
   InvestmentDate,
   KycLevel,
   Limit,
+  SupportIssueReason,
+  SupportIssueType,
   Utils,
   Validations,
   useBank,
@@ -25,7 +28,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { CreateSupportIssue, SupportIssueReason } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
@@ -38,7 +40,6 @@ import {
   LimitLabels,
   OriginFutureLabels,
   OriginNowLabels,
-  SupportIssueType,
 } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';

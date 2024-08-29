@@ -4,19 +4,10 @@ import {
   InvestmentDate,
   Limit,
   SupportIssueReason,
+  SupportIssueType,
   TransactionFailureReason,
   TransactionState,
 } from '@dfx.swiss/react';
-
-// TODO: Replace with import from packages
-export enum SupportIssueType {
-  GENERIC_ISSUE = 'GenericIssue',
-  TRANSACTION_ISSUE = 'TransactionIssue',
-  KYC_ISSUE = 'KycIssue',
-  LIMIT_REQUEST = 'LimitRequest',
-  PARTNERSHIP_REQUEST = 'PartnershipRequest',
-  NOTIFICATION_OF_CHANGES = 'NotificationOfChanges',
-}
 
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
