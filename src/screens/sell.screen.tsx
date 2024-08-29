@@ -257,7 +257,7 @@ export default function SellScreen(): JSX.Element {
   // Spend data changed
   useEffect(() => {
     const requiresUpdate =
-      enteredAmount !== paymentInfo?.amount?.toString() || selectedAsset?.name !== paymentInfo?.asset.name;
+      enteredAmount !== paymentInfo?.amount?.toString() || selectedAsset?.uniqueName !== paymentInfo?.asset.uniqueName;
     requiresUpdate && updateData(Side.GET);
   }, [enteredAmount, selectedAsset]);
 
