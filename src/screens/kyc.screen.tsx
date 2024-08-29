@@ -16,6 +16,7 @@ import {
   KycStepStatus,
   KycStepType,
   QuestionType,
+  SupportIssueType,
   UrlType,
   Utils,
   Validations,
@@ -1131,7 +1132,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const currentOptions = currentQuestion?.options ?? [];
   const currentResponse = responses.find((r) => currentQuestion?.key === r.key);
   const nocLinkText = 'support@dfx.swiss';
-  const nocSupportLink = `${process.env.PUBLIC_URL}/support/issue?issue-type=NotificationOfChanges`;
+  const nocSupportLink = `${process.env.PUBLIC_URL}/support/issue?issue-type=${SupportIssueType.NOTIFICATION_OF_CHANGES}`;
 
   useEffect(() => {
     if (!step.session) return;
