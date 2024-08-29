@@ -21,6 +21,7 @@ import {
   Form,
   SpinnerSize,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
   StyledDropdown,
   StyledFileUpload,
@@ -282,6 +283,15 @@ export default function SupportIssueScreen(): JSX.Element {
           <p className="text-dfxGray-700">
             {translate('screens/support', 'Select the transaction for which you would like to create an issue.')}
           </p>
+          <StyledButton
+            label={translate('screens/payment', 'My transaction is missing')}
+            onClick={() => {
+              setValue('reason', SupportIssueReason.TRANSACTION_MISSING);
+              setSelectTransaction(false);
+            }}
+            width={StyledButtonWidth.FULL}
+            color={StyledButtonColor.BLUE}
+          />
           <TransactionList isSupport={true} onSelectTransaction={onSelectTransaction} setError={setError} />
         </>
       ) : (
