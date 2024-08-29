@@ -163,6 +163,17 @@ export default function ChatScreen(): JSX.Element {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (e.shiftKey) {
+        setInputValue((prevValue) => `${prevValue}\n`);
+      } else {
+        handleSend();
+      }
+    }
+  };
+
   const handleChatBubbleClick = (e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessage) => {
     if (!e) {
       setClickedMessage(undefined);
@@ -199,7 +210,6 @@ export default function ChatScreen(): JSX.Element {
       }
 
       prevChat.messages[messageIndex] = message;
-      console.log(message);
       return { ...prevChat };
     });
 
@@ -269,13 +279,50 @@ export default function ChatScreen(): JSX.Element {
               <input type="file" multiple onChange={handleFileChange} className="hidden" />
             </label>
 
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              className="flex-grow px-2 bg-dfxGray-300 rounded-lg text-dfxGray-800 outline-none"
-              placeholder="Type a message..."
-            />
+            <div
+              className="
+                grid
+                w-full
+                text-sm
+                after:px-3.5
+                after:py-2.5
+                [&>textarea]:text-inherit
+                after:text-inherit
+                [&>textarea]:resize-none
+                [&>textarea]:overflow-hidden
+                [&>textarea]:[grid-area:1/1/2/2]
+                after:[grid-area:1/1/2/2]
+                after:whitespace-pre-wrap
+                after:invisible
+                after:content-[attr(data-cloned-val)_'_']
+                after:border
+                text-dfxGray-800
+                outline-none
+                resize-none
+                overflow-auto
+                max-h-40"
+              data-cloned-val={inputValue}
+            >
+              <textarea
+                className="
+                  w-full
+                  text-slate-600
+                  bg-dfxGray-300
+                  appearance-none
+                  rounded
+                  px-3.5
+                  py-2.5
+                  outline-none"
+                name="message"
+                id="message"
+                rows={1}
+                value={inputValue}
+                onInput={(e) => setInputValue(e.currentTarget.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Write a message..."
+                required
+              />
+            </div>
 
             <button onClick={handleSend} className="items-center p-2 cursor-pointer">
               <MdSend className="text-2xl text-dfxBlue-800" />
@@ -498,7 +545,7 @@ function ChatBubble({
             </div>
           </div>
         )}
-        {message && <p className="leading-snug text-sm px-3">{message}</p>}
+        {message && <p className="leading-snug text-sm px-3 whitespace-pre-wrap">{message}</p>}
         <div className="flex flex-row justify-between items-center px-3 -mt-0.5">
           <div className="flex flex-row">
             {reactions?.map((reaction, index) => (
