@@ -263,11 +263,12 @@ export default function SellScreen(): JSX.Element {
 
   // Get data changed
   useEffect(() => {
+    const isSameTargetAmount = selectedTargetAmount === paymentInfo?.estimatedAmount?.toString();
     const requiresUpdate =
-      selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString() ||
+      !isSameTargetAmount ||
       selectedCurrency?.name !== paymentInfo?.currency?.name ||
       selectedBankAccount?.iban !== validatedData?.iban;
-    requiresUpdate && updateData(!selectedTargetAmount && enteredAmount ? Side.GET : Side.SPEND);
+    requiresUpdate && updateData(isSameTargetAmount && enteredAmount ? Side.GET : Side.SPEND);
   }, [selectedTargetAmount, selectedCurrency, selectedBankAccount]);
 
   function updateData(sideToUpdate?: Side) {
