@@ -18,7 +18,6 @@ import {
   Form,
   SpinnerSize,
   StyledButton,
-  StyledButtonColor,
   StyledButtonWidth,
   StyledDropdown,
   StyledFileUpload,
@@ -117,6 +116,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const [accounts, setAccounts] = useState<Iban[]>();
   const [isKycComplete, setIsKycComplete] = useState<boolean>();
   const [banks, setBanks] = useState<Bank[]>();
+  const [supportIssue, setSupportIssue] = useState<Partial<CreateSupportIssue>>();
 
   const {
     control,
@@ -146,11 +146,25 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [user, selectedType]);
 
   useEffect(() => {
+    setSelectTransaction(false);
+
     const issueTypeParam = urlParams.get('issue-type');
     const issueType = issueTypeParam && issues.find((t) => t === issueTypeParam);
-    if (issueType) setValue('type', issueType);
-    if (issueTypeParam) {
-      urlParams.delete('issue-type');
+    if (issueType) {
+      setSupportIssue((prev) => ({ ...prev, type: issueType }));
+      setValue('type', issueType);
+    }
+
+    const reasonParam = urlParams.get('reason');
+    const reasonEnum = issueType && reasonParam && IssueReasons[issueType].find((r) => r === reasonParam);
+    if (reasonEnum) {
+      setSupportIssue((prev) => ({ ...prev, reason: reasonEnum }));
+      setValue('reason', reasonEnum);
+    }
+
+    if (issueTypeParam || reasonParam) {
+      issueTypeParam && urlParams.delete('issue-type');
+      reasonParam && urlParams.delete('reason');
       setUrlParams(urlParams);
     }
   }, [urlParams]);
@@ -164,14 +178,18 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [selectedTransaction]);
 
   useEffect(() => {
-    if (selectedReason && selectedType === SupportIssueType.TRANSACTION_ISSUE) {
+    if (selectedReason && selectedReason !== supportIssue?.reason) {
+      setSupportIssue((prev) => ({ ...prev, reason: selectedReason }));
       reset({ ...formDefaultValues, type: selectedType, reason: selectedReason });
     }
-  }, [selectedReason]);
+  }, [selectedReason, supportIssue]);
 
   useEffect(() => {
-    selectedType && reset({ ...formDefaultValues, type: selectedType });
-  }, [selectedType]);
+    if (selectedType && selectedType !== supportIssue?.type) {
+      setSupportIssue((prev) => ({ ...prev, type: selectedType }));
+      reset({ ...formDefaultValues, type: selectedType });
+    }
+  }, [selectedType, supportIssue]);
 
   useEffect(() => {
     if (isLoggedIn)
@@ -280,15 +298,6 @@ export default function SupportIssueScreen(): JSX.Element {
           <p className="text-dfxGray-700">
             {translate('screens/support', 'Select the transaction for which you would like to create an issue.')}
           </p>
-          <StyledButton
-            label={translate('screens/payment', 'My transaction is missing')}
-            onClick={() => {
-              setValue('reason', SupportIssueReason.TRANSACTION_MISSING);
-              setSelectTransaction(false);
-            }}
-            width={StyledButtonWidth.FULL}
-            color={StyledButtonColor.BLUE}
-          />
           <TransactionList isSupport={true} onSelectTransaction={onSelectTransaction} setError={setError} />
         </>
       ) : (

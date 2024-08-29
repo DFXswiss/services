@@ -34,6 +34,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
@@ -272,6 +273,16 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
 
   return (
     <StyledVerticalStack gap={4} full center>
+      <StyledButton
+        label={translate('screens/payment', 'My transaction is missing')}
+        onClick={() =>
+          navigate(
+            `/support/issue?issue-type=${SupportIssueType.TRANSACTION_ISSUE}&reason=${SupportIssueReason.TRANSACTION_MISSING}`,
+          )
+        }
+        width={StyledButtonWidth.FULL}
+        color={StyledButtonColor.BLUE}
+      />
       <StyledVerticalStack full center className="pt-2.5">
         <div className="relative w-full">
           <h2 className="text-dfxGray-700 mb-2 flex-1">{translate('screens/payment', 'Your Transactions')}</h2>
