@@ -267,7 +267,7 @@ export default function SellScreen(): JSX.Element {
       selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString() ||
       selectedCurrency?.name !== paymentInfo?.currency?.name ||
       selectedBankAccount?.iban !== validatedData?.iban;
-    requiresUpdate && updateData(Side.SPEND);
+    requiresUpdate && updateData(!selectedTargetAmount && enteredAmount ? Side.GET : Side.SPEND);
   }, [selectedTargetAmount, selectedCurrency, selectedBankAccount]);
 
   function updateData(sideToUpdate?: Side) {
