@@ -5,12 +5,13 @@ import { IoMusicalNotes } from 'react-icons/io5';
 import { MdOutlineCancel, MdOutlineClose, MdSend } from 'react-icons/md';
 import { RiCheckDoubleFill, RiCheckFill } from 'react-icons/ri';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { blankedAddress } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 interface SupportMessage {
   id: string;
   message?: string;
-  media?: MediaFile[];
+  media?: MediaFile;
   date: string;
   sender: string;
   status: 'sent' | 'received' | 'read';
@@ -44,7 +45,7 @@ const initialChat: SupportIssue = {
     {
       id: '1',
       message: 'Hello, I have a question',
-      media: [],
+      media: undefined,
       date: '2021-10-10T10:10:10',
       sender: 'user',
       status: 'read',
@@ -53,7 +54,7 @@ const initialChat: SupportIssue = {
     {
       id: '2',
       message: 'Hi',
-      media: [],
+      media: undefined,
       date: '2021-10-10T10:10:10',
       sender: 'agent',
       status: 'received',
@@ -61,14 +62,12 @@ const initialChat: SupportIssue = {
     {
       id: '3',
       message: 'How can I help you, today?',
-      media: [
-        {
-          name: 'image.jpg',
-          url: 'https://gratisography.com/wp-content/uploads/2024/01/gratisography-cyber-kitty-800x525.jpg',
-          type: 'image/jpeg',
-          size: 123456,
-        },
-      ],
+      media: {
+        name: 'image.jpg',
+        url: 'https://gratisography.com/wp-content/uploads/2024/01/gratisography-cyber-kitty-800x525.jpg',
+        type: 'image/jpeg',
+        size: 123456,
+      },
       date: '2021-10-10T10:10:10',
       sender: 'agent',
       status: 'received',
@@ -76,7 +75,7 @@ const initialChat: SupportIssue = {
     {
       id: '4',
       message: 'Hello',
-      media: [],
+      media: undefined,
       date: '2021-10-10T10:10:10',
       sender: 'user',
       status: 'read',
@@ -84,14 +83,12 @@ const initialChat: SupportIssue = {
     {
       id: '5',
       message: undefined,
-      media: [
-        {
-          name: 'image.jpg',
-          url: 'https://assistanteplus.fr/wp-content/uploads/2022/04/chat-midjourney.webp',
-          type: 'image/webp',
-          size: 123456,
-        },
-      ],
+      media: {
+        name: 'image.jpg',
+        url: 'https://assistanteplus.fr/wp-content/uploads/2022/04/chat-midjourney.webp',
+        type: 'image/webp',
+        size: 123456,
+      },
       date: '2021-10-10T10:10:10',
       sender: 'user',
       status: 'read',
@@ -124,31 +121,38 @@ export default function ChatScreen(): JSX.Element {
   }, [chat.messages]);
 
   const handleSend = () => {
-    if (inputValue.trim() === '' && selectedFiles.length === 0) return;
+    const hasText = inputValue.trim() !== '';
+    const numFiles = selectedFiles.length;
 
-    const newMessage: SupportMessage = {
-      id: (chat.messages.length + 1).toString(),
-      message: inputValue,
-      media: selectedFiles.map((file) => ({
-        name: file.name,
-        url: URL.createObjectURL(file), // Temporary URL for preview
-        type: file.type,
-        size: file.size,
-      })),
-      date: new Date().toISOString(),
-      sender: 'user',
-      status: 'sent',
-      replyTo: replyToMessage?.id,
-    };
+    if (!hasText && numFiles === 0) return;
 
-    setChat((prevChat) => ({
-      ...prevChat,
-      messages: [...prevChat.messages, newMessage],
-    }));
+    const files = numFiles !== 1 ? [...selectedFiles, undefined] : selectedFiles;
+    files.forEach((file, index) => {
+      const newMessage: SupportMessage = {
+        id: (chat.messages.length + index + 1).toString(),
+        message: index === files.length - 1 ? inputValue : undefined,
+        media: file && {
+          name: file.name,
+          url: URL.createObjectURL(file), // Temporary URL for preview
+          type: file.type,
+          size: file.size,
+        },
+        date: new Date().toISOString(),
+        sender: 'user',
+        status: 'sent',
+        replyTo: index === 0 ? replyToMessage?.id : undefined,
+      };
+
+      setChat((prevChat) => ({
+        ...prevChat,
+        messages: [...prevChat.messages, newMessage],
+      }));
+    });
 
     setInputValue('');
     setSelectedFiles([]);
     setReplyToMessage(undefined);
+    return;
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,7 +233,7 @@ export default function ChatScreen(): JSX.Element {
               <div className="w-1 h-full bg-dfxBlue-800" />
               <div className="flex flex-row flex-grow px-2 py-1">
                 <img
-                  src={replyToMessage.media?.[0].url}
+                  src={replyToMessage.media?.url}
                   alt="Media"
                   className="rounded-sm max-h-10 object-cover"
                   style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
@@ -248,11 +252,13 @@ export default function ChatScreen(): JSX.Element {
             </div>
           )}
           {selectedFiles.length > 0 && (
-            <div className="flex flex-row gap-2">
+            <div className="flex flex-row flex-wrap gap-2">
               {selectedFiles.map((file, index) => (
-                <div key={index} className="flex flex-row gap-1.5 items-center bg-dfxGray-800/20 rounded-md p-2">
+                <div key={index} className="flex flex-row gap-1.5 items-center bg-dfxGray-800/20 rounded-md p-2 pr-3">
                   <HiOutlinePaperClip className="text-dfxGray-800 text-lg" />
-                  <p className="text-dfxGray-800">{file.name}</p>
+                  <p className="text-dfxGray-800 text-left text-sm">
+                    {blankedAddress(file.name, { displayLength: 20 })}
+                  </p>
                 </div>
               ))}
             </div>
@@ -360,7 +366,7 @@ function ChatBubble({
   };
 
   const isUser = sender === 'user';
-  const hasMedia = !!media?.length;
+  const mediaType = media?.type?.split('/')[0];
 
   return (
     <div
@@ -371,14 +377,14 @@ function ChatBubble({
         onClick={onClick}
         className={`flex flex-col max-w-xs rounded-lg overflow-clip pb-1.5 ${
           sender === 'user' ? 'bg-[#24A1DE] text-white rounded-br-none' : 'bg-dfxGray-400 text-black rounded-bl-none'
-        } ${!hasMedia || !!replyToMessage ? 'pt-1.5 gap-1.5' : 'gap-1.5'}`}
+        } ${!mediaType || !!replyToMessage ? 'pt-1.5 gap-1.5' : 'gap-1.5'}`}
       >
         {replyToMessage && (
           <div className="flex flex-row bg-dfxGray-300/20 rounded-md overflow-clip mx-1.5">
             <div className="w-1 h-full bg-white" />
             <div className="flex flex-row flex-grow px-2 py-1">
               <img
-                src={replyToMessage.media?.[0].url}
+                src={replyToMessage.media?.url}
                 alt="Media"
                 className="rounded-sm max-h-10 object-cover"
                 style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
@@ -390,78 +396,57 @@ function ChatBubble({
             </div>
           </div>
         )}
-        {hasHeader && !isUser && !media?.length && (
-          <p className="font-semibold text-sm text-dfxRed-150 px-3">{sender}</p>
-        )}
-        {hasMedia &&
-          media.map((file, index) => {
-            const fileType = file.type.split('/')[0];
-            switch (fileType) {
-              case 'image':
-                return (
-                  <img
-                    key={index}
-                    src={file.url}
-                    alt={file.name}
-                    className="rounded-sm mb-1 max-h-40 object-cover cursor-pointer"
-                    style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
-                    onClick={(e) => handlePreview(e, file)}
-                  />
-                );
-              case 'video':
-                return (
-                  <video
-                    key={index}
-                    controls
-                    className="rounded-sm mb-1 max-h-40 object-cover cursor-pointer"
-                    style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
-                    onClick={(e) => handlePreview(e, file)}
-                  >
-                    <source src={file.url} type={file.type} />
-                    {translate('general/messages', 'Your browser does not support the video tag.')}
-                  </video>
-                );
-              case 'audio':
-                return (
-                  <div
-                    key={index}
-                    className="flex items-center mb-1 p-2 cursor-pointer"
-                    onClick={(e) => handlePreview(e, file)}
-                  >
-                    <div className="flex justify-center items-center w-12 h-12 bg-white rounded-md">
-                      <IoMusicalNotes className="text-dfxGray-700 text-2xl" />
-                    </div>
-                    <div className="flex flex-col mx-2">
-                      <span className="text-white text-sm font-semibold">{file.name}</span>
-                      <span className="text-dfxGray-400 text-xs">
-                        {file.type.split('/')[1].toUpperCase() ?? file.type} · {Math.round(file.size / 1024)} KB
-                      </span>
-                    </div>
-                  </div>
-                );
-              default:
-                const fileTypeLabel = fileType === 'application' ? file.type.split('/')[1] : fileType;
-                return (
-                  <a
-                    key={index}
-                    href={file.url}
-                    target="_blank"
-                    className="flex items-center mb-1 p-2 cursor-pointer"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex justify-center items-center w-12 h-12 bg-white rounded-md">
-                      <HiOutlinePaperClip className="text-dfxGray-700 text-2xl" />
-                    </div>
-                    <div className="flex flex-col mx-2">
-                      <span className="text-white text-sm font-semibold">{file.name}</span>
-                      <span className="text-dfxGray-400 text-xs">
-                        {fileTypeLabel.toUpperCase()} · {Math.round(file.size / 1024)} KB
-                      </span>
-                    </div>
-                  </a>
-                );
-            }
-          })}
+        {hasHeader && !isUser && !media && <p className="font-semibold text-sm text-dfxRed-150 px-3">{sender}</p>}
+        {mediaType &&
+          (mediaType === 'image' ? (
+            <img
+              src={media.url}
+              alt={media.name}
+              className="rounded-sm mb-1 max-h-40 object-cover cursor-pointer"
+              style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
+              onClick={(e) => handlePreview(e, media)}
+            />
+          ) : mediaType === 'video' ? (
+            <video
+              controls
+              className="rounded-sm mb-1 max-h-40 object-cover cursor-pointer"
+              style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
+              onClick={(e) => handlePreview(e, media)}
+            >
+              <source src={media.url} type={media.type} />
+              {translate('general/messages', 'Your browser does not support the video tag.')}
+            </video>
+          ) : mediaType === 'audio' ? (
+            <div className="flex items-center mb-1 p-2 cursor-pointer" onClick={(e) => handlePreview(e, media)}>
+              <div className="flex justify-center items-center w-12 h-12 bg-white rounded-md">
+                <IoMusicalNotes className="text-dfxGray-700 text-2xl" />
+              </div>
+              <div className="flex flex-col mx-2">
+                <span className="text-white text-sm font-semibold">{media.name}</span>
+                <span className="text-dfxGray-400 text-xs">
+                  {media.type.split('/')[1].toUpperCase() ?? media.type} · {Math.round(media.size / 1024)} KB
+                </span>
+              </div>
+            </div>
+          ) : (
+            <a
+              href={media.url}
+              target="_blank"
+              className="flex items-center mb-1 p-2 cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-center items-center w-12 h-12 bg-white rounded-md">
+                <HiOutlinePaperClip className="text-dfxGray-700 text-2xl" />
+              </div>
+              <div className="flex flex-col mx-2">
+                <span className="text-white text-sm font-semibold">{media.name}</span>
+                <span className="text-dfxGray-400 text-xs">
+                  {(mediaType === 'application' ? media.type.split('/')[1] : mediaType).toUpperCase()} ·{' '}
+                  {Math.round(media.size / 1024)} KB
+                </span>
+              </div>
+            </a>
+          ))}
         {selectedFile && (
           <div
             className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50"
