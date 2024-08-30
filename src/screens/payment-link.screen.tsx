@@ -248,6 +248,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
+
   const [sessionApiUrl, setSessionApiUrl] = useState<string>(() => {
     const savedState = sessionStorage.getItem('apiUrl');
     return savedState ? JSON.parse(savedState) : '';
@@ -283,8 +284,6 @@ export default function PaymentLinkScreen(): JSX.Element {
       return;
     }
 
-    fetchInitial(apiUrl);
-
     if (apiUrl !== sessionApiUrl) {
       setSessionApiUrl(apiUrl);
       sessionStorage.setItem('apiUrl', JSON.stringify(apiUrl));
@@ -301,10 +300,33 @@ export default function PaymentLinkScreen(): JSX.Element {
   }, [selectedPaymentMethod]);
 
   useEffect(() => {
+    let refreshTimeout: NodeJS.Timeout;
+
+    const fetchPayRequest = (url: string) => {
+      fetchDataApi(url, true)
+        .then((data: PaymentLinkPayRequest) => {
+          setError(undefined);
+          setPayRequest(data);
+
+          const expiration = new Date(data.quote.expiration);
+          refreshTimeout = setTimeout(() => fetchPayRequest(url), expiration.getTime() - Date.now());
+        })
+        .catch((e) => {
+          if (e.message === noPaymentErrorMessage) {
+            refreshTimeout = setTimeout(() => fetchPayRequest(url), 1000);
+          }
+        });
+    };
+
+    if (sessionApiUrl) fetchPayRequest(sessionApiUrl);
+
+    return () => clearTimeout(refreshTimeout);
+  }, [sessionApiUrl]);
+
+  useEffect(() => {
     if (!payRequest) return;
 
     let callback: string;
-    setPaymentIdentifier(undefined);
     switch (selectedPaymentMethod.id) {
       case 'OpenCryptoPay.io':
       case 'FrankencoinPay.com':
@@ -335,37 +357,12 @@ export default function PaymentLinkScreen(): JSX.Element {
   useEffect(() => {
     if (!callbackUrl) return;
 
-    const fetchData = () => {
-      console.log('fetching data');
-      setIsLoading(true);
-      fetchDataApi(callbackUrl)
-        .then((data) => {
-          data && setPaymentIdentifier(data.uri ?? data.pr);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    };
-
-    fetchData();
-
-    const intervalId = setInterval(() => {
-      fetchData();
-    }, 300000);
-
-    return () => clearInterval(intervalId);
+    setIsLoading(true);
+    setPaymentIdentifier(undefined);
+    fetchDataApi(callbackUrl)
+      .then((data) => setPaymentIdentifier(data.uri ?? data.pr))
+      .finally(() => setIsLoading(false));
   }, [callbackUrl]);
-
-  async function fetchInitial(url: string) {
-    fetchDataApi(url, true)
-      .then((data: PaymentLinkPayRequest) => {
-        setError(undefined);
-        setPayRequest(data);
-      })
-      .catch((e) => {
-        if (e.message === noPaymentErrorMessage) setTimeout(() => fetchInitial(url), 1000);
-      });
-  }
 
   async function fetchDataApi(url: string, rethrow = false): Promise<any> {
     const response = await fetch(url);
