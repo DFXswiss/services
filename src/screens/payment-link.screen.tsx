@@ -20,6 +20,7 @@ import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, formatLocationAddress, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -237,6 +238,7 @@ const recommendedWallets = ['Frankencoin', 'Cake Wallet', 'Wallet of Satoshi', '
 
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
+  const { navigate } = useNavigation();
   const { width } = useWindowContext();
 
   const [urlParams, setUrlParams] = useSearchParams();
@@ -277,7 +279,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     }
 
     if (!apiUrl) {
-      setError('Invalid payment link.');
+      urlParams.size ? setError('Invalid payment link.') : navigate('/', { replace: true });
       return;
     }
 
@@ -288,7 +290,6 @@ export default function PaymentLinkScreen(): JSX.Element {
       sessionStorage.setItem('apiUrl', JSON.stringify(apiUrl));
     }
 
-    // Clear all URL parameters by setting an empty URLSearchParams object
     if (urlParams.size) {
       const clearedParams = new URLSearchParams();
       setUrlParams(clearedParams);
@@ -501,7 +502,6 @@ export default function PaymentLinkScreen(): JSX.Element {
                         {
                           label: translate('screens/kyc', 'Website'),
                           text: payRequest.recipient.website,
-                          // open absolute URL in new tab
                           onClick: () => {
                             const url =
                               payRequest.recipient.website.startsWith('http://') ||
