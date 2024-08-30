@@ -335,14 +335,25 @@ export default function PaymentLinkScreen(): JSX.Element {
   useEffect(() => {
     if (!callbackUrl) return;
 
-    setIsLoading(true);
-    fetchDataApi(callbackUrl)
-      .then((data) => {
-        data && setPaymentIdentifier(data.uri ?? data.pr);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    const fetchData = () => {
+      console.log('fetching data');
+      setIsLoading(true);
+      fetchDataApi(callbackUrl)
+        .then((data) => {
+          data && setPaymentIdentifier(data.uri ?? data.pr);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    };
+
+    fetchData();
+
+    const intervalId = setInterval(() => {
+      fetchData();
+    }, 300000);
+
+    return () => clearInterval(intervalId);
   }, [callbackUrl]);
 
   async function fetchInitial(url: string) {
@@ -445,102 +456,94 @@ export default function PaymentLinkScreen(): JSX.Element {
               )}
             </StyledVerticalStack>
           </Form>
-          {isLoading || !paymentIdentifier ? (
-            <div className="mt-4">
-              <StyledLoadingSpinner size={SpinnerSize.LG} />
-            </div>
-          ) : (
-            <>
-              <StyledCollapsible
-                full
-                titleContent={
-                  <div className="flex flex-col items-start gap-1.5 text-left -my-1">
-                    <div className="flex flex-col items-start text-left">
-                      <div className="font-semibold leading-none">
-                        {translate('screens/payment', 'Payment details')}
-                      </div>
-                    </div>
-                    <div className="leading-none text-dfxGray-800 text-xs">
-                      {`${translate('screens/payment', 'Your payment details at a glance')}`}
-                    </div>
+          <>
+            <StyledCollapsible
+              full
+              titleContent={
+                <div className="flex flex-col items-start gap-1.5 text-left -my-1">
+                  <div className="flex flex-col items-start text-left">
+                    <div className="font-semibold leading-none">{translate('screens/payment', 'Payment details')}</div>
                   </div>
-                }
-              >
-                <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                  <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                    <p>{translate('screens/payment', 'Pending')}</p>
-                  </StyledDataTableRow>
-                  <StyledDataTableRow label={paymentIdentifierLabelMap[selectedPaymentMethod.id] ?? 'URI'}>
-                    <p>{blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
-                    <CopyButton onCopy={() => copy(paymentIdentifier)} />
-                  </StyledDataTableRow>
-                  <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                    <p>
-                      {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
-                    </p>
-                  </StyledDataTableRow>
-                  {payRequest.recipient && (
-                    <StyledDataTableExpandableRow
-                      label={translate('screens/payment', 'Recipient')}
-                      expansionItems={[
-                        {
-                          label: translate('screens/support', 'Name'),
-                          text: payRequest.recipient.name,
-                        },
-                        {
-                          label: translate('screens/home', 'Address'),
-                          text: formatLocationAddress({ ...payRequest.recipient.address }) ?? '',
-                        },
-                        {
-                          label: translate('screens/kyc', 'Phone number'),
-                          text: payRequest.recipient.phone,
-                        },
-                        {
-                          label: translate('screens/kyc', 'Email address'),
-                          text: payRequest.recipient.mail,
-                        },
-                        {
-                          label: translate('screens/kyc', 'Website'),
-                          text: payRequest.recipient.website,
-                          onClick: () => {
-                            const url =
-                              payRequest.recipient.website.startsWith('http://') ||
-                              payRequest.recipient.website.startsWith('https://')
-                                ? payRequest.recipient.website
-                                : `https://${payRequest.recipient.website}`;
-
-                            window.open(url, '_blank');
-                          },
-                        },
-                      ].filter((item) => item.text)}
-                    />
-                  )}
-                  <StyledDataTableExpandableRow
-                    label={translate('screens/payment', 'QR Code')}
-                    expansionContent={
-                      <div className="flex w-full items-center justify-center">
-                        <div className="w-48 py-3">
-                          <QrBasic data={paymentIdentifier} />
-                        </div>
-                      </div>
-                    }
-                  />
-                </StyledDataTable>
-              </StyledCollapsible>
-              {['OpenCryptoPay.io', 'FrankencoinPay.com'].includes(selectedPaymentMethod.id) && (
-                <StyledVerticalStack full gap={8} center>
-                  <p className="text-base pt-3 text-dfxGray-700">
-                    {translate('screens/payment', 'Scan the QR-Code with a compatible wallet to complete the payment.')}
+                  <div className="leading-none text-dfxGray-800 text-xs">
+                    {`${translate('screens/payment', 'Your payment details at a glance')}`}
+                  </div>
+                </div>
+              }
+            >
+              <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                <StyledDataTableRow label={translate('screens/payment', 'State')}>
+                  <p>{translate('screens/payment', 'Pending')}</p>
+                </StyledDataTableRow>
+                <StyledDataTableRow
+                  label={paymentIdentifierLabelMap[selectedPaymentMethod.id] ?? 'URI'}
+                  isLoading={isLoading || !paymentIdentifier}
+                >
+                  <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
+                  <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />
+                </StyledDataTableRow>
+                <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
+                  <p>
+                    {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
                   </p>
-                  <WalletGrid
-                    wallets={recommendedWallets}
-                    header={translate('screens/payment', 'Recommended wallets')}
+                </StyledDataTableRow>
+                {payRequest.recipient && (
+                  <StyledDataTableExpandableRow
+                    label={translate('screens/payment', 'Recipient')}
+                    expansionItems={[
+                      {
+                        label: translate('screens/support', 'Name'),
+                        text: payRequest.recipient.name,
+                      },
+                      {
+                        label: translate('screens/home', 'Address'),
+                        text: formatLocationAddress({ ...payRequest.recipient.address }) ?? '',
+                      },
+                      {
+                        label: translate('screens/kyc', 'Phone number'),
+                        text: payRequest.recipient.phone,
+                      },
+                      {
+                        label: translate('screens/kyc', 'Email address'),
+                        text: payRequest.recipient.mail,
+                      },
+                      {
+                        label: translate('screens/kyc', 'Website'),
+                        text: payRequest.recipient.website,
+                        onClick: () => {
+                          const url =
+                            payRequest.recipient.website.startsWith('http://') ||
+                            payRequest.recipient.website.startsWith('https://')
+                              ? payRequest.recipient.website
+                              : `https://${payRequest.recipient.website}`;
+
+                          window.open(url, '_blank');
+                        },
+                      },
+                    ].filter((item) => item.text)}
                   />
-                  <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
-                </StyledVerticalStack>
-              )}
-            </>
-          )}
+                )}
+                <StyledDataTableExpandableRow
+                  label={translate('screens/payment', 'QR Code')}
+                  expansionContent={
+                    <div className="flex w-full items-center justify-center">
+                      <div className="w-48 py-3">
+                        <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
+                      </div>
+                    </div>
+                  }
+                />
+              </StyledDataTable>
+            </StyledCollapsible>
+            {['OpenCryptoPay.io', 'FrankencoinPay.com'].includes(selectedPaymentMethod.id) && (
+              <StyledVerticalStack full gap={8} center>
+                <p className="text-base pt-3 text-dfxGray-700">
+                  {translate('screens/payment', 'Scan the QR-Code with a compatible wallet to complete the payment.')}
+                </p>
+                <WalletGrid wallets={recommendedWallets} header={translate('screens/payment', 'Recommended wallets')} />
+                <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
+              </StyledVerticalStack>
+            )}
+          </>
         </StyledVerticalStack>
       )}
     </Layout>
