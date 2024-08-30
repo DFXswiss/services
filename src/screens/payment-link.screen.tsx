@@ -307,9 +307,8 @@ export default function PaymentLinkScreen(): JSX.Element {
     switch (selectedPaymentMethod.id) {
       case 'OpenCryptoPay.io':
       case 'FrankencoinPay.com':
-        const lightningParam = Lnurl.encode(sessionApiUrl);
-        console.log('lightningParam', lightningParam);
-        lightningParam && setPaymentIdentifier(Lnurl.prependLnurl(lightningParam));
+        const lnurl = Lnurl.encode(simplifyUrl(sessionApiUrl));
+        setPaymentIdentifier(Lnurl.prependLnurl(lnurl));
         break;
       case 'Bitcoin Lightning':
         callback = url(payRequest.callback, new URLSearchParams({ amount: payRequest.minSendable.toString() }));
@@ -367,6 +366,28 @@ export default function PaymentLinkScreen(): JSX.Element {
 
     setError(undefined);
     return data;
+  }
+
+  function simplifyUrl(url: string): string {
+    const replacementMap: { [key: string]: string } = {
+      '/v1/paymentLink/payment': '/v1/plp',
+      routeId: 'r',
+      externalId: 'e',
+      message: 'm',
+      amount: 'a',
+      currency: 'c',
+      expiryDate: 'd',
+    };
+
+    const urlObj = new URL(url);
+    const newPath = replacementMap[urlObj.pathname] || urlObj.pathname;
+    const newParams = new URLSearchParams();
+    urlObj.searchParams.forEach((value, key) => {
+      const shortKey = replacementMap[key] || key;
+      newParams.append(shortKey, value);
+    });
+
+    return `${urlObj.origin}${newPath}?${newParams.toString()}`;
   }
 
   const assetsList = payRequest?.transferAmounts.find((item) => item.method === selectedPaymentMethod.id)?.assets;
