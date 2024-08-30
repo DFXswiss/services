@@ -188,7 +188,7 @@ export default function SupportIssueScreen(): JSX.Element {
 
     try {
       const request: CreateSupportIssue = {
-        type: data.type as any,
+        type: data.type,
         name: data.name,
         reason: data.reason ?? SupportIssueReason.OTHER,
         message: data.message,
