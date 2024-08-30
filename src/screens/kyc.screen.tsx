@@ -1131,7 +1131,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const currentQuestion = index != null ? questions[index - 1] : undefined;
   const currentOptions = currentQuestion?.options ?? [];
   const currentResponse = responses.find((r) => currentQuestion?.key === r.key);
-  const nocLinkText = 'support@dfx.swiss';
+  const nocLinkText = 'services.dfx.swiss/support/issue';
   const nocSupportLink = `${process.env.PUBLIC_URL}/support/issue?issue-type=${SupportIssueType.NOTIFICATION_OF_CHANGES}`;
 
   useEffect(() => {
