@@ -4,10 +4,10 @@ import {
   InvestmentDate,
   Limit,
   SupportIssueReason,
+  SupportIssueType,
   TransactionFailureReason,
   TransactionState,
 } from '@dfx.swiss/react';
-import { SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
@@ -103,6 +103,7 @@ export const IssueTypeLabels = {
   [SupportIssueType.KYC_ISSUE]: 'KYC issue',
   [SupportIssueType.LIMIT_REQUEST]: 'Limit increase request',
   [SupportIssueType.PARTNERSHIP_REQUEST]: 'Partnership request',
+  [SupportIssueType.NOTIFICATION_OF_CHANGES]: 'Notification of changes',
 };
 
 export const IssueReasonLabels = {
