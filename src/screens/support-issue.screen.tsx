@@ -1,11 +1,14 @@
 import {
   ApiError,
   Bank,
+  CreateSupportIssue,
   FundOrigin,
   Iban,
   InvestmentDate,
   KycLevel,
   Limit,
+  SupportIssueReason,
+  SupportIssueType,
   Utils,
   Validations,
   useBank,
@@ -26,7 +29,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { CreateSupportIssue, SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
@@ -56,6 +58,7 @@ const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.KYC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.LIMIT_REQUEST]: [SupportIssueReason.OTHER],
   [SupportIssueType.PARTNERSHIP_REQUEST]: [SupportIssueReason.OTHER],
+  [SupportIssueType.NOTIFICATION_OF_CHANGES]: [SupportIssueReason.OTHER],
 };
 
 interface FormData {
