@@ -20,7 +20,6 @@ import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
-import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, formatLocationAddress, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -238,8 +237,8 @@ const recommendedWallets = ['Frankencoin', 'Cake Wallet', 'Wallet of Satoshi', '
 
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
-  const { navigate } = useNavigation();
   const { width } = useWindowContext();
+
   const [urlParams, setUrlParams] = useSearchParams();
 
   const [callbackUrl, setCallbackUrl] = useState<string>();
@@ -247,9 +246,8 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
-
-  const [lightningParam, setLightningParam] = useState(() => {
-    const savedState = sessionStorage.getItem('lightningParam');
+  const [sessionApiUrl, setSessionApiUrl] = useState<string>(() => {
+    const savedState = sessionStorage.getItem('apiUrl');
     return savedState ? JSON.parse(savedState) : '';
   });
 
@@ -267,28 +265,33 @@ export default function PaymentLinkScreen(): JSX.Element {
   const selectedEthereumUriAsset = useWatch({ control, name: 'asset' });
 
   useEffect(() => {
-    const param = urlParams.get('lightning') || lightningParam;
-    if (!param) {
-      navigate('/', { replace: true });
-      return;
+    const lightningParam = urlParams.get('lightning');
+
+    let apiUrl: string | undefined;
+    if (lightningParam) {
+      apiUrl = Lnurl.decode(lightningParam);
+    } else if (urlParams.size) {
+      apiUrl = `https://api.dfx.swiss/v1/paymentLink/payment?${urlParams.toString()}`;
+    } else {
+      apiUrl = sessionApiUrl;
     }
 
-    const decodedUrl = Lnurl.decode(param);
-    if (!decodedUrl) {
+    if (!apiUrl) {
       setError('Invalid payment link.');
       return;
     }
 
-    fetchInitial(decodedUrl);
+    fetchInitial(apiUrl);
 
-    if (param !== lightningParam) {
-      setLightningParam(param);
-      sessionStorage.setItem('lightningParam', JSON.stringify(param));
+    if (apiUrl !== sessionApiUrl) {
+      setSessionApiUrl(apiUrl);
+      sessionStorage.setItem('apiUrl', JSON.stringify(apiUrl));
     }
 
-    if (urlParams.has('lightning')) {
-      urlParams.delete('lightning');
-      setUrlParams(urlParams);
+    // Clear all URL parameters by setting an empty URLSearchParams object
+    if (urlParams.size) {
+      const clearedParams = new URLSearchParams();
+      setUrlParams(clearedParams);
     }
   }, []);
 
@@ -297,14 +300,16 @@ export default function PaymentLinkScreen(): JSX.Element {
   }, [selectedPaymentMethod]);
 
   useEffect(() => {
-    if (!payRequest || !lightningParam) return;
+    if (!payRequest) return;
 
     let callback: string;
     setPaymentIdentifier(undefined);
     switch (selectedPaymentMethod.id) {
       case 'OpenCryptoPay.io':
       case 'FrankencoinPay.com':
-        setPaymentIdentifier(Lnurl.prependLnurl(lightningParam));
+        const lightningParam = Lnurl.encode(sessionApiUrl);
+        console.log('lightningParam', lightningParam);
+        lightningParam && setPaymentIdentifier(Lnurl.prependLnurl(lightningParam));
         break;
       case 'Bitcoin Lightning':
         callback = url(payRequest.callback, new URLSearchParams({ amount: payRequest.minSendable.toString() }));
