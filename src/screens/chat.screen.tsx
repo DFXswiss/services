@@ -126,7 +126,7 @@ export default function ChatScreen(): JSX.Element {
 
     if (!hasText && numFiles === 0) return;
 
-    const files = numFiles !== 1 ? [...selectedFiles, undefined] : selectedFiles;
+    const files = numFiles !== 1 && hasText ? [...selectedFiles, undefined] : selectedFiles;
     files.forEach((file, index) => {
       const newMessage: SupportMessage = {
         id: (chat.messages.length + index + 1).toString(),
@@ -160,6 +160,7 @@ export default function ChatScreen(): JSX.Element {
 
     if (files && files.length > 0) {
       setSelectedFiles((prevFiles) => [...prevFiles, ...Array.from(files)]);
+      setTimeout(() => (e.target.value = ''), 100);
     }
   };
 
