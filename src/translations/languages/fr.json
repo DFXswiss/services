@@ -141,7 +141,9 @@
     "Increase limit": "Augmenter la limite",
     "Start video identification": "Lancer l'identification par vidéo",
     "I am already verified with DFX": "Je suis déjà vérifié par DFX",
-    "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Par la présente, je charge DFX de transmettre mes données KYC à {{client}}."
+    "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Par la présente, je charge DFX de transmettre mes données KYC à {{client}}.",
+
+    "Merging your accounts...": "Fusion de vos comptes..."
   },
   "screens/2fa": {
     "2FA": "2FA",
@@ -179,7 +181,7 @@
     "Document proof": "Preuve de document"
   },
   "screens/error": {
-    "Oh sorry something went wrong": "Désolé, il y a eu un problème",
+    "Oh, sorry, something went wrong": "Désolé, il y a eu un problème",
 
     "Please return to the previous page. If this problem persists, please contact our support.": "Veuillez revenir à la page précédente. Si le problème persiste, veuillez contacter notre service d'assistance."
   },
@@ -190,6 +192,8 @@
     "Coming Soon": "Bientôt disponible",
     "Login to DFX Services": "Login aux services DFX",
     "We have sent an email with further instructions to the address provided.": "Nous avons envoyé un e-mail avec des instructions supplémentaires à l'adresse fournie.",
+
+    "Logging in...": "Connexion en cours...",
 
     "Scan with your wallet": "Scannez avec votre portefeuille",
     "Connect your wallet": "Connectez votre portefeuille",
@@ -469,6 +473,7 @@
     "Route": "Route",
     "Summary": "Résumé",
     "N/A": "N/A",
+    "delete": "Êtes-vous sûr de vouloir supprimer votre <1>itinéraire de paiement {{type}}</1> avec l’<1>ID {{id}}</1>?",
 
     "Payment details": "Détails du paiement",
     "Your payment details at a glance": "Vos détails de paiement en un coup d'œil",
@@ -521,6 +526,7 @@
     "KYC issue": "Demande KYC",
     "Limit increase request": "Demande d'augmentation de limite",
     "Partnership request": "Demande de partenariat",
+    "Notification of changes": "Notification de changements",
 
     "Reason": "Motif",
     "Other": "Autres",

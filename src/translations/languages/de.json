@@ -141,7 +141,9 @@
     "Increase limit": "Limite erhöhen",
     "Start video identification": "Video-Identifikation starten",
     "I am already verified with DFX": "Ich bin bereits bei DFX verifiziert",
-    "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Hiermit beauftrage ich DFX, meine KYC-Daten an {{client}} zu übermitteln."
+    "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Hiermit beauftrage ich DFX, meine KYC-Daten an {{client}} zu übermitteln.",
+
+    "Merging your accounts...": "Deine Konten werden zusammengeführt..."
   },
   "screens/2fa": {
     "2FA": "2FA",
@@ -179,7 +181,7 @@
     "Document proof": "Dokumentennachweis"
   },
   "screens/error": {
-    "Oh sorry something went wrong": "Entschuldigung, irgendwas hat nicht funktioniert",
+    "Oh, sorry, something went wrong": "Entschuldigung, irgendwas hat nicht funktioniert",
 
     "Please return to the previous page. If this problem persists, please contact our support.": "Bitte kehre zur vorherigen Seite zurück. Wenn dieses Problem weiterhin besteht, wende Dich bitte an unseren Support."
   },
@@ -190,6 +192,8 @@
     "Coming Soon": "Coming Soon",
     "Login to DFX Services": "Login bei DFX Services",
     "We have sent an email with further instructions to the address provided.": "Wir haben eine E-Mail mit weiteren Anweisungen an die angegebene Adresse gesendet.",
+
+    "Logging in...": "Anmelden...",
 
     "Scan with your wallet": "Scanne mit Deiner Wallet",
     "Connect your wallet": "Verbinde Deine Wallet",
@@ -469,6 +473,7 @@
     "Route": "Route",
     "Summary": "Zusammenfassung",
     "N/A": "N/A",
+    "delete": "Bist Du sicher, dass Du Deine <1>{{type}}-Zahlungsroute</1> mit der <1>ID {{id}}</1> löschen möchtest?",
 
     "Payment details": "Zahlungsdetails",
     "Your payment details at a glance": "Deine Zahlungsdetails auf einen Blick",
@@ -521,6 +526,7 @@
     "KYC issue": "KYC-Anfrage",
     "Limit increase request": "Antrag auf Limit-Erhöhung",
     "Partnership request": "Anfrage zu einer Partnerschaft",
+    "Notification of changes": "Mitteilung von Änderungen",
 
     "Reason": "Grund",
     "Other": "Andere",

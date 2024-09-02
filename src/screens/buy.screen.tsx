@@ -257,10 +257,9 @@ export default function BuyScreen(): JSX.Element {
 
   // Get data changed
   useEffect(() => {
-    const requiresUpdate =
-      selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString() ||
-      selectedAsset?.name !== paymentInfo?.asset?.name;
-    requiresUpdate && updateData(Side.SPEND);
+    const isSameTargetAmount = selectedTargetAmount === paymentInfo?.estimatedAmount?.toString();
+    const requiresUpdate = !isSameTargetAmount || selectedAsset?.uniqueName !== paymentInfo?.asset?.uniqueName;
+    requiresUpdate && updateData(isSameTargetAmount && selectedAmount ? Side.GET : Side.SPEND);
   }, [selectedTargetAmount, selectedAsset]);
 
   function updateData(sideToUpdate?: Side) {
