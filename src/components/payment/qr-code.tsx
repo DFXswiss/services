@@ -4,6 +4,7 @@ import QRCode from 'react-qr-code';
 
 interface QrCopyProps {
   data: string;
+  isLoading?: boolean;
 }
 
 export function QrCopy({ data }: QrCopyProps): JSX.Element {
@@ -20,6 +21,12 @@ export function QrCopy({ data }: QrCopyProps): JSX.Element {
   );
 }
 
-export function QrBasic({ data }: QrCopyProps): JSX.Element {
-  return <QRCode className="mx-auto h-auto w-full max-w-[15rem] rounded-sm" value={data} fgColor={'#072440'} />;
+export function QrBasic({ data, isLoading }: QrCopyProps): JSX.Element {
+  return (
+    <QRCode
+      className={`mx-auto h-auto w-full max-w-[15rem] rounded-sm ${isLoading ? 'animate-pulse bg-dfxGray-300' : ''}`}
+      value={data}
+      fgColor={isLoading ? '#0000000A' : '#072440'}
+    />
+  );
 }
