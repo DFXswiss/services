@@ -14,7 +14,6 @@ import {
   useBank,
   useBankAccount,
   useSessionContext,
-  useSupport,
   useUserContext,
 } from '@dfx.swiss/react';
 import {
@@ -31,6 +30,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
+import { useSupportChat } from 'src/contexts/support-chat.context';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import {
@@ -104,17 +104,16 @@ export default function SupportIssueScreen(): JSX.Element {
 
   const { navigate } = useNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
-  const { createIssue } = useSupport();
   const { translate, translateError } = useSettingsContext();
   const { user } = useUserContext();
   const { isLoggedIn } = useSessionContext();
   const { getIbans } = useBankAccount();
   const { getBanks } = useBank();
   const [urlParams, setUrlParams] = useSearchParams();
+  const { preFetch, createSupportIssue } = useSupportChat();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const [issueCreated, setIssueCreated] = useState(false);
   const [selectTransaction, setSelectTransaction] = useState(false);
   const [accounts, setAccounts] = useState<Iban[]>();
   const [isKycComplete, setIsKycComplete] = useState<boolean>();
@@ -136,6 +135,10 @@ export default function SupportIssueScreen(): JSX.Element {
 
   const issues = Object.values(SupportIssueType);
   const reasons = IssueReasons[selectedType] ?? [];
+
+  useEffect(() => {
+    if (selectedType) preFetch(selectedType);
+  }, [selectedType]);
 
   useEffect(() => {
     const kycCompleted = user && user.kyc.level >= KycLevel.Completed;
@@ -235,9 +238,9 @@ export default function SupportIssueScreen(): JSX.Element {
         };
       }
 
-      await createIssue(request);
-
-      setIssueCreated(true);
+      await createSupportIssue(request)
+        .then(() => navigate(`/support/chat`))
+        .catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
@@ -283,19 +286,6 @@ export default function SupportIssueScreen(): JSX.Element {
     >
       {selectedType === SupportIssueType.LIMIT_REQUEST && isKycComplete === undefined ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
-      ) : issueCreated ? (
-        <StyledVerticalStack gap={6} full>
-          <p className="text-dfxGray-700">
-            {translate('screens/support', 'The issue has been successfully submitted. You will be contacted by email.')}
-          </p>
-
-          <StyledButton
-            label={translate('general/actions', 'Ok')}
-            onClick={onDone}
-            width={StyledButtonWidth.FULL}
-            isLoading={isLoading}
-          />
-        </StyledVerticalStack>
       ) : selectTransaction ? (
         <>
           <p className="text-dfxGray-700">

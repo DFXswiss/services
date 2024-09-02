@@ -7,6 +7,7 @@ import { Layout } from './components/layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
 import { SettingsContextProvider } from './contexts/settings.context';
+import { SupportChatProvider } from './contexts/support-chat.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { WindowContextProvider } from './contexts/window.context';
 import ErrorScreen from './screens/error.screen';
@@ -208,7 +209,9 @@ function App({ routerFactory, params }: AppProps) {
           >
             <SettingsContextProvider>
               <WalletContextProvider router={router}>
-                <RouterProvider router={router} />
+                <SupportChatProvider>
+                  <RouterProvider router={router} />
+                </SupportChatProvider>
               </WalletContextProvider>
             </SettingsContextProvider>
           </AppHandlingContextProvider>
