@@ -16,6 +16,7 @@ import {
   KycStepStatus,
   KycStepType,
   QuestionType,
+  SupportIssueType,
   UrlType,
   Utils,
   Validations,
@@ -1130,6 +1131,8 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const currentQuestion = index != null ? questions[index - 1] : undefined;
   const currentOptions = currentQuestion?.options ?? [];
   const currentResponse = responses.find((r) => currentQuestion?.key === r.key);
+  const nocLinkText = 'services.dfx.swiss/support/issue';
+  const nocSupportLink = `${process.env.PUBLIC_URL}/support/issue?issue-type=${SupportIssueType.NOTIFICATION_OF_CHANGES}`;
 
   useEffect(() => {
     if (!step.session) return;
@@ -1228,6 +1231,12 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
           >
             {currentQuestion.key === 'tnc' ? (
               <StyledLink label={currentQuestion.description} url={process.env.REACT_APP_TNC_URL} dark />
+            ) : currentQuestion.key === 'notification_of_changes' ? (
+              <div>
+                {currentQuestion.description.split(nocLinkText)[0]}
+                <StyledLink label={nocLinkText} onClick={() => window.open(nocSupportLink, '_blank')} dark />
+                {currentQuestion.description.split(nocLinkText)[1]}
+              </div>
             ) : (
               currentQuestion.description
             )}

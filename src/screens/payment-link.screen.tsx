@@ -240,6 +240,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { width } = useWindowContext();
+
   const [urlParams, setUrlParams] = useSearchParams();
 
   const [callbackUrl, setCallbackUrl] = useState<string>();
@@ -248,8 +249,8 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
 
-  const [lightningParam, setLightningParam] = useState(() => {
-    const savedState = sessionStorage.getItem('lightningParam');
+  const [sessionApiUrl, setSessionApiUrl] = useState<string>(() => {
+    const savedState = sessionStorage.getItem('apiUrl');
     return savedState ? JSON.parse(savedState) : '';
   });
 
@@ -267,28 +268,30 @@ export default function PaymentLinkScreen(): JSX.Element {
   const selectedEthereumUriAsset = useWatch({ control, name: 'asset' });
 
   useEffect(() => {
-    const param = urlParams.get('lightning') || lightningParam;
-    if (!param) {
-      navigate('/', { replace: true });
+    const lightningParam = urlParams.get('lightning');
+
+    let apiUrl: string | undefined;
+    if (lightningParam) {
+      apiUrl = Lnurl.decode(lightningParam);
+    } else if (urlParams.size) {
+      apiUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment?${urlParams.toString()}`;
+    } else {
+      apiUrl = sessionApiUrl;
+    }
+
+    if (!apiUrl) {
+      urlParams.size ? setError('Invalid payment link.') : navigate('/', { replace: true });
       return;
     }
 
-    const decodedUrl = Lnurl.decode(param);
-    if (!decodedUrl) {
-      setError('Invalid payment link.');
-      return;
+    if (apiUrl !== sessionApiUrl) {
+      setSessionApiUrl(apiUrl);
+      sessionStorage.setItem('apiUrl', JSON.stringify(apiUrl));
     }
 
-    fetchInitial(decodedUrl);
-
-    if (param !== lightningParam) {
-      setLightningParam(param);
-      sessionStorage.setItem('lightningParam', JSON.stringify(param));
-    }
-
-    if (urlParams.has('lightning')) {
-      urlParams.delete('lightning');
-      setUrlParams(urlParams);
+    if (urlParams.size) {
+      const clearedParams = new URLSearchParams();
+      setUrlParams(clearedParams);
     }
   }, []);
 
@@ -297,14 +300,38 @@ export default function PaymentLinkScreen(): JSX.Element {
   }, [selectedPaymentMethod]);
 
   useEffect(() => {
-    if (!payRequest || !lightningParam) return;
+    let refreshTimeout: NodeJS.Timeout;
+
+    const fetchPayRequest = (url: string) => {
+      fetchDataApi(url, true)
+        .then((data: PaymentLinkPayRequest) => {
+          setError(undefined);
+          setPayRequest(data);
+
+          const expiration = new Date(data.quote.expiration);
+          refreshTimeout = setTimeout(() => fetchPayRequest(url), expiration.getTime() - Date.now());
+        })
+        .catch((e) => {
+          if (e.message === noPaymentErrorMessage) {
+            refreshTimeout = setTimeout(() => fetchPayRequest(url), 1000);
+          }
+        });
+    };
+
+    if (sessionApiUrl) fetchPayRequest(sessionApiUrl);
+
+    return () => clearTimeout(refreshTimeout);
+  }, [sessionApiUrl]);
+
+  useEffect(() => {
+    if (!payRequest) return;
 
     let callback: string;
-    setPaymentIdentifier(undefined);
     switch (selectedPaymentMethod.id) {
       case 'OpenCryptoPay.io':
       case 'FrankencoinPay.com':
-        setPaymentIdentifier(Lnurl.prependLnurl(lightningParam));
+        const lnurl = Lnurl.encode(simplifyUrl(sessionApiUrl));
+        setPaymentIdentifier(Lnurl.prependLnurl(lnurl));
         break;
       case 'Bitcoin Lightning':
         callback = url(payRequest.callback, new URLSearchParams({ amount: payRequest.minSendable.toString() }));
@@ -331,25 +358,11 @@ export default function PaymentLinkScreen(): JSX.Element {
     if (!callbackUrl) return;
 
     setIsLoading(true);
+    setPaymentIdentifier(undefined);
     fetchDataApi(callbackUrl)
-      .then((data) => {
-        data && setPaymentIdentifier(data.uri ?? data.pr);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      .then((data) => setPaymentIdentifier(data.uri ?? data.pr))
+      .finally(() => setIsLoading(false));
   }, [callbackUrl]);
-
-  async function fetchInitial(url: string) {
-    fetchDataApi(url, true)
-      .then((data: PaymentLinkPayRequest) => {
-        setError(undefined);
-        setPayRequest(data);
-      })
-      .catch((e) => {
-        if (e.message === noPaymentErrorMessage) setTimeout(() => fetchInitial(url), 1000);
-      });
-  }
 
   async function fetchDataApi(url: string, rethrow = false): Promise<any> {
     const response = await fetch(url);
@@ -362,6 +375,28 @@ export default function PaymentLinkScreen(): JSX.Element {
 
     setError(undefined);
     return data;
+  }
+
+  function simplifyUrl(url: string): string {
+    const replacementMap: { [key: string]: string } = {
+      '/v1/paymentLink/payment': '/v1/plp',
+      routeId: 'r',
+      externalId: 'e',
+      message: 'm',
+      amount: 'a',
+      currency: 'c',
+      expiryDate: 'd',
+    };
+
+    const urlObj = new URL(url);
+    const newPath = replacementMap[urlObj.pathname] || urlObj.pathname;
+    const newParams = new URLSearchParams();
+    urlObj.searchParams.forEach((value, key) => {
+      const shortKey = replacementMap[key] || key;
+      newParams.append(shortKey, value);
+    });
+
+    return `${urlObj.origin}${newPath}?${newParams.toString()}`;
   }
 
   const assetsList = payRequest?.transferAmounts.find((item) => item.method === selectedPaymentMethod.id)?.assets;
@@ -418,103 +453,94 @@ export default function PaymentLinkScreen(): JSX.Element {
               )}
             </StyledVerticalStack>
           </Form>
-          {isLoading || !paymentIdentifier ? (
-            <div className="mt-4">
-              <StyledLoadingSpinner size={SpinnerSize.LG} />
-            </div>
-          ) : (
-            <>
-              <StyledCollapsible
-                full
-                titleContent={
-                  <div className="flex flex-col items-start gap-1.5 text-left -my-1">
-                    <div className="flex flex-col items-start text-left">
-                      <div className="font-semibold leading-none">
-                        {translate('screens/payment', 'Payment details')}
-                      </div>
-                    </div>
-                    <div className="leading-none text-dfxGray-800 text-xs">
-                      {`${translate('screens/payment', 'Your payment details at a glance')}`}
-                    </div>
+          <>
+            <StyledCollapsible
+              full
+              titleContent={
+                <div className="flex flex-col items-start gap-1.5 text-left -my-1">
+                  <div className="flex flex-col items-start text-left">
+                    <div className="font-semibold leading-none">{translate('screens/payment', 'Payment details')}</div>
                   </div>
-                }
-              >
-                <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                  <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                    <p>{translate('screens/payment', 'Pending')}</p>
-                  </StyledDataTableRow>
-                  <StyledDataTableRow label={paymentIdentifierLabelMap[selectedPaymentMethod.id] ?? 'URI'}>
-                    <p>{blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
-                    <CopyButton onCopy={() => copy(paymentIdentifier)} />
-                  </StyledDataTableRow>
-                  <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                    <p>
-                      {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
-                    </p>
-                  </StyledDataTableRow>
-                  {payRequest.recipient && (
-                    <StyledDataTableExpandableRow
-                      label={translate('screens/payment', 'Recipient')}
-                      expansionItems={[
-                        {
-                          label: translate('screens/support', 'Name'),
-                          text: payRequest.recipient.name,
-                        },
-                        {
-                          label: translate('screens/home', 'Address'),
-                          text: formatLocationAddress({ ...payRequest.recipient.address }) ?? '',
-                        },
-                        {
-                          label: translate('screens/kyc', 'Phone number'),
-                          text: payRequest.recipient.phone,
-                        },
-                        {
-                          label: translate('screens/kyc', 'Email address'),
-                          text: payRequest.recipient.mail,
-                        },
-                        {
-                          label: translate('screens/kyc', 'Website'),
-                          text: payRequest.recipient.website,
-                          // open absolute URL in new tab
-                          onClick: () => {
-                            const url =
-                              payRequest.recipient.website.startsWith('http://') ||
-                              payRequest.recipient.website.startsWith('https://')
-                                ? payRequest.recipient.website
-                                : `https://${payRequest.recipient.website}`;
-
-                            window.open(url, '_blank');
-                          },
-                        },
-                      ].filter((item) => item.text)}
-                    />
-                  )}
-                  <StyledDataTableExpandableRow
-                    label={translate('screens/payment', 'QR Code')}
-                    expansionContent={
-                      <div className="flex w-full items-center justify-center">
-                        <div className="w-48 py-3">
-                          <QrBasic data={paymentIdentifier} />
-                        </div>
-                      </div>
-                    }
-                  />
-                </StyledDataTable>
-              </StyledCollapsible>
-              {['OpenCryptoPay.io', 'FrankencoinPay.com'].includes(selectedPaymentMethod.id) && (
-                <StyledVerticalStack full gap={8} center>
-                  <p className="text-base pt-3 text-dfxGray-700">
-                    {translate('screens/payment', 'Scan the QR-Code with a compatible wallet to complete the payment.')}
+                  <div className="leading-none text-dfxGray-800 text-xs">
+                    {`${translate('screens/payment', 'Your payment details at a glance')}`}
+                  </div>
+                </div>
+              }
+            >
+              <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                <StyledDataTableRow label={translate('screens/payment', 'State')}>
+                  <p>{translate('screens/payment', 'Pending')}</p>
+                </StyledDataTableRow>
+                <StyledDataTableRow
+                  label={paymentIdentifierLabelMap[selectedPaymentMethod.id] ?? 'URI'}
+                  isLoading={isLoading || !paymentIdentifier}
+                >
+                  <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
+                  <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />
+                </StyledDataTableRow>
+                <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
+                  <p>
+                    {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
                   </p>
-                  <WalletGrid
-                    wallets={recommendedWallets}
-                    header={translate('screens/payment', 'Recommended wallets')}
+                </StyledDataTableRow>
+                {payRequest.recipient && (
+                  <StyledDataTableExpandableRow
+                    label={translate('screens/payment', 'Recipient')}
+                    expansionItems={[
+                      {
+                        label: translate('screens/support', 'Name'),
+                        text: payRequest.recipient.name,
+                      },
+                      {
+                        label: translate('screens/home', 'Address'),
+                        text: formatLocationAddress({ ...payRequest.recipient.address }) ?? '',
+                      },
+                      {
+                        label: translate('screens/kyc', 'Phone number'),
+                        text: payRequest.recipient.phone,
+                      },
+                      {
+                        label: translate('screens/kyc', 'Email address'),
+                        text: payRequest.recipient.mail,
+                      },
+                      {
+                        label: translate('screens/kyc', 'Website'),
+                        text: payRequest.recipient.website,
+                        onClick: () => {
+                          const url =
+                            payRequest.recipient.website.startsWith('http://') ||
+                            payRequest.recipient.website.startsWith('https://')
+                              ? payRequest.recipient.website
+                              : `https://${payRequest.recipient.website}`;
+
+                          window.open(url, '_blank');
+                        },
+                      },
+                    ].filter((item) => item.text)}
                   />
-                  <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
-                </StyledVerticalStack>
-              )}
-            </>
-          )}
+                )}
+                <StyledDataTableExpandableRow
+                  label={translate('screens/payment', 'QR Code')}
+                  expansionContent={
+                    <div className="flex w-full items-center justify-center">
+                      <div className="w-48 py-3">
+                        <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
+                      </div>
+                    </div>
+                  }
+                />
+              </StyledDataTable>
+            </StyledCollapsible>
+            {['OpenCryptoPay.io', 'FrankencoinPay.com'].includes(selectedPaymentMethod.id) && (
+              <StyledVerticalStack full gap={8} center>
+                <p className="text-base pt-3 text-dfxGray-700">
+                  {translate('screens/payment', 'Scan the QR-Code with a compatible wallet to complete the payment.')}
+                </p>
+                <WalletGrid wallets={recommendedWallets} header={translate('screens/payment', 'Recommended wallets')} />
+                <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
+              </StyledVerticalStack>
+            )}
+          </>
         </StyledVerticalStack>
       )}
     </Layout>
