@@ -274,7 +274,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     if (lightningParam) {
       apiUrl = Lnurl.decode(lightningParam);
     } else if (urlParams.size) {
-      apiUrl = `https://api.dfx.swiss/v1/paymentLink/payment?${urlParams.toString()}`;
+      apiUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment?${urlParams.toString()}`;
     } else {
       apiUrl = sessionApiUrl;
     }
