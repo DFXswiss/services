@@ -16,7 +16,7 @@ import {
   useSupportChat,
 } from 'src/contexts/support-chat.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress } from 'src/util/utils';
+import { blankedAddress, toBase64 } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 const initialChat: SupportIssue = {
@@ -260,6 +260,7 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
   const [inputValue, setInputValue] = useState<string>('');
   const [selectedFiles, setSelectedFiles] = useState<DataFile[]>([]);
 
+  // TODO: refactor, write it as a normal function
   const handleSend = () => {
     submitMessage(inputValue, selectedFiles, replyToMessage);
 
@@ -269,19 +270,26 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
     return;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files as FileList;
 
     if (files && files.length > 0) {
-      setSelectedFiles((prevFiles) => [
-        ...prevFiles,
-        ...Array.from(files).map((file) => ({
-          name: file.name,
-          url: URL.createObjectURL(file),
-          type: file.type,
-          size: file.size,
-        })),
-      ]);
+      const newFiles = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const base64File = await toBase64(file);
+          return {
+            file: base64File,
+            name: file.name,
+            url: URL.createObjectURL(file),
+            type: file.type,
+            size: file.size,
+          };
+        }),
+      );
+
+      setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles]);
+
+      // Clear the input value to allow re-selecting the same file
       setTimeout(() => (e.target.value = ''), 100);
     }
   };
@@ -303,12 +311,14 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
         <div className="flex flex-row bg-dfxGray-800/10 rounded-md overflow-clip mx-1.5 py-1 text-dfxBlue-800">
           <div className="w-1 h-full bg-dfxBlue-800" />
           <div className="flex flex-row flex-grow px-2 py-1">
-            <img
-              src={replyToMessage.file?.url}
-              alt="Media"
-              className="rounded-sm max-h-10 object-cover"
-              style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
-            />
+            {replyToMessage.file && (
+              <img
+                src={replyToMessage.file?.url}
+                alt="Media"
+                className="rounded-sm max-h-10 object-cover"
+                style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
+              />
+            )}
             <div className="flex flex-col px-2 text-left">
               <div className="flex flex-row">
                 <BsReply className="text-dfxBlue-800 text-lg mr-1" />
@@ -442,12 +452,14 @@ function ChatBubble({
           <div className="flex flex-row bg-dfxGray-300/20 rounded-md overflow-clip mx-1.5">
             <div className="w-1 h-full bg-white" />
             <div className="flex flex-row flex-grow px-2 py-1">
-              <img
-                src={replyToMessage.file?.url}
-                alt="Media"
-                className="rounded-sm max-h-10 object-cover"
-                style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
-              />
+              {replyToMessage.file && (
+                <img
+                  src={replyToMessage.file?.url}
+                  alt="Media"
+                  className="rounded-sm max-h-10 object-cover"
+                  style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
+                />
+              )}
               <div className="flex flex-col px-2 text-left">
                 <p className="font-semibold text-sm">{replyToMessage.author}</p>
                 <p className="text-sm line-clamp-1 overflow-ellipsis">{replyToMessage.message ?? 'Media'}</p>
@@ -481,7 +493,9 @@ function ChatBubble({
                 <IoMusicalNotes className="text-dfxGray-700 text-2xl" />
               </div>
               <div className="flex flex-col mx-2">
-                <span className="text-white text-sm font-semibold">{file.name}</span>
+                <span className="text-white text-sm font-semibold">
+                  {blankedAddress(file.name, { displayLength: 20 })}
+                </span>
                 <span className="text-dfxGray-400 text-xs">
                   {file.type.split('/')[1].toUpperCase() ?? file.type} · {Math.round(file.size / 1024)} KB
                 </span>
@@ -498,7 +512,9 @@ function ChatBubble({
                 <HiOutlinePaperClip className="text-dfxGray-700 text-2xl" />
               </div>
               <div className="flex flex-col mx-2">
-                <span className="text-white text-sm font-semibold">{file.name}</span>
+                <span className="text-white text-sm font-semibold">
+                  {blankedAddress(file.name, { displayLength: 20 })}
+                </span>
                 <span className="text-dfxGray-400 text-xs">
                   {(fileType === 'application' ? file.type.split('/')[1] : fileType).toUpperCase()} ·{' '}
                   {Math.round(file.size / 1024)} KB

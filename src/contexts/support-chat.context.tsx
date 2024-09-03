@@ -28,8 +28,9 @@ export interface Reaction {
 }
 
 export interface DataFile {
-  url: string;
+  file?: string;
   name: string;
+  url: string;
   size: number;
   type: string;
 }
@@ -131,6 +132,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
         created: new Date(),
         message: index === modFiles.length - 1 ? message : '',
         file: file && {
+          file: file.file,
           url: file.url,
           name: file.name,
           type: file.type,
@@ -234,7 +236,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       data: {
         author: newMessage.author,
         message: newMessage.message,
-        file: newMessage.file && newMessage.file.url, // TODO: base64 encoded string of the file
+        file: newMessage.file && newMessage.file.file,
         fileName: newMessage.file && newMessage.file.name,
       },
     });
