@@ -74,11 +74,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     setIsLoading(true);
     setIsError(undefined);
 
-    // TODO: Refactor API call into a separate function
-    call<SupportIssue>({
-      url: `support/issue?type=${type}`,
-      method: 'GET',
-    })
+    fetchSupportIssue({ issueType: type })
       .then((response) => setSupportIssue(response))
       .catch(() => setIsError('Error while fetching support issue'))
       .finally(() => setIsLoading(false));
@@ -89,11 +85,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
 
     setIsSyncing(true);
     const fromMessageId = supportIssue.messages[supportIssue.messages.length - 1].id;
-    // TODO: Refactor API call into a separate function
-    call<SupportIssue>({
-      url: `support/issue?id=${supportIssue.id}&fromMessageId=${fromMessageId}`,
-      method: 'GET',
-    })
+    fetchSupportIssue({ issueId: supportIssue.id, fromMessageId })
       .then((response) => updateSupportIssue(response))
       .catch(() => setIsError('Error while fetching support messages'))
       .finally(() => setIsSyncing(false));
@@ -153,17 +145,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
         return [...messages];
       });
 
-      // TODO: Refactor API call into a separate function
-      call<SupportIssue>({
-        url: `support/issue/${supportIssue.id}/message`,
-        method: 'POST',
-        data: {
-          author: newMessage.author,
-          message: newMessage.message,
-          file: newMessage.file && newMessage.file.url, // TODO: base64 encoded string of the file
-          fileName: newMessage.file && newMessage.file.name,
-        },
-      })
+      createSupportMessage(supportIssue.id, newMessage)
         .then(() => updateUnsettledMessageStatus(newMessage, 'received'))
         .catch(() => updateUnsettledMessageStatus(newMessage, 'failed'));
     });
@@ -201,6 +183,24 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     // TODO (later): Update message on server side. Feature not yet available.
   }
 
+  const context = useMemo(
+    () => ({
+      supportIssue: supportIssue && {
+        ...supportIssue,
+        messages: [...supportIssue.messages, ...unsettledMessages],
+      },
+      isLoading,
+      isError,
+      preFetch,
+      createSupportIssue,
+      submitMessage,
+      handleEmojiClick,
+    }),
+    [supportIssue, unsettledMessages, isLoading, isError, call],
+  );
+
+  // --- HELPER FUNCTIONS --- //
+
   function updateSupportIssue(newState: SupportIssue) {
     setSupportIssue((supportIssue) => {
       if (!supportIssue) return newState;
@@ -225,21 +225,40 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     return a.author === b.author && a.message === b.message;
   }
 
-  const context = useMemo(
-    () => ({
-      supportIssue: supportIssue && {
-        ...supportIssue,
-        messages: [...supportIssue.messages, ...unsettledMessages],
+  // --- API FUNCTIONS --- //
+
+  async function createSupportMessage(issueId: number, newMessage: SupportMessage): Promise<SupportIssue> {
+    return call<SupportIssue>({
+      url: `support/issue/${issueId}/message`,
+      method: 'POST',
+      data: {
+        author: newMessage.author,
+        message: newMessage.message,
+        file: newMessage.file && newMessage.file.url, // TODO: base64 encoded string of the file
+        fileName: newMessage.file && newMessage.file.name,
       },
-      isLoading,
-      isError,
-      preFetch,
-      createSupportIssue,
-      submitMessage,
-      handleEmojiClick,
-    }),
-    [supportIssue, unsettledMessages, isLoading, isError, call],
-  );
+    });
+  }
+
+  async function fetchSupportIssue({
+    issueId,
+    issueType,
+    fromMessageId,
+  }: {
+    issueId?: number;
+    issueType?: SupportIssueType;
+    fromMessageId?: number;
+  }): Promise<SupportIssue> {
+    const params = new URLSearchParams();
+    if (issueId) params.append('id', issueId.toString());
+    if (issueType) params.append('type', issueType);
+    if (fromMessageId) params.append('fromMessageId', fromMessageId.toString());
+
+    return call<SupportIssue>({
+      url: `support/issue${params.toString() ? `?${params}` : ''}`,
+      method: 'GET',
+    });
+  }
 
   return <SupportChat.Provider value={context}>{props.children}</SupportChat.Provider>;
 }
