@@ -3719,7 +3719,7 @@ export const FeatureTree: Page[] = [
       },
       {
         id: 'zchf',
-        img: 'zchf',
+        img: 'frankencoin',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
@@ -3749,7 +3749,7 @@ export const FeatureTree: Page[] = [
       },
       {
         id: 'zchf',
-        img: 'zchf',
+        img: 'frankencoin',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
