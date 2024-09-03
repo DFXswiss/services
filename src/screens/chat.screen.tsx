@@ -16,7 +16,7 @@ import {
   useSupportChat,
 } from 'src/contexts/support-chat.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress, toBase64 } from 'src/util/utils';
+import { blankedAddress, formatBytes, toBase64 } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 const initialChat: SupportIssue = {
@@ -422,6 +422,7 @@ function ChatBubble({
   onClick,
 }: ChatBubbleProps): JSX.Element {
   const { translate } = useSettingsContext();
+  const { loadFileData } = useSupportChat();
 
   const [selectedFile, setSelectedFile] = useState<DataFile | null>(null);
 
@@ -430,6 +431,13 @@ function ChatBubble({
     onClick && onClick(undefined);
 
     !selectedFile && setSelectedFile(file);
+  };
+
+  const loadFile = async (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+
+    if (!id || !file) return;
+    await loadFileData(id, file);
   };
 
   const isUser = sender === 'Customer';
@@ -469,7 +477,22 @@ function ChatBubble({
         )}
         {hasHeader && !isUser && !file && <p className="font-semibold text-sm text-dfxRed-150 px-3">{sender}</p>}
         {fileType &&
-          (fileType === 'image' ? (
+          (file.size === 0 ? (
+            <div className="flex items-center mb-1 p-2 cursor-pointer" onClick={(e) => loadFile(e)}>
+              <div className="flex justify-center items-center w-12 h-12 bg-white rounded-md">
+                <HiOutlinePaperClip className="text-dfxGray-700 text-2xl" />
+              </div>
+              <div className="flex flex-col mx-2">
+                <span className="text-white text-sm font-semibold">
+                  {blankedAddress(file.name, { displayLength: 20 })}
+                </span>
+                <span className="text-dfxGray-400 text-xs">
+                  {(fileType === 'application' ? file.type.split('/')[1] : fileType).toUpperCase()} ·{' '}
+                  {formatBytes(file.size)}
+                </span>
+              </div>
+            </div>
+          ) : fileType === 'image' ? (
             <img
               src={file.url}
               alt={file.name}
@@ -497,7 +520,7 @@ function ChatBubble({
                   {blankedAddress(file.name, { displayLength: 20 })}
                 </span>
                 <span className="text-dfxGray-400 text-xs">
-                  {file.type.split('/')[1].toUpperCase() ?? file.type} · {Math.round(file.size / 1024)} KB
+                  {file.type.split('/')[1].toUpperCase() ?? file.type} · {formatBytes(file.size)}
                 </span>
               </div>
             </div>
@@ -517,7 +540,7 @@ function ChatBubble({
                 </span>
                 <span className="text-dfxGray-400 text-xs">
                   {(fileType === 'application' ? file.type.split('/')[1] : fileType).toUpperCase()} ·{' '}
-                  {Math.round(file.size / 1024)} KB
+                  {formatBytes(file.size)}
                 </span>
               </div>
             </a>
@@ -555,7 +578,7 @@ function ChatBubble({
                   <div className="text-center">
                     <HiOutlinePaperClip className="text-dfxGray-700 text-4xl mx-auto mb-4" />
                     <p className="text-lg font-semibold">{selectedFile.name}</p>
-                    <p>{Math.round(selectedFile.size / 1024)} KB</p>
+                    <p>{formatBytes(selectedFile.size)}</p>
                   </div>
                 )}
               </div>

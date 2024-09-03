@@ -1,6 +1,11 @@
 import { CreateSupportIssue, SupportIssueReason, SupportIssueType, useApi, useSupport } from '@dfx.swiss/react';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
+export interface BlobContent {
+  data: any;
+  contentType: string;
+}
+
 export interface SupportMessage {
   id?: number;
   author: string;
@@ -49,6 +54,7 @@ interface SupportChatInterface {
   createSupportIssue: (request: CreateSupportIssue) => Promise<void>;
   submitMessage: (message: string, files: DataFile[], replyToMessage?: SupportMessage) => Promise<void>;
   handleEmojiClick: (messageId: number, emoji: string) => void;
+  loadFileData: (messageId: number, file: DataFile) => Promise<void>;
 }
 
 const SupportChat = createContext<SupportChatInterface>(undefined as any);
@@ -153,6 +159,19 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     });
   }
 
+  async function loadFileData(messageId: number, file: DataFile): Promise<void> {
+    fetchFileData(file.name).then((response) => {
+      const newFile = mapBlobContentToDataFile(file, response);
+      console.log(newFile);
+      setSupportIssue((supportIssue) => {
+        if (!supportIssue) return supportIssue;
+        const message = supportIssue.messages.find((m) => m.id === messageId);
+        if (message) message.file = newFile;
+        return { ...supportIssue };
+      });
+    });
+  }
+
   function handleEmojiClick(messageId: number, emoji: string) {
     if (!supportIssue) return;
 
@@ -197,6 +216,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       createSupportIssue,
       submitMessage,
       handleEmojiClick,
+      loadFileData,
     }),
     [supportIssue, unsettledMessages, isLoading, isError, call],
   );
@@ -225,6 +245,19 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
 
   function isMessageEqual(a: SupportMessage, b: SupportMessage): boolean {
     return a.author === b.author && a.message === b.message;
+  }
+
+  function mapBlobContentToDataFile(file: DataFile, blobContent: BlobContent): DataFile {
+    const byteArray = new Uint8Array(blobContent.data.data);
+    const blob = new Blob([byteArray], { type: blobContent.contentType });
+    const fileUrl = URL.createObjectURL(blob);
+
+    return {
+      ...file,
+      url: fileUrl,
+      type: blobContent.contentType,
+      size: blob.size,
+    };
   }
 
   // --- API FUNCTIONS --- //
@@ -258,6 +291,13 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
 
     return call<SupportIssue>({
       url: `support/issue${params.toString() ? `?${params}` : ''}`,
+      method: 'GET',
+    });
+  }
+
+  async function fetchFileData(name: string): Promise<BlobContent> {
+    return call<BlobContent>({
+      url: `support/issue/file?name=${name}`,
       method: 'GET',
     });
   }
