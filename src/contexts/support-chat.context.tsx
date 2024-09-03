@@ -1,8 +1,8 @@
 import { CreateSupportIssue, SupportIssueReason, SupportIssueType, useApi, useSupport } from '@dfx.swiss/react';
-import { PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
+import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 export interface SupportMessage {
-  id: number;
+  id?: number;
   author: string;
   created: Date;
   message: string;
@@ -59,9 +59,16 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
   const { createIssue } = useSupport();
 
   const [supportIssue, setSupportIssue] = useState<SupportIssue>();
-  const [currentMessageId, setCurrentMessageId] = useState<number>(0);
+  const [unsettledMessages, setUnsettledMessages] = useState<SupportMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [isError, setIsError] = useState<string>();
+
+  useEffect(() => {
+    if (!supportIssue) return;
+    const interval = setTimeout(() => fetchLatestMessages(), 5000);
+    return () => clearInterval(interval);
+  }, [supportIssue]);
 
   async function preFetch(type: SupportIssueType): Promise<void> {
     setIsLoading(true);
@@ -73,7 +80,6 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     })
       .then((response) => {
         setSupportIssue(response);
-        setCurrentMessageId(response.messages[-1].id);
       })
       .catch(() => {
         setIsError('Error while fetching support issue');
@@ -83,25 +89,56 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       });
   }
 
+  async function fetchLatestMessages(): Promise<void> {
+    if (!supportIssue || isLoading || isSyncing) return;
+
+    setIsSyncing(true);
+    call<SupportIssue>({
+      url: `support/issue?id=${supportIssue.id}&fromMessageId=${
+        supportIssue.messages[supportIssue.messages.length - 1].id
+      }`,
+      method: 'GET',
+    })
+      .then((response) => {
+        // refactor into a merge/sync function
+        setSupportIssue({
+          ...response,
+          messages: [...supportIssue.messages, ...response.messages],
+        });
+        setUnsettledMessages((messages) => {
+          return [...messages.filter((m) => !response.messages.some((rm) => isMessageEqual(m, rm)))];
+        });
+      })
+      .catch(() => {
+        setIsError('Error while fetching support messages');
+      })
+      .finally(() => {
+        setIsSyncing(false);
+      });
+  }
+
   async function createSupportIssue(request: CreateSupportIssue): Promise<void> {
-    setSupportIssue((supportIssue) => {
-      if (!supportIssue) return supportIssue;
-      supportIssue.messages.push({
-        id: currentMessageId + 1,
+    const file = request.file
+      ? // TODO: refactor out mapping of file, fileName to DataFile
+        {
+          url: request.file,
+          name: request.fileName || '',
+          type: request.file.split('.').pop() || '',
+          size: 0,
+        }
+      : undefined;
+
+    setUnsettledMessages((messages) => {
+      messages.push({
         author: 'Customer',
         message: request.message,
-        file: request.file
-          ? {
-              url: request.file ?? 'NO URL',
-              name: request.fileName ?? 'NO NAME',
-              size: 0,
-              type: request.file ? request.file.split('.').pop() ?? 'NO TYPE' : 'NO TYPE',
-            }
-          : undefined,
+        file: file,
         created: new Date(),
+        status: 'sent',
       });
-      return { ...supportIssue };
+      return [...messages];
     });
+
     await createIssue(request);
   }
 
@@ -115,13 +152,11 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
 
     const modFiles = numFiles !== 1 && hasText ? [...files, undefined] : files;
     modFiles.forEach((file: DataFile | undefined, index) => {
-      const messageId = randomId();
       const newMessage: SupportMessage = {
-        id: messageId,
         message: index === modFiles.length - 1 ? message : '',
         file: file && {
-          name: file.name,
           url: file.url,
+          name: file.name,
           type: file.type,
           size: file.size,
         },
@@ -131,10 +166,9 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
         replyTo: index === 0 ? replyToMessage?.id : undefined,
       };
 
-      setSupportIssue((supportIssue) => {
-        if (!supportIssue) return supportIssue;
-        supportIssue.messages.push(newMessage);
-        return { ...supportIssue };
+      setUnsettledMessages((messages) => {
+        messages.push(newMessage);
+        return [...messages];
       });
 
       call<SupportIssue>({
@@ -143,29 +177,24 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
         data: {
           author: newMessage.author,
           message: newMessage.message,
-          file: newMessage.file && newMessage.file.url, // base64 encoded string of the file
+          file: newMessage.file && newMessage.file.url, // TODO: base64 encoded string of the file
           fileName: newMessage.file && newMessage.file.name,
         },
       })
         .then(() => {
-          // TODO: refactor into helper function to update status
-          setSupportIssue((supportIssue) => {
-            if (!supportIssue) return supportIssue;
-            const messageIdx = supportIssue.messages.findIndex((m) => m.id === messageId);
-            supportIssue.messages[messageIdx].status = 'received';
-            return { ...supportIssue };
+          // TODO: refactor into helper function to update message props
+          setUnsettledMessages((messages) => {
+            const messageIdx = messages.findIndex((m) => isMessageEqual(m, newMessage));
+            if (messageIdx > -1) messages[messageIdx].status = 'received';
+            return [...messages];
           });
         })
         .catch(() => {
-          setSupportIssue((supportIssue) => {
-            if (!supportIssue) return supportIssue;
-            const messageIdx = supportIssue.messages.findIndex((m) => m.id === messageId);
-            supportIssue.messages[messageIdx].status = 'failed';
-            return { ...supportIssue };
+          setUnsettledMessages((messages) => {
+            const messageIdx = messages.findIndex((m) => isMessageEqual(m, newMessage));
+            if (messageIdx > -1) messages[messageIdx].status = 'failed';
+            return [...messages];
           });
-        })
-        .finally(() => {
-          setIsLoading(false);
         });
     });
   }
@@ -204,14 +233,33 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     // TODO: Update message on server side
   }
 
-  function randomId(): number {
-    return Math.floor(Math.random() * 1000000);
+  function isMessageEqual(a: SupportMessage, b: SupportMessage): boolean {
+    return messageHash(a) === messageHash(b);
+  }
+
+  function messageHash(message: SupportMessage): string {
+    return `${message.author}-${message.message}`;
   }
 
   const context = useMemo(
-    () => ({ supportIssue, isLoading, isError, preFetch, createSupportIssue, submitMessage, handleEmojiClick }),
-    [supportIssue, isLoading, isError, call],
+    () => ({
+      supportIssue: supportIssue && {
+        ...supportIssue,
+        messages: [...supportIssue.messages, ...unsettledMessages],
+      },
+      isLoading,
+      isError,
+      preFetch,
+      createSupportIssue,
+      submitMessage,
+      handleEmojiClick,
+    }),
+    [supportIssue, unsettledMessages, isLoading, isError, call],
   );
+
+  useEffect(() => {
+    console.log(context.supportIssue);
+  }, [context]);
 
   return <SupportChat.Provider value={context}>{props.children}</SupportChat.Provider>;
 }

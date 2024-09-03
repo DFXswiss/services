@@ -161,9 +161,11 @@ export default function ChatScreen(): JSX.Element {
               const isNewSender = prevSender !== message.author;
               return (
                 <ChatBubble
-                  key={message.id}
+                  key={message.id ?? new Date(message.created).getTime()}
                   hasHeader={isNewSender}
-                  replyToMessage={supportIssue.messages.find((m) => m.id === message.replyTo)}
+                  replyToMessage={
+                    message.replyTo ? supportIssue.messages.find((m) => m.id === message.replyTo) : undefined
+                  }
                   onHandleEmojiClick={onHandleEmojiClick}
                   onClick={(e) => handleChatBubbleClick(e, message)}
                   {...message}
@@ -173,7 +175,7 @@ export default function ChatScreen(): JSX.Element {
             <div ref={messagesEndRef} />
           </div>
           <InputComponent replyToMessage={replyToMessage} setReplyToMessage={setReplyToMessage} />
-          {clickedMessage && (
+          {clickedMessage?.id !== undefined && (
             <ChatBubbleMenu
               menuPosition={menuPosition}
               clickedMessage={clickedMessage}
@@ -220,7 +222,7 @@ function ChatBubbleMenu({
           <button
             key={index}
             className="hover:bg-dfxGray-300 w-10 text-lg flex items-center justify-center"
-            onClick={() => onHandleEmojiClick(clickedMessage.id, emoji)}
+            onClick={() => clickedMessage.id !== undefined && onHandleEmojiClick(clickedMessage.id, emoji)}
           >
             {emoji}
           </button>
@@ -561,7 +563,7 @@ function ChatBubble({
             {reactions?.map((reaction, index) => (
               <div
                 key={index}
-                onClick={(e) => onHandleEmojiClick && onHandleEmojiClick(id, reaction.emoji, e)}
+                onClick={(e) => id && onHandleEmojiClick && onHandleEmojiClick(id, reaction.emoji, e)}
                 className="flex flex-row gap-1.5 mr-1 rounded-full px-2 py-0.5 bg-white/20 text-sm cursor-pointer"
               >
                 <span>{reaction.emoji}</span>
