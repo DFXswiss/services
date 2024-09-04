@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { BsReply } from 'react-icons/bs';
 import { HiOutlineDownload, HiOutlinePaperClip } from 'react-icons/hi';
 import { IoMusicalNotes } from 'react-icons/io5';
-import { MdErrorOutline, MdOutlineCancel, MdOutlineClose, MdSend } from 'react-icons/md';
-import { RiCheckDoubleFill, RiCheckFill } from 'react-icons/ri';
+import { MdAccessTime, MdErrorOutline, MdOutlineCancel, MdOutlineClose, MdSend } from 'react-icons/md';
+import { RiCheckFill } from 'react-icons/ri';
 import { useSearchParams } from 'react-router-dom';
 import { IssueTypeLabels } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -520,15 +520,15 @@ function ChatBubble({
               </div>
             ))}
           </div>
-          <div className="flex flex-row text-xs italic text-end text-gray-500">
+          <div className="flex flex-row items-center justify-center text-xs italic text-end text-gray-500">
             {new Date(created).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
             {/* TODO: Cover all states with icons */}
             {status === 'failed' ? (
               <MdErrorOutline className="inline-block text-base ml-1 mb-0.5" />
             ) : status === 'sent' ? (
-              <RiCheckFill className="inline-block text-base ml-1 mb-0.5" />
+              <MdAccessTime className="inline-block text-base ml-1 mb-0.5" />
             ) : (
-              <RiCheckDoubleFill className="inline-block text-base ml-1 mb-0.5" />
+              <RiCheckFill className="inline-block text-base ml-1 mb-0.5" />
             )}
           </div>
         </div>
