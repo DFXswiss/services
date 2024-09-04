@@ -1,4 +1,4 @@
-import { CreateSupportIssue, SupportIssueReason, SupportIssueType, useApi, useSupport } from '@dfx.swiss/react';
+import { CreateSupportIssue, SupportIssueReason, SupportIssueType, useApi } from '@dfx.swiss/react';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { toBase64 } from 'src/util/utils';
 
@@ -81,7 +81,6 @@ export const useSupportChat = () => useContext(SupportChat);
 
 export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
   const { call } = useApi();
-  const { createIssue } = useSupport();
 
   const currUnsettledMessageId = useRef(0);
 
@@ -119,11 +118,12 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
 
   async function createSupportIssue(request: CreateSupportIssue, file?: File): Promise<void> {
     const dataFile = file && (await mapFileToDataFile(file));
+    const messageId = getNextUnsettledMessageId();
 
     setSupportIssue((supportIssue) => {
       if (!supportIssue) return supportIssue;
       supportIssue.messages.push({
-        id: getNextUnsettledMessageId(),
+        id: messageId,
         author: 'Customer',
         message: request.message,
         file: dataFile,
@@ -134,7 +134,12 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       return { ...supportIssue };
     });
 
-    await createIssue(request);
+    createIssue(request)
+      .then((response) => {
+        settleMessage(messageId, response.messages[response.messages.length - 1]);
+        updateSupportIssue(response);
+      })
+      .catch(() => settleMessage(messageId));
   }
 
   async function submitMessage(message: string, files: File[], replyToMessage?: SupportMessage): Promise<void> {
@@ -289,6 +294,14 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
   }
 
   // --- API FUNCTIONS --- //
+
+  async function createIssue(request: CreateSupportIssue): Promise<SupportIssue> {
+    return call<SupportIssue>({
+      url: 'support/issue',
+      method: 'POST',
+      data: request,
+    });
+  }
 
   async function createSupportMessage(issueId: number, newMessage: SupportMessage): Promise<SupportMessage> {
     return call<SupportMessage>({
