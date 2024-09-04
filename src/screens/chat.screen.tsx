@@ -333,7 +333,7 @@ function ChatBubble({
         onClick={onClick}
         className={`flex flex-col max-w-xs rounded-lg overflow-clip pb-1.5 gap-1.5 ${
           isUser ? 'bg-[#24A1DE] text-white rounded-br-none' : 'bg-dfxGray-400 text-black rounded-bl-none'
-        } ${!hasFile || !!replyToMessage ? 'pt-1.5' : ''}`}
+        } ${!hasFile || !!replyToMessage ? 'pt-1.5' : ''} ${status === 'failed' ? 'opacity-60' : ''}`}
       >
         {replyToMessage && (
           <div className="flex flex-row bg-dfxGray-300/20 rounded-md overflow-clip mx-1.5">
