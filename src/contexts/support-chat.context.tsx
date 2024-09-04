@@ -1,5 +1,6 @@
 import { CreateSupportIssue, SupportIssueReason, SupportIssueType, useApi, useSupport } from '@dfx.swiss/react';
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { toBase64 } from 'src/util/utils';
 
 // --- API INTERFACES / ENUMS --- // TODO: Add to packages and import from there
 
@@ -68,8 +69,8 @@ interface SupportChatInterface {
   isLoading: boolean;
   isError?: string;
   preFetch: (type: SupportIssueType) => Promise<void>;
-  createSupportIssue: (request: CreateSupportIssue) => Promise<void>;
-  submitMessage: (message: string, files: DataFile[], replyToMessage?: SupportMessage) => Promise<void>;
+  createSupportIssue: (request: CreateSupportIssue, file?: File) => Promise<void>;
+  submitMessage: (message: string, files: File[], replyToMessage?: SupportMessage) => Promise<void>;
   handleEmojiClick: (messageId: number, emoji: string) => void;
   loadFileData: (messageId: number, fileUrl: string) => Promise<void>;
 }
@@ -82,8 +83,9 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
   const { call } = useApi();
   const { createIssue } = useSupport();
 
+  const currUnsettledMessageId = useRef(0);
+
   const [supportIssue, setSupportIssue] = useState<SupportIssue>();
-  const [unsettledMessages, setUnsettledMessages] = useState<SupportMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isError, setIsError] = useState<string>();
@@ -115,34 +117,27 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       .finally(() => setIsSyncing(false));
   }
 
-  async function createSupportIssue(request: CreateSupportIssue): Promise<void> {
-    const file = request.file
-      ? // TODO: refactor out mapping of file, fileName to DataFile
-        {
-          file: request.file,
-          name: request.fileName || '',
-          type: request.fileName?.split('.').pop() || '',
-          size: 0,
-          url: 'NO URL',
-        }
-      : undefined;
+  async function createSupportIssue(request: CreateSupportIssue, file?: File): Promise<void> {
+    const dataFile = file && (await mapFileToDataFile(file));
 
-    setUnsettledMessages((messages) => {
-      messages.push({
-        id: -1,
+    setSupportIssue((supportIssue) => {
+      if (!supportIssue) return supportIssue;
+      supportIssue.messages.push({
+        id: getNextUnsettledMessageId(),
         author: 'Customer',
         message: request.message,
-        file: file,
+        file: dataFile,
         created: new Date(),
         status: 'sent',
       });
-      return [...messages];
+
+      return { ...supportIssue };
     });
 
     await createIssue(request);
   }
 
-  async function submitMessage(message: string, files: DataFile[], replyToMessage?: SupportMessage): Promise<void> {
+  async function submitMessage(message: string, files: File[], replyToMessage?: SupportMessage): Promise<void> {
     if (!supportIssue) return;
 
     const hasText = message.trim() !== '';
@@ -151,29 +146,23 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     if (!hasText && numFiles === 0) return;
 
     const modFiles = numFiles !== 1 && hasText ? [...files, undefined] : files;
-    modFiles.forEach((file: DataFile | undefined, index) => {
-      const messageId = -unsettledMessages.length - 1;
+    modFiles.forEach(async (file: File | undefined, index) => {
+      const messageId = getNextUnsettledMessageId();
 
       const newMessage: SupportMessage = {
         id: messageId,
         author: 'Customer',
         created: new Date(),
         message: index === modFiles.length - 1 ? message : '',
-        // TODO: Use spread operator for file
-        file: file && {
-          file: file.file,
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          url: file.url,
-        },
+        file: file && (await mapFileToDataFile(file)),
         replyTo: index === 0 ? replyToMessage?.id : undefined,
         status: 'sent',
       };
 
-      setUnsettledMessages((messages) => {
-        messages.push(newMessage);
-        return [...messages];
+      setSupportIssue((supportIssue) => {
+        if (!supportIssue) return supportIssue;
+        supportIssue.messages.push(newMessage);
+        return { ...supportIssue };
       });
 
       createSupportMessage(supportIssue.id, newMessage)
@@ -231,10 +220,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
 
   const context = useMemo(
     () => ({
-      supportIssue: supportIssue && {
-        ...supportIssue,
-        messages: [...supportIssue.messages, ...unsettledMessages],
-      },
+      supportIssue,
       isLoading,
       isError,
       preFetch,
@@ -243,7 +229,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       handleEmojiClick,
       loadFileData,
     }),
-    [supportIssue, unsettledMessages, isLoading, isError, call],
+    [supportIssue, isLoading, isError, call],
   );
 
   // --- HELPER FUNCTIONS --- //
@@ -251,33 +237,38 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
   function updateSupportIssue(newState: SupportIssue) {
     setSupportIssue((supportIssue) => {
       if (!supportIssue) return newState;
-      supportIssue.messages = [...supportIssue.messages, ...newState.messages];
+      supportIssue.messages = [
+        ...supportIssue.messages,
+        ...newState.messages.filter((m) => !supportIssue.messages.some((sm) => sm.id === m.id)),
+      ];
       return { ...supportIssue };
     });
   }
 
   function settleMessage(messageId: number, newMessage?: SupportMessage) {
-    const idx = unsettledMessages.findIndex((m) => m.id === messageId);
-    if (idx === -1) return;
+    const idx = supportIssue?.messages.findIndex((m) => m.id === messageId);
+    if (!supportIssue || !idx || idx === -1) return;
 
-    const settledMessage = unsettledMessages[idx];
+    const settledMessage = supportIssue.messages[idx];
 
-    setUnsettledMessages((messages) => {
-      if (newMessage) messages.splice(idx, 1);
-      else messages[idx].status = 'failed';
-      return [...messages];
-    });
-
-    if (!newMessage) return;
     setSupportIssue((supportIssue) => {
       if (!supportIssue) return supportIssue;
-      supportIssue.messages.push({ ...settledMessage, ...newMessage, status: 'received' });
+      supportIssue.messages[idx] = { ...settledMessage, ...newMessage, status: newMessage ? 'received' : 'failed' };
       return { ...supportIssue };
     });
   }
 
-  function isMessageEqual(a: SupportMessage, b: SupportMessage): boolean {
-    return a.author === b.author && a.message === b.message;
+  async function mapFileToDataFile(file: File) {
+    const base64File = await toBase64(file);
+    if (!base64File) return;
+
+    return {
+      file: base64File,
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      url: URL.createObjectURL(file),
+    };
   }
 
   function mapBlobContentToDataFile(fileName: string, blobContent: BlobContent): DataFile {
@@ -291,6 +282,10 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       size: blob.size,
       url: URL.createObjectURL(blob),
     };
+  }
+
+  function getNextUnsettledMessageId(): number {
+    return --currUnsettledMessageId.current;
   }
 
   // --- API FUNCTIONS --- //

@@ -238,7 +238,7 @@ export default function SupportIssueScreen(): JSX.Element {
         };
       }
 
-      await createSupportIssue(request)
+      await createSupportIssue(request, data.file)
         .then(() => navigate(`/support/chat`))
         .catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
     } catch (e) {

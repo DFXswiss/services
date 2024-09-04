@@ -10,7 +10,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { DataFile, SupportMessage, useSupportChat } from 'src/contexts/support-chat.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress, formatBytes, toBase64 } from 'src/util/utils';
+import { blankedAddress, formatBytes } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 const emojiSet = ['👍', '❤️', '😂', '😮', '😢', '👏'];
@@ -94,7 +94,7 @@ export default function ChatScreen(): JSX.Element {
               const isNewSender = prevSender !== message.author;
               return (
                 <ChatBubble
-                  key={message.id ?? new Date(message.created).getTime()}
+                  key={message.id}
                   hasHeader={isNewSender}
                   replyToMessage={
                     message.replyTo ? supportIssue.messages.find((m) => m.id === message.replyTo) : undefined
@@ -133,7 +133,7 @@ interface InputComponentProps {
 function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentProps): JSX.Element {
   const { submitMessage } = useSupportChat();
   const [inputValue, setInputValue] = useState<string>('');
-  const [selectedFiles, setSelectedFiles] = useState<DataFile[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   // TODO: refactor, write it as a normal function
   const handleSend = () => {
@@ -149,23 +149,7 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
     const files = e.target.files as FileList;
 
     if (files && files.length > 0) {
-      const newFiles = await Promise.all(
-        Array.from(files).map(async (file) => {
-          const base64File = await toBase64(file);
-          if (!base64File) return;
-
-          return {
-            file: base64File,
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            url: URL.createObjectURL(file),
-          };
-        }),
-      );
-
-      const validFiles = newFiles.filter((file): file is DataFile => !!file);
-      setSelectedFiles((prevFiles) => [...prevFiles, ...validFiles]);
+      setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
       setTimeout(() => (e.target.value = ''), 100);
     }
   };
@@ -337,7 +321,7 @@ function ChatBubble({
           author === 'Customer'
             ? 'bg-[#24A1DE] text-white rounded-br-none'
             : 'bg-dfxGray-400 text-black rounded-bl-none'
-        } ${!fileUrl || !!replyToMessage ? 'pt-1.5' : ''}`}
+        } ${!hasFile || !!replyToMessage ? 'pt-1.5' : ''}`}
       >
         {replyToMessage && (
           <div className="flex flex-row bg-dfxGray-300/20 rounded-md overflow-clip mx-1.5">
