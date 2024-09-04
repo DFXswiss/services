@@ -7,6 +7,7 @@ import { IoMusicalNotes } from 'react-icons/io5';
 import { MdErrorOutline, MdOutlineCancel, MdOutlineClose, MdSend } from 'react-icons/md';
 import { RiCheckDoubleFill, RiCheckFill } from 'react-icons/ri';
 import { useSearchParams } from 'react-router-dom';
+import { IssueTypeLabels } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { DataFile, SupportMessage, useSupportChat } from 'src/contexts/support-chat.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -17,6 +18,7 @@ const emojiSet = ['👍', '❤️', '😂', '😮', '😢', '👏'];
 
 export default function ChatScreen(): JSX.Element {
   const { navigate } = useNavigation();
+  const { translate } = useSettingsContext();
   const { supportIssue, isLoading, isError, preFetch, handleEmojiClick } = useSupportChat();
 
   const [clickedMessage, setClickedMessage] = useState<SupportMessage>();
@@ -82,7 +84,7 @@ export default function ChatScreen(): JSX.Element {
   };
 
   return (
-    <Layout title="Ticket 1390" noPadding>
+    <Layout title={translate('screens/support', IssueTypeLabels[typeParam as SupportIssueType])} noPadding>
       {isLoading || !supportIssue ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -94,16 +96,23 @@ export default function ChatScreen(): JSX.Element {
               const prevSender = index > 0 ? supportIssue.messages[index - 1].author : null;
               const isNewSender = prevSender !== message.author;
               return (
-                <ChatBubble
-                  key={message.id}
-                  hasHeader={isNewSender}
-                  replyToMessage={
-                    message.replyTo ? supportIssue.messages.find((m) => m.id === message.replyTo) : undefined
-                  }
-                  onEmojiClick={onEmojiClick}
-                  onClick={(e) => onChatBubbleClick(e, message)}
-                  {...message}
-                />
+                <>
+                  {index > 0 &&
+                    new Date(message.created).getDate() !==
+                      new Date(supportIssue.messages[index - 1].created).getDate() && (
+                      <DateTag date={message.created} />
+                    )}
+                  <ChatBubble
+                    key={message.id}
+                    hasHeader={isNewSender}
+                    replyToMessage={
+                      message.replyTo ? supportIssue.messages.find((m) => m.id === message.replyTo) : undefined
+                    }
+                    onEmojiClick={onEmojiClick}
+                    onClick={(e) => onChatBubbleClick(e, message)}
+                    {...message}
+                  />
+                </>
               );
             })}
             <div ref={messagesEndRef} />
@@ -123,6 +132,35 @@ export default function ChatScreen(): JSX.Element {
         </div>
       )}
     </Layout>
+  );
+}
+
+interface DateTagProps {
+  date: Date;
+}
+
+function DateTag({ date }: DateTagProps): JSX.Element {
+  const { language } = useSettingsContext();
+
+  const dateStringLangMap: { [language: string]: string } = {
+    en: 'en-US',
+    de: 'de-DE',
+    fr: 'fr-FR',
+    it: 'it-IT',
+  };
+
+  const dateStringLang = dateStringLangMap[language?.symbol.toLowerCase() ?? 'en'];
+
+  return (
+    <div className="flex flex-wrap justify-center py-8">
+      <div className=" text-xs font-semibold py-1 px-3 bg-dfxGray-300 text-dfxGray-700 rounded-full">
+        {new Date(date).toLocaleDateString([dateStringLang, 'en-US'], {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -319,9 +357,7 @@ function ChatBubble({
       <div
         onClick={onClick}
         className={`flex flex-col max-w-xs rounded-lg overflow-clip pb-1.5 gap-1.5 ${
-          author === 'Customer'
-            ? 'bg-[#24A1DE] text-white rounded-br-none'
-            : 'bg-dfxGray-400 text-black rounded-bl-none'
+          isUser ? 'bg-[#24A1DE] text-white rounded-br-none' : 'bg-dfxGray-400 text-black rounded-bl-none'
         } ${!hasFile || !!replyToMessage ? 'pt-1.5' : ''}`}
       >
         {replyToMessage && (
@@ -356,10 +392,10 @@ function ChatBubble({
                 )}
               </div>
               <div className="flex flex-col mx-2">
-                <span className="text-white text-sm font-semibold">
+                <span className="text-sm font-semibold">
                   {fileUrl && blankedAddress(fileUrl.split('/').pop() ?? fileUrl, { displayLength: 20 })}
                 </span>
-                <span className="text-dfxGray-400 text-xs">
+                <span className="text-xs font-medium opacity-60">
                   {error ?? translate('general/actions', isLoadingFile ? 'Downloading...' : 'Download')}
                 </span>
               </div>
