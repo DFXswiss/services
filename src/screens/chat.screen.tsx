@@ -1,5 +1,5 @@
-import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react';
-import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import { ApiError, SupportIssueType } from '@dfx.swiss/react';
+import { SpinnerSize, SpinnerVariant, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { BsReply } from 'react-icons/bs';
 import { HiOutlineDownload, HiOutlinePaperClip } from 'react-icons/hi';
@@ -8,79 +8,10 @@ import { MdErrorOutline, MdOutlineCancel, MdOutlineClose, MdSend } from 'react-i
 import { RiCheckDoubleFill, RiCheckFill } from 'react-icons/ri';
 import { useSearchParams } from 'react-router-dom';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import {
-  DataFile,
-  SupportIssue,
-  SupportIssueState,
-  SupportMessage,
-  useSupportChat,
-} from 'src/contexts/support-chat.context';
+import { DataFile, SupportMessage, useSupportChat } from 'src/contexts/support-chat.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, formatBytes, toBase64 } from 'src/util/utils';
 import { Layout } from '../components/layout';
-
-const initialChat: SupportIssue = {
-  id: 32,
-  state: SupportIssueState.CREATED,
-  type: SupportIssueType.GENERIC_ISSUE,
-  reason: SupportIssueReason.OTHER,
-  name: 'John Smith',
-  created: new Date('2021-10-10T10:10:10'),
-  messages: [
-    {
-      id: 0,
-      message: 'Hello, I have a question',
-      file: undefined,
-      created: new Date('2021-10-10T10:10:10'),
-      author: 'Customer',
-      status: 'received',
-      reactions: [{ emoji: '👍', users: ['Customer'] }],
-    },
-    {
-      id: 1,
-      message: 'Hi',
-      file: undefined,
-      created: new Date('2021-10-10T10:10:10'),
-      author: 'agent',
-      status: 'received',
-    },
-    {
-      id: 3,
-      message: 'How can I help you, today?',
-      file: {
-        name: 'image.jpg',
-        url: 'https://gratisography.com/wp-content/uploads/2024/01/gratisography-cyber-kitty-800x525.jpg',
-        type: 'image/jpeg',
-        size: 123456,
-      },
-      created: new Date('2021-10-10T10:10:10'),
-      author: 'agent',
-      status: 'received',
-    },
-    {
-      id: 4,
-      message: 'Hello',
-      file: undefined,
-      created: new Date('2021-10-10T10:10:10'),
-      author: 'Customer',
-      status: 'received',
-    },
-    {
-      id: 5,
-      message: '',
-      file: {
-        name: 'image.jpg',
-        url: 'https://assistanteplus.fr/wp-content/uploads/2022/04/chat-midjourney.webp',
-        type: 'image/webp',
-        size: 123456,
-      },
-      created: new Date('2021-10-10T10:10:10'),
-      author: 'Customer',
-      status: 'failed',
-      replyTo: 3,
-    },
-  ],
-};
 
 const emojiSet = ['👍', '❤️', '😂', '😮', '😢', '👏'];
 
@@ -89,27 +20,29 @@ export default function ChatScreen(): JSX.Element {
   const { supportIssue, isLoading, isError, preFetch, handleEmojiClick } = useSupportChat();
 
   const [clickedMessage, setClickedMessage] = useState<SupportMessage>();
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [replyToMessage, setReplyToMessage] = useState<SupportMessage>();
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const [urlParams, setUrlParams] = useSearchParams();
-  const [typeParam, setTypeParam] = useState(() => {
+  const [typeParam, setTypeParam] = useState<SupportIssueType>(() => {
     const savedState = sessionStorage.getItem('typeParam');
     return savedState ? JSON.parse(savedState) : '';
   });
 
   useEffect(() => {
     const param = urlParams.get('type') || typeParam;
-    if (!param) {
+    const isValidParam = Object.values(SupportIssueType).includes(param as SupportIssueType);
+
+    if (!param || !isValidParam) {
       if (!isLoading && !isError && !supportIssue) {
         navigate('/support/issue', { replace: true });
         return;
       }
     } else {
       if (param !== typeParam) {
-        setTypeParam(param);
+        setTypeParam(param as SupportIssueType);
         sessionStorage.setItem('typeParam', JSON.stringify(param));
       }
 
@@ -128,9 +61,9 @@ export default function ChatScreen(): JSX.Element {
     if (supportIssue?.messages && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [supportIssue?.messages]);
+  }, [supportIssue?.messages.length]);
 
-  const handleChatBubbleClick = (e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessage) => {
+  const onChatBubbleClick = (e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessage) => {
     if (!e) {
       setClickedMessage(undefined);
       return;
@@ -141,7 +74,7 @@ export default function ChatScreen(): JSX.Element {
     setClickedMessage(message);
   };
 
-  const onHandleEmojiClick = (messageId: number, emoji: string, e?: React.MouseEvent<HTMLDivElement>) => {
+  const onEmojiClick = (messageId: number, emoji: string, e?: React.MouseEvent<HTMLDivElement>) => {
     e?.stopPropagation();
     handleEmojiClick(messageId, emoji);
     setClickedMessage(undefined);
@@ -166,8 +99,8 @@ export default function ChatScreen(): JSX.Element {
                   replyToMessage={
                     message.replyTo ? supportIssue.messages.find((m) => m.id === message.replyTo) : undefined
                   }
-                  onHandleEmojiClick={onHandleEmojiClick}
-                  onClick={(e) => handleChatBubbleClick(e, message)}
+                  onEmojiClick={onEmojiClick}
+                  onClick={(e) => onChatBubbleClick(e, message)}
                   {...message}
                 />
               );
@@ -183,70 +116,12 @@ export default function ChatScreen(): JSX.Element {
                 setReplyToMessage(message);
                 setClickedMessage(undefined);
               }}
-              onHandleEmojiClick={onHandleEmojiClick}
+              onEmojiClick={onEmojiClick}
             />
           )}
         </div>
       )}
     </Layout>
-  );
-}
-
-interface ChatBubbleMenuProps {
-  menuPosition: { top: number; left: number };
-  clickedMessage: SupportMessage;
-  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessage | undefined>>;
-  onHandleEmojiClick: (messageId: number, emoji: string) => void;
-}
-
-function ChatBubbleMenu({
-  menuPosition,
-  clickedMessage,
-  setReplyToMessage,
-  onHandleEmojiClick,
-}: ChatBubbleMenuProps): JSX.Element {
-  const { translate } = useSettingsContext();
-
-  return (
-    <div
-      style={{
-        top: menuPosition.top,
-        left: menuPosition.left,
-        transform: `${menuPosition.left > window.innerWidth / 2 ? 'translateX(-100%)' : 'translateX(0)'}
-        ${menuPosition.top > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)'}`,
-      }}
-      className="absolute pointer-events-none"
-    >
-      <div className="flex flex-row border border-dfxGray-400 shadow-md z-10 bg-white rounded-full overflow-clip h-10 mb-1 pointer-events-auto">
-        {emojiSet.map((emoji, index) => (
-          <button
-            key={index}
-            className="hover:bg-dfxGray-300 w-10 text-lg flex items-center justify-center"
-            onClick={() => clickedMessage.id !== undefined && onHandleEmojiClick(clickedMessage.id, emoji)}
-          >
-            {emoji}
-          </button>
-        ))}
-      </div>
-      <div className="w-36 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip text-dfxBlue-800 pointer-events-auto">
-        <div className="flex flex-col divide-y-0.5 divide-dfxGray-400 items-start bg-dfxGray-100 w-36">
-          <button
-            className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-            onClick={() => {
-              console.log('Copy');
-            }}
-          >
-            {translate('general/actions', 'Copy')}
-          </button>
-          <button
-            className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-            onClick={() => setReplyToMessage(clickedMessage)}
-          >
-            {translate('general/actions', 'Reply')}
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -277,19 +152,20 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
       const newFiles = await Promise.all(
         Array.from(files).map(async (file) => {
           const base64File = await toBase64(file);
+          if (!base64File) return;
+
           return {
             file: base64File,
             name: file.name,
-            url: URL.createObjectURL(file),
             type: file.type,
             size: file.size,
+            url: URL.createObjectURL(file),
           };
         }),
       );
 
-      setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles]);
-
-      // Clear the input value to allow re-selecting the same file
+      const validFiles = newFiles.filter((file): file is DataFile => !!file);
+      setSelectedFiles((prevFiles) => [...prevFiles, ...validFiles]);
       setTimeout(() => (e.target.value = ''), 100);
     }
   };
@@ -404,31 +280,34 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
 interface ChatBubbleProps extends SupportMessage {
   hasHeader: boolean;
   replyToMessage?: SupportMessage;
-  onHandleEmojiClick?: (messageId: number, emoji: string, e?: React.MouseEvent<HTMLDivElement>) => void;
   onClick?: (e?: React.MouseEvent<HTMLDivElement>) => void;
+  onEmojiClick?: (messageId: number, emoji: string, e?: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 function ChatBubble({
   id,
   message,
+  fileUrl,
   file,
-  created: date,
-  author: sender,
+  created,
+  author,
   status,
   reactions,
   hasHeader,
   replyToMessage,
-  onHandleEmojiClick,
   onClick,
+  onEmojiClick,
 }: ChatBubbleProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { loadFileData } = useSupportChat();
 
-  const [selectedFile, setSelectedFile] = useState<DataFile | null>(null);
+  const [selectedFile, setSelectedFile] = useState<DataFile | null>(null); // TODO: Make this boolean!!]
+  const [isLoadingFile, setIsLoadingFile] = useState(false);
+  const [error, setError] = useState<string>();
 
   const handlePreview = (e: React.MouseEvent<HTMLImageElement | HTMLVideoElement | HTMLDivElement>, file: DataFile) => {
     e.stopPropagation();
-    onClick && onClick(undefined);
+    onClick && onClick(undefined); // TODO: Do we need this?
 
     !selectedFile && setSelectedFile(file);
   };
@@ -436,11 +315,15 @@ function ChatBubble({
   const loadFile = async (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
 
-    if (!id || !file) return;
-    await loadFileData(id, file);
+    if (!id || !fileUrl) return;
+    setIsLoadingFile(true);
+    loadFileData(id, fileUrl)
+      .catch((e: ApiError) => setError('Download failed'))
+      .finally(() => setIsLoadingFile(false));
   };
 
-  const isUser = sender === 'Customer';
+  const isUser = author === 'Customer';
+  const hasFile = fileUrl || !!file;
   const fileType = file?.type?.split('/')[0];
 
   return (
@@ -450,11 +333,11 @@ function ChatBubble({
     >
       <div
         onClick={onClick}
-        className={`flex flex-col max-w-xs rounded-lg overflow-clip pb-1.5 ${
-          sender === 'Customer'
+        className={`flex flex-col max-w-xs rounded-lg overflow-clip pb-1.5 gap-1.5 ${
+          author === 'Customer'
             ? 'bg-[#24A1DE] text-white rounded-br-none'
             : 'bg-dfxGray-400 text-black rounded-bl-none'
-        } ${!fileType || !!replyToMessage ? 'pt-1.5 gap-1.5' : 'gap-1.5'}`}
+        } ${!fileUrl || !!replyToMessage ? 'pt-1.5' : ''}`}
       >
         {replyToMessage && (
           <div className="flex flex-row bg-dfxGray-300/20 rounded-md overflow-clip mx-1.5">
@@ -475,20 +358,24 @@ function ChatBubble({
             </div>
           </div>
         )}
-        {hasHeader && !isUser && !file && <p className="font-semibold text-sm text-dfxRed-150 px-3">{sender}</p>}
-        {fileType &&
-          (file.size === 0 ? (
+        {hasHeader && !isUser && !file && <p className="font-semibold text-sm text-dfxRed-150 px-3">{author}</p>}
+        {/* TODO: Improve the control flow */}
+        {hasFile &&
+          (!file ? (
             <div className="flex items-center mb-1 p-2 cursor-pointer" onClick={(e) => loadFile(e)}>
               <div className="flex justify-center items-center w-12 h-12 bg-white rounded-md">
-                <HiOutlinePaperClip className="text-dfxGray-700 text-2xl" />
+                {isLoadingFile ? (
+                  <StyledLoadingSpinner size={SpinnerSize.MD} variant={SpinnerVariant.LIGHT_MODE} />
+                ) : (
+                  <HiOutlineDownload className="text-dfxGray-700 text-2xl" />
+                )}
               </div>
               <div className="flex flex-col mx-2">
                 <span className="text-white text-sm font-semibold">
-                  {blankedAddress(file.name, { displayLength: 20 })}
+                  {fileUrl && blankedAddress(fileUrl.split('/').pop() ?? fileUrl, { displayLength: 20 })}
                 </span>
                 <span className="text-dfxGray-400 text-xs">
-                  {(fileType === 'application' ? file.type.split('/')[1] : fileType).toUpperCase()} ·{' '}
-                  {formatBytes(file.size)}
+                  {error ?? translate('general/actions', isLoadingFile ? 'Downloading...' : 'Download')}
                 </span>
               </div>
             </div>
@@ -539,8 +426,9 @@ function ChatBubble({
                   {blankedAddress(file.name, { displayLength: 20 })}
                 </span>
                 <span className="text-dfxGray-400 text-xs">
-                  {(fileType === 'application' ? file.type.split('/')[1] : fileType).toUpperCase()} ·{' '}
-                  {formatBytes(file.size)}
+                  {fileType &&
+                    (fileType === 'application' ? file.type.split('/')[1] ?? fileType : fileType).toUpperCase()}{' '}
+                  · {formatBytes(file.size)}
                 </span>
               </div>
             </a>
@@ -602,7 +490,7 @@ function ChatBubble({
             {reactions?.map((reaction, index) => (
               <div
                 key={index}
-                onClick={(e) => id && onHandleEmojiClick && onHandleEmojiClick(id, reaction.emoji, e)}
+                onClick={(e) => id && onEmojiClick && onEmojiClick(id, reaction.emoji, e)}
                 className="flex flex-row gap-1.5 mr-1 rounded-full px-2 py-0.5 bg-white/20 text-sm cursor-pointer"
               >
                 <span>{reaction.emoji}</span>
@@ -611,7 +499,7 @@ function ChatBubble({
             ))}
           </div>
           <div className="flex flex-row text-xs italic text-end text-gray-500">
-            {new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+            {new Date(created).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
             {/* TODO: Cover all states with icons */}
             {status === 'failed' ? (
               <MdErrorOutline className="inline-block text-base ml-1 mb-0.5" />
@@ -621,6 +509,56 @@ function ChatBubble({
               <RiCheckDoubleFill className="inline-block text-base ml-1 mb-0.5" />
             )}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ChatBubbleMenuProps {
+  menuPosition: { top: number; left: number };
+  clickedMessage: SupportMessage;
+  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessage | undefined>>;
+  onEmojiClick: (messageId: number, emoji: string) => void;
+}
+
+function ChatBubbleMenu({
+  menuPosition,
+  clickedMessage,
+  setReplyToMessage,
+  onEmojiClick,
+}: ChatBubbleMenuProps): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  return (
+    <div
+      style={{
+        top: menuPosition.top,
+        left: menuPosition.left,
+        transform: `${menuPosition.left > window.innerWidth / 2 ? 'translateX(-100%)' : 'translateX(0)'}
+        ${menuPosition.top > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)'}`,
+      }}
+      className="absolute pointer-events-none"
+    >
+      <div className="flex flex-row border border-dfxGray-400 shadow-md z-10 bg-white rounded-full overflow-clip h-10 mb-1 pointer-events-auto">
+        {emojiSet.map((emoji, index) => (
+          <button
+            key={index}
+            className="hover:bg-dfxGray-300 w-10 text-lg flex items-center justify-center"
+            onClick={() => clickedMessage.id !== undefined && onEmojiClick(clickedMessage.id, emoji)}
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
+      <div className="w-36 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip text-dfxBlue-800 pointer-events-auto">
+        <div className="flex flex-col divide-y-0.5 divide-dfxGray-400 items-start bg-dfxGray-100 w-36">
+          <button
+            className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
+            onClick={() => setReplyToMessage(clickedMessage)}
+          >
+            {translate('general/actions', 'Reply')}
+          </button>
         </div>
       </div>
     </div>
