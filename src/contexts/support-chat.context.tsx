@@ -91,7 +91,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
 
   useEffect(() => {
     if (!supportIssue) return;
-    const interval = setTimeout(() => fetchLatestMessages(), 10000);
+    const interval = setTimeout(() => fetchLatestMessages(), 5000);
     return () => clearInterval(interval);
   }, [supportIssue]);
 
@@ -293,7 +293,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     return --currUnsettledMessageId.current;
   }
 
-  // --- API FUNCTIONS --- //
+  // --- API FUNCTIONS --- // TODO: add to packages and import from there
 
   async function createIssue(request: CreateSupportIssue): Promise<SupportIssue> {
     return call<SupportIssue>({

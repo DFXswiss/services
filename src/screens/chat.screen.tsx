@@ -70,8 +70,9 @@ export default function ChatScreen(): JSX.Element {
     }
 
     e.stopPropagation();
-    setMenuPosition({ top: e.clientY, left: e.clientX });
-    setClickedMessage(message);
+    // TODO: Uncomment to enable replies & reactions (feature not yet available)
+    // setMenuPosition({ top: e.clientY, left: e.clientX });
+    // setClickedMessage(message);
   };
 
   const onEmojiClick = (messageId: number, emoji: string, e?: React.MouseEvent<HTMLDivElement>) => {
@@ -454,7 +455,8 @@ function ChatBubble({
                   </div>
                 )}
               </div>
-              <div className="flex mt-4 items-center justify-center">
+              {/* TODO: Enable direct download */}
+              {/* <div className="flex mt-4 items-center justify-center">
                 <a
                   className="bg-white/30 text-white pl-4 pr-6 py-2 rounded-full font-semibold cursor-pointer"
                   href={selectedFile.url}
@@ -464,7 +466,7 @@ function ChatBubble({
                     {translate('general/actions', 'Download')}
                   </div>
                 </a>
-              </div>
+              </div> */}
             </div>
           </div>
         )}
