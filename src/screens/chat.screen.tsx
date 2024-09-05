@@ -19,7 +19,7 @@ const emojiSet = ['👍', '❤️', '😂', '😮', '😢', '👏'];
 export default function ChatScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
-  const { supportIssue, isLoading, isError, preFetch, handleEmojiClick } = useSupportChat();
+  const { supportIssue, isLoading, isError, preFetch, handleEmojiClick, setSync } = useSupportChat();
 
   const [clickedMessage, setClickedMessage] = useState<SupportMessage>();
   const [replyToMessage, setReplyToMessage] = useState<SupportMessage>();
@@ -34,7 +34,7 @@ export default function ChatScreen(): JSX.Element {
   });
 
   useEffect(() => {
-    const param = urlParams.get('type') || typeParam;
+    const param = urlParams.get('type') ?? typeParam;
     const isValidParam = Object.values(SupportIssueType).includes(param as SupportIssueType);
 
     if (!param || !isValidParam) {
@@ -43,21 +43,22 @@ export default function ChatScreen(): JSX.Element {
         return;
       }
     } else {
+      setSync(true);
+      preFetch(param as SupportIssueType);
+
       if (param !== typeParam) {
         setTypeParam(param as SupportIssueType);
         sessionStorage.setItem('typeParam', JSON.stringify(param));
       }
-
-      if (urlParams.has('typeParam')) {
-        urlParams.delete('typeParam');
-        setUrlParams(urlParams);
-      }
     }
-  }, []);
 
-  useEffect(() => {
-    if (!isLoading && typeParam && typeParam != supportIssue?.type) preFetch(typeParam);
-  }, [typeParam]);
+    if (urlParams.has('type')) {
+      urlParams.delete('type');
+      setUrlParams(urlParams);
+    }
+
+    return () => setSync(false);
+  }, []);
 
   useEffect(() => {
     if (supportIssue?.messages && messagesEndRef.current) {

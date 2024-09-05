@@ -73,6 +73,7 @@ interface SupportChatInterface {
   submitMessage: (message: string, files: File[], replyToMessage?: SupportMessage) => Promise<void>;
   handleEmojiClick: (messageId: number, emoji: string) => void;
   loadFileData: (messageId: number, fileUrl: string) => Promise<void>;
+  setSync: (sync: boolean) => void;
 }
 
 const SupportChat = createContext<SupportChatInterface>(undefined as any);
@@ -88,14 +89,17 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isError, setIsError] = useState<string>();
+  const [sync, setSync] = useState(false);
 
   useEffect(() => {
-    if (!supportIssue) return;
-    const interval = setTimeout(() => fetchLatestMessages(), 5000);
+    const interval = setTimeout(() => sync && syncSupportIssue(), 5000);
     return () => clearInterval(interval);
-  }, [supportIssue]);
+  }, [supportIssue, sync]);
 
   async function preFetch(type: SupportIssueType): Promise<void> {
+    if (!type || type === supportIssue?.type) return;
+
+    setSupportIssue(undefined);
     setIsLoading(true);
     setIsError(undefined);
 
@@ -105,7 +109,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       .finally(() => setIsLoading(false));
   }
 
-  async function fetchLatestMessages(): Promise<void> {
+  async function syncSupportIssue(): Promise<void> {
     if (!supportIssue || isLoading || isSyncing) return;
 
     setIsSyncing(true);
@@ -233,6 +237,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       submitMessage,
       handleEmojiClick,
       loadFileData,
+      setSync,
     }),
     [supportIssue, isLoading, isError, call],
   );

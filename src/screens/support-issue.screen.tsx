@@ -239,7 +239,7 @@ export default function SupportIssueScreen(): JSX.Element {
       }
 
       await createSupportIssue(request, data.file)
-        .then(() => navigate(`/support/chat`))
+        .then(() => navigate(`/support/chat?type=${data.type}`))
         .catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
