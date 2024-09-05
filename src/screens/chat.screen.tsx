@@ -393,7 +393,20 @@ interface ChatBubbleFileEmbedProps {
   file?: DataFile;
 }
 
-// TODO: Refactor / clean up
+const enum FileType {
+  IMAGE,
+  VIDEO,
+  AUDIO,
+  DOCUMENT,
+}
+
+const FileTypeMap: { [key: string]: FileType } = {
+  image: FileType.IMAGE,
+  video: FileType.VIDEO,
+  audio: FileType.AUDIO,
+  application: FileType.DOCUMENT,
+};
+
 function ChatBubbleFileEmbed({ messageId, fileUrl, file }: ChatBubbleFileEmbedProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { loadFileData } = useSupportChat();
@@ -402,95 +415,78 @@ function ChatBubbleFileEmbed({ messageId, fileUrl, file }: ChatBubbleFileEmbedPr
   const [isLoadingFile, setIsLoadingFile] = useState(false);
   const [error, setError] = useState<string>();
 
-  const handlePreview = (e: React.MouseEvent<HTMLImageElement | HTMLVideoElement | HTMLDivElement>) => {
+  const isLoaded = !!file;
+  const hasFile = isLoaded || !!fileUrl;
+  const fileType = isLoaded && (FileTypeMap[file.type.split('/')[0]] ?? FileType.DOCUMENT);
+
+  if (!hasFile) return <></>;
+
+  function onClick(e: React.MouseEvent<any>) {
     e.stopPropagation();
-    // onClick && onClick(undefined); // TODO: Do we need this?
 
-    setShowPreview(true);
-  };
+    if (isLoaded) {
+      fileType === FileType.DOCUMENT ? window.open(file.url, '_blank') : setShowPreview(true);
+    } else {
+      setIsLoadingFile(true);
+      loadFileData(messageId, fileUrl ?? '')
+        .catch((e: ApiError) => setError('Download failed'))
+        .finally(() => setIsLoadingFile(false));
+    }
+  }
 
-  const loadFile = async (e: React.MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation();
+  const icon = isLoadingFile ? (
+    <StyledLoadingSpinner size={SpinnerSize.MD} variant={SpinnerVariant.LIGHT_MODE} />
+  ) : !isLoaded ? (
+    <HiOutlineDownload />
+  ) : fileType === FileType.AUDIO ? (
+    <IoMusicalNotes />
+  ) : (
+    <HiOutlinePaperClip />
+  );
 
-    if (!fileUrl) return;
-    setIsLoadingFile(true);
-    loadFileData(messageId, fileUrl)
-      .catch((e: ApiError) => setError('Download failed'))
-      .finally(() => setIsLoadingFile(false));
-  };
+  const label = file?.name ?? fileUrl?.split('/').pop() ?? fileUrl ?? '';
 
-  const fileType = file?.type?.split('/')[0];
+  const description =
+    error ?? isLoadingFile
+      ? translate('general/actions', 'Downloading...')
+      : !isLoaded
+      ? translate('general/actions', 'Download')
+      : `${(file.type.split('/')[1] ?? file.type.split('/')[0] ?? file.type).toUpperCase()} · ${formatBytes(
+          file.size,
+        )}`;
 
   return (
     <>
-      {!file ? (
-        <div className="flex items-center mb-1 p-2 cursor-pointer" onClick={(e) => loadFile(e)}>
-          <div className="flex justify-center items-center w-12 h-12 bg-white rounded-md">
-            {isLoadingFile ? (
-              <StyledLoadingSpinner size={SpinnerSize.MD} variant={SpinnerVariant.LIGHT_MODE} />
-            ) : (
-              <HiOutlineDownload className="text-dfxGray-700 text-2xl" />
-            )}
-          </div>
-          <div className="flex flex-col mx-2">
-            <span className="text-sm font-semibold">
-              {fileUrl && blankedAddress(fileUrl.split('/').pop() ?? fileUrl, { displayLength: 20 })}
-            </span>
-            <span className="text-xs font-medium opacity-60">
-              {error ?? translate('general/actions', isLoadingFile ? 'Downloading...' : 'Download')}
-            </span>
-          </div>
-        </div>
-      ) : fileType === 'image' ? (
+      {isLoaded && fileType === FileType.IMAGE ? (
         <img
           src={file.url}
           alt={file.name}
           className="rounded-sm mb-1 max-h-40 object-cover cursor-pointer"
           style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
-          onClick={(e) => handlePreview(e)}
+          onClick={onClick}
         />
-      ) : fileType === 'video' ? (
+      ) : isLoaded && fileType === FileType.VIDEO ? (
         <video
           controls
           className="rounded-sm mb-1 max-h-40 object-cover cursor-pointer"
           style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
-          onClick={(e) => handlePreview(e)}
+          onClick={onClick}
         >
           <source src={file.url} type={file.type} />
           {translate('general/messages', 'Your browser does not support the video tag.')}
         </video>
-      ) : fileType === 'audio' ? (
-        <div className="flex items-center mb-1 p-2 cursor-pointer" onClick={(e) => handlePreview(e)}>
-          <div className="flex justify-center items-center w-12 h-12 bg-white rounded-md">
-            <IoMusicalNotes className="text-dfxGray-700 text-2xl" />
+      ) : (
+        <div className="flex items-center mb-1 p-2 cursor-pointer" onClick={onClick}>
+          <div className="flex justify-center items-center w-12 h-12 bg-white text-dfxGray-700 text-2xl rounded-md">
+            {icon}
           </div>
           <div className="flex flex-col mx-2">
-            <span className="text-white text-sm font-semibold">{blankedAddress(file.name, { displayLength: 20 })}</span>
-            <span className="text-dfxGray-400 text-xs">
-              {file.type.split('/')[1].toUpperCase() ?? file.type} · {formatBytes(file.size)}
-            </span>
+            <span className="text-sm font-semibold">{blankedAddress(label, { displayLength: 20 })}</span>
+            <span className="text-xs font-medium opacity-60">{description}</span>
           </div>
         </div>
-      ) : (
-        <a
-          href={file.url}
-          target="_blank"
-          className="flex items-center mb-1 p-2 cursor-pointer"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex justify-center items-center w-12 h-12 bg-white rounded-md">
-            <HiOutlinePaperClip className="text-dfxGray-700 text-2xl" />
-          </div>
-          <div className="flex flex-col mx-2">
-            <span className="text-white text-sm font-semibold">{blankedAddress(file.name, { displayLength: 20 })}</span>
-            <span className="text-dfxGray-400 text-xs">
-              {fileType && (fileType === 'application' ? file.type.split('/')[1] ?? fileType : fileType).toUpperCase()}{' '}
-              · {formatBytes(file.size)}
-            </span>
-          </div>
-        </a>
       )}
-      {showPreview && !!file && (
+      {showPreview && isLoaded && (
         <div
           className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50"
           onClick={(e) => e.stopPropagation()}
@@ -506,18 +502,17 @@ function ChatBubbleFileEmbed({ messageId, fileUrl, file }: ChatBubbleFileEmbedPr
           </button>
           <div className="relative m-4 pointer-events-auto">
             <div className="rounded-sm overflow-clip">
-              {file.type.startsWith('image') && <img src={file.url} alt={file.name} className="max-h-96" />}
-              {file.type.startsWith('video') && (
+              {fileType === FileType.IMAGE ? (
+                <img src={file.url} alt={file.name} className="max-h-96" />
+              ) : fileType === FileType.VIDEO ? (
                 <video controls className="max-h-96">
                   <source src={file.url} type={file.type} />
                 </video>
-              )}
-              {file.type.startsWith('audio') && (
+              ) : fileType === FileType.AUDIO ? (
                 <audio controls className="max-h-96">
                   <source src={file.url} type={file.type} />
                 </audio>
-              )}
-              {file.type.startsWith('application') && (
+              ) : (
                 <div className="text-center">
                   <HiOutlinePaperClip className="text-dfxGray-700 text-4xl mx-auto mb-4" />
                   <p className="text-lg font-semibold">{file.name}</p>
