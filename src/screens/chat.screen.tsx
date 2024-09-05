@@ -393,11 +393,11 @@ interface ChatBubbleFileEmbedProps {
   file?: DataFile;
 }
 
-const enum FileType {
-  IMAGE,
-  VIDEO,
-  AUDIO,
-  DOCUMENT,
+enum FileType {
+  IMAGE = 'Image',
+  VIDEO = 'Video',
+  AUDIO = 'Audio',
+  DOCUMENT = 'Document',
 }
 
 const FileTypeMap: { [key: string]: FileType } = {
@@ -405,6 +405,7 @@ const FileTypeMap: { [key: string]: FileType } = {
   video: FileType.VIDEO,
   audio: FileType.AUDIO,
   application: FileType.DOCUMENT,
+  text: FileType.DOCUMENT,
 };
 
 function ChatBubbleFileEmbed({ messageId, fileUrl, file }: ChatBubbleFileEmbedProps): JSX.Element {
@@ -417,7 +418,7 @@ function ChatBubbleFileEmbed({ messageId, fileUrl, file }: ChatBubbleFileEmbedPr
 
   const isLoaded = !!file;
   const hasFile = isLoaded || !!fileUrl;
-  const fileType = isLoaded && (FileTypeMap[file.type.split('/')[0]] ?? FileType.DOCUMENT);
+  const fileType = (isLoaded && FileTypeMap[file?.type.split('/')[0]]) || FileType.DOCUMENT;
 
   if (!hasFile) return <></>;
 
@@ -444,16 +445,14 @@ function ChatBubbleFileEmbed({ messageId, fileUrl, file }: ChatBubbleFileEmbedPr
     <HiOutlinePaperClip />
   );
 
-  const label = file?.name ?? fileUrl?.split('/').pop() ?? fileUrl ?? '';
+  const label = file?.name ?? fileUrl?.split('/').pop() ?? fileUrl ?? fileType;
 
   const description =
     error ?? isLoadingFile
       ? translate('general/actions', 'Downloading...')
       : !isLoaded
       ? translate('general/actions', 'Download')
-      : `${(file.type.split('/')[1] ?? file.type.split('/')[0] ?? file.type).toUpperCase()} · ${formatBytes(
-          file.size,
-        )}`;
+      : `${fileType} · ${formatBytes(file.size)}`;
 
   return (
     <>
