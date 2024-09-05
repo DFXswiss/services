@@ -18,6 +18,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
+import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -238,6 +239,7 @@ const recommendedWallets = ['Frankencoin', 'Cake Wallet', 'Wallet of Satoshi', '
 
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
+  const { params } = useAppHandlingContext();
   const { navigate } = useNavigation();
   const { width } = useWindowContext();
 
@@ -268,7 +270,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const selectedEthereumUriAsset = useWatch({ control, name: 'asset' });
 
   useEffect(() => {
-    const lightningParam = urlParams.get('lightning');
+    const lightningParam = params?.lightning;
 
     let apiUrl: string | undefined;
     if (lightningParam) {
