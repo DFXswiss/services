@@ -20,6 +20,7 @@ import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useAppParams } from 'src/hooks/app-params.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, formatLocationAddress, url } from 'src/util/utils';
@@ -239,6 +240,7 @@ const recommendedWallets = ['Frankencoin', 'Cake Wallet', 'Wallet of Satoshi', '
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
+  const { lightning } = useAppParams();
   const { width } = useWindowContext();
 
   const [urlParams, setUrlParams] = useSearchParams();
@@ -268,7 +270,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const selectedEthereumUriAsset = useWatch({ control, name: 'asset' });
 
   useEffect(() => {
-    const lightningParam = urlParams.get('lightning');
+    const lightningParam = lightning;
 
     let apiUrl: string | undefined;
     if (lightningParam) {
