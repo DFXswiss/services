@@ -40,6 +40,7 @@
     "Area code and number required": "Indicatif régional et numéro requis",
     "IBAN not allowed": "IBAN non autorisé",
     "IBAN country not allowed": "Code pays de l'IBAN non autorisé",
+    "Allowed formats: PDF, JPG, JPEG, PNG": "Formats autorisés : PDF, JPG, JPEG, PNG",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer. Si le problème persiste, veuillez contacter notre service d'assistance."
   },
@@ -65,6 +66,7 @@
     "Document upload": "Téléchargement de documents",
     "Legal entity": "Personne juridique",
     "Nationality": "Nationalité",
+    "Nationality (according to identification document)": "Nationalité (selon le document d'identification)",
     "Shareholder register": "Registre des actionnaires",
     "Commercial register": "Registre du commerce",
     "Signatory power": "Pouvoir de signature",

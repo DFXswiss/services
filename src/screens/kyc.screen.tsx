@@ -902,7 +902,7 @@ function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps):
       <StyledVerticalStack gap={6} full center>
         <StyledVerticalStack gap={2} full center>
           <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-            {translate('screens/kyc', 'Nationality')}
+            {translate('screens/kyc', 'Nationality (according to identification document)')}
           </p>
           {isCountryLoading ? (
             <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -958,7 +958,7 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
     handleSubmit,
     resetField,
     formState: { isValid, errors },
-  } = useForm<FormDataFile>({ mode: 'onTouched' });
+  } = useForm<FormDataFile>({ mode: 'onChange' });
 
   async function onSubmit(data: FormDataFile) {
     if (!step.session) return;
@@ -981,7 +981,17 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
   }
 
   const rules = Utils.createRules({
-    file: Validations.Required,
+    file: [
+      Validations.Required,
+      Validations.Custom((file) =>
+        file?.type === 'application/pdf' ||
+        file?.type === 'image/png' ||
+        file?.type === 'image/jpg' ||
+        file?.type === 'image/jpeg'
+          ? true
+          : 'file_type',
+      ),
+    ],
   });
 
   return (
