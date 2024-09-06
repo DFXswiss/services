@@ -958,7 +958,7 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
     handleSubmit,
     resetField,
     formState: { isValid, errors },
-  } = useForm<FormDataFile>({ mode: 'onTouched' });
+  } = useForm<FormDataFile>({ mode: 'onChange' });
 
   async function onSubmit(data: FormDataFile) {
     if (!step.session) return;
@@ -981,7 +981,12 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
   }
 
   const rules = Utils.createRules({
-    file: Validations.Required,
+    file: [
+      Validations.Required,
+      Validations.Custom((file) =>
+        file?.type === 'application/pdf' || file?.type.startsWith('image/') ? true : 'type',
+      ),
+    ],
   });
 
   return (
