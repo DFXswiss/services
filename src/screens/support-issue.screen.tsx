@@ -267,7 +267,13 @@ export default function SupportIssueScreen(): JSX.Element {
     investmentDate: Validations.Required,
     fundOrigin: Validations.Required,
     file: Validations.Custom((file) =>
-      !file || file.type === 'application/pdf' || file.type.startsWith('image/') ? true : 'type',
+      !file ||
+      file.type === 'application/pdf' ||
+      file.type === 'image/png' ||
+      file.type === 'image/jpg' ||
+      file.type === 'image/jpeg'
+        ? true
+        : 'file_type',
     ),
   });
 

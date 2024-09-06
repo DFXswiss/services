@@ -40,7 +40,7 @@
     "Area code and number required": "Prefisso e numero richiesto",
     "IBAN not allowed": "IBAN non consentito",
     "IBAN country not allowed": "Codice paese IBAN non consentito",
-    "Only PDF, JPG, PNG allowed": "Sono consentiti solo PDF, JPG, PNG",
+    "Allowed formats: PDF, JPG, JPEG, PNG": "Formati consentiti: PDF, JPG, JPEG, PNG",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto."
   },

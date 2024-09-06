@@ -24,7 +24,7 @@ const ValidationErrors: Record<string, string> = {
   code_and_number: 'Area code and number required',
   iban_blocked: 'IBAN not allowed',
   iban_country_blocked: 'IBAN country not allowed',
-  type: 'Only PDF, JPG, PNG allowed',
+  file_type: 'Allowed formats: PDF, JPG, JPEG, PNG',
 };
 
 interface SettingsInterface {

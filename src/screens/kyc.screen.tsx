@@ -984,7 +984,12 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
     file: [
       Validations.Required,
       Validations.Custom((file) =>
-        file?.type === 'application/pdf' || file?.type.startsWith('image/') ? true : 'type',
+        file?.type === 'application/pdf' ||
+        file?.type === 'image/png' ||
+        file?.type === 'image/jpg' ||
+        file?.type === 'image/jpeg'
+          ? true
+          : 'file_type',
       ),
     ],
   });
