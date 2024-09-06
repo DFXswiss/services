@@ -181,11 +181,10 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
   }
 
   async function loadFileData(messageId: number, fileUrl: string): Promise<void> {
-    const fileName = fileUrl.split('/').pop();
-    if (!fileName) return;
+    if (!supportIssue) return;
 
-    return fetchFileData(fileName).then((blobContent) => {
-      const newFile = mapBlobContentToDataFile(fileName, blobContent);
+    return fetchFileData(supportIssue.id, messageId).then((blobContent) => {
+      const newFile = mapBlobContentToDataFile(blobContent, fileUrl.split('/').pop());
       setSupportIssue((supportIssue) => {
         if (!supportIssue) return supportIssue;
         const message = supportIssue.messages.find((m) => m.id === messageId);
@@ -281,13 +280,13 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     };
   }
 
-  function mapBlobContentToDataFile(fileName: string, blobContent: BlobContent): DataFile {
+  function mapBlobContentToDataFile(blobContent: BlobContent, fileName?: string): DataFile {
     const byteArray = new Uint8Array(blobContent.data.data);
     const blob = new Blob([byteArray], { type: blobContent.contentType });
 
     return {
       file: blobContent.data.data,
-      name: fileName,
+      name: fileName || 'file',
       type: blobContent.contentType,
       size: blob.size,
       url: URL.createObjectURL(blob),
@@ -341,9 +340,9 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     });
   }
 
-  async function fetchFileData(name: string): Promise<BlobContent> {
+  async function fetchFileData(issueId: number, messageId: number): Promise<BlobContent> {
     return call<BlobContent>({
-      url: `support/issue/file?name=${name}`,
+      url: `support/issue/${issueId}/message/${messageId}/file`,
       method: 'GET',
     });
   }
