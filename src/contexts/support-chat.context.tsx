@@ -21,6 +21,7 @@ export interface SupportMessageDto {
   created: Date;
   message: string;
   fileUrl?: string;
+  fileName?: string;
 }
 
 export interface SupportIssueDto {
@@ -51,7 +52,6 @@ export interface SupportIssue extends SupportIssueDto {
 
 export interface DataFile {
   file: string;
-  name: string;
   type: string;
   size: number;
   url: string;
@@ -72,7 +72,7 @@ interface SupportChatInterface {
   createSupportIssue: (request: CreateSupportIssue, file?: File) => Promise<void>;
   submitMessage: (message: string, files: File[], replyToMessage?: SupportMessage) => Promise<void>;
   handleEmojiClick: (messageId: number, emoji: string) => void;
-  loadFileData: (messageId: number, fileUrl: string) => Promise<void>;
+  loadFileData: (messageId: number) => Promise<void>;
   setSync: (sync: boolean) => void;
 }
 
@@ -131,6 +131,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
         author: 'Customer',
         message: request.message,
         file: dataFile,
+        fileName: file?.name,
         created: new Date(),
         status: 'sent',
       });
@@ -156,16 +157,18 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
 
     const modFiles = numFiles !== 1 && hasText ? [...files, undefined] : files;
     modFiles.forEach(async (file: File | undefined, index) => {
+      const dataFile = file && (await mapFileToDataFile(file));
       const messageId = getNextUnsettledMessageId();
 
       const newMessage: SupportMessage = {
         id: messageId,
         author: 'Customer',
-        created: new Date(),
         message: index === modFiles.length - 1 ? message : '',
-        file: file && (await mapFileToDataFile(file)),
-        replyTo: index === 0 ? replyToMessage?.id : undefined,
+        file: dataFile,
+        fileName: file?.name,
+        created: new Date(),
         status: 'sent',
+        replyTo: index === 0 ? replyToMessage?.id : undefined,
       };
 
       setSupportIssue((supportIssue) => {
@@ -180,14 +183,24 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     });
   }
 
-  async function loadFileData(messageId: number, fileUrl: string): Promise<void> {
-    if (!supportIssue) return;
+  async function loadFileData(messageId: number): Promise<void> {
+    const message = supportIssue?.messages.find((m) => m.id === messageId);
+    if (!supportIssue || !message?.fileUrl || !message.fileName) throw new Error('Failed to load file data');
 
-    return fetchFileData(supportIssue.id, messageId).then((blobContent) => {
-      const newFile = mapBlobContentToDataFile(blobContent, fileUrl.split('/').pop());
+    return fetchFileData(supportIssue.id, message.id).then((blobContent) => {
+      const byteArray = new Uint8Array(blobContent.data.data);
+      const blob = new Blob([byteArray], { type: blobContent.contentType });
+
+      const newFile = {
+        file: blobContent.data.data,
+        name: message.fileName,
+        type: blobContent.contentType,
+        size: blob.size,
+        url: URL.createObjectURL(blob),
+      };
+
       setSupportIssue((supportIssue) => {
         if (!supportIssue) return supportIssue;
-        const message = supportIssue.messages.find((m) => m.id === messageId);
         if (message) message.file = newFile;
         return { ...supportIssue };
       });
@@ -267,29 +280,15 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     });
   }
 
-  async function mapFileToDataFile(file: File) {
+  async function mapFileToDataFile(file: File): Promise<DataFile | undefined> {
     const base64File = await toBase64(file);
     if (!base64File) return;
 
     return {
       file: base64File,
-      name: file.name,
       type: file.type,
       size: file.size,
       url: URL.createObjectURL(file),
-    };
-  }
-
-  function mapBlobContentToDataFile(blobContent: BlobContent, fileName?: string): DataFile {
-    const byteArray = new Uint8Array(blobContent.data.data);
-    const blob = new Blob([byteArray], { type: blobContent.contentType });
-
-    return {
-      file: blobContent.data.data,
-      name: fileName || 'file',
-      type: blobContent.contentType,
-      size: blob.size,
-      url: URL.createObjectURL(blob),
     };
   }
 
@@ -314,8 +313,8 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       data: {
         author: newMessage.author,
         message: newMessage.message,
-        file: newMessage.file && newMessage.file.file,
-        fileName: newMessage.file && newMessage.file.name,
+        file: newMessage.file?.file,
+        fileName: newMessage.fileName,
       },
     });
   }

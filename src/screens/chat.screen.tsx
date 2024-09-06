@@ -1,9 +1,8 @@
-import { ApiError, SupportIssueType } from '@dfx.swiss/react';
+import { SupportIssueType } from '@dfx.swiss/react';
 import { SpinnerSize, SpinnerVariant, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { BsReply } from 'react-icons/bs';
 import { HiOutlineDownload, HiOutlinePaperClip } from 'react-icons/hi';
-import { IoMusicalNotes } from 'react-icons/io5';
 import { MdAccessTime, MdErrorOutline, MdOutlineCancel, MdOutlineClose, MdSend } from 'react-icons/md';
 import { RiCheckFill } from 'react-icons/ri';
 import { useSearchParams } from 'react-router-dom';
@@ -97,14 +96,13 @@ export default function ChatScreen(): JSX.Element {
               const prevSender = index > 0 ? supportIssue.messages[index - 1].author : null;
               const isNewSender = prevSender !== message.author;
               return (
-                <>
+                <div key={message.id}>
                   {index > 0 &&
                     new Date(message.created).getDate() !==
                       new Date(supportIssue.messages[index - 1].created).getDate() && (
                       <DateTag date={message.created} />
                     )}
                   <ChatBubble
-                    key={message.id}
                     hasHeader={isNewSender}
                     replyToMessage={
                       message.replyTo ? supportIssue.messages.find((m) => m.id === message.replyTo) : undefined
@@ -113,7 +111,7 @@ export default function ChatScreen(): JSX.Element {
                     onClick={(e) => onChatBubbleClick(e, message)}
                     {...message}
                   />
-                </>
+                </div>
               );
             })}
             <div ref={messagesEndRef} />
@@ -311,7 +309,7 @@ interface ChatBubbleProps extends SupportMessage {
 function ChatBubble({
   id,
   message,
-  fileUrl,
+  fileName,
   file,
   created,
   author,
@@ -323,7 +321,7 @@ function ChatBubble({
   onEmojiClick,
 }: ChatBubbleProps): JSX.Element {
   const isUser = author === 'Customer';
-  const hasFile = fileUrl || !!file;
+  const hasFile = !!fileName;
 
   return (
     <div
@@ -356,7 +354,7 @@ function ChatBubble({
           </div>
         )}
         {hasHeader && !isUser && !file && <p className="font-semibold text-sm text-dfxRed-150 px-3">{author}</p>}
-        {hasFile && <ChatBubbleFileEmbed messageId={id} fileUrl={fileUrl} file={file} />}
+        {hasFile && <ChatBubbleFileEmbed messageId={id} fileName={fileName} file={file} />}
         {message && <p className="leading-snug text-sm px-3 whitespace-pre-wrap">{message}</p>}
         <div className="flex flex-row justify-between items-center px-3 -mt-0.5">
           <div className="flex flex-row">
@@ -390,26 +388,21 @@ function ChatBubble({
 
 interface ChatBubbleFileEmbedProps {
   messageId: number;
-  fileUrl?: string;
+  fileName?: string;
   file?: DataFile;
 }
 
 enum FileType {
   IMAGE = 'Image',
-  VIDEO = 'Video',
-  AUDIO = 'Audio',
   DOCUMENT = 'Document',
 }
 
 const FileTypeMap: { [key: string]: FileType } = {
-  image: FileType.IMAGE,
-  video: FileType.VIDEO,
-  audio: FileType.AUDIO,
   application: FileType.DOCUMENT,
-  text: FileType.DOCUMENT,
+  image: FileType.IMAGE,
 };
 
-function ChatBubbleFileEmbed({ messageId, fileUrl, file }: ChatBubbleFileEmbedProps): JSX.Element {
+function ChatBubbleFileEmbed({ messageId, fileName, file }: ChatBubbleFileEmbedProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { loadFileData } = useSupportChat();
 
@@ -418,7 +411,7 @@ function ChatBubbleFileEmbed({ messageId, fileUrl, file }: ChatBubbleFileEmbedPr
   const [error, setError] = useState<string>();
 
   const isLoaded = !!file;
-  const hasFile = isLoaded || !!fileUrl;
+  const hasFile = !!fileName;
   const fileType = (isLoaded && FileTypeMap[file?.type.split('/')[0]]) || FileType.DOCUMENT;
 
   if (!hasFile) return <></>;
@@ -429,9 +422,10 @@ function ChatBubbleFileEmbed({ messageId, fileUrl, file }: ChatBubbleFileEmbedPr
     if (isLoaded) {
       fileType === FileType.DOCUMENT ? window.open(file.url, '_blank') : setShowPreview(true);
     } else {
+      setError(undefined);
       setIsLoadingFile(true);
-      loadFileData(messageId, fileUrl ?? '')
-        .catch((e: ApiError) => setError('Download failed'))
+      loadFileData(messageId)
+        .catch(() => setError('Download failed'))
         .finally(() => setIsLoadingFile(false));
     }
   }
@@ -440,49 +434,36 @@ function ChatBubbleFileEmbed({ messageId, fileUrl, file }: ChatBubbleFileEmbedPr
     <StyledLoadingSpinner size={SpinnerSize.MD} variant={SpinnerVariant.LIGHT_MODE} />
   ) : !isLoaded ? (
     <HiOutlineDownload />
-  ) : fileType === FileType.AUDIO ? (
-    <IoMusicalNotes />
   ) : (
     <HiOutlinePaperClip />
   );
 
-  const label = file?.name ?? fileUrl?.split('/').pop() ?? fileUrl ?? fileType;
+  const description = isLoadingFile
+    ? translate('general/actions', 'Downloading...')
+    : !isLoaded
+    ? translate('general/actions', 'Download')
+    : `${fileType} · ${formatBytes(file.size)}`;
 
-  const description =
-    error ?? isLoadingFile
-      ? translate('general/actions', 'Downloading...')
-      : !isLoaded
-      ? translate('general/actions', 'Download')
-      : `${fileType} · ${formatBytes(file.size)}`;
+  console.log(isLoadingFile, description);
 
   return (
     <>
       {isLoaded && fileType === FileType.IMAGE ? (
         <img
           src={file.url}
-          alt={file.name}
+          alt={fileName}
           className="rounded-sm mb-1 max-h-40 object-cover cursor-pointer"
           style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
           onClick={onClick}
         />
-      ) : isLoaded && fileType === FileType.VIDEO ? (
-        <video
-          controls
-          className="rounded-sm mb-1 max-h-40 object-cover cursor-pointer"
-          style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
-          onClick={onClick}
-        >
-          <source src={file.url} type={file.type} />
-          {translate('general/messages', 'Your browser does not support the video tag.')}
-        </video>
       ) : (
         <div className="flex items-center mb-1 p-2 cursor-pointer" onClick={onClick}>
           <div className="flex justify-center items-center w-12 h-12 bg-white text-dfxGray-700 text-2xl rounded-md">
             {icon}
           </div>
           <div className="flex flex-col mx-2">
-            <span className="text-sm font-semibold">{blankedAddress(label, { displayLength: 20 })}</span>
-            <span className="text-xs font-medium opacity-60">{description}</span>
+            <span className="text-sm font-semibold">{blankedAddress(fileName, { displayLength: 20 })}</span>
+            <span className="text-xs font-medium opacity-60">{error ?? description}</span>
           </div>
         </div>
       )}
@@ -503,35 +484,15 @@ function ChatBubbleFileEmbed({ messageId, fileUrl, file }: ChatBubbleFileEmbedPr
           <div className="relative m-4 pointer-events-auto">
             <div className="rounded-sm overflow-clip">
               {fileType === FileType.IMAGE ? (
-                <img src={file.url} alt={file.name} className="max-h-96" />
-              ) : fileType === FileType.VIDEO ? (
-                <video controls className="max-h-96">
-                  <source src={file.url} type={file.type} />
-                </video>
-              ) : fileType === FileType.AUDIO ? (
-                <audio controls className="max-h-96">
-                  <source src={file.url} type={file.type} />
-                </audio>
+                <img src={file.url} alt={fileName} className="max-h-96" />
               ) : (
                 <div className="text-center">
                   <HiOutlinePaperClip className="text-dfxGray-700 text-4xl mx-auto mb-4" />
-                  <p className="text-lg font-semibold">{file.name}</p>
+                  <p className="text-lg font-semibold">{fileName}</p>
                   <p>{formatBytes(file.size)}</p>
                 </div>
               )}
             </div>
-            {/* TODO: Enable direct download */}
-            {/* <div className="flex mt-4 items-center justify-center">
-                <a
-                  className="bg-white/30 text-white pl-4 pr-6 py-2 rounded-full font-semibold cursor-pointer"
-                  href={file.url}
-                >
-                  <div className="flex flex-row gap-2">
-                    <HiOutlineDownload className="text-xl" />
-                    {translate('general/actions', 'Download')}
-                  </div>
-                </a>
-              </div> */}
           </div>
         </div>
       )}
