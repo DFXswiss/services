@@ -1,16 +1,29 @@
-import { SpinnerSize, SpinnerVariant, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import { ApiError, Transaction, TransactionState, TransactionType, useTransaction } from '@dfx.swiss/react';
+import {
+  AssetIconVariant,
+  DfxAssetIcon,
+  DfxIcon,
+  IconSize,
+  IconVariant,
+  SpinnerSize,
+  SpinnerVariant,
+  StyledCollapsible,
+  StyledLoadingSpinner,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { BsReply } from 'react-icons/bs';
 import { HiOutlineDownload, HiOutlinePaperClip } from 'react-icons/hi';
 import { MdAccessTime, MdErrorOutline, MdOutlineCancel, MdOutlineClose, MdSend } from 'react-icons/md';
 import { RiCheckFill } from 'react-icons/ri';
 import { useSearchParams } from 'react-router-dom';
-import { IssueTypeLabels } from 'src/config/labels';
+import { IssueTypeLabels, toPaymentStateLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { DataFile, SupportMessage, useSupportChat } from 'src/contexts/support-chat.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, formatBytes } from 'src/util/utils';
 import { Layout } from '../components/layout';
+import { TxInfo } from './transaction.screen';
 
 const emojiSet = ['👍', '❤️', '😂', '😮', '😢', '👏'];
 
@@ -89,6 +102,7 @@ export default function ChatScreen(): JSX.Element {
       ) : (
         <div className="flex flex-col gap-2 w-full h-full">
           <div className="flex flex-col flex-grow gap-1 h-0 overflow-auto p-3.5">
+            {!!supportIssue.transaction && <TransactionComponent transactionUid={supportIssue.transaction.uid} />}
             {supportIssue.messages.map((message, index) => {
               const prevSender = index > 0 ? supportIssue.messages[index - 1].author : null;
               const isNewSender = prevSender !== message.author;
@@ -128,6 +142,76 @@ export default function ChatScreen(): JSX.Element {
         </div>
       )}
     </Layout>
+  );
+}
+
+interface TransactionComponentProps {
+  transactionUid: string;
+}
+
+function TransactionComponent({ transactionUid }: TransactionComponentProps): JSX.Element {
+  const { getTransactionByUid } = useTransaction();
+  const { translate } = useSettingsContext();
+
+  const [tx, setTx] = useState<Transaction>();
+  const [error, setError] = useState<string>();
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setIsLoading(true);
+    getTransactionByUid(transactionUid)
+      .then(setTx)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsLoading(false));
+  }, [transactionUid]);
+
+  const isUnassigned = tx?.state === TransactionState.UNASSIGNED;
+  const icon =
+    tx &&
+    !isUnassigned &&
+    (tx.type === TransactionType.SELL ? [tx.inputAsset, tx.outputAsset] : [tx.outputAsset, tx.inputAsset])
+      .map((a) => a?.replace(/^d/, '') as AssetIconVariant)
+      .find((a) => Object.values(AssetIconVariant).includes(a));
+
+  return (
+    <div className="flex w-full justify-center mb-2">
+      {!tx || isLoading ? (
+        <div className="flex flex-row gap-2 justify-center bg-dfxGray-300/50 w-full rounded-md p-4">
+          {!error && <StyledLoadingSpinner size={SpinnerSize.MD} variant={SpinnerVariant.LIGHT_MODE} />}
+          <span className={`text-sm ${error ? 'text-dfxRed-100' : 'text-dfxBlue-600'}`}>
+            {error ?? translate('screen/payments', 'Loading transaction...')}
+          </span>
+        </div>
+      ) : (
+        <StyledCollapsible
+          full
+          titleContent={
+            <div className="flex flex-row gap-2 items-center">
+              {icon ? (
+                <DfxAssetIcon asset={icon as AssetIconVariant} />
+              ) : (
+                <DfxIcon icon={IconVariant.HELP} size={IconSize.LG} />
+              )}
+              <div className="flex flex-col items-start text-left">
+                <div className="font-bold leading-none">{translate('screens/payment', tx.type)}</div>
+                <div className={`leading-none ${isUnassigned && 'text-dfxRed-100'}`}>
+                  {translate('screens/payment', toPaymentStateLabel(tx.state))}
+                </div>
+              </div>
+              <div className="ml-auto">
+                {tx.inputAsset ? `${tx.inputAmount ?? ''} ${tx.inputAsset}` : ''}
+                {tx.inputAsset && tx.outputAsset ? ' → ' : ''}
+                {tx.outputAsset ? `${tx.outputAmount ?? ''} ${tx.outputAsset}` : ''}
+              </div>
+            </div>
+          }
+        >
+          <StyledVerticalStack full gap={4}>
+            <TxInfo tx={tx} />
+          </StyledVerticalStack>
+        </StyledCollapsible>
+      )}
+    </div>
   );
 }
 

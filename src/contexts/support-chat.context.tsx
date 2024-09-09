@@ -24,6 +24,11 @@ export interface SupportMessageDto {
   fileName?: string;
 }
 
+export interface SupportIssueTransactionDto {
+  uid: string;
+  url: string;
+}
+
 export interface SupportIssueDto {
   id: number;
   state: SupportIssueState;
@@ -33,7 +38,7 @@ export interface SupportIssueDto {
   created: Date;
   messages: SupportMessageDto[];
   information?: string;
-  transaction?: any; // TODO: Define
+  transaction?: SupportIssueTransactionDto;
   limitRequest?: any; // TODO: Define
 }
 
