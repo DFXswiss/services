@@ -1,4 +1,3 @@
-import { SupportIssueType } from '@dfx.swiss/react';
 import { SpinnerSize, SpinnerVariant, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { BsReply } from 'react-icons/bs';
@@ -18,42 +17,40 @@ const emojiSet = ['👍', '❤️', '😂', '😮', '😢', '👏'];
 export default function ChatScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
-  const { supportIssue, isLoading, isError, preFetch, handleEmojiClick, setSync } = useSupportChat();
+  const { supportIssue, isLoading, isError, loadSupportIssue, handleEmojiClick, setSync } = useSupportChat();
+
+  const [urlParams, setUrlParams] = useSearchParams();
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const [clickedMessage, setClickedMessage] = useState<SupportMessage>();
   const [replyToMessage, setReplyToMessage] = useState<SupportMessage>();
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
-
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
-  const [urlParams, setUrlParams] = useSearchParams();
-  const [typeParam, setTypeParam] = useState<SupportIssueType>(() => {
-    const savedState = sessionStorage.getItem('typeParam');
+  const [issueId, setIssueId] = useState<string>(() => {
+    const savedState = sessionStorage.getItem('issue-id');
     return savedState ? JSON.parse(savedState) : '';
   });
 
+  // TODO (later): Refactor into search parameter hook
   useEffect(() => {
-    const param = urlParams.get('type') ?? typeParam;
-    const isValidParam = Object.values(SupportIssueType).includes(param as SupportIssueType);
+    const issueIdParam = urlParams.get('issue-id') ?? issueId;
 
-    if (!param || !isValidParam) {
+    if (!issueIdParam) {
       if (!isLoading && !isError && !supportIssue) {
         navigate('/support/issue', { replace: true });
         return;
       }
     } else {
       setSync(true);
-      preFetch(param as SupportIssueType);
+      loadSupportIssue(+issueIdParam);
 
-      if (param !== typeParam) {
-        setTypeParam(param as SupportIssueType);
-        sessionStorage.setItem('typeParam', JSON.stringify(param));
+      if (issueIdParam !== issueId) {
+        setIssueId(issueIdParam);
+        sessionStorage.setItem('issue-id', JSON.stringify(issueIdParam));
       }
     }
 
-    if (urlParams.has('type')) {
-      urlParams.delete('type');
-      setUrlParams(urlParams);
+    if (urlParams.toString()) {
+      setUrlParams(new URLSearchParams());
     }
 
     return () => setSync(false);
@@ -84,7 +81,7 @@ export default function ChatScreen(): JSX.Element {
   };
 
   return (
-    <Layout title={translate('screens/support', IssueTypeLabels[typeParam as SupportIssueType])} noPadding>
+    <Layout title={supportIssue && translate('screens/support', IssueTypeLabels[supportIssue?.type])} noPadding>
       {isLoading || !supportIssue ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -454,8 +451,6 @@ function ChatBubbleFileEmbed({ messageId, fileName, file }: ChatBubbleFileEmbedP
     : !isLoaded
     ? translate('general/actions', 'Download')
     : `${fileType} · ${formatBytes(file.size)}`;
-
-  console.log(isLoadingFile, description);
 
   return (
     <>

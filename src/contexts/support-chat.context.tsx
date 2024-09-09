@@ -68,8 +68,8 @@ interface SupportChatInterface {
   supportIssue?: SupportIssue;
   isLoading: boolean;
   isError?: string;
-  preFetch: (type: SupportIssueType) => Promise<void>;
-  createSupportIssue: (request: CreateSupportIssue, file?: File) => Promise<void>;
+  loadSupportIssue: (id: number) => Promise<void>;
+  createSupportIssue: (request: CreateSupportIssue, file?: File) => Promise<number>;
   submitMessage: (message: string, files: File[], replyToMessage?: SupportMessage) => Promise<void>;
   handleEmojiClick: (messageId: number, emoji: string) => void;
   loadFileData: (messageId: number) => Promise<void>;
@@ -96,14 +96,14 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     return () => clearInterval(interval);
   }, [supportIssue, sync]);
 
-  async function preFetch(type: SupportIssueType): Promise<void> {
-    if (!type || type === supportIssue?.type) return;
+  async function loadSupportIssue(id: number): Promise<void> {
+    if (!id || id === supportIssue?.id) return;
 
     setSupportIssue(undefined);
     setIsLoading(true);
     setIsError(undefined);
 
-    fetchSupportIssue({ issueType: type })
+    fetchSupportIssue(id)
       .then((response) => setSupportIssue(response))
       .catch(() => setIsError('Error while fetching support issue'))
       .finally(() => setIsLoading(false));
@@ -114,13 +114,13 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
 
     setIsSyncing(true);
     const fromMessageId = supportIssue.messages[supportIssue.messages.length - 1].id;
-    fetchSupportIssue({ issueId: supportIssue.id, fromMessageId })
+    fetchSupportIssue(supportIssue.id, fromMessageId)
       .then((response) => updateSupportIssue(response))
       .catch(() => setIsError('Error while fetching support messages'))
       .finally(() => setIsSyncing(false));
   }
 
-  async function createSupportIssue(request: CreateSupportIssue, file?: File): Promise<void> {
+  async function createSupportIssue(request: CreateSupportIssue, file?: File): Promise<number> {
     const dataFile = file && (await mapFileToDataFile(file));
     const messageId = getNextUnsettledMessageId();
 
@@ -139,12 +139,15 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       return { ...supportIssue };
     });
 
-    createIssue(request)
-      .then((response) => {
-        settleMessage(messageId, response.messages[response.messages.length - 1]);
-        updateSupportIssue(response);
-      })
-      .catch(() => settleMessage(messageId));
+    try {
+      const issue = await createIssue(request);
+      settleMessage(messageId, issue.messages[issue.messages.length - 1]);
+      updateSupportIssue(issue);
+      return issue.id;
+    } catch (error) {
+      settleMessage(messageId);
+      throw error;
+    }
   }
 
   async function submitMessage(message: string, files: File[], replyToMessage?: SupportMessage): Promise<void> {
@@ -244,7 +247,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       supportIssue,
       isLoading,
       isError,
-      preFetch,
+      loadSupportIssue,
       createSupportIssue,
       submitMessage,
       handleEmojiClick,
@@ -319,22 +322,12 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     });
   }
 
-  async function fetchSupportIssue({
-    issueId,
-    issueType,
-    fromMessageId,
-  }: {
-    issueId?: number;
-    issueType?: SupportIssueType;
-    fromMessageId?: number;
-  }): Promise<SupportIssue> {
-    const params = new URLSearchParams();
-    if (issueId) params.append('id', issueId.toString());
-    if (issueType) params.append('type', issueType);
+  async function fetchSupportIssue(id: number, fromMessageId?: number): Promise<SupportIssue> {
+    const params = new URLSearchParams({ id: id.toString() });
     if (fromMessageId) params.append('fromMessageId', fromMessageId.toString());
 
     return call<SupportIssue>({
-      url: `support/issue${params.toString() ? `?${params}` : ''}`,
+      url: `support/issue?${params.toString()}`,
       method: 'GET',
     });
   }

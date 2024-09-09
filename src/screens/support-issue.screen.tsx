@@ -110,7 +110,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const { getIbans } = useBankAccount();
   const { getBanks } = useBank();
   const [urlParams, setUrlParams] = useSearchParams();
-  const { preFetch, createSupportIssue } = useSupportChat();
+  const { createSupportIssue } = useSupportChat();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -135,10 +135,6 @@ export default function SupportIssueScreen(): JSX.Element {
 
   const issues = Object.values(SupportIssueType);
   const reasons = IssueReasons[selectedType] ?? [];
-
-  useEffect(() => {
-    if (selectedType) preFetch(selectedType);
-  }, [selectedType]);
 
   useEffect(() => {
     const kycCompleted = user && user.kyc.level >= KycLevel.Completed;
@@ -239,7 +235,7 @@ export default function SupportIssueScreen(): JSX.Element {
       }
 
       await createSupportIssue(request, data.file)
-        .then(() => navigate(`/support/chat?type=${data.type}`))
+        .then((response) => navigate(`/support/chat?issue-id=${response}`))
         .catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
