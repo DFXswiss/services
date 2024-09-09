@@ -3682,6 +3682,86 @@ export const FeatureTree: Page[] = [
     ],
   },
 
+  // --- REALUNIT --- //
+  {
+    id: 'realunit',
+    tiles: [
+      {
+        id: 'buy',
+        img: 'kaufen',
+        next: {
+          page: 'realunit-buy',
+        },
+      },
+      {
+        id: 'sell',
+        img: 'verkaufen',
+        next: {
+          page: 'realunit-sell',
+        },
+      },
+    ],
+  },
+  {
+    id: 'realunit-buy',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'zchf',
+        img: 'frankencoin',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ZCHF' },
+          },
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'realunit-sell',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'zchf',
+        img: 'frankencoin',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'ETH' },
+          },
+        },
+      },
+    ],
+  },
+
   // --- zkfinance --- //
   {
     id: 'zkfinance',

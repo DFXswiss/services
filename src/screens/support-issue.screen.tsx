@@ -126,7 +126,7 @@ export default function SupportIssueScreen(): JSX.Element {
     formState: { errors, isValid },
     reset,
     setValue,
-  } = useForm<FormData>({ mode: 'onTouched', defaultValues: formDefaultValues });
+  } = useForm<FormData>({ mode: 'all', defaultValues: formDefaultValues });
   const selectedType = useWatch({ control, name: 'type' });
   const investmentDate = useWatch({ control, name: 'investmentDate' });
   const selectedReason = useWatch({ control, name: 'reason' });
@@ -265,6 +265,15 @@ export default function SupportIssueScreen(): JSX.Element {
     limit: Validations.Required,
     investmentDate: Validations.Required,
     fundOrigin: Validations.Required,
+    file: Validations.Custom((file) =>
+      !file ||
+      file.type === 'application/pdf' ||
+      file.type === 'image/png' ||
+      file.type === 'image/jpg' ||
+      file.type === 'image/jpeg'
+        ? true
+        : 'file_type',
+    ),
   });
 
   return (
