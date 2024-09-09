@@ -254,7 +254,7 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
       <div className="flex flex-row items-center space-x-2">
         <label className="flex items-center p-2 cursor-pointer">
           <HiOutlinePaperClip className="text-2xl text-dfxGray-800" />
-          <input type="file" multiple onChange={handleFileChange} className="hidden" />
+          <input className="hidden" type="file" multiple accept=".pdf, .jpeg, .jpg, .png" onChange={handleFileChange} />
         </label>
 
         <div
