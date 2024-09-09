@@ -29,6 +29,11 @@ export interface SupportIssueTransactionDto {
   url: string;
 }
 
+export interface SupportIssueLimitRequestDto {
+  id: number;
+  limit: number;
+}
+
 export interface SupportIssueDto {
   id: number;
   state: SupportIssueState;
@@ -39,7 +44,7 @@ export interface SupportIssueDto {
   messages: SupportMessageDto[];
   information?: string;
   transaction?: SupportIssueTransactionDto;
-  limitRequest?: any; // TODO: Define
+  limitRequest?: SupportIssueLimitRequestDto;
 }
 
 // --- FRONTEND INTERFACES --- //
@@ -134,10 +139,10 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
       supportIssue.messages.push({
         id: messageId,
         author: 'Customer',
-        message: request.message,
-        file: dataFile,
-        fileName: file?.name,
         created: new Date(),
+        message: request.message,
+        fileName: file?.name,
+        file: dataFile,
         status: 'sent',
       });
 
@@ -193,7 +198,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
 
   async function loadFileData(messageId: number): Promise<void> {
     const message = supportIssue?.messages.find((m) => m.id === messageId);
-    if (!supportIssue || !message?.fileUrl || !message.fileName) throw new Error('Failed to load file data');
+    if (!supportIssue || !message?.fileName) throw new Error('Failed to load file data');
 
     return fetchFileData(supportIssue.id, message.id).then((blobContent) => {
       const byteArray = new Uint8Array(blobContent.data.data);
@@ -306,7 +311,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
 
   // --- API FUNCTIONS --- // TODO: add to packages and import from there
 
-  async function createIssue(request: CreateSupportIssue): Promise<SupportIssue> {
+  async function createIssue(request: CreateSupportIssue): Promise<SupportIssueDto> {
     return call<SupportIssue>({
       url: 'support/issue',
       method: 'POST',
@@ -314,7 +319,7 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     });
   }
 
-  async function createSupportMessage(issueId: number, newMessage: SupportMessage): Promise<SupportMessage> {
+  async function createSupportMessage(issueId: number, newMessage: SupportMessage): Promise<SupportMessageDto> {
     return call<SupportMessage>({
       url: `support/issue/${issueId}/message`,
       method: 'POST',
@@ -327,12 +332,9 @@ export function SupportChatProvider(props: PropsWithChildren): JSX.Element {
     });
   }
 
-  async function fetchSupportIssue(id: number, fromMessageId?: number): Promise<SupportIssue> {
-    const params = new URLSearchParams({ id: id.toString() });
-    if (fromMessageId) params.append('fromMessageId', fromMessageId.toString());
-
+  async function fetchSupportIssue(issueId: number, fromMessageId?: number): Promise<SupportIssueDto> {
     return call<SupportIssue>({
-      url: `support/issue?${params.toString()}`,
+      url: `support/issue/${issueId}${fromMessageId ? `?fromMessageId=${fromMessageId}` : ''}`,
       method: 'GET',
     });
   }
