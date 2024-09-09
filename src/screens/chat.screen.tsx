@@ -192,6 +192,10 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
     }
   };
 
+  const removeFile = (index: number) => {
+    setSelectedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -233,9 +237,16 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
       {selectedFiles.length > 0 && (
         <div className="flex flex-row flex-wrap gap-2">
           {selectedFiles.map((file, index) => (
-            <div key={index} className="flex flex-row gap-1.5 items-center bg-dfxGray-800/20 rounded-md p-2 pr-3">
-              <HiOutlinePaperClip className="text-dfxGray-800 text-lg" />
-              <p className="text-dfxGray-800 text-left text-sm">{blankedAddress(file.name, { displayLength: 20 })}</p>
+            <div
+              key={index}
+              className="flex flex-row gap-1.5 items-center text-dfxGray-800 bg-dfxGray-500 rounded-md p-2 pr-3"
+            >
+              <HiOutlinePaperClip className="text-lg" />
+              <p className="text-left text-sm">{blankedAddress(file.name, { displayLength: 20 })}</p>
+              <MdOutlineClose
+                className="text-dfxGray-300 text-md ml-1 bg-dfxGray-800/40 rounded-full p-0.5 cursor-pointer"
+                onClick={() => removeFile(index)}
+              />
             </div>
           ))}
         </div>
