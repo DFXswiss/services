@@ -40,6 +40,7 @@
     "Area code and number required": "Vorwahl und Nummer erforderlich",
     "IBAN not allowed": "IBAN nicht erlaubt",
     "IBAN country not allowed": "IBAN Land nicht erlaubt",
+    "Only XML files are allowed": "Nur XML-Dateien sind erlaubt",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support."
   },
@@ -143,7 +144,10 @@
     "I am already verified with DFX": "Ich bin bereits bei DFX verifiziert",
     "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Hiermit beauftrage ich DFX, meine KYC-Daten an {{client}} zu übermitteln.",
 
-    "Merging your accounts...": "Deine Konten werden zusammengeführt..."
+    "Merging your accounts...": "Deine Konten werden zusammengeführt...",
+
+    "Upload your SEPA file here": "Lade Deine SEPA-Datei hier hoch",
+    "Uploaded": "Hochgeladen"
   },
   "screens/2fa": {
     "2FA": "2FA",

@@ -1,6 +1,9 @@
 import { ApiError, useApi, Utils, Validations } from '@dfx.swiss/react';
 import {
+  DfxIcon,
   Form,
+  IconSize,
+  IconVariant,
   StyledButton,
   StyledButtonWidth,
   StyledFileUpload,
@@ -20,7 +23,8 @@ export default function SepaScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { call } = useApi();
 
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
   const [error, setError] = useState<string>();
 
   const {
@@ -28,7 +32,7 @@ export default function SepaScreen(): JSX.Element {
     handleSubmit,
     resetField,
     formState: { isValid, errors },
-  } = useForm<FormDataFile>({ mode: 'onTouched' });
+  } = useForm<FormDataFile>({ mode: 'onChange' });
 
   async function onSubmit(data: FormDataFile) {
     if (!data.file) {
@@ -39,7 +43,7 @@ export default function SepaScreen(): JSX.Element {
     const fileData = new FormData();
     fileData.append('files', data.file);
 
-    setIsUpdating(true);
+    setIsUploading(true);
     setError(undefined);
     call({
       url: `bankTx`,
@@ -48,17 +52,23 @@ export default function SepaScreen(): JSX.Element {
       noJson: true,
     })
       .then(() => {
-        setIsUpdating(false);
+        setIsUploading(false);
+        toggleNotification();
         resetField('file');
       })
       .catch((e: ApiError) => {
-        setIsUpdating(false);
+        setIsUploading(false);
         setError(e.message);
       });
   }
 
+  const toggleNotification = () => {
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 2000);
+  };
+
   const rules = Utils.createRules({
-    file: Validations.Required,
+    file: [Validations.Required, Validations.Custom((file) => (file.type !== 'text/xml' ? 'xml_file' : true))],
   });
 
   return (
@@ -72,8 +82,16 @@ export default function SepaScreen(): JSX.Element {
       >
         <StyledVerticalStack gap={6} full center>
           <StyledVerticalStack gap={2} full>
-            <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-              {translate('screens/kyc', 'Upload your SEPA file here')}
+            <p className="flex flex-row justify-between w-full text-dfxGray-700 text-xs font-semibold uppercase text-start px-3">
+              <span>{translate('screens/kyc', 'Upload your SEPA file here')}</span>
+              <span
+                className={` flex flex-row gap-1 items-center text-dfxRed-100 font-normal transition-opacity duration-200 ${
+                  showNotification ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                <DfxIcon icon={IconVariant.CHECK} size={IconSize.SM} />
+                {translate('screens/kyc', 'Uploaded')}
+              </span>
             </p>
             <StyledFileUpload
               name="file"
@@ -96,7 +114,7 @@ export default function SepaScreen(): JSX.Element {
             onClick={handleSubmit(onSubmit)}
             width={StyledButtonWidth.FULL}
             disabled={!isValid}
-            isLoading={isUpdating}
+            isLoading={isUploading}
           />
         </StyledVerticalStack>
       </Form>
