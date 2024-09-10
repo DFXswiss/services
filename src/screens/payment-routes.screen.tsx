@@ -81,7 +81,7 @@ interface DeletePaymentRoute {
   type: PaymentRouteType;
 }
 
-export default function PaymentRoutes(): JSX.Element {
+export default function PaymentRoutesScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();

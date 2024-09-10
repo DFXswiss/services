@@ -660,7 +660,7 @@ export default function SellScreen(): JSX.Element {
                       <StyledButton
                         width={StyledButtonWidth.MIN}
                         label={translate('general/actions', 'Retry')}
-                        onClick={() => setVal('amount', enteredAmount)} // re-trigger
+                        onClick={() => updateData(Side.GET)} // re-trigger
                         className="mt-4"
                         color={StyledButtonColor.STURDY_WHITE}
                       />
