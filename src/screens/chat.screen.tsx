@@ -19,7 +19,7 @@ import { RiCheckFill } from 'react-icons/ri';
 import { useSearchParams } from 'react-router-dom';
 import { IssueTypeLabels, toPaymentStateLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { DataFile, SupportMessage, useSupportChat } from 'src/contexts/support-chat.context';
+import { DataFile, SupportMessageExt, useSupportChat } from 'src/contexts/support-chat.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, formatBytes } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -35,8 +35,8 @@ export default function ChatScreen(): JSX.Element {
   const [urlParams, setUrlParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const [clickedMessage, setClickedMessage] = useState<SupportMessage>();
-  const [replyToMessage, setReplyToMessage] = useState<SupportMessage>();
+  const [clickedMessage, setClickedMessage] = useState<SupportMessageExt>();
+  const [replyToMessage, setReplyToMessage] = useState<SupportMessageExt>();
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [issueId, setIssueId] = useState<string>(() => {
     const savedState = sessionStorage.getItem('issue-id');
@@ -75,7 +75,7 @@ export default function ChatScreen(): JSX.Element {
     }
   }, [supportIssue?.messages.length]);
 
-  const onChatBubbleClick = (e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessage) => {
+  const onChatBubbleClick = (e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessageExt) => {
     if (!e) {
       setClickedMessage(undefined);
       return;
@@ -245,8 +245,8 @@ function DateTag({ date }: DateTagProps): JSX.Element {
 }
 
 interface InputComponentProps {
-  replyToMessage?: SupportMessage;
-  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessage | undefined>>;
+  replyToMessage?: SupportMessageExt;
+  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessageExt | undefined>>;
 }
 
 function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentProps): JSX.Element {
@@ -391,9 +391,9 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
   );
 }
 
-interface ChatBubbleProps extends SupportMessage {
+interface ChatBubbleProps extends SupportMessageExt {
   hasHeader: boolean;
-  replyToMessage?: SupportMessage;
+  replyToMessage?: SupportMessageExt;
   onClick?: (e?: React.MouseEvent<HTMLDivElement>) => void;
   onEmojiClick?: (messageId: number, emoji: string, e?: React.MouseEvent<HTMLDivElement>) => void;
 }
@@ -593,8 +593,8 @@ function ChatBubbleFileEmbed({ messageId, fileName, file }: ChatBubbleFileEmbedP
 
 interface ChatBubbleMenuProps {
   menuPosition: { top: number; left: number };
-  clickedMessage: SupportMessage;
-  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessage | undefined>>;
+  clickedMessage: SupportMessageExt;
+  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessageExt | undefined>>;
   onEmojiClick: (messageId: number, emoji: string) => void;
 }
 
