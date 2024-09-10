@@ -1,4 +1,11 @@
-import { ApiError, Transaction, TransactionState, TransactionType, useTransaction } from '@dfx.swiss/react';
+import {
+  ApiError,
+  SupportMessage,
+  Transaction,
+  TransactionState,
+  TransactionType,
+  useTransaction,
+} from '@dfx.swiss/react';
 import {
   AssetIconVariant,
   DfxAssetIcon,
@@ -11,6 +18,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { CustomerAuthor, DataFile, SupportMessageStatus } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { BsReply } from 'react-icons/bs';
 import { HiOutlineDownload, HiOutlinePaperClip } from 'react-icons/hi';
@@ -19,7 +27,7 @@ import { RiCheckFill } from 'react-icons/ri';
 import { useSearchParams } from 'react-router-dom';
 import { IssueTypeLabels, toPaymentStateLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { DataFile, SupportMessageAux, SupportMessageStatus, useSupportChat } from 'src/contexts/support-chat.context';
+import { useSupportChat } from 'src/contexts/support-chat.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, formatBytes } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -35,8 +43,8 @@ export default function ChatScreen(): JSX.Element {
   const [urlParams, setUrlParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const [clickedMessage, setClickedMessage] = useState<SupportMessageAux>();
-  const [replyToMessage, setReplyToMessage] = useState<SupportMessageAux>();
+  const [clickedMessage, setClickedMessage] = useState<SupportMessage>();
+  const [replyToMessage, setReplyToMessage] = useState<SupportMessage>();
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [issueId, setIssueId] = useState<string>(() => {
     const savedState = sessionStorage.getItem('issue-id');
@@ -75,7 +83,7 @@ export default function ChatScreen(): JSX.Element {
     }
   }, [supportIssue?.messages.length]);
 
-  const onChatBubbleClick = (e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessageAux) => {
+  const onChatBubbleClick = (e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessage) => {
     if (!e) {
       setClickedMessage(undefined);
       return;
@@ -245,8 +253,8 @@ function DateTag({ date }: DateTagProps): JSX.Element {
 }
 
 interface InputComponentProps {
-  replyToMessage?: SupportMessageAux;
-  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessageAux | undefined>>;
+  replyToMessage?: SupportMessage;
+  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessage | undefined>>;
 }
 
 function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentProps): JSX.Element {
@@ -391,9 +399,9 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
   );
 }
 
-interface ChatBubbleProps extends SupportMessageAux {
+interface ChatBubbleProps extends SupportMessage {
   hasHeader: boolean;
-  replyToMessage?: SupportMessageAux;
+  replyToMessage?: SupportMessage;
   onClick?: (e?: React.MouseEvent<HTMLDivElement>) => void;
   onEmojiClick?: (messageId: number, emoji: string, e?: React.MouseEvent<HTMLDivElement>) => void;
 }
@@ -412,7 +420,7 @@ function ChatBubble({
   onClick,
   onEmojiClick,
 }: ChatBubbleProps): JSX.Element {
-  const isUser = author === 'Customer';
+  const isUser = author === CustomerAuthor;
   const hasFile = !!fileName;
   const failedToSend = status === SupportMessageStatus.FAILED;
 
@@ -593,8 +601,8 @@ function ChatBubbleFileEmbed({ messageId, fileName, file }: ChatBubbleFileEmbedP
 
 interface ChatBubbleMenuProps {
   menuPosition: { top: number; left: number };
-  clickedMessage: SupportMessageAux;
-  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessageAux | undefined>>;
+  clickedMessage: SupportMessage;
+  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessage | undefined>>;
   onEmojiClick: (messageId: number, emoji: string) => void;
 }
 
