@@ -1,4 +1,4 @@
-import { DfxContextProvider } from '@dfx.swiss/react';
+import { DfxContextProvider, PaymentRoutesContextProvider } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
 import { Suspense, lazy } from 'react';
@@ -25,7 +25,7 @@ const BuyScreen = lazy(() => import('./screens/buy.screen'));
 const KycRedirectScreen = lazy(() => import('./screens/kyc-redirect.screen'));
 const KycScreen = lazy(() => import('./screens/kyc.screen'));
 const LinkScreen = lazy(() => import('./screens/link.screen'));
-const PaymentRoutes = lazy(() => import('./screens/payment-routes.screen'));
+const PaymentRoutesScreen = lazy(() => import('./screens/payment-routes.screen'));
 const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
 const SellInfoScreen = lazy(() => import('./screens/sell-info.screen'));
 const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
@@ -97,7 +97,11 @@ export const Routes = [
   },
   {
     path: '/routes',
-    element: withSuspense(<PaymentRoutes />),
+    element: withSuspense(
+      <PaymentRoutesContextProvider>
+        <PaymentRoutesScreen />
+      </PaymentRoutesContextProvider>,
+    ),
   },
   {
     path: '/pl',
