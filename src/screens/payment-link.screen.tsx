@@ -126,7 +126,7 @@ const compatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: string;
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Breez.webp',
   },
   BtcTaro: {
-    websiteUrl: 'https://dfx.swiss/bitcoin.html/',
+    websiteUrl: 'https://dfx.swiss/bitcoin.html',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCTaroDFX.webp',
   },
   CoinCorner: {
