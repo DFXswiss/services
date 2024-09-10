@@ -14,6 +14,7 @@ import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useAdminGuard } from '../hooks/guard.hook';
 
 interface FormDataFile {
   file: File;
@@ -26,6 +27,8 @@ export default function SepaScreen(): JSX.Element {
   const [isUploading, setIsUploading] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [error, setError] = useState<string>();
+
+  useAdminGuard();
 
   const {
     control,

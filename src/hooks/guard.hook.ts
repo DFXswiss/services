@@ -1,4 +1,5 @@
 import { useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
+import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
 import { useEffect } from 'react';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useNavigation } from './navigation.hook';
@@ -11,6 +12,23 @@ export function useUserGuard(redirectPath = '/', isActive = true) {
   useSessionGuard(false, redirectPath, isActive);
 }
 
+export function useAdminGuard(redirectPath = '/', isActive = true) {
+  useUserRoleGuard([UserRole.ADMIN], redirectPath, isActive);
+}
+
+function useUserRoleGuard(requiresUserRoles: UserRole[], redirectPath = '/', isActive = true) {
+  const { isLoggedIn } = useSessionContext();
+  const { isInitialized } = useWalletContext();
+  const { navigate } = useNavigation();
+  const { session } = useAuthContext();
+
+  useEffect(() => {
+    if (isActive && isInitialized && (!isLoggedIn || (session && !requiresUserRoles.includes(session?.role)))) {
+      navigate(redirectPath, { setRedirect: true });
+    }
+  }, [session, isLoggedIn, isInitialized, navigate, isActive]);
+}
+
 function useSessionGuard(requireActiveAddress: boolean, redirectPath: string, isActive: boolean) {
   const { isLoggedIn } = useSessionContext();
   const { session } = useAuthContext();
@@ -21,7 +39,7 @@ function useSessionGuard(requireActiveAddress: boolean, redirectPath: string, is
     if (isActive && isInitialized && (!isLoggedIn || (requireActiveAddress && !session?.address))) {
       navigate(redirectPath, { setRedirect: true });
     }
-  }, [isInitialized, isLoggedIn, navigate, isActive]);
+  }, [session, isInitialized, isLoggedIn, navigate, isActive]);
 }
 
 export function useKycLevelGuard(minLevel: number, redirectPath = '/') {
