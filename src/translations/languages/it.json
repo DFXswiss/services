@@ -41,6 +41,7 @@
     "IBAN not allowed": "IBAN non consentito",
     "IBAN country not allowed": "Codice paese IBAN non consentito",
     "Only XML files are allowed": "Sono consentiti solo file XML",
+    "Allowed formats: PDF, JPG, JPEG, PNG": "Formati consentiti: PDF, JPG, JPEG, PNG",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto."
   },
@@ -66,6 +67,7 @@
     "Document upload": "Caricamento del documento",
     "Legal entity": "Persona giuridica",
     "Nationality": "Nazionalità",
+    "Nationality (according to identification document)": "Nazionalità (secondo il documento d'identità)",
     "Shareholder register": "Registro degli azionisti",
     "Commercial register": "Registro commerciale",
     "Signatory power": "Potere di firma",
