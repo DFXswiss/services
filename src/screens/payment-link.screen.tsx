@@ -105,7 +105,6 @@ const paymentIdentifierLabelMap: Record<string, string> = {
 };
 
 const compatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: string; recommended?: boolean } } = {
-  
   BitBanana: {
     websiteUrl: 'https://bitbanana.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BitBanana.webp',
