@@ -14,6 +14,7 @@ import {
   useBank,
   useBankAccount,
   useSessionContext,
+  useSupportChatContext,
   useUserContext,
 } from '@dfx.swiss/react';
 import {
@@ -30,7 +31,6 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
-import { useSupportChat } from 'src/contexts/support-chat.context';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import {
@@ -110,7 +110,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const { getIbans } = useBankAccount();
   const { getBanks } = useBank();
   const [urlParams, setUrlParams] = useSearchParams();
-  const { createSupportIssue } = useSupportChat();
+  const { createSupportIssue } = useSupportChatContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();

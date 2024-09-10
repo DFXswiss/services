@@ -4,6 +4,7 @@ import {
   Transaction,
   TransactionState,
   TransactionType,
+  useSupportChatContext,
   useTransaction,
 } from '@dfx.swiss/react';
 import {
@@ -27,7 +28,6 @@ import { RiCheckFill } from 'react-icons/ri';
 import { useSearchParams } from 'react-router-dom';
 import { IssueTypeLabels, toPaymentStateLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { useSupportChat } from 'src/contexts/support-chat.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, formatBytes } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -38,7 +38,7 @@ const emojiSet = ['👍', '❤️', '😂', '😮', '😢', '👏'];
 export default function ChatScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
-  const { supportIssue, isLoading, isError, loadSupportIssue, handleEmojiClick, setSync } = useSupportChat();
+  const { supportIssue, isLoading, isError, loadSupportIssue, handleEmojiClick, setSync } = useSupportChatContext();
 
   const [urlParams, setUrlParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -258,7 +258,7 @@ interface InputComponentProps {
 }
 
 function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentProps): JSX.Element {
-  const { submitMessage } = useSupportChat();
+  const { submitMessage } = useSupportChatContext();
   const [inputValue, setInputValue] = useState<string>('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -505,7 +505,7 @@ const FileTypeMap: { [key: string]: FileType } = {
 
 function ChatBubbleFileEmbed({ messageId, fileName, file }: ChatBubbleFileEmbedProps): JSX.Element {
   const { translate } = useSettingsContext();
-  const { loadFileData } = useSupportChat();
+  const { loadFileData } = useSupportChatContext();
 
   const [showPreview, setShowPreview] = useState(false);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
