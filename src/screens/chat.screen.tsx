@@ -19,7 +19,7 @@ import { RiCheckFill } from 'react-icons/ri';
 import { useSearchParams } from 'react-router-dom';
 import { IssueTypeLabels, toPaymentStateLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { DataFile, SupportMessageExt, useSupportChat } from 'src/contexts/support-chat.context';
+import { DataFile, SupportMessageAux, SupportMessageStatus, useSupportChat } from 'src/contexts/support-chat.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, formatBytes } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -35,8 +35,8 @@ export default function ChatScreen(): JSX.Element {
   const [urlParams, setUrlParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const [clickedMessage, setClickedMessage] = useState<SupportMessageExt>();
-  const [replyToMessage, setReplyToMessage] = useState<SupportMessageExt>();
+  const [clickedMessage, setClickedMessage] = useState<SupportMessageAux>();
+  const [replyToMessage, setReplyToMessage] = useState<SupportMessageAux>();
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [issueId, setIssueId] = useState<string>(() => {
     const savedState = sessionStorage.getItem('issue-id');
@@ -75,7 +75,7 @@ export default function ChatScreen(): JSX.Element {
     }
   }, [supportIssue?.messages.length]);
 
-  const onChatBubbleClick = (e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessageExt) => {
+  const onChatBubbleClick = (e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessageAux) => {
     if (!e) {
       setClickedMessage(undefined);
       return;
@@ -245,8 +245,8 @@ function DateTag({ date }: DateTagProps): JSX.Element {
 }
 
 interface InputComponentProps {
-  replyToMessage?: SupportMessageExt;
-  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessageExt | undefined>>;
+  replyToMessage?: SupportMessageAux;
+  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessageAux | undefined>>;
 }
 
 function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentProps): JSX.Element {
@@ -391,9 +391,9 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
   );
 }
 
-interface ChatBubbleProps extends SupportMessageExt {
+interface ChatBubbleProps extends SupportMessageAux {
   hasHeader: boolean;
-  replyToMessage?: SupportMessageExt;
+  replyToMessage?: SupportMessageAux;
   onClick?: (e?: React.MouseEvent<HTMLDivElement>) => void;
   onEmojiClick?: (messageId: number, emoji: string, e?: React.MouseEvent<HTMLDivElement>) => void;
 }
@@ -414,7 +414,7 @@ function ChatBubble({
 }: ChatBubbleProps): JSX.Element {
   const isUser = author === 'Customer';
   const hasFile = !!fileName;
-  const failedToSend = status === 'failed';
+  const failedToSend = status === SupportMessageStatus.FAILED;
 
   return (
     <div
@@ -465,9 +465,9 @@ function ChatBubble({
           <div className="flex flex-row items-center justify-center text-xs italic text-end text-gray-500">
             {new Date(created).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
             {/* TODO: Cover all states with icons */}
-            {status === 'failed' ? (
+            {failedToSend ? (
               <MdErrorOutline className="inline-block text-base ml-1 mb-0.5" />
-            ) : status === 'sent' ? (
+            ) : status === SupportMessageStatus.SENT ? (
               <MdAccessTime className="inline-block text-base ml-1 mb-0.5" />
             ) : (
               <RiCheckFill className="inline-block text-base ml-1 mb-0.5" />
@@ -593,8 +593,8 @@ function ChatBubbleFileEmbed({ messageId, fileName, file }: ChatBubbleFileEmbedP
 
 interface ChatBubbleMenuProps {
   menuPosition: { top: number; left: number };
-  clickedMessage: SupportMessageExt;
-  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessageExt | undefined>>;
+  clickedMessage: SupportMessageAux;
+  setReplyToMessage: React.Dispatch<React.SetStateAction<SupportMessageAux | undefined>>;
   onEmojiClick: (messageId: number, emoji: string) => void;
 }
 
