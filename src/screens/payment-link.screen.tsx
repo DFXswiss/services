@@ -1,9 +1,10 @@
-import { ApiError, Blockchain, Utils } from '@dfx.swiss/react';
+import { Blockchain, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
   Form,
   SpinnerSize,
+  SpinnerVariant,
   StyledCollapsible,
   StyledDataTable,
   StyledDataTableExpandableRow,
@@ -18,6 +19,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
+import { compatibleWallets, paymentMethods, recommendedWallets } from 'src/config/payment-link-wallets';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
@@ -26,17 +28,13 @@ import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, formatLocationAddress, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
-const noPaymentErrorMessage = 'No pending payment found';
+const NoPendingPaymentFound = 'No pending payment found';
 
-interface FormData {
-  paymentMethod: PaymentMethod;
-  asset: string;
-}
-
-interface PaymentMethod {
+export interface PaymentMethod {
   id: string;
   label: string;
   description: string;
+  paymentIdentifierLabel?: string;
 }
 
 interface Quote {
@@ -55,187 +53,48 @@ export interface TransferInfo {
   minFee: number;
   assets: Amount[];
 }
-export interface PaymentLinkPayRequest {
+
+export interface ApiError {
+  statusCode: number;
+  message: string;
+  error?: string;
+}
+
+export interface PaymentLinkPayTerminal extends ApiError {
   tag: string;
-  callback: string;
-  minSendable: number;
-  maxSendable: number;
-  metadata: string;
   displayName: string;
-  quote: Quote;
+  standard: string;
+  possibleStandards: string[];
+  displayQr: boolean;
   recipient: {
-    address: {
+    address?: {
       city: string;
       country: string;
       houseNumber: string;
       street: string;
       zip: string;
     };
-    name: string;
-    mail: string;
-    phone: string;
-    website: string;
+    name?: string;
+    mail?: string;
+    phone?: string;
+    website?: string;
   };
+}
+
+export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
+  quote: Quote;
+  callback: string;
+  metadata: string;
+  minSendable: number;
+  maxSendable: number;
   requestedAmount: Amount;
   transferAmounts: TransferInfo[];
 }
 
-const paymentMethods: PaymentMethod[] = [
-  {
-    id: 'OpenCryptoPay.io',
-    label: 'OpenCryptoPay.io',
-    description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
-  },
-  {
-    id: 'FrankencoinPay.com',
-    label: 'FrankencoinPay.com',
-    description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
-  },
-  {
-    id: 'Bitcoin Lightning',
-    label: 'Bitcoin Lightning',
-    description: 'Pay with a Bolt 11 Invoice',
-  },
-];
-
-const paymentIdentifierLabelMap: Record<string, string> = {
-  'OpenCryptoPay.io': 'LNURL',
-  'FrankencoinPay.com': 'LNURL',
-  'Bitcoin Lightning': 'LNR',
-};
-
-const compatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: string; recommended?: boolean } } = {
-  Alby: {
-    websiteUrl: 'https://getalby.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Alby.webp',
-  },
-  BareBitcoin: {
-    websiteUrl: 'https://barebitcoin.no/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BareBitcoin.webp',
-  },
-  Bipa: {
-    websiteUrl: 'https://bipa.app/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bipa.webp',
-  },
-  BitBanana: {
-    websiteUrl: 'https://bitbanana.app/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BitBanana.webp',
-  },
-  Bitkit: {
-    websiteUrl: 'https://bitkit.to/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bitkit.webp',
-  },
-  Blixt: {
-    websiteUrl: 'https://blixtwallet.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blixt.webp',
-  },
-  BlueWallet: {
-    websiteUrl: 'https://bluewallet.io/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BlueWallet.webp',
-  },
-  Breez: {
-    websiteUrl: 'https://breez.technology/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Breez.webp',
-  },
-  BTCPayServer: {
-    websiteUrl: 'https://btcpayserver.org/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCPayServer.webp',
-  },
-  'Cake Wallet': {
-    websiteUrl: 'https://cakewallet.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/4.webp',
-    recommended: true,
-  },
-  CoinCorner: {
-    websiteUrl: 'https://www.coincorner.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CoinCorner.webp',
-  },
-  Coinos: {
-    websiteUrl: 'https://coinos.io/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/coinos.webp',
-  },
-  Electrum: {
-    websiteUrl: 'https://electrum.org/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Electrum.webp',
-  },
-  Fountain: {
-    websiteUrl: 'https://fountainplatform.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Fountain.webp',
-  },
-  Frankencoin: {
-    websiteUrl: 'https://frankencoin.app/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Frankencoin.webp',
-    recommended: true,
-  },
-  Galoy: {
-    websiteUrl: 'https://galoy.io/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Galoy.webp',
-  },
-  Geyser: {
-    websiteUrl: 'https://geyser.fund/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Geyser.webp',
-  },
-  LifPay: {
-    websiteUrl: 'https://lifpay.me/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LifPay.webp',
-  },
-  LightningTipBot: {
-    websiteUrl: 'https://github.com/LightningTipBot/LightningTipBot',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LightningTopBot.webp',
-  },
-  LipaWallet: {
-    websiteUrl: 'https://lipa.swiss/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/lipawallet.webp',
-  },
-  LNbits: {
-    websiteUrl: 'https://lnbits.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LNbits.webp',
-  },
-  Machankura: {
-    websiteUrl: 'https://8333.mobi/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Machankura.webp',
-  },
-  Muun: {
-    websiteUrl: 'https://muun.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/muun.webp',
-  },
-  OneKey: {
-    websiteUrl: 'https://onekey.so/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/OneKey.webp',
-  },
-  Phoenix: {
-    websiteUrl: 'https://phoenix.acinq.co/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Phoenix.webp',
-    recommended: true,
-  },
-  PouchPH: {
-    websiteUrl: 'https://pouch.ph/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Pouchph.webp',
-  },
-  River: {
-    websiteUrl: 'https://river.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/River.webp',
-  },
-  ShockWallet: {
-    websiteUrl: 'https://shockwallet.app/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/ShockWallet.webp',
-  },
-  'Wallet of Satoshi': {
-    websiteUrl: 'https://www.walletofsatoshi.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/WalletofSatoshi.webp',
-    recommended: true,
-  },
-  ZEBEDEE: {
-    websiteUrl: 'https://zbd.gg/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/ZEBEDEE.webp',
-  },
-  Zeus: {
-    websiteUrl: 'https://zeusln.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Zeus.webp',
-  },
-};
-
-const recommendedWallets = ['Frankencoin', 'Cake Wallet', 'Wallet of Satoshi', 'Phoenix'];
+interface FormData {
+  paymentMethod: PaymentMethod;
+  asset: string;
+}
 
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -246,7 +105,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [urlParams, setUrlParams] = useSearchParams();
 
   const [callbackUrl, setCallbackUrl] = useState<string>();
-  const [payRequest, setPayRequest] = useState<PaymentLinkPayRequest>();
+  const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
@@ -302,31 +161,28 @@ export default function PaymentLinkScreen(): JSX.Element {
   }, [selectedPaymentMethod]);
 
   useEffect(() => {
-    let refreshTimeout: NodeJS.Timeout;
+    let refetchTimeout: NodeJS.Timeout | undefined;
 
-    const fetchPayRequest = (url: string) => {
-      fetchDataApi(url, true)
-        .then((data: PaymentLinkPayRequest) => {
-          setError(undefined);
-          setPayRequest(data);
+    async function fetchPayRequest(url: string) {
+      return fetchDataApi(url).then((data: PaymentLinkPayTerminal | PaymentLinkPayRequest | undefined) => {
+        setError(undefined);
+        setPayRequest(data);
 
-          const expiration = new Date(data.quote.expiration);
-          refreshTimeout = setTimeout(() => fetchPayRequest(url), expiration.getTime() - Date.now());
-        })
-        .catch((e) => {
-          if (e.message === noPaymentErrorMessage) {
-            refreshTimeout = setTimeout(() => fetchPayRequest(url), 1000);
-          }
-        });
-    };
+        if (data) {
+          const expiration = hasQuote(data) && new Date(data.quote.expiration);
+          const refetchDelay = expiration ? expiration.getTime() - Date.now() : 1000;
+          refetchTimeout = setTimeout(() => fetchPayRequest(url), refetchDelay);
+        }
+      });
+    }
 
-    if (sessionApiUrl) fetchPayRequest(sessionApiUrl);
+    sessionApiUrl && fetchPayRequest(sessionApiUrl);
 
-    return () => clearTimeout(refreshTimeout);
+    return () => refetchTimeout && clearTimeout(refetchTimeout);
   }, [sessionApiUrl]);
 
   useEffect(() => {
-    if (!payRequest) return;
+    if (!payRequest || !hasQuote(payRequest)) return;
 
     let callback: string;
     switch (selectedPaymentMethod.id) {
@@ -362,17 +218,19 @@ export default function PaymentLinkScreen(): JSX.Element {
     setIsLoading(true);
     setPaymentIdentifier(undefined);
     fetchDataApi(callbackUrl)
-      .then((data) => setPaymentIdentifier(data.uri ?? data.pr))
+      .then((data) => data && setPaymentIdentifier(data.uri ?? data.pr))
       .finally(() => setIsLoading(false));
   }, [callbackUrl]);
 
-  async function fetchDataApi(url: string, rethrow = false): Promise<any> {
+  async function fetchDataApi(url: string): Promise<any> {
     const response = await fetch(url);
     const data = await response.json();
     if (data.error) {
-      setError((data as ApiError).message ?? 'Unknown error');
-      if (rethrow) throw data;
-      return undefined;
+      const message = data.message ?? 'Unknown error';
+      if (message !== NoPendingPaymentFound) {
+        setError(message);
+        return undefined;
+      }
     }
 
     setError(undefined);
@@ -401,12 +259,17 @@ export default function PaymentLinkScreen(): JSX.Element {
     return `${urlObj.origin}${newPath}?${newParams.toString()}`;
   }
 
-  const assetsList = payRequest?.transferAmounts.find((item) => item.method === selectedPaymentMethod.id)?.assets;
+  function hasQuote(request?: PaymentLinkPayTerminal | PaymentLinkPayRequest): request is PaymentLinkPayRequest {
+    return !!request && 'quote' in request;
+  }
+
+  const assetsList =
+    hasQuote(payRequest) && payRequest.transferAmounts.find((item) => item.method === selectedPaymentMethod.id)?.assets;
 
   return (
     <Layout backButton={false} smallMenu>
       {error ? (
-        <PaymentErrorHint message={error} />
+        <ErrorHint message={error} />
       ) : !payRequest ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
@@ -414,10 +277,16 @@ export default function PaymentLinkScreen(): JSX.Element {
           <div className="flex flex-col w-full gap-6 py-8 justify-center">
             <p className="text-dfxBlue-800 font-bold text-xl">{payRequest.displayName}</p>
             <div className="w-full h-[1px] bg-gradient-to-r bg-dfxGray-500 from-white via-dfxGray-500 to-white" />
-            <p className="text-xl font-bold text-dfxBlue-800">
-              <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
-              {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
-            </p>
+            {hasQuote(payRequest) ? (
+              <p className="text-xl font-bold text-dfxBlue-800">
+                <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
+                {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
+              </p>
+            ) : (
+              <div className="flex w-full justify-center">
+                <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
+              </div>
+            )}
           </div>
           <Form control={control} errors={errors}>
             <StyledVerticalStack full gap={4} center>
@@ -425,7 +294,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                 name="paymentMethod"
                 items={[
                   ...paymentMethods,
-                  ...payRequest.transferAmounts
+                  ...(hasQuote(payRequest) ? payRequest.transferAmounts : [])
                     .filter((item) => item.method !== 'Lightning')
                     .map((item) => ({
                       id: item.method,
@@ -470,74 +339,103 @@ export default function PaymentLinkScreen(): JSX.Element {
               }
             >
               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                  <p>{translate('screens/payment', 'Pending')}</p>
-                </StyledDataTableRow>
-                <StyledDataTableRow
-                  label={paymentIdentifierLabelMap[selectedPaymentMethod.id] ?? 'URI'}
-                  isLoading={isLoading || !paymentIdentifier}
-                >
-                  <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
-                  <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />
-                </StyledDataTableRow>
-                <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                  <p>
-                    {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
-                  </p>
-                </StyledDataTableRow>
+                {hasQuote(payRequest) && (
+                  <>
+                    <StyledDataTableRow label={translate('screens/payment', 'State')}>
+                      <p>{translate('screens/payment', 'Pending')}</p>
+                    </StyledDataTableRow>
+
+                    <StyledDataTableRow
+                      label={
+                        paymentMethods.find((item) => item.id === selectedPaymentMethod.id)?.paymentIdentifierLabel ??
+                        'URI'
+                      }
+                      isLoading={isLoading || !paymentIdentifier}
+                    >
+                      <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
+                      <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />
+                    </StyledDataTableRow>
+
+                    <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
+                      <p>
+                        {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
+                      </p>
+                    </StyledDataTableRow>
+                  </>
+                )}
                 {payRequest.recipient && (
                   <StyledDataTableExpandableRow
                     label={translate('screens/payment', 'Recipient')}
-                    expansionItems={[
-                      {
-                        label: translate('screens/support', 'Name'),
-                        text: payRequest.recipient.name,
-                      },
-                      {
-                        label: translate('screens/home', 'Address'),
-                        text: formatLocationAddress({ ...payRequest.recipient.address }) ?? '',
-                      },
-                      {
-                        label: translate('screens/kyc', 'Phone number'),
-                        text: payRequest.recipient.phone,
-                      },
-                      {
-                        label: translate('screens/kyc', 'Email address'),
-                        text: payRequest.recipient.mail,
-                      },
-                      {
-                        label: translate('screens/kyc', 'Website'),
-                        text: payRequest.recipient.website,
-                        onClick: () => {
-                          const url =
-                            payRequest.recipient.website.startsWith('http://') ||
-                            payRequest.recipient.website.startsWith('https://')
-                              ? payRequest.recipient.website
-                              : `https://${payRequest.recipient.website}`;
-
-                          window.open(url, '_blank');
+                    expansionItems={
+                      [
+                        {
+                          label: translate('screens/support', 'Name'),
+                          text: payRequest.recipient.name,
                         },
-                      },
-                    ].filter((item) => item.text)}
+                        {
+                          label: translate('screens/home', 'Address'),
+                          text: formatLocationAddress({ ...payRequest.recipient.address, country: undefined }) ?? '',
+                        },
+                        {
+                          label: translate('screens/home', 'Country'),
+                          text: payRequest.recipient.address?.country ?? '',
+                        },
+                        {
+                          label: translate('screens/kyc', 'Phone number'),
+                          text: payRequest.recipient.phone,
+                        },
+                        {
+                          label: translate('screens/kyc', 'Email address'),
+                          text: payRequest.recipient.mail,
+                        },
+                        {
+                          label: translate('screens/kyc', 'Website'),
+                          text: payRequest.recipient.website,
+                          onClick: () => {
+                            const url =
+                              payRequest.recipient.website?.startsWith('http://') ||
+                              payRequest.recipient.website?.startsWith('https://')
+                                ? payRequest.recipient.website
+                                : `https://${payRequest.recipient.website}`;
+
+                            window.open(url, '_blank');
+                          },
+                        },
+                      ].filter((item) => item.text) as any
+                    }
                   />
                 )}
-                <StyledDataTableExpandableRow
-                  label={translate('screens/payment', 'QR Code')}
-                  expansionContent={
-                    <div className="flex w-full items-center justify-center">
-                      <div className="w-48 py-3">
-                        <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
+                {hasQuote(payRequest) && !payRequest.displayQr && (
+                  <StyledDataTableExpandableRow
+                    label={translate('screens/payment', 'QR Code')}
+                    expansionContent={
+                      <div className="flex w-full items-center justify-center">
+                        <div className="w-48 my-3">
+                          <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
+                        </div>
                       </div>
-                    </div>
-                  }
-                />
+                    }
+                  />
+                )}
               </StyledDataTable>
             </StyledCollapsible>
             {['OpenCryptoPay.io', 'FrankencoinPay.com'].includes(selectedPaymentMethod.id) && (
               <StyledVerticalStack full gap={8} center>
-                <p className="text-base pt-3 text-dfxGray-700">
-                  {translate('screens/payment', 'Scan the QR-Code with a compatible wallet to complete the payment.')}
-                </p>
+                {hasQuote(payRequest) && (
+                  <div className="flex flex-col w-full items-center justify-center">
+                    {payRequest.displayQr && (
+                      <div className="w-48 my-3">
+                        <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
+                      </div>
+                    )}
+                    <p className="text-base pt-3 text-dfxGray-700">
+                      {translate(
+                        'screens/payment',
+                        'Scan the QR-Code with a compatible wallet to complete the payment.',
+                      )}
+                    </p>
+                  </div>
+                )}
                 <WalletGrid wallets={recommendedWallets} header={translate('screens/payment', 'Recommended wallets')} />
                 <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
               </StyledVerticalStack>
@@ -548,17 +446,6 @@ export default function PaymentLinkScreen(): JSX.Element {
     </Layout>
   );
 }
-
-const PaymentErrorHint = ({ message }: { message: string }): JSX.Element => {
-  return message === noPaymentErrorMessage ? (
-    <>
-      <StyledLoadingSpinner size={SpinnerSize.LG} />
-      <p className="text-dfxGray-800 text-sm pt-3">{message}</p>
-    </>
-  ) : (
-    <ErrorHint message={message} />
-  );
-};
 
 interface WalletGridProps {
   wallets?: string[];
