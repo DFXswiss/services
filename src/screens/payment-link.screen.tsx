@@ -1,4 +1,4 @@
-import { Blockchain, Utils } from '@dfx.swiss/react';
+import { ApiError, Blockchain, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -54,13 +54,7 @@ export interface TransferInfo {
   assets: Amount[];
 }
 
-export interface ApiError {
-  statusCode: number;
-  message: string;
-  error?: string;
-}
-
-export interface PaymentLinkPayTerminal extends ApiError {
+export interface PaymentLinkPayTerminal {
   tag: string;
   displayName: string;
   standard: string;
@@ -79,6 +73,11 @@ export interface PaymentLinkPayTerminal extends ApiError {
     phone?: string;
     website?: string;
   };
+
+  // error fields
+  statusCode?: number;
+  message?: string;
+  error?: string;
 }
 
 export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
@@ -164,16 +163,16 @@ export default function PaymentLinkScreen(): JSX.Element {
     let refetchTimeout: NodeJS.Timeout | undefined;
 
     async function fetchPayRequest(url: string) {
-      return fetchDataApi(url).then((data: PaymentLinkPayTerminal | PaymentLinkPayRequest | undefined) => {
-        setError(undefined);
-        setPayRequest(data);
+      return fetchDataApi(url)
+        .then((data: PaymentLinkPayRequest | PaymentLinkPayTerminal) => {
+          setError(undefined);
+          setPayRequest(data);
 
-        if (data) {
           const expiration = hasQuote(data) && new Date(data.quote.expiration);
           const refetchDelay = expiration ? expiration.getTime() - Date.now() : 1000;
           refetchTimeout = setTimeout(() => fetchPayRequest(url), refetchDelay);
-        }
-      });
+        })
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown Error'));
     }
 
     sessionApiUrl && fetchPayRequest(sessionApiUrl);
@@ -219,22 +218,13 @@ export default function PaymentLinkScreen(): JSX.Element {
     setPaymentIdentifier(undefined);
     fetchDataApi(callbackUrl)
       .then((data) => data && setPaymentIdentifier(data.uri ?? data.pr))
+      .catch((error) => setError(error.message))
       .finally(() => setIsLoading(false));
   }, [callbackUrl]);
 
   async function fetchDataApi(url: string): Promise<any> {
     const response = await fetch(url);
-    const data = await response.json();
-    if (data.error) {
-      const message = data.message ?? 'Unknown error';
-      if (message !== NoPendingPaymentFound) {
-        setError(message);
-        return undefined;
-      }
-    }
-
-    setError(undefined);
-    return data;
+    return response.json();
   }
 
   function simplifyUrl(url: string): string {
