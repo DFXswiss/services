@@ -23,7 +23,7 @@ function useUserRoleGuard(requiresUserRoles: UserRole[], redirectPath = '/', isA
   const { session } = useAuthContext();
 
   useEffect(() => {
-    if (isActive && isInitialized && (!isLoggedIn || (session && !requiresUserRoles.includes(session?.role)))) {
+    if (isActive && isInitialized && (!isLoggedIn || (session && !requiresUserRoles.includes(session.role)))) {
       navigate(redirectPath, { setRedirect: true });
     }
   }, [session, isLoggedIn, isInitialized, navigate, isActive]);
