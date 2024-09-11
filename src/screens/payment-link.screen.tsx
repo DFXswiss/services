@@ -19,7 +19,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
-import { compatibleWallets, paymentMethods, recommendedWallets } from 'src/config/payment-link-wallets';
+import { CompatibleWallets, PaymentMethods, RecommendedWallets } from 'src/config/payment-link-wallets';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
@@ -121,7 +121,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     formState: { errors },
   } = useForm<FormData>({
     mode: 'onTouched',
-    defaultValues: { paymentMethod: paymentMethods[0] },
+    defaultValues: { paymentMethod: PaymentMethods[0] },
   });
 
   const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
@@ -283,7 +283,7 @@ export default function PaymentLinkScreen(): JSX.Element {
               <StyledDropdown<PaymentMethod>
                 name="paymentMethod"
                 items={[
-                  ...paymentMethods,
+                  ...PaymentMethods,
                   ...(hasQuote(payRequest) ? payRequest.transferAmounts : [])
                     .filter((item) => item.method !== 'Lightning')
                     .map((item) => ({
@@ -337,7 +337,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 
                     <StyledDataTableRow
                       label={
-                        paymentMethods.find((item) => item.id === selectedPaymentMethod.id)?.paymentIdentifierLabel ??
+                        PaymentMethods.find((item) => item.id === selectedPaymentMethod.id)?.paymentIdentifierLabel ??
                         'URI'
                       }
                       isLoading={isLoading || !paymentIdentifier}
@@ -426,7 +426,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                     </p>
                   </div>
                 )}
-                <WalletGrid wallets={recommendedWallets} header={translate('screens/payment', 'Recommended wallets')} />
+                <WalletGrid wallets={RecommendedWallets} header={translate('screens/payment', 'Recommended wallets')} />
                 <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
               </StyledVerticalStack>
             )}
@@ -443,7 +443,7 @@ interface WalletGridProps {
 }
 
 function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
-  const walletNames = wallets ?? Object.keys(compatibleWallets);
+  const walletNames = wallets ?? Object.keys(CompatibleWallets);
 
   return (
     <div className="flex flex-col w-full gap-4 px-5">
@@ -456,7 +456,7 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
       )}
       <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 place-items-center gap-4 justify-end">
         {walletNames.map((walletName) => {
-          const wallet = compatibleWallets[walletName];
+          const wallet = CompatibleWallets[walletName];
 
           return (
             <div

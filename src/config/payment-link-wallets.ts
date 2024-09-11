@@ -1,4 +1,4 @@
-export const paymentMethods = [
+export const PaymentMethods = [
   {
     id: 'OpenCryptoPay.io',
     label: 'OpenCryptoPay.io',
@@ -19,7 +19,9 @@ export const paymentMethods = [
   },
 ];
 
-export const compatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: string; recommended?: boolean } } = {
+export const RecommendedWallets = ['Frankencoin', 'Cake Wallet', 'Wallet of Satoshi', 'Phoenix'];
+
+export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: string; recommended?: boolean } } = {
   Alby: {
     websiteUrl: 'https://getalby.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Alby.webp',
@@ -149,5 +151,3 @@ export const compatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Zeus.webp',
   },
 };
-
-export const recommendedWallets = ['Frankencoin', 'Cake Wallet', 'Wallet of Satoshi', 'Phoenix'];
