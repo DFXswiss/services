@@ -34,6 +34,7 @@ const TfaScreen = lazy(() => import('./screens/tfa.screen'));
 const TransactionScreen = lazy(() => import('./screens/transaction.screen'));
 const AccountMerge = lazy(() => import('./screens/account-merge.screen'));
 const MailLoginScreen = lazy(() => import('./screens/mail-login.screen'));
+const SepaScreen = lazy(() => import('./screens/sepa.screen'));
 
 setupLanguages();
 
@@ -164,6 +165,10 @@ export const Routes = [
   {
     path: '/account-merge',
     element: withSuspense(<AccountMerge />),
+  },
+  {
+    path: '/sepa',
+    element: withSuspense(<SepaScreen />),
   },
 ];
 
