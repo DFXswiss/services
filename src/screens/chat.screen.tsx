@@ -19,7 +19,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { CustomerAuthor, DataFile, SupportMessageStatus } from '@dfx.swiss/react/dist/definitions/support';
+import { DataFile, SupportMessageStatus } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { BsReply } from 'react-icons/bs';
 import { HiOutlineDownload, HiOutlinePaperClip } from 'react-icons/hi';
@@ -266,7 +266,7 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
   const handleSend = () => {
     submitMessage(inputValue, selectedFiles, replyToMessage);
 
-    setInputValue(undefined);
+    setInputValue('');
     setSelectedFiles([]);
     setReplyToMessage(undefined);
     return;
@@ -420,7 +420,7 @@ function ChatBubble({
   onClick,
   onEmojiClick,
 }: ChatBubbleProps): JSX.Element {
-  const isUser = author === CustomerAuthor;
+  const isUser = !author || author === 'Customer';
   const hasFile = !!fileName;
   const failedToSend = status === SupportMessageStatus.FAILED;
 
