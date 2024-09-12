@@ -446,10 +446,7 @@ export default function PaymentRoutes(): JSX.Element {
                           </div>
                         </div>
                         {link.status === PaymentLinkStatus.ACTIVE &&
-                          (!link.payment ||
-                            [PaymentLinkPaymentStatus.CANCELLED, PaymentLinkPaymentStatus.EXPIRED].includes(
-                              link.payment.status,
-                            )) && (
+                          (!link.payment || link.payment.status !== PaymentLinkPaymentStatus.PENDING) && (
                             <StyledButton
                               label={translate('screens/payment', 'Create payment')}
                               onClick={() => setShowCreatePaymentOverlay(link.id)}
