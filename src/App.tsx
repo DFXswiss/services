@@ -1,8 +1,8 @@
-import { DfxContextProvider } from '@dfx.swiss/react';
+import { DfxContextProvider, SupportChatContextProvider } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
 import { Suspense, lazy } from 'react';
-import { Navigate, RouteObject, RouterProvider } from 'react-router-dom';
+import { Navigate, Outlet, RouteObject, RouterProvider } from 'react-router-dom';
 import { Layout } from './components/layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
@@ -155,12 +155,22 @@ export const Routes = [
     element: withSuspense(<SupportScreen />),
   },
   {
-    path: '/support/issue',
-    element: withSuspense(<SupportIssueScreen />),
-  },
-  {
-    path: '/support/chat',
-    element: withSuspense(<ChatScreen />),
+    path: '/support',
+    element: (
+      <SupportChatContextProvider>
+        <Outlet />
+      </SupportChatContextProvider>
+    ),
+    children: [
+      {
+        path: 'issue',
+        element: withSuspense(<SupportIssueScreen />),
+      },
+      {
+        path: 'chat',
+        element: withSuspense(<ChatScreen />),
+      },
+    ],
   },
   {
     path: '/bank-accounts',
