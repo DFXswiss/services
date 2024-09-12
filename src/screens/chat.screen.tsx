@@ -259,14 +259,14 @@ interface InputComponentProps {
 
 function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentProps): JSX.Element {
   const { submitMessage } = useSupportChatContext();
-  const [inputValue, setInputValue] = useState<string>('');
+  const [inputValue, setInputValue] = useState<string>();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   // TODO: refactor, write it as a normal function
   const handleSend = () => {
     submitMessage(inputValue, selectedFiles, replyToMessage);
 
-    setInputValue('');
+    setInputValue(undefined);
     setSelectedFiles([]);
     setReplyToMessage(undefined);
     return;
@@ -289,7 +289,7 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
     if (e.key === 'Enter') {
       e.preventDefault();
       if (e.shiftKey) {
-        setInputValue((prevValue) => `${prevValue}\n`);
+        setInputValue((prevValue) => (prevValue ? `${prevValue}\n` : ''));
       } else {
         handleSend();
       }
