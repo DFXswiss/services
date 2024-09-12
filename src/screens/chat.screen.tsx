@@ -28,6 +28,7 @@ import { RiCheckFill } from 'react-icons/ri';
 import { useSearchParams } from 'react-router-dom';
 import { IssueTypeLabels, toPaymentStateLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useUserGuard } from 'src/hooks/guard.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, formatBytes } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -36,6 +37,8 @@ import { TxInfo } from './transaction.screen';
 const emojiSet = ['👍', '❤️', '😂', '😮', '😢', '👏'];
 
 export default function ChatScreen(): JSX.Element {
+  useUserGuard('/login');
+
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { supportIssue, isLoading, isError, loadSupportIssue, handleEmojiClick, setSync } = useSupportChatContext();
@@ -258,6 +261,7 @@ interface InputComponentProps {
 }
 
 function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentProps): JSX.Element {
+  const { translate } = useSettingsContext();
   const { submitMessage } = useSupportChatContext();
   const [inputValue, setInputValue] = useState<string>();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -386,7 +390,7 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
             value={inputValue}
             onInput={(e) => setInputValue(e.currentTarget.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Write a message..."
+            placeholder={translate('screens/support', 'Write a message...')}
             required
           />
         </div>
@@ -540,7 +544,7 @@ function ChatBubbleFileEmbed({ messageId, fileName, file }: ChatBubbleFileEmbedP
   );
 
   const description = isLoadingFile
-    ? translate('general/actions', 'Downloading...')
+    ? translate('screens/support', 'Downloading...')
     : !isLoaded
     ? translate('general/actions', 'Download')
     : `${fileType} · ${formatBytes(file.size)}`;
