@@ -1,23 +1,37 @@
-export const PaymentMethods = [
-  {
-    id: 'OpenCryptoPay.io',
+export enum PaymentStandard {
+  OPEN_CRYPTO_PAY = 'OpenCryptoPay',
+  FRANKENCOIN_PAY = 'FrankencoinPay',
+  LIGHTNING_BOLT11 = 'LightningBolt11',
+  PAY_TO_ADDRESS = 'PayToAddress',
+}
+
+export const PaymentMethods = {
+  [PaymentStandard.OPEN_CRYPTO_PAY]: {
+    id: PaymentStandard.OPEN_CRYPTO_PAY,
     label: 'OpenCryptoPay.io',
     description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
     paymentIdentifierLabel: 'LNURL',
   },
-  {
-    id: 'FrankencoinPay.com',
+  [PaymentStandard.FRANKENCOIN_PAY]: {
+    id: PaymentStandard.FRANKENCOIN_PAY,
     label: 'FrankencoinPay.com',
     description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
     paymentIdentifierLabel: 'LNURL',
   },
-  {
-    id: 'Bitcoin',
+  [PaymentStandard.LIGHTNING_BOLT11]: {
+    id: PaymentStandard.LIGHTNING_BOLT11,
     label: 'Bitcoin Lightning',
     description: 'Pay with a Bolt 11 Invoice',
     paymentIdentifierLabel: 'LNR',
   },
-];
+
+  [PaymentStandard.PAY_TO_ADDRESS]: {
+    id: PaymentStandard.PAY_TO_ADDRESS,
+    label: '{{blockchain}} address',
+    description: 'Pay to a {{blockchain}} Blockchain address',
+    paymentIdentifierLabel: 'URI',
+  },
+};
 
 export const RecommendedWallets = ['Frankencoin', 'Cake Wallet', 'Wallet of Satoshi', 'Phoenix'];
 

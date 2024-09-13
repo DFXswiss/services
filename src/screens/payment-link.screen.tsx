@@ -19,7 +19,12 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
-import { CompatibleWallets, PaymentMethods, RecommendedWallets } from 'src/config/payment-link-wallets';
+import {
+  CompatibleWallets,
+  PaymentMethods,
+  PaymentStandard,
+  RecommendedWallets,
+} from 'src/config/payment-link-wallets';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
@@ -28,10 +33,8 @@ import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, formatLocationAddress, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
-const NoPendingPaymentFound = 'No pending payment found';
-
 export interface PaymentMethod {
-  id: string;
+  id: PaymentStandard | string;
   label: string;
   description: string;
   paymentIdentifierLabel?: string;
@@ -57,8 +60,8 @@ export interface TransferInfo {
 export interface PaymentLinkPayTerminal {
   tag: string;
   displayName: string;
-  standard: string;
-  possibleStandards: string[];
+  standard: PaymentStandard;
+  possibleStandards: PaymentStandard[];
   displayQr: boolean;
   recipient: {
     address?: {
@@ -95,6 +98,7 @@ interface FormData {
   asset: string;
 }
 
+// TODO: Display PayToAddress as a separate payment method and then add chain and asset selection
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
@@ -121,7 +125,6 @@ export default function PaymentLinkScreen(): JSX.Element {
     formState: { errors },
   } = useForm<FormData>({
     mode: 'onTouched',
-    defaultValues: { paymentMethod: PaymentMethods[0] },
   });
 
   const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
@@ -167,6 +170,8 @@ export default function PaymentLinkScreen(): JSX.Element {
         .then((data: PaymentLinkPayRequest | PaymentLinkPayTerminal) => {
           setError(undefined);
           setPayRequest(data);
+          // TODO: PaymentMethods[data.standard] is not good if data.standard === PayToAddress
+          if (!selectedPaymentMethod) setValue('paymentMethod', PaymentMethods[data.standard]);
 
           const expiration = hasQuote(data) && new Date(data.quote.expiration);
           const refetchDelay = expiration ? expiration.getTime() - Date.now() : 1000;
@@ -185,12 +190,12 @@ export default function PaymentLinkScreen(): JSX.Element {
 
     let callback: string;
     switch (selectedPaymentMethod.id) {
-      case 'OpenCryptoPay.io':
-      case 'FrankencoinPay.com':
+      case PaymentStandard.OPEN_CRYPTO_PAY:
+      case PaymentStandard.FRANKENCOIN_PAY:
         const lnurl = Lnurl.encode(simplifyUrl(sessionApiUrl));
         setPaymentIdentifier(Lnurl.prependLnurl(lnurl));
         break;
-      case 'Bitcoin Lightning':
+      case PaymentStandard.LIGHTNING_BOLT11:
         callback = url(payRequest.callback, new URLSearchParams({ amount: payRequest.minSendable.toString() }));
         callback !== callbackUrl && setCallbackUrl(callback);
         break;
@@ -283,18 +288,23 @@ export default function PaymentLinkScreen(): JSX.Element {
               <StyledDropdown<PaymentMethod>
                 name="paymentMethod"
                 items={[
-                  ...PaymentMethods,
-                  ...(hasQuote(payRequest) ? payRequest.transferAmounts : [])
-                    .filter((item) => item.method !== 'Lightning')
-                    .map((item) => ({
-                      id: item.method,
-                      label: translate('screens/payment', '{{blockchain}} address', {
-                        blockchain: item.method,
-                      }),
-                      description: translate('screens/payment', 'Pay to a {{blockchain}} Blockchain address', {
-                        blockchain: item.method,
-                      }),
-                    })),
+                  ...(payRequest?.possibleStandards.flatMap((standard: PaymentStandard) => {
+                    const paymentMethod = PaymentMethods[standard];
+                    if (standard !== PaymentStandard.PAY_TO_ADDRESS) return paymentMethod;
+
+                    return (hasQuote(payRequest) ? payRequest.transferAmounts : [])
+                      .filter((chain) => chain.method !== 'Lightning')
+                      .map((chain) => ({
+                        id: chain.method.toString(),
+                        label: translate('screens/payment', paymentMethod.label, {
+                          blockchain: chain.method,
+                        }),
+                        description: translate('screens/payment', paymentMethod.description, {
+                          blockchain: chain.method,
+                        }),
+                        paymentIdentifierLabel: paymentMethod.paymentIdentifierLabel,
+                      }));
+                  }) ?? []),
                 ]}
                 labelFunc={(item) => translate('screens/payment', item.label)}
                 descriptionFunc={(item) => translate('screens/payment', item.description)}
@@ -336,10 +346,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                     </StyledDataTableRow>
 
                     <StyledDataTableRow
-                      label={
-                        PaymentMethods.find((item) => item.id === selectedPaymentMethod.id)?.paymentIdentifierLabel ??
-                        'URI'
-                      }
+                      label={selectedPaymentMethod.paymentIdentifierLabel}
                       isLoading={isLoading || !paymentIdentifier}
                     >
                       <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
@@ -409,7 +416,9 @@ export default function PaymentLinkScreen(): JSX.Element {
                 )}
               </StyledDataTable>
             </StyledCollapsible>
-            {['OpenCryptoPay.io', 'FrankencoinPay.com'].includes(selectedPaymentMethod.id) && (
+            {[PaymentStandard.OPEN_CRYPTO_PAY, PaymentStandard.FRANKENCOIN_PAY].includes(
+              selectedPaymentMethod?.id as PaymentStandard,
+            ) && (
               <StyledVerticalStack full gap={8} center>
                 {hasQuote(payRequest) && (
                   <div className="flex flex-col w-full items-center justify-center">
