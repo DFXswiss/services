@@ -271,7 +271,7 @@ export default function SellScreen(): JSX.Element {
     requiresUpdate && updateData(isSameTargetAmount && enteredAmount ? Side.GET : Side.SPEND);
   }, [selectedTargetAmount, selectedCurrency, selectedBankAccount]);
 
-  function updateData(sideToUpdate?: Side) {
+  function updateData(sideToUpdate: Side) {
     const data = validateData({
       amount: sideToUpdate === Side.GET ? enteredAmount : undefined,
       currency: selectedCurrency,
@@ -287,12 +287,10 @@ export default function SellScreen(): JSX.Element {
     let isRunning = true;
 
     setErrorMessage(undefined);
+    setPaymentInfo(undefined);
+    setIsLoading(undefined);
 
-    if (!validatedData) {
-      setPaymentInfo(undefined);
-      setIsLoading(undefined);
-      return;
-    }
+    if (!validatedData) return;
 
     const data: SellPaymentInfo = { ...validatedData, externalTransactionId };
 
@@ -645,7 +643,7 @@ export default function SellScreen(): JSX.Element {
                 />
               </StyledVerticalStack>
 
-              {isLoading ? (
+              {isLoading && !paymentInfo ? (
                 <StyledVerticalStack center>
                   <StyledLoadingSpinner size={SpinnerSize.LG} />
                 </StyledVerticalStack>
@@ -660,7 +658,7 @@ export default function SellScreen(): JSX.Element {
                       <StyledButton
                         width={StyledButtonWidth.MIN}
                         label={translate('general/actions', 'Retry')}
-                        onClick={() => setVal('amount', enteredAmount)} // re-trigger
+                        onClick={() => updateData(Side.GET)} // re-trigger
                         className="mt-4"
                         color={StyledButtonColor.STURDY_WHITE}
                       />

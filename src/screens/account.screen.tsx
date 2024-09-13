@@ -227,9 +227,9 @@ export default function AccountScreen(): JSX.Element {
                   name="address"
                   placeholder={translate('general/actions', 'Select...')}
                   items={user.addresses.sort(sortAddressesByBlockchain)}
-                  disabled={user.addresses.length === 0}
                   labelFunc={(item) => blankedAddress(item.address, { width })}
                   descriptionFunc={(item) => item.label ?? item.wallet}
+                  forceEnable={user?.activeAddress === undefined}
                 />
               </Form>
             </div>
