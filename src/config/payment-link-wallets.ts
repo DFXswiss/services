@@ -1,32 +1,32 @@
-export enum PaymentStandard {
+export enum PaymentStandardType {
   OPEN_CRYPTO_PAY = 'OpenCryptoPay',
   FRANKENCOIN_PAY = 'FrankencoinPay',
   LIGHTNING_BOLT11 = 'LightningBolt11',
   PAY_TO_ADDRESS = 'PayToAddress',
 }
 
-export const PaymentMethods = {
-  [PaymentStandard.OPEN_CRYPTO_PAY]: {
-    id: PaymentStandard.OPEN_CRYPTO_PAY,
+export const PaymentStandards = {
+  [PaymentStandardType.OPEN_CRYPTO_PAY]: {
+    id: PaymentStandardType.OPEN_CRYPTO_PAY,
     label: 'OpenCryptoPay.io',
     description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
     paymentIdentifierLabel: 'LNURL',
   },
-  [PaymentStandard.FRANKENCOIN_PAY]: {
-    id: PaymentStandard.FRANKENCOIN_PAY,
+  [PaymentStandardType.FRANKENCOIN_PAY]: {
+    id: PaymentStandardType.FRANKENCOIN_PAY,
     label: 'FrankencoinPay.com',
     description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
     paymentIdentifierLabel: 'LNURL',
   },
-  [PaymentStandard.LIGHTNING_BOLT11]: {
-    id: PaymentStandard.LIGHTNING_BOLT11,
+  [PaymentStandardType.LIGHTNING_BOLT11]: {
+    id: PaymentStandardType.LIGHTNING_BOLT11,
     label: 'Bitcoin Lightning',
     description: 'Pay with a Bolt 11 Invoice',
     paymentIdentifierLabel: 'LNR',
   },
 
-  [PaymentStandard.PAY_TO_ADDRESS]: {
-    id: PaymentStandard.PAY_TO_ADDRESS,
+  [PaymentStandardType.PAY_TO_ADDRESS]: {
+    id: PaymentStandardType.PAY_TO_ADDRESS,
     label: '{{blockchain}} address',
     description: 'Pay to a {{blockchain}} Blockchain address',
     paymentIdentifierLabel: 'URI',

@@ -21,8 +21,8 @@ import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
 import {
   CompatibleWallets,
-  PaymentMethods,
-  PaymentStandard,
+  PaymentStandards,
+  PaymentStandardType,
   RecommendedWallets,
 } from 'src/config/payment-link-wallets';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -33,8 +33,8 @@ import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, formatLocationAddress, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
-export interface PaymentMethod {
-  id: PaymentStandard | string;
+export interface PaymentStandard {
+  id: PaymentStandardType | string;
   label: string;
   description: string;
   paymentIdentifierLabel?: string;
@@ -60,8 +60,8 @@ export interface TransferInfo {
 export interface PaymentLinkPayTerminal {
   tag: string;
   displayName: string;
-  standard: PaymentStandard;
-  possibleStandards: PaymentStandard[];
+  standard: PaymentStandardType;
+  possibleStandards: PaymentStandardType[];
   displayQr: boolean;
   recipient: {
     address?: {
@@ -94,11 +94,10 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
 }
 
 interface FormData {
-  paymentMethod: PaymentMethod;
+  paymentStandard: PaymentStandard;
   asset: string;
 }
 
-// TODO: Display PayToAddress as a separate payment method and then add chain and asset selection
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
@@ -109,6 +108,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   const [callbackUrl, setCallbackUrl] = useState<string>();
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
+  const [paymentStandards, setPaymentStandards] = useState<PaymentStandard[]>();
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
@@ -127,7 +127,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     mode: 'onTouched',
   });
 
-  const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
+  const selectedPaymentMethod = useWatch({ control, name: 'paymentStandard' });
   const selectedEthereumUriAsset = useWatch({ control, name: 'asset' });
 
   useEffect(() => {
@@ -166,12 +166,11 @@ export default function PaymentLinkScreen(): JSX.Element {
     let refetchTimeout: NodeJS.Timeout | undefined;
 
     async function fetchPayRequest(url: string) {
+      setError(undefined);
       return fetchDataApi(url)
         .then((data: PaymentLinkPayRequest | PaymentLinkPayTerminal) => {
-          setError(undefined);
           setPayRequest(data);
-          // TODO: PaymentMethods[data.standard] is not good if data.standard === PayToAddress
-          if (!selectedPaymentMethod) setValue('paymentMethod', PaymentMethods[data.standard]);
+          setPaymentStandardsSelection(data);
 
           const expiration = hasQuote(data) && new Date(data.quote.expiration);
           const refetchDelay = expiration ? expiration.getTime() - Date.now() : 1000;
@@ -190,12 +189,12 @@ export default function PaymentLinkScreen(): JSX.Element {
 
     let callback: string;
     switch (selectedPaymentMethod.id) {
-      case PaymentStandard.OPEN_CRYPTO_PAY:
-      case PaymentStandard.FRANKENCOIN_PAY:
+      case PaymentStandardType.OPEN_CRYPTO_PAY:
+      case PaymentStandardType.FRANKENCOIN_PAY:
         const lnurl = Lnurl.encode(simplifyUrl(sessionApiUrl));
         setPaymentIdentifier(Lnurl.prependLnurl(lnurl));
         break;
-      case PaymentStandard.LIGHTNING_BOLT11:
+      case PaymentStandardType.LIGHTNING_BOLT11:
         callback = url(payRequest.callback, new URLSearchParams({ amount: payRequest.minSendable.toString() }));
         callback !== callbackUrl && setCallbackUrl(callback);
         break;
@@ -254,6 +253,33 @@ export default function PaymentLinkScreen(): JSX.Element {
     return `${urlObj.origin}${newPath}?${newParams.toString()}`;
   }
 
+  function setPaymentStandardsSelection(request: PaymentLinkPayTerminal | PaymentLinkPayRequest): void {
+    if (!hasQuote(request)) return;
+
+    let standard: PaymentStandard | undefined;
+
+    const possibleStandards =
+      request?.possibleStandards.flatMap((type: PaymentStandardType) => {
+        const paymentStandard = PaymentStandards[type];
+
+        if (type !== PaymentStandardType.PAY_TO_ADDRESS) {
+          if (request.standard === type) standard = paymentStandard;
+          return paymentStandard;
+        }
+
+        return (hasQuote(request) ? request.transferAmounts : [])
+          .filter((chain) => chain.method !== 'Lightning')
+          .map((chain) => {
+            const item = { ...paymentStandard, id: chain.method.toString() };
+            if (!standard) standard = item;
+            return item;
+          });
+      }) ?? [];
+
+    setPaymentStandards(possibleStandards);
+    if (!selectedPaymentMethod && standard) setValue('paymentStandard', standard);
+  }
+
   function hasQuote(request?: PaymentLinkPayTerminal | PaymentLinkPayRequest): request is PaymentLinkPayRequest {
     return !!request && 'quote' in request;
   }
@@ -283,47 +309,31 @@ export default function PaymentLinkScreen(): JSX.Element {
               </div>
             )}
           </div>
-          <Form control={control} errors={errors}>
-            <StyledVerticalStack full gap={4} center>
-              <StyledDropdown<PaymentMethod>
-                name="paymentMethod"
-                items={[
-                  ...(payRequest?.possibleStandards.flatMap((standard: PaymentStandard) => {
-                    const paymentMethod = PaymentMethods[standard];
-                    if (standard !== PaymentStandard.PAY_TO_ADDRESS) return paymentMethod;
-
-                    return (hasQuote(payRequest) ? payRequest.transferAmounts : [])
-                      .filter((chain) => chain.method !== 'Lightning')
-                      .map((chain) => ({
-                        id: chain.method.toString(),
-                        label: translate('screens/payment', paymentMethod.label, {
-                          blockchain: chain.method,
-                        }),
-                        description: translate('screens/payment', paymentMethod.description, {
-                          blockchain: chain.method,
-                        }),
-                        paymentIdentifierLabel: paymentMethod.paymentIdentifierLabel,
-                      }));
-                  }) ?? []),
-                ]}
-                labelFunc={(item) => translate('screens/payment', item.label)}
-                descriptionFunc={(item) => translate('screens/payment', item.description)}
-                full
-                smallLabel
-              />
-
-              {assetsList && (
-                <StyledDropdown<string>
-                  name="asset"
-                  items={assetsList?.map((item) => item.asset) ?? []}
-                  labelFunc={(item) => item}
-                  descriptionFunc={() => selectedPaymentMethod.id ?? ''}
-                  full
+          {!!paymentStandards?.length && (
+            <Form control={control} errors={errors}>
+              <StyledVerticalStack full gap={4} center>
+                <StyledDropdown<PaymentStandard>
+                  name="paymentStandard"
+                  items={paymentStandards}
+                  labelFunc={(item) => translate('screens/payment', item.label, { blockchain: item.id })}
+                  descriptionFunc={(item) => translate('screens/payment', item.description, { blockchain: item.id })}
                   smallLabel
+                  full
                 />
-              )}
-            </StyledVerticalStack>
-          </Form>
+
+                {assetsList && (
+                  <StyledDropdown<string>
+                    name="asset"
+                    items={assetsList?.map((item) => item.asset) ?? []}
+                    labelFunc={(item) => item}
+                    descriptionFunc={() => selectedPaymentMethod.id ?? ''}
+                    full
+                    smallLabel
+                  />
+                )}
+              </StyledVerticalStack>
+            </Form>
+          )}
           <>
             <StyledCollapsible
               full
@@ -416,8 +426,8 @@ export default function PaymentLinkScreen(): JSX.Element {
                 )}
               </StyledDataTable>
             </StyledCollapsible>
-            {[PaymentStandard.OPEN_CRYPTO_PAY, PaymentStandard.FRANKENCOIN_PAY].includes(
-              selectedPaymentMethod?.id as PaymentStandard,
+            {[PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
+              selectedPaymentMethod?.id as PaymentStandardType,
             ) && (
               <StyledVerticalStack full gap={8} center>
                 {hasQuote(payRequest) && (
