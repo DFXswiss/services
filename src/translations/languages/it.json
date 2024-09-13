@@ -565,7 +565,9 @@
     "Please be cautious. We will never contact you first. Beware of scams.": "Si prega di essere cauti. Non ti contatteremo mai per primi. Attenzione alle truffe.",
 
     "Write a message...": "Scrivi un messaggio...",
-    "Downloading...": "Scaricamento..."
+    "Downloading...": "Scaricamento...",
+    "Image": "Immagine",
+    "Document": "Documento"
   },
   "screens/settings": {
     "Settings": "Impostazioni",

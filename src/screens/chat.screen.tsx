@@ -48,7 +48,7 @@ export default function ChatScreen(): JSX.Element {
 
   const [clickedMessage, setClickedMessage] = useState<SupportMessage>();
   const [replyToMessage, setReplyToMessage] = useState<SupportMessage>();
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [menuPosition, _setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [issueId, setIssueId] = useState<string>(() => {
     const savedState = sessionStorage.getItem('issue-id');
     return savedState ? JSON.parse(savedState) : '';
@@ -86,7 +86,7 @@ export default function ChatScreen(): JSX.Element {
     }
   }, [supportIssue?.messages.length]);
 
-  const onChatBubbleClick = (e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessage) => {
+  function onChatBubbleClick(e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessage) {
     if (!e) {
       setClickedMessage(undefined);
       return;
@@ -96,13 +96,13 @@ export default function ChatScreen(): JSX.Element {
     // TODO: Uncomment to enable replies & reactions (feature not yet available)
     // setMenuPosition({ top: e.clientY, left: e.clientX });
     // setClickedMessage(message);
-  };
+  }
 
-  const onEmojiClick = (messageId: number, emoji: string, e?: React.MouseEvent<HTMLDivElement>) => {
+  function onEmojiClick(messageId: number, emoji: string, e?: React.MouseEvent<HTMLDivElement>) {
     e?.stopPropagation();
     handleEmojiClick(messageId, emoji);
     setClickedMessage(undefined);
-  };
+  }
 
   return (
     <Layout title={supportIssue && translate('screens/support', IssueTypeLabels[supportIssue?.type])} noPadding>
@@ -266,30 +266,29 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
   const [inputValue, setInputValue] = useState<string>();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  // TODO: refactor, write it as a normal function
-  const handleSend = () => {
+  function handleSend() {
     submitMessage(inputValue, selectedFiles, replyToMessage);
 
     setInputValue('');
     setSelectedFiles([]);
     setReplyToMessage(undefined);
     return;
-  };
+  }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files as FileList;
 
     if (files && files.length > 0) {
       setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
       setTimeout(() => (e.target.value = ''), 100);
     }
-  };
+  }
 
-  const removeFile = (index: number) => {
+  function removeFile(index: number) {
     setSelectedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
-  };
+  }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (e.shiftKey) {
@@ -298,7 +297,7 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
         handleSend();
       }
     }
-  };
+  }
 
   return (
     <div className="flex flex-col gap-2 p-4 bg-dfxGray-300">
@@ -424,6 +423,8 @@ function ChatBubble({
   onClick,
   onEmojiClick,
 }: ChatBubbleProps): JSX.Element {
+  const { translate } = useSettingsContext();
+
   const isUser = !author || author === 'Customer';
   const hasFile = !!fileName;
   const failedToSend = status === SupportMessageStatus.FAILED;
@@ -453,7 +454,9 @@ function ChatBubble({
               )}
               <div className="flex flex-col px-2 text-left">
                 <p className="font-semibold text-sm">{replyToMessage.author}</p>
-                <p className="text-sm line-clamp-1 overflow-ellipsis">{replyToMessage.message ?? 'Media'}</p>
+                <p className="text-sm line-clamp-1 overflow-ellipsis">
+                  {replyToMessage.message ?? translate('screens/support', 'Media')}
+                </p>
               </div>
             </div>
           </div>
@@ -476,7 +479,6 @@ function ChatBubble({
           </div>
           <div className="flex flex-row items-center justify-center text-xs italic text-end text-gray-500">
             {new Date(created).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-            {/* TODO: Cover all states with icons */}
             {failedToSend ? (
               <MdErrorOutline className="inline-block text-base ml-1 mb-0.5" />
             ) : status === SupportMessageStatus.SENT ? (
@@ -547,7 +549,7 @@ function ChatBubbleFileEmbed({ messageId, fileName, file }: ChatBubbleFileEmbedP
     ? translate('screens/support', 'Downloading...')
     : !isLoaded
     ? translate('general/actions', 'Download')
-    : `${fileType} · ${formatBytes(file.size)}`;
+    : `${translate('screens/support', fileType)} · ${formatBytes(file.size)}`;
 
   return (
     <>
