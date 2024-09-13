@@ -17,8 +17,7 @@ export class Lnurl {
   }
 
   static prependLnurl(lnurl: string): string {
-    const baseDomain = `${window.location.protocol}//${window.location.host}`;
-    return `${baseDomain}/pl/?lightning=${lnurl}`;
+    return `${process.env.PUBLIC_URL}/pl/?lightning=${lnurl}`;
   }
 
   static addressToLnurl(address: string): string {
