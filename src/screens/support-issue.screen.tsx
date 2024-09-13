@@ -14,7 +14,7 @@ import {
   useBank,
   useBankAccount,
   useSessionContext,
-  useSupport,
+  useSupportChatContext,
   useUserContext,
 } from '@dfx.swiss/react';
 import {
@@ -104,17 +104,16 @@ export default function SupportIssueScreen(): JSX.Element {
 
   const { navigate } = useNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
-  const { createIssue } = useSupport();
   const { translate, translateError } = useSettingsContext();
   const { user } = useUserContext();
   const { isLoggedIn } = useSessionContext();
   const { getIbans } = useBankAccount();
   const { getBanks } = useBank();
   const [urlParams, setUrlParams] = useSearchParams();
+  const { createSupportIssue } = useSupportChatContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const [issueCreated, setIssueCreated] = useState(false);
   const [selectTransaction, setSelectTransaction] = useState(false);
   const [accounts, setAccounts] = useState<Iban[]>();
   const [isKycComplete, setIsKycComplete] = useState<boolean>();
@@ -235,9 +234,9 @@ export default function SupportIssueScreen(): JSX.Element {
         };
       }
 
-      await createIssue(request);
-
-      setIssueCreated(true);
+      await createSupportIssue(request, data.file)
+        .then((response) => navigate(`/support/chat?issue-id=${response}`))
+        .catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
@@ -292,19 +291,6 @@ export default function SupportIssueScreen(): JSX.Element {
     >
       {selectedType === SupportIssueType.LIMIT_REQUEST && isKycComplete === undefined ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
-      ) : issueCreated ? (
-        <StyledVerticalStack gap={6} full>
-          <p className="text-dfxGray-700">
-            {translate('screens/support', 'The issue has been successfully submitted. You will be contacted by email.')}
-          </p>
-
-          <StyledButton
-            label={translate('general/actions', 'Ok')}
-            onClick={onDone}
-            width={StyledButtonWidth.FULL}
-            isLoading={isLoading}
-          />
-        </StyledVerticalStack>
       ) : selectTransaction ? (
         <>
           <p className="text-dfxGray-700">
