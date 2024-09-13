@@ -62,7 +62,7 @@ export default function ChatScreen(): JSX.Element {
       }
     } else {
       setSync(true);
-      loadSupportIssue(+issueIdParam).catch(() => {
+      loadSupportIssue(issueIdParam).catch(() => {
         navigate('/support/issue', { replace: true });
       });
 
