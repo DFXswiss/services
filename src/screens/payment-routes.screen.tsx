@@ -47,7 +47,7 @@ import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
-import { useUserGuard } from 'src/hooks/guard.hook';
+import { useAddressGuard } from 'src/hooks/guard.hook';
 import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, formatLocationAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
@@ -110,7 +110,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
     CreatePaymentLinkStep.ROUTE,
   );
 
-  useUserGuard('/login');
+  useAddressGuard('/login');
 
   async function togglePaymentLinkStatus(id: string, status: PaymentLinkStatus) {
     setIsUpdatingPaymentLink((prev) => [...prev, id]);
