@@ -246,20 +246,40 @@ export default function BuyScreen(): JSX.Element {
     }
   }, [selectedAmount]);
 
-  // Spend data changed
+  // SPEND data changed
   useEffect(() => {
     const requiresUpdate =
       selectedAmount !== paymentInfo?.amount?.toString() ||
       selectedCurrency?.name !== paymentInfo?.currency.name ||
       selectedPaymentMethod !== validatedData?.paymentMethod;
-    requiresUpdate && updateData(Side.GET);
+
+    const hasSpendData = selectedAmount && selectedCurrency && selectedPaymentMethod;
+    const hasGetData = selectedTargetAmount && selectedAsset;
+
+    if (requiresUpdate) {
+      if (hasSpendData) {
+        updateData(Side.GET);
+      } else if (hasGetData) {
+        updateData(Side.SPEND);
+      }
+    }
   }, [selectedAmount, selectedCurrency, selectedPaymentMethod]);
 
-  // Get data changed
+  // GET data changed
   useEffect(() => {
     const isSameTargetAmount = selectedTargetAmount === paymentInfo?.estimatedAmount?.toString();
     const requiresUpdate = !isSameTargetAmount || selectedAsset?.uniqueName !== paymentInfo?.asset?.uniqueName;
-    requiresUpdate && updateData(isSameTargetAmount && selectedAmount ? Side.GET : Side.SPEND);
+
+    const hasSpendData = selectedAmount && selectedCurrency && selectedPaymentMethod;
+    const hasGetData = selectedTargetAmount && selectedAsset;
+
+    if (requiresUpdate) {
+      if (hasGetData) {
+        updateData(Side.SPEND);
+      } else if (hasSpendData) {
+        updateData(Side.GET);
+      }
+    }
   }, [selectedTargetAmount, selectedAsset]);
 
   function updateData(sideToUpdate: Side) {
