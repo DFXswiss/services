@@ -1,8 +1,8 @@
-import { DfxContextProvider } from '@dfx.swiss/react';
+import { DfxContextProvider, PaymentRoutesContextProvider, SupportChatContextProvider } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
 import { Suspense, lazy } from 'react';
-import { Navigate, RouteObject, RouterProvider } from 'react-router-dom';
+import { Navigate, Outlet, RouteObject, RouterProvider } from 'react-router-dom';
 import { Layout } from './components/layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
@@ -25,11 +25,12 @@ const BuyScreen = lazy(() => import('./screens/buy.screen'));
 const KycRedirectScreen = lazy(() => import('./screens/kyc-redirect.screen'));
 const KycScreen = lazy(() => import('./screens/kyc.screen'));
 const LinkScreen = lazy(() => import('./screens/link.screen'));
-const PaymentRoutes = lazy(() => import('./screens/payment-routes.screen'));
+const PaymentRoutesScreen = lazy(() => import('./screens/payment-routes.screen'));
 const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
 const SellInfoScreen = lazy(() => import('./screens/sell-info.screen'));
 const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
 const SupportScreen = lazy(() => import('./screens/support.screen'));
+const ChatScreen = lazy(() => import('./screens/chat.screen'));
 const TfaScreen = lazy(() => import('./screens/tfa.screen'));
 const TransactionScreen = lazy(() => import('./screens/transaction.screen'));
 const AccountMerge = lazy(() => import('./screens/account-merge.screen'));
@@ -98,7 +99,11 @@ export const Routes = [
   },
   {
     path: '/routes',
-    element: withSuspense(<PaymentRoutes />),
+    element: withSuspense(
+      <PaymentRoutesContextProvider>
+        <PaymentRoutesScreen />
+      </PaymentRoutesContextProvider>,
+    ),
   },
   {
     path: '/pl',
@@ -155,8 +160,22 @@ export const Routes = [
     element: withSuspense(<SupportScreen />),
   },
   {
-    path: '/support/issue',
-    element: withSuspense(<SupportIssueScreen />),
+    path: '/support',
+    element: (
+      <SupportChatContextProvider>
+        <Outlet />
+      </SupportChatContextProvider>
+    ),
+    children: [
+      {
+        path: 'issue',
+        element: withSuspense(<SupportIssueScreen />),
+      },
+      {
+        path: 'chat',
+        element: withSuspense(<ChatScreen />),
+      },
+    ],
   },
   {
     path: '/bank-accounts',

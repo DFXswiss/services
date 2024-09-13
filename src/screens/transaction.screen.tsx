@@ -418,7 +418,7 @@ interface TxInfoProps {
   tx: DetailTransaction;
 }
 
-function TxInfo({ tx }: TxInfoProps): JSX.Element {
+export function TxInfo({ tx }: TxInfoProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();

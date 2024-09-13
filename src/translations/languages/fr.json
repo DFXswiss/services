@@ -32,7 +32,8 @@
     "Delete account": "Supprimer le compte",
     "Copy Address": "Copier l'adresse",
     "Open Explorer": "Ouvrir l'explorateur",
-    "Select transaction": "Sélectionner la transaction"
+    "Select transaction": "Sélectionner la transaction",
+    "Download": "Télécharger"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -561,7 +562,12 @@
     "Join the DFX Community. Our moderators are happy to assist you in the group.": "Rejoignez la communauté DFX. Nos modérateurs sont ravis de vous aider dans le groupe.",
     "If you have a specific question or problem, you can submit a ticket here.": "Si vous avez une question ou un problème spécifique, vous pouvez soumettre un ticket ici.",
     "Join now": "Rejoignez maintenant",
-    "Please be cautious. We will never contact you first. Beware of scams.": "Soyez prudent. Nous ne vous contacterons jamais en premier. Méfiez-vous des arnaques."
+    "Please be cautious. We will never contact you first. Beware of scams.": "Soyez prudent. Nous ne vous contacterons jamais en premier. Méfiez-vous des arnaques.",
+
+    "Write a message...": "Écrire un message...",
+    "Downloading...": "Téléchargement...",
+    "Image": "Image",
+    "Document": "Document"
   },
   "screens/settings": {
     "Settings": "Paramètres",

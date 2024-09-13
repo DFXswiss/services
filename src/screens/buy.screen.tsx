@@ -133,7 +133,7 @@ export default function BuyScreen(): JSX.Element {
 
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({
-    defaultValues: { amount: '100' },
+    defaultValues: { amount: !amountOut ? '100' : undefined },
   });
 
   const selectedAmount = useWatch({ control, name: 'amount' });
@@ -262,7 +262,7 @@ export default function BuyScreen(): JSX.Element {
     requiresUpdate && updateData(isSameTargetAmount && selectedAmount ? Side.GET : Side.SPEND);
   }, [selectedTargetAmount, selectedAsset]);
 
-  function updateData(sideToUpdate?: Side) {
+  function updateData(sideToUpdate: Side) {
     const data = validateData({
       amount: sideToUpdate === Side.GET ? selectedAmount : undefined,
       currency: selectedCurrency,
@@ -278,12 +278,10 @@ export default function BuyScreen(): JSX.Element {
     let isRunning = true;
 
     setErrorMessage(undefined);
+    setPaymentInfo(undefined);
+    setIsLoading(undefined);
 
-    if (!validatedData) {
-      setPaymentInfo(undefined);
-      setIsLoading(undefined);
-      return;
-    }
+    if (!validatedData) return;
 
     const data: BuyPaymentInfo = { ...validatedData, externalTransactionId };
 
@@ -523,7 +521,7 @@ export default function BuyScreen(): JSX.Element {
                   )}
                 </StyledVerticalStack>
 
-                {isLoading ? (
+                {isLoading && !paymentInfo ? (
                   <StyledVerticalStack center>
                     <StyledLoadingSpinner size={SpinnerSize.LG} />
                   </StyledVerticalStack>
@@ -538,7 +536,7 @@ export default function BuyScreen(): JSX.Element {
                         <StyledButton
                           width={StyledButtonWidth.MIN}
                           label={translate('general/actions', 'Retry')}
-                          onClick={updateData}
+                          onClick={() => updateData(Side.GET)}
                           className="mt-4"
                           color={StyledButtonColor.STURDY_WHITE}
                         />
