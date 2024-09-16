@@ -7,7 +7,7 @@ export function InfoBannerComponent(): JSX.Element {
   const { infoBanner, closeInfoBanner } = useSettingsContext();
 
   return infoBanner ? (
-    <div className="flex flex-row justify-center items-center w-full p-3.5 bg-dfxRed-100">
+    <div className="flex flex-row justify-center items-center w-full p-3.5 bg-dfxBlue-800">
       <p className="font-semibold text-sm px-8">
         {infoBanner?.[language?.symbol.toLowerCase() as keyof InfoBanner] ?? infoBanner?.en}
       </p>
