@@ -486,7 +486,7 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
   const walletNames = wallets ?? Object.keys(CompatibleWallets);
 
   return (
-    <div className="flex flex-col w-full gap-4 px-5">
+    <div className="flex flex-col w-full gap-4 px-4">
       {header && (
         <div className="flex flex-row items-center gap-2">
           <div className="flex-grow bg-gradient-to-r from-white to-dfxGray-600 h-[1px]" />
@@ -494,34 +494,22 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
           <div className="flex-grow bg-gradient-to-r from-dfxGray-600 to-white h-[1px]" />
         </div>
       )}
-      <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 place-items-center gap-4 justify-end">
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))' }}>
         {walletNames.map((walletName) => {
           const wallet = CompatibleWallets[walletName];
 
           return (
             <div
               key={walletName}
-              className="flex flex-col items-center gap-2 cursor-pointer"
+              className="flex flex-col items-center gap-2 cursor-pointer max-w-[120px] min-w-0"
               onClick={() => window.open(wallet.websiteUrl)}
-              style={{ flex: '1 1 0', maxWidth: '120px', minWidth: '0' }}
             >
               <img
-                className="border border-dfxGray-400 shadow-md bg-white rounded-md overflow-clip"
+                className="border border-dfxGray-400 shadow-md bg-white rounded-md"
                 src={wallet.iconUrl}
                 alt={walletName}
-                style={{ width: '100%', height: 'auto' }}
               />
-              <p
-                className="text-center font-semibold text-dfxGray-600 w-full text-2xs sm:text-xs truncate"
-                style={{
-                  maxWidth: '100%',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {walletName}
-              </p>
+              <p className="text-center font-semibold text-dfxGray-600 w-full text-xs truncate">{walletName}</p>
             </div>
           );
         })}

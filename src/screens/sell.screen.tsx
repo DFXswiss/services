@@ -254,21 +254,44 @@ export default function SellScreen(): JSX.Element {
     }
   }, [enteredAmount]);
 
-  // Spend data changed
+  // SPEND data changed
   useEffect(() => {
     const requiresUpdate =
       enteredAmount !== paymentInfo?.amount?.toString() || selectedAsset?.uniqueName !== paymentInfo?.asset.uniqueName;
-    requiresUpdate && updateData(Side.GET);
+
+    const hasSpendData = enteredAmount && selectedAsset;
+    const hasGetData = selectedTargetAmount && selectedCurrency && selectedBankAccount;
+
+    if (requiresUpdate) {
+      if (hasSpendData) {
+        updateData(Side.GET);
+      } else if (hasGetData) {
+        updateData(Side.SPEND);
+      }
+    }
+
+    // requiresUpdate && updateData(Side.GET);
   }, [enteredAmount, selectedAsset]);
 
-  // Get data changed
+  // GET data changed
   useEffect(() => {
-    const isSameTargetAmount = selectedTargetAmount === paymentInfo?.estimatedAmount?.toString();
     const requiresUpdate =
-      !isSameTargetAmount ||
+      selectedTargetAmount !== paymentInfo?.estimatedAmount?.toString() ||
       selectedCurrency?.name !== paymentInfo?.currency?.name ||
       selectedBankAccount?.iban !== validatedData?.iban;
-    requiresUpdate && updateData(isSameTargetAmount && enteredAmount ? Side.GET : Side.SPEND);
+
+    const hasSpendData = enteredAmount && selectedAsset;
+    const hasGetData = selectedTargetAmount && selectedCurrency && selectedBankAccount;
+
+    if (requiresUpdate) {
+      if (hasGetData) {
+        updateData(Side.SPEND);
+      } else if (hasSpendData) {
+        updateData(Side.GET);
+      }
+    }
+
+    // requiresUpdate && updateData(isSameTargetAmount && enteredAmount ? Side.GET : Side.SPEND);
   }, [selectedTargetAmount, selectedCurrency, selectedBankAccount]);
 
   function updateData(sideToUpdate: Side) {
