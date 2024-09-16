@@ -28,7 +28,6 @@ import { RiCheckFill } from 'react-icons/ri';
 import { useSearchParams } from 'react-router-dom';
 import { IssueTypeLabels, toPaymentStateLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { useUserGuard } from 'src/hooks/guard.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, formatBytes } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -37,8 +36,6 @@ import { TxInfo } from './transaction.screen';
 const emojiSet = ['👍', '❤️', '😂', '😮', '😢', '👏'];
 
 export default function ChatScreen(): JSX.Element {
-  useUserGuard('/login');
-
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { supportIssue, isLoading, isError, loadSupportIssue, handleEmojiClick, setSync } = useSupportChatContext();
@@ -65,7 +62,9 @@ export default function ChatScreen(): JSX.Element {
       }
     } else {
       setSync(true);
-      loadSupportIssue(+issueIdParam);
+      loadSupportIssue(issueIdParam).catch(() => {
+        navigate('/support/issue', { replace: true });
+      });
 
       if (issueIdParam !== issueId) {
         setIssueId(issueIdParam);
@@ -105,7 +104,11 @@ export default function ChatScreen(): JSX.Element {
   }
 
   return (
-    <Layout title={supportIssue && translate('screens/support', IssueTypeLabels[supportIssue?.type])} noPadding>
+    <Layout
+      title={supportIssue && translate('screens/support', IssueTypeLabels[supportIssue?.type])}
+      onBack={() => navigate('/support/issue')}
+      noPadding
+    >
       {isLoading || !supportIssue ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
