@@ -38,6 +38,7 @@ export interface PaymentStandard {
   label: string;
   description: string;
   paymentIdentifierLabel?: string;
+  blockchain?: Blockchain;
 }
 
 interface Quote {
@@ -159,7 +160,15 @@ export default function PaymentLinkScreen(): JSX.Element {
   }, []);
 
   useEffect(() => {
+    if (!selectedPaymentMethod) return;
     resetField('asset');
+    const url = new URL(sessionApiUrl);
+    const params = new URLSearchParams(url.search);
+    if (params.get('standard') !== selectedPaymentMethod.id) {
+      params.set('standard', selectedPaymentMethod.id);
+      url.search = params.toString();
+      setSessionApiUrl(url.toString());
+    }
   }, [selectedPaymentMethod]);
 
   useEffect(() => {
@@ -199,7 +208,9 @@ export default function PaymentLinkScreen(): JSX.Element {
         callback !== callbackUrl && setCallbackUrl(callback);
         break;
       default:
-        const assets = payRequest.transferAmounts.find((item) => item.method === selectedPaymentMethod.id)?.assets;
+        const assets = payRequest.transferAmounts.find(
+          (item) => item.method === selectedPaymentMethod?.blockchain,
+        )?.assets;
         const asset = assets?.find((item) => item.asset === selectedEthereumUriAsset)?.asset ?? assets?.[0]?.asset;
         if (!asset) {
           setError('No asset found for this payment method');
@@ -207,13 +218,17 @@ export default function PaymentLinkScreen(): JSX.Element {
         }
         callback = url(
           payRequest.callback,
-          new URLSearchParams({ quote: payRequest.quote.id, method: selectedPaymentMethod.id, asset }),
+          new URLSearchParams({
+            quote: payRequest.quote.id,
+            method: selectedPaymentMethod.blockchain?.toString() ?? '',
+            asset,
+          }),
         );
         callback !== callbackUrl && setCallbackUrl(callback);
         asset !== selectedEthereumUriAsset && setValue('asset', asset);
         break;
     }
-  }, [payRequest, selectedPaymentMethod, selectedEthereumUriAsset]);
+  }, [payRequest, sessionApiUrl, selectedPaymentMethod, selectedEthereumUriAsset]);
 
   useEffect(() => {
     if (!callbackUrl) return;
@@ -270,7 +285,7 @@ export default function PaymentLinkScreen(): JSX.Element {
         return (hasQuote(request) ? request.transferAmounts : [])
           .filter((chain) => chain.method !== 'Lightning')
           .map((chain) => {
-            const item = { ...paymentStandard, id: chain.method.toString() };
+            const item = { ...paymentStandard, blockchain: chain.method };
             if (!standard) standard = item;
             return item;
           });
@@ -285,7 +300,8 @@ export default function PaymentLinkScreen(): JSX.Element {
   }
 
   const assetsList =
-    hasQuote(payRequest) && payRequest.transferAmounts.find((item) => item.method === selectedPaymentMethod.id)?.assets;
+    hasQuote(payRequest) &&
+    payRequest.transferAmounts.find((item) => item.method === selectedPaymentMethod.blockchain)?.assets;
 
   return (
     <Layout backButton={false} smallMenu>
@@ -315,8 +331,12 @@ export default function PaymentLinkScreen(): JSX.Element {
                 <StyledDropdown<PaymentStandard>
                   name="paymentStandard"
                   items={paymentStandards}
-                  labelFunc={(item) => translate('screens/payment', item.label, { blockchain: item.id })}
-                  descriptionFunc={(item) => translate('screens/payment', item.description, { blockchain: item.id })}
+                  labelFunc={(item) =>
+                    translate('screens/payment', item.label, { blockchain: item.blockchain?.toString() ?? '' })
+                  }
+                  descriptionFunc={(item) =>
+                    translate('screens/payment', item.description, { blockchain: item.blockchain?.toString() ?? '' })
+                  }
                   smallLabel
                   full
                 />
@@ -326,7 +346,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                     name="asset"
                     items={assetsList?.map((item) => item.asset) ?? []}
                     labelFunc={(item) => item}
-                    descriptionFunc={() => selectedPaymentMethod.id ?? ''}
+                    descriptionFunc={() => selectedPaymentMethod.blockchain ?? ''}
                     full
                     smallLabel
                   />
