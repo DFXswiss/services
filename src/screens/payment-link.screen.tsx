@@ -446,7 +446,7 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
   const walletNames = wallets ?? Object.keys(CompatibleWallets);
 
   return (
-    <div className="flex flex-col w-full gap-4 px-4 md:px-5">
+    <div className="flex flex-col w-full gap-4 px-4">
       {header && (
         <div className="flex flex-row items-center gap-2">
           <div className="flex-grow bg-gradient-to-r from-white to-dfxGray-600 h-[1px]" />
@@ -454,7 +454,7 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
           <div className="flex-grow bg-gradient-to-r from-dfxGray-600 to-white h-[1px]" />
         </div>
       )}
-      <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))' }}>
         {walletNames.map((walletName) => {
           const wallet = CompatibleWallets[walletName];
 
