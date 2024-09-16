@@ -12,7 +12,7 @@ export const PaymentMethods = [
     paymentIdentifierLabel: 'LNURL',
   },
   {
-    id: 'Bitcoin',
+    id: 'Bitcoin Lightning',
     label: 'Bitcoin Lightning',
     description: 'Pay with a Bolt 11 Invoice',
     paymentIdentifierLabel: 'LNR',

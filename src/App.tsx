@@ -107,11 +107,11 @@ export const Routes = [
   },
   {
     path: '/pl',
-    element: <Navigate to={`/payment-link${window.location.search}`} />,
+    element: withSuspense(<PaymentLinkScreen />),
   },
   {
     path: '/payment-link',
-    element: withSuspense(<PaymentLinkScreen />),
+    element: <Navigate to={`/pl${window.location.search}`} />,
   },
   {
     path: '/kyc',
