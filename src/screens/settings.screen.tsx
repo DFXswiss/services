@@ -1,4 +1,4 @@
-import { Fiat, Language, useFiatContext, useUserContext } from '@dfx.swiss/react';
+import { Fiat, Language, useFiatContext, UserAddress, useUserContext } from '@dfx.swiss/react';
 import {
   AlignContent,
   DfxIcon,
@@ -13,6 +13,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
@@ -21,7 +22,6 @@ import { ConfirmationOverlay, RenameAddressOverlay } from 'src/components/overla
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
-import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 
@@ -48,15 +48,14 @@ export default function SettingsScreen(): JSX.Element {
   const { translate, language, currency, availableLanguages, changeLanguage, changeCurrency } = useSettingsContext();
   const { currencies } = useFiatContext();
   const { user, isUserLoading } = useUserContext();
-  const { copy } = useClipboard();
   const { setWallet } = useWalletContext();
   const { width } = useWindowContext();
   const { deleteAddress, deleteAccount, renameAddress } = useUserContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
 
   const [menuAddress, setMenuAddress] = useState<string>();
+  const [showDisabledWallets, setShowDisabledWallets] = useState(false);
   const [overlayType, setOverlayType] = useState<OverlayType>(OverlayType.NONE);
 
   useUserGuard('/login');
@@ -89,20 +88,6 @@ export default function SettingsScreen(): JSX.Element {
     }
   }, [selectedCurrency]);
 
-  useEffect(() => {
-    const element = rootRef?.current ?? document;
-    if (element) {
-      function closeMenu(event: Event) {
-        if (menuAddress && !overlayType && !menuRef.current?.contains(event.target as Node)) {
-          toggleMenuAddress();
-        }
-      }
-
-      element.addEventListener('mousedown', closeMenu);
-      return () => element.removeEventListener('mousedown', closeMenu);
-    }
-  }, [menuAddress, overlayType, rootRef, menuRef]);
-
   function toggleMenuAddress(address?: string) {
     setMenuAddress((menuAddress) => (menuAddress !== address ? address : undefined));
   }
@@ -125,6 +110,7 @@ export default function SettingsScreen(): JSX.Element {
           break;
       }
     }
+
     setOverlayType(OverlayType.NONE);
     toggleMenuAddress();
   }
@@ -132,6 +118,12 @@ export default function SettingsScreen(): JSX.Element {
   const title = OverlayHeader[overlayType]
     ? `${translate('general/actions', OverlayHeader[overlayType])}?`
     : translate('screens/settings', 'Settings');
+
+  const addressesList = user?.addresses
+    .sort(sortAddressesByBlockchain)
+    .concat(
+      showDisabledWallets ? ((user as any)?.disabledAddresses as UserAddress[]).sort(sortAddressesByBlockchain) : [],
+    );
 
   return (
     <Layout title={title} rootRef={rootRef} onBack={overlayType ? () => onCloseOverlay() : undefined}>
@@ -170,73 +162,83 @@ export default function SettingsScreen(): JSX.Element {
             </div>
           ) : (
             <>
-              {user?.addresses.length ? (
+              {addressesList?.length ? (
                 <StyledVerticalStack full gap={2}>
                   <StyledDataTable
                     label={translate('screens/settings', 'Your Wallets')}
                     alignContent={AlignContent.BETWEEN}
                   >
-                    {user.addresses.sort(sortAddressesByBlockchain).map((address) => (
-                      <StyledDataTableRow key={address.address}>
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="flex flex-row gap-2 font-semibold">
-                            {address.label ?? address.wallet}
-                            {address.address === user.activeAddress?.address && (
-                              <div className="flex bg-dfxGray-400 font-bold rounded-sm px-1.5 text-2xs items-center justify-center">
-                                {translate('screens/settings', 'Active').toUpperCase()}
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-xs text-dfxGray-700">{blankedAddress(address.address, { width })}</div>
-                        </div>
-                        <div className="relative flex items-center">
-                          <button onClick={() => toggleMenuAddress(address.address)}>
-                            <DfxIcon icon={IconVariant.THREE_DOTS_VERT} color={IconColor.BLUE} />
-                          </button>
-                          {menuAddress === address.address && (
+                    {addressesList.map((address) => {
+                      const isDisabled = (user as any)?.disabledAddresses.some(
+                        (disabledAddress: UserAddress) => disabledAddress.address === address.address,
+                      );
+
+                      return (
+                        <StyledDataTableRow key={address.address}>
+                          <div className="flex flex-col items-start gap-1">
                             <div
-                              ref={menuRef}
-                              className="absolute right-5 top-3 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip"
+                              className={`flex flex-row gap-2 font-semibold ${isDisabled ? 'text-dfxGray-700' : ''}`}
                             >
-                              <div className="flex flex-col divide-y-0.5 divide-dfxGray-400 items-start bg-dfxGray-100 w-36">
-                                <button
-                                  className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-                                  onClick={() => {
-                                    copy(address.address);
-                                    toggleMenuAddress();
-                                  }}
-                                >
-                                  {translate('general/actions', 'Copy')}
-                                </button>
-                                {address.explorerUrl && (
-                                  <button
-                                    className="hover:bg-dfxGray-300  w-full text-left px-4 py-2"
-                                    onClick={() => {
+                              {address.label ?? address.wallet}
+                              {address.address === user?.activeAddress?.address && (
+                                <div className="flex bg-dfxGray-400 font-bold rounded-sm px-1.5 text-2xs items-center justify-center">
+                                  {translate('screens/settings', 'Active').toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-xs text-dfxGray-700">{blankedAddress(address.address, { width })}</div>
+                          </div>
+                          <div className="relative flex items-center">
+                            <button onClick={() => toggleMenuAddress(address.address)}>
+                              <DfxIcon icon={IconVariant.THREE_DOTS_VERT} color={IconColor.BLUE} />
+                            </button>
+                            {menuAddress === address.address && (
+                              <OverflowMenu
+                                menuItems={[
+                                  {
+                                    label: translate('general/actions', 'Copy'),
+                                    onClick: () => {
+                                      copy(address.address);
+                                      toggleMenuAddress();
+                                    },
+                                  },
+                                  {
+                                    label: translate('general/actions', 'Open Explorer'),
+                                    onClick: () => {
                                       window.open(address.explorerUrl, '_blank');
                                       toggleMenuAddress();
-                                    }}
-                                  >
-                                    {translate('general/actions', 'Open Explorer')}
-                                  </button>
-                                )}
-                                <button
-                                  className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-                                  onClick={() => setOverlayType(OverlayType.RENAME_ADDRESS)}
-                                >
-                                  {translate('general/actions', 'Rename')}
-                                </button>
-                                <button
-                                  className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-                                  onClick={() => setOverlayType(OverlayType.DELETE_ADDRESS)}
-                                >
-                                  {translate('general/actions', 'Delete')}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </StyledDataTableRow>
-                    ))}
+                                    },
+                                  },
+                                  {
+                                    label: translate('general/actions', 'Rename'),
+                                    onClick: () => setOverlayType(OverlayType.RENAME_ADDRESS),
+                                    hidden: isDisabled,
+                                  },
+                                  {
+                                    label: translate('general/actions', 'Delete'),
+                                    onClick: () => setOverlayType(OverlayType.DELETE_ADDRESS),
+                                    hidden: isDisabled,
+                                  },
+                                ]}
+                                onClose={() => toggleMenuAddress()}
+                              />
+                            )}
+                          </div>
+                        </StyledDataTableRow>
+                      );
+                    })}
+                    <StyledDataTableRow>
+                      <div
+                        className="flex flex-row w-full justify-between items-start gap-1 text-xs cursor-pointer select-none text-dfxGray-700 hover:text-dfxGray-800"
+                        onClick={() => setShowDisabledWallets((prev) => !prev)}
+                      >
+                        <div>{`${showDisabledWallets ? 'Hide' : 'Show'} deleted wallets`}</div>
+                        <DfxIcon
+                          icon={showDisabledWallets ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
+                          color={IconColor.DARK_GRAY}
+                        />
+                      </div>
+                    </StyledDataTableRow>
                   </StyledDataTable>
                 </StyledVerticalStack>
               ) : (
@@ -251,6 +253,59 @@ export default function SettingsScreen(): JSX.Element {
         </StyledVerticalStack>
       )}
     </Layout>
+  );
+}
+
+interface MenuItem {
+  label: string;
+  hidden?: boolean;
+  onClick: () => void;
+}
+
+interface OverflowMenuProps {
+  menuItems: MenuItem[];
+  onClose: () => void;
+}
+
+function OverflowMenu({ menuItems, onClose }: OverflowMenuProps): JSX.Element {
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (document) {
+      function closeMenu(event: Event) {
+        if (!menuRef.current?.contains(event.target as Node)) {
+          onClose();
+        }
+      }
+
+      document.addEventListener('mousedown', closeMenu);
+      return () => document.removeEventListener('mousedown', closeMenu);
+    }
+  }, []);
+
+  return (
+    <div
+      ref={menuRef}
+      className="absolute right-5 top-3 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip"
+    >
+      <div className="flex flex-col divide-y-0.5 divide-dfxGray-400 items-start bg-dfxGray-100 w-36">
+        {menuItems
+          .filter((item) => !item.hidden)
+          .map((item) => (
+            <button
+              key={item.label}
+              className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
+              onClick={(e) => {
+                e.stopPropagation();
+
+                item.onClick();
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+      </div>
+    </div>
   );
 }
 
