@@ -14,7 +14,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
@@ -114,10 +114,12 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
 
-  const [sessionApiUrl, setSessionApiUrl] = useState<string>(() => {
-    const savedState = sessionStorage.getItem('apiUrl');
-    return savedState ? JSON.parse(savedState) : '';
-  });
+  const sessionApiUrl = useRef<string>(sessionStorage.getItem('apiUrl') ?? '');
+
+  const setSessionApiUrl = (newUrl: string) => {
+    sessionApiUrl.current = newUrl;
+    sessionStorage.setItem('apiUrl', JSON.stringify(newUrl));
+  };
 
   const {
     control,
@@ -140,7 +142,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     } else if (urlParams.size) {
       apiUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment?${urlParams.toString()}`;
     } else {
-      apiUrl = sessionApiUrl;
+      apiUrl = sessionApiUrl.current;
     }
 
     if (!apiUrl) {
@@ -148,10 +150,7 @@ export default function PaymentLinkScreen(): JSX.Element {
       return;
     }
 
-    if (apiUrl !== sessionApiUrl) {
-      setSessionApiUrl(apiUrl);
-      sessionStorage.setItem('apiUrl', JSON.stringify(apiUrl));
-    }
+    if (apiUrl !== sessionApiUrl.current) setSessionApiUrl(apiUrl);
 
     if (urlParams.size) {
       const clearedParams = new URLSearchParams();
@@ -162,7 +161,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   useEffect(() => {
     if (!selectedPaymentMethod) return;
     resetField('asset');
-    const url = new URL(sessionApiUrl);
+    const url = new URL(sessionApiUrl.current);
     const params = new URLSearchParams(url.search);
     if (params.get('standard') !== selectedPaymentMethod.id) {
       params.set('standard', selectedPaymentMethod.id);
@@ -178,6 +177,8 @@ export default function PaymentLinkScreen(): JSX.Element {
       setError(undefined);
       return fetchDataApi(url)
         .then((data: PaymentLinkPayRequest | PaymentLinkPayTerminal) => {
+          if (sessionApiUrl.current !== url) return;
+
           setPayRequest(data);
           setPaymentStandardsSelection(data);
 
@@ -188,10 +189,10 @@ export default function PaymentLinkScreen(): JSX.Element {
         .catch((error: ApiError) => setError(error.message ?? 'Unknown Error'));
     }
 
-    sessionApiUrl && fetchPayRequest(sessionApiUrl);
+    sessionApiUrl.current && fetchPayRequest(sessionApiUrl.current);
 
     return () => refetchTimeout && clearTimeout(refetchTimeout);
-  }, [sessionApiUrl]);
+  }, [sessionApiUrl.current]);
 
   useEffect(() => {
     if (!payRequest || !hasQuote(payRequest)) return;
@@ -200,7 +201,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     switch (selectedPaymentMethod.id) {
       case PaymentStandardType.OPEN_CRYPTO_PAY:
       case PaymentStandardType.FRANKENCOIN_PAY:
-        const lnurl = Lnurl.encode(simplifyUrl(sessionApiUrl));
+        const lnurl = Lnurl.encode(simplifyUrl(sessionApiUrl.current));
         setPaymentIdentifier(Lnurl.prependLnurl(lnurl));
         break;
       case PaymentStandardType.LIGHTNING_BOLT11:
@@ -228,7 +229,7 @@ export default function PaymentLinkScreen(): JSX.Element {
         asset !== selectedEthereumUriAsset && setValue('asset', asset);
         break;
     }
-  }, [payRequest, sessionApiUrl, selectedPaymentMethod, selectedEthereumUriAsset]);
+  }, [payRequest, sessionApiUrl.current, selectedPaymentMethod, selectedEthereumUriAsset]);
 
   useEffect(() => {
     if (!callbackUrl) return;
