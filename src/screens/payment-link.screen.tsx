@@ -17,7 +17,6 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
-import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
 import {
   CompatibleWallets,
@@ -178,6 +177,7 @@ export default function PaymentLinkScreen(): JSX.Element {
       return fetchDataApi(url)
         .then((data: PaymentLinkPayRequest | PaymentLinkPayTerminal) => {
           if (sessionApiUrl.current !== url) return;
+          if (!handlePayRequestError(data.error, data.message)) return;
 
           setPayRequest(data);
           setPaymentStandardsSelection(data);
@@ -300,6 +300,20 @@ export default function PaymentLinkScreen(): JSX.Element {
     return !!request && 'quote' in request;
   }
 
+  function handlePayRequestError(error?: string, message?: string): boolean {
+    if (!error) return true;
+
+    if (message === 'No pending payment found') {
+      return true;
+    } else if (message?.includes('Active payment link not found')) {
+      setError(translate('screens/payment', 'Invalid Payment Link'));
+    } else {
+      setError(message ?? 'Unknown Error');
+    }
+
+    return false;
+  }
+
   const assetsList =
     hasQuote(payRequest) &&
     payRequest.transferAmounts.find((item) => item.method === selectedPaymentMethod.blockchain)?.assets;
@@ -307,7 +321,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   return (
     <Layout backButton={false} smallMenu>
       {error ? (
-        <ErrorHint message={error} />
+        <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
       ) : !payRequest ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
