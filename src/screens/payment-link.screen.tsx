@@ -481,7 +481,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                   </div>
                 )}
                 <WalletGrid wallets={RecommendedWallets} header={translate('screens/payment', 'Recommended wallets')} />
-                <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
+                <WalletGrid header={translate('screens/payment', 'Compatible wallets')} />
               </StyledVerticalStack>
             )}
           </>
