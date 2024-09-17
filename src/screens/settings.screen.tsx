@@ -54,7 +54,7 @@ export default function SettingsScreen(): JSX.Element {
 
   const rootRef = useRef<HTMLDivElement>(null);
 
-  const [menuAddress, setMenuAddress] = useState<string>();
+  const [menuAddress, setMenuAddress] = useState<UserAddress>();
   const [showDisabledWallets, setShowDisabledWallets] = useState(false);
   const [overlayType, setOverlayType] = useState<OverlayType>(OverlayType.NONE);
 
@@ -88,17 +88,13 @@ export default function SettingsScreen(): JSX.Element {
     }
   }, [selectedCurrency]);
 
-  function toggleMenuAddress(address?: string) {
-    setMenuAddress((menuAddress) => (menuAddress !== address ? address : undefined));
-  }
-
   async function onCloseOverlay(result?: any): Promise<void> {
     if (result) {
       switch (overlayType) {
         case OverlayType.DELETE_ADDRESS:
           if (!menuAddress) break;
-          deleteAddress(menuAddress);
-          menuAddress === user?.activeAddress?.address && setWallet();
+          deleteAddress(menuAddress.address);
+          menuAddress.address === user?.activeAddress?.address && setWallet();
           break;
         case OverlayType.DELETE_ACCOUNT:
           deleteAccount();
@@ -106,29 +102,27 @@ export default function SettingsScreen(): JSX.Element {
           break;
         case OverlayType.RENAME_ADDRESS:
           if (!menuAddress) break;
-          await renameAddress(menuAddress, result);
+          await renameAddress(menuAddress.address, result);
           break;
       }
     }
 
     setOverlayType(OverlayType.NONE);
-    toggleMenuAddress();
+    setMenuAddress(undefined);
   }
 
   const title = OverlayHeader[overlayType]
     ? `${translate('general/actions', OverlayHeader[overlayType])}?`
     : translate('screens/settings', 'Settings');
 
-  const addressesList = user?.addresses
-    .sort(sortAddressesByBlockchain)
-    .concat(
-      showDisabledWallets ? ((user as any)?.disabledAddresses as UserAddress[]).sort(sortAddressesByBlockchain) : [],
-    );
+  const userAddresses = user?.addresses.sort(sortAddressesByBlockchain);
+  const disabledAddresses = showDisabledWallets ? user?.disabledAddresses.sort(sortAddressesByBlockchain) : [];
+  const addressesList = (userAddresses ?? []).concat(disabledAddresses ?? []);
 
   return (
     <Layout title={title} rootRef={rootRef} onBack={overlayType ? () => onCloseOverlay() : undefined}>
       {overlayType ? (
-        <SettingsOverlay overlayType={overlayType} onCloseOverlay={onCloseOverlay} data={menuAddress} />
+        <SettingsOverlay type={overlayType} address={menuAddress} onClose={onCloseOverlay} />
       ) : (
         <StyledVerticalStack full gap={8}>
           <StyledVerticalStack full gap={4}>
@@ -189,24 +183,24 @@ export default function SettingsScreen(): JSX.Element {
                             <div className="text-xs text-dfxGray-700">{blankedAddress(address.address, { width })}</div>
                           </div>
                           <div className="relative flex items-center">
-                            <button onClick={() => toggleMenuAddress(address.address)}>
+                            <button onClick={() => setMenuAddress(address)}>
                               <DfxIcon icon={IconVariant.THREE_DOTS_VERT} color={IconColor.BLUE} />
                             </button>
-                            {menuAddress === address.address && (
+                            {menuAddress?.address === address.address && (
                               <OverflowMenu
                                 menuItems={[
                                   {
                                     label: translate('general/actions', 'Copy'),
                                     onClick: () => {
                                       copy(address.address);
-                                      toggleMenuAddress();
+                                      setMenuAddress(undefined);
                                     },
                                   },
                                   {
                                     label: translate('general/actions', 'Open Explorer'),
                                     onClick: () => {
                                       window.open(address.explorerUrl, '_blank');
-                                      toggleMenuAddress();
+                                      setMenuAddress(undefined);
                                     },
                                   },
                                   {
@@ -220,7 +214,7 @@ export default function SettingsScreen(): JSX.Element {
                                     hidden: isDisabled,
                                   },
                                 ]}
-                                onClose={() => toggleMenuAddress()}
+                                onClose={() => setMenuAddress(undefined)}
                               />
                             )}
                           </div>
@@ -297,7 +291,6 @@ function OverflowMenu({ menuItems, onClose }: OverflowMenuProps): JSX.Element {
               className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
               onClick={(e) => {
                 e.stopPropagation();
-
                 item.onClick();
               }}
             >
@@ -310,19 +303,19 @@ function OverflowMenu({ menuItems, onClose }: OverflowMenuProps): JSX.Element {
 }
 
 interface SettingsOverlayProps {
-  overlayType: OverlayType;
-  onCloseOverlay: (result?: any) => Promise<void>;
-  data?: string;
+  type: OverlayType;
+  address?: UserAddress;
+  onClose: (result?: any) => Promise<void>;
 }
 
-function SettingsOverlay({ overlayType, onCloseOverlay, data }: SettingsOverlayProps): JSX.Element {
+function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.Element {
   const { width } = useWindowContext();
   const { translate } = useSettingsContext();
 
-  const formattedAddress = blankedAddress(data ?? '', { width });
-
-  switch (overlayType) {
+  switch (type) {
     case OverlayType.DELETE_ADDRESS:
+      const formattedAddress = blankedAddress(address?.address ?? '', { width });
+
       return (
         <ConfirmationOverlay
           messageContent={
@@ -335,8 +328,8 @@ function SettingsOverlay({ overlayType, onCloseOverlay, data }: SettingsOverlayP
           }
           cancelLabel={translate('general/actions', 'Cancel')}
           confirmLabel={translate('general/actions', 'Delete')}
-          onCancel={() => onCloseOverlay(false)}
-          onConfirm={() => onCloseOverlay(true)}
+          onCancel={() => onClose(false)}
+          onConfirm={() => onClose(true)}
         />
       );
     case OverlayType.DELETE_ACCOUNT:
@@ -348,12 +341,12 @@ function SettingsOverlay({ overlayType, onCloseOverlay, data }: SettingsOverlayP
           )}
           cancelLabel={translate('general/actions', 'Cancel')}
           confirmLabel={translate('general/actions', 'Delete')}
-          onCancel={() => onCloseOverlay(false)}
-          onConfirm={() => onCloseOverlay(true)}
+          onCancel={() => onClose(false)}
+          onConfirm={() => onClose(true)}
         />
       );
     case OverlayType.RENAME_ADDRESS:
-      return <RenameAddressOverlay onClose={onCloseOverlay} />;
+      return <RenameAddressOverlay placeholder={address?.label ?? address?.wallet} onClose={onClose} />;
     default:
       return <></>;
   }
