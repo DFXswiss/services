@@ -159,16 +159,19 @@ export default function PaymentLinkScreen(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (!selectedPaymentMethod) return;
-    resetField('asset');
-    const url = new URL(sessionApiUrl.current);
-    const params = new URLSearchParams(url.search);
-    if (params.get('standard') !== selectedPaymentMethod.id) {
-      params.set('standard', selectedPaymentMethod.id);
-      url.search = params.toString();
-      setSessionApiUrl(url.toString());
+    if (!selectedPaymentMethod) {
+      if (payRequest) setValue('paymentStandard', PaymentStandards[payRequest.standard]);
+    } else {
+      resetField('asset');
+      const url = new URL(sessionApiUrl.current);
+      const params = new URLSearchParams(url.search);
+      if (params.get('standard') !== selectedPaymentMethod.id) {
+        params.set('standard', selectedPaymentMethod.id);
+        url.search = params.toString();
+        setSessionApiUrl(url.toString());
+      }
     }
-  }, [selectedPaymentMethod]);
+  }, [selectedPaymentMethod, payRequest]);
 
   useEffect(() => {
     let refetchTimeout: NodeJS.Timeout | undefined;
