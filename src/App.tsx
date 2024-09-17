@@ -175,6 +175,10 @@ export const Routes = [
         path: 'chat',
         element: withSuspense(<ChatScreen />),
       },
+      {
+        path: 'chat/:id',
+        element: withSuspense(<ChatScreen />),
+      },
     ],
   },
   {
