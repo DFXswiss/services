@@ -177,7 +177,7 @@ export default function PaymentLinkScreen(): JSX.Element {
       return fetchDataApi(url)
         .then((data: PaymentLinkPayRequest | PaymentLinkPayTerminal) => {
           if (sessionApiUrl.current !== url) return;
-          if (!handlePayRequestError(data.error, data.message)) return;
+          if (!isValidPayRequest(data.error, data.message)) return;
 
           setPayRequest(data);
           setPaymentStandardsSelection(data);
@@ -300,7 +300,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     return !!request && 'quote' in request;
   }
 
-  function handlePayRequestError(error?: string, message?: string): boolean {
+  function isValidPayRequest(error?: string, message?: string): boolean {
     if (!error) return true;
 
     if (message === 'No pending payment found') {
