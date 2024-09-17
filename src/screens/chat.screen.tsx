@@ -25,7 +25,7 @@ import { BsReply } from 'react-icons/bs';
 import { HiOutlineDownload, HiOutlinePaperClip } from 'react-icons/hi';
 import { MdAccessTime, MdErrorOutline, MdOutlineCancel, MdOutlineClose, MdSend } from 'react-icons/md';
 import { RiCheckFill } from 'react-icons/ri';
-import { useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { IssueTypeLabels, toPaymentStateLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -38,46 +38,34 @@ const emojiSet = ['👍', '❤️', '😂', '😮', '😢', '👏'];
 export default function ChatScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
-  const { supportIssue, isLoading, isError, loadSupportIssue, handleEmojiClick, setSync } = useSupportChatContext();
+  const { supportIssue, isLoading, loadSupportIssue, handleEmojiClick, setSync } = useSupportChatContext();
+  const { id: issueUidParam } = useParams();
 
-  const [urlParams, setUrlParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const [clickedMessage, setClickedMessage] = useState<SupportMessage>();
   const [replyToMessage, setReplyToMessage] = useState<SupportMessage>();
   const [menuPosition, _setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
-  const [issueId, setIssueId] = useState<string>(() => {
-    const savedState = sessionStorage.getItem('issue-id');
-    return savedState ? JSON.parse(savedState) : '';
+  const [sessionUid, setSessionUid] = useState<string>(() => {
+    return sessionStorage.getItem('issue-uid') || '';
   });
 
-  // TODO (later): Refactor into search parameter hook
   useEffect(() => {
-    const issueIdParam = urlParams.get('issue-id') ?? issueId;
-
-    if (!issueIdParam) {
-      if (!isLoading && !isError && !supportIssue) {
-        navigate('/support/issue', { replace: true });
-        return;
-      }
-    } else {
+    if (issueUidParam) {
+      setSessionUid(issueUidParam);
+      sessionStorage.setItem('issue-uid', issueUidParam);
+      navigate('/support/chat', { replace: true });
+    } else if (sessionUid) {
       setSync(true);
-      loadSupportIssue(issueIdParam).catch(() => {
+      loadSupportIssue(sessionUid).catch(() => {
         navigate('/support/issue', { replace: true });
       });
-
-      if (issueIdParam !== issueId) {
-        setIssueId(issueIdParam);
-        sessionStorage.setItem('issue-id', JSON.stringify(issueIdParam));
-      }
-    }
-
-    if (urlParams.toString()) {
-      setUrlParams(new URLSearchParams());
+    } else {
+      navigate('/support/issue', { replace: true });
     }
 
     return () => setSync(false);
-  }, []);
+  }, [issueUidParam, sessionUid]);
 
   useEffect(() => {
     if (supportIssue?.messages && messagesEndRef.current) {
