@@ -33,21 +33,9 @@ export const PaymentStandards = {
   },
 };
 
-export const RecommendedWallets = ['Frankencoin', 'Cake Wallet', 'Wallet of Satoshi', 'Phoenix'];
+export const RecommendedWallets = ['Frankencoin', 'Phoenix', 'Wallet of Satoshi', 'BtcTaro'];
 
 export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: string; recommended?: boolean } } = {
-  Alby: {
-    websiteUrl: 'https://getalby.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Alby.webp',
-  },
-  BareBitcoin: {
-    websiteUrl: 'https://barebitcoin.no/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BareBitcoin.webp',
-  },
-  Bipa: {
-    websiteUrl: 'https://bipa.app/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bipa.webp',
-  },
   BitBanana: {
     websiteUrl: 'https://bitbanana.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BitBanana.webp',
@@ -68,51 +56,26 @@ export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
     websiteUrl: 'https://breez.technology/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Breez.webp',
   },
-  BTCPayServer: {
-    websiteUrl: 'https://btcpayserver.org/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCPayServer.webp',
-  },
-  'Cake Wallet': {
-    websiteUrl: 'https://cakewallet.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/4.webp',
-    recommended: true,
+  BtcTaro: {
+    websiteUrl: 'https://dfx.swiss/bitcoin.html',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCTaroDFX.webp',
   },
   CoinCorner: {
     websiteUrl: 'https://www.coincorner.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CoinCorner.webp',
   },
-  Coinos: {
-    websiteUrl: 'https://coinos.io/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/coinos.webp',
-  },
   Electrum: {
     websiteUrl: 'https://electrum.org/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Electrum.webp',
-  },
-  Fountain: {
-    websiteUrl: 'https://fountainplatform.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Fountain.webp',
   },
   Frankencoin: {
     websiteUrl: 'https://frankencoin.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Frankencoin.webp',
     recommended: true,
   },
-  Galoy: {
-    websiteUrl: 'https://galoy.io/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Galoy.webp',
-  },
-  Geyser: {
-    websiteUrl: 'https://geyser.fund/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Geyser.webp',
-  },
   LifPay: {
     websiteUrl: 'https://lifpay.me/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LifPay.webp',
-  },
-  LightningTipBot: {
-    websiteUrl: 'https://github.com/LightningTipBot/LightningTipBot',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LightningTopBot.webp',
   },
   LipaWallet: {
     websiteUrl: 'https://lipa.swiss/',
@@ -121,10 +84,6 @@ export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
   LNbits: {
     websiteUrl: 'https://lnbits.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LNbits.webp',
-  },
-  Machankura: {
-    websiteUrl: 'https://8333.mobi/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Machankura.webp',
   },
   Muun: {
     websiteUrl: 'https://muun.com/',
@@ -142,14 +101,6 @@ export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
   PouchPH: {
     websiteUrl: 'https://pouch.ph/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Pouchph.webp',
-  },
-  River: {
-    websiteUrl: 'https://river.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/River.webp',
-  },
-  ShockWallet: {
-    websiteUrl: 'https://shockwallet.app/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/ShockWallet.webp',
   },
   'Wallet of Satoshi': {
     websiteUrl: 'https://www.walletofsatoshi.com/',
