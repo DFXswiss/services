@@ -118,7 +118,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   const setSessionApiUrl = (newUrl: string) => {
     sessionApiUrl.current = newUrl;
-    sessionStorage.setItem('apiUrl', JSON.stringify(newUrl));
+    sessionStorage.setItem('apiUrl', newUrl);
   };
 
   const {
