@@ -1845,8 +1845,8 @@ export const FeatureTree: Page[] = [
 
   {
     id: 'frankencoin-buy-polygon',
-    header: 'Buy Frankencoin Assets on Ethereum',
-    description: 'Buy Frankencoin Assets on Ethereum',
+    header: 'Buy Frankencoin Assets on Polygon',
+    description: 'Buy Frankencoin Assets on Polygon',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
@@ -1902,8 +1902,8 @@ export const FeatureTree: Page[] = [
 
   {
     id: 'frankencoin-buy-arbitrum',
-    header: 'Buy Frankencoin Assets on Ethereum',
-    description: 'Buy Frankencoin Assets on Ethereum',
+    header: 'Buy Frankencoin Assets on Arbitrum',
+    description: 'Buy Frankencoin Assets on Arbitrum',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
@@ -1939,6 +1939,44 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'FPS',
+        img: 'fps',
+        disabled: true,
+      },
+    ],
+  },
+
+  {
+    id: 'frankencoin-buy-base',
+    header: 'Buy Frankencoin Assets on Base',
+    description: 'Buy Frankencoin Assets on Base',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BASE, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'ZCHF',
+        img: 'frankencoin',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BASE, assetOut: 'ZCHF' },
           },
         },
       },
