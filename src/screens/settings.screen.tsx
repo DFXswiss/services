@@ -226,7 +226,11 @@ export default function SettingsScreen(): JSX.Element {
                         className="flex flex-row w-full justify-between items-start gap-1 text-xs cursor-pointer select-none text-dfxGray-700 hover:text-dfxGray-800"
                         onClick={() => setShowDisabledWallets((prev) => !prev)}
                       >
-                        <div>{`${showDisabledWallets ? 'Hide' : 'Show'} deleted wallets`}</div>
+                        <div>
+                          {showDisabledWallets
+                            ? translate('screens/settings', 'Hide deleted wallets')
+                            : translate('screens/settings', 'Show deleted wallets')}
+                        </div>
                         <DfxIcon
                           icon={showDisabledWallets ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
                           color={IconColor.DARK_GRAY}

@@ -573,6 +573,9 @@
     "Currency": "Valuta",
     "Label": "Etichetta",
 
+    "Show deleted wallets": "Mostra portafogli eliminati",
+    "Hide deleted wallets": "Nascondi portafogli eliminati",
+
     "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "I tuoi dati rimarranno sui nostri server temporaneamente prima della cancellazione definitiva. Se hai domande, contatta il nostro team di supporto."
   },

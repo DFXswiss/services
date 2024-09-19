@@ -573,6 +573,9 @@
     "Currency": "Währung",
     "Label": "Bezeichnung",
 
+    "Show deleted wallets": "Gelöschte Wallets anzeigen",
+    "Hide deleted wallets": "Gelöschte Wallets ausblenden",
+
     "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team."
   },
