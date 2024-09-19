@@ -1,7 +1,6 @@
 import {
   ApiError,
   Country,
-  CreatePaymentLink,
   CreatePaymentLinkPayment,
   Fiat,
   PaymentLinkPaymentMode,
@@ -24,6 +23,7 @@ import {
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
+  StyledButtonSize,
   StyledButtonWidth,
   StyledCollapsible,
   StyledDataTable,
@@ -100,6 +100,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const [editRecipient, setEditRecipient] = useState<string>();
   const [showCreatePaymentLinkOverlay, setShowCreatePaymentLinkOverlay] = useState(false);
   const [showCreatePaymentOverlay, setShowCreatePaymentOverlay] = useState<string>();
   const [isUpdatingPaymentLink, setIsUpdatingPaymentLink] = useState<string[]>([]);
@@ -141,6 +142,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
   function onDone(id?: string) {
     setShowCreatePaymentLinkOverlay(false);
     setShowCreatePaymentOverlay(undefined);
+    setEditRecipient(undefined);
 
     if (id) {
       setTimeout(() => paymentLinkRefs.current[id]?.scrollIntoView());
@@ -160,6 +162,8 @@ export default function PaymentRoutesScreen(): JSX.Element {
       ? `Payment Link: ${translate('screens/payment', createPaymentLinkStepToTitleMap[createPaymentLinkStep])}`
       : showCreatePaymentOverlay
       ? 'Create payment'
+      : editRecipient !== undefined
+      ? 'Edit recipient'
       : deleteRoute
       ? 'Delete payment route?'
       : 'Payment routes';
@@ -172,6 +176,8 @@ export default function PaymentRoutesScreen(): JSX.Element {
             : setShowCreatePaymentLinkOverlay(false)
       : showCreatePaymentOverlay !== undefined
       ? () => setShowCreatePaymentOverlay(undefined)
+      : editRecipient !== undefined
+      ? () => setEditRecipient(undefined)
       : deleteRoute
       ? () => onDeleteRoute(false)
       : undefined;
@@ -183,7 +189,19 @@ export default function PaymentRoutesScreen(): JSX.Element {
       ) : showCreatePaymentLinkOverlay ? (
         <CreatePaymentLinkOverlay step={createPaymentLinkStep} setStep={setCreatePaymentLinkStep} onDone={onDone} />
       ) : showCreatePaymentOverlay !== undefined ? (
-        <CreatePaymentOverlay id={showCreatePaymentOverlay} onDone={onDone} />
+        <CreatePaymentLinkOverlay
+          step={CreatePaymentLinkStep.PAYMENT}
+          paymentLinkId={showCreatePaymentOverlay}
+          setStep={setCreatePaymentLinkStep}
+          onDone={onDone}
+        />
+      ) : editRecipient !== undefined ? (
+        <CreatePaymentLinkOverlay
+          step={CreatePaymentLinkStep.RECIPIENT}
+          paymentLinkId={editRecipient}
+          setStep={setCreatePaymentLinkStep}
+          onDone={onDone}
+        />
       ) : deleteRoute ? (
         <ConfirmationOverlay
           messageContent={
@@ -401,8 +419,23 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                   },
                                 },
                               ].filter((item) => item.text)}
+                              expansionContent={
+                                <StyledButton
+                                  label={translate('general/actions', 'Copy')}
+                                  onClick={() => copy(link.recipient.name)}
+                                  color={StyledButtonColor.STURDY_WHITE}
+                                />
+                              }
                             >
                               {link.recipient.name && <p>{link.recipient.name}</p>}
+                              {/* TODO: Remove this StyledButton (replaced by expansionContent above) */}
+                              <StyledButton
+                                label={translate('general/actions', 'Temp Edit')}
+                                onClick={() => setEditRecipient(link.id)}
+                                color={StyledButtonColor.STURDY_WHITE}
+                                width={StyledButtonWidth.MIN}
+                                size={StyledButtonSize.SMALL}
+                              />
                             </StyledDataTableExpandableRow>
                           )}
                           {link.payment != null && (
@@ -570,6 +603,7 @@ enum CreatePaymentLinkStep {
 
 interface CreatePaymentLinkOverlayProps {
   step: CreatePaymentLinkStep;
+  paymentLinkId?: string;
   setStep: (title: CreatePaymentLinkStep) => void;
   onDone: (id?: string) => void;
 }
@@ -581,13 +615,18 @@ const createPaymentLinkStepToTitleMap = {
   [CreatePaymentLinkStep.DONE]: 'Summary',
 };
 
-function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOverlayProps): JSX.Element {
+function CreatePaymentLinkOverlay({
+  step,
+  paymentLinkId,
+  setStep,
+  onDone,
+}: CreatePaymentLinkOverlayProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
-  const { createPaymentLink } = usePaymentRoutesContext();
+  const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink } = usePaymentRoutesContext();
   const { currencies } = useFiatContext();
   const { getCountries } = useCountry();
-  const { paymentRoutes } = usePaymentRoutesContext();
+  const { paymentRoutes, paymentLinks } = usePaymentRoutesContext();
 
   const [countries, setCountries] = useState<Country[]>([]);
   const [isCountryLoading, setIsCountryLoading] = useState(true);
@@ -601,12 +640,39 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
     reset,
     getValues,
     setValue,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<FormData>({
     mode: 'onTouched',
   });
 
   const data = watch();
+
+  useEffect(() => {
+    getCountries()
+      .then(setCountries)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsCountryLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (paymentLinkId) {
+      const prefilledRecipientData = paymentLinks?.find((link) => link.id === paymentLinkId)?.recipient;
+      if (prefilledRecipientData && countries) {
+        const prefilledCountry = countries.find((country) => country.symbol === prefilledRecipientData.address.country);
+        reset({
+          recipientName: prefilledRecipientData.name,
+          recipientStreet: prefilledRecipientData.address.street,
+          recipientHouseNumber: prefilledRecipientData.address.houseNumber,
+          recipientZip: prefilledRecipientData.address.zip,
+          recipientCity: prefilledRecipientData.address.city,
+          recipientCountry: prefilledCountry,
+          recipientPhone: prefilledRecipientData.phone,
+          recipientEmail: prefilledRecipientData.mail,
+          recipientWebsite: prefilledRecipientData.website,
+        });
+      }
+    }
+  }, [paymentLinks, countries]);
 
   useEffect(() => {
     const maxIdRoute = paymentRoutes?.sell.reduce((prev, current) => (prev.id < current.id ? prev : current));
@@ -617,21 +683,19 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
     setError(undefined);
   }, [step]);
 
-  useEffect(() => {
-    getCountries()
-      .then(setCountries)
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsCountryLoading(false));
-  }, []);
-
   async function onSubmit(data: FormData) {
     setIsLoading(true);
 
     try {
-      const request: CreatePaymentLink = {
-        routeId: data.routeId ? +data.routeId.id : undefined,
-        externalId: data.externalId ? data.externalId : undefined,
-        recipient: {
+      const request: any = {}; // TODO: Set type to CreatePaymentLink
+
+      if (data.routeId || data.externalId) {
+        request.routeId = data.routeId ? +data.routeId.id : undefined;
+        request.externalId = data.externalId ? data.externalId : undefined;
+      }
+
+      if (hasRecipientData) {
+        request.recipient = {
           name: data.recipientName,
           address: {
             street: data.recipientStreet,
@@ -643,21 +707,35 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
           phone: data.recipientPhone,
           mail: data.recipientEmail,
           website: data.recipientWebsite,
-        },
-      } as CreatePaymentLink;
+        };
+      }
 
-      if (data.paymentMode) {
+      if (hasPaymentData) {
         request.payment = {
           mode: data.paymentMode,
           amount: +data.paymentAmount,
           externalId: data.paymentExternalId,
           currency: data.paymentCurrency.name,
           expiryDate: data.paymentExpiryDate,
-        } as any;
+        };
       }
 
-      const paymentLink = await createPaymentLink(request);
-      onDone(paymentLink?.id);
+      switch (step) {
+        case CreatePaymentLinkStep.RECIPIENT:
+          if (!paymentLinkId) break;
+          await updatePaymentLink(request, paymentLinkId);
+          break;
+        case CreatePaymentLinkStep.PAYMENT:
+          if (!paymentLinkId) break;
+          await createPaymentLinkPayment(request.payment, paymentLinkId);
+          break;
+        default:
+          const newPaymentLink = await createPaymentLink(request);
+          paymentLinkId = newPaymentLink?.id;
+          break;
+      }
+
+      onDone(paymentLinkId);
       setStep(CreatePaymentLinkStep.ROUTE);
       reset();
     } catch (e) {
@@ -740,95 +818,96 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
               />
             </StyledVerticalStack>
           )}
-          {step === CreatePaymentLinkStep.RECIPIENT &&
-            (isCountryLoading ? (
-              <StyledLoadingSpinner size={SpinnerSize.LG} />
-            ) : (
-              <StyledVerticalStack gap={2} full>
+          {step === CreatePaymentLinkStep.RECIPIENT && (
+            <StyledVerticalStack gap={2} full>
+              <StyledInput
+                name="recipientName"
+                autocomplete="name"
+                label={translate('screens/kyc', 'Name')}
+                placeholder={translate('screens/kyc', 'John Smith')}
+                full
+                smallLabel
+              />
+              <StyledHorizontalStack gap={2}>
                 <StyledInput
-                  name="recipientName"
-                  autocomplete="name"
-                  label={translate('screens/kyc', 'Name')}
-                  placeholder={translate('screens/kyc', 'John Smith')}
+                  name="recipientStreet"
+                  autocomplete="street"
+                  label={translate('screens/kyc', 'Street')}
+                  placeholder={translate('screens/kyc', 'Street')}
                   full
                   smallLabel
                 />
-                <StyledHorizontalStack gap={2}>
-                  <StyledInput
-                    name="recipientStreet"
-                    autocomplete="street"
-                    label={translate('screens/kyc', 'Street')}
-                    placeholder={translate('screens/kyc', 'Street')}
-                    full
-                    smallLabel
-                  />
-                  <StyledInput
-                    name="recipientHouseNumber"
-                    autocomplete="house-number"
-                    label={translate('screens/kyc', 'House nr.')}
-                    placeholder="xx"
-                    small
-                    smallLabel
-                  />
-                </StyledHorizontalStack>
-                <StyledHorizontalStack gap={2}>
-                  <StyledInput
-                    name="recipientZip"
-                    autocomplete="zip"
-                    label={translate('screens/kyc', 'ZIP code')}
-                    placeholder="12345"
-                    small
-                    smallLabel
-                  />
-                  <StyledInput
-                    name="recipientCity"
-                    autocomplete="city"
-                    label={translate('screens/kyc', 'City')}
-                    placeholder="Berlin"
-                    full
-                    smallLabel
-                  />
-                </StyledHorizontalStack>
-                <StyledSearchDropdown
-                  rootRef={rootRef}
-                  name="recipientCountry"
-                  autocomplete="country"
-                  label={translate('screens/kyc', 'Country')}
-                  placeholder={translate('general/actions', 'Select...')}
-                  items={countries}
-                  labelFunc={(item) => item.name}
-                  filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
-                  matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+                <StyledInput
+                  name="recipientHouseNumber"
+                  autocomplete="house-number"
+                  label={translate('screens/kyc', 'House nr.')}
+                  placeholder="xx"
+                  small
+                  smallLabel
+                />
+              </StyledHorizontalStack>
+              <StyledHorizontalStack gap={2}>
+                <StyledInput
+                  name="recipientZip"
+                  autocomplete="zip"
+                  label={translate('screens/kyc', 'ZIP code')}
+                  placeholder="12345"
+                  small
                   smallLabel
                 />
                 <StyledInput
-                  name="recipientPhone"
-                  autocomplete="phone"
-                  type="tel"
-                  label={translate('screens/kyc', 'Phone number')}
-                  placeholder="+49 12345678"
-                  smallLabel
-                />
-                <StyledInput
-                  name="recipientEmail"
-                  autocomplete="email"
-                  type="email"
-                  label={translate('screens/kyc', 'Email address')}
-                  placeholder={translate('screens/kyc', 'example@mail.com')}
-                  smallLabel
+                  name="recipientCity"
+                  autocomplete="city"
+                  label={translate('screens/kyc', 'City')}
+                  placeholder="Berlin"
                   full
-                />
-                <StyledInput
-                  name="recipientWebsite"
-                  autocomplete="website"
-                  type="url"
-                  label={translate('screens/kyc', 'Website')}
-                  placeholder={translate('screens/kyc', 'https://example.com')}
                   smallLabel
-                  full
                 />
-              </StyledVerticalStack>
-            ))}
+              </StyledHorizontalStack>
+              <StyledSearchDropdown
+                rootRef={rootRef}
+                name="recipientCountry"
+                autocomplete="country"
+                label={translate('screens/kyc', 'Country')}
+                placeholder={
+                  isCountryLoading
+                    ? translate('screens/payment', 'Loading countries...')
+                    : translate('general/actions', 'Select...')
+                }
+                items={countries ?? []}
+                labelFunc={(item) => item.name}
+                filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+                matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+                smallLabel
+              />
+              <StyledInput
+                name="recipientPhone"
+                autocomplete="phone"
+                type="tel"
+                label={translate('screens/kyc', 'Phone number')}
+                placeholder="+49 12345678"
+                smallLabel
+              />
+              <StyledInput
+                name="recipientEmail"
+                autocomplete="email"
+                type="email"
+                label={translate('screens/kyc', 'Email address')}
+                placeholder={translate('screens/kyc', 'example@mail.com')}
+                smallLabel
+                full
+              />
+              <StyledInput
+                name="recipientWebsite"
+                autocomplete="website"
+                type="url"
+                label={translate('screens/kyc', 'Website')}
+                placeholder={translate('screens/kyc', 'https://example.com')}
+                smallLabel
+                full
+              />
+            </StyledVerticalStack>
+          )}
           {step === CreatePaymentLinkStep.PAYMENT && (
             <>
               <StyledDropdown
@@ -935,14 +1014,26 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
             </div>
           )}
 
-          {step === CreatePaymentLinkStep.DONE ? (
-            <StyledButton
-              type="submit"
-              label={translate('general/actions', 'Create')}
-              onClick={handleSubmit(onSubmit)}
-              width={StyledButtonWidth.FULL}
-              isLoading={isLoading}
-            />
+          {step === CreatePaymentLinkStep.DONE || paymentLinkId ? (
+            <div className="flex flex-col w-full gap-4">
+              {paymentLinkId && (
+                <StyledButton
+                  type="submit"
+                  label={translate('general/actions', 'Cancel')}
+                  onClick={() => onDone()}
+                  width={StyledButtonWidth.FULL}
+                  color={StyledButtonColor.STURDY_WHITE}
+                />
+              )}
+              <StyledButton
+                type="submit"
+                label={translate('general/actions', 'Create')}
+                onClick={handleSubmit(onSubmit)}
+                width={StyledButtonWidth.FULL}
+                isLoading={isLoading}
+                disabled={!isValid}
+              />
+            </div>
           ) : (
             <div className="flex flex-col w-full gap-4">
               {(skipPaymentData || skipRecipientData) && (
@@ -990,11 +1081,13 @@ function CreatePaymentLinkOverlay({ step, setStep, onDone }: CreatePaymentLinkOv
   );
 }
 
+// TODO: Remove this
 interface CreatePaymentOverlayProps {
   id: string;
   onDone: (id?: string) => void;
 }
 
+// TODO: Remove this
 function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
@@ -1112,6 +1205,7 @@ function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.El
   );
 }
 
+// TODO: Import from packages
 interface DateAndTimePickerProps extends ControlProps {
   hideLabel?: boolean;
   smallLabel?: boolean;

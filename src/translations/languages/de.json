@@ -428,6 +428,8 @@
     "Address deleted": "Adresse gelöscht",
     "Video identification required": "Video-Identifikation erforderlich",
 
+    "Loading countries...": "Länder werden geladen...",
+
     "Payment method": "Zahlungsmethode",
     "Standard bank transaction": "Standard-Banktransaktion",
     "Instant bank transaction": "Sofort-Banktransaktion",
