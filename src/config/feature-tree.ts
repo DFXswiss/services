@@ -509,14 +509,14 @@ export const FeatureTree: Page[] = [
     dfxStyle: true,
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.POLYGON, assetOut: 'MATIC' },
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'POL' },
           },
         },
       },
@@ -1146,14 +1146,14 @@ export const FeatureTree: Page[] = [
     dfxStyle: true,
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.POLYGON, assetIn: 'MATIC' },
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'POL' },
           },
         },
       },
@@ -1850,14 +1850,14 @@ export const FeatureTree: Page[] = [
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.POLYGON, assetOut: 'MATIC' },
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'POL' },
           },
         },
       },
@@ -2102,14 +2102,14 @@ export const FeatureTree: Page[] = [
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.POLYGON, assetIn: 'MATIC' },
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'POL' },
           },
         },
       },
@@ -2159,14 +2159,14 @@ export const FeatureTree: Page[] = [
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'MATIC' },
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'POL' },
           },
         },
       },
@@ -2209,14 +2209,14 @@ export const FeatureTree: Page[] = [
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'MATIC' },
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'POL' },
           },
         },
       },
@@ -3056,14 +3056,14 @@ export const FeatureTree: Page[] = [
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.POLYGON, assetOut: 'MATIC' },
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'POL' },
           },
         },
       },
@@ -3332,14 +3332,14 @@ export const FeatureTree: Page[] = [
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.POLYGON, assetIn: 'MATIC' },
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'POL' },
           },
         },
       },
