@@ -22,12 +22,12 @@ import {
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
-  StyledButtonSize,
   StyledButtonWidth,
   StyledCollapsible,
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
+  StyledDateAndTimePicker,
   StyledDropdown,
   StyledHorizontalStack,
   StyledInput,
@@ -35,10 +35,9 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { ControlProps } from '@dfx.swiss/react-components/dist/stories/form/Form';
 import copy from 'copy-to-clipboard';
-import { forwardRef, useEffect, useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { Layout } from 'src/components/layout';
 import { ConfirmationOverlay } from 'src/components/overlays';
@@ -156,7 +155,10 @@ export default function PaymentRoutesScreen(): JSX.Element {
     : 'Payment routes';
 
   const onBack = showPaymentLinkForm
-    ? () => setShowPaymentLinkForm((prev) => (prev && prev.step > 0 ? { ...prev, step: prev.step - 1 } : undefined))
+    ? () =>
+        setShowPaymentLinkForm((prev) =>
+          prev && prev.step > 0 && !prev.paymentLinkId ? { ...prev, step: prev.step - 1 } : undefined,
+        )
     : deleteRoute
     ? () => setDeleteRoute(undefined)
     : undefined;
@@ -290,10 +292,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
           {paymentLinks?.length ? (
             <StyledVerticalStack gap={2} full>
               <h2 className="ml-3.5 mb-1.5 text-dfxGray-700">{translate('screens/payment', 'Payment Links')}</h2>
-              {paymentLinks.map((link: any) => {
-                {
-                  /** TODO: add new fields to packages, remove `: any`*/
-                }
+              {paymentLinks.map((link) => {
                 return (
                   <div key={link.id} ref={(el) => paymentLinkRefs.current && (paymentLinkRefs.current[link.id] = el)}>
                     <StyledCollapsible
@@ -359,57 +358,52 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           {link.recipient && (
                             <StyledDataTableExpandableRow
                               label={translate('screens/payment', 'Recipient')}
-                              expansionItems={[
-                                { label: translate('screens/support', 'Name'), text: link.recipient.name },
-                                {
-                                  label: translate('screens/home', 'Address'),
-                                  text: formatLocationAddress({ ...link.recipient.address }),
-                                },
-                                {
-                                  label: translate('screens/kyc', 'Phone number'),
-                                  text: link.recipient.phone,
-                                },
-                                {
-                                  label: translate('screens/kyc', 'Email address'),
-                                  text: link.recipient.mail,
-                                },
-                                {
-                                  label: translate('screens/kyc', 'Website'),
-                                  text: link.recipient.website,
-                                  // open absolute URL in new tab
-                                  onClick: () => {
-                                    const url =
-                                      link.recipient.website.startsWith('http://') ||
-                                      link.recipient.website.startsWith('https://')
-                                        ? link.recipient.website
-                                        : `https://${link.recipient.website}`;
-
-                                    window.open(url, '_blank');
+                              expansionItems={
+                                [
+                                  { label: translate('screens/support', 'Name'), text: link.recipient.name },
+                                  {
+                                    label: translate('screens/home', 'Address'),
+                                    text: formatLocationAddress({ ...link.recipient.address }),
                                   },
-                                },
-                              ].filter((item) => item.text)}
+                                  {
+                                    label: translate('screens/kyc', 'Phone number'),
+                                    text: link.recipient.phone,
+                                  },
+                                  {
+                                    label: translate('screens/kyc', 'Email address'),
+                                    text: link.recipient.mail,
+                                  },
+                                  {
+                                    label: translate('screens/kyc', 'Website'),
+                                    text: link.recipient.website,
+                                    // open absolute URL in new tab
+                                    onClick: () => {
+                                      const url =
+                                        link.recipient.website?.startsWith('http://') ||
+                                        link.recipient.website?.startsWith('https://')
+                                          ? link.recipient.website
+                                          : `https://${link.recipient.website}`;
+
+                                      window.open(url, '_blank');
+                                    },
+                                  },
+                                ].filter((item) => item.text) as any
+                              }
                               expansionContent={
                                 <StyledButton
-                                  label={translate('general/actions', 'Copy')}
-                                  onClick={() => copy(link.recipient.name)}
+                                  label={translate('screens/payment', 'Edit recipient')}
+                                  onClick={() =>
+                                    setShowPaymentLinkForm({
+                                      step: PaymentLinkFormStep.RECIPIENT,
+                                      paymentLinkId: link.id,
+                                    })
+                                  }
                                   color={StyledButtonColor.STURDY_WHITE}
+                                  width={StyledButtonWidth.FULL}
                                 />
                               }
                             >
                               {link.recipient.name && <p>{link.recipient.name}</p>}
-                              {/* TODO: Remove this StyledButton (replaced by expansionContent above) */}
-                              <StyledButton
-                                label={translate('general/actions', 'Temp Edit')}
-                                onClick={() =>
-                                  setShowPaymentLinkForm({
-                                    step: PaymentLinkFormStep.RECIPIENT,
-                                    paymentLinkId: link.id,
-                                  })
-                                }
-                                color={StyledButtonColor.STURDY_WHITE}
-                                width={StyledButtonWidth.MIN}
-                                size={StyledButtonSize.SMALL}
-                              />
                             </StyledDataTableExpandableRow>
                           )}
                           {link.payment != null && (
@@ -618,6 +612,9 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
     formState: { errors, isValid },
   } = useForm<FormData>({
     mode: 'onTouched',
+    defaultValues: {
+      paymentExpiryDate: new Date(Date.now() + 60 * 60 * 1000),
+    },
   });
 
   const data = watch();
@@ -662,7 +659,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
     setIsLoading(true);
 
     try {
-      const request: any = {}; // TODO: Set type to CreatePaymentLink
+      const request: any = {};
 
       if (data.routeId || data.externalId) {
         request.routeId = data.routeId ? +data.routeId.id : undefined;
@@ -923,7 +920,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 labelFunc={(item) => item.name}
               />
 
-              <DateAndTimePicker
+              <StyledDateAndTimePicker
                 name="paymentExpiryDate"
                 label={translate('screens/payment', 'Expires at')}
                 smallLabel
@@ -1057,138 +1054,3 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
     </>
   );
 }
-
-// TODO: Import from packages
-interface DateAndTimePickerProps extends ControlProps {
-  hideLabel?: boolean;
-  smallLabel?: boolean;
-}
-
-interface DateAndTimePickerContentProps extends DateAndTimePickerProps {
-  onChange: (date: Date) => void;
-  value: Date | null;
-}
-
-const DateAndTimePicker = forwardRef<HTMLDivElement, DateAndTimePickerProps>((props: DateAndTimePickerProps, ref) => {
-  return (
-    <Controller
-      control={props.control}
-      render={({ field: { onChange, value } }) => <Content {...props} onChange={onChange} value={value} />}
-      name={props.name}
-      rules={props.rules}
-    />
-  );
-});
-
-const Content = forwardRef<HTMLInputElement, DateAndTimePickerContentProps>(
-  (
-    {
-      control,
-      name,
-      label,
-      rules,
-      disabled,
-      error,
-      hideLabel,
-      smallLabel,
-      onChange,
-      value,
-      ...props
-    }: DateAndTimePickerContentProps,
-    ref,
-  ) => {
-    const [selectedDateTime, setSelectedDateTime] = useState<string>('');
-
-    useEffect(() => {
-      const toLocalISOString = (date: Date) => {
-        const tzoffset = date.getTimezoneOffset() * 60000;
-        return new Date(date.getTime() - tzoffset).toISOString().slice(0, -5);
-      };
-
-      if (value) {
-        const localISOTime = toLocalISOString(value);
-        setSelectedDateTime(localISOTime);
-      } else {
-        const now = new Date();
-        now.setHours(now.getHours() + 1);
-        now.setMinutes(now.getMinutes() + 1);
-        now.setSeconds(0);
-
-        const defaultDateTime = toLocalISOString(now);
-        setSelectedDateTime(defaultDateTime);
-        onChange(now);
-      }
-    }, [value, onChange]);
-
-    const handleDateTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const dateTime = event.target.value;
-      setSelectedDateTime(dateTime);
-
-      const newDate = new Date(dateTime);
-      if (!isNaN(newDate.getTime())) {
-        onChange(newDate);
-      }
-    };
-
-    return (
-      <>
-        <style>
-          {`
-          input::-webkit-datetime-edit-day-field:focus,
-          input::-webkit-datetime-edit-month-field:focus,
-          input::-webkit-datetime-edit-year-field:focus {
-              background-color: #f5516c; /* text-dfxRed-100 */
-              color: white;
-              outline: none;
-          }
-
-          input::-webkit-datetime-edit-hour-field:focus,
-          input::-webkit-datetime-edit-minute-field:focus,
-          input::-webkit-datetime-edit-second-field:focus {
-              background-color: #f5516c;
-              color: white;
-              outline: none;
-          }
-
-          .custom-date-input,
-          .custom-time-input {
-            color: ${error ? '#f5516c' : '#2a4365'}; /* text-dfxRed-100 or text-dfxBlue-800 */
-          }
-
-          .custom-date-input::placeholder,
-          .custom-time-input::placeholder {
-            color: #a0aec0; /* text-dfxGray-600 */
-          }
-        `}
-        </style>
-        <div {...props} className="flex flex-col gap-4 w-full">
-          <div className="flex flex-row gap-4">
-            <div className="flex-1">
-              {label && (
-                <label
-                  hidden={hideLabel}
-                  className={`text-start ${smallLabel ? 'text-sm' : 'text-base'} font-semibold pl-3 text-dfxBlue-800`}
-                >
-                  {label}
-                </label>
-              )}
-              <div className="h-1" />
-              <input
-                ref={ref}
-                type="datetime-local"
-                value={selectedDateTime}
-                onChange={handleDateTimeChange}
-                step="1"
-                disabled={disabled}
-                className={`custom-date-input text-base font-normal rounded-md p-4 w-full bg-white border border-dfxGray-500 focus:outline-dfxBlue-800 ${
-                  disabled ? 'opacity-50 cursor-not-allowed focus:outline-none' : ''
-                }`}
-              />
-            </div>
-          </div>
-        </div>
-        {error && <p className="text-start text-sm text-dfxRed-100 pl-3">{error?.message}</p>}
-      </>
-    );
-  },
-);
