@@ -80,11 +80,7 @@ export default function BankAccountsScreen(): JSX.Element {
   return (
     <Layout title={translate('screens/iban', 'Bank Accounts')}>
       <StyledVerticalStack gap={6} full center>
-        {error ? (
-          <div>
-            <ErrorHint message={error} />
-          </div>
-        ) : isAdded ? (
+        {isAdded ? (
           <>
             <p className="text-dfxGray-700">
               {translate(
