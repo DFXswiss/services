@@ -52,10 +52,11 @@ interface FormData {
 }
 
 interface RenameAddressOverlayProps {
+  placeholder?: string;
   onClose: (label?: string) => Promise<void>;
 }
 
-export function RenameAddressOverlay({ onClose }: RenameAddressOverlayProps): JSX.Element {
+export function RenameAddressOverlay({ placeholder, onClose }: RenameAddressOverlayProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
 
   const [isUpdating, setIsUpdating] = useState(false);
@@ -92,7 +93,7 @@ export function RenameAddressOverlay({ onClose }: RenameAddressOverlayProps): JS
           name="label"
           autocomplete="label"
           label={translate('screens/settings', 'Label')}
-          placeholder={translate('screens/settings', 'Label')}
+          placeholder={placeholder ?? translate('screens/settings', 'Label')}
           full
           smallLabel
         />
