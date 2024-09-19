@@ -1,7 +1,6 @@
 import {
   ApiError,
   Country,
-  CreatePaymentLinkPayment,
   Fiat,
   PaymentLinkPaymentMode,
   PaymentLinkPaymentStatus,
@@ -100,15 +99,11 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const [showEditRecipientForm, setShowEditRecipientForm] = useState<string>();
-  const [showCreatePaymentLinkForm, setShowCreatePaymentLinkForm] = useState(false);
-  const [showCreatePaymentForm, setShowCreatePaymentForm] = useState<string>();
-
   const [deleteRoute, setDeleteRoute] = useState<DeletePaymentRoute>();
   const [isDeletingRoute, setIsDeletingRoute] = useState<string[]>([]);
   const [isUpdatingPaymentLink, setIsUpdatingPaymentLink] = useState<string[]>([]);
   const [expandedPaymentLinkId, setExpandedPaymentLinkId] = useState<string>();
-  const [createPaymentLinkStep, setCreatePaymentLinkStep] = useState<PaymentLinkFormStep>(PaymentLinkFormStep.ROUTE);
+  const [showPaymentLinkForm, setShowPaymentLinkForm] = useState<PaymentLinkFormState>();
 
   useAddressGuard('/login');
 
@@ -139,9 +134,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
   }
 
   function onCloseForm(id?: string) {
-    setShowCreatePaymentLinkForm(false);
-    setShowCreatePaymentForm(undefined);
-    setShowEditRecipientForm(undefined);
+    setShowPaymentLinkForm(undefined);
 
     if (id) {
       setTimeout(() => paymentLinkRefs.current[id]?.scrollIntoView());
@@ -156,49 +149,26 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const hasRoutes =
     paymentRoutes && Boolean(paymentRoutes?.buy.length || paymentRoutes?.sell.length || paymentRoutes?.swap.length);
 
-  const title =
-    showCreatePaymentLinkForm && createPaymentLinkStep !== undefined
-      ? `Payment Link: ${translate('screens/payment', createPaymentLinkStepToTitleMap[createPaymentLinkStep])}`
-      : showCreatePaymentForm
-      ? 'Create payment'
-      : showEditRecipientForm !== undefined
-      ? 'Edit recipient'
-      : deleteRoute
-      ? 'Delete payment route?'
-      : 'Payment routes';
+  const title = showPaymentLinkForm
+    ? `Payment Link: ${translate('screens/payment', PaymentLinkFormStepToTitle[showPaymentLinkForm.step])}`
+    : deleteRoute
+    ? 'Delete payment route?'
+    : 'Payment routes';
 
-  const onBack =
-    showCreatePaymentLinkForm && createPaymentLinkStep !== undefined
-      ? () =>
-          createPaymentLinkStep !== PaymentLinkFormStep.ROUTE
-            ? setCreatePaymentLinkStep(createPaymentLinkStep - 1)
-            : setShowCreatePaymentLinkForm(false)
-      : showCreatePaymentForm !== undefined
-      ? () => setShowCreatePaymentForm(undefined)
-      : showEditRecipientForm !== undefined
-      ? () => setShowEditRecipientForm(undefined)
-      : deleteRoute
-      ? () => onDeleteRoute(false)
-      : undefined;
+  const onBack = showPaymentLinkForm
+    ? () => setShowPaymentLinkForm((prev) => (prev && prev.step > 0 ? { ...prev, step: prev.step - 1 } : undefined))
+    : deleteRoute
+    ? () => setDeleteRoute(undefined)
+    : undefined;
 
   return (
     <Layout title={translate('screens/payment', title)} onBack={onBack} textStart rootRef={rootRef}>
       {error ? (
         <ErrorHint message={error} />
-      ) : showCreatePaymentLinkForm ? (
-        <PaymentLinkForm step={createPaymentLinkStep} setStep={setCreatePaymentLinkStep} onClose={onCloseForm} />
-      ) : showCreatePaymentForm !== undefined ? (
+      ) : showPaymentLinkForm ? (
         <PaymentLinkForm
-          step={PaymentLinkFormStep.PAYMENT}
-          paymentLinkId={showCreatePaymentForm}
-          setStep={setCreatePaymentLinkStep}
-          onClose={onCloseForm}
-        />
-      ) : showEditRecipientForm !== undefined ? (
-        <PaymentLinkForm
-          step={PaymentLinkFormStep.RECIPIENT}
-          paymentLinkId={showEditRecipientForm}
-          setStep={setCreatePaymentLinkStep}
+          state={showPaymentLinkForm}
+          setStep={(step) => setShowPaymentLinkForm((prev) => ({ ...prev, step }))}
           onClose={onCloseForm}
         />
       ) : deleteRoute ? (
@@ -430,7 +400,12 @@ export default function PaymentRoutesScreen(): JSX.Element {
                               {/* TODO: Remove this StyledButton (replaced by expansionContent above) */}
                               <StyledButton
                                 label={translate('general/actions', 'Temp Edit')}
-                                onClick={() => setShowEditRecipientForm(link.id)}
+                                onClick={() =>
+                                  setShowPaymentLinkForm({
+                                    step: PaymentLinkFormStep.RECIPIENT,
+                                    paymentLinkId: link.id,
+                                  })
+                                }
                                 color={StyledButtonColor.STURDY_WHITE}
                                 width={StyledButtonWidth.MIN}
                                 size={StyledButtonSize.SMALL}
@@ -481,7 +456,9 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           (!link.payment || link.payment.status !== PaymentLinkPaymentStatus.PENDING) && (
                             <StyledButton
                               label={translate('screens/payment', 'Create payment')}
-                              onClick={() => setShowCreatePaymentForm(link.id)}
+                              onClick={() =>
+                                setShowPaymentLinkForm({ step: PaymentLinkFormStep.PAYMENT, paymentLinkId: link.id })
+                              }
                               color={StyledButtonColor.STURDY_WHITE}
                             />
                           )}
@@ -525,7 +502,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
             <StyledButton
               label={translate('screens/payment', 'Create Payment Link')}
               width={StyledButtonWidth.FULL}
-              onClick={() => setShowCreatePaymentLinkForm(true)}
+              onClick={() => setShowPaymentLinkForm({ step: PaymentLinkFormStep.ROUTE })}
             />
           ) : (
             <></>
@@ -600,21 +577,25 @@ enum PaymentLinkFormStep {
   DONE,
 }
 
-interface PaymentLinkFormProps {
+interface PaymentLinkFormState {
   step: PaymentLinkFormStep;
   paymentLinkId?: string;
+}
+
+interface PaymentLinkFormProps {
+  state: PaymentLinkFormState;
   setStep: (title: PaymentLinkFormStep) => void;
   onClose: (id?: string) => void;
 }
 
-const createPaymentLinkStepToTitleMap = {
+const PaymentLinkFormStepToTitle = {
   [PaymentLinkFormStep.ROUTE]: 'Route',
   [PaymentLinkFormStep.RECIPIENT]: 'Recipient',
   [PaymentLinkFormStep.PAYMENT]: 'Payment',
   [PaymentLinkFormStep.DONE]: 'Summary',
 };
 
-function PaymentLinkForm({ step, paymentLinkId, setStep, onClose }: PaymentLinkFormProps): JSX.Element {
+function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: PaymentLinkFormProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
   const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink } = usePaymentRoutesContext();
@@ -730,7 +711,6 @@ function PaymentLinkForm({ step, paymentLinkId, setStep, onClose }: PaymentLinkF
       }
 
       onClose(paymentLinkId);
-      setStep(PaymentLinkFormStep.ROUTE);
       reset();
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
@@ -1072,130 +1052,6 @@ function PaymentLinkForm({ step, paymentLinkId, setStep, onClose }: PaymentLinkF
               />
             </div>
           )}
-        </StyledVerticalStack>
-      </Form>
-    </>
-  );
-}
-
-// TODO: Remove this
-interface CreatePaymentOverlayProps {
-  id: string;
-  onDone: (id?: string) => void;
-}
-
-// TODO: Remove this
-function CreatePaymentOverlay({ id, onDone }: CreatePaymentOverlayProps): JSX.Element {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const { translate, translateError } = useSettingsContext();
-  const { createPaymentLinkPayment } = usePaymentRoutesContext();
-  const { currencies } = useFiatContext();
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>();
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isValid },
-  } = useForm<FormData>({
-    mode: 'onTouched',
-  });
-
-  async function onSubmit(data: FormData) {
-    setIsLoading(true);
-
-    try {
-      const request: CreatePaymentLinkPayment = {
-        mode: data.paymentMode,
-        amount: +data.paymentAmount,
-        externalId: data.paymentExternalId,
-        currency: data.paymentCurrency.name,
-        expiryDate: data.paymentExpiryDate,
-      } as any;
-
-      await createPaymentLinkPayment(request, id);
-      onDone(id);
-    } catch (e) {
-      setError((e as ApiError).message ?? 'Unknown error');
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  const rules = Utils.createRules({
-    paymentMode: Validations.Required,
-    paymentAmount: Validations.Required,
-    paymentExternalId: Validations.Required,
-    paymentCurrency: Validations.Required,
-    paymentExpiryDate: Validations.Required,
-  });
-
-  return (
-    <>
-      <Form
-        control={control}
-        rules={rules}
-        errors={errors}
-        onSubmit={handleSubmit(onSubmit)}
-        translate={translateError}
-      >
-        <StyledVerticalStack gap={6} full center>
-          <StyledDropdown
-            rootRef={rootRef}
-            name="paymentMode"
-            label={translate('screens/payment', 'Mode')}
-            smallLabel
-            full
-            placeholder={translate('general/actions', 'Select...')}
-            items={Object.values(PaymentLinkPaymentMode)}
-            labelFunc={(item) => translate('screens/payment', item)}
-          />
-
-          <StyledInput
-            name="paymentAmount"
-            autocomplete="paymentAmount"
-            label={translate('screens/payment', 'Amount')}
-            smallLabel
-            placeholder={'0.00'}
-            full
-          />
-
-          <StyledInput
-            name="paymentExternalId"
-            autocomplete="paymentExternalId"
-            label={translate('screens/payment', 'Payment ID')}
-            placeholder={translate('screens/payment', 'Payment ID')}
-            full
-            smallLabel
-          />
-
-          <StyledDropdown
-            name="paymentCurrency"
-            label={translate('screens/settings', 'Currency')}
-            full
-            smallLabel={true}
-            placeholder={translate('general/actions', 'Select...')}
-            items={currencies ?? []}
-            labelFunc={(item) => item.name}
-          />
-
-          <DateAndTimePicker name="paymentExpiryDate" label={translate('screens/payment', 'Expires at')} smallLabel />
-
-          {error && (
-            <div>
-              <ErrorHint message={error} />
-            </div>
-          )}
-
-          <StyledButton
-            type="submit"
-            label={translate('general/actions', 'Create')}
-            onClick={handleSubmit(onSubmit)}
-            width={StyledButtonWidth.FULL}
-            disabled={!isValid}
-            isLoading={isLoading}
-          />
         </StyledVerticalStack>
       </Form>
     </>
