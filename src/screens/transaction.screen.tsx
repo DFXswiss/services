@@ -9,6 +9,7 @@ import {
   TransactionType,
   Utils,
   Validations,
+  useAuthContext,
   useSessionContext,
   useTransaction,
 } from '@dfx.swiss/react';
@@ -34,6 +35,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
 import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -52,8 +54,8 @@ import { blankedAddress } from '../util/utils';
 
 export default function TransactionScreen(): JSX.Element {
   const { id } = useParams();
-  const { pathname } = useLocation();
   const { navigate } = useNavigation();
+  const { session } = useAuthContext();
   const { translate } = useSettingsContext();
   const { getTransactionCsv } = useTransaction();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -99,6 +101,7 @@ export default function TransactionScreen(): JSX.Element {
             width={StyledButtonWidth.FULL}
             label={translate('screens/payment', 'Cointracking')}
             onClick={() => setShowCoinTracking(!showCoinTracking)}
+            hidden={session?.role === UserRole.ACCOUNT}
           />
           <StyledButton
             color={StyledButtonColor.STURDY_WHITE}
