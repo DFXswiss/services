@@ -100,16 +100,15 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const [editRecipient, setEditRecipient] = useState<string>();
-  const [showCreatePaymentLinkOverlay, setShowCreatePaymentLinkOverlay] = useState(false);
-  const [showCreatePaymentOverlay, setShowCreatePaymentOverlay] = useState<string>();
-  const [isUpdatingPaymentLink, setIsUpdatingPaymentLink] = useState<string[]>([]);
-  const [isDeletingRoute, setIsDeletingRoute] = useState<string[]>([]);
-  const [expandedRef, setExpandedRef] = useState<string>();
+  const [showEditRecipientForm, setShowEditRecipientForm] = useState<string>();
+  const [showCreatePaymentLinkForm, setShowCreatePaymentLinkForm] = useState(false);
+  const [showCreatePaymentForm, setShowCreatePaymentForm] = useState<string>();
+
   const [deleteRoute, setDeleteRoute] = useState<DeletePaymentRoute>();
-  const [createPaymentLinkStep, setCreatePaymentLinkStep] = useState<CreatePaymentLinkStep>(
-    CreatePaymentLinkStep.ROUTE,
-  );
+  const [isDeletingRoute, setIsDeletingRoute] = useState<string[]>([]);
+  const [isUpdatingPaymentLink, setIsUpdatingPaymentLink] = useState<string[]>([]);
+  const [expandedPaymentLinkId, setExpandedPaymentLinkId] = useState<string>();
+  const [createPaymentLinkStep, setCreatePaymentLinkStep] = useState<PaymentLinkFormStep>(PaymentLinkFormStep.ROUTE);
 
   useAddressGuard('/login');
 
@@ -139,14 +138,14 @@ export default function PaymentRoutesScreen(): JSX.Element {
     });
   }
 
-  function onDone(id?: string) {
-    setShowCreatePaymentLinkOverlay(false);
-    setShowCreatePaymentOverlay(undefined);
-    setEditRecipient(undefined);
+  function onCloseForm(id?: string) {
+    setShowCreatePaymentLinkForm(false);
+    setShowCreatePaymentForm(undefined);
+    setShowEditRecipientForm(undefined);
 
     if (id) {
       setTimeout(() => paymentLinkRefs.current[id]?.scrollIntoView());
-      setExpandedRef(id);
+      setExpandedPaymentLinkId(id);
     }
   }
 
@@ -158,26 +157,26 @@ export default function PaymentRoutesScreen(): JSX.Element {
     paymentRoutes && Boolean(paymentRoutes?.buy.length || paymentRoutes?.sell.length || paymentRoutes?.swap.length);
 
   const title =
-    showCreatePaymentLinkOverlay && createPaymentLinkStep !== undefined
+    showCreatePaymentLinkForm && createPaymentLinkStep !== undefined
       ? `Payment Link: ${translate('screens/payment', createPaymentLinkStepToTitleMap[createPaymentLinkStep])}`
-      : showCreatePaymentOverlay
+      : showCreatePaymentForm
       ? 'Create payment'
-      : editRecipient !== undefined
+      : showEditRecipientForm !== undefined
       ? 'Edit recipient'
       : deleteRoute
       ? 'Delete payment route?'
       : 'Payment routes';
 
   const onBack =
-    showCreatePaymentLinkOverlay && createPaymentLinkStep !== undefined
+    showCreatePaymentLinkForm && createPaymentLinkStep !== undefined
       ? () =>
-          createPaymentLinkStep !== CreatePaymentLinkStep.ROUTE
+          createPaymentLinkStep !== PaymentLinkFormStep.ROUTE
             ? setCreatePaymentLinkStep(createPaymentLinkStep - 1)
-            : setShowCreatePaymentLinkOverlay(false)
-      : showCreatePaymentOverlay !== undefined
-      ? () => setShowCreatePaymentOverlay(undefined)
-      : editRecipient !== undefined
-      ? () => setEditRecipient(undefined)
+            : setShowCreatePaymentLinkForm(false)
+      : showCreatePaymentForm !== undefined
+      ? () => setShowCreatePaymentForm(undefined)
+      : showEditRecipientForm !== undefined
+      ? () => setShowEditRecipientForm(undefined)
       : deleteRoute
       ? () => onDeleteRoute(false)
       : undefined;
@@ -186,21 +185,21 @@ export default function PaymentRoutesScreen(): JSX.Element {
     <Layout title={translate('screens/payment', title)} onBack={onBack} textStart rootRef={rootRef}>
       {error ? (
         <ErrorHint message={error} />
-      ) : showCreatePaymentLinkOverlay ? (
-        <CreatePaymentLinkOverlay step={createPaymentLinkStep} setStep={setCreatePaymentLinkStep} onDone={onDone} />
-      ) : showCreatePaymentOverlay !== undefined ? (
-        <CreatePaymentLinkOverlay
-          step={CreatePaymentLinkStep.PAYMENT}
-          paymentLinkId={showCreatePaymentOverlay}
+      ) : showCreatePaymentLinkForm ? (
+        <PaymentLinkForm step={createPaymentLinkStep} setStep={setCreatePaymentLinkStep} onClose={onCloseForm} />
+      ) : showCreatePaymentForm !== undefined ? (
+        <PaymentLinkForm
+          step={PaymentLinkFormStep.PAYMENT}
+          paymentLinkId={showCreatePaymentForm}
           setStep={setCreatePaymentLinkStep}
-          onDone={onDone}
+          onClose={onCloseForm}
         />
-      ) : editRecipient !== undefined ? (
-        <CreatePaymentLinkOverlay
-          step={CreatePaymentLinkStep.RECIPIENT}
-          paymentLinkId={editRecipient}
+      ) : showEditRecipientForm !== undefined ? (
+        <PaymentLinkForm
+          step={PaymentLinkFormStep.RECIPIENT}
+          paymentLinkId={showEditRecipientForm}
           setStep={setCreatePaymentLinkStep}
-          onDone={onDone}
+          onClose={onCloseForm}
         />
       ) : deleteRoute ? (
         <ConfirmationOverlay
@@ -329,7 +328,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
                   <div key={link.id} ref={(el) => paymentLinkRefs.current && (paymentLinkRefs.current[link.id] = el)}>
                     <StyledCollapsible
                       full
-                      isExpanded={expandedRef ? expandedRef === link.id : undefined}
+                      isExpanded={expandedPaymentLinkId ? expandedPaymentLinkId === link.id : undefined}
                       titleContent={
                         <div className="flex flex-row justify-between gap-2 items-center">
                           <div className="flex flex-col items-start text-left">
@@ -431,7 +430,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
                               {/* TODO: Remove this StyledButton (replaced by expansionContent above) */}
                               <StyledButton
                                 label={translate('general/actions', 'Temp Edit')}
-                                onClick={() => setEditRecipient(link.id)}
+                                onClick={() => setShowEditRecipientForm(link.id)}
                                 color={StyledButtonColor.STURDY_WHITE}
                                 width={StyledButtonWidth.MIN}
                                 size={StyledButtonSize.SMALL}
@@ -441,7 +440,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           {link.payment != null && (
                             <StyledDataTableExpandableRow
                               label={translate('screens/payment', 'Payment')}
-                              isExpanded={expandedRef ? expandedRef === link.id : undefined}
+                              isExpanded={expandedPaymentLinkId ? expandedPaymentLinkId === link.id : undefined}
                               expansionItems={[
                                 {
                                   label: translate('screens/payment', 'ID'),
@@ -482,7 +481,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           (!link.payment || link.payment.status !== PaymentLinkPaymentStatus.PENDING) && (
                             <StyledButton
                               label={translate('screens/payment', 'Create payment')}
-                              onClick={() => setShowCreatePaymentOverlay(link.id)}
+                              onClick={() => setShowCreatePaymentForm(link.id)}
                               color={StyledButtonColor.STURDY_WHITE}
                             />
                           )}
@@ -526,7 +525,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
             <StyledButton
               label={translate('screens/payment', 'Create Payment Link')}
               width={StyledButtonWidth.FULL}
-              onClick={() => setShowCreatePaymentLinkOverlay(true)}
+              onClick={() => setShowCreatePaymentLinkForm(true)}
             />
           ) : (
             <></>
@@ -594,33 +593,28 @@ function RouteComponent({
   );
 }
 
-enum CreatePaymentLinkStep {
+enum PaymentLinkFormStep {
   ROUTE,
   RECIPIENT,
   PAYMENT,
   DONE,
 }
 
-interface CreatePaymentLinkOverlayProps {
-  step: CreatePaymentLinkStep;
+interface PaymentLinkFormProps {
+  step: PaymentLinkFormStep;
   paymentLinkId?: string;
-  setStep: (title: CreatePaymentLinkStep) => void;
-  onDone: (id?: string) => void;
+  setStep: (title: PaymentLinkFormStep) => void;
+  onClose: (id?: string) => void;
 }
 
 const createPaymentLinkStepToTitleMap = {
-  [CreatePaymentLinkStep.ROUTE]: 'Route',
-  [CreatePaymentLinkStep.RECIPIENT]: 'Recipient',
-  [CreatePaymentLinkStep.PAYMENT]: 'Payment',
-  [CreatePaymentLinkStep.DONE]: 'Summary',
+  [PaymentLinkFormStep.ROUTE]: 'Route',
+  [PaymentLinkFormStep.RECIPIENT]: 'Recipient',
+  [PaymentLinkFormStep.PAYMENT]: 'Payment',
+  [PaymentLinkFormStep.DONE]: 'Summary',
 };
 
-function CreatePaymentLinkOverlay({
-  step,
-  paymentLinkId,
-  setStep,
-  onDone,
-}: CreatePaymentLinkOverlayProps): JSX.Element {
+function PaymentLinkForm({ step, paymentLinkId, setStep, onClose }: PaymentLinkFormProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
   const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink } = usePaymentRoutesContext();
@@ -721,11 +715,11 @@ function CreatePaymentLinkOverlay({
       }
 
       switch (step) {
-        case CreatePaymentLinkStep.RECIPIENT:
+        case PaymentLinkFormStep.RECIPIENT:
           if (!paymentLinkId) break;
           await updatePaymentLink(request, paymentLinkId);
           break;
-        case CreatePaymentLinkStep.PAYMENT:
+        case PaymentLinkFormStep.PAYMENT:
           if (!paymentLinkId) break;
           await createPaymentLinkPayment(request.payment, paymentLinkId);
           break;
@@ -735,8 +729,8 @@ function CreatePaymentLinkOverlay({
           break;
       }
 
-      onDone(paymentLinkId);
-      setStep(CreatePaymentLinkStep.ROUTE);
+      onClose(paymentLinkId);
+      setStep(PaymentLinkFormStep.ROUTE);
       reset();
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
@@ -782,8 +776,8 @@ function CreatePaymentLinkOverlay({
       data.paymentExpiryDate,
   );
 
-  const skipRecipientData = Boolean(!hasRecipientData && step === CreatePaymentLinkStep.RECIPIENT);
-  const skipPaymentData = Boolean(!hasPaymentData && step === CreatePaymentLinkStep.PAYMENT);
+  const skipRecipientData = Boolean(!hasRecipientData && step === PaymentLinkFormStep.RECIPIENT);
+  const skipPaymentData = Boolean(!hasPaymentData && step === PaymentLinkFormStep.PAYMENT);
 
   return (
     <>
@@ -795,7 +789,7 @@ function CreatePaymentLinkOverlay({
         translate={translateError}
       >
         <StyledVerticalStack gap={6} full center>
-          {step === CreatePaymentLinkStep.ROUTE && (
+          {step === PaymentLinkFormStep.ROUTE && (
             <StyledVerticalStack gap={6} full center>
               <StyledDropdown<RouteIdSelectData>
                 name="routeId"
@@ -818,7 +812,7 @@ function CreatePaymentLinkOverlay({
               />
             </StyledVerticalStack>
           )}
-          {step === CreatePaymentLinkStep.RECIPIENT && (
+          {step === PaymentLinkFormStep.RECIPIENT && (
             <StyledVerticalStack gap={2} full>
               <StyledInput
                 name="recipientName"
@@ -908,7 +902,7 @@ function CreatePaymentLinkOverlay({
               />
             </StyledVerticalStack>
           )}
-          {step === CreatePaymentLinkStep.PAYMENT && (
+          {step === PaymentLinkFormStep.PAYMENT && (
             <>
               <StyledDropdown
                 rootRef={rootRef}
@@ -956,7 +950,7 @@ function CreatePaymentLinkOverlay({
               />
             </>
           )}
-          {step === CreatePaymentLinkStep.DONE && (
+          {step === PaymentLinkFormStep.DONE && (
             <StyledVerticalStack center full gap={2}>
               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                 <StyledDataTableRow label={translate('screens/payment', 'Route ID')}>
@@ -1014,20 +1008,23 @@ function CreatePaymentLinkOverlay({
             </div>
           )}
 
-          {step === CreatePaymentLinkStep.DONE || paymentLinkId ? (
+          {step === PaymentLinkFormStep.DONE || paymentLinkId ? (
             <div className="flex flex-col w-full gap-4">
               {paymentLinkId && (
                 <StyledButton
                   type="submit"
                   label={translate('general/actions', 'Cancel')}
-                  onClick={() => onDone()}
+                  onClick={() => onClose()}
                   width={StyledButtonWidth.FULL}
                   color={StyledButtonColor.STURDY_WHITE}
                 />
               )}
               <StyledButton
                 type="submit"
-                label={translate('general/actions', 'Create')}
+                label={translate(
+                  'general/actions',
+                  paymentLinkId && step === PaymentLinkFormStep.RECIPIENT ? 'Save' : 'Create',
+                )}
                 onClick={handleSubmit(onSubmit)}
                 width={StyledButtonWidth.FULL}
                 isLoading={isLoading}
