@@ -311,10 +311,6 @@
     "The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "Le montant de sortie est calculé comme le montant d'entrée moins les frais DFX et les frais de réseau sur le taux de base. C'est-à-dire, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.",
     "Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Montant de sortie = (Montant d'entrée - Frais DFX - Frais de réseau) ÷ Taux de base."
   },
-  "screens/bank-accounts": {
-    "DFX bank accounts": "DFX Coordonnées bancaires",
-    "Todo list of bank accounts": "Liste des comptes bancaires à faire"
-  },
   "screens/sell": {
     "Add or select your IBAN": "Ajouter ou sélectionner votre IBAN",
     "Select payment account": "Sélectionner le compte de paiement",
@@ -428,6 +424,8 @@
     "Address deleted": "Adresse supprimée",
     "Video identification required": "Identification par vidéo nécessaire",
 
+    "Loading countries...": "Chargement des pays...",
+
     "Payment method": "Mode de paiement",
     "Standard bank transaction": "Transaction bancaire standard",
     "Instant bank transaction": "Transaction bancaire instantanée",
@@ -467,6 +465,7 @@
     "Multiple": "Multiples",
     "Active": "Actif",
     "Inactive": "Inactif",
+    "Edit recipient": "Modifier le bénéficiaire",
     "Create Payment Link": "Créer un Payment Link",
     "Create payment": "Créer un paiement",
     "Cancel payment": "Annuler le paiement",
@@ -576,6 +575,9 @@
     "Language": "Langue",
     "Currency": "Devise",
     "Label": "Étiquette",
+
+    "Show deleted wallets": "Afficher les portefeuilles supprimés",
+    "Hide deleted wallets": "Masquer les portefeuilles supprimés",
 
     "delete": "Êtes-vous sûr de vouloir supprimer l'adresse <1>{{address}}</1> de votre compte DFX ? Cette action est irréversible.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support."

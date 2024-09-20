@@ -311,10 +311,6 @@
     "The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "L'importo di output è calcolato come l'importo di input meno la commissione DFX e la commissione di rete sul tasso base. Cioè, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.",
     "Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Importo di output = (Importo di input - Commissione DFX - Commissione di rete) ÷ Tasso base."
   },
-  "screens/bank-accounts": {
-    "DFX bank accounts": "Conti bancari DFX",
-    "Todo list of bank accounts": "Elenco dei conti correnti bancari"
-  },
   "screens/sell": {
     "Add or select your IBAN": "Aggiungere o selezionare l'IBAN",
     "Select payment account": "Selezionare il conto di pagamento",
@@ -428,6 +424,8 @@
     "Address deleted": "Indirizzo cancellato",
     "Video identification required": "È necessaria l'identificazione video",
 
+    "Loading countries...": "Caricamento dei paesi...",
+
     "Payment method": "Metodo di pagamento",
     "Standard bank transaction": "Transazione bancaria standard",
     "Instant bank transaction": "Transazione bancaria istantanea",
@@ -467,6 +465,7 @@
     "Multiple": "Multiplo",
     "Active": "Attivo",
     "Inactive": "Inattivo",
+    "Edit recipient": "Modifica destinatario",
     "Create Payment Link": "Crea un Payment Link",
     "Create payment": "Crea pagamento",
     "Cancel payment": "Annulla pagamento",
@@ -576,6 +575,9 @@
     "Language": "Lingua",
     "Currency": "Valuta",
     "Label": "Etichetta",
+
+    "Show deleted wallets": "Mostra portafogli eliminati",
+    "Hide deleted wallets": "Nascondi portafogli eliminati",
 
     "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "I tuoi dati rimarranno sui nostri server temporaneamente prima della cancellazione definitiva. Se hai domande, contatta il nostro team di supporto."

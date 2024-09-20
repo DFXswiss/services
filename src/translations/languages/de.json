@@ -311,10 +311,6 @@
     "The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "Der Ausgabebetrag wird als Eingabebetrag abzüglich der DFX-Gebühr und der Netzwerkgebühr über dem Basiskurs berechnet. Das heißt, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.",
     "Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Ausgabebetrag = (Eingabebetrag - DFX-Gebühr - Netzwerkgebühr) ÷ Basiskurs."
   },
-  "screens/bank-accounts": {
-    "DFX bank accounts": "DFX Bankverbindungen",
-    "Todo list of bank accounts": "Todo list of bank accounts"
-  },
   "screens/sell": {
     "Add or select your IBAN": "Deine IBAN hinzufügen oder auswählen",
     "Select payment account": "Bankkonto auswählen",
@@ -428,6 +424,8 @@
     "Address deleted": "Adresse gelöscht",
     "Video identification required": "Video-Identifikation erforderlich",
 
+    "Loading countries...": "Länder werden geladen...",
+
     "Payment method": "Zahlungsmethode",
     "Standard bank transaction": "Standard-Banktransaktion",
     "Instant bank transaction": "Sofort-Banktransaktion",
@@ -467,6 +465,7 @@
     "Multiple": "Mehrere",
     "Active": "Aktiv",
     "Inactive": "Inaktiv",
+    "Edit recipient": "Empfänger bearbeiten",
     "Create Payment Link": "Payment Link erstellen",
     "Create payment": "Zahlung erstellen",
     "Cancel payment": "Zahlung abbrechen",
@@ -576,6 +575,9 @@
     "Language": "Sprache",
     "Currency": "Währung",
     "Label": "Bezeichnung",
+
+    "Show deleted wallets": "Gelöschte Wallets anzeigen",
+    "Hide deleted wallets": "Gelöschte Wallets ausblenden",
 
     "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team."
