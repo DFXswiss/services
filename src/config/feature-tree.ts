@@ -1746,6 +1746,13 @@ export const FeatureTree: Page[] = [
           page: 'frankencoin-buy-optimism',
         },
       },
+      {
+        id: 'base',
+        img: 'basechain',
+        next: {
+          page: 'frankencoin-buy-base',
+        },
+      },
     ],
   },
 
