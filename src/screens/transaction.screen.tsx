@@ -11,7 +11,6 @@ import {
   UserAddress,
   Utils,
   Validations,
-  useApi,
   useAuthContext,
   useBank,
   useSessionContext,
@@ -21,6 +20,7 @@ import {
 import {
   AlignContent,
   AssetIconVariant,
+  CopyButton,
   DfxAssetIcon,
   DfxIcon,
   Form,
@@ -42,6 +42,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
 import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
+import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
@@ -81,7 +82,9 @@ export default function TransactionScreen(): JSX.Element {
       .finally(() => setIsCsvLoading(false));
   }
 
-  const title = isTransaction
+  const title = isRefund
+    ? translate('screens/payment', 'Transaction refund')
+    : isTransaction
     ? translate('screens/payment', 'Transaction status')
     : showCoinTracking
     ? translate('screens/payment', 'Cointracking Link (read rights)')
@@ -201,9 +204,7 @@ interface TransactionRefundProps {
 
 const AddAccount = 'Add bank account';
 
-// TODO: Only type "Swap"/"Sell" and state "Failed" should be able to refund
 function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
-  const { call } = useApi();
   const { id } = useParams();
   const { width } = useWindowContext();
   const { navigate } = useNavigation();
@@ -211,7 +212,9 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { user } = useUserContext();
   const { getBanks } = useBank();
   const { isLoggedIn } = useSessionContext();
-  const { getTransactionByUid } = useTransaction();
+  const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
+
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [refundDetails, setRefundDetails] = useState<RefundDetails>();
@@ -221,10 +224,15 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isValid },
   } = useForm<FormData>({ mode: 'onTouched' });
 
   const selectedIban = useWatch({ control, name: 'iban' });
+
+  const chargebackAddresses = user?.addresses.filter(
+    (a) => transaction?.inputBlockchain && a.blockchains.includes(transaction?.inputBlockchain),
+  );
 
   useEffect(() => {
     if (id && transaction?.state !== TransactionState.COMPLETED) {
@@ -249,6 +257,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   }, [transaction, refundDetails]);
 
   useEffect(() => {
+    // TODO (when BUY refund enabled): Return back to /refund page after adding bank account
     if (selectedIban === AddAccount) navigate('/bank-accounts');
   }, [selectedIban]);
 
@@ -257,11 +266,12 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       Promise.all([getBanks().then(setBanks)]).catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   }, [isLoggedIn]);
 
+  useEffect(() => {
+    if (chargebackAddresses && chargebackAddresses.length === 1) setValue('address', chargebackAddresses[0]);
+  }, [chargebackAddresses]);
+
   function fetchRefund(txId: number) {
-    call<RefundDetails>({
-      url: `transaction/${txId}/refund`,
-      method: 'GET',
-    })
+    getTransactionRefund(txId)
       .then(setRefundDetails)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   }
@@ -271,11 +281,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     setIsLoading(true);
 
     try {
-      await call({
-        url: `transaction/${transaction.id}/refund`,
-        method: 'PUT',
-        data: { refundTarget: data.address?.address ?? data.iban },
-      });
+      await setTransactionRefundTarget(transaction.id, { refundTarget: data.address?.address ?? data.iban });
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
@@ -283,10 +289,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       navigate('/tx');
     }
   }
-
-  const userAddress = user?.addresses.filter(
-    (a) => transaction?.inputBlockchain && a.blockchains.includes(transaction?.inputBlockchain),
-  );
 
   const rules = Utils.createRules({
     address: Validations.Required,
@@ -296,49 +298,45 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   return refundDetails && transaction ? (
     <StyledVerticalStack gap={6} full>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-        <StyledDataTableRow label={translate('screens/payment', 'Transaction ammount')}>
-          <p className="font-semibold">{transaction?.inputAmount}</p>
+        <StyledDataTableRow label={translate('screens/payment', 'Transaction amount')}>
+          <p>
+            {transaction?.inputAmount} {transaction?.inputAsset}
+          </p>
         </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/payment', 'Transaction asset')}>
-          <p className="font-semibold">{transaction?.inputAsset}</p>
+        <StyledDataTableRow label={translate('screens/payment', 'Fee')}>
+          <p>
+            {refundDetails.feeAmount} {transaction?.inputAsset}
+          </p>
         </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/payment', 'Fee amount')}>
-          <p className="font-semibold">{refundDetails.feeAmount}</p>
-        </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/payment', 'Refund amount')}>
-          <p className="font-semibold">
-            {/* TODO: What if transaction.inputAmount is undefined? */}
-            {transaction?.inputAmount && transaction?.inputAmount - refundDetails.feeAmount}
+        <StyledDataTableRow
+          label={translate('screens/payment', 'Refund amount')}
+          infoText={translate('screens/payment', 'Refund amount is the transaction amount minus the fee.')}
+        >
+          <p>
+            {transaction?.inputAmount && transaction?.inputAmount - refundDetails.feeAmount} {transaction?.inputAsset}
           </p>
         </StyledDataTableRow>
       </StyledDataTable>
-      <Form
-        control={control}
-        rules={rules}
-        errors={errors}
-        onSubmit={handleSubmit(onSubmit)}
-        // translate={translateError}
-      >
+      <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack gap={6} full>
-          {userAddress && [TransactionType.SELL, TransactionType.SWAP].includes(transaction?.type) && (
+          {chargebackAddresses && [TransactionType.SELL, TransactionType.SWAP].includes(transaction?.type) && (
             <StyledDropdown<UserAddress>
-              // rootRef={rootRef}
+              rootRef={rootRef}
               name="address"
-              label={translate('screens/support', 'Receiver Address')}
-              items={userAddress}
+              label={translate('screens/payment', 'Chargeback address')}
+              items={chargebackAddresses}
               labelFunc={(item) => blankedAddress(item.address, { width })}
               descriptionFunc={(_item) => transaction.inputBlockchain?.toString() ?? ''}
               full
-              forceEnable
             />
           )}
           {banks && transaction?.type === TransactionType.BUY && (
             <StyledDropdown<string>
-              // rootRef={rootRef}
+              rootRef={rootRef}
               name="iban"
-              label={translate('screens/support', 'Receiver IBAN')}
-              items={banks.map((b) => b.iban)}
-              labelFunc={(item) => blankedAddress(item, { displayLength: 18 })}
+              label={translate('screens/payment', 'Chargeback IBAN')}
+              items={[...banks.map((b) => b.iban), AddAccount]}
+              labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
               placeholder={translate('general/actions', 'Select...')}
               full
             />
@@ -346,7 +344,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
 
           <StyledButton
             type="submit"
-            label={translate('general/actions', 'Confirm')}
+            label={translate('general/actions', 'Confirm refund')}
             onClick={handleSubmit(onSubmit)}
             width={StyledButtonWidth.FULL}
             disabled={!isValid}
@@ -566,19 +564,20 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   onClick={() => assignTransaction(tx.id)}
                                 />
                               ))}
-                            {tx.outputTxUrl && (
-                              <StyledButton
-                                label={translate('screens/payment', 'Show on block explorer')}
-                                onClick={() => window.open(tx.outputTxUrl, '_blank', 'noreferrer')}
-                              />
-                            )}
-                            {/* TODO: Remove confirm if chargeback already exists */}
-                            {tx.state === TransactionState.FAILED && (
-                              <StyledButton
-                                label={translate('screens/payment', 'Confirm refund')}
-                                onClick={() => navigate(`/tx/${tx.uid}/refund`)}
-                              />
-                            )}
+                            <StyledButton
+                              label={translate('screens/payment', 'Show on block explorer')}
+                              onClick={() => window.open(tx.outputTxUrl, '_blank', 'noreferrer')}
+                              hidden={!tx.outputTxUrl}
+                            />
+                            <StyledButton
+                              label={translate('general/actions', 'Confirm refund')}
+                              onClick={() => navigate(`/tx/${tx.uid}/refund`)}
+                              hidden={
+                                tx.state !== TransactionState.FAILED ||
+                                !!tx.chargebackAmount ||
+                                ![TransactionType.SELL, TransactionType.SWAP].includes(tx.type)
+                              }
+                            />
                             {tx.state === TransactionState.KYC_REQUIRED && (
                               <StyledButton
                                 label={translate('screens/kyc', 'Complete KYC')}
@@ -629,7 +628,6 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
       ? 'Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.'
       : 'Output amount = Input amount × Base rate - DFX fee - Network fee.',
   );
-
   const baseRateInfo = tx.priceSteps
     ?.map((step) =>
       translate('screens/payment', '{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})', {
@@ -641,6 +639,8 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
       }),
     )
     .join('\n');
+  const chargebackTarget =
+    tx.type === TransactionType.BUY ? Utils.formatIban(tx.chargebackTarget) : tx.chargebackTarget;
 
   const rateItems = [];
   tx.exchangeRate != null &&
@@ -745,22 +745,23 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
           </p>
         </StyledDataTableExpandableRow>
       )}
-      {(tx as any).chargebackAmount && (
-        <StyledDataTableRow label={translate('screens/payment', 'Chargeback Amount')}>
+      {tx.chargebackAmount && (
+        <StyledDataTableRow label={translate('screens/payment', 'Chargeback amount')}>
           <p>
-            {(tx as any).chargebackAmount} {tx.inputAsset}
+            {tx.chargebackAmount} {tx.inputAsset}
           </p>
         </StyledDataTableRow>
       )}
-      {(tx as any).chargebackTarget && (
+      {chargebackTarget && (
         <StyledDataTableRow
           label={
             tx.type === TransactionType.BUY
-              ? translate('screens/payment', 'Chargeback Iban')
-              : translate('screens/payment', 'Chargeback Address')
+              ? translate('screens/payment', 'Chargeback IBAN')
+              : translate('screens/payment', 'Chargeback address')
           }
         >
-          <p>{(tx as any).chargebackTarget}</p>
+          <p>{blankedAddress(chargebackTarget, { width, scale: 0.65 })}</p>
+          <CopyButton onCopy={() => copy(chargebackTarget)} />
         </StyledDataTableRow>
       )}
     </StyledDataTable>

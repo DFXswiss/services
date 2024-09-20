@@ -33,7 +33,8 @@
     "Copy Address": "Adresse kopieren",
     "Open Explorer": "Explorer öffnen",
     "Select transaction": "Transaktion auswählen",
-    "Download": "Herunterladen"
+    "Download": "Herunterladen",
+    "Confirm refund": "Rückerstattung bestätigen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -368,6 +369,7 @@
     "No transactions found": "Keine Transaktionen gefunden",
     "My transaction is missing": "Meine Transaktion fehlt",
     "Transaction status": "Status der Transaktion",
+    "Transaction refund": "Rückerstattung der Transaktion",
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} zu {{to}} bei {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",
@@ -377,6 +379,14 @@
     "Input TX": "Input TX",
     "Output": "Output",
     "Output TX": "Output TX",
+
+    "Chargeback IBAN": "Chargeback-IBAN",
+    "Chargeback address": "Chargeback-Adresse",
+    "Chargeback amount": "Chargeback-Betrag",
+    "Transaction amount": "Transaktionsbetrag",
+    "Refund amount": "Rückerstattungsbetrag",
+    "Fee": "Gebühr",
+    "Refund amount is the transaction amount minus the fee.": "Der Rückerstattungsbetrag ist der Transaktionsbetrag minus der Gebühr.",
 
     "Type": "Typ",
     "Buy": "Kauf",

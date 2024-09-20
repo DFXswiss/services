@@ -33,7 +33,8 @@
     "Copy Address": "Copier l'adresse",
     "Open Explorer": "Ouvrir l'explorateur",
     "Select transaction": "Sélectionner la transaction",
-    "Download": "Télécharger"
+    "Download": "Télécharger",
+    "Confirm refund": "Confirmer le remboursement"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -368,6 +369,7 @@
     "No transactions found": "Aucune transaction trouvée",
     "My transaction is missing": "Ma transaction est manquante",
     "Transaction status": "Statut de la transaction",
+    "Transaction refund": "Remboursement de la transaction",
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} vers {{to}} à {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",
@@ -377,6 +379,14 @@
     "Input TX": "Input TX",
     "Output": "Output",
     "Output TX": "Output TX",
+
+    "Chargeback IBAN": "IBAN de rétrofacturation",
+    "Chargeback address": "Adresse de rétrofacturation",
+    "Chargeback amount": "Montant de la rétrofacturation",
+    "Transaction amount": "Montant de la transaction",
+    "Refund amount": "Montant du remboursement",
+    "Fee": "Frais",
+    "Refund amount is the transaction amount minus the fee.": "Le montant du remboursement correspond au montant de la transaction moins les frais.",
 
     "Type": "Type",
     "Buy": "Achat",
