@@ -30,6 +30,9 @@
     "Rename address": "Renommer l'adresse",
     "Delete address": "Supprimer l'adresse",
     "Delete account": "Supprimer le compte",
+    "Rename wallet": "Renommer le portefeuille",
+    "Edit email": "Modifier l'e-mail",
+    "Edit phone number": "Modifier le numéro de téléphone",
     "Copy Address": "Copier l'adresse",
     "Open Explorer": "Ouvrir l'explorateur",
     "Select transaction": "Sélectionner la transaction",
@@ -575,6 +578,7 @@
     "Language": "Langue",
     "Currency": "Devise",
     "Label": "Étiquette",
+    "Wallet name": "Nom du portefeuille",
 
     "Show deleted wallets": "Afficher les portefeuilles supprimés",
     "Hide deleted wallets": "Masquer les portefeuilles supprimés",

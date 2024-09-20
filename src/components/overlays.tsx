@@ -19,7 +19,7 @@ interface ConfirmationOverlayProps {
   cancelLabel: string;
   confirmLabel: string;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
 }
 
 export function ConfirmationOverlay({
@@ -51,12 +51,15 @@ interface FormData {
   label: string;
 }
 
-interface RenameAddressOverlayProps {
+interface EditOverlayProps {
+  label?: string;
+  prefill?: string;
   placeholder?: string;
-  onClose: (label?: string) => Promise<void>;
+  onCancel: () => void;
+  onEdit: (label: string) => Promise<void>;
 }
 
-export function RenameAddressOverlay({ placeholder, onClose }: RenameAddressOverlayProps): JSX.Element {
+export function EditOverlay({ label, prefill, placeholder, onCancel, onEdit }: EditOverlayProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
 
   const [isUpdating, setIsUpdating] = useState(false);
@@ -66,12 +69,12 @@ export function RenameAddressOverlay({ placeholder, onClose }: RenameAddressOver
     control,
     handleSubmit,
     formState: { isValid, errors },
-  } = useForm<FormData>({ mode: 'onTouched' });
+  } = useForm<FormData>({ mode: 'onTouched', defaultValues: { label: prefill } });
 
   function onSubmit(data: FormData) {
     setIsUpdating(true);
     setError(undefined);
-    onClose(data.label)
+    onEdit(data.label)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
   }
@@ -92,7 +95,7 @@ export function RenameAddressOverlay({ placeholder, onClose }: RenameAddressOver
         <StyledInput
           name="label"
           autocomplete="label"
-          label={translate('screens/settings', 'Label')}
+          label={label ?? translate('screens/settings', 'Label')}
           placeholder={placeholder ?? translate('screens/settings', 'Label')}
           full
           smallLabel
@@ -104,7 +107,7 @@ export function RenameAddressOverlay({ placeholder, onClose }: RenameAddressOver
           color={StyledButtonColor.STURDY_WHITE}
           width={StyledButtonWidth.FULL}
           label={translate('general/actions', 'Cancel')}
-          onClick={() => onClose()}
+          onClick={onCancel}
         />
         <StyledButton
           type="submit"
