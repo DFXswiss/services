@@ -1,5 +1,6 @@
 import {
   ApiError,
+  Bank,
   CryptoPaymentMethod,
   DetailTransaction,
   FiatPaymentMethod,
@@ -7,11 +8,15 @@ import {
   TransactionState,
   TransactionTarget,
   TransactionType,
+  UserAddress,
   Utils,
   Validations,
+  useApi,
   useAuthContext,
+  useBank,
   useSessionContext,
   useTransaction,
+  useUserContext,
 } from '@dfx.swiss/react';
 import {
   AlignContent,
@@ -38,7 +43,7 @@ import {
 import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
 import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
 import CoinTracking from 'src/components/cointracking';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -54,6 +59,7 @@ import { blankedAddress } from '../util/utils';
 
 export default function TransactionScreen(): JSX.Element {
   const { id } = useParams();
+  const { pathname } = useLocation();
   const { navigate } = useNavigation();
   const { session } = useAuthContext();
   const { translate } = useSettingsContext();
@@ -65,6 +71,7 @@ export default function TransactionScreen(): JSX.Element {
   const [error, setError] = useState<string>();
 
   const isTransaction = id && id.startsWith('T');
+  const isRefund = isTransaction && pathname.includes('/refund');
 
   function exportCsv() {
     setIsCsvLoading(true);
@@ -90,6 +97,8 @@ export default function TransactionScreen(): JSX.Element {
     <Layout rootRef={rootRef} title={title} onBack={onBack}>
       {error ? (
         <ErrorHint message={error} />
+      ) : isRefund ? (
+        <TransactionRefund setError={setError} />
       ) : isTransaction ? (
         <TransactionStatus setError={setError} />
       ) : showCoinTracking ? (
@@ -169,6 +178,181 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
           width={StyledButtonWidth.FULL}
         />
       )}
+    </StyledVerticalStack>
+  ) : (
+    <StyledLoadingSpinner size={SpinnerSize.LG} />
+  );
+}
+
+interface RefundDetails {
+  expiryDate: Date;
+  feeAmount: number;
+  refundAmount: number;
+}
+
+interface FormData {
+  address: UserAddress;
+  iban: string;
+}
+
+interface TransactionRefundProps {
+  setError: (error: string) => void;
+}
+
+const AddAccount = 'Add bank account';
+
+function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
+  const { call } = useApi();
+  const { id } = useParams();
+  const { width } = useWindowContext();
+  const { navigate } = useNavigation();
+  const { translate } = useSettingsContext();
+  const { user } = useUserContext();
+  const { getBanks } = useBank();
+  const { isLoggedIn } = useSessionContext();
+  const { getTransactionByUid } = useTransaction();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [refundDetails, setRefundDetails] = useState<RefundDetails>();
+  const [transaction, setTransaction] = useState<Transaction>();
+  const [banks, setBanks] = useState<Bank[]>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<FormData>({ mode: 'onTouched' });
+
+  const selectedIban = useWatch({ control, name: 'iban' });
+
+  useEffect(() => {
+    if (id && transaction?.state !== TransactionState.COMPLETED) {
+      getTransactionByUid(id)
+        .then((tx) => {
+          setTransaction(tx);
+          fetchRefund(tx.id);
+        })
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+    }
+  }, [id, transaction?.state]);
+
+  useEffect(() => {
+    let refetchTimeout: NodeJS.Timeout | undefined;
+
+    if (transaction && refundDetails?.expiryDate) {
+      const timeout = new Date(refundDetails.expiryDate).getTime() - Date.now();
+      refetchTimeout = setTimeout(() => fetchRefund(transaction.id), timeout > 0 ? timeout : 0);
+    }
+
+    return () => refetchTimeout && clearTimeout(refetchTimeout);
+  }, [transaction, refundDetails]);
+
+  useEffect(() => {
+    if (selectedIban === AddAccount) navigate('/bank-accounts');
+  }, [selectedIban]);
+
+  useEffect(() => {
+    if (isLoggedIn)
+      Promise.all([getBanks().then(setBanks)]).catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+  }, [isLoggedIn]);
+
+  function fetchRefund(txId: number) {
+    call<RefundDetails>({
+      url: `transaction/${txId}/refund`,
+      method: 'GET',
+    })
+      .then(setRefundDetails)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+  }
+
+  async function onSubmit(data: FormData) {
+    if (!transaction) return;
+    setIsLoading(true);
+
+    try {
+      // PUT v1/transaction/:id/refund
+      await call({
+        url: `transaction/${transaction.id}/refund`,
+        method: 'PUT',
+        data: { refundTarget: data.address.address ?? data.iban },
+      });
+    } catch (e) {
+      setError((e as ApiError).message ?? 'Unknown error');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const userAddress = user?.addresses.filter(
+    (a) => transaction?.inputBlockchain && a.blockchains.includes(transaction?.inputBlockchain),
+  );
+
+  const rules = Utils.createRules({
+    address: Validations.Required,
+    iban: Validations.Required,
+  });
+
+  return refundDetails && transaction ? (
+    <StyledVerticalStack gap={6} full>
+      <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+        <StyledDataTableRow label={translate('screens/payment', 'Transaction ammount')}>
+          <p className="font-semibold">{transaction?.inputAmount}</p>
+        </StyledDataTableRow>
+        <StyledDataTableRow label={translate('screens/payment', 'Transaction asset')}>
+          <p className="font-semibold">{transaction?.inputAsset}</p>
+        </StyledDataTableRow>
+        <StyledDataTableRow label={translate('screens/payment', 'Fee amount')}>
+          <p className="font-semibold">{refundDetails.feeAmount}</p>
+        </StyledDataTableRow>
+        <StyledDataTableRow label={translate('screens/payment', 'Refund amount')}>
+          <p className="font-semibold">
+            {/* TODO: What if transaction.inputAmount is undefined? */}
+            {transaction?.inputAmount && transaction?.inputAmount - refundDetails.feeAmount}
+          </p>
+        </StyledDataTableRow>
+      </StyledDataTable>
+      <Form
+        control={control}
+        rules={rules}
+        errors={errors}
+        onSubmit={handleSubmit(onSubmit)}
+        // translate={translateError}
+      >
+        <StyledVerticalStack gap={6} full>
+          {userAddress && [TransactionType.SELL, TransactionType.SWAP].includes(transaction?.type) && (
+            <StyledDropdown<UserAddress>
+              // rootRef={rootRef}
+              name="address"
+              label={translate('screens/support', 'Receiver Address')}
+              items={userAddress}
+              labelFunc={(item) => blankedAddress(item.address, { width })}
+              descriptionFunc={(_item) => transaction.inputBlockchain?.toString() ?? ''}
+              full
+              forceEnable
+            />
+          )}
+          {banks && transaction?.type === TransactionType.BUY && (
+            <StyledDropdown<string>
+              // rootRef={rootRef}
+              name="iban"
+              label={translate('screens/support', 'Receiver IBAN')}
+              items={banks.map((b) => blankedAddress(Utils.formatIban(b.iban) ?? '', { displayLength: 18 }))}
+              labelFunc={(item) => item}
+              placeholder={translate('general/actions', 'Select...')}
+              full
+            />
+          )}
+
+          <StyledButton
+            type="submit"
+            label={translate('general/actions', 'Confirm')}
+            onClick={handleSubmit(onSubmit)}
+            width={StyledButtonWidth.FULL}
+            disabled={!isValid}
+            isLoading={isLoading}
+          />
+        </StyledVerticalStack>
+      </Form>
     </StyledVerticalStack>
   ) : (
     <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -387,6 +571,12 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                 onClick={() => window.open(tx.outputTxUrl, '_blank', 'noreferrer')}
                               />
                             )}
+                            {tx.state === TransactionState.FAILED && (
+                              <StyledButton
+                                label={translate('screens/payment', 'Confirm refund')}
+                                onClick={() => navigate(`/tx/${tx.uid}/refund`)}
+                              />
+                            )}
                             {tx.state === TransactionState.KYC_REQUIRED && (
                               <StyledButton
                                 label={translate('screens/kyc', 'Complete KYC')}
@@ -556,3 +746,9 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
     </StyledDataTable>
   );
 }
+
+// TODO: Display the following information for failed transaction under /tx
+// chargebackAddress (sell/swap)
+// chargebackIban (buy)
+// chargebackAmount
+// chargebackAllowedDateUser (confirmation date of chargeback)
