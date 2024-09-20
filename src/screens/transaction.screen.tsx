@@ -201,6 +201,7 @@ interface TransactionRefundProps {
 
 const AddAccount = 'Add bank account';
 
+// TODO: Only type "Swap"/"Sell" and state "Failed" should be able to refund
 function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { call } = useApi();
   const { id } = useParams();
@@ -270,16 +271,16 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     setIsLoading(true);
 
     try {
-      // PUT v1/transaction/:id/refund
       await call({
         url: `transaction/${transaction.id}/refund`,
         method: 'PUT',
-        data: { refundTarget: data.address.address ?? data.iban },
+        data: { refundTarget: data.address?.address ?? data.iban },
       });
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
       setIsLoading(false);
+      navigate('/tx');
     }
   }
 
@@ -336,8 +337,8 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
               // rootRef={rootRef}
               name="iban"
               label={translate('screens/support', 'Receiver IBAN')}
-              items={banks.map((b) => blankedAddress(Utils.formatIban(b.iban) ?? '', { displayLength: 18 }))}
-              labelFunc={(item) => item}
+              items={banks.map((b) => b.iban)}
+              labelFunc={(item) => blankedAddress(item, { displayLength: 18 })}
               placeholder={translate('general/actions', 'Select...')}
               full
             />
@@ -571,6 +572,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                 onClick={() => window.open(tx.outputTxUrl, '_blank', 'noreferrer')}
                               />
                             )}
+                            {/* TODO: Remove confirm if chargeback already exists */}
                             {tx.state === TransactionState.FAILED && (
                               <StyledButton
                                 label={translate('screens/payment', 'Confirm refund')}
@@ -743,12 +745,24 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
           </p>
         </StyledDataTableExpandableRow>
       )}
+      {(tx as any).chargebackAmount && (
+        <StyledDataTableRow label={translate('screens/payment', 'Chargeback Amount')}>
+          <p>
+            {(tx as any).chargebackAmount} {tx.inputAsset}
+          </p>
+        </StyledDataTableRow>
+      )}
+      {(tx as any).chargebackTarget && (
+        <StyledDataTableRow
+          label={
+            tx.type === TransactionType.BUY
+              ? translate('screens/payment', 'Chargeback Iban')
+              : translate('screens/payment', 'Chargeback Address')
+          }
+        >
+          <p>{(tx as any).chargebackTarget}</p>
+        </StyledDataTableRow>
+      )}
     </StyledDataTable>
   );
 }
-
-// TODO: Display the following information for failed transaction under /tx
-// chargebackAddress (sell/swap)
-// chargebackIban (buy)
-// chargebackAmount
-// chargebackAllowedDateUser (confirmation date of chargeback)
