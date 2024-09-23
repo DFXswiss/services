@@ -156,6 +156,10 @@ export const Routes = [
     element: withSuspense(<TransactionScreen />),
   },
   {
+    path: '/tx/:id/refund',
+    element: withSuspense(<TransactionScreen />),
+  },
+  {
     path: '/support',
     element: withSuspense(<SupportScreen />),
   },
