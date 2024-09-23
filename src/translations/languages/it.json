@@ -33,7 +33,8 @@
     "Copy Address": "Copia l'indirizzo",
     "Open Explorer": "Apri Explorer",
     "Select transaction": "Selezionare la transazione",
-    "Download": "Scaricare"
+    "Download": "Scaricare",
+    "Confirm refund": "Confermare il rimborso"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -368,6 +369,7 @@
     "No transactions found": "Nessuna transazione trovata",
     "My transaction is missing": "La mia transazione è scomparsa",
     "Transaction status": "Stato della transazione",
+    "Transaction refund": "Rimborso della transazione",
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} a {{to}} a {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",
@@ -377,6 +379,14 @@
     "Input TX": "Input TX",
     "Output": "Output",
     "Output TX": "Output TX",
+
+    "Chargeback IBAN": "IBAN per il chargeback",
+    "Chargeback address": "Indirizzo per il chargeback",
+    "Chargeback amount": "Importo del chargeback",
+    "Transaction amount": "Importo della transazione",
+    "Refund amount": "Importo del rimborso",
+    "Fee": "Commissione",
+    "Refund amount is the transaction amount minus the fee.": "L'importo del rimborso è l'importo della transazione meno la commissione.",
 
     "Type": "Tipo",
     "Buy": "Acquisto",
