@@ -1127,27 +1127,27 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
       <StyledLoadingSpinner size={SpinnerSize.LG} />
     ) : (
       <>
-        ( step.session.type === UrlType.TOKEN ? (
-        <SumsubWebSdk
-          className="w-full h-full max-h-[900px]"
-          accessToken={step.session.url}
-          expirationHandler={() => onError('Token expired')}
-          config={{ lang: lang.symbol.toLowerCase() }}
-          onMessage={(type: string, payload: any) =>
-            type === 'idCheck.onApplicantStatusChanged' &&
-            ['pending', 'completed'].includes(payload?.reviewStatus) &&
-            setIsDone(true)
-          }
-          onError={onError}
-        />
+        {step.session.type === UrlType.TOKEN ? (
+          <SumsubWebSdk
+            className="w-full h-full max-h-[900px]"
+            accessToken={step.session.url}
+            expirationHandler={() => onError('Token expired')}
+            config={{ lang: lang.symbol.toLowerCase() }}
+            onMessage={(type: string, payload: any) =>
+              type === 'idCheck.onApplicantStatusChanged' &&
+              ['pending', 'completed'].includes(payload?.reviewStatus) &&
+              setIsDone(true)
+            }
+            onError={onError}
+          />
         ) : (
-        <iframe
-          src={step.session.url}
-          allow="camera *; microphone *"
-          allowFullScreen={true}
-          className="w-full h-full max-h-[900px]"
-        ></iframe>
-        ) )
+          <iframe
+            src={step.session.url}
+            allow="camera *; microphone *"
+            allowFullScreen={true}
+            className="w-full h-full max-h-[900px]"
+          ></iframe>
+        )}
       </>
     )
   ) : (
