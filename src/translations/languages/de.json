@@ -30,6 +30,8 @@
     "Rename address": "Adresse umbenennen",
     "Delete address": "Adresse löschen",
     "Delete account": "Konto löschen",
+    "Edit email": "E-Mail bearbeiten",
+    "Edit phone number": "Telefonnummer bearbeiten",
     "Copy Address": "Adresse kopieren",
     "Open Explorer": "Explorer öffnen",
     "Select transaction": "Transaktion auswählen",
@@ -279,8 +281,7 @@
     "Credit": "Guthaben",
     "Paid credit": "Ausgezahltes Guthaben",
     "User count": "Anzahl Benutzer",
-    "Active user count": "Anzahl aktiver Benutzer",
-    "Active wallet": "Aktive Wallet"
+    "Active user count": "Anzahl aktiver Benutzer"
   },
   "screens/buy": {
     "You spend": "Du zahlst",
@@ -580,14 +581,15 @@
   },
   "screens/settings": {
     "Settings": "Einstellungen",
-    "Your Wallets": "Deine Wallets",
+    "Your Addresses": "Deine Adressen",
     "Active": "Aktiv",
     "Language": "Sprache",
     "Currency": "Währung",
     "Label": "Bezeichnung",
+    "Address name": "Adressname",
 
-    "Show deleted wallets": "Gelöschte Wallets anzeigen",
-    "Hide deleted wallets": "Gelöschte Wallets ausblenden",
+    "Show deleted addresses": "Gelöschte Adressen anzeigen",
+    "Hide deleted addresses": "Gelöschte Adressen ausblenden",
 
     "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team."
