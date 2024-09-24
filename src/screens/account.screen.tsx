@@ -220,7 +220,7 @@ export default function AccountScreen(): JSX.Element {
           {user?.addresses.length ? (
             <div className="bg-white w-full rounded-md mb-2">
               <h2 className="text-center text-dfxBlue-800 text-sm font-semibold ml-3.5 mb-1.5">
-                {translate('screens/home', 'Active wallet')}
+                {translate('screens/home', 'Active address')}
               </h2>
               <Form control={control} errors={errors}>
                 <StyledDropdown

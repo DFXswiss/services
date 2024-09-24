@@ -42,9 +42,9 @@ enum OverlayType {
 
 const OverlayHeader: { [key in OverlayType]: string } = {
   [OverlayType.NONE]: '',
-  [OverlayType.DELETE_ADDRESS]: 'Delete wallet',
+  [OverlayType.DELETE_ADDRESS]: 'Delete address',
   [OverlayType.DELETE_ACCOUNT]: 'Delete account',
-  [OverlayType.RENAME_ADDRESS]: 'Rename wallet',
+  [OverlayType.RENAME_ADDRESS]: 'Rename address',
   [OverlayType.EDIT_EMAIL]: 'Edit email',
   [OverlayType.EDIT_PHONE]: 'Edit phone number',
 };
@@ -174,7 +174,7 @@ export default function SettingsScreen(): JSX.Element {
               {addressesList?.length ? (
                 <StyledVerticalStack full gap={2}>
                   <StyledDataTable
-                    label={translate('screens/settings', 'Your Wallets')}
+                    label={translate('screens/settings', 'Your Addreses')}
                     alignContent={AlignContent.BETWEEN}
                   >
                     {addressesList.map((address) => {
@@ -243,8 +243,8 @@ export default function SettingsScreen(): JSX.Element {
                       >
                         <div>
                           {showDisabledWallets
-                            ? translate('screens/settings', 'Hide deleted wallets')
-                            : translate('screens/settings', 'Show deleted wallets')}
+                            ? translate('screens/settings', 'Hide deleted addresses')
+                            : translate('screens/settings', 'Show deleted addresses')}
                         </div>
                         <DfxIcon
                           icon={showDisabledWallets ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
@@ -380,9 +380,9 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
     case OverlayType.RENAME_ADDRESS:
       return (
         <EditOverlay
-          label={translate('screens/settings', 'Wallet name')}
+          label={translate('screens/settings', 'Address name')}
           prefill={address?.label ?? address?.wallet}
-          placeholder={translate('screens/settings', 'Wallet name')}
+          placeholder={translate('screens/settings', 'Address name')}
           onCancel={onClose}
           onEdit={async (result) => {
             if (address) await renameAddress(address.address, result);
