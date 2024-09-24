@@ -487,6 +487,9 @@
     "Deactivate": "Deaktivieren",
     "Expires at": "Gültig bis",
 
+    "Create Invoice": "Rechnung erstellen",
+    "Invoice ID": "Rechnungs-ID",
+
     "Route": "Route",
     "Summary": "Zusammenfassung",
     "N/A": "N/A",
