@@ -1102,7 +1102,7 @@ function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProp
 }
 
 function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element {
-  const [isDone, setIsDone] = useState(true);
+  const [isDone, setIsDone] = useState(false);
 
   useEffect(() => {
     onDone();
