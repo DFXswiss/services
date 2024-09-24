@@ -174,7 +174,7 @@ export default function SettingsScreen(): JSX.Element {
               {addressesList?.length ? (
                 <StyledVerticalStack full gap={2}>
                   <StyledDataTable
-                    label={translate('screens/settings', 'Your Addreses')}
+                    label={translate('screens/settings', 'Your Addresses')}
                     alignContent={AlignContent.BETWEEN}
                   >
                     {addressesList.map((address) => {
