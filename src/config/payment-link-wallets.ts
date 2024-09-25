@@ -44,6 +44,10 @@ export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
     websiteUrl: 'https://bitkit.to/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bitkit.webp',
   },
+  Blink: {
+    websiteUrl: 'https://de.blink.sv/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blink.webp',
+  },
   Blixt: {
     websiteUrl: 'https://blixtwallet.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blixt.webp',
