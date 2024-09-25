@@ -89,6 +89,7 @@ export default function InvoiceScreen(): JSX.Element {
             smallLabel
           />
           <StyledInput
+            type="number"
             name="amount"
             autocomplete="amount"
             label={translate('screens/payment', 'Amount')}
