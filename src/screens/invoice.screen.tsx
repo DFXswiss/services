@@ -39,12 +39,13 @@ export default function InvoiceScreen(): JSX.Element {
     const nowPlusOneYear = new Date();
     nowPlusOneYear.setFullYear(nowPlusOneYear.getFullYear() + 1);
     const formattedDate = new Intl.DateTimeFormat('de-DE').format(nowPlusOneYear);
+    const invoiceIdIsNumber = !isNaN(Number(data.invoiceId));
 
     const callback = url(
       baseUrl,
       new URLSearchParams({
-        route: data.recipient,
-        amount: data.invoiceId,
+        [invoiceIdIsNumber ? 'routeId' : 'route']: data.invoiceId,
+        amount: data.amount.toString(),
         currency: data.currency.name,
         message: data.recipient,
         date: formattedDate,
