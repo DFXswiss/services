@@ -113,6 +113,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
+  const refetchTimeout = useRef<NodeJS.Timeout>();
 
   const sessionApiUrl = useRef<string>(sessionStorage.getItem('apiUrl') ?? '');
 
@@ -174,8 +175,6 @@ export default function PaymentLinkScreen(): JSX.Element {
   }, [selectedPaymentMethod, payRequest]);
 
   useEffect(() => {
-    let refetchTimeout: NodeJS.Timeout | undefined;
-
     async function fetchPayRequest(url: string) {
       setError(undefined);
       return fetchDataApi(url)
@@ -187,14 +186,15 @@ export default function PaymentLinkScreen(): JSX.Element {
 
           const expiration = hasQuote(data) && new Date(data.quote.expiration);
           const refetchDelay = expiration ? expiration.getTime() - Date.now() : 1000;
-          refetchTimeout = setTimeout(() => fetchPayRequest(url), refetchDelay);
+          if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
+          refetchTimeout.current = setTimeout(() => fetchPayRequest(url), refetchDelay);
         })
         .catch((error: ApiError) => setError(error.message ?? 'Unknown Error'));
     }
 
     sessionApiUrl.current && fetchPayRequest(sessionApiUrl.current);
 
-    return () => refetchTimeout && clearTimeout(refetchTimeout);
+    return () => refetchTimeout.current && clearTimeout(refetchTimeout.current);
   }, [sessionApiUrl.current]);
 
   useEffect(() => {
@@ -359,97 +359,101 @@ export default function PaymentLinkScreen(): JSX.Element {
             </Form>
           )}
           <>
-            <StyledCollapsible
-              full
-              titleContent={
-                <div className="flex flex-col items-start gap-1.5 text-left -my-1">
-                  <div className="flex flex-col items-start text-left">
-                    <div className="font-semibold leading-none">{translate('screens/payment', 'Payment details')}</div>
-                  </div>
-                  <div className="leading-none text-dfxGray-800 text-xs">
-                    {`${translate('screens/payment', 'Your payment details at a glance')}`}
-                  </div>
-                </div>
-              }
-            >
-              <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                {hasQuote(payRequest) && (
-                  <>
-                    <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                      <p>{translate('screens/payment', 'Pending')}</p>
-                    </StyledDataTableRow>
-
-                    <StyledDataTableRow
-                      label={selectedPaymentMethod.paymentIdentifierLabel}
-                      isLoading={isLoading || !paymentIdentifier}
-                    >
-                      <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
-                      <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />
-                    </StyledDataTableRow>
-
-                    <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                      <p>
-                        {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
-                      </p>
-                    </StyledDataTableRow>
-                  </>
-                )}
-                {payRequest.recipient && (
-                  <StyledDataTableExpandableRow
-                    label={translate('screens/payment', 'Recipient')}
-                    expansionItems={
-                      [
-                        {
-                          label: translate('screens/support', 'Name'),
-                          text: payRequest.recipient.name,
-                        },
-                        {
-                          label: translate('screens/home', 'Address'),
-                          text: formatLocationAddress({ ...payRequest.recipient.address, country: undefined }) ?? '',
-                        },
-                        {
-                          label: translate('screens/home', 'Country'),
-                          text: payRequest.recipient.address?.country ?? '',
-                        },
-                        {
-                          label: translate('screens/kyc', 'Phone number'),
-                          text: payRequest.recipient.phone,
-                        },
-                        {
-                          label: translate('screens/kyc', 'Email address'),
-                          text: payRequest.recipient.mail,
-                        },
-                        {
-                          label: translate('screens/kyc', 'Website'),
-                          text: payRequest.recipient.website,
-                          onClick: () => {
-                            const url =
-                              payRequest.recipient.website?.startsWith('http://') ||
-                              payRequest.recipient.website?.startsWith('https://')
-                                ? payRequest.recipient.website
-                                : `https://${payRequest.recipient.website}`;
-
-                            window.open(url, '_blank');
-                          },
-                        },
-                      ].filter((item) => item.text) as any
-                    }
-                  />
-                )}
-                {hasQuote(payRequest) && !payRequest.displayQr && (
-                  <StyledDataTableExpandableRow
-                    label={translate('screens/payment', 'QR Code')}
-                    expansionContent={
-                      <div className="flex w-full items-center justify-center">
-                        <div className="w-48 my-3">
-                          <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
-                        </div>
+            {(hasQuote(payRequest) || payRequest.recipient) && (
+              <StyledCollapsible
+                full
+                titleContent={
+                  <div className="flex flex-col items-start gap-1.5 text-left -my-1">
+                    <div className="flex flex-col items-start text-left">
+                      <div className="font-semibold leading-none">
+                        {translate('screens/payment', 'Payment details')}
                       </div>
-                    }
-                  />
-                )}
-              </StyledDataTable>
-            </StyledCollapsible>
+                    </div>
+                    <div className="leading-none text-dfxGray-800 text-xs">
+                      {`${translate('screens/payment', 'Your payment details at a glance')}`}
+                    </div>
+                  </div>
+                }
+              >
+                <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                  {hasQuote(payRequest) && (
+                    <>
+                      <StyledDataTableRow label={translate('screens/payment', 'State')}>
+                        <p>{translate('screens/payment', 'Pending')}</p>
+                      </StyledDataTableRow>
+
+                      <StyledDataTableRow
+                        label={selectedPaymentMethod.paymentIdentifierLabel}
+                        isLoading={isLoading || !paymentIdentifier}
+                      >
+                        <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
+                        <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />
+                      </StyledDataTableRow>
+
+                      <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
+                        <p>
+                          {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
+                        </p>
+                      </StyledDataTableRow>
+                    </>
+                  )}
+                  {payRequest.recipient && (
+                    <StyledDataTableExpandableRow
+                      label={translate('screens/payment', 'Recipient')}
+                      expansionItems={
+                        [
+                          {
+                            label: translate('screens/support', 'Name'),
+                            text: payRequest.recipient.name,
+                          },
+                          {
+                            label: translate('screens/home', 'Address'),
+                            text: formatLocationAddress({ ...payRequest.recipient.address, country: undefined }) ?? '',
+                          },
+                          {
+                            label: translate('screens/home', 'Country'),
+                            text: payRequest.recipient.address?.country ?? '',
+                          },
+                          {
+                            label: translate('screens/kyc', 'Phone number'),
+                            text: payRequest.recipient.phone,
+                          },
+                          {
+                            label: translate('screens/kyc', 'Email address'),
+                            text: payRequest.recipient.mail,
+                          },
+                          {
+                            label: translate('screens/kyc', 'Website'),
+                            text: payRequest.recipient.website,
+                            onClick: () => {
+                              const url =
+                                payRequest.recipient.website?.startsWith('http://') ||
+                                payRequest.recipient.website?.startsWith('https://')
+                                  ? payRequest.recipient.website
+                                  : `https://${payRequest.recipient.website}`;
+
+                              window.open(url, '_blank');
+                            },
+                          },
+                        ].filter((item) => item.text) as any
+                      }
+                    />
+                  )}
+                  {hasQuote(payRequest) && !payRequest.displayQr && (
+                    <StyledDataTableExpandableRow
+                      label={translate('screens/payment', 'QR Code')}
+                      expansionContent={
+                        <div className="flex w-full items-center justify-center">
+                          <div className="w-48 my-3">
+                            <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
+                          </div>
+                        </div>
+                      }
+                    />
+                  )}
+                </StyledDataTable>
+              </StyledCollapsible>
+            )}
             {[PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
               selectedPaymentMethod?.id as PaymentStandardType,
             ) && (
