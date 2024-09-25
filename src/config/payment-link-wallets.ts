@@ -9,14 +9,14 @@ export const PaymentStandards = {
   [PaymentStandardType.OPEN_CRYPTO_PAY]: {
     id: PaymentStandardType.OPEN_CRYPTO_PAY,
     label: 'OpenCryptoPay.io',
-    description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
-    paymentIdentifierLabel: 'LNURL',
+    description: 'Pay with OpenCryptoPay, Bitcoin Lightning LNURL',
+    paymentIdentifierLabel: 'URL',
   },
   [PaymentStandardType.FRANKENCOIN_PAY]: {
     id: PaymentStandardType.FRANKENCOIN_PAY,
     label: 'FrankencoinPay.com',
     description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
-    paymentIdentifierLabel: 'LNURL',
+    paymentIdentifierLabel: 'URL',
   },
   [PaymentStandardType.LIGHTNING_BOLT11]: {
     id: PaymentStandardType.LIGHTNING_BOLT11,
