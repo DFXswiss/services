@@ -30,10 +30,13 @@
     "Rename address": "Adresse umbenennen",
     "Delete address": "Adresse löschen",
     "Delete account": "Konto löschen",
+    "Edit email": "E-Mail bearbeiten",
+    "Edit phone number": "Telefonnummer bearbeiten",
     "Copy Address": "Adresse kopieren",
     "Open Explorer": "Explorer öffnen",
     "Select transaction": "Transaktion auswählen",
-    "Download": "Herunterladen"
+    "Download": "Herunterladen",
+    "Confirm refund": "Rückerstattung bestätigen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -280,8 +283,7 @@
     "Credit": "Guthaben",
     "Paid credit": "Ausgezahltes Guthaben",
     "User count": "Anzahl Benutzer",
-    "Active user count": "Anzahl aktiver Benutzer",
-    "Active wallet": "Aktive Wallet"
+    "Active user count": "Anzahl aktiver Benutzer"
   },
   "screens/buy": {
     "You spend": "Du zahlst",
@@ -370,6 +372,7 @@
     "No transactions found": "Keine Transaktionen gefunden",
     "My transaction is missing": "Meine Transaktion fehlt",
     "Transaction status": "Status der Transaktion",
+    "Transaction refund": "Rückerstattung der Transaktion",
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} zu {{to}} bei {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",
@@ -379,6 +382,14 @@
     "Input TX": "Input TX",
     "Output": "Output",
     "Output TX": "Output TX",
+
+    "Chargeback IBAN": "Chargeback-IBAN",
+    "Chargeback address": "Chargeback-Adresse",
+    "Chargeback amount": "Chargeback-Betrag",
+    "Transaction amount": "Transaktionsbetrag",
+    "Refund amount": "Rückerstattungsbetrag",
+    "Fee": "Gebühr",
+    "Refund amount is the transaction amount minus the fee.": "Der Rückerstattungsbetrag ist der Transaktionsbetrag minus der Gebühr.",
 
     "Type": "Typ",
     "Buy": "Kauf",
@@ -572,14 +583,15 @@
   },
   "screens/settings": {
     "Settings": "Einstellungen",
-    "Your Wallets": "Deine Wallets",
+    "Your Addresses": "Deine Adressen",
     "Active": "Aktiv",
     "Language": "Sprache",
     "Currency": "Währung",
     "Label": "Bezeichnung",
+    "Address name": "Adressname",
 
-    "Show deleted wallets": "Gelöschte Wallets anzeigen",
-    "Hide deleted wallets": "Gelöschte Wallets ausblenden",
+    "Show deleted addresses": "Gelöschte Adressen anzeigen",
+    "Hide deleted addresses": "Gelöschte Adressen ausblenden",
 
     "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team."

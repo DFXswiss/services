@@ -15,6 +15,7 @@ import {
   KycStepSession,
   KycStepStatus,
   KycStepType,
+  Language,
   QuestionType,
   SupportIssueType,
   UrlType,
@@ -59,6 +60,7 @@ import {
   LegalEntity,
   SignatoryPower,
 } from '@dfx.swiss/react/dist/definitions/kyc';
+import SumsubWebSdk from '@sumsub/websdk-react';
 import { RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
@@ -332,7 +334,7 @@ export default function KycScreen(): JSX.Element {
             </div>
           )}
         </StyledVerticalStack>
-      ) : stepInProgress && kycCode && !error ? (
+      ) : info && stepInProgress && kycCode && !error ? (
         [KycStepStatus.NOT_STARTED, KycStepStatus.IN_PROGRESS].includes(stepInProgress.status) ? (
           <KycEdit
             rootRef={rootRef}
@@ -340,8 +342,10 @@ export default function KycScreen(): JSX.Element {
             code={kycCode}
             isLoading={isSubmitting}
             step={stepInProgress}
+            lang={info.language}
             onDone={() => onLoad(true)}
             onBack={() => onLoad(false)}
+            onError={setError}
             showLinkHint={onLink}
           />
         ) : (
@@ -420,8 +424,10 @@ interface EditProps {
   code: string;
   isLoading: boolean;
   step: KycStepSession;
+  lang: Language;
   onDone: () => void;
   onBack: () => void;
+  onError: (error: string) => void;
   showLinkHint: () => void;
 }
 
@@ -1098,7 +1104,16 @@ function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProp
   );
 }
 
-function Ident({ step, onDone, onBack }: EditProps): JSX.Element {
+function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element {
+  const [isDone, setIsDone] = useState(false);
+
+  useEffect(() => {
+    onDone();
+
+    const refreshInterval = setInterval(() => isDone && onDone(), 1000);
+    return () => clearInterval(refreshInterval);
+  }, [isDone]);
+
   // listen to close events
   useEffect(() => {
     window.addEventListener('message', onMessage);
@@ -1111,14 +1126,33 @@ function Ident({ step, onDone, onBack }: EditProps): JSX.Element {
   }
 
   return step.session ? (
-    <>
-      <iframe
-        src={step.session?.url}
-        allow="camera *; microphone *"
-        allowFullScreen={true}
-        className="w-full h-full max-h-[900px]"
-      ></iframe>
-    </>
+    isDone ? (
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
+    ) : (
+      <>
+        {step.session.type === UrlType.TOKEN ? (
+          <SumsubWebSdk
+            className="w-full h-full max-h-[900px]"
+            accessToken={step.session.url}
+            expirationHandler={() => onError('Token expired')}
+            config={{ lang: lang.symbol.toLowerCase() }}
+            onMessage={(type: string, payload: any) =>
+              type === 'idCheck.onApplicantStatusChanged' &&
+              ['pending', 'completed'].includes(payload?.reviewStatus) &&
+              setIsDone(true)
+            }
+            onError={onError}
+          />
+        ) : (
+          <iframe
+            src={step.session.url}
+            allow="camera *; microphone *"
+            allowFullScreen={true}
+            className="w-full h-full max-h-[900px]"
+          ></iframe>
+        )}
+      </>
+    )
   ) : (
     <ErrorHint message="No session URL" />
   );

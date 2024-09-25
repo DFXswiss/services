@@ -80,6 +80,7 @@ interface SelectTransactionFormData {
   description: string;
 }
 
+const NoIban = 'No IBAN, only account number';
 const AddAccount = 'Add bank account';
 const selectTxButtonLabel = 'Select transaction';
 
@@ -249,10 +250,6 @@ export default function SupportIssueScreen(): JSX.Element {
     setSelectTransaction(false);
   }
 
-  function onDone() {
-    navigate('/account');
-  }
-
   const rules = Utils.createRules({
     type: Validations.Required,
     senderIban: Validations.Required,
@@ -351,12 +348,15 @@ export default function SupportIssueScreen(): JSX.Element {
                   <StyledDropdown<string>
                     rootRef={rootRef}
                     label={translate('screens/support', 'Sender IBAN')}
-                    items={[
-                      ...accounts.map((a) => Utils.formatIban(a.iban) ?? ''),
-                      'No IBAN, only account number',
-                      AddAccount,
-                    ]}
-                    labelFunc={(item) => translate('screens/iban', item)}
+                    items={[...accounts.map((a) => a.iban), NoIban, AddAccount]}
+                    labelFunc={(item) =>
+                      blankedAddress(
+                        [NoIban, AddAccount].includes(item)
+                          ? translate('screens/iban', item)
+                          : Utils.formatIban(item) ?? '',
+                        { displayLength: 30 },
+                      )
+                    }
                     name="senderIban"
                     placeholder={translate('general/actions', 'Select...')}
                     full
@@ -365,8 +365,8 @@ export default function SupportIssueScreen(): JSX.Element {
                   <StyledDropdown<string>
                     rootRef={rootRef}
                     label={translate('screens/support', 'Receiver IBAN')}
-                    items={banks.map((b) => blankedAddress(Utils.formatIban(b.iban) ?? '', { displayLength: 18 }))}
-                    labelFunc={(item) => item}
+                    items={banks.map((b) => b.iban)}
+                    labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
                     name="receiverIban"
                     placeholder={translate('general/actions', 'Select...')}
                     full

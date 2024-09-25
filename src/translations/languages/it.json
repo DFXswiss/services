@@ -30,10 +30,13 @@
     "Rename address": "Rinominare l'indirizzo",
     "Delete address": "Elimina l'indirizzo",
     "Delete account": "Elimina l'account",
+    "Edit email": "Modifica e-mail",
+    "Edit phone number": "Modifica il numero di telefono",
     "Copy Address": "Copia l'indirizzo",
     "Open Explorer": "Apri Explorer",
     "Select transaction": "Selezionare la transazione",
-    "Download": "Scaricare"
+    "Download": "Scaricare",
+    "Confirm refund": "Confermare il rimborso"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -280,8 +283,7 @@
     "Credit": "Credito",
     "Paid credit": "Credito pagato",
     "User count": "Conteggio utenti",
-    "Active user count": "Conteggio utenti attivi",
-    "Active wallet": "Portafoglio attivo"
+    "Active user count": "Conteggio utenti attivi"
   },
   "screens/buy": {
     "You spend": "Si spende",
@@ -370,6 +372,7 @@
     "No transactions found": "Nessuna transazione trovata",
     "My transaction is missing": "La mia transazione è scomparsa",
     "Transaction status": "Stato della transazione",
+    "Transaction refund": "Rimborso della transazione",
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} a {{to}} a {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",
@@ -379,6 +382,14 @@
     "Input TX": "Input TX",
     "Output": "Output",
     "Output TX": "Output TX",
+
+    "Chargeback IBAN": "IBAN per il chargeback",
+    "Chargeback address": "Indirizzo per il chargeback",
+    "Chargeback amount": "Importo del chargeback",
+    "Transaction amount": "Importo della transazione",
+    "Refund amount": "Importo del rimborso",
+    "Fee": "Commissione",
+    "Refund amount is the transaction amount minus the fee.": "L'importo del rimborso è l'importo della transazione meno la commissione.",
 
     "Type": "Tipo",
     "Buy": "Acquisto",
@@ -572,14 +583,15 @@
   },
   "screens/settings": {
     "Settings": "Impostazioni",
-    "Your Wallets": "I tuoi portafogli",
+    "Your Addresses": "I tuoi indirizzi",
     "Active": "Attivo",
     "Language": "Lingua",
     "Currency": "Valuta",
     "Label": "Etichetta",
+    "Address name": "Nome dell'indirizzo",
 
-    "Show deleted wallets": "Mostra portafogli eliminati",
-    "Hide deleted wallets": "Nascondi portafogli eliminati",
+    "Show deleted addresses": "Mostra indirizzi eliminati",
+    "Hide deleted addresses": "Nascondi indirizzi eliminati",
 
     "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "I tuoi dati rimarranno sui nostri server temporaneamente prima della cancellazione definitiva. Se hai domande, contatta il nostro team di supporto."
