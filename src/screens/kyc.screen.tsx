@@ -2,12 +2,15 @@ import {
   AccountType,
   ApiError,
   Country,
+  DocumentType,
+  GenderType,
   KycContactData,
   KycFinancialOption,
   KycFinancialQuestion,
   KycFinancialResponse,
   KycInfo,
   KycLevel,
+  KycManualIdentData,
   KycPersonalData,
   KycSession,
   KycStep,
@@ -1294,33 +1297,10 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   );
 }
 
-export enum DocumentTypes {
-  IDCARD = 'ID Card',
-  PASSPORT = 'Passport',
-  DRIVERS_LICENSE = "Driver's License",
-  RESIDENCE_PERMIT = 'Residence Permit',
-}
-
-export enum GenderTypes {
-  MALE = 'Male',
-  FEMALE = 'Female',
-}
-
-export interface KycManualIdentData {
-  firstName: string;
-  lastName: string;
-  birthName: string;
-  documentType: DocumentTypes;
-  documentNumber?: string;
-  nationality: Country;
-  birthplace: string;
-  gender: GenderTypes;
-  file: string;
-}
-
 function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
-  const { getCountries } = useKyc();
+  const { getCountries, setManualIdentData } = useKyc();
+  const { genderTypeToString, documentTypeToString } = useKycHelper();
   const { countryCode } = useGeoLocation();
 
   const [isCountryLoading, setIsCountryLoading] = useState(true);
@@ -1354,11 +1334,10 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
 
     setIsUpdating(true);
     setError(undefined);
-    // TODO: Implement (import from packages)
-    // call({ url: step.session.url, code, method: 'PUT', data })
-    //   .then(() => (mode === Mode.KYC ? onDone() : onBack()))
-    //   .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-    //   .finally(() => setIsUpdating(false));
+    setManualIdentData(code, step.session.url, data)
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
   }
 
   const rules = Utils.createRules({
@@ -1378,10 +1357,13 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                 <StyledDropdown
                   rootRef={rootRef}
                   name="gender"
-                  label={translate('screens/kyc', 'Gender (optional)')}
+                  label={`${translate('screens/kyc', 'Gender')} (${translate(
+                    'screens/kyc',
+                    'Optional',
+                  ).toLowerCase()})`}
                   placeholder={translate('general/actions', 'Select...')}
-                  items={Object.values(GenderTypes)}
-                  labelFunc={(item) => translate('screens/kyc', item)}
+                  items={Object.values(GenderType)}
+                  labelFunc={(item) => genderTypeToString(item)}
                   smallLabel
                 />
                 <StyledHorizontalStack gap={2}>
@@ -1404,6 +1386,7 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                 </StyledHorizontalStack>
 
                 <StyledInput
+                  type="date"
                   name="birthName"
                   autocomplete="birthName"
                   label={translate('screens/kyc', 'Birth name')}
@@ -1414,7 +1397,10 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                 <StyledInput
                   name="birthplace"
                   autocomplete="birthplace"
-                  label={translate('screens/kyc', 'Birthplace (optional)')}
+                  label={`${translate('screens/kyc', 'Birthplace')} (${translate(
+                    'screens/kyc',
+                    'Optional',
+                  ).toLowerCase()})`}
                   placeholder={translate('screens/kyc', 'New York, USA')}
                   full
                   smallLabel
@@ -1435,15 +1421,15 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
 
               <StyledVerticalStack gap={2}>
                 <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-                  {translate('screens/kyc', 'Document Information')}
+                  {translate('screens/kyc', 'Identification document')}
                 </p>
                 <StyledDropdown
                   rootRef={rootRef}
                   name="documentType"
                   label={translate('screens/kyc', 'Document type')}
                   placeholder={translate('general/actions', 'Select...')}
-                  items={Object.values(DocumentTypes)}
-                  labelFunc={(item) => translate('screens/kyc', item)}
+                  items={Object.values(DocumentType)}
+                  labelFunc={(item) => documentTypeToString(item)}
                   smallLabel
                 />
                 <StyledInput
@@ -1455,7 +1441,7 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                 />
                 <StyledFileUpload
                   name="file"
-                  label="Document"
+                  label={translate('screens/support', 'Document')}
                   placeholder={translate('general/actions', 'Drop files here')}
                   buttonLabel={translate('general/actions', 'Browse')}
                   full
