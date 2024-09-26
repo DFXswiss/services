@@ -30,6 +30,8 @@
     "Rename address": "Renommer l'adresse",
     "Delete address": "Supprimer l'adresse",
     "Delete account": "Supprimer le compte",
+    "Edit email": "Modifier l'e-mail",
+    "Edit phone number": "Modifier le numéro de téléphone",
     "Copy Address": "Copier l'adresse",
     "Open Explorer": "Ouvrir l'explorateur",
     "Select transaction": "Sélectionner la transaction",
@@ -74,6 +76,8 @@
     "Commercial register": "Registre du commerce",
     "Signatory power": "Pouvoir de signature",
     "Power of Attorney": "Procuration",
+    "Additional documents": "Documents supplémentaires",
+    "Residence permit": "Permis de séjour",
     "DFX approval": "Approbation DFX",
 
     "Public Limited Company": "Société anonyme",
@@ -111,7 +115,7 @@
 
     "Account Type": "Type de compte",
     "Personal": "Personnel",
-    "Business": "Professionnel",
+    "Organization": "Organisation",
     "SoleProprietorship": "Entreprise individuelle",
     "Personal Information": "Informations personnelles",
     "Gender": "Sexe",
@@ -295,8 +299,7 @@
     "Credit": "Crédit",
     "Paid credit": "Crédit payé",
     "User count": "Nombre d'utilisateurs",
-    "Active user count": "Nombre d'utilisateurs actifs",
-    "Active wallet": "Portefeuille actif"
+    "Active user count": "Nombre d'utilisateurs actifs"
   },
   "screens/buy": {
     "You spend": "Vous dépensez",
@@ -596,14 +599,15 @@
   },
   "screens/settings": {
     "Settings": "Paramètres",
-    "Your Wallets": "Vos Portefeuilles",
+    "Your Addresses": "Vos adresses",
     "Active": "Actif",
     "Language": "Langue",
     "Currency": "Devise",
     "Label": "Étiquette",
+    "Address name": "Nom de l'adresse",
 
-    "Show deleted wallets": "Afficher les portefeuilles supprimés",
-    "Hide deleted wallets": "Masquer les portefeuilles supprimés",
+    "Show deleted addresses": "Afficher les adresses supprimées",
+    "Hide deleted addresses": "Masquer les adresses supprimées",
 
     "delete": "Êtes-vous sûr de vouloir supprimer l'adresse <1>{{address}}</1> de votre compte DFX ? Cette action est irréversible.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support."

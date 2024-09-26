@@ -250,10 +250,6 @@ export default function SupportIssueScreen(): JSX.Element {
     setSelectTransaction(false);
   }
 
-  function onDone() {
-    navigate('/account');
-  }
-
   const rules = Utils.createRules({
     type: Validations.Required,
     senderIban: Validations.Required,

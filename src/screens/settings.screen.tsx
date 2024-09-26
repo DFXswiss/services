@@ -1,9 +1,10 @@
-import { Fiat, Language, useFiatContext, UserAddress, useUserContext } from '@dfx.swiss/react';
+import { Fiat, Language, useFiatContext, UserAddress, useUserContext, Validations } from '@dfx.swiss/react';
 import {
   AlignContent,
   DfxIcon,
   Form,
   IconColor,
+  IconSize,
   IconVariant,
   SpinnerSize,
   StyledButton,
@@ -18,7 +19,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { Layout } from 'src/components/layout';
-import { ConfirmationOverlay, RenameAddressOverlay } from 'src/components/overlays';
+import { ConfirmationOverlay, EditOverlay } from 'src/components/overlays';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -35,22 +36,24 @@ enum OverlayType {
   DELETE_ADDRESS,
   DELETE_ACCOUNT,
   RENAME_ADDRESS,
+  EDIT_EMAIL,
+  EDIT_PHONE,
 }
 
 const OverlayHeader: { [key in OverlayType]: string } = {
   [OverlayType.NONE]: '',
-  [OverlayType.DELETE_ADDRESS]: 'Delete wallet',
+  [OverlayType.DELETE_ADDRESS]: 'Delete address',
   [OverlayType.DELETE_ACCOUNT]: 'Delete account',
-  [OverlayType.RENAME_ADDRESS]: 'Rename wallet',
+  [OverlayType.RENAME_ADDRESS]: 'Rename address',
+  [OverlayType.EDIT_EMAIL]: 'Edit email',
+  [OverlayType.EDIT_PHONE]: 'Edit phone number',
 };
 
 export default function SettingsScreen(): JSX.Element {
   const { translate, language, currency, availableLanguages, changeLanguage, changeCurrency } = useSettingsContext();
   const { currencies } = useFiatContext();
   const { user, isUserLoading } = useUserContext();
-  const { setWallet } = useWalletContext();
   const { width } = useWindowContext();
-  const { deleteAddress, deleteAccount, renameAddress } = useUserContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -88,25 +91,7 @@ export default function SettingsScreen(): JSX.Element {
     }
   }, [selectedCurrency]);
 
-  async function onCloseOverlay(result?: any): Promise<void> {
-    if (result) {
-      switch (overlayType) {
-        case OverlayType.DELETE_ADDRESS:
-          if (!menuAddress) break;
-          deleteAddress(menuAddress.address);
-          menuAddress.address === user?.activeAddress?.address && setWallet();
-          break;
-        case OverlayType.DELETE_ACCOUNT:
-          deleteAccount();
-          setWallet();
-          break;
-        case OverlayType.RENAME_ADDRESS:
-          if (!menuAddress) break;
-          await renameAddress(menuAddress.address, result);
-          break;
-      }
-    }
-
+  function onCloseOverlay(): void {
     setOverlayType(OverlayType.NONE);
     setMenuAddress(undefined);
   }
@@ -150,6 +135,36 @@ export default function SettingsScreen(): JSX.Element {
             </Form>
           </StyledVerticalStack>
 
+          <StyledVerticalStack full gap={2}>
+            <StyledDataTable
+              label={translate('screens/kyc', 'Personal Information')}
+              alignContent={AlignContent.BETWEEN}
+            >
+              <StyledDataTableRow>
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex flex-row gap-2 font-semibold">{translate('screens/kyc', 'Email address')}</div>
+                  <div className="text-xs text-dfxGray-700">{user?.mail}</div>
+                </div>
+                <div className="relative flex items-center">
+                  <button onClick={() => setOverlayType(OverlayType.EDIT_EMAIL)}>
+                    <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
+                  </button>
+                </div>
+              </StyledDataTableRow>
+              <StyledDataTableRow>
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex flex-row gap-2 font-semibold">{translate('screens/kyc', 'Phone number')}</div>
+                  <div className="text-xs text-dfxGray-700">{user?.phone}</div>
+                </div>
+                <div className="relative flex items-center">
+                  <button onClick={() => setOverlayType(OverlayType.EDIT_PHONE)}>
+                    <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
+                  </button>
+                </div>
+              </StyledDataTableRow>
+            </StyledDataTable>
+          </StyledVerticalStack>
+
           {isUserLoading ? (
             <div className="flex mt-4 w-full justify-center items-center">
               <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -159,7 +174,7 @@ export default function SettingsScreen(): JSX.Element {
               {addressesList?.length ? (
                 <StyledVerticalStack full gap={2}>
                   <StyledDataTable
-                    label={translate('screens/settings', 'Your Wallets')}
+                    label={translate('screens/settings', 'Your Addresses')}
                     alignContent={AlignContent.BETWEEN}
                   >
                     {addressesList.map((address) => {
@@ -228,8 +243,8 @@ export default function SettingsScreen(): JSX.Element {
                       >
                         <div>
                           {showDisabledWallets
-                            ? translate('screens/settings', 'Hide deleted wallets')
-                            : translate('screens/settings', 'Show deleted wallets')}
+                            ? translate('screens/settings', 'Hide deleted addresses')
+                            : translate('screens/settings', 'Show deleted addresses')}
                         </div>
                         <DfxIcon
                           icon={showDisabledWallets ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
@@ -309,12 +324,15 @@ function OverflowMenu({ menuItems, onClose }: OverflowMenuProps): JSX.Element {
 interface SettingsOverlayProps {
   type: OverlayType;
   address?: UserAddress;
-  onClose: (result?: any) => Promise<void>;
+  onClose: () => void;
 }
 
 function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.Element {
+  const { user } = useUserContext();
   const { width } = useWindowContext();
   const { translate } = useSettingsContext();
+  const { setWallet } = useWalletContext();
+  const { deleteAddress, deleteAccount, renameAddress, changeMail, changePhone } = useUserContext();
 
   switch (type) {
     case OverlayType.DELETE_ADDRESS:
@@ -332,8 +350,14 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
           }
           cancelLabel={translate('general/actions', 'Cancel')}
           confirmLabel={translate('general/actions', 'Delete')}
-          onCancel={() => onClose(false)}
-          onConfirm={() => onClose(true)}
+          onCancel={onClose}
+          onConfirm={async () => {
+            if (address) {
+              await deleteAddress(address.address);
+              address.address === user?.activeAddress?.address && setWallet();
+            }
+            onClose();
+          }}
         />
       );
     case OverlayType.DELETE_ACCOUNT:
@@ -345,12 +369,55 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
           )}
           cancelLabel={translate('general/actions', 'Cancel')}
           confirmLabel={translate('general/actions', 'Delete')}
-          onCancel={() => onClose(false)}
-          onConfirm={() => onClose(true)}
+          onCancel={onClose}
+          onConfirm={async () => {
+            await deleteAccount();
+            setWallet();
+            onClose();
+          }}
         />
       );
     case OverlayType.RENAME_ADDRESS:
-      return <RenameAddressOverlay placeholder={address?.label ?? address?.wallet} onClose={onClose} />;
+      return (
+        <EditOverlay
+          label={translate('screens/settings', 'Address name')}
+          prefill={address?.label ?? address?.wallet}
+          placeholder={translate('screens/settings', 'Address name')}
+          onCancel={onClose}
+          onEdit={async (result) => {
+            if (address) await renameAddress(address.address, result);
+            onClose();
+          }}
+        />
+      );
+    case OverlayType.EDIT_EMAIL:
+      return (
+        <EditOverlay
+          label={translate('screens/kyc', 'Email address')}
+          prefill={user?.mail}
+          placeholder={translate('screens/kyc', 'Email address')}
+          validation={Validations.Mail}
+          onCancel={onClose}
+          onEdit={async (result) => {
+            await changeMail(result);
+            onClose();
+          }}
+        />
+      );
+    case OverlayType.EDIT_PHONE:
+      return (
+        <EditOverlay
+          label={translate('screens/kyc', 'Phone number')}
+          prefill={user?.phone}
+          placeholder={translate('screens/kyc', 'Phone number')}
+          validation={Validations.Phone}
+          onCancel={onClose}
+          onEdit={async (result) => {
+            await changePhone(result);
+            onClose();
+          }}
+        />
+      );
     default:
       return <></>;
   }

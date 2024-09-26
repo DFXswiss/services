@@ -42,7 +42,8 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepName.AUTHORITY]: 'Power of Attorney',
     [KycStepName.IDENT]: 'Identification',
     [KycStepName.FINANCIAL_DATA]: 'Additional data',
-    [KycStepName.DOCUMENT_UPLOAD]: 'Document upload',
+    [KycStepName.ADDITIONAL_DOCUMENTS]: 'Additional documents',
+    [KycStepName.RESIDENCE_PERMIT]: 'Residence permit',
     [KycStepName.DFX_APPROVAL]: 'DFX approval',
   };
 
@@ -50,6 +51,7 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepType.AUTO]: 'auto',
     [KycStepType.VIDEO]: 'video',
     [KycStepType.MANUAL]: 'manual',
+    [KycStepType.SUMSUB_AUTO]: 'auto',
   };
 
   const legalEntityMap: Record<LegalEntity, string> = {

@@ -34,6 +34,8 @@ interface SettingsInterface {
   currency?: Fiat;
   changeLanguage: (language: Language) => void;
   changeCurrency: (currency: Fiat) => void;
+  changeMail: (mail: string) => void;
+  changePhone: (phone: string) => void;
   translate: (key: string, defaultValue: string, interpolation?: Record<string, string | number>) => string;
   translateError: (key: string) => string;
   processingKycData: boolean;
@@ -58,6 +60,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     user,
     changeLanguage: changeUserLanguage,
     changeMail: changeUserMail,
+    changePhone: changeUserPhone,
     changeCurrency: changeUserCurrency,
   } = useUserContext();
   const { language: storedLanguage, infoBanner: storedInfoBanner } = useStore();
@@ -199,6 +202,16 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     changeUserCurrency(newCurrency);
   }
 
+  function changeMail(mail: string) {
+    setParams({ mail });
+    changeUserMail(mail);
+  }
+
+  function changePhone(phone: string) {
+    setParams({ phone });
+    changeUserPhone(phone);
+  }
+
   function translate(key: string, defaultValue: string, interpolation?: Record<string, string | number>): string {
     return t([key, defaultValue].join('.'), defaultValue, interpolation);
   }
@@ -222,6 +235,8 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
       currency,
       changeLanguage,
       changeCurrency,
+      changeMail,
+      changePhone,
       translate,
       translateError,
       processingKycData,

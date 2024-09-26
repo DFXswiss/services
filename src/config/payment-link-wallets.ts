@@ -9,14 +9,14 @@ export const PaymentStandards = {
   [PaymentStandardType.OPEN_CRYPTO_PAY]: {
     id: PaymentStandardType.OPEN_CRYPTO_PAY,
     label: 'OpenCryptoPay.io',
-    description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
-    paymentIdentifierLabel: 'LNURL',
+    description: 'Pay with OpenCryptoPay, Bitcoin Lightning LNURL',
+    paymentIdentifierLabel: 'URL',
   },
   [PaymentStandardType.FRANKENCOIN_PAY]: {
     id: PaymentStandardType.FRANKENCOIN_PAY,
     label: 'FrankencoinPay.com',
     description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
-    paymentIdentifierLabel: 'LNURL',
+    paymentIdentifierLabel: 'URL',
   },
   [PaymentStandardType.LIGHTNING_BOLT11]: {
     id: PaymentStandardType.LIGHTNING_BOLT11,
@@ -43,6 +43,10 @@ export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
   Bitkit: {
     websiteUrl: 'https://bitkit.to/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bitkit.webp',
+  },
+  Blink: {
+    websiteUrl: 'https://de.blink.sv/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blink.webp',
   },
   Blixt: {
     websiteUrl: 'https://blixtwallet.com/',
@@ -85,9 +89,9 @@ export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
     websiteUrl: 'https://lnbits.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LNbits.webp',
   },
-  Muun: {
-    websiteUrl: 'https://muun.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/muun.webp',
+  AQUA: {
+    websiteUrl: 'https://aquawallet.io/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/aqua.webp',
   },
   OneKey: {
     websiteUrl: 'https://onekey.so/',
