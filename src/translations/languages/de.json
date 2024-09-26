@@ -76,6 +76,8 @@
     "Commercial register": "Handelsregister",
     "Signatory power": "Unterschriftsberechtigung",
     "Power of Attorney": "Vollmacht",
+    "Additional documents": "Zusätzliche Dokumente",
+    "Residence permit": "Aufenthaltsbewilligung",
     "DFX approval": "DFX-Genehmigung",
 
     "Public Limited Company": "Aktiengesellschaft",
@@ -103,7 +105,7 @@
 
     "Account Type": "Kontotyp",
     "Personal": "Privatkonto",
-    "Business": "Geschäftskonto",
+    "Organization": "Organisation",
     "SoleProprietorship": "Einzelunternehmen",
     "Personal Information": "Persönliche Daten",
     "First name": "Vorname",
