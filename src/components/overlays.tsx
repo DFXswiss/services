@@ -1,4 +1,4 @@
-import { ApiError, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, Utils, ValidationRule, Validations } from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
@@ -55,11 +55,19 @@ interface EditOverlayProps {
   label?: string;
   prefill?: string;
   placeholder?: string;
+  validation?: ValidationRule;
   onCancel: () => void;
   onEdit: (label: string) => Promise<void>;
 }
 
-export function EditOverlay({ label, prefill, placeholder, onCancel, onEdit }: EditOverlayProps): JSX.Element {
+export function EditOverlay({
+  label,
+  prefill,
+  placeholder,
+  validation,
+  onCancel,
+  onEdit,
+}: EditOverlayProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
 
   const [isUpdating, setIsUpdating] = useState(false);
@@ -80,7 +88,7 @@ export function EditOverlay({ label, prefill, placeholder, onCancel, onEdit }: E
   }
 
   const rules = Utils.createRules({
-    label: Validations.Required,
+    label: [Validations.Required, validation],
   });
 
   return (
@@ -92,32 +100,33 @@ export function EditOverlay({ label, prefill, placeholder, onCancel, onEdit }: E
         onSubmit={handleSubmit(onSubmit)}
         translate={translateError}
       >
-        <StyledInput
-          name="label"
-          autocomplete="label"
-          label={label ?? translate('screens/settings', 'Label')}
-          placeholder={placeholder ?? translate('screens/settings', 'Label')}
-          full
-          smallLabel
-        />
+        <StyledVerticalStack gap={3} full>
+          <StyledInput
+            name="label"
+            autocomplete="label"
+            label={label ?? translate('screens/settings', 'Label')}
+            placeholder={placeholder ?? translate('screens/settings', 'Label')}
+            full
+            smallLabel
+          />
+          <StyledHorizontalStack gap={6} spanAcross>
+            <StyledButton
+              color={StyledButtonColor.STURDY_WHITE}
+              width={StyledButtonWidth.FULL}
+              label={translate('general/actions', 'Cancel')}
+              onClick={onCancel}
+            />
+            <StyledButton
+              type="submit"
+              label={translate('general/actions', 'Save')}
+              onClick={handleSubmit(onSubmit)}
+              width={StyledButtonWidth.FULL}
+              disabled={!isValid}
+              isLoading={isUpdating}
+            />
+          </StyledHorizontalStack>
+        </StyledVerticalStack>
       </Form>
-
-      <StyledHorizontalStack gap={6} spanAcross>
-        <StyledButton
-          color={StyledButtonColor.STURDY_WHITE}
-          width={StyledButtonWidth.FULL}
-          label={translate('general/actions', 'Cancel')}
-          onClick={onCancel}
-        />
-        <StyledButton
-          type="submit"
-          label={translate('general/actions', 'Save')}
-          onClick={handleSubmit(onSubmit)}
-          width={StyledButtonWidth.FULL}
-          disabled={!isValid}
-          isLoading={isUpdating}
-        />
-      </StyledHorizontalStack>
 
       {error && (
         <div>

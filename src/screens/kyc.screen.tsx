@@ -463,8 +463,11 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.FINANCIAL_DATA:
       return <FinancialData {...props} />;
 
-    case KycStepName.DOCUMENT_UPLOAD:
-      return <DocumentUpload {...props} />;
+    case KycStepName.ADDITIONAL_DOCUMENTS:
+      return <FileUpload {...props} />;
+
+    case KycStepName.RESIDENCE_PERMIT:
+      return <FileUpload {...props} />;
 
     case KycStepName.DFX_APPROVAL:
       return <></>;
