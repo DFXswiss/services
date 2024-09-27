@@ -1,9 +1,11 @@
 import {
   ApiError,
-  Bank,
+  Asset,
   CryptoPaymentMethod,
   DetailTransaction,
+  Fiat,
   FiatPaymentMethod,
+  Iban,
   Transaction,
   TransactionState,
   TransactionTarget,
@@ -12,7 +14,7 @@ import {
   Utils,
   Validations,
   useAuthContext,
-  useBank,
+  useBankAccount,
   useSessionContext,
   useTransaction,
   useUserContext,
@@ -191,6 +193,8 @@ interface RefundDetails {
   expiryDate: Date;
   feeAmount: number;
   refundAmount: number;
+  refundAsset: Asset | Fiat;
+  refundTarget?: string;
 }
 
 interface FormData {
@@ -210,7 +214,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
-  const { getBanks } = useBank();
+  const { getIbans } = useBankAccount();
   const { isLoggedIn } = useSessionContext();
   const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
 
@@ -219,7 +223,9 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [refundDetails, setRefundDetails] = useState<RefundDetails>();
   const [transaction, setTransaction] = useState<Transaction>();
-  const [banks, setBanks] = useState<Bank[]>();
+  const [ibans, setIbans] = useState<Iban[]>();
+
+  const newIban = sessionStorage.getItem('newIban');
 
   const {
     control,
@@ -257,18 +263,27 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   }, [transaction, refundDetails]);
 
   useEffect(() => {
-    // TODO (when BUY refund enabled): Return back to /refund page after adding bank account
-    if (selectedIban === AddAccount) navigate('/bank-accounts');
+    if (selectedIban === AddAccount) navigate('/bank-accounts', { setRedirect: true });
   }, [selectedIban]);
 
   useEffect(() => {
     if (isLoggedIn)
-      Promise.all([getBanks().then(setBanks)]).catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+      Promise.all([getIbans().then(setIbans)]).catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   }, [isLoggedIn]);
 
   useEffect(() => {
-    if (chargebackAddresses && chargebackAddresses.length === 1) setValue('address', chargebackAddresses[0]);
-  }, [chargebackAddresses]);
+    if (chargebackAddresses && refundDetails) {
+      const refundAddress = chargebackAddresses.find((a) => a.address === refundDetails.refundTarget);
+      setValue('address', refundAddress ?? chargebackAddresses[0]);
+    }
+  }, [chargebackAddresses, refundDetails]);
+
+  useEffect(() => {
+    if (ibans && newIban) {
+      const refundBank = ibans.find((b) => b.iban === newIban);
+      refundBank && setValue('iban', refundBank?.iban);
+    }
+  }, [ibans, newIban]);
 
   function fetchRefund(txId: number) {
     getTransactionRefund(txId)
@@ -316,6 +331,11 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
             {transaction?.inputAmount && transaction?.inputAmount - refundDetails.feeAmount} {transaction?.inputAsset}
           </p>
         </StyledDataTableRow>
+        {refundDetails.refundTarget && (
+          <StyledDataTableRow label={translate('screens/payment', 'Recipient')}>
+            <p>{refundDetails.refundTarget}</p>
+          </StyledDataTableRow>
+        )}
       </StyledDataTable>
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack gap={6} full>
@@ -330,13 +350,15 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
               full
             />
           )}
-          {banks && transaction?.type === TransactionType.BUY && (
+          {!refundDetails.refundTarget && ibans && transaction?.type === TransactionType.BUY && (
             <StyledDropdown<string>
               rootRef={rootRef}
               name="iban"
               label={translate('screens/payment', 'Chargeback IBAN')}
-              items={[...banks.map((b) => b.iban), AddAccount]}
-              labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
+              items={[...ibans.map((b) => b.iban), AddAccount]}
+              labelFunc={(item) =>
+                item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
+              }
               placeholder={translate('general/actions', 'Select...')}
               full
             />
@@ -572,11 +594,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                             <StyledButton
                               label={translate('general/actions', 'Confirm refund')}
                               onClick={() => navigate(`/tx/${tx.uid}/refund`)}
-                              hidden={
-                                tx.state !== TransactionState.FAILED ||
-                                !!tx.chargebackAmount ||
-                                ![TransactionType.SELL, TransactionType.SWAP].includes(tx.type)
-                              }
+                              hidden={tx.state !== TransactionState.FAILED || !!tx.chargebackAmount}
                             />
                             {tx.state === TransactionState.KYC_REQUIRED && (
                               <StyledButton
