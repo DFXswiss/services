@@ -463,8 +463,11 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.FINANCIAL_DATA:
       return <FinancialData {...props} />;
 
-    case KycStepName.DOCUMENT_UPLOAD:
-      return <DocumentUpload {...props} />;
+    case KycStepName.ADDITIONAL_DOCUMENTS:
+      return <FileUpload {...props} />;
+
+    case KycStepName.RESIDENCE_PERMIT:
+      return <FileUpload {...props} />;
 
     case KycStepName.DFX_APPROVAL:
       return <></>;
@@ -1102,6 +1105,15 @@ function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProp
 }
 
 function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element {
+  const [isDone, setIsDone] = useState(false);
+
+  useEffect(() => {
+    onDone();
+
+    const refreshInterval = setInterval(() => isDone && onDone(), 1000);
+    return () => clearInterval(refreshInterval);
+  }, [isDone]);
+
   // listen to close events
   useEffect(() => {
     window.addEventListener('message', onMessage);
@@ -1114,26 +1126,32 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
   }
 
   return step.session ? (
-    step.session.type === UrlType.TOKEN ? (
-      <SumsubWebSdk
-        className="w-full h-full max-h-[900px]"
-        accessToken={step.session.url}
-        expirationHandler={() => onError('Token expired')}
-        config={{ lang: lang.symbol.toLowerCase() }}
-        onMessage={(type: string, payload: any) =>
-          type === 'idCheck.onApplicantStatusChanged' &&
-          ['pending', 'completed'].includes(payload?.reviewStatus) &&
-          onDone()
-        }
-        onError={onError}
-      />
+    isDone ? (
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
     ) : (
-      <iframe
-        src={step.session.url}
-        allow="camera *; microphone *"
-        allowFullScreen={true}
-        className="w-full h-full max-h-[900px]"
-      ></iframe>
+      <>
+        {step.session.type === UrlType.TOKEN ? (
+          <SumsubWebSdk
+            className="w-full h-full max-h-[900px]"
+            accessToken={step.session.url}
+            expirationHandler={() => onError('Token expired')}
+            config={{ lang: lang.symbol.toLowerCase() }}
+            onMessage={(type: string, payload: any) =>
+              type === 'idCheck.onApplicantStatusChanged' &&
+              ['pending', 'completed'].includes(payload?.reviewStatus) &&
+              setIsDone(true)
+            }
+            onError={onError}
+          />
+        ) : (
+          <iframe
+            src={step.session.url}
+            allow="camera *; microphone *"
+            allowFullScreen={true}
+            className="w-full h-full max-h-[900px]"
+          ></iframe>
+        )}
+      </>
     )
   ) : (
     <ErrorHint message="No session URL" />

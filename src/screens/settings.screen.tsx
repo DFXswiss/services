@@ -1,4 +1,4 @@
-import { Fiat, Language, useFiatContext, UserAddress, useUserContext } from '@dfx.swiss/react';
+import { Fiat, Language, useFiatContext, UserAddress, useUserContext, Validations } from '@dfx.swiss/react';
 import {
   AlignContent,
   DfxIcon,
@@ -396,6 +396,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
           label={translate('screens/kyc', 'Email address')}
           prefill={user?.mail}
           placeholder={translate('screens/kyc', 'Email address')}
+          validation={Validations.Mail}
           onCancel={onClose}
           onEdit={async (result) => {
             await changeMail(result);
@@ -409,6 +410,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
           label={translate('screens/kyc', 'Phone number')}
           prefill={user?.phone}
           placeholder={translate('screens/kyc', 'Phone number')}
+          validation={Validations.Phone}
           onCancel={onClose}
           onEdit={async (result) => {
             await changePhone(result);

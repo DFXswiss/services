@@ -76,6 +76,8 @@
     "Commercial register": "Registre du commerce",
     "Signatory power": "Pouvoir de signature",
     "Power of Attorney": "Procuration",
+    "Additional documents": "Documents supplémentaires",
+    "Residence permit": "Permis de séjour",
     "DFX approval": "Approbation DFX",
 
     "Public Limited Company": "Société anonyme",
@@ -103,7 +105,7 @@
 
     "Account Type": "Type de compte",
     "Personal": "Personnel",
-    "Business": "Professionnel",
+    "Organization": "Organisation",
     "SoleProprietorship": "Entreprise individuelle",
     "Personal Information": "Informations personnelles",
     "First name": "Prénom",
