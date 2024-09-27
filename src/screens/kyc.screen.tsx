@@ -478,9 +478,6 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.DFX_APPROVAL:
       return <></>;
-
-    default:
-      return <></>;
   }
 }
 
@@ -1337,6 +1334,18 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   );
 }
 
+export interface KycManualIdentFormData {
+  firstName: string;
+  lastName: string;
+  birthName: string;
+  documentType: DocumentType;
+  documentNumber?: string;
+  nationality: Country;
+  birthplace: string;
+  gender: GenderType;
+  file: File;
+}
+
 function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { getCountries, setManualIdentData } = useKyc();
@@ -1367,14 +1376,19 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
     handleSubmit,
     setValue,
     formState: { isValid, isDirty, errors },
-  } = useForm<KycManualIdentData>({ mode: 'onTouched' });
+  } = useForm<KycManualIdentFormData>({ mode: 'onTouched' });
 
-  function onSubmit(data: KycManualIdentData) {
+  async function onSubmit(data: KycManualIdentFormData) {
     if (!step.session) return;
+
+    const requestData: KycManualIdentData = {
+      ...data,
+      file: (await toBase64(data.file)) ?? '',
+    };
 
     setIsUpdating(true);
     setError(undefined);
-    setManualIdentData(code, step.session.url, data)
+    setManualIdentData(code, step.session.url, requestData)
       .then(onDone)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
@@ -1426,7 +1440,6 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                 </StyledHorizontalStack>
 
                 <StyledInput
-                  type="date"
                   name="birthName"
                   autocomplete="birthName"
                   label={translate('screens/kyc', 'Birth name')}
