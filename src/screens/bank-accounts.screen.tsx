@@ -10,6 +10,7 @@ import {
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { useSessionStore } from 'src/hooks/session-store.hook';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -24,6 +25,7 @@ export default function BankAccountsScreen(): JSX.Element {
   const { addIban } = useBankAccount();
   const { countries } = useUserContext();
   const { redirectPath } = useAppHandlingContext();
+  const { newIban: newIbanStore } = useSessionStore();
 
   const [isAdded, setIsAdded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,7 +52,7 @@ export default function BankAccountsScreen(): JSX.Element {
 
     addIban(iban)
       .then(() => {
-        sessionStorage.setItem('newIban', iban);
+        newIbanStore.set(iban);
         setIsAdded(true);
       })
       .catch((e: ApiError) => {

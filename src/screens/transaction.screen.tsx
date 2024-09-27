@@ -50,6 +50,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
 import CoinTracking from 'src/components/cointracking';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useSessionStore } from 'src/hooks/session-store.hook';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, toPaymentStateLabel } from '../config/labels';
@@ -216,6 +217,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { user } = useUserContext();
   const { getIbans } = useBankAccount();
   const { isLoggedIn } = useSessionContext();
+  const { newIban: newIbanStore } = useSessionStore();
   const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -225,7 +227,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const [transaction, setTransaction] = useState<Transaction>();
   const [ibans, setIbans] = useState<Iban[]>();
 
-  const newIban = sessionStorage.getItem('newIban');
+  const newIban = newIbanStore.get();
 
   const {
     control,
