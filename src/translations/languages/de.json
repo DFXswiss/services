@@ -36,7 +36,9 @@
     "Open Explorer": "Explorer öffnen",
     "Select transaction": "Transaktion auswählen",
     "Download": "Herunterladen",
-    "Confirm refund": "Rückerstattung bestätigen"
+    "Confirm refund": "Rückerstattung bestätigen",
+    "Copy Link": "Link kopieren",
+    "Open invoice": "Rechnung öffnen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
