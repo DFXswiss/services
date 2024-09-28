@@ -102,7 +102,7 @@ interface FormData {
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
-  const { lightning } = useAppParams();
+  const { lightning, setParams } = useAppParams();
   const { width } = useWindowContext();
 
   const [urlParams, setUrlParams] = useSearchParams();
@@ -139,6 +139,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 
     let apiUrl: string | undefined;
     if (lightningParam) {
+      setParams({ lightning: undefined });
       apiUrl = Lnurl.decode(lightningParam);
     } else if (urlParams.size) {
       apiUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment?${urlParams.toString()}`;

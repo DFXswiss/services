@@ -10,6 +10,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
+import { addYears, format } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Layout } from 'src/components/layout';
@@ -45,9 +46,8 @@ export default function InvoiceScreen(): JSX.Element {
   useEffect(() => {
     const baseUrl = '/pl';
 
-    const nowPlusOneYear = new Date();
-    nowPlusOneYear.setFullYear(nowPlusOneYear.getFullYear() + 1);
-    const formattedDate = new Intl.DateTimeFormat('de-DE').format(nowPlusOneYear);
+    const nextYearDate = addYears(new Date(), 1);
+    const formattedDate = format(nextYearDate, 'dd.MM.yyyy');
     const recipientIsNumber = !isNaN(Number(data.recipient));
 
     const callback = url(
