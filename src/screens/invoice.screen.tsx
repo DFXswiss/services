@@ -47,7 +47,7 @@ export default function InvoiceScreen(): JSX.Element {
     const baseUrl = '/pl';
 
     const nextYearDate = addYears(new Date(), 1);
-    const formattedDate = format(nextYearDate, 'dd.MM.yyyy');
+    const formattedDate = format(nextYearDate, 'yyyy-MM-dd');
     const recipientIsNumber = !isNaN(Number(data.recipient));
 
     const callback = url(
@@ -57,7 +57,7 @@ export default function InvoiceScreen(): JSX.Element {
         amount: data.amount?.toString(),
         currency: data.currency?.name,
         message: data.invoiceId,
-        date: formattedDate,
+        expiryDate: formattedDate,
       }),
     );
 
@@ -134,7 +134,6 @@ export default function InvoiceScreen(): JSX.Element {
               </StyledHorizontalStack>
             </StyledVerticalStack>
             <StyledButton
-              type="submit"
               label={translate('general/actions', 'Open invoice')}
               onClick={() => callback && navigate(callback)}
               width={StyledButtonWidth.FULL}
