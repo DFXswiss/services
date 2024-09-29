@@ -13,6 +13,7 @@ import copy from 'copy-to-clipboard';
 import { addYears, format } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useSearchParams } from 'react-router-dom';
 import { Layout } from 'src/components/layout';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -31,17 +32,25 @@ export default function InvoiceScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { currencies } = useFiatContext();
 
+  const [urlParams, setUrlParams] = useSearchParams();
   const [callback, setCallback] = useState<string>();
 
   const {
     watch,
     control,
+    setValue,
     formState: { errors, isValid },
   } = useForm<FormData>({
     mode: 'onTouched',
   });
 
   const data = watch();
+
+  useEffect(() => {
+    const recipient = urlParams.get('recipient');
+    if (recipient) setValue('recipient', recipient);
+    setUrlParams(new URLSearchParams());
+  }, []);
 
   useEffect(() => {
     const baseUrl = '/pl';
