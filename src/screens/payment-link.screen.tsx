@@ -396,25 +396,25 @@ export default function PaymentLinkScreen(): JSX.Element {
                         label={selectedPaymentMethod.paymentIdentifierLabel}
                         isLoading={isLoading || !paymentIdentifier}
                         expansionItems={
-                          parsedEvmUri
+                          parsedEvmUri && paymentIdentifier
                             ? [
                                 {
                                   label: selectedPaymentMethod.paymentIdentifierLabel ?? '',
-                                  text: blankedAddress(paymentIdentifier ?? '', { width, scale: 0.8 }) ?? '',
+                                  text: blankedAddress(paymentIdentifier, { width, scale: 0.8 }),
                                   icon: IconVariant.COPY,
-                                  onClick: () => copy(paymentIdentifier ?? ''),
+                                  onClick: () => copy(paymentIdentifier),
                                 },
                                 {
                                   label: translate('screens/home', 'Address'),
-                                  text: blankedAddress(parsedEvmUri?.address ?? '', { width }),
+                                  text: blankedAddress(parsedEvmUri.address, { width }),
                                   icon: IconVariant.COPY,
-                                  onClick: () => copy(parsedEvmUri?.address ?? ''),
+                                  onClick: () => copy(parsedEvmUri.address),
                                 },
                                 {
                                   label: translate('screens/home', 'Blockchain'),
-                                  text: toBlockchain(parsedEvmUri?.chainId) ?? '',
+                                  text: toBlockchain(parsedEvmUri.chainId) ?? '',
                                   icon: IconVariant.COPY,
-                                  onClick: () => copy(parsedEvmUri?.chainId.toString() ?? ''),
+                                  onClick: () => copy(toBlockchain(parsedEvmUri.chainId) ?? ''),
                                 },
                               ].filter((item) => item.text)
                             : []
