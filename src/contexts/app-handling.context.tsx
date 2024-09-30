@@ -210,7 +210,11 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   }
 
   function setParameters(params: Partial<AppParams>) {
-    setParams((p) => ({ ...p, ...params }));
+    setParams((p) => {
+      const updatedParams = { ...p, ...params };
+      storeQueryParams.set(updatedParams);
+      return updatedParams;
+    });
   }
 
   function paramsIsNotEmpty(paramSet: AppParams): boolean {
