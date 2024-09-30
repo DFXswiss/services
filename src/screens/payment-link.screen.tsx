@@ -438,7 +438,17 @@ export default function PaymentLinkScreen(): JSX.Element {
                           },
                         ].filter((item) => item.text) as any
                       }
-                    />
+                    >
+                      <p>{payRequest.recipient.name}</p>
+                    </StyledDataTableExpandableRow>
+                  )}
+                  {hasQuote(payRequest) && (
+                    <StyledDataTableRow
+                      label={translate('screens/payment', 'Expiry date')}
+                      isLoading={isLoading || !paymentIdentifier}
+                    >
+                      <p>{new Date(payRequest.quote.expiration).toLocaleString()}</p>
+                    </StyledDataTableRow>
                   )}
                   {hasQuote(payRequest) && !payRequest.displayQr && (
                     <StyledDataTableExpandableRow
