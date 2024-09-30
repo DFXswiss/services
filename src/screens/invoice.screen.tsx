@@ -10,8 +10,8 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { addYears, format } from 'date-fns';
-import { useEffect, useState } from 'react';
+import { addYears } from 'date-fns';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { Layout } from 'src/components/layout';
@@ -45,6 +45,9 @@ export default function InvoiceScreen(): JSX.Element {
   });
 
   const data = watch();
+  const baseUrl = '/pl';
+  const nextYearDate = useMemo(() => addYears(new Date(), 1), []);
+  const formattedDate = useMemo(() => nextYearDate.toISOString(), [nextYearDate]);
 
   useEffect(() => {
     const recipient = urlParams.get('recipient');
@@ -53,10 +56,6 @@ export default function InvoiceScreen(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    const baseUrl = '/pl';
-
-    const nextYearDate = addYears(new Date(), 1);
-    const formattedDate = format(nextYearDate, 'yyyy-MM-dd');
     const recipientIsNumber = !isNaN(Number(data.recipient));
 
     const callback = url(
