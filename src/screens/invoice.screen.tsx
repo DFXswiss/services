@@ -93,7 +93,11 @@ export default function InvoiceScreen(): JSX.Element {
     fetchJson(url(baseUrl, searchParams))
       .then(({ error, message }) => {
         if (error) {
-          setError(message ?? 'Unknown Error');
+          setError(
+            message === 'Route not found'
+              ? translate('screens/payment', 'Recipient not found')
+              : message ?? 'Unknown Error',
+          );
         } else {
           setValidatedParams(searchParams);
         }
