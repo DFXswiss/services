@@ -1,4 +1,4 @@
-import { Fiat, useFiatContext, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, Fiat, useFiatContext, Utils, Validations } from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
@@ -14,11 +14,13 @@ import { addYears } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
+import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import useDebounce from 'src/hooks/debounce.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { url } from 'src/util/utils';
+import { fetchJson, url } from 'src/util/utils';
 
 interface FormData {
   recipient: string;
@@ -27,13 +29,19 @@ interface FormData {
   currency: Fiat;
 }
 
+const baseUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment`;
+const relativeBaseUrl = '/pl';
+
 export default function InvoiceScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { navigate } = useNavigation();
   const { currencies } = useFiatContext();
 
   const [urlParams, setUrlParams] = useSearchParams();
+  const [validatedParams, setValidatedParams] = useState<URLSearchParams>();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [callback, setCallback] = useState<string>();
+  const [error, setError] = useState<string>();
 
   const {
     watch,
@@ -44,8 +52,8 @@ export default function InvoiceScreen(): JSX.Element {
     mode: 'onTouched',
   });
 
-  const data = watch();
-  const baseUrl = '/pl';
+  const data = useDebounce(watch(), 500);
+
   const nextYearDate = useMemo(() => addYears(new Date(), 1), []);
   const formattedDate = useMemo(() => nextYearDate.toISOString(), [nextYearDate]);
 
@@ -56,21 +64,43 @@ export default function InvoiceScreen(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    const recipientIsNumber = !isNaN(Number(data.recipient));
+    data && validateParams(data);
+  }, [data?.recipient, data?.invoiceId, data?.amount, data?.currency]);
 
-    const callback = url(
-      baseUrl,
-      new URLSearchParams({
-        [recipientIsNumber ? 'routeId' : 'route']: data.recipient,
-        amount: data.amount?.toString(),
-        currency: data.currency?.name,
-        message: data.invoiceId,
-        expiryDate: formattedDate,
-      }),
-    );
+  useEffect(() => {
+    validatedParams && setCallback(url(relativeBaseUrl, validatedParams));
+  }, [validatedParams]);
 
-    setCallback(callback);
-  }, [data]);
+  async function validateParams(data: FormData) {
+    setIsLoading(true);
+    setError(undefined);
+    setCallback(undefined);
+    setValidatedParams(undefined);
+
+    if (!data.recipient || !data.invoiceId || !data.amount || !data.currency) {
+      setIsLoading(false);
+      return;
+    }
+
+    const searchParams = new URLSearchParams({
+      [!isNaN(Number(data.recipient)) ? 'routeId' : 'route']: data.recipient,
+      amount: data.amount?.toString(),
+      currency: data.currency?.name,
+      message: data.invoiceId,
+      expiryDate: formattedDate,
+    });
+
+    fetchJson(url(baseUrl, searchParams))
+      .then(({ error, message }) => {
+        if (error) {
+          setError(message ?? 'Unknown Error');
+        } else {
+          setValidatedParams(searchParams);
+        }
+      })
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown Error'))
+      .finally(() => setIsLoading(false));
+  }
 
   const rules = Utils.createRules({
     recipient: Validations.Required,
@@ -83,15 +113,14 @@ export default function InvoiceScreen(): JSX.Element {
     <Layout title={translate('screens/payment', 'Create Invoice')}>
       <StyledVerticalStack gap={6} full center>
         <div className="flex flex-col gap-2 w-48 my-3">
-          <QrBasic data={`${process.env.PUBLIC_URL}${callback}`} />
-          {isValid && callback && (
-            <StyledButton
-              label={translate('general/actions', 'Copy Link')}
-              onClick={() => callback && copy(`${process.env.PUBLIC_URL}${callback}`)}
-              color={StyledButtonColor.STURDY_WHITE}
-              width={StyledButtonWidth.FULL}
-            />
-          )}
+          <QrBasic data={`${process.env.PUBLIC_URL}${callback}`} isLoading={!callback} />
+          <StyledButton
+            label={translate('general/actions', 'Copy Link')}
+            onClick={() => callback && copy(`${process.env.PUBLIC_URL}${callback}`)}
+            color={StyledButtonColor.STURDY_WHITE}
+            width={StyledButtonWidth.FULL}
+            disabled={!callback}
+          />
         </div>
         <Form control={control} rules={rules} errors={errors} translate={translateError}>
           <StyledVerticalStack gap={6} full center>
@@ -141,12 +170,20 @@ export default function InvoiceScreen(): JSX.Element {
                 </div>
               </StyledHorizontalStack>
             </StyledVerticalStack>
+
             <StyledButton
               label={translate('general/actions', 'Open invoice')}
               onClick={() => callback && navigate(callback)}
               width={StyledButtonWidth.FULL}
               disabled={!isValid || !callback}
+              isLoading={isLoading}
             />
+
+            {error && (
+              <div>
+                <ErrorHint message={error} />
+              </div>
+            )}
           </StyledVerticalStack>
         </Form>
       </StyledVerticalStack>
