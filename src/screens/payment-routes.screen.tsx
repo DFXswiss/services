@@ -997,7 +997,6 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 />
               )}
               <StyledButton
-                type="submit"
                 label={translate(
                   'general/actions',
                   paymentLinkId && step === PaymentLinkFormStep.RECIPIENT ? 'Save' : 'Create',
