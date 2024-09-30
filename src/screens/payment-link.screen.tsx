@@ -3,6 +3,7 @@ import {
   AlignContent,
   CopyButton,
   Form,
+  IconVariant,
   SpinnerSize,
   SpinnerVariant,
   StyledCollapsible,
@@ -29,6 +30,8 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { useWeb3 } from 'src/hooks/web3.hook';
+import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, formatLocationAddress, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -103,6 +106,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { lightning, setParams } = useAppParams();
+  const { toBlockchain } = useWeb3();
   const { width } = useWindowContext();
 
   const [urlParams, setUrlParams] = useSearchParams();
@@ -308,6 +312,11 @@ export default function PaymentLinkScreen(): JSX.Element {
     hasQuote(payRequest) &&
     payRequest.transferAmounts.find((item) => item.method === selectedPaymentMethod.blockchain)?.assets;
 
+  const parsedEvmUri =
+    selectedPaymentMethod?.id === PaymentStandardType.PAY_TO_ADDRESS && paymentIdentifier
+      ? EvmUri.decode(paymentIdentifier)
+      : undefined;
+
   return (
     <Layout backButton={false} smallMenu>
       {error ? (
@@ -383,13 +392,37 @@ export default function PaymentLinkScreen(): JSX.Element {
                         <p>{translate('screens/payment', 'Pending')}</p>
                       </StyledDataTableRow>
 
-                      <StyledDataTableRow
+                      <StyledDataTableExpandableRow
                         label={selectedPaymentMethod.paymentIdentifierLabel}
                         isLoading={isLoading || !paymentIdentifier}
+                        expansionItems={
+                          parsedEvmUri
+                            ? [
+                                {
+                                  label: selectedPaymentMethod.paymentIdentifierLabel ?? '',
+                                  text: blankedAddress(paymentIdentifier ?? '', { width, scale: 0.8 }) ?? '',
+                                  icon: IconVariant.COPY,
+                                  onClick: () => copy(paymentIdentifier ?? ''),
+                                },
+                                {
+                                  label: translate('screens/home', 'Address'),
+                                  text: blankedAddress(parsedEvmUri?.address ?? '', { width }),
+                                  icon: IconVariant.COPY,
+                                  onClick: () => copy(parsedEvmUri?.address ?? ''),
+                                },
+                                {
+                                  label: translate('screens/home', 'Blockchain'),
+                                  text: toBlockchain(parsedEvmUri?.chainId) ?? '',
+                                  icon: IconVariant.COPY,
+                                  onClick: () => copy(parsedEvmUri?.chainId.toString() ?? ''),
+                                },
+                              ].filter((item) => item.text)
+                            : []
+                        }
                       >
                         <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
-                        <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />
-                      </StyledDataTableRow>
+                        {!parsedEvmUri && <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />}
+                      </StyledDataTableExpandableRow>
 
                       <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
                         <p>
