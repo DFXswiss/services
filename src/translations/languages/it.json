@@ -36,7 +36,9 @@
     "Open Explorer": "Apri Explorer",
     "Select transaction": "Selezionare la transazione",
     "Download": "Scaricare",
-    "Confirm refund": "Confermare il rimborso"
+    "Confirm refund": "Confermare il rimborso",
+    "Copy Link": "Copia il link",
+    "Open invoice": "Apri la fattura"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -488,6 +490,9 @@
     "Activate": "Attivare",
     "Deactivate": "Disattivare",
     "Expires at": "Scade il",
+
+    "Create Invoice": "Crea fattura",
+    "Invoice ID": "ID della fattura",
 
     "Route": "Modalità",
     "Summary": "Riepilogo",

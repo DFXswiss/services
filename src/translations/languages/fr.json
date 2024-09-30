@@ -36,7 +36,9 @@
     "Open Explorer": "Ouvrir l'explorateur",
     "Select transaction": "Sélectionner la transaction",
     "Download": "Télécharger",
-    "Confirm refund": "Confirmer le remboursement"
+    "Confirm refund": "Confirmer le remboursement",
+    "Copy Link": "Copier le lien",
+    "Open invoice": "Ouvrir la facture"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -488,6 +490,9 @@
     "Activate": "Activer",
     "Deactivate": "Désactiver",
     "Expires at": "Expire à",
+
+    "Create Invoice": "Créer une facture",
+    "Invoice ID": "ID de facture",
 
     "Route": "Route",
     "Summary": "Résumé",
