@@ -1382,9 +1382,16 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
     if (!step.session) return;
 
     const requestData: KycManualIdentData = {
-      ...data,
-      file: (await toBase64(data.file)) ?? '',
-    };
+      firstName: data.firstName,
+      lastName: data.lastName,
+      birthName: data.birthName,
+      documentType: data.documentType,
+      documentNumber: data.documentNumber,
+      nationality: data.nationality,
+      birthplace: data.birthplace,
+      gender: data.gender,
+      document: { file: (await toBase64(data.file)) ?? '', fileName: data.file.name },
+    } as any;
 
     setIsUpdating(true);
     setError(undefined);
@@ -1397,6 +1404,21 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
   const rules = Utils.createRules({
     firstName: Validations.Required,
     lastName: Validations.Required,
+    birthName: Validations.Required,
+    documentType: Validations.Required,
+    documentNumber: Validations.Required,
+    nationality: Validations.Required,
+    file: [
+      Validations.Required,
+      Validations.Custom((file) =>
+        file?.type === 'application/pdf' ||
+        file?.type === 'image/png' ||
+        file?.type === 'image/jpg' ||
+        file?.type === 'image/jpeg'
+          ? true
+          : 'file_type',
+      ),
+    ],
   });
 
   return (
