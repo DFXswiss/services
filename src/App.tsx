@@ -27,6 +27,7 @@ const KycScreen = lazy(() => import('./screens/kyc.screen'));
 const LinkScreen = lazy(() => import('./screens/link.screen'));
 const PaymentRoutesScreen = lazy(() => import('./screens/payment-routes.screen'));
 const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
+const InvoiceScreen = lazy(() => import('./screens/invoice.screen'));
 const SellInfoScreen = lazy(() => import('./screens/sell-info.screen'));
 const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
 const SupportScreen = lazy(() => import('./screens/support.screen'));
@@ -112,6 +113,10 @@ export const Routes = [
   {
     path: '/payment-link',
     element: <Navigate to={`/pl${window.location.search}`} />,
+  },
+  {
+    path: '/invoice',
+    element: withSuspense(<InvoiceScreen />),
   },
   {
     path: '/kyc',

@@ -36,7 +36,9 @@
     "Open Explorer": "Explorer öffnen",
     "Select transaction": "Transaktion auswählen",
     "Download": "Herunterladen",
-    "Confirm refund": "Rückerstattung bestätigen"
+    "Confirm refund": "Rückerstattung bestätigen",
+    "Copy Link": "Link kopieren",
+    "Open invoice": "Rechnung öffnen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -504,6 +506,9 @@
     "Activate": "Aktivieren",
     "Deactivate": "Deaktivieren",
     "Expires at": "Gültig bis",
+
+    "Create Invoice": "Rechnung erstellen",
+    "Invoice ID": "Rechnungs-ID",
 
     "Route": "Route",
     "Summary": "Zusammenfassung",

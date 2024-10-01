@@ -795,7 +795,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 name="recipientName"
                 autocomplete="name"
                 label={translate('screens/kyc', 'Name')}
-                placeholder={translate('screens/kyc', 'John Smith')}
+                placeholder={translate('screens/kyc', 'John Doe')}
                 full
                 smallLabel
               />
@@ -997,7 +997,6 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 />
               )}
               <StyledButton
-                type="submit"
                 label={translate(
                   'general/actions',
                   paymentLinkId && step === PaymentLinkFormStep.RECIPIENT ? 'Save' : 'Create',
