@@ -5,21 +5,27 @@ import {
   DocumentType,
   GenderType,
   KycContactData,
+  KycFileData,
   KycFinancialOption,
   KycFinancialQuestion,
   KycFinancialResponse,
   KycInfo,
+  KycLegalEntityData,
   KycLevel,
   KycManualIdentData,
+  KycNationalityData,
   KycPersonalData,
   KycSession,
+  KycSignatoryPowerData,
   KycStep,
   KycStepName,
   KycStepSession,
   KycStepStatus,
   KycStepType,
   Language,
+  LegalEntity,
   QuestionType,
+  SignatoryPower,
   SupportIssueType,
   UrlType,
   Utils,
@@ -55,14 +61,6 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import {
-  KycFileData,
-  KycLegalEntityData,
-  KycNationalityData,
-  KycSignatoryPowerData,
-  LegalEntity,
-  SignatoryPower,
-} from '@dfx.swiss/react/dist/definitions/kyc';
 import SumsubWebSdk from '@sumsub/websdk-react';
 import { RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
@@ -1391,7 +1389,7 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
       birthplace: data.birthplace,
       gender: data.gender,
       document: { file: (await toBase64(data.file)) ?? '', fileName: data.file.name },
-    } as any;
+    };
 
     setIsUpdating(true);
     setError(undefined);
