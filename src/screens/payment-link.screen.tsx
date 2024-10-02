@@ -30,7 +30,7 @@ import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress, formatLocationAddress, url } from 'src/util/utils';
+import { blankedAddress, fetchJson, formatLocationAddress, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 export interface PaymentStandard {
@@ -178,7 +178,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   useEffect(() => {
     async function fetchPayRequest(url: string) {
       setError(undefined);
-      return fetchDataApi(url)
+      return fetchJson(url)
         .then((data: PaymentLinkPayRequest | PaymentLinkPayTerminal) => {
           if (sessionApiUrl.current !== url) return;
 
@@ -240,16 +240,11 @@ export default function PaymentLinkScreen(): JSX.Element {
 
     setIsLoading(true);
     setPaymentIdentifier(undefined);
-    fetchDataApi(callbackUrl)
+    fetchJson(callbackUrl)
       .then((data) => data && setPaymentIdentifier(data.uri ?? data.pr))
       .catch((error) => setError(error.message))
       .finally(() => setIsLoading(false));
   }, [callbackUrl]);
-
-  async function fetchDataApi(url: string): Promise<any> {
-    const response = await fetch(url);
-    return response.json();
-  }
 
   function simplifyUrl(url: string): string {
     const replacementMap: { [key: string]: string } = {
