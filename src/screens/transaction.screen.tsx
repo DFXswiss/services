@@ -221,13 +221,16 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
 
   const rootRef = useRef<HTMLDivElement>(null);
+  const refetchTimeout = useRef<NodeJS.Timeout | undefined>();
 
   const [isLoading, setIsLoading] = useState(false);
   const [refundDetails, setRefundDetails] = useState<RefundDetails>();
   const [transaction, setTransaction] = useState<Transaction>();
   const [ibans, setIbans] = useState<Iban[]>();
+  const [addresses, setAddresses] = useState<UserAddress[]>();
 
   const newIban = newIbanStore.get();
+  const isBuy = transaction?.type === TransactionType.BUY;
 
   const {
     control,
@@ -238,35 +241,13 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
 
   const selectedIban = useWatch({ control, name: 'iban' });
 
-  const chargebackAddresses = user?.addresses.filter(
-    (a) => transaction?.inputBlockchain && a.blockchains.includes(transaction?.inputBlockchain),
-  );
-
   useEffect(() => {
-    if (id && transaction?.state !== TransactionState.COMPLETED) {
+    if (id && (!transaction || transaction.state === TransactionState.COMPLETED)) {
       getTransactionByUid(id)
-        .then((tx) => {
-          setTransaction(tx);
-          fetchRefund(tx.id);
-        })
+        .then(setTransaction)
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
     }
-  }, [id, transaction?.state]);
-
-  useEffect(() => {
-    let refetchTimeout: NodeJS.Timeout | undefined;
-
-    if (transaction && refundDetails?.expiryDate) {
-      const timeout = new Date(refundDetails.expiryDate).getTime() - Date.now();
-      refetchTimeout = setTimeout(() => fetchRefund(transaction.id), timeout > 0 ? timeout : 0);
-    }
-
-    return () => refetchTimeout && clearTimeout(refetchTimeout);
-  }, [transaction, refundDetails]);
-
-  useEffect(() => {
-    if (selectedIban === AddAccount) navigate('/bank-accounts', { setRedirect: true });
-  }, [selectedIban]);
+  }, [id, transaction]);
 
   useEffect(() => {
     if (isLoggedIn)
@@ -274,11 +255,37 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   }, [isLoggedIn]);
 
   useEffect(() => {
-    if (chargebackAddresses && refundDetails) {
-      const refundAddress = chargebackAddresses.find((a) => a.address === refundDetails.refundTarget);
-      setValue('address', refundAddress ?? chargebackAddresses[0]);
+    async function fetchRefund(txId: number) {
+      getTransactionRefund(txId)
+        .then((response) => {
+          setRefundDetails(response);
+          if (transaction?.id && response.expiryDate) {
+            const timeout = new Date(response.expiryDate).getTime() - Date.now();
+            if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
+            refetchTimeout.current = setTimeout(() => fetchRefund(transaction.id), timeout > 0 ? timeout : 0);
+          }
+        })
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
     }
-  }, [chargebackAddresses, refundDetails]);
+
+    if (transaction?.id) fetchRefund(transaction.id);
+
+    return () => refetchTimeout.current && clearTimeout(refetchTimeout.current);
+  }, [transaction]);
+
+  useEffect(() => {
+    if (selectedIban === AddAccount) navigate('/bank-accounts', { setRedirect: true });
+  }, [selectedIban]);
+
+  useEffect(() => {
+    if (transaction && user) {
+      const allowedAddresses = user.addresses.filter(
+        (a) => transaction?.inputBlockchain && a.blockchains.includes(transaction?.inputBlockchain),
+      );
+      setAddresses(allowedAddresses);
+      if (allowedAddresses?.length === 1) setValue('address', allowedAddresses[0]);
+    }
+  }, [transaction, user]);
 
   useEffect(() => {
     if (ibans && newIban) {
@@ -298,7 +305,9 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     setIsLoading(true);
 
     try {
-      await setTransactionRefundTarget(transaction.id, { refundTarget: data.address?.address ?? data.iban });
+      await setTransactionRefundTarget(transaction.id, {
+        refundTarget: refundDetails?.refundTarget ?? data.address?.address ?? data.iban,
+      });
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
@@ -341,18 +350,18 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       </StyledDataTable>
       <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
         <StyledVerticalStack gap={6} full>
-          {chargebackAddresses && [TransactionType.SELL, TransactionType.SWAP].includes(transaction?.type) && (
+          {!refundDetails.refundTarget && addresses && !isBuy && (
             <StyledDropdown<UserAddress>
               rootRef={rootRef}
               name="address"
               label={translate('screens/payment', 'Chargeback address')}
-              items={chargebackAddresses}
+              items={addresses}
               labelFunc={(item) => blankedAddress(item.address, { width })}
               descriptionFunc={(_item) => transaction.inputBlockchain?.toString() ?? ''}
               full
             />
           )}
-          {!refundDetails.refundTarget && ibans && transaction?.type === TransactionType.BUY && (
+          {!refundDetails.refundTarget && ibans && isBuy && (
             <StyledDropdown<string>
               rootRef={rootRef}
               name="iban"
@@ -437,7 +446,6 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   }
 
-  // form
   const {
     control,
     handleSubmit,
