@@ -93,6 +93,5 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
 export async function fetchJson(url: string): Promise<any> {
   const response = await fetch(url);
-  console.log('response', response);
   return response.json();
 }
