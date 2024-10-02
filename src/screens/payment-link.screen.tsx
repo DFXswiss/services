@@ -375,6 +375,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                     </div>
                   </div>
                 }
+                isExpanded={selectedPaymentMethod?.id === PaymentStandardType.PAY_TO_ADDRESS}
               >
                 <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                   {hasQuote(payRequest) && (
