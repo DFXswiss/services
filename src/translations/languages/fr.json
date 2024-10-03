@@ -90,6 +90,14 @@
     "Trust": "Fiducie",
     "Other": "Autre",
 
+    "Female": "Femme",
+    "Male": "Homme",
+
+    "Passport": "Passeport",
+    "ID card": "Carte d'identité",
+    "Driver's license": "Permis de conduire",
+    "Residence permit": "Permis de séjour",
+
     "Authorized to sign individually": "Autorisé à signer individuellement",
     "Authorized to sign jointly": "Autorisé à signer conjointement",
     "No signing authorization": "Pas d'autorisation de signature",
@@ -105,12 +113,17 @@
     "Failed": "Échoué",
     "Outdated": "Obsolète",
 
+    "Optional": "Facultatif",
+
     "Account Type": "Type de compte",
     "Personal": "Personnel",
     "Organization": "Organisation",
     "SoleProprietorship": "Entreprise individuelle",
     "Personal Information": "Informations personnelles",
+    "Gender": "Sexe",
     "First name": "Prénom",
+    "Birth name": "Nom de naissance",
+    "Birthplace": "Lieu de naissance",
     "John": "Jean",
     "John Doe": "Jean Dupont",
     "Last name": "Nom de famille",
@@ -130,6 +143,9 @@
     "Organization name": "Nom de l'organisation",
     "Example inc.": "Exempel SARL & Co. KG",
     "Contact information": "Coordonnées",
+    "Identification document": "Document d'identification",
+    "Document type": "Type de document",
+    "Document number": "Numéro de document",
 
     "Please fill in personal information to continue": "Veuillez compléter vos informations personnelles pour continuer",
     "Please enter your contact information so that we can find your account": "Veuillez saisir vos coordonnées afin que nous puissions retrouver votre compte",

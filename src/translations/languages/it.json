@@ -90,6 +90,14 @@
     "Trust": "Fiducia",
     "Other": "Altro",
 
+    "Female": "Femmina",
+    "Male": "Maschio",
+
+    "Passport": "Passaporto",
+    "ID card": "Carta d'identità",
+    "Driver's license": "Patente di guida",
+    "Residence permit": "Permesso di soggiorno",
+
     "Authorized to sign individually": "Autorizzato a firmare individualmente",
     "Authorized to sign jointly": "Autorizzato a firmare congiuntamente",
     "No signing authorization": "Nessuna autorizzazione a firmare",
@@ -105,12 +113,17 @@
     "Failed": "Fallito",
     "Outdated": "Obsoleto",
 
+    "Optional": "Opzionale",
+
     "Account Type": "Tipo di conto",
     "Personal": "Personale",
     "Organization": "Organizzazione",
     "SoleProprietorship": "Impresa individuale",
     "Personal Information": "Informazioni personali",
+    "Gender": "Genere",
     "First name": "Nome",
+    "Birth name": "Nome di nascita",
+    "Birthplace": "Luogo di nascita",
     "John": "Giovanni",
     "John Doe": "Giovanni Rossi",
     "Last name": "Cognome",
@@ -130,6 +143,9 @@
     "Organization name": "Nome dell'organizzazione",
     "Example inc.": "Esempio inc.",
     "Contact information": "Informazioni di contatto",
+    "Identification document": "Documento d'identità",
+    "Document type": "Tipo di documento",
+    "Document number": "Numero del documento",
 
     "Please fill in personal information to continue": "Compilare i dati personali per continuare",
     "Please enter your contact information so that we can find your account": "Inserite le vostre informazioni di contatto per consentirci di trovare il vostro account",

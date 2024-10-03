@@ -1,5 +1,5 @@
 import { KycLevel, KycStepName, KycStepType, LimitPeriod, TradingLimit, Utils, useUserContext } from '@dfx.swiss/react';
-import { LegalEntity, SignatoryPower } from '@dfx.swiss/react/dist/definitions/kyc';
+import { DocumentType, GenderType, LegalEntity, SignatoryPower } from '@dfx.swiss/react/dist/definitions/kyc';
 import { useMemo } from 'react';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from './navigation.hook';
@@ -16,6 +16,8 @@ interface KycHelperInterface {
   nameToString: (stepName: KycStepName) => string;
   typeToString: (stepType: KycStepType) => string;
   legalEntityToString: (entity: LegalEntity) => string;
+  genderTypeToString: (genderType: GenderType) => string;
+  documentTypeToString: (documentType: DocumentType) => string;
   signatoryPowerToString: (power: SignatoryPower) => string;
 }
 
@@ -62,6 +64,18 @@ export function useKycHelper(): KycHelperInterface {
     [LegalEntity.OTHER]: 'Other',
   };
 
+  const genderTypeMap: Record<GenderType, string> = {
+    [GenderType.FEMALE]: 'Female',
+    [GenderType.MALE]: 'Male',
+  };
+
+  const manualIdentDocumentTypeMap: Record<DocumentType, string> = {
+    [DocumentType.PASSPORT]: 'Passport',
+    [DocumentType.IDCARD]: 'ID card',
+    [DocumentType.DRIVERS_LICENSE]: "Driver's license",
+    [DocumentType.RESIDENCE_PERMIT]: 'Residence permit',
+  };
+
   const limit = user && limitToString(user.tradingLimit);
 
   const isComplete = user && user.kyc.level >= KycLevel.Completed;
@@ -103,6 +117,14 @@ export function useKycHelper(): KycHelperInterface {
     return translate('screens/kyc', legalEntityMap[entity]);
   };
 
+  const genderTypeToString = (genderType: GenderType): string => {
+    return translate('screens/kyc', genderTypeMap[genderType]);
+  };
+
+  const documentTypeToString = (documentType: DocumentType): string => {
+    return translate('screens/kyc', manualIdentDocumentTypeMap[documentType]);
+  };
+
   function signatoryPowerToString(power: SignatoryPower): string {
     switch (power) {
       case SignatoryPower.SINGLE:
@@ -126,6 +148,8 @@ export function useKycHelper(): KycHelperInterface {
       nameToString,
       typeToString,
       legalEntityToString,
+      genderTypeToString,
+      documentTypeToString,
       signatoryPowerToString,
     }),
     [user, translate],
