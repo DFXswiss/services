@@ -167,12 +167,11 @@ export default function PaymentLinkScreen(): JSX.Element {
 
     const currentPaymentStandard = new URL(sessionApiUrl.current).searchParams.get('standard');
     const currentMethod = currentCallback.current && new URL(currentCallback.current).searchParams.get('method');
-    const currentAsset = currentCallback.current && new URL(currentCallback.current).searchParams.get('asset');
 
     const newPaymentStandard =
       selectedPaymentStandard ?? paymentStandards?.find((item) => item.id === payRequest.standard);
     const newAsset =
-      selectedAsset ??
+      (currentMethod === newPaymentStandard?.blockchain ? selectedAsset : undefined) ??
       payRequest.transferAmounts.find((item) => item.method === selectedPaymentStandard?.blockchain)?.assets?.[0]
         ?.asset;
 
@@ -181,18 +180,14 @@ export default function PaymentLinkScreen(): JSX.Element {
       url.searchParams.set('standard', newPaymentStandard?.id ?? payRequest.standard);
       setSessionApiUrl(url.toString());
       fetchPayRequest(url.toString());
-    }
-
-    if (
-      currentPaymentStandard !== newPaymentStandard?.id ||
-      currentMethod !== newPaymentStandard?.blockchain ||
-      currentAsset !== newAsset
-    ) {
+      setPaymentIdentifier(undefined);
+      currentCallback.current = undefined;
+    } else {
       fetchPaymentIdentifier(payRequest, newPaymentStandard?.blockchain, newAsset);
     }
 
     if (!selectedPaymentStandard && newPaymentStandard) setValue('paymentStandard', newPaymentStandard);
-    if (!selectedAsset && newAsset) setValue('asset', newAsset);
+    if (!selectedAsset && newAsset && newAsset !== selectedAsset) setValue('asset', newAsset);
   }, [payRequest, paymentStandards, selectedPaymentStandard, selectedAsset]);
 
   async function fetchPayRequest(url: string): Promise<number | undefined> {
@@ -200,14 +195,14 @@ export default function PaymentLinkScreen(): JSX.Element {
     let refetchDelay: number | undefined;
 
     try {
-      const data = await fetchJson(url);
+      const payRequest = await fetchJson(url);
       if (sessionApiUrl.current !== url) return undefined;
 
-      setPayRequest(data);
+      setPayRequest(payRequest);
 
-      if (hasQuote(data)) {
-        setPaymentStandardSelection(data);
-        refetchDelay = new Date(data.quote.expiration).getTime() - Date.now();
+      if (hasQuote(payRequest)) {
+        setPaymentStandardSelection(payRequest);
+        refetchDelay = new Date(payRequest.quote.expiration).getTime() - Date.now();
       } else {
         refetchDelay = 1000;
       }
@@ -240,26 +235,35 @@ export default function PaymentLinkScreen(): JSX.Element {
   }
 
   async function fetchPaymentIdentifier(
-    request: PaymentLinkPayTerminal | PaymentLinkPayRequest,
+    payRequest: PaymentLinkPayTerminal | PaymentLinkPayRequest,
     selectedPaymentMethod?: Blockchain,
     selectedAsset?: string,
   ): Promise<void> {
-    if (!hasQuote(request)) return;
+    if (
+      !hasQuote(payRequest) ||
+      (payRequest.standard === PaymentStandardType.PAY_TO_ADDRESS && !(selectedPaymentMethod && selectedAsset))
+    )
+      return;
 
-    switch (request.standard) {
+    switch (payRequest.standard) {
       case PaymentStandardType.OPEN_CRYPTO_PAY:
       case PaymentStandardType.FRANKENCOIN_PAY:
         setPaymentIdentifier(Lnurl.prependLnurl(Lnurl.encode(simplifyUrl(sessionApiUrl.current))));
         break;
       case PaymentStandardType.LIGHTNING_BOLT11:
-        invokeCallback(url(request.callback, new URLSearchParams({ amount: request.minSendable.toString() })));
+        invokeCallback(
+          url(
+            payRequest.callback,
+            new URLSearchParams({ quote: payRequest.quote.id, amount: payRequest.minSendable.toString() }),
+          ),
+        );
         break;
       case PaymentStandardType.PAY_TO_ADDRESS:
         invokeCallback(
           url(
-            request.callback,
+            payRequest.callback,
             new URLSearchParams({
-              quote: request.quote.id,
+              quote: payRequest.quote.id,
               method: selectedPaymentMethod ?? '',
               asset: selectedAsset ?? '',
             }),
@@ -277,7 +281,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     setPaymentIdentifier(undefined);
     fetchJson(callbackUrl)
       .then((response) => {
-        if (response && response.statusCode !== 409) {
+        if (response && response.statusCode !== 409 && callbackUrl === currentCallback.current) {
           response && setPaymentIdentifier(response.uri ?? response.pr);
         }
       })
@@ -421,14 +425,14 @@ export default function PaymentLinkScreen(): JSX.Element {
                                   onClick: () => copy(toBlockchain(parsedEvmUri.chainId) ?? ''),
                                 },
                                 {
-                                  label: translate('screens/payment', 'Value'),
+                                  label: translate('screens/payment', 'Amount'),
                                   text: parsedEvmUri.amount,
                                   icon: IconVariant.COPY,
                                   onClick: () => copy(parsedEvmUri.amount ?? ''),
                                 },
                                 {
                                   label: translate('screens/payment', 'Token contract'),
-                                  text: parsedEvmUri.tokenContractAddress,
+                                  text: blankedAddress(parsedEvmUri.tokenContractAddress ?? '', { width }),
                                   icon: IconVariant.COPY,
                                   onClick: () => copy(parsedEvmUri.tokenContractAddress ?? ''),
                                 },
