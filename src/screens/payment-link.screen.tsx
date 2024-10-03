@@ -29,6 +29,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { useSessionStore } from 'src/hooks/session-store.hook';
 import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, fetchJson, formatLocationAddress, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -105,6 +106,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { lightning, setParams } = useAppParams();
   const { width } = useWindowContext();
 
+  const { paymentLinkApiUrl: paymentLinkApiUrlStore } = useSessionStore();
   const [urlParams, setUrlParams] = useSearchParams();
 
   const [callbackUrl, setCallbackUrl] = useState<string>();
@@ -115,11 +117,11 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [error, setError] = useState<string>();
   const refetchTimeout = useRef<NodeJS.Timeout>();
 
-  const sessionApiUrl = useRef<string>(sessionStorage.getItem('apiUrl') ?? '');
+  const sessionApiUrl = useRef<string>(paymentLinkApiUrlStore.get() ?? '');
 
   const setSessionApiUrl = (newUrl: string) => {
     sessionApiUrl.current = newUrl;
-    sessionStorage.setItem('apiUrl', newUrl);
+    paymentLinkApiUrlStore.set(newUrl);
   };
 
   const {
