@@ -15,8 +15,10 @@ import {
   StyledSpacer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSettingsContext } from '../../contexts/settings.context';
+import { ErrorHint } from '../error-hint';
 
 interface AddBankAccountProps {
   onSubmit: (bankAccount: BankAccount) => void;
@@ -24,6 +26,8 @@ interface AddBankAccountProps {
 
 export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
+
+  const [error, setError] = useState<string>();
 
   const {
     control,
@@ -34,7 +38,10 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
   const { countries } = useUserContext();
 
   async function createBankAccount(newAccount: CreateBankAccount): Promise<void> {
-    createAccount(newAccount).then(onSubmit);
+    setError(undefined);
+    createAccount(newAccount)
+      .then(onSubmit)
+      .catch((e) => setError(e.message ?? 'Unknown error'));
   }
 
   const rules = Utils.createRules({
@@ -57,6 +64,13 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
           placeholder={translate('screens/sell', 'e.g. Deutsche Bank')}
         />
         <StyledSpacer spacing={-1} />
+
+        {error && (
+          <div className="text-center">
+            <ErrorHint message={error} />
+          </div>
+        )}
+
         <StyledButton
           type="submit"
           disabled={!isValid}
