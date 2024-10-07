@@ -1,40 +1,33 @@
-export interface EvmUriData {
-  scheme: string;
-  address: string;
-  chainId: number;
-  action?: string;
+type EvmUriData = {
+  address?: string;
+  chainId?: string;
   amount?: string;
   tokenContractAddress?: string;
-}
+  method?: string;
+};
 
 export class EvmUri {
-  static decode(uri: string): EvmUriData | undefined {
-    const ethUriPattern = /^ethereum:([a-zA-Z0-9]+)@(\d+)(\/[a-zA-Z0-9]+)?(\?.+)?$/;
-    const match = ethUriPattern.exec(uri);
+  static decode(uri: string): EvmUriData | null {
+    const basePattern = /^ethereum:([^@]+)@([^/?]+)(?:\/([^?]+))?/;
+    const match = basePattern.exec(uri);
 
-    if (!match) return undefined;
+    if (!match) return null;
 
-    const [, address, chainId, action, query] = match;
+    const [, addressOrToken, chainId, method] = match;
+    const queryParams = new URLSearchParams(uri.split('?')[1]);
 
-    const params: EvmUriData = {
-      scheme: 'ethereum',
-      address: address ? address.toLowerCase() : '',
-      chainId: chainId ? parseInt(chainId, 10) : 0,
-      action: action?.replace('/', ''),
-    };
-
-    if (query) {
-      const queryParams = new URLSearchParams(query.substring(1));
-
-      if (queryParams.has('uint256')) {
-        params.amount = queryParams.get('uint256') ?? undefined;
-      }
-
-      if (queryParams.has('address')) {
-        params.tokenContractAddress = queryParams.get('address')?.toLowerCase();
-      }
-    }
-
-    return params;
+    return method
+      ? {
+          tokenContractAddress: addressOrToken,
+          chainId,
+          method,
+          address: queryParams.get('address') || undefined,
+          amount: queryParams.get('uint256') || undefined,
+        }
+      : {
+          address: addressOrToken,
+          chainId,
+          amount: queryParams.get('value') || undefined,
+        };
   }
 }

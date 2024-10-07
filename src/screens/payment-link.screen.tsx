@@ -414,15 +414,15 @@ export default function PaymentLinkScreen(): JSX.Element {
                                 },
                                 {
                                   label: translate('screens/home', 'Address'),
-                                  text: blankedAddress(parsedEvmUri.address, { width }),
+                                  text: blankedAddress(parsedEvmUri.address ?? '', { width }),
                                   icon: IconVariant.COPY,
-                                  onClick: () => copy(parsedEvmUri.address),
+                                  onClick: () => copy(parsedEvmUri.address ?? ''),
                                 },
                                 {
                                   label: translate('screens/home', 'Blockchain'),
-                                  text: toBlockchain(parsedEvmUri.chainId) ?? '',
+                                  text: toBlockchain(parsedEvmUri.chainId ?? ''),
                                   icon: IconVariant.COPY,
-                                  onClick: () => copy(toBlockchain(parsedEvmUri.chainId) ?? ''),
+                                  onClick: () => copy(toBlockchain(parsedEvmUri.chainId ?? '') ?? ''),
                                 },
                                 {
                                   label: translate('screens/payment', 'Amount'),
