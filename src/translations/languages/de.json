@@ -90,6 +90,14 @@
     "Trust": "Treuhand",
     "Other": "Andere",
 
+    "Female": "Weiblich",
+    "Male": "Männlich",
+
+    "Passport": "Pass",
+    "ID card": "ID-Karte",
+    "Driver's license": "Führerschein",
+    "Residence permit": "Aufenthaltsbewilligung",
+
     "Authorized to sign individually": "Einzelunterschriftberechtigt",
     "Authorized to sign jointly": "Unterschriftsberechtigt zu zweit",
     "No signing authorization": "Keine Unterschriftsberechtigung",
@@ -105,12 +113,17 @@
     "Failed": "Gescheitert",
     "Outdated": "Veraltet",
 
+    "Optional": "Optional",
+
     "Account Type": "Kontotyp",
     "Personal": "Privatkonto",
     "Organization": "Organisation",
     "SoleProprietorship": "Einzelunternehmen",
     "Personal Information": "Persönliche Daten",
+    "Gender": "Geschlecht",
     "First name": "Vorname",
+    "Birth name": "Geburtsname",
+    "Birthplace": "Geburtsort",
     "John": "Max",
     "John Doe": "Max Mustermann",
     "Last name": "Nachname",
@@ -130,6 +143,9 @@
     "Organization name": "Name der Organisation",
     "Example inc.": "Beispiel GmbH & Co. KG",
     "Contact information": "Kontaktdaten",
+    "Identification document": "Identifikationsdokument",
+    "Document type": "Dokumenttyp",
+    "Document number": "Dokumentnummer",
 
     "Please fill in personal information to continue": "Bitte gib Deine persönlichen Daten ein, um fortzufahren",
     "Please enter your contact information so that we can find your account": "Bitte gib Deine Kontaktinformationen ein, damit wir Dein Konto finden können",
