@@ -1,8 +1,9 @@
-import { ApiError, Blockchain, Utils } from '@dfx.swiss/react';
+import { Blockchain, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
   Form,
+  IconVariant,
   SpinnerSize,
   SpinnerVariant,
   StyledCollapsible,
@@ -29,12 +30,14 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { useWeb3 } from 'src/hooks/web3.hook';
+import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, fetchJson, formatLocationAddress, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 export interface PaymentStandard {
-  id: PaymentStandardType | string;
+  id: PaymentStandardType;
   label: string;
   description: string;
   paymentIdentifierLabel?: string;
@@ -102,20 +105,21 @@ interface FormData {
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
-  const { lightning, setParams } = useAppParams();
+  const { toBlockchain } = useWeb3();
   const { width } = useWindowContext();
 
+  const { lightning, setParams } = useAppParams();
   const [urlParams, setUrlParams] = useSearchParams();
 
-  const [callbackUrl, setCallbackUrl] = useState<string>();
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
-  const [paymentStandards, setPaymentStandards] = useState<PaymentStandard[]>();
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
+  const [paymentStandards, setPaymentStandards] = useState<PaymentStandard[]>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
   const refetchTimeout = useRef<NodeJS.Timeout>();
 
   const sessionApiUrl = useRef<string>(sessionStorage.getItem('apiUrl') ?? '');
+  const currentCallback = useRef<string>();
 
   const setSessionApiUrl = (newUrl: string) => {
     sessionApiUrl.current = newUrl;
@@ -125,126 +129,165 @@ export default function PaymentLinkScreen(): JSX.Element {
   const {
     control,
     setValue,
-    resetField,
     formState: { errors },
   } = useForm<FormData>({
     mode: 'onTouched',
   });
 
-  const selectedPaymentMethod = useWatch({ control, name: 'paymentStandard' });
-  const selectedEthereumUriAsset = useWatch({ control, name: 'asset' });
+  const selectedPaymentStandard = useWatch({ control, name: 'paymentStandard' });
+  const selectedAsset = useWatch({ control, name: 'asset' });
 
   useEffect(() => {
     const lightningParam = lightning;
 
     let apiUrl: string | undefined;
     if (lightningParam) {
-      setParams({ lightning: undefined });
       apiUrl = Lnurl.decode(lightningParam);
+      setParams({ lightning: undefined });
     } else if (urlParams.size) {
       apiUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment?${urlParams.toString()}`;
-    } else {
-      apiUrl = sessionApiUrl.current;
+      setUrlParams(new URLSearchParams());
     }
 
-    if (!apiUrl) {
-      urlParams.size ? setError('Invalid payment link.') : navigate('/', { replace: true });
-      return;
+    if (apiUrl) {
+      setSessionApiUrl(apiUrl);
+    } else if (!sessionApiUrl.current) {
+      navigate('/', { replace: true });
     }
 
-    if (apiUrl !== sessionApiUrl.current) setSessionApiUrl(apiUrl);
+    fetchPayRequest(sessionApiUrl.current);
 
-    if (urlParams.size) {
-      const clearedParams = new URLSearchParams();
-      setUrlParams(clearedParams);
-    }
+    return () => {
+      if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
+    };
   }, []);
 
   useEffect(() => {
-    if (!selectedPaymentMethod) {
-      if (payRequest) setValue('paymentStandard', PaymentStandards[payRequest.standard]);
-    } else {
-      resetField('asset');
+    if (!hasQuote(payRequest)) return;
+
+    const currentPaymentStandard = new URL(sessionApiUrl.current).searchParams.get('standard');
+    const currentMethod = currentCallback.current && new URL(currentCallback.current).searchParams.get('method');
+
+    const newPaymentStandard =
+      selectedPaymentStandard ?? paymentStandards?.find((item) => item.id === payRequest.standard);
+    const newAsset =
+      (currentMethod === newPaymentStandard?.blockchain ? selectedAsset : undefined) ??
+      payRequest.transferAmounts.find((item) => item.method === selectedPaymentStandard?.blockchain)?.assets?.[0]
+        ?.asset;
+
+    if (!currentPaymentStandard || currentPaymentStandard !== newPaymentStandard?.id) {
       const url = new URL(sessionApiUrl.current);
-      const params = new URLSearchParams(url.search);
-      if (params.get('standard') !== selectedPaymentMethod.id) {
-        params.set('standard', selectedPaymentMethod.id);
-        url.search = params.toString();
-        setSessionApiUrl(url.toString());
+      url.searchParams.set('standard', newPaymentStandard?.id ?? payRequest.standard);
+      setSessionApiUrl(url.toString());
+      fetchPayRequest(url.toString());
+      setPaymentIdentifier(undefined);
+      currentCallback.current = undefined;
+    } else {
+      fetchPaymentIdentifier(payRequest, newPaymentStandard?.blockchain, newAsset);
+    }
+
+    if (!selectedPaymentStandard && newPaymentStandard) setValue('paymentStandard', newPaymentStandard);
+    if (!selectedAsset && newAsset && newAsset !== selectedAsset) setValue('asset', newAsset);
+  }, [payRequest, paymentStandards, selectedPaymentStandard, selectedAsset]);
+
+  async function fetchPayRequest(url: string): Promise<number | undefined> {
+    setError(undefined);
+    let refetchDelay: number | undefined;
+
+    try {
+      const payRequest = await fetchJson(url);
+      if (sessionApiUrl.current !== url) return undefined;
+
+      setPayRequest(payRequest);
+
+      if (hasQuote(payRequest)) {
+        setPaymentStandardSelection(payRequest);
+        refetchDelay = new Date(payRequest.quote.expiration).getTime() - Date.now();
+      } else {
+        refetchDelay = 1000;
       }
+
+      if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
+      refetchTimeout.current = setTimeout(() => fetchPayRequest(url), refetchDelay);
+    } catch (error: any) {
+      setError(error.message ?? 'Unknown Error');
     }
-  }, [selectedPaymentMethod, payRequest]);
+  }
 
-  useEffect(() => {
-    async function fetchPayRequest(url: string) {
-      setError(undefined);
-      return fetchJson(url)
-        .then((data: PaymentLinkPayRequest | PaymentLinkPayTerminal) => {
-          if (sessionApiUrl.current !== url) return;
+  function setPaymentStandardSelection(data: PaymentLinkPayRequest | PaymentLinkPayTerminal) {
+    if (!hasQuote(data) || paymentStandards) return;
 
-          setPayRequest(data);
-          setPaymentStandardsSelection(data);
+    const possibleStandards: PaymentStandard[] = data.possibleStandards.flatMap((type: PaymentStandardType) => {
+      const paymentStandard = PaymentStandards[type];
 
-          const expiration = hasQuote(data) && new Date(data.quote.expiration);
-          const refetchDelay = expiration ? expiration.getTime() - Date.now() : 1000;
-          if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
-          refetchTimeout.current = setTimeout(() => fetchPayRequest(url), refetchDelay);
-        })
-        .catch((error: ApiError) => setError(error.message ?? 'Unknown Error'));
-    }
+      if (type !== PaymentStandardType.PAY_TO_ADDRESS) {
+        return paymentStandard;
+      } else {
+        return data.transferAmounts
+          .filter((chain) => chain.method !== 'Lightning')
+          .map((chain) => {
+            return { ...paymentStandard, blockchain: chain.method };
+          });
+      }
+    });
 
-    sessionApiUrl.current && fetchPayRequest(sessionApiUrl.current);
+    setPaymentStandards(possibleStandards);
+  }
 
-    return () => refetchTimeout.current && clearTimeout(refetchTimeout.current);
-  }, [sessionApiUrl.current]);
+  async function fetchPaymentIdentifier(
+    payRequest: PaymentLinkPayTerminal | PaymentLinkPayRequest,
+    selectedPaymentMethod?: Blockchain,
+    selectedAsset?: string,
+  ): Promise<void> {
+    if (
+      !hasQuote(payRequest) ||
+      (payRequest.standard === PaymentStandardType.PAY_TO_ADDRESS && !(selectedPaymentMethod && selectedAsset))
+    )
+      return;
 
-  useEffect(() => {
-    if (!payRequest || !hasQuote(payRequest)) return;
-
-    let callback: string;
-    switch (selectedPaymentMethod.id) {
+    switch (payRequest.standard) {
       case PaymentStandardType.OPEN_CRYPTO_PAY:
       case PaymentStandardType.FRANKENCOIN_PAY:
-        const lnurl = Lnurl.encode(simplifyUrl(sessionApiUrl.current));
-        setPaymentIdentifier(Lnurl.prependLnurl(lnurl));
+        setPaymentIdentifier(Lnurl.prependLnurl(Lnurl.encode(simplifyUrl(sessionApiUrl.current))));
         break;
       case PaymentStandardType.LIGHTNING_BOLT11:
-        callback = url(payRequest.callback, new URLSearchParams({ amount: payRequest.minSendable.toString() }));
-        callback !== callbackUrl && setCallbackUrl(callback);
-        break;
-      default:
-        const assets = payRequest.transferAmounts.find(
-          (item) => item.method === selectedPaymentMethod?.blockchain,
-        )?.assets;
-        const asset = assets?.find((item) => item.asset === selectedEthereumUriAsset)?.asset ?? assets?.[0]?.asset;
-        if (!asset) {
-          setError('No asset found for this payment method');
-          return;
-        }
-        callback = url(
-          payRequest.callback,
-          new URLSearchParams({
-            quote: payRequest.quote.id,
-            method: selectedPaymentMethod.blockchain?.toString() ?? '',
-            asset,
-          }),
+        invokeCallback(
+          url(
+            payRequest.callback,
+            new URLSearchParams({ quote: payRequest.quote.id, amount: payRequest.minSendable.toString() }),
+          ),
         );
-        callback !== callbackUrl && setCallbackUrl(callback);
-        asset !== selectedEthereumUriAsset && setValue('asset', asset);
+        break;
+      case PaymentStandardType.PAY_TO_ADDRESS:
+        invokeCallback(
+          url(
+            payRequest.callback,
+            new URLSearchParams({
+              quote: payRequest.quote.id,
+              method: selectedPaymentMethod ?? '',
+              asset: selectedAsset ?? '',
+            }),
+          ),
+        );
         break;
     }
-  }, [payRequest, sessionApiUrl.current, selectedPaymentMethod, selectedEthereumUriAsset]);
+  }
 
-  useEffect(() => {
-    if (!callbackUrl) return;
+  async function invokeCallback(callbackUrl: string): Promise<void> {
+    if (currentCallback.current === callbackUrl) return;
+    currentCallback.current = callbackUrl;
 
     setIsLoading(true);
     setPaymentIdentifier(undefined);
     fetchJson(callbackUrl)
-      .then((data) => data && setPaymentIdentifier(data.uri ?? data.pr))
+      .then((response) => {
+        if (response && response.statusCode !== 409 && callbackUrl === currentCallback.current) {
+          response && setPaymentIdentifier(response.uri ?? response.pr);
+        }
+      })
       .catch((error) => setError(error.message))
       .finally(() => setIsLoading(false));
-  }, [callbackUrl]);
+  }
 
   function simplifyUrl(url: string): string {
     const replacementMap: { [key: string]: string } = {
@@ -268,40 +311,18 @@ export default function PaymentLinkScreen(): JSX.Element {
     return `${urlObj.origin}${newPath}?${newParams.toString()}`;
   }
 
-  function setPaymentStandardsSelection(request: PaymentLinkPayTerminal | PaymentLinkPayRequest): void {
-    if (!hasQuote(request)) return;
-
-    let standard: PaymentStandard | undefined;
-
-    const possibleStandards =
-      request?.possibleStandards.flatMap((type: PaymentStandardType) => {
-        const paymentStandard = PaymentStandards[type];
-
-        if (type !== PaymentStandardType.PAY_TO_ADDRESS) {
-          if (request.standard === type) standard = paymentStandard;
-          return paymentStandard;
-        }
-
-        return (hasQuote(request) ? request.transferAmounts : [])
-          .filter((chain) => chain.method !== 'Lightning')
-          .map((chain) => {
-            const item = { ...paymentStandard, blockchain: chain.method };
-            if (!standard) standard = item;
-            return item;
-          });
-      }) ?? [];
-
-    setPaymentStandards(possibleStandards);
-    if (!selectedPaymentMethod && standard) setValue('paymentStandard', standard);
-  }
-
   function hasQuote(request?: PaymentLinkPayTerminal | PaymentLinkPayRequest): request is PaymentLinkPayRequest {
     return !!request && 'quote' in request;
   }
 
   const assetsList =
     hasQuote(payRequest) &&
-    payRequest.transferAmounts.find((item) => item.method === selectedPaymentMethod.blockchain)?.assets;
+    payRequest.transferAmounts.find((item) => item.method === selectedPaymentStandard?.blockchain)?.assets;
+
+  const parsedEvmUri =
+    selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS && paymentIdentifier
+      ? EvmUri.decode(paymentIdentifier)
+      : undefined;
 
   return (
     <Layout backButton={false} smallMenu>
@@ -325,7 +346,7 @@ export default function PaymentLinkScreen(): JSX.Element {
               </div>
             )}
           </div>
-          {!!paymentStandards?.length && (
+          {hasQuote(payRequest) && paymentStandards?.length && (
             <Form control={control} errors={errors}>
               <StyledVerticalStack full gap={4} center>
                 <StyledDropdown<PaymentStandard>
@@ -346,7 +367,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                     name="asset"
                     items={assetsList?.map((item) => item.asset) ?? []}
                     labelFunc={(item) => item}
-                    descriptionFunc={() => selectedPaymentMethod.blockchain ?? ''}
+                    descriptionFunc={() => selectedPaymentStandard?.blockchain ?? ''}
                     full
                     smallLabel
                   />
@@ -370,7 +391,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                     </div>
                   </div>
                 }
-                isExpanded={selectedPaymentMethod?.id === PaymentStandardType.PAY_TO_ADDRESS}
+                isExpanded={selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS}
               >
                 <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                   {hasQuote(payRequest) && (
@@ -379,13 +400,49 @@ export default function PaymentLinkScreen(): JSX.Element {
                         <p>{translate('screens/payment', 'Pending')}</p>
                       </StyledDataTableRow>
 
-                      <StyledDataTableRow
-                        label={selectedPaymentMethod.paymentIdentifierLabel}
+                      <StyledDataTableExpandableRow
+                        label={selectedPaymentStandard?.paymentIdentifierLabel}
                         isLoading={isLoading || !paymentIdentifier}
+                        expansionItems={
+                          parsedEvmUri && paymentIdentifier
+                            ? ([
+                                {
+                                  label: selectedPaymentStandard?.paymentIdentifierLabel ?? '',
+                                  text: blankedAddress(paymentIdentifier, { width, scale: 0.8 }),
+                                  icon: IconVariant.COPY,
+                                  onClick: () => copy(paymentIdentifier),
+                                },
+                                {
+                                  label: translate('screens/home', 'Address'),
+                                  text: blankedAddress(parsedEvmUri.address ?? '', { width }),
+                                  icon: IconVariant.COPY,
+                                  onClick: () => copy(parsedEvmUri.address ?? ''),
+                                },
+                                {
+                                  label: translate('screens/home', 'Blockchain'),
+                                  text: toBlockchain(parsedEvmUri.chainId ?? ''),
+                                  icon: IconVariant.COPY,
+                                  onClick: () => copy(toBlockchain(parsedEvmUri.chainId ?? '') ?? ''),
+                                },
+                                {
+                                  label: translate('screens/payment', 'Amount'),
+                                  text: parsedEvmUri.amount,
+                                  icon: IconVariant.COPY,
+                                  onClick: () => copy(parsedEvmUri.amount ?? ''),
+                                },
+                                {
+                                  label: translate('screens/payment', 'Token contract'),
+                                  text: blankedAddress(parsedEvmUri.tokenContractAddress ?? '', { width }),
+                                  icon: IconVariant.COPY,
+                                  onClick: () => copy(parsedEvmUri.tokenContractAddress ?? ''),
+                                },
+                              ].filter((item) => item.text) as any[])
+                            : []
+                        }
                       >
                         <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
-                        <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />
-                      </StyledDataTableRow>
+                        {!parsedEvmUri && <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />}
+                      </StyledDataTableExpandableRow>
 
                       <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
                         <p>
@@ -462,7 +519,7 @@ export default function PaymentLinkScreen(): JSX.Element {
               </StyledCollapsible>
             )}
             {[PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
-              selectedPaymentMethod?.id as PaymentStandardType,
+              selectedPaymentStandard?.id as PaymentStandardType,
             ) && (
               <StyledVerticalStack full gap={8} center>
                 {hasQuote(payRequest) && (
