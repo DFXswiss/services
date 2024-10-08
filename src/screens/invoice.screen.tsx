@@ -7,12 +7,14 @@ import {
   StyledDropdown,
   StyledHorizontalStack,
   StyledInput,
+  StyledLink,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { addYears } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Trans } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
@@ -93,11 +95,7 @@ export default function InvoiceScreen(): JSX.Element {
     fetchJson(url(baseUrl, searchParams))
       .then(({ error, message }) => {
         if (error) {
-          setError(
-            message === 'Route not found'
-              ? translate('screens/payment', 'Recipient not found')
-              : message ?? 'Unknown Error',
-          );
+          setError(message ?? 'Unknown Error');
         } else {
           setValidatedParams(searchParams);
         }
@@ -185,7 +183,27 @@ export default function InvoiceScreen(): JSX.Element {
 
             {error && (
               <div>
-                <ErrorHint message={error} />
+                {error === 'Route not found' ? (
+                  <p className="text-dfxGray-800 text-sm">
+                    <Trans
+                      i18nKey="general/errors.invoice"
+                      defaults="DFX does not recognize a recipient with the name <strong>{{recipient}}</strong>. This service can only be used for recipients who have an active account with DFX and are activated for the invoicing service. If you wish to register as a recipient with DFX, please contact support at <link>{{supportLink}}</link>."
+                      values={{ recipient: data?.recipient, supportLink: '' }}
+                      components={{
+                        strong: <strong />,
+                        link: (
+                          <StyledLink
+                            label={'https://services.dfx.swiss/support'}
+                            url={`https://services.dfx.swiss/support`}
+                            dark
+                          />
+                        ),
+                      }}
+                    />
+                  </p>
+                ) : (
+                  <ErrorHint message={error} />
+                )}
               </div>
             )}
           </StyledVerticalStack>
