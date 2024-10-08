@@ -591,6 +591,8 @@ interface PaymentStatusTileProps {
 }
 
 function PaymentStatusTile({ status }: PaymentStatusTileProps): JSX.Element {
+  const { translate } = useSettingsContext();
+
   if (!status || status === PaymentLinkPaymentStatus.PENDING) {
     return <></>;
   }
@@ -622,7 +624,9 @@ function PaymentStatusTile({ status }: PaymentStatusTileProps): JSX.Element {
   return (
     <div className={tileBackgroundStyle}>
       <div className={iconStyle}>{statusIcon[status]}</div>
-      <p className="text-dfxBlue-800 font-bold text-xl mt-4 leading-snug">{status.toUpperCase()}</p>
+      <p className="text-dfxBlue-800 font-bold text-xl mt-4 leading-snug">
+        {translate('screens/payment', status).toUpperCase()}
+      </p>
     </div>
   );
 }
