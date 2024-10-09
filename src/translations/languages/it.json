@@ -49,7 +49,8 @@
     "Only XML files are allowed": "Sono consentiti solo file XML",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Formati consentiti: PDF, JPG, JPEG, PNG",
 
-    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto."
+    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto.",
+    "invoice": "DFX non riconosce un destinatario con il nome <strong>{{recipient}}</strong>. Questo servizio può essere utilizzato solo per i destinatari che hanno un account attivo con DFX e sono attivati per il servizio di fatturazione. Se desideri registrarti come destinatario presso DFX, contatta l’assistenza all’indirizzo <link>{{supportLink}}</link>."
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -506,6 +507,8 @@
     "Activate": "Attivare",
     "Deactivate": "Disattivare",
     "Expires at": "Scade il",
+
+    "Token contract": "Contratto del token",
 
     "Create Invoice": "Crea fattura",
     "Invoice ID": "ID della fattura",

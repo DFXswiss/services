@@ -49,7 +49,8 @@
     "Only XML files are allowed": "Nur XML-Dateien sind erlaubt",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Erlaubte Formate: PDF, JPG, JPEG, PNG",
 
-    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support."
+    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.",
+    "invoice": "DFX kennt keinen Empfänger mit dem Namen <strong>{{recipient}}</strong>. Dieser Service kann nur für Empfänger verwendet werden, die ein aktives Konto bei DFX haben und für den Rechnungsservice aktiviert sind. Solltest Du dich als Empfänger bei DFX registrieren wollen, dann melde Dich beim Support unter <link>{{supportLink}}</link>."
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -506,6 +507,8 @@
     "Activate": "Aktivieren",
     "Deactivate": "Deaktivieren",
     "Expires at": "Gültig bis",
+
+    "Token contract": "Tokenvertrag",
 
     "Create Invoice": "Rechnung erstellen",
     "Invoice ID": "Rechnungs-ID",
