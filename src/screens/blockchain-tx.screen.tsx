@@ -8,6 +8,7 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { ethers } from 'ethers';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -35,7 +36,7 @@ interface FormData {
 
 export default function BlockchainTransactionScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
-  const { toChainId } = useWeb3();
+  const { toChainObject, toChainId } = useWeb3();
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -61,18 +62,58 @@ export default function BlockchainTransactionScreen(): JSX.Element {
   async function onSubmit(data: FormData) {
     const { blockchain, contractAddress, signer, privateKey, file } = data;
     setIsLoading(true);
-    // TODO: implement transaction signing and send it to the blockchain
-    setIsLoading(false);
+
+    try {
+      const functionAbi = JSON.parse(await readFileAsText(file));
+      const { method, types, inputs } = functionAbi;
+
+      const rpcUrl = toChainObject(blockchain)?.rpcUrls[0];
+      const chainId = parseInt(toChainId(blockchain)?.toString() || '');
+
+      if (!rpcUrl || !chainId) {
+        throw new Error('Invalid blockchain');
+      }
+
+      const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+      const wallet = new ethers.Wallet(privateKey, provider);
+
+      const iface = new ethers.utils.Interface([`function ${method}(${types.join(',')})`]);
+      const encodedData = iface.encodeFunctionData(method, inputs);
+
+      const transaction = {
+        to: contractAddress,
+        data: encodedData,
+        value: ethers.BigNumber.from(0),
+        gasLimit: ethers.BigNumber.from('210000'), // TODO: try lower gas limit
+        gasPrice: await provider.getGasPrice(),
+        nonce: await provider.getTransactionCount(wallet.address),
+        chainId: chainId,
+      };
+
+      const signedTransaction = await wallet.signTransaction(transaction);
+
+      const txResponse = await provider.sendTransaction(signedTransaction);
+
+      const receipt = await txResponse.wait();
+
+      // TODO: Display transaction receipt
+      console.log('Transaction successful!', receipt);
+    } catch (error) {
+      console.error('Error signing or sending the transaction:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const rules = Utils.createRules({
     blockchain: Validations.Required,
     contractAddress: Validations.Required,
-    signer: Validations.Required,
     file: [
       Validations.Required,
       Validations.Custom((file) => (file?.type === 'application/json' ? true : 'json_file')),
     ],
+    signer: Validations.Required,
+    privateKey: Validations.Required,
   });
 
   return (
@@ -165,7 +206,7 @@ function JsonDisplay({ file, label, smallLabel = false, hideLabel = false }: Jso
   const [json, setJson] = useState<string | undefined>();
 
   useEffect(() => {
-    readFileAsText(file, setJson);
+    readFileAsText(file).then(setJson);
   }, [file]);
 
   return (
