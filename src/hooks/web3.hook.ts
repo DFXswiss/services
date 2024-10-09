@@ -128,6 +128,18 @@ export function useWeb3(): Web3Interface {
         };
 
       case Blockchain.ETHEREUM:
+        return {
+          chainId,
+          chainName: 'Ethereum Mainnet',
+          nativeCurrency: {
+            name: 'Ether',
+            symbol: 'ETH',
+            decimals: 18,
+          },
+          rpcUrls: ['https://eth.llamarpc.com'],
+          blockExplorerUrls: ['https://etherscan.io'],
+        };
+
       default:
         return undefined;
     }

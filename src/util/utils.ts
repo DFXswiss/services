@@ -48,6 +48,19 @@ export function toBase64(file: File): Promise<string | undefined> {
   });
 }
 
+export function readFileAsText(file: File, callback: (content: string) => void): void {
+  const reader = new FileReader();
+
+  reader.onload = (event) => {
+    const content = event.target?.result;
+    if (typeof content === 'string') {
+      callback(content);
+    }
+  };
+
+  reader.readAsText(file);
+}
+
 export function openPdfFromString(pdf: string) {
   const byteArray = Uint8Array.from(atob(pdf), (c) => c.charCodeAt(0));
   const file = new Blob([byteArray], { type: 'application/pdf;base64' });
