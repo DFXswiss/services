@@ -37,6 +37,7 @@ const TransactionScreen = lazy(() => import('./screens/transaction.screen'));
 const AccountMerge = lazy(() => import('./screens/account-merge.screen'));
 const MailLoginScreen = lazy(() => import('./screens/mail-login.screen'));
 const SepaScreen = lazy(() => import('./screens/sepa.screen'));
+const BlockchainTransactionScreen = lazy(() => import('./screens/blockchain-tx.screen'));
 
 setupLanguages();
 
@@ -201,6 +202,10 @@ export const Routes = [
   {
     path: '/sepa',
     element: withSuspense(<SepaScreen />),
+  },
+  {
+    path: '/blockchain/tx',
+    element: withSuspense(<BlockchainTransactionScreen />),
   },
 ];
 

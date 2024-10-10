@@ -72,7 +72,7 @@ export function useWeb3(): Web3Interface {
             decimals: 18,
           },
           rpcUrls: ['https://arb1.arbitrum.io/rpc'],
-          blockExplorerUrls: ['https://arbiscan.io'],
+          blockExplorerUrls: ['https://arbiscan.io/'],
         };
 
       case Blockchain.OPTIMISM:
@@ -111,7 +111,7 @@ export function useWeb3(): Web3Interface {
             decimals: 18,
           },
           rpcUrls: ['https://mainnet.base.org'],
-          blockExplorerUrls: ['https://basescan.org'],
+          blockExplorerUrls: ['https://basescan.org/'],
         };
 
       case Blockchain.HAQQ:
@@ -128,6 +128,18 @@ export function useWeb3(): Web3Interface {
         };
 
       case Blockchain.ETHEREUM:
+        return {
+          chainId,
+          chainName: 'Ethereum Mainnet',
+          nativeCurrency: {
+            name: 'Ether',
+            symbol: 'ETH',
+            decimals: 18,
+          },
+          rpcUrls: ['https://eth.llamarpc.com'],
+          blockExplorerUrls: ['https://etherscan.io/'],
+        };
+
       default:
         return undefined;
     }
