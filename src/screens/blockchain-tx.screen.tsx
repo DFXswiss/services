@@ -1,19 +1,26 @@
 import { Blockchain, Utils, Validations } from '@dfx.swiss/react';
 import {
+  AlignContent,
+  CopyButton,
   Form,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
+  StyledDataTable,
+  StyledDataTableRow,
   StyledDropdown,
   StyledFileUpload,
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import copy from 'copy-to-clipboard';
 import { ethers } from 'ethers';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useWindowContext } from 'src/contexts/window.context';
 import { useWeb3 } from 'src/hooks/web3.hook';
-import { readFileAsText } from 'src/util/utils';
+import { blankedAddress, readFileAsText } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 const availableBlockchains = [
@@ -24,54 +31,59 @@ const availableBlockchains = [
   Blockchain.BASE,
 ];
 
-const availableSigners = ['0x9229e0179a436CD0b77F731992307AC765Bc4b17'];
+const privateKeysMap = JSON.parse(process.env.REACT_APP_PRIVATE_KEYS_MAP || '{}');
+const availableSigners = Object.keys(privateKeysMap);
 
 interface FormData {
   blockchain: Blockchain;
   contractAddress: string;
   file: File;
   signer: string;
-  privateKey: string;
 }
 
 export default function BlockchainTransactionScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { toChainObject, toChainId } = useWeb3();
+  const { width } = useWindowContext();
   const rootRef = useRef<HTMLDivElement>(null);
 
+  const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
-  const [showPrivateKey, setShowPrivateKey] = useState(false);
+  const [txExplorerUrl, setTxExplorerUrl] = useState<string>();
 
   const {
-    watch,
     control,
     handleSubmit,
     formState: { errors, isValid },
   } = useForm<FormData>({
     mode: 'all',
     defaultValues: {
-      blockchain: Blockchain.ETHEREUM,
+      blockchain: Blockchain.POLYGON,
       signer: availableSigners[0],
     },
   });
 
-  const data = watch();
   const selectedFile = useWatch({ control, name: 'file' });
-  const selectedPrivateKey = useWatch({ control, name: 'privateKey' });
 
   async function onSubmit(data: FormData) {
-    const { blockchain, contractAddress, signer, privateKey, file } = data;
+    setError(undefined);
+    setTxExplorerUrl(undefined);
     setIsLoading(true);
+
+    const { blockchain, contractAddress, signer, file } = data;
 
     try {
       const functionAbi = JSON.parse(await readFileAsText(file));
       const { method, types, inputs } = functionAbi;
 
-      const rpcUrl = toChainObject(blockchain)?.rpcUrls[0];
+      const privateKey = privateKeysMap[signer];
+      const chainObject = toChainObject(blockchain);
+      const rpcUrl = chainObject?.rpcUrls[0];
       const chainId = parseInt(toChainId(blockchain)?.toString() || '');
 
       if (!rpcUrl || !chainId) {
-        throw new Error('Invalid blockchain');
+        setError('Invalid blockchain');
+        return;
       }
 
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
@@ -84,7 +96,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
         to: contractAddress,
         data: encodedData,
         value: ethers.BigNumber.from(0),
-        gasLimit: ethers.BigNumber.from('210000'), // TODO: try lower gas limit
+        gasLimit: ethers.BigNumber.from('300000'), // TODO (later): estimate gas
         gasPrice: await provider.getGasPrice(),
         nonce: await provider.getTransactionCount(wallet.address),
         chainId: chainId,
@@ -96,10 +108,9 @@ export default function BlockchainTransactionScreen(): JSX.Element {
 
       const receipt = await txResponse.wait();
 
-      // TODO: Display transaction receipt
-      console.log('Transaction successful!', receipt);
-    } catch (error) {
-      console.error('Error signing or sending the transaction:', error);
+      setTxExplorerUrl(chainObject.blockExplorerUrls[0] + `tx/${receipt.transactionHash}`);
+    } catch (error: any) {
+      setError(error.message ?? 'Error signing or sending the transaction');
     } finally {
       setIsLoading(false);
     }
@@ -113,7 +124,6 @@ export default function BlockchainTransactionScreen(): JSX.Element {
       Validations.Custom((file) => (file?.type === 'application/json' ? true : 'json_file')),
     ],
     signer: Validations.Required,
-    privateKey: Validations.Required,
   });
 
   return (
@@ -170,17 +180,9 @@ export default function BlockchainTransactionScreen(): JSX.Element {
             items={availableSigners}
             labelFunc={(item) => item}
           />
-          <StyledInput
-            type={showPrivateKey ? 'text' : 'password'}
-            name="privateKey"
-            autocomplete="current-password"
-            buttonLabel={selectedPrivateKey ? translate('general/actions', 'Show') : undefined}
-            buttonClick={() => setShowPrivateKey(!showPrivateKey)}
-            label={translate('screens/payment', 'Private key')}
-            placeholder={translate('screens/kyc', 'John Doe')}
-            full
-            smallLabel
-          />
+
+          {error && <div className="text-dfxRed-100 text-sm">{error}</div>}
+
           <StyledButton
             type="submit"
             label={translate('general/actions', 'Sign transaction')}
@@ -189,6 +191,24 @@ export default function BlockchainTransactionScreen(): JSX.Element {
             disabled={!isValid}
             isLoading={isLoading}
           />
+
+          {txExplorerUrl && (
+            <StyledVerticalStack center full gap={4} className="border border-dfxGray-500 rounded-md p-4 ">
+              <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                <StyledDataTableRow label={translate('screens/payment', 'Transaction hash')}>
+                  <p className="font-semibold">{blankedAddress(txExplorerUrl?.split('/').pop() ?? '', { width })}</p>
+                  <CopyButton onCopy={() => copy(txExplorerUrl?.split('/').pop() ?? '')} />
+                </StyledDataTableRow>
+              </StyledDataTable>
+              <StyledButton
+                type="button"
+                label={translate('general/actions', 'Open in explorer')}
+                onClick={() => window.open(txExplorerUrl ?? '', '_blank')}
+                width={StyledButtonWidth.FULL}
+                color={StyledButtonColor.STURDY_WHITE}
+              />
+            </StyledVerticalStack>
+          )}
         </StyledVerticalStack>
       </Form>
     </Layout>
