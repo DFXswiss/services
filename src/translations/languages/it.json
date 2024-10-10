@@ -98,7 +98,6 @@
     "Passport": "Passaporto",
     "ID card": "Carta d'identità",
     "Driver's license": "Patente di guida",
-    "Residence permit": "Permesso di soggiorno",
 
     "Authorized to sign individually": "Autorizzato a firmare individualmente",
     "Authorized to sign jointly": "Autorizzato a firmare congiuntamente",
@@ -621,6 +620,14 @@
 
     "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "I tuoi dati rimarranno sui nostri server temporaneamente prima della cancellazione definitiva. Se hai domande, contatta il nostro team di supporto."
+  },
+  "screens/blockchain": {
+    "Transaction signing": "Firma della transazione",
+    "Transaction hash": "Hash della transazione",
+    "Transaction (Input data)": "Transazione (Dati di input)",
+    "Sign transaction": "Firma la transazione",
+    "Signer": "Firmatario",
+    "Contract address": "Indirizzo del contratto"
   },
   "navigation/links": {
     "Buy": "Comprare",

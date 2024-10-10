@@ -127,7 +127,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
   });
 
   return (
-    <Layout title={translate('screens/support', 'Transaction signing')} rootRef={rootRef}>
+    <Layout title={translate('screens/blockchain', 'Transaction signing')} rootRef={rootRef}>
       <Form
         control={control}
         rules={rules}
@@ -139,7 +139,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
           <StyledDropdown<Blockchain>
             name="blockchain"
             rootRef={rootRef}
-            label={translate('screens/settings', 'Blockchain')}
+            label={translate('screens/home', 'Blockchain')}
             smallLabel={true}
             placeholder={translate('general/actions', 'Select...')}
             items={availableBlockchains}
@@ -149,7 +149,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
           <StyledInput
             name="contractAddress"
             autocomplete="contractAddress"
-            label={translate('screens/payment', 'Contract address')}
+            label={translate('screens/blockchain', 'Contract address')}
             placeholder={translate('screens/kyc', 'John Doe')}
             full
             smallLabel
@@ -157,7 +157,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
           <div className="flex flex-col gap-2">
             <StyledFileUpload
               name="file"
-              label={translate('screens/support', 'Transaction (input data)')}
+              label={translate('screens/blockchain', 'Transaction (Input data)')}
               placeholder={translate('general/actions', 'Drop JSON file here')}
               buttonLabel={translate('general/actions', 'Browse')}
               full
@@ -166,7 +166,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
             {selectedFile && !errors.file && (
               <JsonDisplay
                 file={selectedFile}
-                label={translate('screens/support', 'Transaction (input data)')}
+                label={translate('screens/blockchain', 'Transaction (Input data)')}
                 hideLabel
               />
             )}
@@ -174,7 +174,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
           <StyledDropdown<string>
             name="signer"
             rootRef={rootRef}
-            label={translate('screens/settings', 'Signer')}
+            label={translate('screens/blockchain', 'Signer')}
             smallLabel={true}
             placeholder={translate('general/actions', 'Select...')}
             items={availableSigners}
@@ -185,7 +185,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
 
           <StyledButton
             type="submit"
-            label={translate('general/actions', 'Sign transaction')}
+            label={translate('screens/blockchain', 'Sign transaction')}
             onClick={handleSubmit(onSubmit)}
             width={StyledButtonWidth.FULL}
             disabled={!isValid}
@@ -195,14 +195,14 @@ export default function BlockchainTransactionScreen(): JSX.Element {
           {txExplorerUrl && (
             <StyledVerticalStack center full gap={4} className="border border-dfxGray-500 rounded-md p-4 ">
               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                <StyledDataTableRow label={translate('screens/payment', 'Transaction hash')}>
+                <StyledDataTableRow label={translate('screens/blockchain', 'Transaction hash')}>
                   <p className="font-semibold">{blankedAddress(txExplorerUrl?.split('/').pop() ?? '', { width })}</p>
                   <CopyButton onCopy={() => copy(txExplorerUrl?.split('/').pop() ?? '')} />
                 </StyledDataTableRow>
               </StyledDataTable>
               <StyledButton
                 type="button"
-                label={translate('general/actions', 'Open in explorer')}
+                label={translate('general/actions', 'Open Explorer')}
                 onClick={() => window.open(txExplorerUrl ?? '', '_blank')}
                 width={StyledButtonWidth.FULL}
                 color={StyledButtonColor.STURDY_WHITE}
