@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { blankedAddress, readFileAsText } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -50,6 +51,8 @@ export default function BlockchainTransactionScreen(): JSX.Element {
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
   const [txExplorerUrl, setTxExplorerUrl] = useState<string>();
+
+  useAdminGuard();
 
   const {
     control,
