@@ -1,4 +1,4 @@
-import { Blockchain, Utils, Validations } from '@dfx.swiss/react';
+import { Blockchain, useApi, Utils, Validations } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -19,9 +19,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
-import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
-import { blankedAddress, readFileAsText } from 'src/util/utils';
+import { blankedAddress, readFileAsText, toBase64 } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 const availableBlockchains = [
@@ -38,21 +37,22 @@ const availableSigners = Object.keys(privateKeysMap);
 interface FormData {
   blockchain: Blockchain;
   contractAddress: string;
-  file: File;
   signer: string;
+  file: File;
 }
 
 export default function BlockchainTransactionScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { toChainObject, toChainId } = useWeb3();
   const { width } = useWindowContext();
+  const { call } = useApi();
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
   const [txExplorerUrl, setTxExplorerUrl] = useState<string>();
 
-  useAdminGuard();
+  // useAdminGuard(); // TODO: Add guard
 
   const {
     control,
@@ -73,45 +73,16 @@ export default function BlockchainTransactionScreen(): JSX.Element {
     setTxExplorerUrl(undefined);
     setIsLoading(true);
 
-    const { blockchain, contractAddress, signer, file } = data;
-
     try {
-      const functionAbi = JSON.parse(await readFileAsText(file));
-      const { method, types, inputs } = functionAbi;
-
-      const privateKey = privateKeysMap[signer];
-      const chainObject = toChainObject(blockchain);
-      const rpcUrl = chainObject?.rpcUrls[0];
-      const chainId = parseInt(toChainId(blockchain)?.toString() || '');
-
-      if (!rpcUrl || !chainId) {
-        setError('Invalid blockchain');
-        return;
-      }
-
-      const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-      const wallet = new ethers.Wallet(privateKey, provider);
-
-      const iface = new ethers.utils.Interface([`function ${method}(${types.join(',')})`]);
-      const encodedData = iface.encodeFunctionData(method, inputs);
-
-      const transaction = {
-        to: contractAddress,
-        data: encodedData,
-        value: ethers.BigNumber.from(0),
-        gasLimit: ethers.BigNumber.from('300000'), // TODO (later): estimate gas
-        gasPrice: await provider.getGasPrice(),
-        nonce: await provider.getTransactionCount(wallet.address),
-        chainId: chainId,
-      };
-
-      const signedTransaction = await wallet.signTransaction(transaction);
-
-      const txResponse = await provider.sendTransaction(signedTransaction);
+      const txResponse = await call<ethers.providers.TransactionResponse>({
+        url: `gs/evm/rawInputData`,
+        method: 'POST',
+        data: { ...data, file: await toBase64(data.file) },
+      });
 
       const receipt = await txResponse.wait();
 
-      setTxExplorerUrl(chainObject.blockExplorerUrls[0] + `tx/${receipt.transactionHash}`);
+      setTxExplorerUrl(toChainObject(data.blockchain)?.blockExplorerUrls[0] + `tx/${receipt.transactionHash}`);
     } catch (error: any) {
       setError(error.message ?? 'Error signing or sending the transaction');
     } finally {
