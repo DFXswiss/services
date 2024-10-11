@@ -36,7 +36,9 @@
     "Open Explorer": "Ouvrir l'explorateur",
     "Select transaction": "Sélectionner la transaction",
     "Download": "Télécharger",
-    "Confirm refund": "Confirmer le remboursement"
+    "Confirm refund": "Confirmer le remboursement",
+    "Copy Link": "Copier le lien",
+    "Open invoice": "Ouvrir la facture"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -47,7 +49,8 @@
     "Only XML files are allowed": "Seuls les fichiers XML sont autorisés",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Formats autorisés : PDF, JPG, JPEG, PNG",
 
-    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer. Si le problème persiste, veuillez contacter notre service d'assistance."
+    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer. Si le problème persiste, veuillez contacter notre service d'assistance.",
+    "invoice": "DFX ne reconnaît pas un destinataire nommé <strong>{{recipient}}</strong>. Ce service ne peut être utilisé que pour des destinataires ayant un compte actif chez DFX et activés pour le service de facturation. Si vous souhaitez vous inscrire en tant que destinataire chez DFX, veuillez contacter le support à <link>{{supportLink}}</link>."
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -88,6 +91,14 @@
     "Trust": "Fiducie",
     "Other": "Autre",
 
+    "Female": "Femme",
+    "Male": "Homme",
+
+    "Passport": "Passeport",
+    "ID card": "Carte d'identité",
+    "Driver's license": "Permis de conduire",
+    "Residence permit": "Permis de séjour",
+
     "Authorized to sign individually": "Autorisé à signer individuellement",
     "Authorized to sign jointly": "Autorisé à signer conjointement",
     "No signing authorization": "Pas d'autorisation de signature",
@@ -103,12 +114,17 @@
     "Failed": "Échoué",
     "Outdated": "Obsolète",
 
+    "Optional": "Facultatif",
+
     "Account Type": "Type de compte",
     "Personal": "Personnel",
     "Organization": "Organisation",
     "SoleProprietorship": "Entreprise individuelle",
     "Personal Information": "Informations personnelles",
+    "Gender": "Sexe",
     "First name": "Prénom",
+    "Birth name": "Nom de naissance",
+    "Birthplace": "Lieu de naissance",
     "John": "Jean",
     "John Doe": "Jean Dupont",
     "Last name": "Nom de famille",
@@ -128,6 +144,9 @@
     "Organization name": "Nom de l'organisation",
     "Example inc.": "Exempel SARL & Co. KG",
     "Contact information": "Coordonnées",
+    "Identification document": "Document d'identification",
+    "Document type": "Type de document",
+    "Document number": "Numéro de document",
 
     "Please fill in personal information to continue": "Veuillez compléter vos informations personnelles pour continuer",
     "Please enter your contact information so that we can find your account": "Veuillez saisir vos coordonnées afin que nous puissions retrouver votre compte",
@@ -489,6 +508,12 @@
     "Activate": "Activer",
     "Deactivate": "Désactiver",
     "Expires at": "Expire à",
+
+    "Token contract": "Contrat de token",
+
+    "Create Invoice": "Créer une facture",
+    "Invoice ID": "ID de facture",
+    "Recipient not found": "Bénéficiaire non trouvé",
 
     "Route": "Route",
     "Summary": "Résumé",

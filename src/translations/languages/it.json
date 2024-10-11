@@ -36,7 +36,9 @@
     "Open Explorer": "Apri Explorer",
     "Select transaction": "Selezionare la transazione",
     "Download": "Scaricare",
-    "Confirm refund": "Confermare il rimborso"
+    "Confirm refund": "Confermare il rimborso",
+    "Copy Link": "Copia il link",
+    "Open invoice": "Apri la fattura"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -47,7 +49,8 @@
     "Only XML files are allowed": "Sono consentiti solo file XML",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Formati consentiti: PDF, JPG, JPEG, PNG",
 
-    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto."
+    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto.",
+    "invoice": "DFX non riconosce un destinatario con il nome <strong>{{recipient}}</strong>. Questo servizio può essere utilizzato solo per i destinatari che hanno un account attivo con DFX e sono attivati per il servizio di fatturazione. Se desideri registrarti come destinatario presso DFX, contatta l’assistenza all’indirizzo <link>{{supportLink}}</link>."
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -88,6 +91,14 @@
     "Trust": "Fiducia",
     "Other": "Altro",
 
+    "Female": "Femmina",
+    "Male": "Maschio",
+
+    "Passport": "Passaporto",
+    "ID card": "Carta d'identità",
+    "Driver's license": "Patente di guida",
+    "Residence permit": "Permesso di soggiorno",
+
     "Authorized to sign individually": "Autorizzato a firmare individualmente",
     "Authorized to sign jointly": "Autorizzato a firmare congiuntamente",
     "No signing authorization": "Nessuna autorizzazione a firmare",
@@ -103,12 +114,17 @@
     "Failed": "Fallito",
     "Outdated": "Obsoleto",
 
+    "Optional": "Opzionale",
+
     "Account Type": "Tipo di conto",
     "Personal": "Personale",
     "Organization": "Organizzazione",
     "SoleProprietorship": "Impresa individuale",
     "Personal Information": "Informazioni personali",
+    "Gender": "Genere",
     "First name": "Nome",
+    "Birth name": "Nome di nascita",
+    "Birthplace": "Luogo di nascita",
     "John": "Giovanni",
     "John Doe": "Giovanni Rossi",
     "Last name": "Cognome",
@@ -128,6 +144,9 @@
     "Organization name": "Nome dell'organizzazione",
     "Example inc.": "Esempio inc.",
     "Contact information": "Informazioni di contatto",
+    "Identification document": "Documento d'identità",
+    "Document type": "Tipo di documento",
+    "Document number": "Numero del documento",
 
     "Please fill in personal information to continue": "Compilare i dati personali per continuare",
     "Please enter your contact information so that we can find your account": "Inserite le vostre informazioni di contatto per consentirci di trovare il vostro account",
@@ -489,6 +508,12 @@
     "Activate": "Attivare",
     "Deactivate": "Disattivare",
     "Expires at": "Scade il",
+
+    "Token contract": "Contratto del token",
+
+    "Create Invoice": "Crea fattura",
+    "Invoice ID": "ID della fattura",
+    "Recipient not found": "Destinatario non trovato",
 
     "Route": "Modalità",
     "Summary": "Riepilogo",

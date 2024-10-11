@@ -36,7 +36,9 @@
     "Open Explorer": "Explorer öffnen",
     "Select transaction": "Transaktion auswählen",
     "Download": "Herunterladen",
-    "Confirm refund": "Rückerstattung bestätigen"
+    "Confirm refund": "Rückerstattung bestätigen",
+    "Copy Link": "Link kopieren",
+    "Open invoice": "Rechnung öffnen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -47,7 +49,8 @@
     "Only XML files are allowed": "Nur XML-Dateien sind erlaubt",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Erlaubte Formate: PDF, JPG, JPEG, PNG",
 
-    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support."
+    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.",
+    "invoice": "DFX kennt keinen Empfänger mit dem Namen <strong>{{recipient}}</strong>. Dieser Service kann nur für Empfänger verwendet werden, die ein aktives Konto bei DFX haben und für den Rechnungsservice aktiviert sind. Solltest Du dich als Empfänger bei DFX registrieren wollen, dann melde Dich beim Support unter <link>{{supportLink}}</link>."
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -88,6 +91,14 @@
     "Trust": "Treuhand",
     "Other": "Andere",
 
+    "Female": "Weiblich",
+    "Male": "Männlich",
+
+    "Passport": "Pass",
+    "ID card": "ID-Karte",
+    "Driver's license": "Führerschein",
+    "Residence permit": "Aufenthaltsbewilligung",
+
     "Authorized to sign individually": "Einzelunterschriftberechtigt",
     "Authorized to sign jointly": "Unterschriftsberechtigt zu zweit",
     "No signing authorization": "Keine Unterschriftsberechtigung",
@@ -103,12 +114,17 @@
     "Failed": "Gescheitert",
     "Outdated": "Veraltet",
 
+    "Optional": "Optional",
+
     "Account Type": "Kontotyp",
     "Personal": "Privatkonto",
     "Organization": "Organisation",
     "SoleProprietorship": "Einzelunternehmen",
     "Personal Information": "Persönliche Daten",
+    "Gender": "Geschlecht",
     "First name": "Vorname",
+    "Birth name": "Geburtsname",
+    "Birthplace": "Geburtsort",
     "John": "Max",
     "John Doe": "Max Mustermann",
     "Last name": "Nachname",
@@ -128,6 +144,9 @@
     "Organization name": "Name der Organisation",
     "Example inc.": "Beispiel GmbH & Co. KG",
     "Contact information": "Kontaktdaten",
+    "Identification document": "Identifikationsdokument",
+    "Document type": "Dokumenttyp",
+    "Document number": "Dokumentnummer",
 
     "Please fill in personal information to continue": "Bitte gib Deine persönlichen Daten ein, um fortzufahren",
     "Please enter your contact information so that we can find your account": "Bitte gib Deine Kontaktinformationen ein, damit wir Dein Konto finden können",
@@ -489,6 +508,12 @@
     "Activate": "Aktivieren",
     "Deactivate": "Deaktivieren",
     "Expires at": "Gültig bis",
+
+    "Token contract": "Tokenvertrag",
+
+    "Create Invoice": "Rechnung erstellen",
+    "Invoice ID": "Rechnungs-ID",
+    "Recipient not found": "Empfänger nicht gefunden",
 
     "Route": "Route",
     "Summary": "Zusammenfassung",
