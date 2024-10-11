@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { blankedAddress, readFileAsText, toBase64 } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -52,7 +53,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [txExplorerUrl, setTxExplorerUrl] = useState<string>();
 
-  // useAdminGuard(); // TODO: Add guard
+  useAdminGuard();
 
   const {
     control,
@@ -73,6 +74,13 @@ export default function BlockchainTransactionScreen(): JSX.Element {
     setTxExplorerUrl(undefined);
     setIsLoading(true);
 
+    const chainObject = toChainObject(data.blockchain);
+    if (!chainObject) {
+      setError('Invalid blockchain');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const txResponse = await call<ethers.providers.TransactionResponse>({
         url: `gs/evm/rawInputData`,
@@ -80,9 +88,10 @@ export default function BlockchainTransactionScreen(): JSX.Element {
         data: { ...data, file: await toBase64(data.file) },
       });
 
-      const receipt = await txResponse.wait();
+      const provider = new ethers.providers.JsonRpcProvider(chainObject.rpcUrls[0]);
+      const receipt = await provider.waitForTransaction(txResponse.hash);
 
-      setTxExplorerUrl(toChainObject(data.blockchain)?.blockExplorerUrls[0] + `tx/${receipt.transactionHash}`);
+      setTxExplorerUrl(chainObject?.blockExplorerUrls[0] + `tx/${receipt.transactionHash}`);
     } catch (error: any) {
       setError(error.message ?? 'Error signing or sending the transaction');
     } finally {
@@ -152,7 +161,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
             smallLabel={true}
             placeholder={translate('general/actions', 'Select...')}
             items={availableSigners}
-            labelFunc={(item) => item}
+            labelFunc={(item) => blankedAddress(item, { width, scale: 1.2 })}
           />
 
           {error && <div className="text-dfxRed-100 text-sm">{error}</div>}
@@ -170,7 +179,9 @@ export default function BlockchainTransactionScreen(): JSX.Element {
             <StyledVerticalStack center full gap={4} className="border border-dfxGray-500 rounded-md p-4 ">
               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                 <StyledDataTableRow label={translate('screens/blockchain', 'Transaction hash')}>
-                  <p className="font-semibold">{blankedAddress(txExplorerUrl?.split('/').pop() ?? '', { width })}</p>
+                  <p className="font-semibold">
+                    {blankedAddress(txExplorerUrl?.split('/').pop() ?? '', { width, scale: 0.7 })}
+                  </p>
                   <CopyButton onCopy={() => copy(txExplorerUrl?.split('/').pop() ?? '')} />
                 </StyledDataTableRow>
               </StyledDataTable>
