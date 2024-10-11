@@ -105,14 +105,21 @@ export default function SellInfoScreen(): JSX.Element {
   }, [assetOut, getCurrency, currencies]);
 
   useEffect(() => {
-    if (bankAccountParam && bankAccounts) {
+    if (bankAccountParam && bankAccounts !== undefined) {
       const account = getAccount(bankAccounts, bankAccountParam);
       if (account) {
         setBankAccount(account);
-      } else if (!isCreatingAccount && Validations.Iban(countries).validate(bankAccountParam) === true) {
+      } else if (!isCreatingAccount) {
+        const ibanIsValid = Validations.Iban(countries).validate(bankAccountParam);
+        if (ibanIsValid !== true) {
+          setErrorMessage(`Invalid IBAN: ${ibanIsValid}`);
+          return;
+        }
+
         setIsCreatingAccount(true);
         createAccount({ iban: bankAccountParam })
           .then(setBankAccount)
+          .catch(() => setErrorMessage('Failed to create bank account'))
           .finally(() => setIsCreatingAccount(false));
       }
     }
