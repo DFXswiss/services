@@ -21,7 +21,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
-import { blankedAddress, readFileAsText, toBase64 } from 'src/util/utils';
+import { blankedAddress, readFileAsText } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 const availableBlockchains = [
@@ -82,10 +82,12 @@ export default function BlockchainTransactionScreen(): JSX.Element {
     }
 
     try {
+      const { blockchain, contractAddress, signer, file } = data;
+
       const txResponse = await call<ethers.providers.TransactionResponse>({
-        url: `gs/evm/rawInputData`,
+        url: `gs/evm/contractTransaction`,
         method: 'POST',
-        data: { ...data, file: await toBase64(data.file) },
+        data: { blockchain, contractAddress, signer, callData: await readFileAsText(file) },
       });
 
       const provider = new ethers.providers.JsonRpcProvider(chainObject.rpcUrls[0]);
