@@ -184,6 +184,14 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
           width={StyledButtonWidth.FULL}
         />
       )}
+      <StyledButton
+        label={translate('general/actions', 'Confirm refund')}
+        onClick={() => navigate(`/tx/${transaction.uid}/refund`)}
+        hidden={
+          ![TransactionState.FAILED, TransactionState.AML_PENDING].includes(transaction.state) ||
+          !!transaction.chargebackAmount
+        }
+      />
     </StyledVerticalStack>
   ) : (
     <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -604,7 +612,10 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                             <StyledButton
                               label={translate('general/actions', 'Confirm refund')}
                               onClick={() => navigate(`/tx/${tx.uid}/refund`)}
-                              hidden={tx.state !== TransactionState.FAILED || !!tx.chargebackAmount}
+                              hidden={
+                                ![TransactionState.FAILED, TransactionState.AML_PENDING].includes(tx.state) ||
+                                !!tx.chargebackAmount
+                              }
                             />
                             {tx.state === TransactionState.KYC_REQUIRED && (
                               <StyledButton

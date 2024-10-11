@@ -408,7 +408,8 @@
     "Cancelled": "Abgebrochen",
     "Expired": "Abgelaufen",
     "Failed": "Gescheitert",
-    "Returned": "Zurückgeschickt",
+    "Refund pending": "Rückerstattung ausstehend",
+    "Refunded": "Rückerstattet",
     "Unassigned": "Nicht zugeordnet",
     "LNURL decoded": "LNURL dekodiert",
 

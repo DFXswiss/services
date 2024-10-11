@@ -408,7 +408,8 @@
     "Cancelled": "Annullato",
     "Expired": "Scaduto",
     "Failed": "Fallito",
-    "Returned": "Restituito",
+    "Refund pending": "Rimborso in sospeso",
+    "Refunded": "Rimborsato",
     "Unassigned": "Non assegnato",
     "LNURL decoded": "LNURL decodificato",
 
