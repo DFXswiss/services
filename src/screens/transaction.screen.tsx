@@ -347,7 +347,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
         </StyledDataTableRow>
         {refundDetails.refundTarget && (
           <StyledDataTableRow label={translate('screens/payment', 'Recipient')}>
-            <p>{refundDetails.refundTarget}</p>
+            <p>{blankedAddress(refundDetails.refundTarget, { width })}</p>
           </StyledDataTableRow>
         )}
       </StyledDataTable>
