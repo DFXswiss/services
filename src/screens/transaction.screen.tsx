@@ -188,8 +188,9 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
         label={translate('general/actions', 'Confirm refund')}
         onClick={() => navigate(`/tx/${transaction.uid}/refund`)}
         hidden={
-          ![TransactionState.FAILED, TransactionState.AML_PENDING].includes(transaction.state) ||
-          !!transaction.chargebackAmount
+          ![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
+            transaction.state,
+          ) || !!transaction.chargebackAmount
         }
       />
     </StyledVerticalStack>
@@ -250,7 +251,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const selectedIban = useWatch({ control, name: 'iban' });
 
   useEffect(() => {
-    if (id && (!transaction || transaction.state === TransactionState.COMPLETED)) {
+    if (id && !transaction) {
       getTransactionByUid(id)
         .then(setTransaction)
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
@@ -301,12 +302,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       refundBank && setValue('iban', refundBank?.iban);
     }
   }, [ibans, newIban]);
-
-  function fetchRefund(txId: number) {
-    getTransactionRefund(txId)
-      .then(setRefundDetails)
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
-  }
 
   async function onSubmit(data: FormData) {
     if (!transaction) return;
@@ -613,8 +608,11 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               label={translate('general/actions', 'Confirm refund')}
                               onClick={() => navigate(`/tx/${tx.uid}/refund`)}
                               hidden={
-                                ![TransactionState.FAILED, TransactionState.AML_PENDING].includes(tx.state) ||
-                                !!tx.chargebackAmount
+                                ![
+                                  TransactionState.FAILED,
+                                  TransactionState.AML_PENDING,
+                                  TransactionState.KYC_REQUIRED,
+                                ].includes(tx.state) || !!tx.chargebackAmount
                               }
                             />
                             {tx.state === TransactionState.KYC_REQUIRED && (
