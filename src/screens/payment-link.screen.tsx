@@ -543,7 +543,7 @@ export default function PaymentLinkScreen(): JSX.Element {
               </StyledVerticalStack>
             )}
           </>
-          <div className="py-2 w-full leading-none">
+          <div className="p-1 w-full leading-none">
             <StyledLink
               label={translate(
                 'screens/payment',
