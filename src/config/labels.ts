@@ -32,6 +32,7 @@ export const PaymentStateLabels = {
   [TransactionState.COMPLETED]: 'Completed',
   [TransactionState.FAILED]: 'Failed',
   [TransactionState.RETURNED]: 'Returned',
+  [TransactionState.RETURN_PENDING]: 'Return pending',
 };
 
 export function toPaymentStateLabel(state: TransactionState): string {

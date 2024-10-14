@@ -1,8 +1,11 @@
-import { Blockchain, Utils } from '@dfx.swiss/react';
+import { Asset, Blockchain, useAssetContext, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
   Form,
+  IconColor,
+  IconSize,
+  IconVariant,
   SpinnerSize,
   SpinnerVariant,
   StyledCollapsible,
@@ -10,6 +13,8 @@ import {
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledHorizontalStack,
+  StyledIconButton,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -32,7 +37,7 @@ import { useNavigation } from 'src/hooks/navigation.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress, fetchJson, formatLocationAddress, url } from 'src/util/utils';
+import { blankedAddress, fetchJson, formatLocationAddress, formatUnits, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 export interface PaymentStandard {
@@ -106,6 +111,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { toBlockchain } = useWeb3();
   const { width } = useWindowContext();
+  const { assets } = useAssetContext();
 
   const { lightning, setParams } = useAppParams();
   const [urlParams, setUrlParams] = useSearchParams();
@@ -113,6 +119,8 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
   const [paymentStandards, setPaymentStandards] = useState<PaymentStandard[]>();
+  const [assetObject, setAssetObject] = useState<Asset>();
+  const [showContract, setShowContract] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
   const refetchTimeout = useRef<NodeJS.Timeout>();
@@ -187,7 +195,12 @@ export default function PaymentLinkScreen(): JSX.Element {
 
     if (!selectedPaymentStandard && newPaymentStandard) setValue('paymentStandard', newPaymentStandard);
     if (!selectedAsset && newAsset && newAsset !== selectedAsset) setValue('asset', newAsset);
-  }, [payRequest, paymentStandards, selectedPaymentStandard, selectedAsset]);
+    if (newPaymentStandard?.blockchain) {
+      setAssetObject(assets.get(newPaymentStandard?.blockchain)?.find((item) => item.name === newAsset));
+    } else {
+      setAssetObject(undefined);
+    }
+  }, [payRequest, paymentStandards, selectedPaymentStandard, selectedAsset, assets]);
 
   async function fetchPayRequest(url: string): Promise<number | undefined> {
     setError(undefined);
@@ -284,7 +297,10 @@ export default function PaymentLinkScreen(): JSX.Element {
           response && setPaymentIdentifier(response.uri ?? response.pr);
         }
       })
-      .catch((error) => setError(error.message))
+      .catch((error) => {
+        setError(error.message);
+        setPaymentIdentifier(undefined);
+      })
       .finally(() => setIsLoading(false));
   }
 
@@ -409,12 +425,53 @@ export default function PaymentLinkScreen(): JSX.Element {
                             <CopyButton onCopy={() => copy(paymentIdentifier)} />
                           </StyledDataTableRow>
 
+                          {parsedEvmUri.amount && (
+                            <StyledDataTableRow
+                              label={translate('screens/payment', 'Asset amount')}
+                              isLoading={isLoading || !paymentIdentifier}
+                            >
+                              <p>{formatUnits(parsedEvmUri.amount, (assetObject as any).decimals)}</p>
+                              <CopyButton onCopy={() => copy(parsedEvmUri.amount ?? '')} />
+                            </StyledDataTableRow>
+                          )}
+
+                          {assetObject && (
+                            <StyledDataTableRow label={translate('screens/sell', 'Asset')}>
+                              {showContract && assetObject.chainId ? (
+                                <StyledHorizontalStack gap={2}>
+                                  <span>{blankedAddress(assetObject.chainId, { width, scale: 0.75 })}</span>
+                                  <StyledIconButton
+                                    icon={IconVariant.COPY}
+                                    onClick={() => copy(assetObject.chainId ?? '')}
+                                    size={IconSize.SM}
+                                  />
+                                  {assetObject.explorerUrl && (
+                                    <StyledIconButton
+                                      icon={IconVariant.OPEN_IN_NEW}
+                                      onClick={() => window.open(assetObject.explorerUrl, '_blank')}
+                                      size={IconSize.SM}
+                                    />
+                                  )}
+                                </StyledHorizontalStack>
+                              ) : (
+                                <p>{assetObject.name}</p>
+                              )}
+                              {assetObject.chainId && (
+                                <StyledIconButton
+                                  icon={showContract ? IconVariant.INFO : IconVariant.INFO_OUTLINE}
+                                  color={IconColor.DARK_GRAY}
+                                  onClick={() => setShowContract(!showContract)}
+                                />
+                              )}
+                            </StyledDataTableRow>
+                          )}
+
                           {parsedEvmUri.address && (
                             <StyledDataTableRow
                               label={translate('screens/home', 'Address')}
                               isLoading={isLoading || !paymentIdentifier}
                             >
-                              <p>{blankedAddress(parsedEvmUri.address ?? '', { width })}</p>
+                              <p>{blankedAddress(parsedEvmUri.address ?? '', { width, scale: 0.8 })}</p>
                               <CopyButton onCopy={() => copy(parsedEvmUri.address ?? '')} />
                             </StyledDataTableRow>
                           )}
@@ -428,72 +485,8 @@ export default function PaymentLinkScreen(): JSX.Element {
                               <CopyButton onCopy={() => copy(toBlockchain(parsedEvmUri.chainId ?? '') ?? '')} />
                             </StyledDataTableRow>
                           )}
-
-                          {parsedEvmUri.amount && (
-                            <StyledDataTableRow
-                              label={translate('screens/payment', 'Amount')}
-                              isLoading={isLoading || !paymentIdentifier}
-                            >
-                              <p>{parsedEvmUri.amount}</p>
-                              <CopyButton onCopy={() => copy(parsedEvmUri.amount ?? '')} />
-                            </StyledDataTableRow>
-                          )}
-
-                          {parsedEvmUri.tokenContractAddress && (
-                            <StyledDataTableRow
-                              label={translate('screens/payment', 'Token contract')}
-                              isLoading={isLoading || !paymentIdentifier}
-                            >
-                              <p>{blankedAddress(parsedEvmUri.tokenContractAddress ?? '', { width, scale: 0.7 })}</p>
-                              <CopyButton onCopy={() => copy(parsedEvmUri.tokenContractAddress ?? '')} />
-                            </StyledDataTableRow>
-                          )}
                         </>
                       )}
-
-                      {/* <StyledDataTableExpandableRow
-                        label={selectedPaymentStandard?.paymentIdentifierLabel}
-                        isLoading={isLoading || !paymentIdentifier}
-                        expansionItems={
-                          parsedEvmUri && paymentIdentifier
-                            ? ([
-                                {
-                                  label: selectedPaymentStandard?.paymentIdentifierLabel ?? '',
-                                  text: blankedAddress(paymentIdentifier, { width, scale: 0.8 }),
-                                  icon: IconVariant.COPY,
-                                  onClick: () => copy(paymentIdentifier),
-                                },
-                                {
-                                  label: translate('screens/home', 'Address'),
-                                  text: blankedAddress(parsedEvmUri.address ?? '', { width }),
-                                  icon: IconVariant.COPY,
-                                  onClick: () => copy(parsedEvmUri.address ?? ''),
-                                },
-                                {
-                                  label: translate('screens/home', 'Blockchain'),
-                                  text: toBlockchain(parsedEvmUri.chainId ?? ''),
-                                  icon: IconVariant.COPY,
-                                  onClick: () => copy(toBlockchain(parsedEvmUri.chainId ?? '') ?? ''),
-                                },
-                                {
-                                  label: translate('screens/payment', 'Amount'),
-                                  text: parsedEvmUri.amount,
-                                  icon: IconVariant.COPY,
-                                  onClick: () => copy(parsedEvmUri.amount ?? ''),
-                                },
-                                {
-                                  label: translate('screens/payment', 'Token contract'),
-                                  text: blankedAddress(parsedEvmUri.tokenContractAddress ?? '', { width }),
-                                  icon: IconVariant.COPY,
-                                  onClick: () => copy(parsedEvmUri.tokenContractAddress ?? ''),
-                                },
-                              ].filter((item) => item.text) as any[])
-                            : []
-                        }
-                      >
-                        <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
-                        {!parsedEvmUri && <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />}
-                      </StyledDataTableExpandableRow> */}
 
                       <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
                         <p>

@@ -95,3 +95,18 @@ export async function fetchJson(url: string): Promise<any> {
   const response = await fetch(url);
   return response.json();
 }
+
+export function formatUnits(value: string, decimals = 18): string {
+  const bigIntValue = BigInt(value);
+  const multiplier = BigInt(10 ** decimals);
+  const integerPart = bigIntValue / multiplier;
+  const fractionalPart = bigIntValue % multiplier;
+  let fractionalStr = fractionalPart.toString().padStart(decimals, '0');
+  fractionalStr = fractionalStr.replace(/0+$/, '');
+
+  if (fractionalStr === '') {
+    return integerPart.toString();
+  }
+
+  return `${integerPart.toString()}.${fractionalStr}`;
+}
