@@ -11,6 +11,7 @@ import {
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -542,6 +543,17 @@ export default function PaymentLinkScreen(): JSX.Element {
               </StyledVerticalStack>
             )}
           </>
+          <div className="p-1 w-full leading-none">
+            <StyledLink
+              label={translate(
+                'screens/payment',
+                'By using this service, the outstanding claim of the above-mentioned company against DFX is assigned, and the General Terms and Conditions of DFX AG apply.',
+              )}
+              url={process.env.REACT_APP_TNC_URL}
+              small
+              dark
+            />
+          </div>
         </StyledVerticalStack>
       )}
     </Layout>
