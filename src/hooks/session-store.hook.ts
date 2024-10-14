@@ -5,13 +5,11 @@ export interface SessionStoreItem<T> {
 }
 
 export interface SessionStoreInterface {
-  newIban: SessionStoreItem<string>;
   supportIssueUid: SessionStoreItem<string>;
   paymentLinkApiUrl: SessionStoreItem<string>;
 }
 
 enum SessionStoreKey {
-  NEW_IBAN = 'dfx.newIban',
   SUPPORT_ISSUE_UID = 'dfx.supportIssueUid',
   PAYMENT_LINK_API_URL = 'dfx.paymentLinkApiUrl',
 }
@@ -30,11 +28,6 @@ export function useSessionStore(): SessionStoreInterface {
   }
 
   return {
-    newIban: {
-      get: () => get(SessionStoreKey.NEW_IBAN),
-      set: (value: string) => set(SessionStoreKey.NEW_IBAN, value),
-      remove: () => remove(SessionStoreKey.NEW_IBAN),
-    },
     supportIssueUid: {
       get: () => get(SessionStoreKey.SUPPORT_ISSUE_UID),
       set: (value: string) => set(SessionStoreKey.SUPPORT_ISSUE_UID, value),

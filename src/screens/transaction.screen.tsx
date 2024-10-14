@@ -50,7 +50,6 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
 import CoinTracking from 'src/components/cointracking';
 import { useWindowContext } from 'src/contexts/window.context';
-import { useSessionStore } from 'src/hooks/session-store.hook';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, toPaymentStateLabel } from '../config/labels';
@@ -220,13 +219,13 @@ const AddAccount = 'Add bank account';
 
 function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { id } = useParams();
+  const { state } = useLocation();
   const { width } = useWindowContext();
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
   const { getIbans } = useBankAccount();
   const { isLoggedIn } = useSessionContext();
-  const { newIban: newIbanStore } = useSessionStore();
   const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -238,7 +237,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const [ibans, setIbans] = useState<Iban[]>();
   const [addresses, setAddresses] = useState<UserAddress[]>();
 
-  const newIban = newIbanStore.get();
   const isBuy = transaction?.type === TransactionType.BUY;
 
   const {
@@ -246,7 +244,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     handleSubmit,
     setValue,
     formState: { errors, isValid },
-  } = useForm<FormData>({ mode: 'onTouched' });
+  } = useForm<FormData>({ mode: 'onTouched', defaultValues: { iban: state?.newIban } });
 
   const selectedIban = useWatch({ control, name: 'iban' });
 
@@ -283,7 +281,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   }, [transaction]);
 
   useEffect(() => {
-    if (selectedIban === AddAccount) navigate('/bank-accounts', { setRedirect: true });
+    if (selectedIban === AddAccount) navigate('/bank-accounts', { setRedirect: true, state: { refundTxUid: id } });
   }, [selectedIban]);
 
   useEffect(() => {
@@ -295,13 +293,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       if (allowedAddresses?.length === 1) setValue('address', allowedAddresses[0]);
     }
   }, [transaction, user]);
-
-  useEffect(() => {
-    if (ibans && newIban) {
-      const refundBank = ibans.find((b) => b.iban === newIban);
-      refundBank && setValue('iban', refundBank?.iban);
-    }
-  }, [ibans, newIban]);
 
   async function onSubmit(data: FormData) {
     if (!transaction) return;
