@@ -430,7 +430,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                               label={translate('screens/payment', 'Asset amount')}
                               isLoading={isLoading || !paymentIdentifier}
                             >
-                              <p>{formatUnits(parsedEvmUri.amount, (assetObject as any).decimals)}</p>
+                              <p>{formatUnits(parsedEvmUri.amount, assetObject?.decimals)}</p>
                               <CopyButton onCopy={() => copy(parsedEvmUri.amount ?? '')} />
                             </StyledDataTableRow>
                           )}
