@@ -482,6 +482,7 @@
     "The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.": "Il tasso di cambio di {{rate}} {{currency}}/{{asset}} è fisso per {{timer}}, dopo di che sarà ricalcolato.",
     "Please send the specified amount to the address below.": "Si prega di inviare l'importo specificato all'indirizzo sottostante.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
+    "By using this service, the outstanding claim of the above-mentioned company against DFX is assigned, and the General Terms and Conditions of DFX AG apply.": "Con l’utilizzo di questo servizio, il credito insoluto della suddetta azienda nei confronti di DFX viene ceduto, e si applicano i Termini e Condizioni Generali della DFX AG.",
 
     "Payment routes": "Modalità di pagamento",
     "Payment route": "Modalità di pagamento",
