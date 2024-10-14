@@ -427,7 +427,8 @@
     "Cancelled": "Annulé",
     "Expired": "Expiré",
     "Failed": "Échec",
-    "Returned": "Retourné",
+    "Refund pending": "Remboursement en attente",
+    "Refunded": "Remboursé",
     "Unassigned": "Non attribué",
     "LNURL decoded": "LNURL décodé",
 
@@ -556,6 +557,7 @@
     "Accounts already used with DFX": "Comptes déjà utilisés avec DFX",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Pour retrouver votre transaction manquante, veuillez ajouter le compte bancaire à partir duquel vous avez envoyé l'argent.",
     "The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.": "Le compte bancaire a été ajouté, toutes les transactions de cet IBAN seront désormais associées à votre compte. Veuillez vérifier l'aperçu des transactions pour voir si la transaction manquante est maintenant visible.",
+    "The bank account has been added, all transactions from this IBAN will now be associated with your account.": "Le compte bancaire a été ajouté, toutes les transactions de cet IBAN seront désormais associées à votre compte.",
     "Add bank account": "Ajouter un compte bancaire",
     "No IBAN, only account number": "Pas d'IBAN, seulement numéro de compte",
     "This IBAN already exists in another DFX customer account.": "Cet IBAN existe déjà sur un autre compte client de DFX.",
