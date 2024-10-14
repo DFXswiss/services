@@ -3,7 +3,6 @@ import {
   AlignContent,
   CopyButton,
   Form,
-  IconVariant,
   SpinnerSize,
   SpinnerVariant,
   StyledCollapsible,
@@ -400,7 +399,59 @@ export default function PaymentLinkScreen(): JSX.Element {
                         <p>{translate('screens/payment', 'Pending')}</p>
                       </StyledDataTableRow>
 
-                      <StyledDataTableExpandableRow
+                      {parsedEvmUri && paymentIdentifier && (
+                        <>
+                          <StyledDataTableRow
+                            label={selectedPaymentStandard?.paymentIdentifierLabel ?? ''}
+                            isLoading={isLoading || !paymentIdentifier}
+                          >
+                            <p>{blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
+                            <CopyButton onCopy={() => copy(paymentIdentifier)} />
+                          </StyledDataTableRow>
+
+                          {parsedEvmUri.address && (
+                            <StyledDataTableRow
+                              label={translate('screens/home', 'Address')}
+                              isLoading={isLoading || !paymentIdentifier}
+                            >
+                              <p>{blankedAddress(parsedEvmUri.address ?? '', { width })}</p>
+                              <CopyButton onCopy={() => copy(parsedEvmUri.address ?? '')} />
+                            </StyledDataTableRow>
+                          )}
+
+                          {toBlockchain(parsedEvmUri.chainId ?? '') && (
+                            <StyledDataTableRow
+                              label={translate('screens/home', 'Blockchain')}
+                              isLoading={isLoading || !paymentIdentifier}
+                            >
+                              <p>{toBlockchain(parsedEvmUri.chainId ?? '')}</p>
+                              <CopyButton onCopy={() => copy(toBlockchain(parsedEvmUri.chainId ?? '') ?? '')} />
+                            </StyledDataTableRow>
+                          )}
+
+                          {parsedEvmUri.amount && (
+                            <StyledDataTableRow
+                              label={translate('screens/payment', 'Amount')}
+                              isLoading={isLoading || !paymentIdentifier}
+                            >
+                              <p>{parsedEvmUri.amount}</p>
+                              <CopyButton onCopy={() => copy(parsedEvmUri.amount ?? '')} />
+                            </StyledDataTableRow>
+                          )}
+
+                          {parsedEvmUri.tokenContractAddress && (
+                            <StyledDataTableRow
+                              label={translate('screens/payment', 'Token contract')}
+                              isLoading={isLoading || !paymentIdentifier}
+                            >
+                              <p>{blankedAddress(parsedEvmUri.tokenContractAddress ?? '', { width, scale: 0.7 })}</p>
+                              <CopyButton onCopy={() => copy(parsedEvmUri.tokenContractAddress ?? '')} />
+                            </StyledDataTableRow>
+                          )}
+                        </>
+                      )}
+
+                      {/* <StyledDataTableExpandableRow
                         label={selectedPaymentStandard?.paymentIdentifierLabel}
                         isLoading={isLoading || !paymentIdentifier}
                         expansionItems={
@@ -442,7 +493,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                       >
                         <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
                         {!parsedEvmUri && <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />}
-                      </StyledDataTableExpandableRow>
+                      </StyledDataTableExpandableRow> */}
 
                       <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
                         <p>
