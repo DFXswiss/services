@@ -414,23 +414,11 @@ export default function PaymentLinkScreen(): JSX.Element {
                 <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                   {hasQuote(payRequest) && (
                     <>
-                      <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                        <p>{translate('screens/payment', 'Pending')}</p>
-                      </StyledDataTableRow>
-
                       {parsedEvmUri && paymentIdentifier && (
                         <>
-                          <StyledDataTableRow
-                            label={selectedPaymentStandard?.paymentIdentifierLabel ?? ''}
-                            isLoading={isLoading || !paymentIdentifier}
-                          >
-                            <p>{blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
-                            <CopyButton onCopy={() => copy(paymentIdentifier)} />
-                          </StyledDataTableRow>
-
                           {parsedEvmUri.amount && (
                             <StyledDataTableRow
-                              label={translate('screens/payment', 'Asset amount')}
+                              label={translate('screens/payment', 'Amount')}
                               isLoading={isLoading || !paymentIdentifier}
                             >
                               <p>{formatUnits(parsedEvmUri.amount, assetObject?.decimals)}</p>
@@ -490,12 +478,6 @@ export default function PaymentLinkScreen(): JSX.Element {
                           )}
                         </>
                       )}
-
-                      <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                        <p>
-                          {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
-                        </p>
-                      </StyledDataTableRow>
                     </>
                   )}
                   {payRequest.recipient && (
@@ -542,14 +524,15 @@ export default function PaymentLinkScreen(): JSX.Element {
                       <p>{payRequest.recipient.name}</p>
                     </StyledDataTableExpandableRow>
                   )}
-                  {hasQuote(payRequest) && (
-                    <StyledDataTableRow
-                      label={translate('screens/payment', 'Expiry date')}
-                      isLoading={isLoading || !paymentIdentifier}
-                    >
-                      <p>{new Date(payRequest.quote.expiration).toLocaleString()}</p>
-                    </StyledDataTableRow>
-                  )}
+
+                  <StyledDataTableRow
+                    label={selectedPaymentStandard?.paymentIdentifierLabel ?? ''}
+                    isLoading={isLoading || !paymentIdentifier}
+                  >
+                    <p>{blankedAddress(paymentIdentifier ?? '', { width, scale: 0.8 })}</p>
+                    <CopyButton onCopy={() => copy(paymentIdentifier ?? '')} />
+                  </StyledDataTableRow>
+
                   {hasQuote(payRequest) && !payRequest.displayQr && (
                     <StyledDataTableExpandableRow
                       label={translate('screens/payment', 'QR Code')}

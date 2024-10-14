@@ -365,7 +365,6 @@
     "Bank Transaction Details": "Dettagli della transazione bancarian",
     "Recipient": "Destinatario",
     "Amount": "Importo",
-    "Asset amount": "Importo dell'attività",
     "Amount in {{currency}}": "Importo in {{currency}}",
     "Currency": "Valuta",
     "IBAN": "IBAN",

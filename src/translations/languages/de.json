@@ -365,7 +365,6 @@
     "Bank Transaction Details": "Angaben zur Banktransaktion",
     "Recipient": "Empfänger",
     "Amount": "Betrag",
-    "Asset amount": "Asset-Betrag",
     "Amount in {{currency}}": "Betrag in {{currency}}",
     "Currency": "Währung",
     "IBAN": "IBAN",
