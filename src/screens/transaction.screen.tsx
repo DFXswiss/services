@@ -92,11 +92,15 @@ export default function TransactionScreen(): JSX.Element {
     ? translate('screens/payment', 'Cointracking Link (read rights)')
     : translate('screens/payment', 'Transactions');
 
-  const onBack = isTransaction
-    ? () => navigate('/tx')
-    : showCoinTracking
-    ? () => setShowCoinTracking(false)
-    : undefined;
+  const onBack =
+    isTransaction || isRefund
+      ? () => {
+          setError(undefined);
+          navigate('/tx');
+        }
+      : showCoinTracking
+      ? () => setShowCoinTracking(false)
+      : undefined;
 
   return (
     <Layout rootRef={rootRef} title={title} onBack={onBack}>
@@ -147,7 +151,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
 
   useEffect(() => {
     const fetchTransaction = () => {
-      if (id && transaction?.state !== TransactionState.COMPLETED) {
+      if (id && transaction?.state !== TransactionState.COMPLETED && transaction?.state !== TransactionState.RETURNED) {
         getTransactionByUid(id)
           .then(setTransaction)
           .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
