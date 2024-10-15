@@ -105,7 +105,7 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
 
 interface FormData {
   paymentStandard: PaymentStandard;
-  asset: string;
+  asset?: string;
 }
 
 export default function PaymentLinkScreen(): JSX.Element {
@@ -175,35 +175,52 @@ export default function PaymentLinkScreen(): JSX.Element {
   useEffect(() => {
     if (!hasQuote(payRequest)) return;
 
-    const currentPaymentStandard = new URL(sessionApiUrl.current).searchParams.get('standard');
-    const currentMethod = currentCallback.current && new URL(currentCallback.current).searchParams.get('method');
+    const currUrlStandard = new URL(sessionApiUrl.current).searchParams.get('standard');
 
-    const newPaymentStandard =
-      selectedPaymentStandard ?? paymentStandards?.find((item) => item.id === payRequest.standard);
-    const newAsset =
-      (currentMethod === newPaymentStandard?.blockchain ? selectedAsset : undefined) ??
-      payRequest.transferAmounts.find((item) => item.method === selectedPaymentStandard?.blockchain)?.assets?.[0]
-        ?.asset;
-
-    if (!currentPaymentStandard || currentPaymentStandard !== newPaymentStandard?.id) {
+    if (!currUrlStandard || (selectedPaymentStandard && currUrlStandard !== selectedPaymentStandard?.id)) {
       const url = new URL(sessionApiUrl.current);
-      url.searchParams.set('standard', newPaymentStandard?.id ?? payRequest.standard);
+      url.searchParams.set('standard', selectedPaymentStandard?.id ?? payRequest.standard);
+
       setSessionApiUrl(url.toString());
       fetchPayRequest(url.toString());
+
       setPaymentIdentifier(undefined);
       currentCallback.current = undefined;
+      setValue('asset', undefined);
+      setAssetObject(undefined);
     } else {
-      fetchPaymentIdentifier(payRequest, newPaymentStandard?.blockchain, newAsset);
+      fetchPaymentIdentifier(
+        payRequest,
+        selectedPaymentStandard?.blockchain,
+        selectedAsset ??
+          payRequest.transferAmounts.find((item) => item.method === selectedPaymentStandard?.blockchain)?.assets?.[0]
+            ?.asset,
+      );
+    }
+  }, [payRequest, selectedPaymentStandard, selectedAsset]);
+
+  useEffect(() => {
+    if (!hasQuote(payRequest)) return;
+
+    const paymentStandard = paymentStandards?.find((item) => item.id === payRequest.standard);
+    if (!selectedPaymentStandard && paymentStandard) {
+      setValue('paymentStandard', paymentStandard);
     }
 
-    if (!selectedPaymentStandard && newPaymentStandard) setValue('paymentStandard', newPaymentStandard);
-    if (!selectedAsset && newAsset && newAsset !== selectedAsset) setValue('asset', newAsset);
-    if (newPaymentStandard?.blockchain) {
-      setAssetObject(assets.get(newPaymentStandard?.blockchain)?.find((item) => item.name === newAsset));
+    const asset = payRequest.transferAmounts.find((item) => item.method === paymentStandard?.blockchain)?.assets?.[0]
+      ?.asset;
+    if (!selectedAsset && asset) {
+      setValue('asset', asset);
+    }
+  }, [payRequest, paymentStandards, selectedPaymentStandard, selectedAsset]);
+
+  useEffect(() => {
+    if (selectedAsset && selectedPaymentStandard?.blockchain) {
+      setAssetObject(assets.get(selectedPaymentStandard?.blockchain)?.find((item) => item.name === selectedAsset));
     } else {
       setAssetObject(undefined);
     }
-  }, [payRequest, paymentStandards, selectedPaymentStandard, selectedAsset, assets]);
+  }, [selectedAsset, selectedPaymentStandard]);
 
   async function fetchPayRequest(url: string): Promise<number | undefined> {
     setError(undefined);
@@ -263,6 +280,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     switch (payRequest.standard) {
       case PaymentStandardType.OPEN_CRYPTO_PAY:
       case PaymentStandardType.FRANKENCOIN_PAY:
+        currentCallback.current = payRequest.callback;
         setPaymentIdentifier(Lnurl.prependLnurl(Lnurl.encode(simplifyUrl(sessionApiUrl.current))));
         break;
       case PaymentStandardType.LIGHTNING_BOLT11:
@@ -525,25 +543,28 @@ export default function PaymentLinkScreen(): JSX.Element {
                     </StyledDataTableExpandableRow>
                   )}
 
-                  <StyledDataTableRow
-                    label={selectedPaymentStandard?.paymentIdentifierLabel ?? ''}
-                    isLoading={isLoading || !paymentIdentifier}
-                  >
-                    <p>{blankedAddress(paymentIdentifier ?? '', { width, scale: 0.8 })}</p>
-                    <CopyButton onCopy={() => copy(paymentIdentifier ?? '')} />
-                  </StyledDataTableRow>
-
-                  {hasQuote(payRequest) && !payRequest.displayQr && (
-                    <StyledDataTableExpandableRow
-                      label={translate('screens/payment', 'QR Code')}
-                      expansionContent={
-                        <div className="flex w-full items-center justify-center">
-                          <div className="w-48 my-3">
-                            <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
-                          </div>
-                        </div>
-                      }
-                    />
+                  {paymentIdentifier && (
+                    <>
+                      <StyledDataTableRow
+                        label={selectedPaymentStandard?.paymentIdentifierLabel ?? ''}
+                        isLoading={isLoading || !paymentIdentifier}
+                      >
+                        <p>{blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
+                        <CopyButton onCopy={() => copy(paymentIdentifier)} />
+                      </StyledDataTableRow>
+                      {hasQuote(payRequest) && !payRequest.displayQr && (
+                        <StyledDataTableExpandableRow
+                          label={translate('screens/payment', 'QR Code')}
+                          expansionContent={
+                            <div className="flex w-full items-center justify-center">
+                              <div className="w-48 my-3">
+                                <QrBasic data={paymentIdentifier} isLoading={isLoading} />
+                              </div>
+                            </div>
+                          }
+                        />
+                      )}{' '}
+                    </>
                   )}
                 </StyledDataTable>
               </StyledCollapsible>
