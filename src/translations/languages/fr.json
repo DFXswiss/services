@@ -97,7 +97,6 @@
     "Passport": "Passeport",
     "ID card": "Carte d'identité",
     "Driver's license": "Permis de conduire",
-    "Residence permit": "Permis de séjour",
 
     "Authorized to sign individually": "Autorisé à signer individuellement",
     "Authorized to sign jointly": "Autorisé à signer conjointement",
@@ -574,6 +573,7 @@
     "Limit increase request": "Demande d'augmentation de limite",
     "Partnership request": "Demande de partenariat",
     "Notification of changes": "Notification de changements",
+    "Bug report": "Rapport de bug",
 
     "Reason": "Motif",
     "Other": "Autres",
