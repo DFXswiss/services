@@ -94,7 +94,7 @@ export default function KycScreen(): JSX.Element {
   const { translate, changeLanguage, processingKycData } = useSettingsContext();
   const { user, reloadUser } = useUserContext();
   const { getKycInfo, continueKyc, startStep, addTransferClient } = useKyc();
-  const { levelToString, limitToString, nameToString } = useKycHelper();
+  const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
   const { pathname, search } = useLocation();
   const { navigate, goBack } = useNavigation();
   const { logout } = useSessionContext();
@@ -373,8 +373,8 @@ export default function KycScreen(): JSX.Element {
                       ? info.kycSteps.map((step) => {
                           const icon = stepIcon(step);
                           return {
-                            label: nameToString(step.name),
-                            text: icon?.label ?? '',
+                            label: `${nameToString(step.name)}${step.type ? ` (${typeToString(step.type)})` : ''}`,
+                            text: icon?.label || '',
                             icon: icon?.icon,
                           };
                         })

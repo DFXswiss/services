@@ -78,7 +78,7 @@ export default function TfaScreen(): JSX.Element {
 
     verify2fa(kycCode, data.token)
       .then(() => goBack())
-      .catch((e: ApiError) => (e.statusCode === 401 ? setTokenInvalid(true) : setError(e.message ?? 'Unknown error')))
+      .catch((e: ApiError) => (e.statusCode === 403 ? setTokenInvalid(true) : setError(e.message ?? 'Unknown error')))
       .finally(() => setIsSubmitting(false));
   }
 

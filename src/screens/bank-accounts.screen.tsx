@@ -7,8 +7,9 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useLocation } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -18,15 +19,23 @@ import { useNavigation } from '../hooks/navigation.hook';
 export default function BankAccountsScreen(): JSX.Element {
   useUserGuard('/login');
 
-  const { navigate } = useNavigation();
+  const { state } = useLocation();
+  const { navigate, goBack } = useNavigation();
   const { translate, translateError } = useSettingsContext();
   const { addIban } = useBankAccount();
   const { countries } = useUserContext();
+
+  const refundTxUid = useRef<string>();
+  const newIban = useRef<string>();
 
   const [isAdded, setIsAdded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>();
   const [customError, setCustomError] = useState<string>();
+
+  useEffect(() => {
+    refundTxUid.current = state?.refundTxUid;
+  }, []);
 
   // form
   const {
@@ -45,7 +54,10 @@ export default function BankAccountsScreen(): JSX.Element {
     setCustomError(undefined);
 
     addIban(iban)
-      .then(() => setIsAdded(true))
+      .then(() => {
+        newIban.current = iban;
+        setIsAdded(true);
+      })
       .catch((e: ApiError) => {
         if (e.statusCode === 403) {
           setCustomError(translate('screens/iban', 'This IBAN already exists in another DFX customer account.'));
@@ -74,7 +86,9 @@ export default function BankAccountsScreen(): JSX.Element {
   }
 
   function onClose() {
-    navigate('/tx');
+    !refundTxUid.current
+      ? goBack()
+      : navigate(`/tx/${refundTxUid.current}/refund`, { state: { newIban: newIban.current } });
   }
 
   return (
@@ -85,7 +99,9 @@ export default function BankAccountsScreen(): JSX.Element {
             <p className="text-dfxGray-700">
               {translate(
                 'screens/iban',
-                'The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.',
+                refundTxUid.current
+                  ? 'The bank account has been added, all transactions from this IBAN will now be associated with your account.'
+                  : 'The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.',
               )}
             </p>
 

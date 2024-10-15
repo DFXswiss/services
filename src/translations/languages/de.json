@@ -49,7 +49,8 @@
     "Only XML files are allowed": "Nur XML-Dateien sind erlaubt",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Erlaubte Formate: PDF, JPG, JPEG, PNG",
 
-    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support."
+    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.",
+    "invoice": "DFX kennt keinen Empfänger mit dem Namen <strong>{{recipient}}</strong>. Dieser Service kann nur für Empfänger verwendet werden, die ein aktives Konto bei DFX haben und für den Rechnungsservice aktiviert sind. Solltest Du dich als Empfänger bei DFX registrieren wollen, dann melde Dich beim Support unter <link>{{supportLink}}</link>."
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -426,7 +427,8 @@
     "Cancelled": "Abgebrochen",
     "Expired": "Abgelaufen",
     "Failed": "Gescheitert",
-    "Returned": "Zurückgeschickt",
+    "Refund pending": "Rückerstattung ausstehend",
+    "Refunded": "Rückerstattet",
     "Unassigned": "Nicht zugeordnet",
     "LNURL decoded": "LNURL dekodiert",
 
@@ -481,6 +483,7 @@
     "The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.": "Der Wechselkurs von {{rate}} {{currency}}/{{asset}} ist für {{timer}} festgelegt, danach wird er neu berechnet.",
     "Please send the specified amount to the address below.": "Bitte sende den angegebenen Betrag an die unten stehende Adresse.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Bitte beachte, dass Du mit der Nutzung dieses Dienstes automatisch unsere Allgemeinen Geschäftsbedingungen akzeptierst.",
+    "By using this service, the outstanding claim of the above-mentioned company against DFX is assigned, and the General Terms and Conditions of DFX AG apply.": "Mit der Nutzung dieses Dienstes wird die offene Forderung des oben genannten Unternehmen an DFX abgetreten und es gelten  die Allgemeinen Geschäftsbedingungen der DFX AG.",
 
     "Payment routes": "Payment Routen",
     "Payment route": "Payment Route",
@@ -554,6 +557,7 @@
     "Accounts already used with DFX": "Bereits mit DFX verwendete Konten",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Um Deine fehlende Transaktion zu finden, füge bitte das Bankkonto hinzu, von dem Du das Geld gesendet hast.",
     "The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.": "Das Bankkonto wurde hinzugefügt, alle Transaktionen von dieser IBAN werden nun mit Deinem Konto verknüpft. Bitte prüfe in der Transaktionsübersicht, ob Deine fehlende Transaktion jetzt sichtbar ist.",
+    "The bank account has been added, all transactions from this IBAN will now be associated with your account.": "Das Bankkonto wurde hinzugefügt, alle Transaktionen von dieser IBAN werden nun mit Deinem Konto verknüpft.",
     "Add bank account": "Bankverbindung hinzufügen",
     "No IBAN, only account number": "Keine IBAN, nur Kontonummer",
     "This IBAN already exists in another DFX customer account.": "Diese IBAN existiert bereits in einem anderen DFX-Kundenkonto.",
