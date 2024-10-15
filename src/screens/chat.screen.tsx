@@ -29,6 +29,7 @@ import { useParams } from 'react-router-dom';
 import { IssueTypeLabels, toPaymentStateLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { useSessionStore } from 'src/hooks/session-store.hook';
 import { blankedAddress, formatBytes } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { TxInfo } from './transaction.screen';
@@ -39,6 +40,7 @@ export default function ChatScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { supportIssue, isLoading, loadSupportIssue, handleEmojiClick, setSync } = useSupportChatContext();
+  const { supportIssueUid: supportIssueUidStore } = useSessionStore();
   const { id: issueUidParam } = useParams();
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -47,13 +49,13 @@ export default function ChatScreen(): JSX.Element {
   const [replyToMessage, setReplyToMessage] = useState<SupportMessage>();
   const [menuPosition, _setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [sessionUid, setSessionUid] = useState<string>(() => {
-    return sessionStorage.getItem('issue-uid') || '';
+    return supportIssueUidStore.get() || '';
   });
 
   useEffect(() => {
     if (issueUidParam) {
       setSessionUid(issueUidParam);
-      sessionStorage.setItem('issue-uid', issueUidParam);
+      supportIssueUidStore.set(issueUidParam);
       navigate('/support/chat', { replace: true });
     } else if (sessionUid) {
       setSync(true);

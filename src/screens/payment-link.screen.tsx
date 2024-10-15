@@ -11,6 +11,7 @@ import {
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -30,6 +31,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { useSessionStore } from 'src/hooks/session-store.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
@@ -108,6 +110,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { toBlockchain } = useWeb3();
   const { width } = useWindowContext();
 
+  const { paymentLinkApiUrl: paymentLinkApiUrlStore } = useSessionStore();
   const { lightning, setParams } = useAppParams();
   const [urlParams, setUrlParams] = useSearchParams();
 
@@ -118,12 +121,12 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [error, setError] = useState<string>();
   const refetchTimeout = useRef<NodeJS.Timeout>();
 
-  const sessionApiUrl = useRef<string>(sessionStorage.getItem('apiUrl') ?? '');
+  const sessionApiUrl = useRef<string>(paymentLinkApiUrlStore.get() ?? '');
   const currentCallback = useRef<string>();
 
   const setSessionApiUrl = (newUrl: string) => {
     sessionApiUrl.current = newUrl;
-    sessionStorage.setItem('apiUrl', newUrl);
+    paymentLinkApiUrlStore.set(newUrl);
   };
 
   const {
@@ -542,6 +545,17 @@ export default function PaymentLinkScreen(): JSX.Element {
               </StyledVerticalStack>
             )}
           </>
+          <div className="p-1 w-full leading-none">
+            <StyledLink
+              label={translate(
+                'screens/payment',
+                'By using this service, the outstanding claim of the above-mentioned company against DFX is assigned, and the General Terms and Conditions of DFX AG apply.',
+              )}
+              url={process.env.REACT_APP_TNC_URL}
+              small
+              dark
+            />
+          </div>
         </StyledVerticalStack>
       )}
     </Layout>
