@@ -224,7 +224,9 @@ export default function PaymentLinkScreen(): JSX.Element {
         setPaymentStandardSelection(payRequest);
         awaitPayment(payRequest.quote.payment)
           .then((response) => {
-            setPaymentStatus(response.status);
+            if (response.status !== PaymentLinkPaymentStatus.PENDING) {
+              setPaymentStatus(response.status);
+            }
           })
           .catch(() => {
             fetchPayRequest(url);
