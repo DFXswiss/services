@@ -188,7 +188,10 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
         />
       )}
       <StyledButton
-        label={translate('general/actions', 'Confirm refund')}
+        label={translate(
+          'general/actions',
+          transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+        )}
         onClick={() => navigate(`/tx/${transaction.uid}/refund`)}
         hidden={
           ![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
@@ -375,7 +378,10 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
 
           <StyledButton
             type="submit"
-            label={translate('general/actions', 'Confirm refund')}
+            label={translate(
+              'general/actions',
+              transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+            )}
             onClick={handleSubmit(onSubmit)}
             width={StyledButtonWidth.FULL}
             disabled={!isValid}
@@ -600,7 +606,10 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               hidden={!tx.outputTxUrl}
                             />
                             <StyledButton
-                              label={translate('general/actions', 'Confirm refund')}
+                              label={translate(
+                                'general/actions',
+                                tx.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+                              )}
                               onClick={() => navigate(`/tx/${tx.uid}/refund`)}
                               hidden={
                                 ![
