@@ -105,7 +105,7 @@ export const IssueTypeLabels = {
   [SupportIssueType.LIMIT_REQUEST]: 'Limit increase request',
   [SupportIssueType.PARTNERSHIP_REQUEST]: 'Partnership request',
   [SupportIssueType.NOTIFICATION_OF_CHANGES]: 'Notification of changes',
-  [(SupportIssueType as any).BUG_REPORT]: 'Bug report',
+  [SupportIssueType.BUG_REPORT]: 'Bug report',
 };
 
 export const IssueReasonLabels = {
