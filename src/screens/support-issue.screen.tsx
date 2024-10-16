@@ -58,6 +58,7 @@ const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.LIMIT_REQUEST]: [SupportIssueReason.OTHER],
   [SupportIssueType.PARTNERSHIP_REQUEST]: [SupportIssueReason.OTHER],
   [SupportIssueType.NOTIFICATION_OF_CHANGES]: [SupportIssueReason.OTHER],
+  [SupportIssueType.BUG_REPORT]: [SupportIssueReason.OTHER],
 };
 
 interface FormData {

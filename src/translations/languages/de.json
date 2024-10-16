@@ -97,7 +97,6 @@
     "Passport": "Pass",
     "ID card": "ID-Karte",
     "Driver's license": "Führerschein",
-    "Residence permit": "Aufenthaltsbewilligung",
 
     "Authorized to sign individually": "Einzelunterschriftberechtigt",
     "Authorized to sign jointly": "Unterschriftsberechtigt zu zweit",
@@ -574,6 +573,7 @@
     "Limit increase request": "Antrag auf Limit-Erhöhung",
     "Partnership request": "Anfrage zu einer Partnerschaft",
     "Notification of changes": "Mitteilung von Änderungen",
+    "Bug report": "Fehlermeldung",
 
     "Reason": "Grund",
     "Other": "Andere",
