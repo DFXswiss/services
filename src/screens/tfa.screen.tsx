@@ -11,6 +11,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { TfaType } from '@dfx.swiss/react/dist/definitions/kyc';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import QRCode from 'react-qr-code';
@@ -63,7 +64,7 @@ export default function TfaScreen(): JSX.Element {
     return getKycInfo(kycCode)
       .then((i) => {
         setInfo(i);
-        if (!i.twoFactorEnabled) return setup2fa(kycCode).then(setSetupInfo);
+        return setup2fa(kycCode).then(setSetupInfo);
       })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
@@ -86,6 +87,8 @@ export default function TfaScreen(): JSX.Element {
     window.open(url, '_blank', 'noreferrer');
   }
 
+  const isAppType = setupInfo?.type === TfaType.APP;
+
   return (
     <Layout title={translate('screens/2fa', '2FA')}>
       {isLoading ? (
@@ -102,7 +105,7 @@ export default function TfaScreen(): JSX.Element {
             <StyledVerticalStack gap={10} full>
               {info && (
                 <>
-                  {setupInfo && (
+                  {isAppType && (
                     <>
                       {/* step 1 */}
                       <StyledVerticalStack gap={4} full>
@@ -181,20 +184,25 @@ export default function TfaScreen(): JSX.Element {
                   {/* step 3 */}
                   <StyledVerticalStack gap={4} full>
                     <h2 className="text-dfxGray-700">
-                      {setupInfo && (
+                      {isAppType && (
                         <span className="text-dfxGray-800">
                           {translate('screens/2fa', 'Step {{step}}', { step: 3 })}
                           {': '}
                         </span>
                       )}
                       <span className="font-medium">
-                        {translate('screens/2fa', 'Enter the 6-digit dynamic code from your authenticator app')}
+                        {translate(
+                          'screens/2fa',
+                          isAppType
+                            ? 'Enter the 6-digit dynamic code from your authenticator app'
+                            : 'Enter the 6-digit code from your email',
+                        )}
                       </span>
                     </h2>
                     <StyledInput
                       name="token"
                       type="number"
-                      placeholder={translate('screens/2fa', 'Authenticator code')}
+                      placeholder={translate('screens/2fa', isAppType ? 'Authenticator code' : 'Email code')}
                       forceError={tokenInvalid}
                       forceErrorMessage={tokenInvalid ? translate('screens/2fa', 'Invalid or expired code') : undefined}
                       full
