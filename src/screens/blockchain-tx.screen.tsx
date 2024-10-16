@@ -32,8 +32,7 @@ const availableBlockchains = [
   Blockchain.BASE,
 ];
 
-const privateKeysMap = JSON.parse(process.env.REACT_APP_PRIVATE_KEYS_MAP || '{}');
-const availableSigners = Object.keys(privateKeysMap);
+const availableSigners = ['0x9229e0179a436CD0b77F731992307AC765Bc4b17'];
 
 interface FormData {
   blockchain: Blockchain;
