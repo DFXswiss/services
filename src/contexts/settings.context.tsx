@@ -25,6 +25,7 @@ const ValidationErrors: Record<string, string> = {
   iban_blocked: 'IBAN not allowed',
   iban_country_blocked: 'IBAN country not allowed',
   xml_file: 'Only XML files are allowed',
+  json_file: 'Only JSON files are allowed',
   file_type: 'Allowed formats: PDF, JPG, JPEG, PNG',
 };
 
