@@ -185,7 +185,9 @@
     "Click + in Google Authenticator to add a new account. You can scan the QR code or enter the secret provided to create your account in Google Authenticator.": "Fare clic su + in Google Authenticator per aggiungere un nuovo account. È possibile scansionare il codice QR o inserire il segreto fornito per creare il proprio account in Google Authenticator.",
     "Secret": "Segreto",
     "Enter the 6-digit dynamic code from your authenticator app": "Immettere il codice dinamico a 6 cifre dall'app Authenticator.",
+    "Enter the 6-digit code from your email": "Immettere il codice a 6 cifre dall'e-mail",
     "Authenticator code": "Codice autenticatore",
+    "Email code": "Codice e-mail",
     "Invalid or expired code": "Codice non valido o scaduto",
     "Delete 2FA method": "Eliminare il metodo 2FA",
     "Are you sure you want to delete your 2FA method?": "Siete sicuri di voler eliminare il metodo 2FA?"
