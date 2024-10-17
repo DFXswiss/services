@@ -48,6 +48,7 @@
     "IBAN not allowed": "IBAN non consentito",
     "IBAN country not allowed": "Codice paese IBAN non consentito",
     "Only XML files are allowed": "Sono consentiti solo file XML",
+    "Only JSON files are allowed": "Sono consentiti solo file JSON",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Formati consentiti: PDF, JPG, JPEG, PNG",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto.",
@@ -624,6 +625,14 @@
 
     "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "I tuoi dati rimarranno sui nostri server temporaneamente prima della cancellazione definitiva. Se hai domande, contatta il nostro team di supporto."
+  },
+  "screens/blockchain": {
+    "Transaction signing": "Firma della transazione",
+    "Transaction hash": "Hash della transazione",
+    "Transaction (Input data)": "Transazione (Dati di input)",
+    "Sign transaction": "Firma la transazione",
+    "Signer": "Firmatario",
+    "Contract address": "Indirizzo del contratto"
   },
   "navigation/links": {
     "Buy": "Comprare",

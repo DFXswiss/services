@@ -48,6 +48,7 @@
     "IBAN not allowed": "IBAN nicht erlaubt",
     "IBAN country not allowed": "IBAN Land nicht erlaubt",
     "Only XML files are allowed": "Nur XML-Dateien sind erlaubt",
+    "Only JSON files are allowed": "Nur JSON-Dateien sind erlaubt",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Erlaubte Formate: PDF, JPG, JPEG, PNG",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.",
@@ -510,7 +511,7 @@
     "Deactivate": "Deaktivieren",
     "Expires at": "Gültig bis",
 
-    "Token contract": "Tokenvertrag",
+    "Token contract": "Token-Contract",
 
     "Create Invoice": "Rechnung erstellen",
     "Invoice ID": "Rechnungs-ID",
@@ -624,6 +625,14 @@
 
     "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team."
+  },
+  "screens/blockchain": {
+    "Transaction signing": "Transaktionssignierung",
+    "Transaction hash": "Transaktions-Hash",
+    "Transaction (Input data)": "Transaktion (Eingabedaten)",
+    "Sign transaction": "Transaktion signieren",
+    "Signer": "Signierer",
+    "Contract address": "Contract-Adresse"
   },
   "navigation/links": {
     "Buy": "Kaufen",
