@@ -328,12 +328,12 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'Transaction amount')}>
           <p>
-            {transaction?.inputAmount} {transaction?.inputAsset}
+            {transaction.inputAmount} {transaction.inputAsset}
           </p>
         </StyledDataTableRow>
         <StyledDataTableRow label={translate('screens/payment', 'Fee')}>
           <p>
-            {refundDetails.feeAmount} {transaction?.inputAsset}
+            {refundDetails.feeAmount} {refundDetails.refundAsset.name}
           </p>
         </StyledDataTableRow>
         <StyledDataTableRow
@@ -341,7 +341,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
           infoText={translate('screens/payment', 'Refund amount is the transaction amount minus the fee.')}
         >
           <p>
-            {transaction?.inputAmount && transaction?.inputAmount - refundDetails.feeAmount} {transaction?.inputAsset}
+            {refundDetails.refundAmount} {refundDetails.refundAsset.name}
           </p>
         </StyledDataTableRow>
         {refundDetails.refundTarget && (
