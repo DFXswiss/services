@@ -1,4 +1,4 @@
-import { ApiError, KycInfo, TfaSetup, Utils, Validations, useKyc, useUserContext } from '@dfx.swiss/react';
+import { ApiError, TfaSetup, Utils, Validations, useKyc, useUserContext } from '@dfx.swiss/react';
 import {
   CopyButton,
   Form,
@@ -11,7 +11,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { TfaType } from '@dfx.swiss/react/dist/definitions/kyc';
+import { TfaLevel, TfaType } from '@dfx.swiss/react/dist/definitions/kyc';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import QRCode from 'react-qr-code';
@@ -26,12 +26,11 @@ import { useNavigation } from '../hooks/navigation.hook';
 export default function TfaScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { user } = useUserContext();
-  const { getKycInfo, setup2fa, verify2fa } = useKyc();
-  const { search } = useLocation();
+  const { setup2fa, verify2fa } = useKyc();
+  const { search, state } = useLocation();
   const { copy } = useClipboard();
   const { goBack } = useNavigation();
 
-  const [info, setInfo] = useState<KycInfo>();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>();
@@ -41,6 +40,7 @@ export default function TfaScreen(): JSX.Element {
 
   const params = new URLSearchParams(search);
   const kycCode = params.get('code') ?? user?.kyc.hash;
+  const tfaLevel: TfaLevel | undefined = state?.level;
 
   useUserGuard('/login', !kycCode);
 
@@ -61,12 +61,13 @@ export default function TfaScreen(): JSX.Element {
   async function load(): Promise<void> {
     if (!kycCode) return;
 
-    return getKycInfo(kycCode)
-      .then((i) => {
-        setInfo(i);
-        return setup2fa(kycCode).then(setSetupInfo);
+    return setup2fa(kycCode, tfaLevel)
+      .then(setSetupInfo)
+      .catch((error: ApiError) => {
+        if (error.message !== '2FA already set up') {
+          setError(error.message ?? 'Unknown error');
+        }
       })
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
   }
 
@@ -87,8 +88,6 @@ export default function TfaScreen(): JSX.Element {
     window.open(url, '_blank', 'noreferrer');
   }
 
-  const isAppType = setupInfo?.type === TfaType.APP;
-
   return (
     <Layout title={translate('screens/2fa', '2FA')}>
       {isLoading ? (
@@ -103,124 +102,121 @@ export default function TfaScreen(): JSX.Element {
         >
           <div className="text-left">
             <StyledVerticalStack gap={10} full>
-              {info && (
-                <>
-                  {isAppType && (
-                    <>
-                      {/* step 1 */}
-                      <StyledVerticalStack gap={4} full>
-                        <h2 className="text-dfxGray-700">
-                          <span className="text-dfxGray-800">
-                            {translate('screens/2fa', 'Step {{step}}', { step: 1 })}
-                            {': '}
-                          </span>
-                          <span className="font-medium">
-                            {translate(
-                              'screens/2fa',
-                              'Install Google Authenticator or another 2FA app on your smartphone',
-                            )}
-                          </span>
-                        </h2>
-                        <div className="flex flex-row flex-wrap gap-2">
-                          <StyledButton
-                            icon={IconVariant.APPLE}
-                            label="App Store"
-                            color={StyledButtonColor.STURDY_WHITE}
-                            width={StyledButtonWidth.MIN}
-                            onClick={() =>
-                              openAppStore('https://apps.apple.com/de/app/google-authenticator/id388497605')
-                            }
-                            deactivateMargin
-                          />
-                          <StyledButton
-                            icon={IconVariant.GOOGLE_PLAY}
-                            label="Google Play"
-                            color={StyledButtonColor.STURDY_WHITE}
-                            width={StyledButtonWidth.MIN}
-                            onClick={() =>
-                              openAppStore(
-                                'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2',
-                              )
-                            }
-                            deactivateMargin
-                          />
-                        </div>
-                      </StyledVerticalStack>
-
-                      {/* step 2 */}
-                      <StyledVerticalStack gap={4} full>
-                        <h2 className="text-dfxGray-700">
-                          <span className="text-dfxGray-800">
-                            {translate('screens/2fa', 'Step {{step}}', { step: 2 })}
-                            {': '}
-                          </span>
-                          <span className="font-medium">
-                            {translate('screens/2fa', 'Set up the 2FA authenticator')}
-                          </span>
-                        </h2>
-                        <p className="text-dfxGray-700">
-                          {translate(
-                            'screens/2fa',
-                            'Click + in Google Authenticator to add a new account. You can scan the QR code or enter the secret provided to create your account in Google Authenticator.',
-                          )}
-                        </p>
-                        <QRCode
-                          className="mx-auto h-auto w-full max-w-[15rem]"
-                          value={setupInfo.uri}
-                          size={128}
-                          fgColor={'#072440'}
-                        />
-                        <StyledVerticalStack full center>
-                          <p className="text-dfxGray-800 italic">{translate('screens/2fa', 'Secret')}:</p>
-                          <div className="flex flex-row items-center gap-2 px-4">
-                            <p className="text-dfxGray-800 italic break-all">{setupInfo.secret}</p>
-                            <CopyButton onCopy={() => copy(setupInfo.secret)} />
-                          </div>
-                        </StyledVerticalStack>
-                      </StyledVerticalStack>
-                    </>
-                  )}
-
-                  {/* step 3 */}
-                  <StyledVerticalStack gap={4} full>
-                    <h2 className="text-dfxGray-700">
-                      {isAppType && (
+              <>
+                {setupInfo?.uri && (
+                  <>
+                    {/* step 1 */}
+                    <StyledVerticalStack gap={4} full>
+                      <h2 className="text-dfxGray-700">
                         <span className="text-dfxGray-800">
-                          {translate('screens/2fa', 'Step {{step}}', { step: 3 })}
+                          {translate('screens/2fa', 'Step {{step}}', { step: 1 })}
                           {': '}
                         </span>
-                      )}
-                      <span className="font-medium">
+                        <span className="font-medium">
+                          {translate(
+                            'screens/2fa',
+                            'Install Google Authenticator or another 2FA app on your smartphone',
+                          )}
+                        </span>
+                      </h2>
+                      <div className="flex flex-row flex-wrap gap-2">
+                        <StyledButton
+                          icon={IconVariant.APPLE}
+                          label="App Store"
+                          color={StyledButtonColor.STURDY_WHITE}
+                          width={StyledButtonWidth.MIN}
+                          onClick={() => openAppStore('https://apps.apple.com/de/app/google-authenticator/id388497605')}
+                          deactivateMargin
+                        />
+                        <StyledButton
+                          icon={IconVariant.GOOGLE_PLAY}
+                          label="Google Play"
+                          color={StyledButtonColor.STURDY_WHITE}
+                          width={StyledButtonWidth.MIN}
+                          onClick={() =>
+                            openAppStore(
+                              'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2',
+                            )
+                          }
+                          deactivateMargin
+                        />
+                      </div>
+                    </StyledVerticalStack>
+
+                    {/* step 2 */}
+                    <StyledVerticalStack gap={4} full>
+                      <h2 className="text-dfxGray-700">
+                        <span className="text-dfxGray-800">
+                          {translate('screens/2fa', 'Step {{step}}', { step: 2 })}
+                          {': '}
+                        </span>
+                        <span className="font-medium">{translate('screens/2fa', 'Set up the 2FA authenticator')}</span>
+                      </h2>
+                      <p className="text-dfxGray-700">
                         {translate(
                           'screens/2fa',
-                          isAppType
-                            ? 'Enter the 6-digit dynamic code from your authenticator app'
-                            : 'Enter the 6-digit code from your email',
+                          'Click + in Google Authenticator to add a new account. You can scan the QR code or enter the secret provided to create your account in Google Authenticator.',
                         )}
-                      </span>
-                    </h2>
-                    <StyledInput
-                      name="token"
-                      type="number"
-                      placeholder={translate('screens/2fa', isAppType ? 'Authenticator code' : 'Email code')}
-                      forceError={tokenInvalid}
-                      forceErrorMessage={tokenInvalid ? translate('screens/2fa', 'Invalid or expired code') : undefined}
-                      full
-                    />
-
-                    <StyledVerticalStack gap={2} full center>
-                      <StyledButton
-                        type="submit"
-                        width={StyledButtonWidth.MIN}
-                        label={translate('general/actions', 'Next')}
-                        onClick={handleSubmit(onSubmit)}
-                        isLoading={isSubmitting}
-                        disabled={!isValid}
+                      </p>
+                      <QRCode
+                        className="mx-auto h-auto w-full max-w-[15rem]"
+                        value={setupInfo.uri}
+                        size={128}
+                        fgColor={'#072440'}
                       />
+                      <StyledVerticalStack full center>
+                        <p className="text-dfxGray-800 italic">{translate('screens/2fa', 'Secret')}:</p>
+                        <div className="flex flex-row items-center gap-2 px-4">
+                          <p className="text-dfxGray-800 italic break-all">{setupInfo.secret}</p>
+                          <CopyButton onCopy={() => copy(setupInfo.secret)} />
+                        </div>
+                      </StyledVerticalStack>
                     </StyledVerticalStack>
+                  </>
+                )}
+
+                <StyledVerticalStack gap={4} full>
+                  <h2 className="text-dfxGray-700">
+                    {/* step 3 */}
+                    {setupInfo?.uri && (
+                      <span className="text-dfxGray-800">
+                        {translate('screens/2fa', 'Step {{step}}', { step: 3 })}
+                        {': '}
+                      </span>
+                    )}
+                    <span className="font-medium">
+                      {translate(
+                        'screens/2fa',
+                        setupInfo?.type === TfaType.MAIL
+                          ? 'Enter the 6-digit code from your email'
+                          : 'Enter the 6-digit dynamic code from your authenticator app',
+                      )}
+                    </span>
+                  </h2>
+                  <StyledInput
+                    name="token"
+                    type="number"
+                    placeholder={translate(
+                      'screens/2fa',
+                      setupInfo?.type === TfaType.MAIL ? 'Email code' : 'Authenticator code',
+                    )}
+                    forceError={tokenInvalid}
+                    forceErrorMessage={tokenInvalid ? translate('screens/2fa', 'Invalid or expired code') : undefined}
+                    full
+                  />
+
+                  <StyledVerticalStack gap={2} full center>
+                    <StyledButton
+                      type="submit"
+                      width={StyledButtonWidth.MIN}
+                      label={translate('general/actions', 'Next')}
+                      onClick={handleSubmit(onSubmit)}
+                      isLoading={isSubmitting}
+                      disabled={!isValid}
+                    />
                   </StyledVerticalStack>
-                </>
-              )}
+                </StyledVerticalStack>
+              </>
               {error && (
                 <StyledVerticalStack full center>
                   <ErrorHint message={error} />
