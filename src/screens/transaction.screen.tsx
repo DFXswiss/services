@@ -164,10 +164,9 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
     return () => clearInterval(interval);
   }, [id, transaction?.state]);
 
-  function assignTransaction() {
+  function handleTransactionNavigation(path: string) {
     if (!transaction) return;
 
-    const path = `/tx/${transaction.id}/assign`;
     if (isLoggedIn) {
       navigate(path);
     } else {
@@ -183,7 +182,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
       {transaction.state === TransactionState.UNASSIGNED && (
         <StyledButton
           label={translate('screens/payment', 'Assign transaction')}
-          onClick={assignTransaction}
+          onClick={() => handleTransactionNavigation(`/tx/${transaction.id}/assign`)}
           width={StyledButtonWidth.FULL}
         />
       )}
@@ -192,7 +191,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
           'general/actions',
           transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
         )}
-        onClick={() => navigate(`/tx/${transaction.uid}/refund`)}
+        onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
         hidden={
           ![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
             transaction.state,
@@ -225,6 +224,8 @@ interface TransactionRefundProps {
 const AddAccount = 'Add bank account';
 
 function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
+  useUserGuard('/login');
+
   const { id } = useParams();
   const { state } = useLocation();
   const { width } = useWindowContext();
@@ -256,12 +257,12 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const selectedIban = useWatch({ control, name: 'iban' });
 
   useEffect(() => {
-    if (id && !transaction) {
+    if (id && !transaction && isLoggedIn) {
       getTransactionByUid(id)
         .then(setTransaction)
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
     }
-  }, [id, transaction]);
+  }, [id, transaction, isLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn)
@@ -372,6 +373,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
                 item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
               }
               placeholder={translate('general/actions', 'Select...')}
+              forceEnable
               full
             />
           )}
