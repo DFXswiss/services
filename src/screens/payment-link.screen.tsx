@@ -3,6 +3,7 @@ import {
   AlignContent,
   CopyButton,
   Form,
+  IconColor,
   IconVariant,
   SpinnerSize,
   SpinnerVariant,
@@ -11,6 +12,8 @@ import {
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledInfoText,
+  StyledInfoTextSize,
   StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
@@ -32,6 +35,7 @@ import {
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
+import { useCountdown } from 'src/hooks/countdown.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useSessionStore } from 'src/hooks/session-store.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
@@ -124,6 +128,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { toBlockchain } = useWeb3();
   const { width } = useWindowContext();
   const { call } = useApi();
+  const { timer, remainingSeconds, startTimer } = useCountdown();
 
   const { paymentLinkApiUrl: paymentLinkApiUrlStore } = useSessionStore();
   const { lightning, setParams } = useAppParams();
@@ -238,6 +243,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 
       if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
       refetchTimeout.current = setTimeout(() => fetchPayRequest(url), refetchDelay);
+      startTimer(new Date(payRequest.quote.expiration));
     } catch (error: any) {
       setError(error.message ?? 'Unknown Error');
     }
@@ -431,130 +437,161 @@ export default function PaymentLinkScreen(): JSX.Element {
                   }
                   isExpanded={selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS}
                 >
-                  <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                    {hasQuote(payRequest) && (
-                      <>
-                        <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                          <p>{translate('screens/payment', 'Pending')}</p>
-                        </StyledDataTableRow>
+                  <StyledVerticalStack full gap={4} className="text-left">
+                    <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                      {hasQuote(payRequest) && (
+                        <>
+                          <StyledDataTableRow label={translate('screens/payment', 'State')}>
+                            <p>{translate('screens/payment', 'Pending')}</p>
+                          </StyledDataTableRow>
 
+                          <StyledDataTableExpandableRow
+                            label={selectedPaymentStandard?.paymentIdentifierLabel}
+                            isLoading={isLoading || !paymentIdentifier}
+                            expansionItems={
+                              parsedEvmUri && paymentIdentifier
+                                ? ([
+                                    {
+                                      label: selectedPaymentStandard?.paymentIdentifierLabel ?? '',
+                                      text: blankedAddress(paymentIdentifier, { width, scale: 0.8 }),
+                                      icon: IconVariant.COPY,
+                                      onClick: () => copy(paymentIdentifier),
+                                    },
+                                    {
+                                      label: translate('screens/home', 'Address'),
+                                      text: blankedAddress(parsedEvmUri.address ?? '', { width }),
+                                      icon: IconVariant.COPY,
+                                      onClick: () => copy(parsedEvmUri.address ?? ''),
+                                    },
+                                    {
+                                      label: translate('screens/home', 'Blockchain'),
+                                      text: toBlockchain(parsedEvmUri.chainId ?? ''),
+                                      icon: IconVariant.COPY,
+                                      onClick: () => copy(toBlockchain(parsedEvmUri.chainId ?? '') ?? ''),
+                                    },
+                                    {
+                                      label: translate('screens/payment', 'Amount'),
+                                      text: parsedEvmUri.amount,
+                                      icon: IconVariant.COPY,
+                                      onClick: () => copy(parsedEvmUri.amount ?? ''),
+                                    },
+                                    {
+                                      label: translate('screens/payment', 'Token contract'),
+                                      text: blankedAddress(parsedEvmUri.tokenContractAddress ?? '', { width }),
+                                      icon: IconVariant.COPY,
+                                      onClick: () => copy(parsedEvmUri.tokenContractAddress ?? ''),
+                                    },
+                                  ].filter((item) => item.text) as any[])
+                                : []
+                            }
+                          >
+                            <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
+                            {!parsedEvmUri && (
+                              <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />
+                            )}
+                          </StyledDataTableExpandableRow>
+
+                          <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
+                            <p>
+                              {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
+                            </p>
+                          </StyledDataTableRow>
+                        </>
+                      )}
+                      {payRequest.recipient && (
                         <StyledDataTableExpandableRow
-                          label={selectedPaymentStandard?.paymentIdentifierLabel}
-                          isLoading={isLoading || !paymentIdentifier}
+                          label={translate('screens/payment', 'Recipient')}
                           expansionItems={
-                            parsedEvmUri && paymentIdentifier
-                              ? ([
-                                  {
-                                    label: selectedPaymentStandard?.paymentIdentifierLabel ?? '',
-                                    text: blankedAddress(paymentIdentifier, { width, scale: 0.8 }),
-                                    icon: IconVariant.COPY,
-                                    onClick: () => copy(paymentIdentifier),
-                                  },
-                                  {
-                                    label: translate('screens/home', 'Address'),
-                                    text: blankedAddress(parsedEvmUri.address ?? '', { width }),
-                                    icon: IconVariant.COPY,
-                                    onClick: () => copy(parsedEvmUri.address ?? ''),
-                                  },
-                                  {
-                                    label: translate('screens/home', 'Blockchain'),
-                                    text: toBlockchain(parsedEvmUri.chainId ?? ''),
-                                    icon: IconVariant.COPY,
-                                    onClick: () => copy(toBlockchain(parsedEvmUri.chainId ?? '') ?? ''),
-                                  },
-                                  {
-                                    label: translate('screens/payment', 'Amount'),
-                                    text: parsedEvmUri.amount,
-                                    icon: IconVariant.COPY,
-                                    onClick: () => copy(parsedEvmUri.amount ?? ''),
-                                  },
-                                  {
-                                    label: translate('screens/payment', 'Token contract'),
-                                    text: blankedAddress(parsedEvmUri.tokenContractAddress ?? '', { width }),
-                                    icon: IconVariant.COPY,
-                                    onClick: () => copy(parsedEvmUri.tokenContractAddress ?? ''),
-                                  },
-                                ].filter((item) => item.text) as any[])
-                              : []
+                            [
+                              {
+                                label: translate('screens/support', 'Name'),
+                                text: payRequest.recipient.name,
+                              },
+                              {
+                                label: translate('screens/home', 'Address'),
+                                text:
+                                  formatLocationAddress({ ...payRequest.recipient.address, country: undefined }) ?? '',
+                              },
+                              {
+                                label: translate('screens/home', 'Country'),
+                                text: payRequest.recipient.address?.country ?? '',
+                              },
+                              {
+                                label: translate('screens/kyc', 'Phone number'),
+                                text: payRequest.recipient.phone,
+                              },
+                              {
+                                label: translate('screens/kyc', 'Email address'),
+                                text: payRequest.recipient.mail,
+                              },
+                              {
+                                label: translate('screens/kyc', 'Website'),
+                                text: payRequest.recipient.website,
+                                onClick: () => {
+                                  const url =
+                                    payRequest.recipient.website?.startsWith('http://') ||
+                                    payRequest.recipient.website?.startsWith('https://')
+                                      ? payRequest.recipient.website
+                                      : `https://${payRequest.recipient.website}`;
+
+                                  window.open(url, '_blank');
+                                },
+                              },
+                            ].filter((item) => item.text) as any
                           }
                         >
-                          <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
-                          {!parsedEvmUri && <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />}
+                          <p>{payRequest.recipient.name}</p>
                         </StyledDataTableExpandableRow>
-
-                        <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                          <p>
-                            {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
-                          </p>
+                      )}
+                      {hasQuote(payRequest) && (
+                        <StyledDataTableRow
+                          label={translate('screens/payment', 'Expiry date')}
+                          isLoading={isLoading || !paymentIdentifier}
+                        >
+                          <p>{new Date(payRequest.quote.expiration).toLocaleString()}</p>
                         </StyledDataTableRow>
-                      </>
-                    )}
-                    {payRequest.recipient && (
-                      <StyledDataTableExpandableRow
-                        label={translate('screens/payment', 'Recipient')}
-                        expansionItems={
-                          [
-                            {
-                              label: translate('screens/support', 'Name'),
-                              text: payRequest.recipient.name,
-                            },
-                            {
-                              label: translate('screens/home', 'Address'),
-                              text:
-                                formatLocationAddress({ ...payRequest.recipient.address, country: undefined }) ?? '',
-                            },
-                            {
-                              label: translate('screens/home', 'Country'),
-                              text: payRequest.recipient.address?.country ?? '',
-                            },
-                            {
-                              label: translate('screens/kyc', 'Phone number'),
-                              text: payRequest.recipient.phone,
-                            },
-                            {
-                              label: translate('screens/kyc', 'Email address'),
-                              text: payRequest.recipient.mail,
-                            },
-                            {
-                              label: translate('screens/kyc', 'Website'),
-                              text: payRequest.recipient.website,
-                              onClick: () => {
-                                const url =
-                                  payRequest.recipient.website?.startsWith('http://') ||
-                                  payRequest.recipient.website?.startsWith('https://')
-                                    ? payRequest.recipient.website
-                                    : `https://${payRequest.recipient.website}`;
-
-                                window.open(url, '_blank');
-                              },
-                            },
-                          ].filter((item) => item.text) as any
-                        }
-                      >
-                        <p>{payRequest.recipient.name}</p>
-                      </StyledDataTableExpandableRow>
-                    )}
-                    {hasQuote(payRequest) && (
-                      <StyledDataTableRow
-                        label={translate('screens/payment', 'Expiry date')}
-                        isLoading={isLoading || !paymentIdentifier}
-                      >
-                        <p>{new Date(payRequest.quote.expiration).toLocaleString()}</p>
-                      </StyledDataTableRow>
-                    )}
-                    {hasQuote(payRequest) && !payRequest.displayQr && (
-                      <StyledDataTableExpandableRow
-                        label={translate('screens/payment', 'QR Code')}
-                        expansionContent={
-                          <div className="flex w-full items-center justify-center">
-                            <div className="w-48 my-3">
-                              <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
+                      )}
+                      {hasQuote(payRequest) && !payRequest.displayQr && (
+                        <StyledDataTableExpandableRow
+                          label={translate('screens/payment', 'QR Code')}
+                          expansionContent={
+                            <div className="flex w-full items-center justify-center">
+                              <div className="w-48 my-3">
+                                <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
+                              </div>
                             </div>
+                          }
+                        />
+                      )}
+                    </StyledDataTable>
+                    {hasQuote(payRequest) && selectedPaymentStandard?.blockchain && (
+                      <StyledInfoText textSize={StyledInfoTextSize.XS} iconColor={IconColor.GRAY} discreet>
+                        {timer.minutes > 0 || timer.seconds > 0 ? (
+                          <>
+                            {translate(
+                              'screens/payment',
+                              'The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.',
+                              {
+                                rate: Utils.formatAmount(
+                                  payRequest.requestedAmount.amount /
+                                    (payRequest.transferAmounts
+                                      .find((item) => item.method === selectedPaymentStandard?.blockchain)
+                                      ?.assets.find((item) => item.asset === selectedAsset)?.amount ?? 0),
+                                ),
+                                currency: payRequest.requestedAmount.asset,
+                                asset: selectedAsset,
+                                timer: `${timer.minutes}m ${timer.seconds}s`,
+                              },
+                            )}
+                          </>
+                        ) : (
+                          <div className="mt-1">
+                            <StyledLoadingSpinner size={SpinnerSize.SM} variant={SpinnerVariant.LIGHT_MODE} />
                           </div>
-                        }
-                      />
+                        )}
+                      </StyledInfoText>
                     )}
-                  </StyledDataTable>
+                  </StyledVerticalStack>
                 </StyledCollapsible>
               )}
               {[PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
