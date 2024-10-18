@@ -612,6 +612,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                 'general/actions',
                                 tx.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
                               )}
+                              color={StyledButtonColor.STURDY_WHITE}
                               onClick={() => navigate(`/tx/${tx.uid}/refund`)}
                               hidden={
                                 ![
