@@ -56,13 +56,13 @@ export default function SupportScreen(): JSX.Element {
             icon={<FaTelegram className="h-auto w-6" />}
           />
           <StyledButtonTile
-            title={translate('screens/support', 'Submit Ticket')}
+            title={translate('screens/support', 'Support ticket')}
             description={translate(
               'screens/support',
               'If you have a specific question or problem, you can submit a ticket here.',
             )}
-            onClick={() => navigate('/support/issue')}
-            buttonLabel={translate('screens/support', 'Submit Ticket')}
+            onClick={() => navigate('/support/tickets')}
+            buttonLabel={translate('screens/support', 'View tickets')}
             icon={<MdEditSquare className="h-auto w-6" />}
           />
         </StyledVerticalStack>

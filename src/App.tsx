@@ -30,6 +30,7 @@ const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
 const InvoiceScreen = lazy(() => import('./screens/invoice.screen'));
 const SellInfoScreen = lazy(() => import('./screens/sell-info.screen'));
 const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
+const SupportTicketsScreen = lazy(() => import('./screens/support-tickets.screen'));
 const SupportScreen = lazy(() => import('./screens/support.screen'));
 const ChatScreen = lazy(() => import('./screens/chat.screen'));
 const TfaScreen = lazy(() => import('./screens/tfa.screen'));
@@ -177,6 +178,10 @@ export const Routes = [
       </SupportChatContextProvider>
     ),
     children: [
+      {
+        path: 'tickets',
+        element: withSuspense(<SupportTicketsScreen />),
+      },
       {
         path: 'issue',
         element: withSuspense(<SupportIssueScreen />),
