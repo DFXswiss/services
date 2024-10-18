@@ -810,7 +810,11 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
       )}
       {tx.chargeBackTxId && (
         <StyledDataTableRow label={translate('screens/payment', 'Chargeback TX')}>
-          <p>{tx.chargeBackTxId}</p>
+          {tx.chargeBackTxUrl ? (
+            <StyledLink label={blankedAddress(tx.chargeBackTxId, { width })} url={tx.chargeBackTxUrl} dark />
+          ) : (
+            <p>{blankedAddress(tx.chargeBackTxId, { width })}</p>
+          )}
         </StyledDataTableRow>
       )}
       {tx.chargebackDate && (
