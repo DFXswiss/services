@@ -32,6 +32,7 @@ import {
   PaymentStandardType,
   RecommendedWallets,
 } from 'src/config/payment-link-wallets';
+import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
@@ -128,7 +129,9 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { toBlockchain } = useWeb3();
   const { width } = useWindowContext();
   const { call } = useApi();
-  const { timer, remainingSeconds, startTimer } = useCountdown();
+  const { timer, startTimer } = useCountdown();
+  const { redirectUri } = useAppParams();
+  const { closeServices } = useAppHandlingContext();
 
   const { paymentLinkApiUrl: paymentLinkApiUrlStore } = useSessionStore();
   const { lightning, setParams } = useAppParams();
@@ -230,7 +233,11 @@ export default function PaymentLinkScreen(): JSX.Element {
         awaitPayment(payRequest.quote.payment)
           .then((response) => {
             if (response.status !== PaymentLinkPaymentStatus.PENDING) {
-              setPaymentStatus(response.status);
+              if (response.status === PaymentLinkPaymentStatus.COMPLETED && redirectUri) {
+                closeServices({ type: CloseType.PAYMENT_LINK }, false);
+              } else {
+                setPaymentStatus(response.status);
+              }
             }
           })
           .catch(() => {
