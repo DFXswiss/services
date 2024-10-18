@@ -572,29 +572,26 @@ export default function PaymentLinkScreen(): JSX.Element {
                       )}
                     </StyledDataTable>
                     {hasQuote(payRequest) && selectedPaymentStandard?.blockchain && (
-                      <StyledInfoText textSize={StyledInfoTextSize.XS} iconColor={IconColor.GRAY} discreet>
-                        {timer.minutes > 0 || timer.seconds > 0 ? (
-                          <>
-                            {translate(
-                              'screens/payment',
-                              'The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.',
-                              {
-                                rate: Utils.formatAmount(
-                                  payRequest.requestedAmount.amount /
-                                    (payRequest.transferAmounts
-                                      .find((item) => item.method === selectedPaymentStandard?.blockchain)
-                                      ?.assets.find((item) => item.asset === selectedAsset)?.amount ?? 0),
-                                ),
-                                currency: payRequest.requestedAmount.asset,
-                                asset: selectedAsset,
-                                timer: `${timer.minutes}m ${timer.seconds}s`,
-                              },
-                            )}
-                          </>
-                        ) : (
-                          <div className="mt-1">
-                            <StyledLoadingSpinner size={SpinnerSize.SM} variant={SpinnerVariant.LIGHT_MODE} />
-                          </div>
+                      <StyledInfoText
+                        textSize={StyledInfoTextSize.XS}
+                        iconColor={IconColor.GRAY}
+                        isLoading={!(timer.minutes > 0 || timer.seconds > 0)}
+                        discreet
+                      >
+                        {translate(
+                          'screens/payment',
+                          'The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.',
+                          {
+                            rate: Utils.formatAmount(
+                              payRequest.requestedAmount.amount /
+                                (payRequest.transferAmounts
+                                  .find((item) => item.method === selectedPaymentStandard?.blockchain)
+                                  ?.assets.find((item) => item.asset === selectedAsset)?.amount ?? 0),
+                            ),
+                            currency: payRequest.requestedAmount.asset,
+                            asset: selectedAsset,
+                            timer: `${timer.minutes}m ${timer.seconds}s`,
+                          },
                         )}
                       </StyledInfoText>
                     )}
