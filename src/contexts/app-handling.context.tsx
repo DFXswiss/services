@@ -400,8 +400,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
         });
         break;
 
-      case CloseType.PAYMENT_LINK:
-        uri = adaptUri(uri, params.type);
+      default:
         break;
     }
 

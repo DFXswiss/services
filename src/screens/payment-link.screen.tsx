@@ -130,11 +130,10 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { width } = useWindowContext();
   const { call } = useApi();
   const { timer, startTimer } = useCountdown();
-  const { redirectUri } = useAppParams();
-  const { closeServices } = useAppHandlingContext();
 
   const { paymentLinkApiUrl: paymentLinkApiUrlStore } = useSessionStore();
-  const { lightning, setParams } = useAppParams();
+  const { lightning, redirectUri, setParams } = useAppParams();
+  const { closeServices } = useAppHandlingContext();
   const [urlParams, setUrlParams] = useSearchParams();
 
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
