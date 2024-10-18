@@ -406,6 +406,8 @@
     "Chargeback IBAN": "Chargeback-IBAN",
     "Chargeback address": "Chargeback-Adresse",
     "Chargeback amount": "Chargeback-Betrag",
+    "Chargeback TX": "Chargeback TX",
+    "Chargeback date": "Chargeback-Datum",
     "Transaction amount": "Transaktionsbetrag",
     "Refund amount": "Rückerstattungsbetrag",
     "Fee": "Gebühr",
