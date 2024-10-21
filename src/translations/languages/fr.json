@@ -408,6 +408,8 @@
     "Chargeback IBAN": "IBAN de rétrofacturation",
     "Chargeback address": "Adresse de rétrofacturation",
     "Chargeback amount": "Montant de la rétrofacturation",
+    "Chargeback TX": "TX de rétrofacturation",
+    "Chargeback date": "Date de rétrofacturation",
     "Transaction amount": "Montant de la transaction",
     "Refund amount": "Montant du remboursement",
     "Fee": "Frais",

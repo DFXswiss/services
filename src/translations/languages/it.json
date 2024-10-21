@@ -408,6 +408,8 @@
     "Chargeback IBAN": "IBAN per il chargeback",
     "Chargeback address": "Indirizzo per il chargeback",
     "Chargeback amount": "Importo del chargeback",
+    "Chargeback TX": "Chargeback TX",
+    "Chargeback date": "Data del chargeback",
     "Transaction amount": "Importo della transazione",
     "Refund amount": "Importo del rimborso",
     "Fee": "Commissione",

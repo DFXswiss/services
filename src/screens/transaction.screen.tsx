@@ -811,6 +811,20 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
           <CopyButton onCopy={() => copy(chargebackTarget)} />
         </StyledDataTableRow>
       )}
+      {tx.chargeBackTxId && (
+        <StyledDataTableRow label={translate('screens/payment', 'Chargeback TX')}>
+          {tx.chargeBackTxUrl ? (
+            <StyledLink label={blankedAddress(tx.chargeBackTxId, { width })} url={tx.chargeBackTxUrl} dark />
+          ) : (
+            <p>{blankedAddress(tx.chargeBackTxId, { width })}</p>
+          )}
+        </StyledDataTableRow>
+      )}
+      {tx.chargebackDate && (
+        <StyledDataTableRow label={translate('screens/payment', 'Chargeback date')}>
+          <p>{new Date(tx.chargebackDate).toLocaleString()}</p>
+        </StyledDataTableRow>
+      )}
     </StyledDataTable>
   );
 }
