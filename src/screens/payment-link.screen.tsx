@@ -1,4 +1,4 @@
-import { Blockchain, Utils } from '@dfx.swiss/react';
+import { Blockchain, useApi, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -21,6 +21,8 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { GoCheckCircleFill, GoClockFill, GoXCircleFill } from 'react-icons/go';
+
 import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
@@ -53,6 +55,7 @@ export interface PaymentStandard {
 interface Quote {
   id: string;
   expiration: Date;
+  payment: string;
 }
 
 interface Amount {
@@ -103,6 +106,17 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
   transferAmounts: TransferInfo[];
 }
 
+enum PaymentLinkPaymentStatus {
+  PENDING = 'Pending',
+  COMPLETED = 'Completed',
+  CANCELLED = 'Cancelled',
+  EXPIRED = 'Expired',
+}
+
+interface PaymentStatus {
+  status: PaymentLinkPaymentStatus;
+}
+
 interface FormData {
   paymentStandard: PaymentStandard;
   asset: string;
@@ -113,6 +127,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { toBlockchain } = useWeb3();
   const { width } = useWindowContext();
+  const { call } = useApi();
   const { timer, remainingSeconds, startTimer } = useCountdown();
 
   const { paymentLinkApiUrl: paymentLinkApiUrlStore } = useSessionStore();
@@ -122,6 +137,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
   const [paymentStandards, setPaymentStandards] = useState<PaymentStandard[]>();
+  const [paymentStatus, setPaymentStatus] = useState<PaymentLinkPaymentStatus>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
   const refetchTimeout = useRef<NodeJS.Timeout>();
@@ -207,9 +223,19 @@ export default function PaymentLinkScreen(): JSX.Element {
       if (sessionApiUrl.current !== url) return undefined;
 
       setPayRequest(payRequest);
+      setPaymentStatus(undefined);
 
       if (hasQuote(payRequest)) {
         setPaymentStandardSelection(payRequest);
+        awaitPayment(payRequest.quote.payment)
+          .then((response) => {
+            if (response.status !== PaymentLinkPaymentStatus.PENDING) {
+              setPaymentStatus(response.status);
+            }
+          })
+          .catch(() => {
+            fetchPayRequest(url);
+          });
         refetchDelay = new Date(payRequest.quote.expiration).getTime() - Date.now();
       } else {
         refetchDelay = 1000;
@@ -280,6 +306,13 @@ export default function PaymentLinkScreen(): JSX.Element {
         );
         break;
     }
+  }
+
+  async function awaitPayment(id: string): Promise<PaymentStatus> {
+    return call<PaymentStatus>({
+      url: `lnurlp/wait/${id}`,
+      method: 'GET',
+    });
   }
 
   async function invokeCallback(callbackUrl: string): Promise<void> {
@@ -355,7 +388,8 @@ export default function PaymentLinkScreen(): JSX.Element {
               </div>
             )}
           </div>
-          {hasQuote(payRequest) && paymentStandards?.length && (
+          <PaymentStatusTile status={paymentStatus} />
+          {!paymentStatus && hasQuote(payRequest) && paymentStandards?.length && (
             <Form control={control} errors={errors}>
               <StyledVerticalStack full gap={4} center>
                 <StyledDropdown<PaymentStandard>
@@ -384,203 +418,210 @@ export default function PaymentLinkScreen(): JSX.Element {
               </StyledVerticalStack>
             </Form>
           )}
-          <>
-            {(hasQuote(payRequest) || payRequest.recipient) && (
-              <StyledCollapsible
-                full
-                titleContent={
-                  <div className="flex flex-col items-start gap-1.5 text-left -my-1">
-                    <div className="flex flex-col items-start text-left">
-                      <div className="font-semibold leading-none">
-                        {translate('screens/payment', 'Payment details')}
+          {!paymentStatus && (
+            <>
+              {(hasQuote(payRequest) || payRequest.recipient) && (
+                <StyledCollapsible
+                  full
+                  titleContent={
+                    <div className="flex flex-col items-start gap-1.5 text-left -my-1">
+                      <div className="flex flex-col items-start text-left">
+                        <div className="font-semibold leading-none">
+                          {translate('screens/payment', 'Payment details')}
+                        </div>
+                      </div>
+                      <div className="leading-none text-dfxGray-800 text-xs">
+                        {`${translate('screens/payment', 'Your payment details at a glance')}`}
                       </div>
                     </div>
-                    <div className="leading-none text-dfxGray-800 text-xs">
-                      {`${translate('screens/payment', 'Your payment details at a glance')}`}
-                    </div>
-                  </div>
-                }
-                isExpanded={selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS}
-              >
-                <StyledVerticalStack full gap={4} className="text-left">
-                  <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                    {hasQuote(payRequest) && (
-                      <>
-                        <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                          <p>{translate('screens/payment', 'Pending')}</p>
-                        </StyledDataTableRow>
+                  }
+                  isExpanded={selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS}
+                >
+                  <StyledVerticalStack full gap={4} className="text-left">
+                    <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                      {hasQuote(payRequest) && (
+                        <>
+                          <StyledDataTableRow label={translate('screens/payment', 'State')}>
+                            <p>{translate('screens/payment', 'Pending')}</p>
+                          </StyledDataTableRow>
 
+                          <StyledDataTableExpandableRow
+                            label={selectedPaymentStandard?.paymentIdentifierLabel}
+                            isLoading={isLoading || !paymentIdentifier}
+                            expansionItems={
+                              parsedEvmUri && paymentIdentifier
+                                ? ([
+                                    {
+                                      label: selectedPaymentStandard?.paymentIdentifierLabel ?? '',
+                                      text: blankedAddress(paymentIdentifier, { width, scale: 0.8 }),
+                                      icon: IconVariant.COPY,
+                                      onClick: () => copy(paymentIdentifier),
+                                    },
+                                    {
+                                      label: translate('screens/home', 'Address'),
+                                      text: blankedAddress(parsedEvmUri.address ?? '', { width }),
+                                      icon: IconVariant.COPY,
+                                      onClick: () => copy(parsedEvmUri.address ?? ''),
+                                    },
+                                    {
+                                      label: translate('screens/home', 'Blockchain'),
+                                      text: toBlockchain(parsedEvmUri.chainId ?? ''),
+                                      icon: IconVariant.COPY,
+                                      onClick: () => copy(toBlockchain(parsedEvmUri.chainId ?? '') ?? ''),
+                                    },
+                                    {
+                                      label: translate('screens/payment', 'Amount'),
+                                      text: parsedEvmUri.amount,
+                                      icon: IconVariant.COPY,
+                                      onClick: () => copy(parsedEvmUri.amount ?? ''),
+                                    },
+                                    {
+                                      label: translate('screens/payment', 'Token contract'),
+                                      text: blankedAddress(parsedEvmUri.tokenContractAddress ?? '', { width }),
+                                      icon: IconVariant.COPY,
+                                      onClick: () => copy(parsedEvmUri.tokenContractAddress ?? ''),
+                                    },
+                                  ].filter((item) => item.text) as any[])
+                                : []
+                            }
+                          >
+                            <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
+                            {!parsedEvmUri && (
+                              <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />
+                            )}
+                          </StyledDataTableExpandableRow>
+
+                          <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
+                            <p>
+                              {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
+                            </p>
+                          </StyledDataTableRow>
+                        </>
+                      )}
+                      {payRequest.recipient && (
                         <StyledDataTableExpandableRow
-                          label={selectedPaymentStandard?.paymentIdentifierLabel}
-                          isLoading={isLoading || !paymentIdentifier}
+                          label={translate('screens/payment', 'Recipient')}
                           expansionItems={
-                            parsedEvmUri && paymentIdentifier
-                              ? ([
-                                  {
-                                    label: selectedPaymentStandard?.paymentIdentifierLabel ?? '',
-                                    text: blankedAddress(paymentIdentifier, { width, scale: 0.8 }),
-                                    icon: IconVariant.COPY,
-                                    onClick: () => copy(paymentIdentifier),
-                                  },
-                                  {
-                                    label: translate('screens/home', 'Address'),
-                                    text: blankedAddress(parsedEvmUri.address ?? '', { width }),
-                                    icon: IconVariant.COPY,
-                                    onClick: () => copy(parsedEvmUri.address ?? ''),
-                                  },
-                                  {
-                                    label: translate('screens/home', 'Blockchain'),
-                                    text: toBlockchain(parsedEvmUri.chainId ?? ''),
-                                    icon: IconVariant.COPY,
-                                    onClick: () => copy(toBlockchain(parsedEvmUri.chainId ?? '') ?? ''),
-                                  },
-                                  {
-                                    label: translate('screens/payment', 'Amount'),
-                                    text: parsedEvmUri.amount,
-                                    icon: IconVariant.COPY,
-                                    onClick: () => copy(parsedEvmUri.amount ?? ''),
-                                  },
-                                  {
-                                    label: translate('screens/payment', 'Token contract'),
-                                    text: blankedAddress(parsedEvmUri.tokenContractAddress ?? '', { width }),
-                                    icon: IconVariant.COPY,
-                                    onClick: () => copy(parsedEvmUri.tokenContractAddress ?? ''),
-                                  },
-                                ].filter((item) => item.text) as any[])
-                              : []
+                            [
+                              {
+                                label: translate('screens/support', 'Name'),
+                                text: payRequest.recipient.name,
+                              },
+                              {
+                                label: translate('screens/home', 'Address'),
+                                text:
+                                  formatLocationAddress({ ...payRequest.recipient.address, country: undefined }) ?? '',
+                              },
+                              {
+                                label: translate('screens/home', 'Country'),
+                                text: payRequest.recipient.address?.country ?? '',
+                              },
+                              {
+                                label: translate('screens/kyc', 'Phone number'),
+                                text: payRequest.recipient.phone,
+                              },
+                              {
+                                label: translate('screens/kyc', 'Email address'),
+                                text: payRequest.recipient.mail,
+                              },
+                              {
+                                label: translate('screens/kyc', 'Website'),
+                                text: payRequest.recipient.website,
+                                onClick: () => {
+                                  const url =
+                                    payRequest.recipient.website?.startsWith('http://') ||
+                                    payRequest.recipient.website?.startsWith('https://')
+                                      ? payRequest.recipient.website
+                                      : `https://${payRequest.recipient.website}`;
+
+                                  window.open(url, '_blank');
+                                },
+                              },
+                            ].filter((item) => item.text) as any
                           }
                         >
-                          <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
-                          {!parsedEvmUri && <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />}
+                          <p>{payRequest.recipient.name}</p>
                         </StyledDataTableExpandableRow>
-
-                        <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                          <p>
-                            {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
-                          </p>
+                      )}
+                      {hasQuote(payRequest) && (
+                        <StyledDataTableRow
+                          label={translate('screens/payment', 'Expiry date')}
+                          isLoading={isLoading || !paymentIdentifier}
+                        >
+                          <p>{new Date(payRequest.quote.expiration).toLocaleString()}</p>
                         </StyledDataTableRow>
-                      </>
-                    )}
-                    {payRequest.recipient && (
-                      <StyledDataTableExpandableRow
-                        label={translate('screens/payment', 'Recipient')}
-                        expansionItems={
-                          [
-                            {
-                              label: translate('screens/support', 'Name'),
-                              text: payRequest.recipient.name,
-                            },
-                            {
-                              label: translate('screens/home', 'Address'),
-                              text:
-                                formatLocationAddress({ ...payRequest.recipient.address, country: undefined }) ?? '',
-                            },
-                            {
-                              label: translate('screens/home', 'Country'),
-                              text: payRequest.recipient.address?.country ?? '',
-                            },
-                            {
-                              label: translate('screens/kyc', 'Phone number'),
-                              text: payRequest.recipient.phone,
-                            },
-                            {
-                              label: translate('screens/kyc', 'Email address'),
-                              text: payRequest.recipient.mail,
-                            },
-                            {
-                              label: translate('screens/kyc', 'Website'),
-                              text: payRequest.recipient.website,
-                              onClick: () => {
-                                const url =
-                                  payRequest.recipient.website?.startsWith('http://') ||
-                                  payRequest.recipient.website?.startsWith('https://')
-                                    ? payRequest.recipient.website
-                                    : `https://${payRequest.recipient.website}`;
-
-                                window.open(url, '_blank');
-                              },
-                            },
-                          ].filter((item) => item.text) as any
-                        }
-                      >
-                        <p>{payRequest.recipient.name}</p>
-                      </StyledDataTableExpandableRow>
-                    )}
-                    {hasQuote(payRequest) && (
-                      <StyledDataTableRow
-                        label={translate('screens/payment', 'Expiry date')}
-                        isLoading={isLoading || !paymentIdentifier}
-                      >
-                        <p>{new Date(payRequest.quote.expiration).toLocaleString()}</p>
-                      </StyledDataTableRow>
-                    )}
-                    {hasQuote(payRequest) && !payRequest.displayQr && (
-                      <StyledDataTableExpandableRow
-                        label={translate('screens/payment', 'QR Code')}
-                        expansionContent={
-                          <div className="flex w-full items-center justify-center">
-                            <div className="w-48 my-3">
-                              <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
+                      )}
+                      {hasQuote(payRequest) && !payRequest.displayQr && (
+                        <StyledDataTableExpandableRow
+                          label={translate('screens/payment', 'QR Code')}
+                          expansionContent={
+                            <div className="flex w-full items-center justify-center">
+                              <div className="w-48 my-3">
+                                <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
+                              </div>
                             </div>
+                          }
+                        />
+                      )}
+                    </StyledDataTable>
+                    {hasQuote(payRequest) && selectedPaymentStandard?.blockchain && (
+                      <StyledInfoText textSize={StyledInfoTextSize.XS} iconColor={IconColor.GRAY} discreet>
+                        {timer.minutes > 0 || timer.seconds > 0 ? (
+                          <>
+                            {translate(
+                              'screens/payment',
+                              'The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.',
+                              {
+                                rate: Utils.formatAmount(
+                                  payRequest.requestedAmount.amount /
+                                    (payRequest.transferAmounts
+                                      .find((item) => item.method === selectedPaymentStandard?.blockchain)
+                                      ?.assets.find((item) => item.asset === selectedAsset)?.amount ?? 0),
+                                ),
+                                currency: payRequest.requestedAmount.asset,
+                                asset: selectedAsset,
+                                timer: `${timer.minutes}m ${timer.seconds}s`,
+                              },
+                            )}
+                          </>
+                        ) : (
+                          <div className="mt-1">
+                            <StyledLoadingSpinner size={SpinnerSize.SM} variant={SpinnerVariant.LIGHT_MODE} />
                           </div>
-                        }
-                      />
+                        )}
+                      </StyledInfoText>
                     )}
-                  </StyledDataTable>
-                  {hasQuote(payRequest) && selectedPaymentStandard?.blockchain && (
-                    <StyledInfoText textSize={StyledInfoTextSize.XS} iconColor={IconColor.GRAY} discreet>
-                      {timer.minutes > 0 || timer.seconds > 0 ? (
-                        <>
-                          {translate(
-                            'screens/payment',
-                            'The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.',
-                            {
-                              rate: Utils.formatAmount(
-                                payRequest.requestedAmount.amount /
-                                  (payRequest.transferAmounts
-                                    .find((item) => item.method === selectedPaymentStandard?.blockchain)
-                                    ?.assets.find((item) => item.asset === selectedAsset)?.amount ?? 0),
-                              ),
-                              currency: payRequest.requestedAmount.asset,
-                              asset: selectedAsset,
-                              timer: `${timer.minutes}m ${timer.seconds}s`,
-                            },
-                          )}
-                        </>
-                      ) : (
-                        <div className="mt-1">
-                          <StyledLoadingSpinner size={SpinnerSize.SM} variant={SpinnerVariant.LIGHT_MODE} />
+                  </StyledVerticalStack>
+                </StyledCollapsible>
+              )}
+              {[PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
+                selectedPaymentStandard?.id as PaymentStandardType,
+              ) && (
+                <StyledVerticalStack full gap={8} center>
+                  {hasQuote(payRequest) && (
+                    <div className="flex flex-col w-full items-center justify-center">
+                      {payRequest.displayQr && (
+                        <div className="w-48 my-3">
+                          <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
                         </div>
                       )}
-                    </StyledInfoText>
+                      <p className="text-base pt-3 text-dfxGray-700">
+                        {translate(
+                          'screens/payment',
+                          'Scan the QR-Code with a compatible wallet to complete the payment.',
+                        )}
+                      </p>
+                    </div>
                   )}
+                  <WalletGrid
+                    wallets={RecommendedWallets}
+                    header={translate('screens/payment', 'Recommended wallets')}
+                  />
+                  <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
                 </StyledVerticalStack>
-              </StyledCollapsible>
-            )}
-            {[PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
-              selectedPaymentStandard?.id as PaymentStandardType,
-            ) && (
-              <StyledVerticalStack full gap={8} center>
-                {hasQuote(payRequest) && (
-                  <div className="flex flex-col w-full items-center justify-center">
-                    {payRequest.displayQr && (
-                      <div className="w-48 my-3">
-                        <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
-                      </div>
-                    )}
-                    <p className="text-base pt-3 text-dfxGray-700">
-                      {translate(
-                        'screens/payment',
-                        'Scan the QR-Code with a compatible wallet to complete the payment.',
-                      )}
-                    </p>
-                  </div>
-                )}
-                <WalletGrid wallets={RecommendedWallets} header={translate('screens/payment', 'Recommended wallets')} />
-                <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
-              </StyledVerticalStack>
-            )}
-          </>
+              )}
+            </>
+          )}
           <div className="p-1 w-full leading-none">
             <StyledLink
               label={translate(
@@ -595,6 +636,51 @@ export default function PaymentLinkScreen(): JSX.Element {
         </StyledVerticalStack>
       )}
     </Layout>
+  );
+}
+
+interface PaymentStatusTileProps {
+  status?: PaymentLinkPaymentStatus;
+}
+
+function PaymentStatusTile({ status }: PaymentStatusTileProps): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  if (!status || status === PaymentLinkPaymentStatus.PENDING) {
+    return <></>;
+  }
+
+  let tileBackgroundStyle = 'flex flex-col items-center justify-center w-full py-16 rounded-lg border';
+  let iconStyle = 'text-[7rem] m-auto';
+
+  switch (status) {
+    case PaymentLinkPaymentStatus.COMPLETED:
+      tileBackgroundStyle += ' bg-[#4BB543]/10 border-[#4BB543]';
+      iconStyle += ' text-[#4BB543]';
+      break;
+    case PaymentLinkPaymentStatus.CANCELLED:
+      tileBackgroundStyle += ' bg-[#FF4444]/10 border-[#FF4444]';
+      iconStyle += ' text-[#FF4444]';
+      break;
+    case PaymentLinkPaymentStatus.EXPIRED:
+      tileBackgroundStyle += ' bg-[#65728A]/10 border-[#65728A]';
+      iconStyle += ' text-[#65728A]';
+      break;
+  }
+
+  const statusIcon = {
+    [PaymentLinkPaymentStatus.COMPLETED]: <GoCheckCircleFill />,
+    [PaymentLinkPaymentStatus.CANCELLED]: <GoXCircleFill />,
+    [PaymentLinkPaymentStatus.EXPIRED]: <GoClockFill />,
+  };
+
+  return (
+    <div className={tileBackgroundStyle}>
+      <div className={iconStyle}>{statusIcon[status]}</div>
+      <p className="text-dfxBlue-800 font-bold text-xl mt-4 leading-snug">
+        {translate('screens/payment', status).toUpperCase()}
+      </p>
+    </div>
   );
 }
 

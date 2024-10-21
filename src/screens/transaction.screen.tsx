@@ -363,20 +363,23 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
               full
             />
           )}
-          {!refundDetails.refundTarget && ibans && isBuy && (
-            <StyledDropdown<string>
-              rootRef={rootRef}
-              name="iban"
-              label={translate('screens/payment', 'Chargeback IBAN')}
-              items={[...ibans.map((b) => b.iban), AddAccount]}
-              labelFunc={(item) =>
-                item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
-              }
-              placeholder={translate('general/actions', 'Select...')}
-              forceEnable
-              full
-            />
-          )}
+          {!refundDetails.refundTarget &&
+            transaction.inputPaymentMethod !== FiatPaymentMethod.CARD &&
+            ibans &&
+            isBuy && (
+              <StyledDropdown<string>
+                rootRef={rootRef}
+                name="iban"
+                label={translate('screens/payment', 'Chargeback IBAN')}
+                items={[...ibans.map((b) => b.iban), AddAccount]}
+                labelFunc={(item) =>
+                  item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
+                }
+                placeholder={translate('general/actions', 'Select...')}
+                forceEnable
+                full
+              />
+            )}
 
           <StyledButton
             type="submit"
