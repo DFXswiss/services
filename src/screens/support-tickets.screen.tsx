@@ -1,5 +1,8 @@
-import { ApiError, SupportIssue, useApi } from '@dfx.swiss/react';
+import { ApiError, SupportIssue, SupportIssueReason, SupportIssueState, useApi } from '@dfx.swiss/react';
 import {
+  DfxIcon,
+  IconColor,
+  IconVariant,
   SpinnerSize,
   StyledButton,
   StyledButtonWidth,
@@ -9,7 +12,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { MdKeyboardArrowRight } from 'react-icons/md';
 import { ErrorHint } from 'src/components/error-hint';
-import { IssueTypeLabels } from 'src/config/labels';
+import { IssueReasonLabels, IssueTypeLabels } from 'src/config/labels';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Layout } from '../components/layout';
@@ -25,6 +28,7 @@ export default function SupportTicketsScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [supportTickets, setSupportTickets] = useState<SupportIssue[]>([]);
+  const [showCompletedTickets, setShowCompletedTickets] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -38,11 +42,15 @@ export default function SupportTicketsScreen(): JSX.Element {
           return;
         }
 
-        setSupportTickets(tickets);
+        setSupportTickets(tickets.sort(sortCompletedLast));
       })
       .catch((e: ApiError) => setError(e.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
   }, [call]);
+
+  function sortCompletedLast(a: SupportIssue, b: SupportIssue) {
+    return (a.state === SupportIssueState.COMPLETED ? 1 : 0) - (b.state === SupportIssueState.COMPLETED ? 1 : 0);
+  }
 
   return (
     <Layout title={translate('screens/support', 'Support tickets')} rootRef={rootRef}>
@@ -56,13 +64,21 @@ export default function SupportTicketsScreen(): JSX.Element {
         ) : (
           <div className="flex rounded-md w-full overflow-clip border border-dfxGray-400">
             <table className="w-full text-sm text-left text-dfxGray-800">
-              <thead className="text-xs text-dfxBlue-800 uppercase bg-dfxGray-400">
+              <thead className="text-xs text-dfxBlue-800 bg-dfxGray-400 leading-tight">
                 <tr>
-                  <th scope="col" className="px-6 py-4">
+                  <th scope="col" className="px-6 py-4 uppercase">
                     {translate('screens/support', 'Issue type')}
+                    <>
+                      <br />
+                      <span className="text-dfxGray-600 text-xs">{translate('screens/support', 'Reason')}</span>
+                    </>
                   </th>
-                  <th scope="col" className="px-6 py-4">
-                    {translate('screens/payment', 'Created')}
+                  <th scope="col" className="px-6 py-4 uppercase">
+                    {translate('screens/support', 'Created on')}
+                    <>
+                      <br />
+                      <span className="text-dfxGray-600 text-xs">{translate('screens/payment', 'State')}</span>
+                    </>
                   </th>
                   <th scope="col" className="px-3 py-4">
                     <span className="sr-only">Action</span>
@@ -70,21 +86,63 @@ export default function SupportTicketsScreen(): JSX.Element {
                 </tr>
               </thead>
               <tbody>
-                {supportTickets.map((ticket) => (
-                  <tr
-                    key={ticket.uid}
-                    onClick={() => navigate(`/support/chat/${ticket.uid}`)}
-                    className="bg-white border-b-4 border-dfxGray-300 last:border-none hover:bg-dfxGray-300/50 cursor-pointer"
-                  >
-                    <th scope="row" className="px-6 py-4 font-medium text-dfxBlue-800 whitespace-nowrap">
-                      {translate('screens/support', IssueTypeLabels[ticket.type])}
-                    </th>
-                    <td className="px-6 py-4">{new Date(ticket.created).toLocaleDateString()}</td>
-                    <td className="px-3 py-4 text-right text-lg">
-                      <MdKeyboardArrowRight />
-                    </td>
-                  </tr>
-                ))}
+                {supportTickets
+                  .filter((ticket) => showCompletedTickets || ticket.state !== SupportIssueState.COMPLETED)
+                  .map((ticket) => (
+                    <tr
+                      key={ticket.uid}
+                      onClick={() => navigate(`/support/chat/${ticket.uid}`)}
+                      className={`bg-white border-b-4 border-dfxGray-300 last:border-none hover:bg-dfxGray-300/60 cursor-pointer ${
+                        ticket.state === SupportIssueState.COMPLETED ? 'opacity-60' : ''
+                      }`}
+                    >
+                      <th
+                        scope="row"
+                        className={`pl-6 py-4 font-medium ${
+                          ticket.state === SupportIssueState.COMPLETED ? 'text-dfxBlue-800/60' : 'text-dfxBlue-800'
+                        }  whitespace-nowrap leading-tight`}
+                      >
+                        {translate('screens/support', IssueTypeLabels[ticket.type])}
+                        {ticket.reason != SupportIssueReason.OTHER && (
+                          <>
+                            <br />
+                            <span className="text-dfxGray-600 text-sm">
+                              {translate('screens/support', IssueReasonLabels[ticket.reason])}
+                            </span>
+                          </>
+                        )}
+                      </th>
+                      <td className="px-6 py-4 leading-tight">
+                        {new Date(ticket.created).toLocaleDateString()}
+                        <>
+                          <br />
+                          <span className="text-dfxGray-600 text-sm">{translate('screens/payment', ticket.state)}</span>
+                        </>
+                      </td>
+                      <td align="right" className="pr-6 py-4 text-lg">
+                        <MdKeyboardArrowRight />
+                      </td>
+                    </tr>
+                  ))}
+                <tr
+                  className="bg-white border-b-4 border-dfxGray-300 last:border-none hover:bg-dfxGray-300/60 cursor-pointer"
+                  onClick={() => setShowCompletedTickets((prev) => !prev)}
+                  hidden={supportTickets.length === 0}
+                >
+                  <td className="px-6 py-3 text-xs" colSpan={2}>
+                    <div className="flex flex-row items-center justify-between gap-2 ">
+                      {showCompletedTickets
+                        ? translate('screens/support', 'Hide completed tickets')
+                        : translate('screens/support', 'Show completed tickets')}
+                    </div>
+                  </td>
+                  <td align="right" className="pr-6 py-3 text-lg">
+                    <DfxIcon
+                      icon={showCompletedTickets ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
+                      color={IconColor.DARK_GRAY}
+                    />
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>

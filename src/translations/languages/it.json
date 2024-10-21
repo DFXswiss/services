@@ -613,7 +613,11 @@
     "Write a message...": "Scrivi un messaggio...",
     "Downloading...": "Scaricamento...",
     "Image": "Immagine",
-    "Document": "Documento"
+    "Document": "Documento",
+
+    "Created on": "Creato il",
+    "Hide completed tickets": "Nascondi i ticket completati",
+    "Show completed tickets": "Mostra i ticket completati"
   },
   "screens/settings": {
     "Settings": "Impostazioni",
