@@ -1,9 +1,10 @@
-import { Blockchain, useApi, Utils } from '@dfx.swiss/react';
+import { Asset, Blockchain, useApi, useAssetContext, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
   Form,
   IconColor,
+  IconSize,
   IconVariant,
   SpinnerSize,
   SpinnerVariant,
@@ -12,6 +13,8 @@ import {
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledHorizontalStack,
+  StyledIconButton,
   StyledInfoText,
   StyledInfoTextSize,
   StyledLink,
@@ -41,7 +44,7 @@ import { useSessionStore } from 'src/hooks/session-store.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress, fetchJson, formatLocationAddress, url } from 'src/util/utils';
+import { blankedAddress, fetchJson, formatLocationAddress, formatUnits, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
 export interface PaymentStandard {
@@ -119,7 +122,7 @@ interface PaymentStatus {
 
 interface FormData {
   paymentStandard: PaymentStandard;
-  asset: string;
+  asset?: string;
 }
 
 export default function PaymentLinkScreen(): JSX.Element {
@@ -127,8 +130,9 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { toBlockchain } = useWeb3();
   const { width } = useWindowContext();
+  const { assets } = useAssetContext();
   const { call } = useApi();
-  const { timer, remainingSeconds, startTimer } = useCountdown();
+  const { timer, startTimer } = useCountdown();
 
   const { paymentLinkApiUrl: paymentLinkApiUrlStore } = useSessionStore();
   const { lightning, setParams } = useAppParams();
@@ -137,6 +141,8 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
   const [paymentStandards, setPaymentStandards] = useState<PaymentStandard[]>();
+  const [assetObject, setAssetObject] = useState<Asset>();
+  const [showContract, setShowContract] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<PaymentLinkPaymentStatus>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
@@ -189,30 +195,54 @@ export default function PaymentLinkScreen(): JSX.Element {
   useEffect(() => {
     if (!hasQuote(payRequest)) return;
 
-    const currentPaymentStandard = new URL(sessionApiUrl.current).searchParams.get('standard');
-    const currentMethod = currentCallback.current && new URL(currentCallback.current).searchParams.get('method');
+    const currUrlStandard = new URL(sessionApiUrl.current).searchParams.get('standard');
 
-    const newPaymentStandard =
-      selectedPaymentStandard ?? paymentStandards?.find((item) => item.id === payRequest.standard);
-    const newAsset =
-      (currentMethod === newPaymentStandard?.blockchain ? selectedAsset : undefined) ??
-      payRequest.transferAmounts.find((item) => item.method === selectedPaymentStandard?.blockchain)?.assets?.[0]
-        ?.asset;
-
-    if (!currentPaymentStandard || currentPaymentStandard !== newPaymentStandard?.id) {
+    if (!currUrlStandard || (selectedPaymentStandard && currUrlStandard !== selectedPaymentStandard?.id)) {
       const url = new URL(sessionApiUrl.current);
-      url.searchParams.set('standard', newPaymentStandard?.id ?? payRequest.standard);
+      url.searchParams.set('standard', selectedPaymentStandard?.id ?? payRequest.standard);
+
       setSessionApiUrl(url.toString());
       fetchPayRequest(url.toString());
+
       setPaymentIdentifier(undefined);
       currentCallback.current = undefined;
+      setValue('asset', undefined);
+      setAssetObject(undefined);
     } else {
-      fetchPaymentIdentifier(payRequest, newPaymentStandard?.blockchain, newAsset);
+      fetchPaymentIdentifier(
+        payRequest,
+        selectedPaymentStandard?.blockchain,
+        selectedAsset ??
+          payRequest.transferAmounts.find((item) => item.method === selectedPaymentStandard?.blockchain)?.assets?.[0]
+            ?.asset,
+      );
+    }
+  }, [payRequest, selectedPaymentStandard, selectedAsset]);
+
+  useEffect(() => {
+    if (!hasQuote(payRequest)) return;
+
+    const paymentStandard = paymentStandards?.find((item) => item.id === payRequest.standard);
+    if (!selectedPaymentStandard && paymentStandard) {
+      setValue('paymentStandard', paymentStandard);
     }
 
-    if (!selectedPaymentStandard && newPaymentStandard) setValue('paymentStandard', newPaymentStandard);
-    if (!selectedAsset && newAsset && newAsset !== selectedAsset) setValue('asset', newAsset);
+    const assets = payRequest.transferAmounts.find(
+      (item) => item.method === selectedPaymentStandard?.blockchain,
+    )?.assets;
+
+    if ((!selectedAsset || !assets?.find((item) => item.asset === selectedAsset)) && assets?.length) {
+      setValue('asset', assets[0].asset);
+    }
   }, [payRequest, paymentStandards, selectedPaymentStandard, selectedAsset]);
+
+  useEffect(() => {
+    if (selectedAsset && selectedPaymentStandard?.blockchain) {
+      setAssetObject(assets.get(selectedPaymentStandard?.blockchain)?.find((item) => item.name === selectedAsset));
+    } else {
+      setAssetObject(undefined);
+    }
+  }, [selectedAsset, selectedPaymentStandard]);
 
   async function fetchPayRequest(url: string): Promise<number | undefined> {
     setError(undefined);
@@ -283,6 +313,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     switch (payRequest.standard) {
       case PaymentStandardType.OPEN_CRYPTO_PAY:
       case PaymentStandardType.FRANKENCOIN_PAY:
+        currentCallback.current = payRequest.callback;
         setPaymentIdentifier(Lnurl.prependLnurl(Lnurl.encode(simplifyUrl(sessionApiUrl.current))));
         break;
       case PaymentStandardType.LIGHTNING_BOLT11:
@@ -327,7 +358,10 @@ export default function PaymentLinkScreen(): JSX.Element {
           response && setPaymentIdentifier(response.uri ?? response.pr);
         }
       })
-      .catch((error) => setError(error.message))
+      .catch((error) => {
+        setError(error.message);
+        setPaymentIdentifier(undefined);
+      })
       .finally(() => setIsLoading(false));
   }
 
@@ -441,61 +475,70 @@ export default function PaymentLinkScreen(): JSX.Element {
                     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                       {hasQuote(payRequest) && (
                         <>
-                          <StyledDataTableRow label={translate('screens/payment', 'State')}>
-                            <p>{translate('screens/payment', 'Pending')}</p>
-                          </StyledDataTableRow>
+                          {parsedEvmUri && paymentIdentifier && (
+                            <>
+                              {parsedEvmUri.amount && (
+                                <StyledDataTableRow
+                                  label={translate('screens/payment', 'Amount')}
+                                  isLoading={isLoading || !paymentIdentifier}
+                                >
+                                  <p>{formatUnits(parsedEvmUri.amount, assetObject?.decimals)}</p>
+                                  <CopyButton onCopy={() => copy(parsedEvmUri.amount ?? '')} />
+                                </StyledDataTableRow>
+                              )}
 
-                          <StyledDataTableExpandableRow
-                            label={selectedPaymentStandard?.paymentIdentifierLabel}
-                            isLoading={isLoading || !paymentIdentifier}
-                            expansionItems={
-                              parsedEvmUri && paymentIdentifier
-                                ? ([
-                                    {
-                                      label: selectedPaymentStandard?.paymentIdentifierLabel ?? '',
-                                      text: blankedAddress(paymentIdentifier, { width, scale: 0.8 }),
-                                      icon: IconVariant.COPY,
-                                      onClick: () => copy(paymentIdentifier),
-                                    },
-                                    {
-                                      label: translate('screens/home', 'Address'),
-                                      text: blankedAddress(parsedEvmUri.address ?? '', { width }),
-                                      icon: IconVariant.COPY,
-                                      onClick: () => copy(parsedEvmUri.address ?? ''),
-                                    },
-                                    {
-                                      label: translate('screens/home', 'Blockchain'),
-                                      text: toBlockchain(parsedEvmUri.chainId ?? ''),
-                                      icon: IconVariant.COPY,
-                                      onClick: () => copy(toBlockchain(parsedEvmUri.chainId ?? '') ?? ''),
-                                    },
-                                    {
-                                      label: translate('screens/payment', 'Amount'),
-                                      text: parsedEvmUri.amount,
-                                      icon: IconVariant.COPY,
-                                      onClick: () => copy(parsedEvmUri.amount ?? ''),
-                                    },
-                                    {
-                                      label: translate('screens/payment', 'Token contract'),
-                                      text: blankedAddress(parsedEvmUri.tokenContractAddress ?? '', { width }),
-                                      icon: IconVariant.COPY,
-                                      onClick: () => copy(parsedEvmUri.tokenContractAddress ?? ''),
-                                    },
-                                  ].filter((item) => item.text) as any[])
-                                : []
-                            }
-                          >
-                            <p>{paymentIdentifier && blankedAddress(paymentIdentifier, { width, scale: 0.8 })}</p>
-                            {!parsedEvmUri && (
-                              <CopyButton onCopy={() => paymentIdentifier && copy(paymentIdentifier)} />
-                            )}
-                          </StyledDataTableExpandableRow>
+                              {assetObject && (
+                                <StyledDataTableRow label={translate('screens/sell', 'Asset')}>
+                                  {showContract && assetObject.chainId ? (
+                                    <StyledHorizontalStack gap={2}>
+                                      <span>{blankedAddress(assetObject.chainId, { width, scale: 0.75 })}</span>
+                                      <StyledIconButton
+                                        icon={IconVariant.COPY}
+                                        onClick={() => copy(assetObject.chainId ?? '')}
+                                        size={IconSize.SM}
+                                      />
+                                      {assetObject.explorerUrl && (
+                                        <StyledIconButton
+                                          icon={IconVariant.OPEN_IN_NEW}
+                                          onClick={() => window.open(assetObject.explorerUrl, '_blank')}
+                                          size={IconSize.SM}
+                                        />
+                                      )}
+                                    </StyledHorizontalStack>
+                                  ) : (
+                                    <p>{assetObject.name}</p>
+                                  )}
+                                  {assetObject.chainId && (
+                                    <StyledIconButton
+                                      icon={showContract ? IconVariant.INFO : IconVariant.INFO_OUTLINE}
+                                      color={IconColor.DARK_GRAY}
+                                      onClick={() => setShowContract(!showContract)}
+                                    />
+                                  )}
+                                </StyledDataTableRow>
+                              )}
 
-                          <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-                            <p>
-                              {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
-                            </p>
-                          </StyledDataTableRow>
+                              {parsedEvmUri.address && (
+                                <StyledDataTableRow
+                                  label={translate('screens/home', 'Address')}
+                                  isLoading={isLoading || !paymentIdentifier}
+                                >
+                                  <p>{blankedAddress(parsedEvmUri.address ?? '', { width, scale: 0.8 })}</p>
+                                  <CopyButton onCopy={() => copy(parsedEvmUri.address ?? '')} />
+                                </StyledDataTableRow>
+                              )}
+
+                              {toBlockchain(parsedEvmUri.chainId ?? '') && (
+                                <StyledDataTableRow
+                                  label={translate('screens/home', 'Blockchain')}
+                                  isLoading={isLoading || !paymentIdentifier}
+                                >
+                                  <p>{toBlockchain(parsedEvmUri.chainId ?? '')}</p>
+                                  <CopyButton onCopy={() => copy(toBlockchain(parsedEvmUri.chainId ?? '') ?? '')} />
+                                </StyledDataTableRow>
+                              )}
+                            </>
+                          )}
                         </>
                       )}
                       {payRequest.recipient && (
@@ -579,7 +622,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                                       ?.assets.find((item) => item.asset === selectedAsset)?.amount ?? 0),
                                 ),
                                 currency: payRequest.requestedAmount.asset,
-                                asset: selectedAsset,
+                                asset: selectedAsset ?? '',
                                 timer: `${timer.minutes}m ${timer.seconds}s`,
                               },
                             )}
