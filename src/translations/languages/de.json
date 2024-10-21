@@ -37,6 +37,7 @@
     "Select transaction": "Transaktion auswählen",
     "Download": "Herunterladen",
     "Confirm refund": "Rückerstattung bestätigen",
+    "Request refund": "Rückerstattung beantragen",
     "Copy Link": "Link kopieren",
     "Open invoice": "Rechnung öffnen"
   },
@@ -47,6 +48,7 @@
     "IBAN not allowed": "IBAN nicht erlaubt",
     "IBAN country not allowed": "IBAN Land nicht erlaubt",
     "Only XML files are allowed": "Nur XML-Dateien sind erlaubt",
+    "Only JSON files are allowed": "Nur JSON-Dateien sind erlaubt",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Erlaubte Formate: PDF, JPG, JPEG, PNG",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.",
@@ -97,7 +99,6 @@
     "Passport": "Pass",
     "ID card": "ID-Karte",
     "Driver's license": "Führerschein",
-    "Residence permit": "Aufenthaltsbewilligung",
 
     "Authorized to sign individually": "Einzelunterschriftberechtigt",
     "Authorized to sign jointly": "Unterschriftsberechtigt zu zweit",
@@ -184,7 +185,9 @@
     "Click + in Google Authenticator to add a new account. You can scan the QR code or enter the secret provided to create your account in Google Authenticator.": "Klicke in Google Authenticator auf +, um ein neues Konto hinzuzufügen. Du kannst den QR-Code scannen oder den angegebenen Schlüssel eingeben, um Dein Konto in Google Authenticator zu erstellen.",
     "Secret": "Schlüssel",
     "Enter the 6-digit dynamic code from your authenticator app": "Gib den 6-stelligen dynamischen Code aus Deiner Authenticator-App ein",
+    "Enter the 6-digit code from your email": "Gib den 6-stelligen Code aus Deiner E-Mail ein",
     "Authenticator code": "Authenticator-Code",
+    "Email code": "E-Mail-Code",
     "Invalid or expired code": "Ungültiger oder abgelaufener Code",
     "Delete 2FA method": "2FA-Methode löschen",
     "Are you sure you want to delete the 2FA method?": "Bist Du sicher, dass Du die 2FA-Methode löschen möchtest?"
@@ -510,7 +513,7 @@
     "Deactivate": "Deaktivieren",
     "Expires at": "Gültig bis",
 
-    "Token contract": "Tokenvertrag",
+    "Token contract": "Token-Contract",
 
     "Create Invoice": "Rechnung erstellen",
     "Invoice ID": "Rechnungs-ID",
@@ -574,6 +577,7 @@
     "Limit increase request": "Antrag auf Limit-Erhöhung",
     "Partnership request": "Anfrage zu einer Partnerschaft",
     "Notification of changes": "Mitteilung von Änderungen",
+    "Bug report": "Fehlermeldung",
 
     "Reason": "Grund",
     "Other": "Andere",
@@ -623,6 +627,14 @@
 
     "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team."
+  },
+  "screens/blockchain": {
+    "Transaction signing": "Transaktionssignierung",
+    "Transaction hash": "Transaktions-Hash",
+    "Transaction (Input data)": "Transaktion (Eingabedaten)",
+    "Sign transaction": "Transaktion signieren",
+    "Signer": "Signierer",
+    "Contract address": "Contract-Adresse"
   },
   "navigation/links": {
     "Buy": "Kaufen",

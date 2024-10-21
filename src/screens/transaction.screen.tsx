@@ -92,11 +92,15 @@ export default function TransactionScreen(): JSX.Element {
     ? translate('screens/payment', 'Cointracking Link (read rights)')
     : translate('screens/payment', 'Transactions');
 
-  const onBack = isTransaction
-    ? () => navigate('/tx')
-    : showCoinTracking
-    ? () => setShowCoinTracking(false)
-    : undefined;
+  const onBack =
+    isTransaction || isRefund
+      ? () => {
+          setError(undefined);
+          navigate('/tx');
+        }
+      : showCoinTracking
+      ? () => setShowCoinTracking(false)
+      : undefined;
 
   return (
     <Layout rootRef={rootRef} title={title} onBack={onBack}>
@@ -147,7 +151,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
 
   useEffect(() => {
     const fetchTransaction = () => {
-      if (id && transaction?.state !== TransactionState.COMPLETED) {
+      if (id && transaction?.state !== TransactionState.COMPLETED && transaction?.state !== TransactionState.RETURNED) {
         getTransactionByUid(id)
           .then(setTransaction)
           .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
@@ -160,10 +164,9 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
     return () => clearInterval(interval);
   }, [id, transaction?.state]);
 
-  function assignTransaction() {
+  function handleTransactionNavigation(path: string) {
     if (!transaction) return;
 
-    const path = `/tx/${transaction.id}/assign`;
     if (isLoggedIn) {
       navigate(path);
     } else {
@@ -179,13 +182,16 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
       {transaction.state === TransactionState.UNASSIGNED && (
         <StyledButton
           label={translate('screens/payment', 'Assign transaction')}
-          onClick={assignTransaction}
+          onClick={() => handleTransactionNavigation(`/tx/${transaction.id}/assign`)}
           width={StyledButtonWidth.FULL}
         />
       )}
       <StyledButton
-        label={translate('general/actions', 'Confirm refund')}
-        onClick={() => navigate(`/tx/${transaction.uid}/refund`)}
+        label={translate(
+          'general/actions',
+          transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+        )}
+        onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
         hidden={
           ![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
             transaction.state,
@@ -218,6 +224,8 @@ interface TransactionRefundProps {
 const AddAccount = 'Add bank account';
 
 function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
+  useUserGuard('/login');
+
   const { id } = useParams();
   const { state } = useLocation();
   const { width } = useWindowContext();
@@ -249,12 +257,12 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const selectedIban = useWatch({ control, name: 'iban' });
 
   useEffect(() => {
-    if (id && !transaction) {
+    if (id && !transaction && isLoggedIn) {
       getTransactionByUid(id)
         .then(setTransaction)
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
     }
-  }, [id, transaction]);
+  }, [id, transaction, isLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn)
@@ -320,12 +328,12 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'Transaction amount')}>
           <p>
-            {transaction?.inputAmount} {transaction?.inputAsset}
+            {transaction.inputAmount} {transaction.inputAsset}
           </p>
         </StyledDataTableRow>
         <StyledDataTableRow label={translate('screens/payment', 'Fee')}>
           <p>
-            {refundDetails.feeAmount} {transaction?.inputAsset}
+            {refundDetails.feeAmount} {refundDetails.refundAsset.name}
           </p>
         </StyledDataTableRow>
         <StyledDataTableRow
@@ -333,7 +341,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
           infoText={translate('screens/payment', 'Refund amount is the transaction amount minus the fee.')}
         >
           <p>
-            {transaction?.inputAmount && transaction?.inputAmount - refundDetails.feeAmount} {transaction?.inputAsset}
+            {refundDetails.refundAmount} {refundDetails.refundAsset.name}
           </p>
         </StyledDataTableRow>
         {refundDetails.refundTarget && (
@@ -355,23 +363,30 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
               full
             />
           )}
-          {!refundDetails.refundTarget && ibans && isBuy && (
-            <StyledDropdown<string>
-              rootRef={rootRef}
-              name="iban"
-              label={translate('screens/payment', 'Chargeback IBAN')}
-              items={[...ibans.map((b) => b.iban), AddAccount]}
-              labelFunc={(item) =>
-                item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
-              }
-              placeholder={translate('general/actions', 'Select...')}
-              full
-            />
-          )}
+          {!refundDetails.refundTarget &&
+            transaction.inputPaymentMethod !== FiatPaymentMethod.CARD &&
+            ibans &&
+            isBuy && (
+              <StyledDropdown<string>
+                rootRef={rootRef}
+                name="iban"
+                label={translate('screens/payment', 'Chargeback IBAN')}
+                items={[...ibans.map((b) => b.iban), AddAccount]}
+                labelFunc={(item) =>
+                  item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
+                }
+                placeholder={translate('general/actions', 'Select...')}
+                forceEnable
+                full
+              />
+            )}
 
           <StyledButton
             type="submit"
-            label={translate('general/actions', 'Confirm refund')}
+            label={translate(
+              'general/actions',
+              transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+            )}
             onClick={handleSubmit(onSubmit)}
             width={StyledButtonWidth.FULL}
             disabled={!isValid}
@@ -596,7 +611,11 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               hidden={!tx.outputTxUrl}
                             />
                             <StyledButton
-                              label={translate('general/actions', 'Confirm refund')}
+                              label={translate(
+                                'general/actions',
+                                tx.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+                              )}
+                              color={StyledButtonColor.STURDY_WHITE}
                               onClick={() => navigate(`/tx/${tx.uid}/refund`)}
                               hidden={
                                 ![

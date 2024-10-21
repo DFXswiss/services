@@ -37,6 +37,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { useWalletContext } from 'src/contexts/wallet.context';
+import { useCountdown } from 'src/hooks/countdown.hook';
 import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
@@ -77,6 +78,7 @@ export default function SellInfoScreen(): JSX.Element {
   const { activeWallet } = useWalletContext();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { getTransactionByRequestId } = useTransaction();
+  const { timer, remainingSeconds, startTimer } = useCountdown();
 
   const [isLoading, setIsLoading] = useState(true);
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
@@ -90,7 +92,6 @@ export default function SellInfoScreen(): JSX.Element {
   const [kycError, setKycError] = useState<TransactionError>();
   const [isProcessing, setIsProcessing] = useState(false);
   const [sellTxId, setSellTxId] = useState<string>();
-  const [timer, setTimer] = useState<Timer>({ minutes: 0, seconds: 0 });
 
   // default params
   useEffect(() => {
@@ -127,20 +128,9 @@ export default function SellInfoScreen(): JSX.Element {
 
   useEffect(() => {
     if (!paymentInfo || isLoading) return;
-    const exchangeRateInterval = setInterval(() => {
-      const priceTimestamp = new Date(paymentInfo.timestamp);
-      const expiration = priceTimestamp.setMinutes(priceTimestamp.getMinutes() + 15);
-      const diff = expiration - Date.now();
-      setTimer({
-        minutes: Math.floor(diff / 60_000),
-        seconds: Math.floor((diff % 60_000) / 1000),
-      });
-
-      if (diff <= 1000) {
-        clearInterval(exchangeRateInterval);
-        fetchData();
-      }
-    }, 1000);
+    const priceTimestamp = new Date(paymentInfo.timestamp);
+    const expiration = priceTimestamp.setMinutes(priceTimestamp.getMinutes() + 15);
+    startTimer(new Date(expiration));
 
     const checkTransactionInterval = setInterval(() => {
       getTransactionByRequestId(paymentInfo.id)
@@ -155,10 +145,13 @@ export default function SellInfoScreen(): JSX.Element {
     }, 5000);
 
     return () => {
-      clearInterval(exchangeRateInterval);
       clearInterval(checkTransactionInterval);
     };
   }, [paymentInfo, isLoading]);
+
+  useEffect(() => {
+    if (remainingSeconds <= 1) fetchData();
+  }, [remainingSeconds]);
 
   useEffect(() => fetchData(), [asset, currency, bankAccount, amountIn, amountOut]);
 
