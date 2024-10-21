@@ -363,20 +363,23 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
               full
             />
           )}
-          {!refundDetails.refundTarget && ibans && isBuy && (
-            <StyledDropdown<string>
-              rootRef={rootRef}
-              name="iban"
-              label={translate('screens/payment', 'Chargeback IBAN')}
-              items={[...ibans.map((b) => b.iban), AddAccount]}
-              labelFunc={(item) =>
-                item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
-              }
-              placeholder={translate('general/actions', 'Select...')}
-              forceEnable
-              full
-            />
-          )}
+          {!refundDetails.refundTarget &&
+            transaction.inputPaymentMethod !== FiatPaymentMethod.CARD &&
+            ibans &&
+            isBuy && (
+              <StyledDropdown<string>
+                rootRef={rootRef}
+                name="iban"
+                label={translate('screens/payment', 'Chargeback IBAN')}
+                items={[...ibans.map((b) => b.iban), AddAccount]}
+                labelFunc={(item) =>
+                  item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
+                }
+                placeholder={translate('general/actions', 'Select...')}
+                forceEnable
+                full
+              />
+            )}
 
           <StyledButton
             type="submit"
@@ -612,6 +615,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                 'general/actions',
                                 tx.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
                               )}
+                              color={StyledButtonColor.STURDY_WHITE}
                               onClick={() => navigate(`/tx/${tx.uid}/refund`)}
                               hidden={
                                 ![
@@ -805,6 +809,20 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
         >
           <p>{blankedAddress(chargebackTarget, { width, scale: 0.65 })}</p>
           <CopyButton onCopy={() => copy(chargebackTarget)} />
+        </StyledDataTableRow>
+      )}
+      {tx.chargeBackTxId && (
+        <StyledDataTableRow label={translate('screens/payment', 'Chargeback TX')}>
+          {tx.chargeBackTxUrl ? (
+            <StyledLink label={blankedAddress(tx.chargeBackTxId, { width })} url={tx.chargeBackTxUrl} dark />
+          ) : (
+            <p>{blankedAddress(tx.chargeBackTxId, { width })}</p>
+          )}
+        </StyledDataTableRow>
+      )}
+      {tx.chargebackDate && (
+        <StyledDataTableRow label={translate('screens/payment', 'Chargeback date')}>
+          <p>{new Date(tx.chargebackDate).toLocaleString()}</p>
         </StyledDataTableRow>
       )}
     </StyledDataTable>

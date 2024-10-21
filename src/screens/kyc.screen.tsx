@@ -392,10 +392,6 @@ export default function KycScreen(): JSX.Element {
                     )}
                   </div>
                 </StyledDataTableRow>
-
-                <StyledDataTableRow label={translate('screens/kyc', 'Two-factor authentication')}>
-                  <p>{translate('general/actions', info.twoFactorEnabled ? 'Yes' : 'No')}</p>
-                </StyledDataTableRow>
               </StyledDataTable>
 
               {!allStepsCompleted && (
