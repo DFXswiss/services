@@ -227,10 +227,12 @@ export default function PaymentLinkScreen(): JSX.Element {
       setValue('paymentStandard', paymentStandard);
     }
 
-    const asset = payRequest.transferAmounts.find((item) => item.method === paymentStandard?.blockchain)?.assets?.[0]
-      ?.asset;
-    if (!selectedAsset && asset) {
-      setValue('asset', asset);
+    const assets = payRequest.transferAmounts.find(
+      (item) => item.method === selectedPaymentStandard?.blockchain,
+    )?.assets;
+
+    if ((!selectedAsset || !assets?.find((item) => item.asset === selectedAsset)) && assets?.length) {
+      setValue('asset', assets[0].asset);
     }
   }, [payRequest, paymentStandards, selectedPaymentStandard, selectedAsset]);
 
