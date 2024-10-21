@@ -232,10 +232,9 @@ export default function PaymentLinkScreen(): JSX.Element {
         awaitPayment(payRequest.quote.payment)
           .then((response) => {
             if (response.status !== PaymentLinkPaymentStatus.PENDING) {
+              setPaymentStatus(response.status);
               if (response.status === PaymentLinkPaymentStatus.COMPLETED && redirectUri) {
                 closeServices({ type: CloseType.PAYMENT_LINK }, false);
-              } else {
-                setPaymentStatus(response.status);
               }
             }
           })
