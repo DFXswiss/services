@@ -264,7 +264,7 @@ export default function PaymentLinkScreen(): JSX.Element {
             if (response.status !== PaymentLinkPaymentStatus.PENDING) {
               setPaymentStatus(response.status);
               if (response.status === PaymentLinkPaymentStatus.COMPLETED && redirectUri) {
-                closeServices({ type: CloseType.PAYMENT_LINK }, false);
+                closeServices({ type: CloseType.PAYMENT }, false);
               }
             }
           })

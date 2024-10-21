@@ -109,7 +109,7 @@ export enum CloseType {
   BUY = 'buy',
   SELL = 'sell',
   SWAP = 'swap',
-  PAYMENT_LINK = 'payment',
+  PAYMENT = 'payment',
   CANCEL = 'cancel',
 }
 
@@ -144,7 +144,7 @@ export interface SwapServicesParams extends CloseMessageData {
 }
 
 export interface PaymentLinkServicesParams extends CloseMessageData {
-  type: CloseType.PAYMENT_LINK;
+  type: CloseType.PAYMENT;
 }
 
 export type CloseServicesParams =
@@ -431,7 +431,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       case CloseType.BUY:
       case CloseType.SELL:
       case CloseType.SWAP:
-      case CloseType.PAYMENT_LINK:
+      case CloseType.PAYMENT:
         return params;
 
       default:
