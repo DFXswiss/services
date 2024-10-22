@@ -173,6 +173,7 @@
     "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Par la présente, je charge DFX de transmettre mes données KYC à {{client}}.",
 
     "Merging your accounts...": "Fusion de vos comptes...",
+    "My account": "Mon compte",
 
     "Upload your SEPA file here": "Téléchargez votre fichier SEPA ici",
     "Uploaded": "Téléchargé"
@@ -217,6 +218,8 @@
   "screens/error": {
     "Oh, sorry, something went wrong": "Désolé, il y a eu un problème",
 
+    "Invalid link": "Lien invalide",
+    "Merge is already completed": "La fusion est déjà terminée",
     "Please return to the previous page. If this problem persists, please contact our support.": "Veuillez revenir à la page précédente. Si le problème persiste, veuillez contacter notre service d'assistance."
   },
   "screens/home": {
