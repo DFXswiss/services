@@ -163,6 +163,7 @@ enum CloseType {
   BUY = 'buy',
   SELL = 'sell',
   SWAP = 'swap',
+  PAYMENT = 'payment',
 }
 
 interface CloseMessage {

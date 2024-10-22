@@ -109,6 +109,7 @@ export enum CloseType {
   BUY = 'buy',
   SELL = 'sell',
   SWAP = 'swap',
+  PAYMENT = 'payment',
   CANCEL = 'cancel',
 }
 
@@ -142,7 +143,16 @@ export interface SwapServicesParams extends CloseMessageData {
   swap: Swap;
 }
 
-export type CloseServicesParams = CancelServicesParams | BuyServicesParams | SellServicesParams | SwapServicesParams;
+export interface PaymentLinkServicesParams extends CloseMessageData {
+  type: CloseType.PAYMENT;
+}
+
+export type CloseServicesParams =
+  | CancelServicesParams
+  | BuyServicesParams
+  | SellServicesParams
+  | SwapServicesParams
+  | PaymentLinkServicesParams;
 
 // --- CONTEXT --- //
 interface AppHandlingContextInterface {
@@ -389,6 +399,9 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           isComplete: params.isComplete.toString(),
         });
         break;
+
+      default:
+        break;
     }
 
     return uri.toString();
@@ -418,6 +431,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       case CloseType.BUY:
       case CloseType.SELL:
       case CloseType.SWAP:
+      case CloseType.PAYMENT:
         return params;
 
       default:
