@@ -56,10 +56,8 @@ export default function AccountMerge() {
         {kycHash ? (
           <>
             <div>
-              <h2 className="text-dfxBlue-800">{translate('screens/error', 'Account merged successfully ')}</h2>
-              <p className="text-dfxGray-700">
-                {translate('screens/error', 'You can now navigate to your account screen.')}
-              </p>
+              <h2 className="text-dfxBlue-800">{translate('screens/kyc', 'Account merged successfully!')}</h2>
+              <p className="text-dfxGray-700">{translate('screens/kyc', 'You can now access your account.')}</p>
             </div>
 
             <StyledButton

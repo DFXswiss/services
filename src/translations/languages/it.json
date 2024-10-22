@@ -173,6 +173,8 @@
     "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Autorizzo DFX a trasmettere i miei dati KYC a {{client}}.",
 
     "Merging your accounts...": "Unione dei vostri account...",
+    "Account merged successfully!": "Account unito con successo!",
+    "You can now access your account.": "Ora puoi accedere al tuo account.",
     "My account": "Il mio account",
 
     "Upload your SEPA file here": "Carica il tuo file SEPA qui",
