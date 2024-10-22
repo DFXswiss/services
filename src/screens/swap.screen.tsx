@@ -132,7 +132,6 @@ export default function SwapScreen(): JSX.Element {
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
 
-  const data = useWatch({ control });
   const enteredAmount = useWatch({ control, name: 'amount' });
   const selectedSourceAsset = useWatch({ control, name: 'sourceAsset' });
   const selectedTargetAmount = useWatch({ control, name: 'targetAmount' });
