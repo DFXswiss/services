@@ -540,7 +540,9 @@ export default function SwapScreen(): JSX.Element {
               </StyledVerticalStack>
 
               <StyledVerticalStack gap={2} full>
-                <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
+                <h2 className="text-dfxGray-700">
+                  {translate('screens/buy', paymentInfo?.rate === 1 ? 'You get' : 'You get about')}
+                </h2>
 
                 <StyledHorizontalStack gap={1}>
                   <div className="flex-[3_1_9rem]">

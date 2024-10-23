@@ -309,6 +309,7 @@
   },
   "screens/buy": {
     "You spend": "Vous dépensez",
+    "You get": "Vous obtenez",
     "You get about": "Vous obtenez environ",
 
     "Target address": "Adresse de destination",
