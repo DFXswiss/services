@@ -724,7 +724,14 @@ export const FeatureTree: Page[] = [
       {
         id: 'monero',
         img: 'monero',
-        disabled: true,
+        next: {
+          page: 'monero-wallets',
+          tiles: ['cake', 'monero-wallet', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.MONERO, assetIn: 'XMR' },
+          },
+        },
       },
       {
         id: 'solana',
