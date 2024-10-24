@@ -24,6 +24,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
+import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 
 interface FormData {
@@ -53,6 +54,7 @@ export default function SettingsScreen(): JSX.Element {
   const { translate, language, currency, availableLanguages, changeLanguage, changeCurrency } = useSettingsContext();
   const { currencies } = useFiatContext();
   const { user, isUserLoading } = useUserContext();
+  const { navigate } = useNavigation();
   const { width } = useWindowContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -90,6 +92,10 @@ export default function SettingsScreen(): JSX.Element {
       changeCurrency(selectedCurrency);
     }
   }, [selectedCurrency]);
+
+  useEffect(() => {
+    if (overlayType === OverlayType.EDIT_EMAIL) navigate('/edit-mail', { setRedirect: true });
+  }, [overlayType]);
 
   function onCloseOverlay(): void {
     setOverlayType(OverlayType.NONE);
@@ -390,20 +396,20 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
           }}
         />
       );
-    case OverlayType.EDIT_EMAIL:
-      return (
-        <EditOverlay
-          label={translate('screens/kyc', 'Email address')}
-          prefill={user?.mail}
-          placeholder={translate('screens/kyc', 'Email address')}
-          validation={Validations.Mail}
-          onCancel={onClose}
-          onEdit={async (result) => {
-            await changeMail(result);
-            onClose();
-          }}
-        />
-      );
+    // case OverlayType.EDIT_EMAIL:
+    //   return (
+    //     <EditOverlay
+    //       label={translate('screens/kyc', 'Email address')}
+    //       prefill={user?.mail}
+    //       placeholder={translate('screens/kyc', 'Email address')}
+    //       validation={Validations.Mail}
+    //       onCancel={onClose}
+    //       onEdit={async (result) => {
+    //         await changeMail(result);
+    //         onClose();
+    //       }}
+    //     />
+    //   );
     case OverlayType.EDIT_PHONE:
       return (
         <EditOverlay
