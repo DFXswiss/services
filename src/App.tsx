@@ -38,6 +38,7 @@ const AccountMerge = lazy(() => import('./screens/account-merge.screen'));
 const MailLoginScreen = lazy(() => import('./screens/mail-login.screen'));
 const SepaScreen = lazy(() => import('./screens/sepa.screen'));
 const BlockchainTransactionScreen = lazy(() => import('./screens/blockchain-tx.screen'));
+const EditMailScreen = lazy(() => import('./screens/edit-mail.screen'));
 
 setupLanguages();
 
@@ -54,6 +55,10 @@ export const Routes = [
   {
     path: 'settings',
     element: withSuspense(<SettingsScreen />),
+  },
+  {
+    path: '/edit-mail',
+    element: withSuspense(<EditMailScreen />),
   },
   {
     path: '/login',
