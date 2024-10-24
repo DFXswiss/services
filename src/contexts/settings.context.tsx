@@ -29,8 +29,16 @@ const ValidationErrors: Record<string, string> = {
   file_type: 'Allowed formats: PDF, JPG, JPEG, PNG',
 };
 
+const languageToLocale: { [language: string]: string } = {
+  en: 'en-US',
+  de: 'de-DE',
+  fr: 'fr-FR',
+  it: 'it-IT',
+};
+
 interface SettingsInterface {
   availableLanguages: Language[];
+  locale: string;
   language?: Language;
   currency?: Fiat;
   changeLanguage: (language: Language) => void;
@@ -232,6 +240,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const context = useMemo(
     () => ({
       availableLanguages,
+      locale: languageToLocale[language?.symbol.toLowerCase() ?? 'en'],
       language,
       currency,
       changeLanguage,
@@ -246,7 +255,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
       get,
       put,
     }),
-    [availableLanguages, language, store],
+    [availableLanguages, language, languageToLocale, store],
   );
 
   return <SettingsContext.Provider value={context}>{props.children}</SettingsContext.Provider>;
