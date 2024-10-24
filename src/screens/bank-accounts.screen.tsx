@@ -25,7 +25,7 @@ export default function BankAccountsScreen(): JSX.Element {
   const { addIban } = useBankAccount();
   const { countries } = useUserContext();
 
-  const isMissingTxIssue = useRef<boolean>();
+  const isMissingTxIssue = useRef<boolean>(state?.isMissingTxIssue);
   const newIban = useRef<string>();
 
   const [isAdded, setIsAdded] = useState(false);
