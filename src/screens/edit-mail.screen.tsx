@@ -43,16 +43,8 @@ export default function EditMailScreen(): JSX.Element {
 
   async function onSubmit(newEmail: string) {
     changeMail(newEmail)
-      .then((response: any) => {
-        if (response.error) {
-          setError(response.error);
-          return;
-        }
-
-        setMailVerificationStep(true);
-      })
+      .then(() => setMailVerificationStep(true))
       .catch((e: ApiError) => setError(e.message));
-    // navigate('/account');
   }
 
   async function onVerify(data: { token: string }) {
@@ -60,12 +52,8 @@ export default function EditMailScreen(): JSX.Element {
     setTokenInvalid(false);
     setIsSubmitting(true);
 
-    call({
-      url: '/kyc/verify-email',
-      method: 'POST',
-      data: { token: data.token },
-    })
-      .then(() => goBack())
+    call({ url: 'user/mail/verify', version: 'v2', method: 'POST', data: { token: data.token } })
+      .then(() => navigate('/settings'))
       .catch((e: ApiError) => (e.statusCode === 403 ? setTokenInvalid(true) : setError(e.message ?? 'Unknown error')))
       .finally(() => setIsSubmitting(false));
   }
