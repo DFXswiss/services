@@ -6,11 +6,12 @@ import { url } from '../util/utils';
 interface NavigationOptions extends NavigateOptions {
   clearParams?: string[];
   setRedirect?: boolean;
+  redirectPath?: string;
 }
 
 interface NavigationInterface {
   navigate: (to: To | number, options?: NavigationOptions) => void;
-  goBack: () => void;
+  goBack: (options?: NavigationOptions) => void;
   setParams: (params: URLSearchParams) => void;
   clearParams: (params: string[]) => void;
 }
@@ -21,7 +22,7 @@ export function useNavigation(): NavigationInterface {
   const { redirectPath, setRedirectPath } = useAppHandlingContext();
 
   function navigate(to: To | number, options?: NavigationOptions) {
-    if (options?.setRedirect) setRedirectPath(pathname);
+    if (options?.setRedirect) setRedirectPath(options?.redirectPath ?? pathname);
 
     switch (typeof to) {
       case 'number':
@@ -38,9 +39,9 @@ export function useNavigation(): NavigationInterface {
     }
   }
 
-  function goBack() {
+  function goBack(options?: NavigationOptions) {
     setRedirectPath(undefined);
-    navigate(redirectPath ?? '/account');
+    navigate(redirectPath ?? '/account', options);
   }
 
   function setParams(newParams: URLSearchParams) {

@@ -20,12 +20,12 @@ export default function BankAccountsScreen(): JSX.Element {
   useUserGuard('/login');
 
   const { state } = useLocation();
-  const { navigate, goBack } = useNavigation();
+  const { goBack } = useNavigation();
   const { translate, translateError } = useSettingsContext();
   const { addIban } = useBankAccount();
   const { countries } = useUserContext();
 
-  const refundTxUid = useRef<string>();
+  const isMissingTxIssue = useRef<boolean>(state?.isMissingTxIssue);
   const newIban = useRef<string>();
 
   const [isAdded, setIsAdded] = useState(false);
@@ -34,7 +34,7 @@ export default function BankAccountsScreen(): JSX.Element {
   const [customError, setCustomError] = useState<string>();
 
   useEffect(() => {
-    refundTxUid.current = state?.refundTxUid;
+    isMissingTxIssue.current = state?.isMissingTxIssue;
   }, []);
 
   // form
@@ -86,9 +86,7 @@ export default function BankAccountsScreen(): JSX.Element {
   }
 
   function onClose() {
-    !refundTxUid.current
-      ? goBack()
-      : navigate(`/tx/${refundTxUid.current}/refund`, { state: { newIban: newIban.current } });
+    goBack({ state: { newIban: newIban.current } });
   }
 
   return (
@@ -99,9 +97,9 @@ export default function BankAccountsScreen(): JSX.Element {
             <p className="text-dfxGray-700">
               {translate(
                 'screens/iban',
-                refundTxUid.current
-                  ? 'The bank account has been added, all transactions from this IBAN will now be associated with your account.'
-                  : 'The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.',
+                isMissingTxIssue.current
+                  ? 'The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.'
+                  : 'The bank account has been added, all transactions from this IBAN will now be associated with your account.',
               )}
             </p>
 

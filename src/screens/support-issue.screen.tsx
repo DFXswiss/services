@@ -174,7 +174,8 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [urlParams]);
 
   useEffect(() => {
-    if (selectedSender === AddAccount) navigate('/bank-accounts');
+    if (selectedSender === AddAccount)
+      navigate('/bank-accounts', { setRedirect: true, redirectPath: '/tx', state: { isMissingTxIssue: true } });
   }, [selectedSender]);
 
   useEffect(() => {

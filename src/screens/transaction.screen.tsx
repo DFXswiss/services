@@ -289,7 +289,8 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   }, [transaction]);
 
   useEffect(() => {
-    if (selectedIban === AddAccount) navigate('/bank-accounts', { setRedirect: true, state: { refundTxUid: id } });
+    if (selectedIban === AddAccount)
+      navigate('/bank-accounts', { setRedirect: true, redirectPath: `/tx/${id}/refund` });
   }, [selectedIban]);
 
   useEffect(() => {
