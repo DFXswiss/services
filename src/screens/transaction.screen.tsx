@@ -3,6 +3,7 @@ import {
   Asset,
   CryptoPaymentMethod,
   DetailTransaction,
+  ExportFormat,
   Fiat,
   FiatPaymentMethod,
   Iban,
@@ -75,7 +76,7 @@ export default function TransactionScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { session } = useAuthContext();
   const { translate } = useSettingsContext();
-  const { getTransactionCsv } = useTransaction();
+  const { getTransactionCsv, getTransactionHistory } = useTransaction();
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -97,12 +98,11 @@ export default function TransactionScreen(): JSX.Element {
           break;
         case ExportType.COIN_TRACKING:
         case ExportType.CHAIN_REPORT:
-          await call<string>({
-            url: `transaction/${type}?userAddress=${user?.activeAddress?.address}&format=csv`,
-            method: 'GET',
-            noJson: true,
-          }).then((csv) => {
-            const blob = new Blob([csv], { type: 'text/csv' });
+          await getTransactionHistory(type, {
+            userAddress: user.activeAddress?.address,
+            format: ExportFormat.CSV,
+          }).then((response) => {
+            const blob = new Blob([response], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
 
             window.open(url, '_blank');
