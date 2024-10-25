@@ -13,6 +13,7 @@ import {
   UserAddress,
   Utils,
   Validations,
+  useApi,
   useAuthContext,
   useBankAccount,
   useSessionContext,
@@ -60,8 +61,16 @@ import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress } from '../util/utils';
 
+export enum ExportType {
+  COMPACT = 'Compact',
+  COIN_TRACKING = 'CoinTracking',
+  CHAIN_REPORT = 'ChainReport',
+}
+
 export default function TransactionScreen(): JSX.Element {
   const { id } = useParams();
+  const { call } = useApi();
+  const { user } = useUserContext();
   const { pathname } = useLocation();
   const { navigate } = useNavigation();
   const { session } = useAuthContext();
@@ -69,19 +78,42 @@ export default function TransactionScreen(): JSX.Element {
   const { getTransactionCsv } = useTransaction();
   const rootRef = useRef<HTMLDivElement>(null);
 
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [showCoinTracking, setShowCoinTracking] = useState(false);
-  const [isCsvLoading, setIsCsvLoading] = useState(false);
+  const [isCsvLoading, setIsCsvLoading] = useState<ExportType>();
   const [error, setError] = useState<string>();
 
   const isTransaction = id && id.startsWith('T');
   const isRefund = isTransaction && pathname.includes('/refund');
 
-  function exportCsv() {
-    setIsCsvLoading(true);
-    getTransactionCsv()
-      .then((url) => window.open(url, '_blank'))
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsCsvLoading(false));
+  async function exportCsv(type: ExportType) {
+    if (!user) return;
+
+    try {
+      setIsCsvLoading(type);
+      switch (type) {
+        case ExportType.COMPACT:
+          await getTransactionCsv().then((url) => window.open(url, '_blank'));
+          break;
+        case ExportType.COIN_TRACKING:
+        case ExportType.CHAIN_REPORT:
+          await call<string>({
+            url: `transaction/${type}?userAddress=${user?.activeAddress?.address}&format=csv`,
+            method: 'GET',
+            noJson: true,
+          }).then((csv) => {
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+
+            window.open(url, '_blank');
+          });
+      }
+    } catch (e) {
+      setError((e as ApiError).message ?? 'Unknown error');
+    } finally {
+      setIsCsvLoading(undefined);
+      setShowExportMenu(false);
+    }
   }
 
   const title = isRefund
@@ -93,7 +125,7 @@ export default function TransactionScreen(): JSX.Element {
     : translate('screens/payment', 'Transactions');
 
   const onBack =
-    isTransaction || isRefund
+    isTransaction || isRefund || error
       ? () => {
           setError(undefined);
           navigate('/tx');
@@ -125,9 +157,38 @@ export default function TransactionScreen(): JSX.Element {
             color={StyledButtonColor.STURDY_WHITE}
             width={StyledButtonWidth.FULL}
             label={translate('screens/payment', 'Export CSV')}
-            isLoading={isCsvLoading}
-            onClick={exportCsv}
+            icon={showExportMenu ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
+            iconAfterLabel
+            onClick={() => setShowExportMenu((prev) => !prev)}
           />
+          {!!showExportMenu && (
+            <StyledVerticalStack full gap={2} className="border-2 rounded-md border-dfxGray-300 p-2">
+              <StyledButton
+                color={StyledButtonColor.WHITE}
+                width={StyledButtonWidth.FULL}
+                label={translate('screens/payment', 'Compact')}
+                isLoading={isCsvLoading === ExportType.COMPACT}
+                onClick={() => exportCsv(ExportType.COMPACT)}
+              />
+              <StyledButton
+                color={StyledButtonColor.WHITE}
+                width={StyledButtonWidth.FULL}
+                label={translate('screens/payment', 'CoinTracking')}
+                isLoading={isCsvLoading === ExportType.COIN_TRACKING}
+                onClick={() => exportCsv(ExportType.COIN_TRACKING)}
+                hidden={!user?.activeAddress}
+              />
+              <StyledButton
+                color={StyledButtonColor.WHITE}
+                width={StyledButtonWidth.FULL}
+                label={translate('screens/payment', 'Chain-Report')}
+                isLoading={isCsvLoading === ExportType.CHAIN_REPORT}
+                onClick={() => exportCsv(ExportType.CHAIN_REPORT)}
+                hidden={!user?.activeAddress}
+              />
+            </StyledVerticalStack>
+          )}
+
           <TransactionList isSupport={false} setError={setError} />
         </>
       )}
@@ -289,7 +350,8 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   }, [transaction]);
 
   useEffect(() => {
-    if (selectedIban === AddAccount) navigate('/bank-accounts', { setRedirect: true, state: { refundTxUid: id } });
+    if (selectedIban === AddAccount)
+      navigate('/bank-accounts', { setRedirect: true, redirectPath: `/tx/${id}/refund` });
   }, [selectedIban]);
 
   useEffect(() => {

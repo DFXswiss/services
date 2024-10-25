@@ -184,7 +184,7 @@ export default function SettingsScreen(): JSX.Element {
                     alignContent={AlignContent.BETWEEN}
                   >
                     {addressesList.map((address) => {
-                      const isDisabled = (user as any)?.disabledAddresses.some(
+                      const isDisabled = user?.disabledAddresses.some(
                         (disabledAddress: UserAddress) => disabledAddress.address === address.address,
                       );
 
@@ -242,22 +242,25 @@ export default function SettingsScreen(): JSX.Element {
                         </StyledDataTableRow>
                       );
                     })}
-                    <StyledDataTableRow>
-                      <div
-                        className="flex flex-row w-full justify-between items-start gap-1 text-xs cursor-pointer select-none text-dfxGray-700 hover:text-dfxGray-800"
-                        onClick={() => setShowDisabledWallets((prev) => !prev)}
-                      >
-                        <div>
-                          {showDisabledWallets
-                            ? translate('screens/settings', 'Hide deleted addresses')
-                            : translate('screens/settings', 'Show deleted addresses')}
+
+                    {!!user?.disabledAddresses.length && (
+                      <StyledDataTableRow>
+                        <div
+                          className="flex flex-row w-full justify-between items-start gap-1 text-xs cursor-pointer select-none text-dfxGray-700 hover:text-dfxGray-800"
+                          onClick={() => setShowDisabledWallets((prev) => !prev)}
+                        >
+                          <div>
+                            {showDisabledWallets
+                              ? translate('screens/settings', 'Hide deleted addresses')
+                              : translate('screens/settings', 'Show deleted addresses')}
+                          </div>
+                          <DfxIcon
+                            icon={showDisabledWallets ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
+                            color={IconColor.DARK_GRAY}
+                          />
                         </div>
-                        <DfxIcon
-                          icon={showDisabledWallets ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
-                          color={IconColor.DARK_GRAY}
-                        />
-                      </div>
-                    </StyledDataTableRow>
+                      </StyledDataTableRow>
+                    )}
                   </StyledDataTable>
                 </StyledVerticalStack>
               ) : (
