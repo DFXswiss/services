@@ -173,6 +173,9 @@
     "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Par la présente, je charge DFX de transmettre mes données KYC à {{client}}.",
 
     "Merging your accounts...": "Fusion de vos comptes...",
+    "Account merged successfully!": "Compte fusionné avec succès!",
+    "You can now access your account.": "Vous pouvez maintenant accéder à votre compte.",
+    "My account": "Mon compte",
 
     "Upload your SEPA file here": "Téléchargez votre fichier SEPA ici",
     "Uploaded": "Téléchargé"
@@ -217,6 +220,8 @@
   "screens/error": {
     "Oh, sorry, something went wrong": "Désolé, il y a eu un problème",
 
+    "Invalid link": "Lien invalide",
+    "Merge is already completed": "La fusion est déjà terminée",
     "Please return to the previous page. If this problem persists, please contact our support.": "Veuillez revenir à la page précédente. Si le problème persiste, veuillez contacter notre service d'assistance."
   },
   "screens/home": {
@@ -309,6 +314,7 @@
   },
   "screens/buy": {
     "You spend": "Vous dépensez",
+    "You get": "Vous obtenez",
     "You get about": "Vous obtenez environ",
 
     "Target address": "Adresse de destination",
@@ -538,6 +544,8 @@
     "Other compatible wallets": "Autres portefeuilles compatibles",
 
     "Cointracking": "Cointracking",
+    "Compact": "Compact",
+    "Chain-Report": "Chain-Report",
     "Saved": "Enregistré",
     "Cointracking Link (read rights)": "Lien Cointracking (droits de lecture)",
     "Cointracking homepage": "Page d'accueil Cointracking",
