@@ -47,16 +47,19 @@ export default function SupportTicketsScreen(): JSX.Element {
     return (a.state === SupportIssueState.COMPLETED ? 1 : 0) - (b.state === SupportIssueState.COMPLETED ? 1 : 0);
   }
 
-  if (tickets?.length > 1) tickets.sort(sortCompletedLast);
+  const sortedTickets = tickets ? [...tickets].sort(sortCompletedLast) : [];
 
   return (
-    <Layout title={translate('screens/support', !tickets.length ? 'Support' : 'Support tickets')} rootRef={rootRef}>
+    <Layout
+      title={translate('screens/support', !sortedTickets.length ? 'Support' : 'Support tickets')}
+      rootRef={rootRef}
+    >
       <StyledVerticalStack center gap={4} full className="text-dfxBlue-800">
         {error ? (
           <div>
             <ErrorHint message={error} />
           </div>
-        ) : !tickets.length ? (
+        ) : !sortedTickets.length ? (
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         ) : (
           <div className="flex flex-col w-full gap-4">
@@ -84,7 +87,7 @@ export default function SupportTicketsScreen(): JSX.Element {
                   </tr>
                 </thead>
                 <tbody>
-                  {tickets.map((ticket) => (
+                  {sortedTickets.map((ticket) => (
                     <tr
                       key={ticket.uid}
                       onClick={() => navigate(`/support/chat/${ticket.uid}`)}
@@ -124,7 +127,7 @@ export default function SupportTicketsScreen(): JSX.Element {
                   <tr
                     className="bg-white border-b-4 border-dfxGray-300 last:border-none hover:bg-dfxGray-300/60 cursor-pointer"
                     onClick={() => setShowCompletedTickets((prev) => !prev)}
-                    hidden={tickets.find((ticket) => ticket.state === SupportIssueState.COMPLETED) === undefined}
+                    hidden={!sortedTickets.some((ticket) => ticket.state === SupportIssueState.COMPLETED)}
                   >
                     <td className="px-6 py-3 text-xs" colSpan={2}>
                       <div className="flex flex-row items-center justify-between gap-2 ">
