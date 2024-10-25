@@ -19,7 +19,7 @@ import { useNavigation } from 'src/hooks/navigation.hook';
 export default function EditMailScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { changeMail, verifyMail } = useUserContext();
-  const { navigate, goBack } = useNavigation();
+  const { navigate } = useNavigation();
   const { user } = useUserContext();
   const { call } = useApi();
 

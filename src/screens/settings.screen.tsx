@@ -399,20 +399,6 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
           }}
         />
       );
-    // case OverlayType.EDIT_EMAIL:
-    //   return (
-    //     <EditOverlay
-    //       label={translate('screens/kyc', 'Email address')}
-    //       prefill={user?.mail}
-    //       placeholder={translate('screens/kyc', 'Email address')}
-    //       validation={Validations.Mail}
-    //       onCancel={onClose}
-    //       onEdit={async (result) => {
-    //         await changeMail(result);
-    //         onClose();
-    //       }}
-    //     />
-    //   );
     case OverlayType.EDIT_PHONE:
       return (
         <EditOverlay
