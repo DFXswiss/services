@@ -127,7 +127,7 @@ export default function SupportTicketsScreen(): JSX.Element {
                   <tr
                     className="bg-white border-b-4 border-dfxGray-300 last:border-none hover:bg-dfxGray-300/60 cursor-pointer"
                     onClick={() => setShowCompletedTickets((prev) => !prev)}
-                    hidden={!sortedTickets.some((ticket) => ticket.state === SupportIssueState.COMPLETED)}
+                    hidden={sortedTickets[sortedTickets.length - 1]?.state !== SupportIssueState.COMPLETED}
                   >
                     <td className="px-6 py-3 text-xs" colSpan={2}>
                       <div className="flex flex-row items-center justify-between gap-2 ">
