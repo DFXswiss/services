@@ -18,7 +18,7 @@ import { useNavigation } from 'src/hooks/navigation.hook';
 
 export default function EditMailScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
-  const { changeMail } = useUserContext();
+  const { changeMail, verifyMail } = useUserContext();
   const { navigate, goBack } = useNavigation();
   const { user } = useUserContext();
   const { call } = useApi();
@@ -42,7 +42,7 @@ export default function EditMailScreen(): JSX.Element {
   } = useForm<{ token: string }>({ mode: 'onTouched' });
 
   async function onSubmit(newEmail: string) {
-    changeMail(newEmail)
+    return changeMail(newEmail)
       .then(() => setMailVerificationStep(true))
       .catch((e: ApiError) => setError(e.message));
   }
@@ -52,7 +52,7 @@ export default function EditMailScreen(): JSX.Element {
     setTokenInvalid(false);
     setIsSubmitting(true);
 
-    call({ url: 'user/mail/verify', version: 'v2', method: 'POST', data: { token: data.token } })
+    verifyMail(data.token)
       .then(() => navigate('/settings'))
       .catch((e: ApiError) => (e.statusCode === 403 ? setTokenInvalid(true) : setError(e.message ?? 'Unknown error')))
       .finally(() => setIsSubmitting(false));
