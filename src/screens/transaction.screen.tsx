@@ -86,29 +86,33 @@ export default function TransactionScreen(): JSX.Element {
   const isTransaction = id && id.startsWith('T');
   const isRefund = isTransaction && pathname.includes('/refund');
 
-  function exportCsv(type: ExportType) {
+  async function exportCsv(type: ExportType) {
     if (!user) return;
 
-    setIsCsvLoading(type);
-    exportCsvHelper(type)
-      .then((url) => window.open(url, '_blank'))
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => {
-        setIsCsvLoading(undefined);
-        setShowExportMenu(false);
-      });
-  }
+    try {
+      setIsCsvLoading(type);
+      switch (type) {
+        case ExportType.COMPACT:
+          await getTransactionCsv().then((url) => window.open(url, '_blank'));
+          break;
+        case ExportType.COIN_TRACKING:
+        case ExportType.CHAIN_REPORT:
+          await call<string>({
+            url: `transaction/${type}?userAddress=${user?.activeAddress?.address}&format=csv`,
+            method: 'GET',
+            noJson: true,
+          }).then((csv) => {
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
 
-  async function exportCsvHelper(type: ExportType) {
-    switch (type) {
-      case ExportType.COMPACT:
-        return getTransactionCsv();
-      case ExportType.COIN_TRACKING:
-      case ExportType.CHAIN_REPORT:
-        return call<string>({
-          url: `transaction/${type}?userAddress=${user?.activeAddress?.address}&format=csv`,
-          method: 'GET',
-        });
+            window.open(url, '_blank');
+          });
+      }
+    } catch (e) {
+      setError((e as ApiError).message ?? 'Unknown error');
+    } finally {
+      setIsCsvLoading(undefined);
+      setShowExportMenu(false);
     }
   }
 
@@ -169,7 +173,7 @@ export default function TransactionScreen(): JSX.Element {
               <StyledButton
                 color={StyledButtonColor.WHITE}
                 width={StyledButtonWidth.FULL}
-                label={translate('screens/payment', 'Coin-Tracking')}
+                label={translate('screens/payment', 'CoinTracking')}
                 isLoading={isCsvLoading === ExportType.COIN_TRACKING}
                 onClick={() => exportCsv(ExportType.COIN_TRACKING)}
                 hidden={!user?.activeAddress}
