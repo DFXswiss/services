@@ -272,13 +272,13 @@ export default function PaymentLinkScreen(): JSX.Element {
             fetchPayRequest(url);
           });
         refetchDelay = new Date(payRequest.quote.expiration).getTime() - Date.now();
+        startTimer(new Date(payRequest.quote.expiration));
       } else {
         refetchDelay = 1000;
       }
 
       if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
       refetchTimeout.current = setTimeout(() => fetchPayRequest(url), refetchDelay);
-      startTimer(new Date(payRequest.quote.expiration));
     } catch (error: any) {
       setError(error.message ?? 'Unknown Error');
     }

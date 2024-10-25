@@ -3,6 +3,7 @@ import {
   Asset,
   Blockchain,
   Swap,
+  SwapPaymentInfo,
   TransactionError,
   TransactionType,
   Utils,
@@ -27,13 +28,13 @@ import {
   StyledLink,
   StyledLoadingSpinner,
   StyledSearchDropdown,
-  StyledTextBox,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
-import { DeepPartial, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { useWindowContext } from 'src/contexts/window.context';
+import useDebounce from 'src/hooks/debounce.hook';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
@@ -48,10 +49,14 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
-import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useTxHelper } from '../hooks/tx-helper.hook';
+
+enum Side {
+  SPEND = 'SPEND',
+  GET = 'GET',
+}
 
 interface Address {
   address: string;
@@ -63,6 +68,7 @@ interface FormData {
   sourceAsset: Asset;
   targetAsset: Asset;
   amount: string;
+  targetAmount: string;
   address: Address;
 }
 
@@ -71,6 +77,10 @@ interface CustomAmountError {
   defaultValue: string;
   interpolation?: Record<string, string | number> | undefined;
   hideInfos: boolean;
+}
+
+interface ValidatedData extends SwapPaymentInfo {
+  sideToUpdate?: Side;
 }
 
 export default function SwapScreen(): JSX.Element {
@@ -106,14 +116,14 @@ export default function SwapScreen(): JSX.Element {
   const [customAmountError, setCustomAmountError] = useState<CustomAmountError>();
   const [errorMessage, setErrorMessage] = useState<string>();
   const [kycError, setKycError] = useState<TransactionError>();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isPriceLoading, setIsPriceLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<Side>();
   const [paymentInfo, setPaymentInfo] = useState<Swap>();
   const [balances, setBalances] = useState<AssetBalance[]>();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isTxDone, setTxDone] = useState<boolean>(false);
   const [swapTxId, setSwapTxId] = useState<string>();
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
+  const [validatedData, setValidatedData] = useState<ValidatedData>();
 
   useEffect(() => {
     sourceAssets && getBalances(sourceAssets).then(setBalances);
@@ -122,9 +132,10 @@ export default function SwapScreen(): JSX.Element {
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
 
-  const data = useWatch({ control });
-  const selectedSourceAsset = useWatch({ control, name: 'sourceAsset' });
   const enteredAmount = useWatch({ control, name: 'amount' });
+  const selectedSourceAsset = useWatch({ control, name: 'sourceAsset' });
+  const selectedTargetAmount = useWatch({ control, name: 'targetAmount' });
+  const selectedTargetAsset = useWatch({ control, name: 'targetAsset' });
   const selectedAddress = useWatch({ control, name: 'address' });
 
   // default params
@@ -221,27 +232,66 @@ export default function SwapScreen(): JSX.Element {
     }
   }, [enteredAmount]);
 
-  // data validation
-  const validatedData = validateData(useDebounce(data, 500));
-  const dataValid = validatedData != null;
+  // SPEND data changed
+  useEffect(() => {
+    const requiresUpdate =
+      enteredAmount !== paymentInfo?.amount?.toString() ||
+      selectedSourceAsset?.uniqueName !== paymentInfo?.sourceAsset.uniqueName;
+
+    const hasSpendData = enteredAmount && selectedSourceAsset;
+    const hasGetData = selectedTargetAmount && selectedTargetAsset && selectedAddress;
+
+    if (requiresUpdate) {
+      if (hasSpendData) {
+        updateData(Side.GET);
+      } else if (hasGetData) {
+        updateData(Side.SPEND);
+      }
+    }
+  }, [enteredAmount, selectedSourceAsset]);
+
+  // GET data changed
+  useEffect(() => {
+    const isSameTargetAmount = selectedTargetAmount === paymentInfo?.estimatedAmount?.toString();
+    const requiresUpdate =
+      !isSameTargetAmount || selectedTargetAsset?.uniqueName !== paymentInfo?.targetAsset?.uniqueName;
+
+    const hasSpendData = enteredAmount && selectedSourceAsset;
+    const hasGetData = selectedTargetAmount && selectedTargetAsset && selectedAddress;
+
+    if (requiresUpdate) {
+      if (hasGetData) {
+        updateData(Side.SPEND);
+      } else if (hasSpendData) {
+        updateData(Side.GET);
+      }
+    }
+  }, [selectedTargetAmount, selectedTargetAsset]);
+
+  function updateData(sideToUpdate: Side) {
+    const data = validateData({
+      amount: sideToUpdate === Side.GET ? enteredAmount : undefined,
+      sourceAsset: selectedSourceAsset,
+      targetAsset: selectedTargetAsset,
+      targetAmount: sideToUpdate === Side.SPEND || enteredAmount === undefined ? selectedTargetAmount : undefined,
+      address: selectedAddress,
+    });
+
+    data && setValidatedData({ ...data, sideToUpdate });
+  }
 
   useEffect(() => {
     let isRunning = true;
 
     setErrorMessage(undefined);
+    setPaymentInfo(undefined);
+    setIsLoading(undefined);
 
-    if (!dataValid) {
-      setPaymentInfo(undefined);
-      setIsLoading(false);
-      setIsPriceLoading(false);
-      return;
-    }
+    if (!validatedData) return;
 
-    const amount = Number(validatedData.amount);
-    const { sourceAsset, targetAsset } = validatedData;
-    const data = { amount, sourceAsset, targetAsset, receiverAddress: selectedAddress?.address, externalTransactionId };
+    const data: SwapPaymentInfo = { ...validatedData, externalTransactionId };
 
-    setIsLoading(true);
+    setIsLoading(validatedData.sideToUpdate);
     receiveFor(data)
       .then((swap) => {
         if (isRunning) {
@@ -250,16 +300,16 @@ export default function SwapScreen(): JSX.Element {
 
           // load exact price
           if (swap) {
-            setIsPriceLoading(true);
-            receiveFor({ ...data, exactPrice: true })
-              .then((info) => {
-                if (isRunning) {
-                  setPaymentInfo(info);
-                  setIsPriceLoading(false);
-                }
-              })
-              .catch(console.error);
+            return receiveFor({ ...data, exactPrice: true });
           }
+        }
+      })
+      .then((info) => {
+        if (isRunning && info) {
+          validatedData.sideToUpdate === Side.SPEND
+            ? setVal('amount', info.amount.toString())
+            : setVal('targetAmount', info.estimatedAmount.toString());
+          setPaymentInfo(info);
         }
       })
       .catch((error: ApiError) => {
@@ -272,12 +322,12 @@ export default function SwapScreen(): JSX.Element {
           }
         }
       })
-      .finally(() => isRunning && setIsLoading(false));
+      .finally(() => isRunning && setIsLoading(undefined));
 
     return () => {
       isRunning = false;
     };
-  }, [validatedData, session?.address]);
+  }, [useDebounce(validatedData, 500)]);
 
   function validateSwap(swap: Swap): void {
     setCustomAmountError(undefined);
@@ -334,9 +384,21 @@ export default function SwapScreen(): JSX.Element {
     }
   }
 
-  function validateData(data?: DeepPartial<FormData>): FormData | undefined {
-    if (data && Number(data.amount) > 0 && data.sourceAsset != null && data.targetAsset != null) {
-      return data as FormData;
+  function validateData({
+    amount: amountStr,
+    sourceAsset,
+    targetAsset,
+    targetAmount: targetAmountStr,
+    address,
+  }: Partial<FormData> = {}): SwapPaymentInfo | undefined {
+    const amount = Number(amountStr);
+    const targetAmount = Number(targetAmountStr);
+    if (sourceAsset != null && targetAsset != null && address != null) {
+      return amount > 0
+        ? { amount, sourceAsset, targetAsset, receiverAddress: address.address }
+        : targetAmount > 0
+        ? { sourceAsset, targetAsset, targetAmount, receiverAddress: address.address }
+        : undefined;
     }
   }
 
@@ -478,15 +540,17 @@ export default function SwapScreen(): JSX.Element {
               </StyledVerticalStack>
 
               <StyledVerticalStack gap={2} full>
-                <h2 className="text-dfxGray-700">{translate('screens/buy', 'You get about')}</h2>
+                <h2 className="text-dfxGray-700">
+                  {translate('screens/buy', paymentInfo?.rate === 1 ? 'You get' : 'You get about')}
+                </h2>
 
                 <StyledHorizontalStack gap={1}>
                   <div className="flex-[3_1_9rem]">
-                    <StyledTextBox
-                      text={
-                        paymentInfo && !isLoading ? `≈ ${Utils.formatAmountCrypto(paymentInfo.estimatedAmount)}` : ' '
-                      }
-                      loading={!isLoading && isPriceLoading}
+                    <StyledInput
+                      type="number"
+                      name="targetAmount"
+                      loading={isLoading === Side.GET}
+                      disabled={isLoading === Side.GET}
                       full
                     />
                   </div>
