@@ -630,13 +630,15 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
     if (paymentLinkId) {
       const prefilledRecipientData = paymentLinks?.find((link) => link.id === paymentLinkId)?.recipient;
       if (prefilledRecipientData && countries) {
-        const prefilledCountry = countries.find((country) => country.symbol === prefilledRecipientData.address.country);
+        const prefilledCountry = countries.find(
+          (country) => country.symbol === prefilledRecipientData.address?.country,
+        );
         reset({
           recipientName: prefilledRecipientData.name,
-          recipientStreet: prefilledRecipientData.address.street,
-          recipientHouseNumber: prefilledRecipientData.address.houseNumber,
-          recipientZip: prefilledRecipientData.address.zip,
-          recipientCity: prefilledRecipientData.address.city,
+          recipientStreet: prefilledRecipientData.address?.street,
+          recipientHouseNumber: prefilledRecipientData.address?.houseNumber,
+          recipientZip: prefilledRecipientData.address?.zip,
+          recipientCity: prefilledRecipientData.address?.city,
           recipientCountry: prefilledCountry,
           recipientPhone: prefilledRecipientData.phone,
           recipientEmail: prefilledRecipientData.mail,
