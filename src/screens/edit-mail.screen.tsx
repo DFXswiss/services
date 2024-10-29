@@ -30,7 +30,7 @@ export default function EditMailScreen(): JSX.Element {
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    call({ url: 'kyc/2fa/check?level=Basic', version: 'v2', method: 'GET' })
+    call({ url: 'kyc/2fa?level=Basic', version: 'v2', method: 'GET' })
       .catch(() => navigate('/2fa', { state: { level: TfaLevel.BASIC }, setRedirect: true }))
       .finally(() => setChecking2fa(false));
   }, []);
