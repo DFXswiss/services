@@ -141,35 +141,45 @@ export default function SettingsScreen(): JSX.Element {
             </Form>
           </StyledVerticalStack>
 
-          <StyledVerticalStack full gap={2}>
-            <StyledDataTable
-              label={translate('screens/kyc', 'Personal Information')}
-              alignContent={AlignContent.BETWEEN}
-            >
-              <StyledDataTableRow>
-                <div className="flex flex-col items-start gap-1">
-                  <div className="flex flex-row gap-2 font-semibold">{translate('screens/kyc', 'Email address')}</div>
-                  <div className="text-xs text-dfxGray-700">{user?.mail}</div>
-                </div>
-                <div className="relative flex items-center">
-                  <button onClick={() => setOverlayType(OverlayType.EDIT_EMAIL)}>
-                    <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
-                  </button>
-                </div>
-              </StyledDataTableRow>
-              <StyledDataTableRow>
-                <div className="flex flex-col items-start gap-1">
-                  <div className="flex flex-row gap-2 font-semibold">{translate('screens/kyc', 'Phone number')}</div>
-                  <div className="text-xs text-dfxGray-700">{user?.phone}</div>
-                </div>
-                <div className="relative flex items-center">
-                  <button onClick={() => setOverlayType(OverlayType.EDIT_PHONE)}>
-                    <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
-                  </button>
-                </div>
-              </StyledDataTableRow>
-            </StyledDataTable>
-          </StyledVerticalStack>
+          {!!(user?.mail || user?.phone) && (
+            <StyledVerticalStack full gap={2}>
+              <StyledDataTable
+                label={translate('screens/kyc', 'Personal Information')}
+                alignContent={AlignContent.BETWEEN}
+              >
+                {user?.mail && (
+                  <StyledDataTableRow>
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex flex-row gap-2 font-semibold">
+                        {translate('screens/kyc', 'Email address')}
+                      </div>
+                      <div className="text-xs text-dfxGray-700">{user?.mail}</div>
+                    </div>
+                    <div className="relative flex items-center">
+                      <button onClick={() => setOverlayType(OverlayType.EDIT_EMAIL)}>
+                        <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
+                      </button>
+                    </div>
+                  </StyledDataTableRow>
+                )}
+                {user?.phone && (
+                  <StyledDataTableRow>
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex flex-row gap-2 font-semibold">
+                        {translate('screens/kyc', 'Phone number')}
+                      </div>
+                      <div className="text-xs text-dfxGray-700">{user?.phone}</div>
+                    </div>
+                    <div className="relative flex items-center">
+                      <button onClick={() => setOverlayType(OverlayType.EDIT_PHONE)}>
+                        <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
+                      </button>
+                    </div>
+                  </StyledDataTableRow>
+                )}
+              </StyledDataTable>
+            </StyledVerticalStack>
+          )}
 
           {isUserLoading ? (
             <div className="flex mt-4 w-full justify-center items-center">
