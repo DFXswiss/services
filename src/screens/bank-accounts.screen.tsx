@@ -1,4 +1,4 @@
-import { ApiError, Iban, Utils, Validations, useBankAccount, useUserContext } from '@dfx.swiss/react';
+import { ApiError, Utils, Validations, useBankAccountContext, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
@@ -16,13 +16,18 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
+interface FormData {
+  label: string;
+  iban: string;
+}
+
 export default function BankAccountsScreen(): JSX.Element {
   useUserGuard('/login');
 
   const { state } = useLocation();
   const { goBack } = useNavigation();
   const { translate, translateError } = useSettingsContext();
-  const { addIban } = useBankAccount();
+  const { createAccount } = useBankAccountContext();
   const { countries } = useUserContext();
 
   const isMissingTxIssue = useRef<boolean>(state?.isMissingTxIssue);
@@ -42,18 +47,18 @@ export default function BankAccountsScreen(): JSX.Element {
     control,
     handleSubmit,
     formState: { isValid, errors },
-  } = useForm<Iban>();
+  } = useForm<FormData>();
 
   const rules = Utils.createRules({
     iban: [Validations.Required, Validations.Iban(countries)],
   });
 
-  function onSubmit({ iban }: Iban) {
+  function onSubmit({ iban, label }: FormData) {
     setIsSubmitting(true);
     setError(undefined);
     setCustomError(undefined);
 
-    addIban(iban)
+    createAccount({ iban, label })
       .then(() => {
         newIban.current = iban;
         setIsAdded(true);
@@ -121,6 +126,12 @@ export default function BankAccountsScreen(): JSX.Element {
                 placeholder={translate('screens/payment', 'CH46 8914 4632 3427 5387 5')}
                 full
                 smallLabel
+              />
+
+              <StyledInput
+                name="label"
+                label={translate('screens/sell', 'Optional - Account Designation')}
+                placeholder={translate('screens/sell', 'e.g. Deutsche Bank')}
               />
 
               {error && (
