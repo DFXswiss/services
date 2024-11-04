@@ -351,7 +351,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
   const { width } = useWindowContext();
   const { translate } = useSettingsContext();
   const { setWallet } = useWalletContext();
-  const { deleteAddress, deleteAccount, renameAddress, changeMail, changePhone } = useUserContext();
+  const { deleteAddress, deleteAccount, renameAddress, updateMail, updatePhone } = useUserContext();
 
   switch (type) {
     case OverlayType.DELETE_ADDRESS:
@@ -418,7 +418,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
           validation={Validations.Phone}
           onCancel={onClose}
           onEdit={async (result) => {
-            await changePhone(result);
+            await updatePhone(result);
             onClose();
           }}
         />

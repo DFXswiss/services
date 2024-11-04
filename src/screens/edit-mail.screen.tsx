@@ -18,7 +18,7 @@ import { useNavigation } from 'src/hooks/navigation.hook';
 
 export default function EditMailScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
-  const { changeMail, verifyMail } = useUserContext();
+  const { updateMail, verifyMail } = useUserContext();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
   const { call } = useApi();
@@ -42,7 +42,7 @@ export default function EditMailScreen(): JSX.Element {
   } = useForm<{ token: string }>({ mode: 'onTouched' });
 
   async function onSubmit(newEmail: string) {
-    return changeMail(newEmail)
+    return updateMail(newEmail)
       .then(() => setMailVerificationStep(true))
       .catch((e: ApiError) => setError(e.message));
   }
