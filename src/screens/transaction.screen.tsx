@@ -13,7 +13,6 @@ import {
   UserAddress,
   Utils,
   Validations,
-  useApi,
   useAuthContext,
   useBankAccountContext,
   useSessionContext,
@@ -69,7 +68,6 @@ export enum ExportType {
 
 export default function TransactionScreen(): JSX.Element {
   const { id } = useParams();
-  const { call } = useApi();
   const { user } = useUserContext();
   const { pathname } = useLocation();
   const { navigate } = useNavigation();

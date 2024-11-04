@@ -378,6 +378,8 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                     text: link.recipient.website,
                                     // open absolute URL in new tab
                                     onClick: () => {
+                                      if (!link.recipient?.website) return;
+
                                       const url =
                                         link.recipient.website?.startsWith('http://') ||
                                         link.recipient.website?.startsWith('https://')
