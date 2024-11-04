@@ -541,7 +541,8 @@
     "You have no payment routes yet": "Vous n'avez pas encore d'itinéraires de paiement",
     "Scan the QR-Code with a compatible wallet to complete the payment.": "Scannez le code QR avec un portefeuille compatible pour finaliser le paiement.",
     "Recommended wallets": "Portefeuilles recommandés",
-    "Other compatible wallets": "Autres portefeuilles compatibles",
+    "Compatible wallets": "Portefeuilles compatibles",
+    "Invalid Payment Link": "Payment Link invalide",
 
     "Cointracking": "Cointracking",
     "Compact": "Compact",
