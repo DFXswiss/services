@@ -3,7 +3,6 @@ import {
   Bank,
   CreateSupportIssue,
   FundOrigin,
-  Iban,
   InvestmentDate,
   KycLevel,
   Limit,
@@ -12,7 +11,7 @@ import {
   Utils,
   Validations,
   useBank,
-  useBankAccount,
+  useBankAccountContext,
   useSessionContext,
   useSupportChatContext,
   useUserContext,
@@ -109,15 +108,14 @@ export default function SupportIssueScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { user } = useUserContext();
   const { isLoggedIn } = useSessionContext();
-  const { getIbans } = useBankAccount();
   const { getBanks } = useBank();
+  const { bankAccounts } = useBankAccountContext();
   const [urlParams, setUrlParams] = useSearchParams();
   const { createSupportIssue } = useSupportChatContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [selectTransaction, setSelectTransaction] = useState(false);
-  const [accounts, setAccounts] = useState<Iban[]>();
   const [isKycComplete, setIsKycComplete] = useState<boolean>();
   const [banks, setBanks] = useState<Bank[]>();
   const [supportIssue, setSupportIssue] = useState<Partial<CreateSupportIssue>>();
@@ -198,9 +196,9 @@ export default function SupportIssueScreen(): JSX.Element {
 
   useEffect(() => {
     if (isLoggedIn)
-      Promise.all([getIbans().then(setAccounts), getBanks().then(setBanks)]).catch((error: ApiError) =>
-        setError(error.message ?? 'Unknown error'),
-      );
+      getBanks()
+        .then(setBanks)
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   }, [isLoggedIn]);
 
   async function onSubmit(data: FormData) {
@@ -345,12 +343,12 @@ export default function SupportIssueScreen(): JSX.Element {
                     forceEnable
                   />
                 </StyledVerticalStack>
-              ) : accounts && banks ? (
+              ) : bankAccounts && banks ? (
                 <>
                   <StyledDropdown<string>
                     rootRef={rootRef}
                     label={translate('screens/support', 'Sender IBAN')}
-                    items={[...accounts.map((a) => a.iban), NoIban, AddAccount]}
+                    items={[...bankAccounts.map((a) => a.iban), NoIban, AddAccount]}
                     labelFunc={(item) =>
                       blankedAddress(
                         [NoIban, AddAccount].includes(item)
@@ -359,6 +357,7 @@ export default function SupportIssueScreen(): JSX.Element {
                         { displayLength: 30 },
                       )
                     }
+                    descriptionFunc={(item) => bankAccounts.find((a) => a.iban === item)?.label ?? ''}
                     name="senderIban"
                     placeholder={translate('general/actions', 'Select...')}
                     full

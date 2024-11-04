@@ -541,7 +541,8 @@
     "You have no payment routes yet": "Du hast noch keine Payment Routen",
     "Scan the QR-Code with a compatible wallet to complete the payment.": "Scanne den QR-Code mit einer kompatiblen Wallet, um die Zahlung abzuschliessen.",
     "Recommended wallets": "Empfohlene Wallets",
-    "Other compatible wallets": "Andere kompatible Wallets",
+    "Compatible wallets": "Kompatible Wallets",
+    "Invalid Payment Link": "Ungültiger Payment Link",
 
     "Cointracking": "Cointracking",
     "Compact": "Kompakt",
@@ -621,7 +622,11 @@
     "Write a message...": "Schreibe eine Nachricht...",
     "Downloading...": "Herunterladen...",
     "Image": "Bild",
-    "Document": "Dokument"
+    "Document": "Dokument",
+
+    "Created on": "Erstellt am",
+    "Hide completed tickets": "Abgeschlossene Tickets ausblenden",
+    "Show completed tickets": "Abgeschlossene Tickets anzeigen"
   },
   "screens/settings": {
     "Settings": "Einstellungen",
