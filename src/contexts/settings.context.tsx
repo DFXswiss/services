@@ -25,15 +25,26 @@ const ValidationErrors: Record<string, string> = {
   iban_blocked: 'IBAN not allowed',
   iban_country_blocked: 'IBAN country not allowed',
   xml_file: 'Only XML files are allowed',
+  json_file: 'Only JSON files are allowed',
   file_type: 'Allowed formats: PDF, JPG, JPEG, PNG',
+};
+
+const languageToLocale: { [language: string]: string } = {
+  en: 'en-US',
+  de: 'de-DE',
+  fr: 'fr-FR',
+  it: 'it-IT',
 };
 
 interface SettingsInterface {
   availableLanguages: Language[];
+  locale: string;
   language?: Language;
   currency?: Fiat;
   changeLanguage: (language: Language) => void;
   changeCurrency: (currency: Fiat) => void;
+  changeMail: (mail: string) => void;
+  changePhone: (phone: string) => void;
   translate: (key: string, defaultValue: string, interpolation?: Record<string, string | number>) => string;
   translateError: (key: string) => string;
   processingKycData: boolean;
@@ -58,6 +69,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     user,
     changeLanguage: changeUserLanguage,
     changeMail: changeUserMail,
+    changePhone: changeUserPhone,
     changeCurrency: changeUserCurrency,
   } = useUserContext();
   const { language: storedLanguage, infoBanner: storedInfoBanner } = useStore();
@@ -199,6 +211,16 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     changeUserCurrency(newCurrency);
   }
 
+  function changeMail(mail: string) {
+    setParams({ mail });
+    changeUserMail(mail);
+  }
+
+  function changePhone(phone: string) {
+    setParams({ phone });
+    changeUserPhone(phone);
+  }
+
   function translate(key: string, defaultValue: string, interpolation?: Record<string, string | number>): string {
     return t([key, defaultValue].join('.'), defaultValue, interpolation);
   }
@@ -218,10 +240,13 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const context = useMemo(
     () => ({
       availableLanguages,
+      locale: languageToLocale[language?.symbol.toLowerCase() ?? 'en'],
       language,
       currency,
       changeLanguage,
       changeCurrency,
+      changeMail,
+      changePhone,
       translate,
       translateError,
       processingKycData,
@@ -230,7 +255,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
       get,
       put,
     }),
-    [availableLanguages, language, store],
+    [availableLanguages, language, languageToLocale, store],
   );
 
   return <SettingsContext.Provider value={context}>{props.children}</SettingsContext.Provider>;

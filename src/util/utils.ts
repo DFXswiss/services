@@ -48,6 +48,15 @@ export function toBase64(file: File): Promise<string | undefined> {
   });
 }
 
+export function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
+
 export function openPdfFromString(pdf: string) {
   const byteArray = Uint8Array.from(atob(pdf), (c) => c.charCodeAt(0));
   const file = new Blob([byteArray], { type: 'application/pdf;base64' });
@@ -89,4 +98,24 @@ export function formatBytes(bytes: number, decimals = 2): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
+}
+
+export async function fetchJson(url: string): Promise<any> {
+  const response = await fetch(url);
+  return response.json();
+}
+
+export function formatUnits(value: string, decimals = 18): string {
+  const bigIntValue = BigInt(value);
+  const multiplier = BigInt(10 ** decimals);
+  const integerPart = bigIntValue / multiplier;
+  const fractionalPart = bigIntValue % multiplier;
+  let fractionalStr = fractionalPart.toString().padStart(decimals, '0');
+  fractionalStr = fractionalStr.replace(/0+$/, '');
+
+  if (fractionalStr === '') {
+    return integerPart.toString();
+  }
+
+  return `${integerPart.toString()}.${fractionalStr}`;
 }

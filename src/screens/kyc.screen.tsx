@@ -2,20 +2,30 @@ import {
   AccountType,
   ApiError,
   Country,
+  DocumentType,
+  GenderType,
   KycContactData,
+  KycFileData,
   KycFinancialOption,
   KycFinancialQuestion,
   KycFinancialResponse,
   KycInfo,
+  KycLegalEntityData,
   KycLevel,
+  KycManualIdentData,
+  KycNationalityData,
   KycPersonalData,
   KycSession,
+  KycSignatoryPowerData,
   KycStep,
   KycStepName,
   KycStepSession,
   KycStepStatus,
   KycStepType,
+  Language,
+  LegalEntity,
   QuestionType,
+  SignatoryPower,
   SupportIssueType,
   UrlType,
   Utils,
@@ -51,14 +61,7 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import {
-  KycFileData,
-  KycLegalEntityData,
-  KycNationalityData,
-  KycSignatoryPowerData,
-  LegalEntity,
-  SignatoryPower,
-} from '@dfx.swiss/react/dist/definitions/kyc';
+import SumsubWebSdk from '@sumsub/websdk-react';
 import { RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
@@ -91,7 +94,7 @@ export default function KycScreen(): JSX.Element {
   const { translate, changeLanguage, processingKycData } = useSettingsContext();
   const { user, reloadUser } = useUserContext();
   const { getKycInfo, continueKyc, startStep, addTransferClient } = useKyc();
-  const { levelToString, limitToString, nameToString } = useKycHelper();
+  const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
   const { pathname, search } = useLocation();
   const { navigate, goBack } = useNavigation();
   const { logout } = useSessionContext();
@@ -332,7 +335,7 @@ export default function KycScreen(): JSX.Element {
             </div>
           )}
         </StyledVerticalStack>
-      ) : stepInProgress && kycCode && !error ? (
+      ) : info && stepInProgress && kycCode && !error ? (
         [KycStepStatus.NOT_STARTED, KycStepStatus.IN_PROGRESS].includes(stepInProgress.status) ? (
           <KycEdit
             rootRef={rootRef}
@@ -340,8 +343,10 @@ export default function KycScreen(): JSX.Element {
             code={kycCode}
             isLoading={isSubmitting}
             step={stepInProgress}
+            lang={info.language}
             onDone={() => onLoad(true)}
             onBack={() => onLoad(false)}
+            onError={setError}
             showLinkHint={onLink}
           />
         ) : (
@@ -368,8 +373,8 @@ export default function KycScreen(): JSX.Element {
                       ? info.kycSteps.map((step) => {
                           const icon = stepIcon(step);
                           return {
-                            label: nameToString(step.name),
-                            text: icon?.label ?? '',
+                            label: `${nameToString(step.name)}${step.type ? ` (${typeToString(step.type)})` : ''}`,
+                            text: icon?.label || '',
                             icon: icon?.icon,
                           };
                         })
@@ -386,10 +391,6 @@ export default function KycScreen(): JSX.Element {
                       <StyledIconButton icon={IconVariant.ARROW_UP} onClick={onContinue} isLoading={isSubmitting} />
                     )}
                   </div>
-                </StyledDataTableRow>
-
-                <StyledDataTableRow label={translate('screens/kyc', 'Two-factor authentication')}>
-                  <p>{translate('general/actions', info.twoFactorEnabled ? 'Yes' : 'No')}</p>
                 </StyledDataTableRow>
               </StyledDataTable>
 
@@ -420,8 +421,10 @@ interface EditProps {
   code: string;
   isLoading: boolean;
   step: KycStepSession;
+  lang: Language;
   onDone: () => void;
   onBack: () => void;
+  onError: (error: string) => void;
   showLinkHint: () => void;
 }
 
@@ -452,13 +455,20 @@ function KycEdit(props: EditProps): JSX.Element {
       return <FileUpload {...props} />;
 
     case KycStepName.IDENT:
-      return <Ident {...props} />;
+      if (props.step.type === KycStepType.MANUAL) {
+        return <ManualIdent {...props} />;
+      } else {
+        return <Ident {...props} />;
+      }
 
     case KycStepName.FINANCIAL_DATA:
       return <FinancialData {...props} />;
 
-    case KycStepName.DOCUMENT_UPLOAD:
-      return <DocumentUpload {...props} />;
+    case KycStepName.ADDITIONAL_DOCUMENTS:
+      return <FileUpload {...props} />;
+
+    case KycStepName.RESIDENCE_PERMIT:
+      return <FileUpload {...props} />;
 
     case KycStepName.DFX_APPROVAL:
       return <></>;
@@ -1095,7 +1105,16 @@ function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProp
   );
 }
 
-function Ident({ step, onDone, onBack }: EditProps): JSX.Element {
+function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element {
+  const [isDone, setIsDone] = useState(false);
+
+  useEffect(() => {
+    onDone();
+
+    const refreshInterval = setInterval(() => isDone && onDone(), 1000);
+    return () => clearInterval(refreshInterval);
+  }, [isDone]);
+
   // listen to close events
   useEffect(() => {
     window.addEventListener('message', onMessage);
@@ -1108,14 +1127,33 @@ function Ident({ step, onDone, onBack }: EditProps): JSX.Element {
   }
 
   return step.session ? (
-    <>
-      <iframe
-        src={step.session?.url}
-        allow="camera *; microphone *"
-        allowFullScreen={true}
-        className="w-full h-full max-h-[900px]"
-      ></iframe>
-    </>
+    isDone ? (
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
+    ) : (
+      <>
+        {step.session.type === UrlType.TOKEN ? (
+          <SumsubWebSdk
+            className="w-full h-full max-h-[900px]"
+            accessToken={step.session.url}
+            expirationHandler={() => onError('Token expired')}
+            config={{ lang: lang.symbol.toLowerCase() }}
+            onMessage={(type: string, payload: any) =>
+              type === 'idCheck.onApplicantStatusChanged' &&
+              ['pending', 'completed'].includes(payload?.reviewStatus) &&
+              setIsDone(true)
+            }
+            onError={onError}
+          />
+        ) : (
+          <iframe
+            src={step.session.url}
+            allow="camera *; microphone *"
+            allowFullScreen={true}
+            className="w-full h-full max-h-[900px]"
+          ></iframe>
+        )}
+      </>
+    )
   ) : (
     <ErrorHint message="No session URL" />
   );
@@ -1290,6 +1328,214 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   );
 }
 
-function DocumentUpload({}: EditProps): JSX.Element {
-  return <>TODO</>;
+export interface KycManualIdentFormData {
+  firstName: string;
+  lastName: string;
+  birthName: string;
+  documentType: DocumentType;
+  documentNumber?: string;
+  nationality: Country;
+  birthplace: string;
+  gender: GenderType;
+  file: File;
+}
+
+function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { getCountries, setManualIdentData } = useKyc();
+  const { genderTypeToString, documentTypeToString } = useKycHelper();
+  const { countryCode } = useGeoLocation();
+
+  const [isCountryLoading, setIsCountryLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+  const [countries, setCountries] = useState<Country[]>([]);
+
+  useEffect(() => {
+    getCountries(code)
+      .then(setCountries)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsCountryLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const ipCountry = countries.find((c) => c.symbol === countryCode);
+    if (ipCountry && !isDirty) {
+      setValue('nationality', ipCountry);
+    }
+  }, [countries, countryCode]);
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { isValid, isDirty, errors },
+  } = useForm<KycManualIdentFormData>({ mode: 'onTouched' });
+
+  async function onSubmit(data: KycManualIdentFormData) {
+    if (!step.session) return;
+
+    const requestData: KycManualIdentData = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      birthName: data.birthName,
+      documentType: data.documentType,
+      documentNumber: data.documentNumber,
+      nationality: data.nationality,
+      birthplace: data.birthplace,
+      gender: data.gender,
+      document: { file: (await toBase64(data.file)) ?? '', fileName: data.file.name },
+    };
+
+    setIsUpdating(true);
+    setError(undefined);
+    setManualIdentData(code, step.session.url, requestData)
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    firstName: Validations.Required,
+    lastName: Validations.Required,
+    birthName: Validations.Required,
+    documentType: Validations.Required,
+    documentNumber: Validations.Required,
+    nationality: Validations.Required,
+    file: [
+      Validations.Required,
+      Validations.Custom((file) =>
+        file?.type === 'application/pdf' ||
+        file?.type === 'image/png' ||
+        file?.type === 'image/jpg' ||
+        file?.type === 'image/jpeg'
+          ? true
+          : 'file_type',
+      ),
+    ],
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        {isCountryLoading ? (
+          <StyledLoadingSpinner size={SpinnerSize.LG} />
+        ) : (
+          <>
+            <StyledVerticalStack gap={6} full>
+              <StyledVerticalStack gap={2} full>
+                <StyledDropdown
+                  rootRef={rootRef}
+                  name="gender"
+                  label={`${translate('screens/kyc', 'Gender')} (${translate(
+                    'screens/kyc',
+                    'Optional',
+                  ).toLowerCase()})`}
+                  placeholder={translate('general/actions', 'Select...')}
+                  items={Object.values(GenderType)}
+                  labelFunc={(item) => genderTypeToString(item)}
+                  smallLabel
+                />
+                <StyledHorizontalStack gap={2}>
+                  <StyledInput
+                    name="firstName"
+                    autocomplete="firstname"
+                    label={translate('screens/kyc', 'First name')}
+                    placeholder={translate('screens/kyc', 'John')}
+                    full
+                    smallLabel
+                  />
+                  <StyledInput
+                    name="lastName"
+                    autocomplete="lastname"
+                    label={translate('screens/kyc', 'Last name')}
+                    placeholder={translate('screens/kyc', 'Doe')}
+                    full
+                    smallLabel
+                  />
+                </StyledHorizontalStack>
+
+                <StyledInput
+                  name="birthName"
+                  autocomplete="birthName"
+                  label={translate('screens/kyc', 'Birth name')}
+                  placeholder={translate('screens/kyc', 'John Doe')}
+                  full
+                  smallLabel
+                />
+                <StyledInput
+                  name="birthplace"
+                  autocomplete="birthplace"
+                  label={`${translate('screens/kyc', 'Birthplace')} (${translate(
+                    'screens/kyc',
+                    'Optional',
+                  ).toLowerCase()})`}
+                  placeholder={translate('screens/kyc', 'New York, USA')}
+                  full
+                  smallLabel
+                />
+                <StyledSearchDropdown
+                  rootRef={rootRef}
+                  name="nationality"
+                  autocomplete="nationality"
+                  label={translate('screens/kyc', 'Nationality')}
+                  placeholder={translate('general/actions', 'Select...')}
+                  items={countries}
+                  labelFunc={(item) => item.name}
+                  filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+                  matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+                  smallLabel
+                />
+              </StyledVerticalStack>
+
+              <StyledVerticalStack gap={2}>
+                <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+                  {translate('screens/kyc', 'Identification document')}
+                </p>
+                <StyledDropdown
+                  rootRef={rootRef}
+                  name="documentType"
+                  label={translate('screens/kyc', 'Document type')}
+                  placeholder={translate('general/actions', 'Select...')}
+                  items={Object.values(DocumentType)}
+                  labelFunc={(item) => documentTypeToString(item)}
+                  smallLabel
+                />
+                <StyledInput
+                  name="documentNumber"
+                  label={translate('screens/kyc', 'Document number')}
+                  placeholder="12345"
+                  full
+                  smallLabel
+                />
+                <StyledFileUpload
+                  name="file"
+                  label={translate('screens/support', 'Document')}
+                  placeholder={translate('general/actions', 'Drop files here')}
+                  buttonLabel={translate('general/actions', 'Browse')}
+                  full
+                  smallLabel
+                />
+              </StyledVerticalStack>
+            </StyledVerticalStack>
+
+            {error && (
+              <div>
+                <ErrorHint message={error} />
+              </div>
+            )}
+
+            <StyledButton
+              type="submit"
+              label={translate('general/actions', 'Next')}
+              onClick={handleSubmit(onSubmit)}
+              width={StyledButtonWidth.FULL}
+              disabled={!isValid}
+              isLoading={isUpdating}
+            />
+          </>
+        )}
+      </StyledVerticalStack>
+    </Form>
+  );
 }

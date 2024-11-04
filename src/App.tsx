@@ -27,8 +27,10 @@ const KycScreen = lazy(() => import('./screens/kyc.screen'));
 const LinkScreen = lazy(() => import('./screens/link.screen'));
 const PaymentRoutesScreen = lazy(() => import('./screens/payment-routes.screen'));
 const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
+const InvoiceScreen = lazy(() => import('./screens/invoice.screen'));
 const SellInfoScreen = lazy(() => import('./screens/sell-info.screen'));
 const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
+const SupportTicketsScreen = lazy(() => import('./screens/support-tickets.screen'));
 const SupportScreen = lazy(() => import('./screens/support.screen'));
 const ChatScreen = lazy(() => import('./screens/chat.screen'));
 const TfaScreen = lazy(() => import('./screens/tfa.screen'));
@@ -36,6 +38,7 @@ const TransactionScreen = lazy(() => import('./screens/transaction.screen'));
 const AccountMerge = lazy(() => import('./screens/account-merge.screen'));
 const MailLoginScreen = lazy(() => import('./screens/mail-login.screen'));
 const SepaScreen = lazy(() => import('./screens/sepa.screen'));
+const BlockchainTransactionScreen = lazy(() => import('./screens/blockchain-tx.screen'));
 
 setupLanguages();
 
@@ -114,6 +117,10 @@ export const Routes = [
     element: <Navigate to={`/pl${window.location.search}`} />,
   },
   {
+    path: '/invoice',
+    element: withSuspense(<InvoiceScreen />),
+  },
+  {
     path: '/kyc',
     element: withSuspense(<KycScreen />),
     isKycScreen: true,
@@ -156,6 +163,10 @@ export const Routes = [
     element: withSuspense(<TransactionScreen />),
   },
   {
+    path: '/tx/:id/refund',
+    element: withSuspense(<TransactionScreen />),
+  },
+  {
     path: '/support',
     element: withSuspense(<SupportScreen />),
   },
@@ -167,6 +178,10 @@ export const Routes = [
       </SupportChatContextProvider>
     ),
     children: [
+      {
+        path: 'tickets',
+        element: withSuspense(<SupportTicketsScreen />),
+      },
       {
         path: 'issue',
         element: withSuspense(<SupportIssueScreen />),
@@ -192,6 +207,10 @@ export const Routes = [
   {
     path: '/sepa',
     element: withSuspense(<SepaScreen />),
+  },
+  {
+    path: '/blockchain/tx',
+    element: withSuspense(<BlockchainTransactionScreen />),
   },
 ];
 

@@ -509,14 +509,14 @@ export const FeatureTree: Page[] = [
     dfxStyle: true,
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.POLYGON, assetOut: 'MATIC' },
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'POL' },
           },
         },
       },
@@ -724,7 +724,14 @@ export const FeatureTree: Page[] = [
       {
         id: 'monero',
         img: 'monero',
-        disabled: true,
+        next: {
+          page: 'monero-wallets',
+          tiles: ['cake', 'monero-wallet', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.MONERO, assetIn: 'XMR' },
+          },
+        },
       },
       {
         id: 'solana',
@@ -1146,14 +1153,14 @@ export const FeatureTree: Page[] = [
     dfxStyle: true,
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.POLYGON, assetIn: 'MATIC' },
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'POL' },
           },
         },
       },
@@ -1746,6 +1753,13 @@ export const FeatureTree: Page[] = [
           page: 'frankencoin-buy-optimism',
         },
       },
+      {
+        id: 'base',
+        img: 'basechain',
+        next: {
+          page: 'frankencoin-buy-base',
+        },
+      },
     ],
   },
 
@@ -1845,19 +1859,19 @@ export const FeatureTree: Page[] = [
 
   {
     id: 'frankencoin-buy-polygon',
-    header: 'Buy Frankencoin Assets on Ethereum',
-    description: 'Buy Frankencoin Assets on Ethereum',
+    header: 'Buy Frankencoin Assets on Polygon',
+    description: 'Buy Frankencoin Assets on Polygon',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.POLYGON, assetOut: 'MATIC' },
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'POL' },
           },
         },
       },
@@ -1902,8 +1916,8 @@ export const FeatureTree: Page[] = [
 
   {
     id: 'frankencoin-buy-arbitrum',
-    header: 'Buy Frankencoin Assets on Ethereum',
-    description: 'Buy Frankencoin Assets on Ethereum',
+    header: 'Buy Frankencoin Assets on Arbitrum',
+    description: 'Buy Frankencoin Assets on Arbitrum',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
@@ -1939,6 +1953,44 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'FPS',
+        img: 'fps',
+        disabled: true,
+      },
+    ],
+  },
+
+  {
+    id: 'frankencoin-buy-base',
+    header: 'Buy Frankencoin Assets on Base',
+    description: 'Buy Frankencoin Assets on Base',
+    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BASE, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'ZCHF',
+        img: 'frankencoin',
+        next: {
+          page: 'frankencoin-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BASE, assetOut: 'ZCHF' },
           },
         },
       },
@@ -2064,14 +2116,14 @@ export const FeatureTree: Page[] = [
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.POLYGON, assetIn: 'MATIC' },
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'POL' },
           },
         },
       },
@@ -2121,14 +2173,14 @@ export const FeatureTree: Page[] = [
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'MATIC' },
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'POL' },
           },
         },
       },
@@ -2171,14 +2223,14 @@ export const FeatureTree: Page[] = [
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'frankencoin-wallets',
           tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'MATIC' },
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'POL' },
           },
         },
       },
@@ -3018,14 +3070,14 @@ export const FeatureTree: Page[] = [
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.POLYGON, assetOut: 'MATIC' },
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'POL' },
           },
         },
       },
@@ -3294,14 +3346,14 @@ export const FeatureTree: Page[] = [
     bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
     tiles: [
       {
-        id: 'matic',
-        img: 'matic',
+        id: 'pol',
+        img: 'Pol',
         next: {
           page: 'wallets',
           tiles: ['hw-wallet', 'metamask'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.POLYGON, assetIn: 'MATIC' },
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'POL' },
           },
         },
       },

@@ -1,20 +1,28 @@
 import {
   ApiError,
+  Asset,
   CryptoPaymentMethod,
   DetailTransaction,
+  Fiat,
   FiatPaymentMethod,
   Transaction,
   TransactionState,
   TransactionTarget,
   TransactionType,
+  UserAddress,
   Utils,
   Validations,
+  useApi,
+  useAuthContext,
+  useBankAccountContext,
   useSessionContext,
   useTransaction,
+  useUserContext,
 } from '@dfx.swiss/react';
 import {
   AlignContent,
   AssetIconVariant,
+  CopyButton,
   DfxAssetIcon,
   DfxIcon,
   Form,
@@ -34,9 +42,11 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
 import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
+import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
 import CoinTracking from 'src/components/cointracking';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -50,44 +60,85 @@ import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress } from '../util/utils';
 
+export enum ExportType {
+  COMPACT = 'Compact',
+  COIN_TRACKING = 'CoinTracking',
+  CHAIN_REPORT = 'ChainReport',
+}
+
 export default function TransactionScreen(): JSX.Element {
   const { id } = useParams();
+  const { call } = useApi();
+  const { user } = useUserContext();
   const { pathname } = useLocation();
   const { navigate } = useNavigation();
+  const { session } = useAuthContext();
   const { translate } = useSettingsContext();
   const { getTransactionCsv } = useTransaction();
   const rootRef = useRef<HTMLDivElement>(null);
 
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [showCoinTracking, setShowCoinTracking] = useState(false);
-  const [isCsvLoading, setIsCsvLoading] = useState(false);
+  const [isCsvLoading, setIsCsvLoading] = useState<ExportType>();
   const [error, setError] = useState<string>();
 
   const isTransaction = id && id.startsWith('T');
+  const isRefund = isTransaction && pathname.includes('/refund');
 
-  function exportCsv() {
-    setIsCsvLoading(true);
-    getTransactionCsv()
-      .then((url) => window.open(url, '_blank'))
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsCsvLoading(false));
+  async function exportCsv(type: ExportType) {
+    if (!user) return;
+
+    try {
+      setIsCsvLoading(type);
+      switch (type) {
+        case ExportType.COMPACT:
+          await getTransactionCsv().then((url) => window.open(url, '_blank'));
+          break;
+        case ExportType.COIN_TRACKING:
+        case ExportType.CHAIN_REPORT:
+          await call<string>({
+            url: `transaction/${type}?userAddress=${user?.activeAddress?.address}&format=csv`,
+            method: 'GET',
+            noJson: true,
+          }).then((csv) => {
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+
+            window.open(url, '_blank');
+          });
+      }
+    } catch (e) {
+      setError((e as ApiError).message ?? 'Unknown error');
+    } finally {
+      setIsCsvLoading(undefined);
+      setShowExportMenu(false);
+    }
   }
 
-  const title = isTransaction
+  const title = isRefund
+    ? translate('screens/payment', 'Transaction refund')
+    : isTransaction
     ? translate('screens/payment', 'Transaction status')
     : showCoinTracking
     ? translate('screens/payment', 'Cointracking Link (read rights)')
     : translate('screens/payment', 'Transactions');
 
-  const onBack = isTransaction
-    ? () => navigate('/tx')
-    : showCoinTracking
-    ? () => setShowCoinTracking(false)
-    : undefined;
+  const onBack =
+    isTransaction || isRefund || error
+      ? () => {
+          setError(undefined);
+          navigate('/tx');
+        }
+      : showCoinTracking
+      ? () => setShowCoinTracking(false)
+      : undefined;
 
   return (
     <Layout rootRef={rootRef} title={title} onBack={onBack}>
       {error ? (
         <ErrorHint message={error} />
+      ) : isRefund ? (
+        <TransactionRefund setError={setError} />
       ) : isTransaction ? (
         <TransactionStatus setError={setError} />
       ) : showCoinTracking ? (
@@ -99,14 +150,44 @@ export default function TransactionScreen(): JSX.Element {
             width={StyledButtonWidth.FULL}
             label={translate('screens/payment', 'Cointracking')}
             onClick={() => setShowCoinTracking(!showCoinTracking)}
+            hidden={session?.role === UserRole.ACCOUNT}
           />
           <StyledButton
             color={StyledButtonColor.STURDY_WHITE}
             width={StyledButtonWidth.FULL}
             label={translate('screens/payment', 'Export CSV')}
-            isLoading={isCsvLoading}
-            onClick={exportCsv}
+            icon={showExportMenu ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
+            iconAfterLabel
+            onClick={() => setShowExportMenu((prev) => !prev)}
           />
+          {!!showExportMenu && (
+            <StyledVerticalStack full gap={2} className="border-2 rounded-md border-dfxGray-300 p-2">
+              <StyledButton
+                color={StyledButtonColor.WHITE}
+                width={StyledButtonWidth.FULL}
+                label={translate('screens/payment', 'Compact')}
+                isLoading={isCsvLoading === ExportType.COMPACT}
+                onClick={() => exportCsv(ExportType.COMPACT)}
+              />
+              <StyledButton
+                color={StyledButtonColor.WHITE}
+                width={StyledButtonWidth.FULL}
+                label={translate('screens/payment', 'CoinTracking')}
+                isLoading={isCsvLoading === ExportType.COIN_TRACKING}
+                onClick={() => exportCsv(ExportType.COIN_TRACKING)}
+                hidden={!user?.activeAddress}
+              />
+              <StyledButton
+                color={StyledButtonColor.WHITE}
+                width={StyledButtonWidth.FULL}
+                label={translate('screens/payment', 'Chain-Report')}
+                isLoading={isCsvLoading === ExportType.CHAIN_REPORT}
+                onClick={() => exportCsv(ExportType.CHAIN_REPORT)}
+                hidden={!user?.activeAddress}
+              />
+            </StyledVerticalStack>
+          )}
+
           <TransactionList isSupport={false} setError={setError} />
         </>
       )}
@@ -130,7 +211,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
 
   useEffect(() => {
     const fetchTransaction = () => {
-      if (id && transaction?.state !== TransactionState.COMPLETED) {
+      if (id && transaction?.state !== TransactionState.COMPLETED && transaction?.state !== TransactionState.RETURNED) {
         getTransactionByUid(id)
           .then(setTransaction)
           .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
@@ -143,10 +224,9 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
     return () => clearInterval(interval);
   }, [id, transaction?.state]);
 
-  function assignTransaction() {
+  function handleTransactionNavigation(path: string) {
     if (!transaction) return;
 
-    const path = `/tx/${transaction.id}/assign`;
     if (isLoggedIn) {
       navigate(path);
     } else {
@@ -162,10 +242,214 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
       {transaction.state === TransactionState.UNASSIGNED && (
         <StyledButton
           label={translate('screens/payment', 'Assign transaction')}
-          onClick={assignTransaction}
+          onClick={() => handleTransactionNavigation(`/tx/${transaction.id}/assign`)}
           width={StyledButtonWidth.FULL}
         />
       )}
+      <StyledButton
+        label={translate(
+          'general/actions',
+          transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+        )}
+        onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
+        hidden={
+          ![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
+            transaction.state,
+          ) || !!transaction.chargebackAmount
+        }
+      />
+    </StyledVerticalStack>
+  ) : (
+    <StyledLoadingSpinner size={SpinnerSize.LG} />
+  );
+}
+
+interface RefundDetails {
+  expiryDate: Date;
+  feeAmount: number;
+  refundAmount: number;
+  refundAsset: Asset | Fiat;
+  refundTarget?: string;
+}
+
+interface FormData {
+  address: UserAddress;
+  iban: string;
+}
+
+interface TransactionRefundProps {
+  setError: (error: string) => void;
+}
+
+const AddAccount = 'Add bank account';
+
+function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
+  useUserGuard('/login');
+
+  const { id } = useParams();
+  const { state } = useLocation();
+  const { width } = useWindowContext();
+  const { navigate } = useNavigation();
+  const { translate } = useSettingsContext();
+  const { user } = useUserContext();
+  const { bankAccounts } = useBankAccountContext();
+  const { isLoggedIn } = useSessionContext();
+  const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  const refetchTimeout = useRef<NodeJS.Timeout | undefined>();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [refundDetails, setRefundDetails] = useState<RefundDetails>();
+  const [transaction, setTransaction] = useState<Transaction>();
+  const [addresses, setAddresses] = useState<UserAddress[]>();
+
+  const isBuy = transaction?.type === TransactionType.BUY;
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors, isValid },
+  } = useForm<FormData>({ mode: 'onTouched', defaultValues: { iban: state?.newIban } });
+
+  const selectedIban = useWatch({ control, name: 'iban' });
+
+  useEffect(() => {
+    if (id && !transaction && isLoggedIn) {
+      getTransactionByUid(id)
+        .then(setTransaction)
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+    }
+  }, [id, transaction, isLoggedIn]);
+
+  useEffect(() => {
+    async function fetchRefund(txId: number) {
+      getTransactionRefund(txId)
+        .then((response) => {
+          setRefundDetails(response);
+          if (transaction?.id && response.expiryDate) {
+            const timeout = new Date(response.expiryDate).getTime() - Date.now();
+            if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
+            refetchTimeout.current = setTimeout(() => fetchRefund(transaction.id), timeout > 0 ? timeout : 0);
+          }
+        })
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+    }
+
+    if (transaction?.id) fetchRefund(transaction.id);
+
+    return () => refetchTimeout.current && clearTimeout(refetchTimeout.current);
+  }, [transaction]);
+
+  useEffect(() => {
+    if (selectedIban === AddAccount)
+      navigate('/bank-accounts', { setRedirect: true, redirectPath: `/tx/${id}/refund` });
+  }, [selectedIban]);
+
+  useEffect(() => {
+    if (transaction && user) {
+      const allowedAddresses = user.addresses.filter(
+        (a) => transaction?.inputBlockchain && a.blockchains.includes(transaction?.inputBlockchain),
+      );
+      setAddresses(allowedAddresses);
+      if (allowedAddresses?.length === 1) setValue('address', allowedAddresses[0]);
+    }
+  }, [transaction, user]);
+
+  async function onSubmit(data: FormData) {
+    if (!transaction) return;
+    setIsLoading(true);
+
+    try {
+      await setTransactionRefundTarget(transaction.id, {
+        refundTarget: refundDetails?.refundTarget ?? data.address?.address ?? data.iban,
+      });
+    } catch (e) {
+      setError((e as ApiError).message ?? 'Unknown error');
+    } finally {
+      setIsLoading(false);
+      navigate('/tx');
+    }
+  }
+
+  const rules = Utils.createRules({
+    address: Validations.Required,
+    iban: Validations.Required,
+  });
+
+  return refundDetails && transaction ? (
+    <StyledVerticalStack gap={6} full>
+      <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+        <StyledDataTableRow label={translate('screens/payment', 'Transaction amount')}>
+          <p>
+            {transaction.inputAmount} {transaction.inputAsset}
+          </p>
+        </StyledDataTableRow>
+        <StyledDataTableRow label={translate('screens/payment', 'Fee')}>
+          <p>
+            {refundDetails.feeAmount} {refundDetails.refundAsset.name}
+          </p>
+        </StyledDataTableRow>
+        <StyledDataTableRow
+          label={translate('screens/payment', 'Refund amount')}
+          infoText={translate('screens/payment', 'Refund amount is the transaction amount minus the fee.')}
+        >
+          <p>
+            {refundDetails.refundAmount} {refundDetails.refundAsset.name}
+          </p>
+        </StyledDataTableRow>
+        {refundDetails.refundTarget && (
+          <StyledDataTableRow label={translate('screens/payment', 'Recipient')}>
+            <p>{blankedAddress(refundDetails.refundTarget, { width })}</p>
+          </StyledDataTableRow>
+        )}
+      </StyledDataTable>
+      <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)}>
+        <StyledVerticalStack gap={6} full>
+          {!refundDetails.refundTarget && addresses && !isBuy && (
+            <StyledDropdown<UserAddress>
+              rootRef={rootRef}
+              name="address"
+              label={translate('screens/payment', 'Chargeback address')}
+              items={addresses}
+              labelFunc={(item) => blankedAddress(item.address, { width })}
+              descriptionFunc={(_item) => transaction.inputBlockchain?.toString() ?? ''}
+              full
+            />
+          )}
+          {!refundDetails.refundTarget &&
+            transaction.inputPaymentMethod !== FiatPaymentMethod.CARD &&
+            bankAccounts &&
+            isBuy && (
+              <StyledDropdown<string>
+                rootRef={rootRef}
+                name="iban"
+                label={translate('screens/payment', 'Chargeback IBAN')}
+                items={[...bankAccounts.map((b) => b.iban), AddAccount]}
+                labelFunc={(item) =>
+                  item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
+                }
+                descriptionFunc={(item) => bankAccounts.find((b) => b.iban === item)?.label ?? ''}
+                placeholder={translate('general/actions', 'Select...')}
+                forceEnable
+                full
+              />
+            )}
+
+          <StyledButton
+            type="submit"
+            label={translate(
+              'general/actions',
+              transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+            )}
+            onClick={handleSubmit(onSubmit)}
+            width={StyledButtonWidth.FULL}
+            disabled={!isValid}
+            isLoading={isLoading}
+          />
+        </StyledVerticalStack>
+      </Form>
     </StyledVerticalStack>
   ) : (
     <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -227,7 +511,6 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   }
 
-  // form
   const {
     control,
     handleSubmit,
@@ -378,12 +661,26 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   onClick={() => assignTransaction(tx.id)}
                                 />
                               ))}
-                            {tx.outputTxUrl && (
-                              <StyledButton
-                                label={translate('screens/payment', 'Show on block explorer')}
-                                onClick={() => window.open(tx.outputTxUrl, '_blank', 'noreferrer')}
-                              />
-                            )}
+                            <StyledButton
+                              label={translate('screens/payment', 'Show on block explorer')}
+                              onClick={() => window.open(tx.outputTxUrl, '_blank', 'noreferrer')}
+                              hidden={!tx.outputTxUrl}
+                            />
+                            <StyledButton
+                              label={translate(
+                                'general/actions',
+                                tx.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+                              )}
+                              color={StyledButtonColor.STURDY_WHITE}
+                              onClick={() => navigate(`/tx/${tx.uid}/refund`)}
+                              hidden={
+                                ![
+                                  TransactionState.FAILED,
+                                  TransactionState.AML_PENDING,
+                                  TransactionState.KYC_REQUIRED,
+                                ].includes(tx.state) || !!tx.chargebackAmount
+                              }
+                            />
                             {tx.state === TransactionState.KYC_REQUIRED && (
                               <StyledButton
                                 label={translate('screens/kyc', 'Complete KYC')}
@@ -434,7 +731,6 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
       ? 'Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.'
       : 'Output amount = Input amount × Base rate - DFX fee - Network fee.',
   );
-
   const baseRateInfo = tx.priceSteps
     ?.map((step) =>
       translate('screens/payment', '{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})', {
@@ -446,6 +742,8 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
       }),
     )
     .join('\n');
+  const chargebackTarget =
+    tx.type === TransactionType.BUY ? Utils.formatIban(tx.chargebackTarget) : tx.chargebackTarget;
 
   const rateItems = [];
   tx.exchangeRate != null &&
@@ -549,6 +847,39 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
             {tx.rate} {tx.inputAsset}/{tx.outputAsset}
           </p>
         </StyledDataTableExpandableRow>
+      )}
+      {tx.chargebackAmount && (
+        <StyledDataTableRow label={translate('screens/payment', 'Chargeback amount')}>
+          <p>
+            {tx.chargebackAmount} {tx.inputAsset}
+          </p>
+        </StyledDataTableRow>
+      )}
+      {chargebackTarget && (
+        <StyledDataTableRow
+          label={
+            tx.type === TransactionType.BUY
+              ? translate('screens/payment', 'Chargeback IBAN')
+              : translate('screens/payment', 'Chargeback address')
+          }
+        >
+          <p>{blankedAddress(chargebackTarget, { width, scale: 0.65 })}</p>
+          <CopyButton onCopy={() => copy(chargebackTarget)} />
+        </StyledDataTableRow>
+      )}
+      {tx.chargeBackTxId && (
+        <StyledDataTableRow label={translate('screens/payment', 'Chargeback TX')}>
+          {tx.chargeBackTxUrl ? (
+            <StyledLink label={blankedAddress(tx.chargeBackTxId, { width })} url={tx.chargeBackTxUrl} dark />
+          ) : (
+            <p>{blankedAddress(tx.chargeBackTxId, { width })}</p>
+          )}
+        </StyledDataTableRow>
+      )}
+      {tx.chargebackDate && (
+        <StyledDataTableRow label={translate('screens/payment', 'Chargeback date')}>
+          <p>{new Date(tx.chargebackDate).toLocaleString()}</p>
+        </StyledDataTableRow>
       )}
     </StyledDataTable>
   );

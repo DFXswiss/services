@@ -31,7 +31,8 @@ export const PaymentStateLabels = {
   [TransactionState.FEE_TOO_HIGH]: 'Fee to high',
   [TransactionState.COMPLETED]: 'Completed',
   [TransactionState.FAILED]: 'Failed',
-  [TransactionState.RETURNED]: 'Returned',
+  [TransactionState.RETURNED]: 'Refunded',
+  [TransactionState.RETURN_PENDING]: 'Refund pending',
 };
 
 export function toPaymentStateLabel(state: TransactionState): string {
@@ -104,6 +105,7 @@ export const IssueTypeLabels = {
   [SupportIssueType.LIMIT_REQUEST]: 'Limit increase request',
   [SupportIssueType.PARTNERSHIP_REQUEST]: 'Partnership request',
   [SupportIssueType.NOTIFICATION_OF_CHANGES]: 'Notification of changes',
+  [SupportIssueType.BUG_REPORT]: 'Bug report',
 };
 
 export const IssueReasonLabels = {

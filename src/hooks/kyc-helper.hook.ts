@@ -1,5 +1,5 @@
 import { KycLevel, KycStepName, KycStepType, LimitPeriod, TradingLimit, Utils, useUserContext } from '@dfx.swiss/react';
-import { LegalEntity, SignatoryPower } from '@dfx.swiss/react/dist/definitions/kyc';
+import { DocumentType, GenderType, LegalEntity, SignatoryPower } from '@dfx.swiss/react/dist/definitions/kyc';
 import { useMemo } from 'react';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from './navigation.hook';
@@ -16,6 +16,8 @@ interface KycHelperInterface {
   nameToString: (stepName: KycStepName) => string;
   typeToString: (stepType: KycStepType) => string;
   legalEntityToString: (entity: LegalEntity) => string;
+  genderTypeToString: (genderType: GenderType) => string;
+  documentTypeToString: (documentType: DocumentType) => string;
   signatoryPowerToString: (power: SignatoryPower) => string;
 }
 
@@ -40,7 +42,8 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepName.AUTHORITY]: 'Power of Attorney',
     [KycStepName.IDENT]: 'Identification',
     [KycStepName.FINANCIAL_DATA]: 'Additional data',
-    [KycStepName.DOCUMENT_UPLOAD]: 'Document upload',
+    [KycStepName.ADDITIONAL_DOCUMENTS]: 'Additional documents',
+    [KycStepName.RESIDENCE_PERMIT]: 'Residence permit',
     [KycStepName.DFX_APPROVAL]: 'DFX approval',
   };
 
@@ -48,6 +51,7 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepType.AUTO]: 'auto',
     [KycStepType.VIDEO]: 'video',
     [KycStepType.MANUAL]: 'manual',
+    [KycStepType.SUMSUB_AUTO]: 'auto',
   };
 
   const legalEntityMap: Record<LegalEntity, string> = {
@@ -58,6 +62,18 @@ export function useKycHelper(): KycHelperInterface {
     [LegalEntity.FOUNDATION]: 'Foundation',
     [LegalEntity.TRUST]: 'Trust',
     [LegalEntity.OTHER]: 'Other',
+  };
+
+  const genderTypeMap: Record<GenderType, string> = {
+    [GenderType.FEMALE]: 'Female',
+    [GenderType.MALE]: 'Male',
+  };
+
+  const manualIdentDocumentTypeMap: Record<DocumentType, string> = {
+    [DocumentType.PASSPORT]: 'Passport',
+    [DocumentType.IDCARD]: 'ID card',
+    [DocumentType.DRIVERS_LICENSE]: "Driver's license",
+    [DocumentType.RESIDENCE_PERMIT]: 'Residence permit',
   };
 
   const limit = user && limitToString(user.tradingLimit);
@@ -101,6 +117,14 @@ export function useKycHelper(): KycHelperInterface {
     return translate('screens/kyc', legalEntityMap[entity]);
   };
 
+  const genderTypeToString = (genderType: GenderType): string => {
+    return translate('screens/kyc', genderTypeMap[genderType]);
+  };
+
+  const documentTypeToString = (documentType: DocumentType): string => {
+    return translate('screens/kyc', manualIdentDocumentTypeMap[documentType]);
+  };
+
   function signatoryPowerToString(power: SignatoryPower): string {
     switch (power) {
       case SignatoryPower.SINGLE:
@@ -124,6 +148,8 @@ export function useKycHelper(): KycHelperInterface {
       nameToString,
       typeToString,
       legalEntityToString,
+      genderTypeToString,
+      documentTypeToString,
       signatoryPowerToString,
     }),
     [user, translate],

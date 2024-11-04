@@ -30,10 +30,16 @@
     "Rename address": "Renommer l'adresse",
     "Delete address": "Supprimer l'adresse",
     "Delete account": "Supprimer le compte",
+    "Edit email": "Modifier l'e-mail",
+    "Edit phone number": "Modifier le numéro de téléphone",
     "Copy Address": "Copier l'adresse",
     "Open Explorer": "Ouvrir l'explorateur",
     "Select transaction": "Sélectionner la transaction",
-    "Download": "Télécharger"
+    "Download": "Télécharger",
+    "Confirm refund": "Confirmer le remboursement",
+    "Request refund": "Demander un remboursement",
+    "Copy Link": "Copier le lien",
+    "Open invoice": "Ouvrir la facture"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -42,9 +48,11 @@
     "IBAN not allowed": "IBAN non autorisé",
     "IBAN country not allowed": "Code pays de l'IBAN non autorisé",
     "Only XML files are allowed": "Seuls les fichiers XML sont autorisés",
+    "Only JSON files are allowed": "Seuls les fichiers JSON sont autorisés",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Formats autorisés : PDF, JPG, JPEG, PNG",
 
-    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer. Si le problème persiste, veuillez contacter notre service d'assistance."
+    "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer. Si le problème persiste, veuillez contacter notre service d'assistance.",
+    "invoice": "DFX ne reconnaît pas un destinataire nommé <strong>{{recipient}}</strong>. Ce service ne peut être utilisé que pour des destinataires ayant un compte actif chez DFX et activés pour le service de facturation. Si vous souhaitez vous inscrire en tant que destinataire chez DFX, veuillez contacter le support à <link>{{supportLink}}</link>."
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -73,6 +81,8 @@
     "Commercial register": "Registre du commerce",
     "Signatory power": "Pouvoir de signature",
     "Power of Attorney": "Procuration",
+    "Additional documents": "Documents supplémentaires",
+    "Residence permit": "Permis de séjour",
     "DFX approval": "Approbation DFX",
 
     "Public Limited Company": "Société anonyme",
@@ -82,6 +92,13 @@
     "Foundation": "Fondation",
     "Trust": "Fiducie",
     "Other": "Autre",
+
+    "Female": "Femme",
+    "Male": "Homme",
+
+    "Passport": "Passeport",
+    "ID card": "Carte d'identité",
+    "Driver's license": "Permis de conduire",
 
     "Authorized to sign individually": "Autorisé à signer individuellement",
     "Authorized to sign jointly": "Autorisé à signer conjointement",
@@ -98,12 +115,17 @@
     "Failed": "Échoué",
     "Outdated": "Obsolète",
 
+    "Optional": "Facultatif",
+
     "Account Type": "Type de compte",
     "Personal": "Personnel",
-    "Business": "Professionnel",
+    "Organization": "Organisation",
     "SoleProprietorship": "Entreprise individuelle",
     "Personal Information": "Informations personnelles",
+    "Gender": "Sexe",
     "First name": "Prénom",
+    "Birth name": "Nom de naissance",
+    "Birthplace": "Lieu de naissance",
     "John": "Jean",
     "John Doe": "Jean Dupont",
     "Last name": "Nom de famille",
@@ -123,6 +145,9 @@
     "Organization name": "Nom de l'organisation",
     "Example inc.": "Exempel SARL & Co. KG",
     "Contact information": "Coordonnées",
+    "Identification document": "Document d'identification",
+    "Document type": "Type de document",
+    "Document number": "Numéro de document",
 
     "Please fill in personal information to continue": "Veuillez compléter vos informations personnelles pour continuer",
     "Please enter your contact information so that we can find your account": "Veuillez saisir vos coordonnées afin que nous puissions retrouver votre compte",
@@ -148,6 +173,9 @@
     "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Par la présente, je charge DFX de transmettre mes données KYC à {{client}}.",
 
     "Merging your accounts...": "Fusion de vos comptes...",
+    "Account merged successfully!": "Compte fusionné avec succès!",
+    "You can now access your account.": "Vous pouvez maintenant accéder à votre compte.",
+    "My account": "Mon compte",
 
     "Upload your SEPA file here": "Téléchargez votre fichier SEPA ici",
     "Uploaded": "Téléchargé"
@@ -160,7 +188,9 @@
     "Click + in Google Authenticator to add a new account. You can scan the QR code or enter the secret provided to create your account in Google Authenticator.": "Cliquez sur + dans Google Authenticator pour ajouter un nouveau compte. Vous pouvez scanner le code QR ou saisir le secret fourni pour créer votre compte dans Google Authenticator.",
     "Secret": "Secret",
     "Enter the 6-digit dynamic code from your authenticator app": "Saisissez le code dynamique à 6 chiffres de votre application Authenticator.",
+    "Enter the 6-digit code from your email": "Saisissez le code à 6 chiffres de votre e-mail",
     "Authenticator code": "Code d'authentification",
+    "Email code": "Code e-mail",
     "Invalid or expired code": "Code invalide ou expiré",
     "Delete 2FA method": "Supprimer la méthode 2FA",
     "Are you sure you want to delete your 2FA method?": "Êtes-vous sûr de vouloir supprimer la méthode 2FA ?"
@@ -190,6 +220,8 @@
   "screens/error": {
     "Oh, sorry, something went wrong": "Désolé, il y a eu un problème",
 
+    "Invalid link": "Lien invalide",
+    "Merge is already completed": "La fusion est déjà terminée",
     "Please return to the previous page. If this problem persists, please contact our support.": "Veuillez revenir à la page précédente. Si le problème persiste, veuillez contacter notre service d'assistance."
   },
   "screens/home": {
@@ -278,11 +310,11 @@
     "Credit": "Crédit",
     "Paid credit": "Crédit payé",
     "User count": "Nombre d'utilisateurs",
-    "Active user count": "Nombre d'utilisateurs actifs",
-    "Active wallet": "Portefeuille actif"
+    "Active user count": "Nombre d'utilisateurs actifs"
   },
   "screens/buy": {
     "You spend": "Vous dépensez",
+    "You get": "Vous obtenez",
     "You get about": "Vous obtenez environ",
 
     "Target address": "Adresse de destination",
@@ -310,10 +342,6 @@
 
     "The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "Le montant de sortie est calculé comme le montant d'entrée moins les frais DFX et les frais de réseau sur le taux de base. C'est-à-dire, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.",
     "Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Montant de sortie = (Montant d'entrée - Frais DFX - Frais de réseau) ÷ Taux de base."
-  },
-  "screens/bank-accounts": {
-    "DFX bank accounts": "DFX Coordonnées bancaires",
-    "Todo list of bank accounts": "Liste des comptes bancaires à faire"
   },
   "screens/sell": {
     "Add or select your IBAN": "Ajouter ou sélectionner votre IBAN",
@@ -372,6 +400,7 @@
     "No transactions found": "Aucune transaction trouvée",
     "My transaction is missing": "Ma transaction est manquante",
     "Transaction status": "Statut de la transaction",
+    "Transaction refund": "Remboursement de la transaction",
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} vers {{to}} à {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
 
     "ID": "ID",
@@ -381,6 +410,16 @@
     "Input TX": "Input TX",
     "Output": "Output",
     "Output TX": "Output TX",
+
+    "Chargeback IBAN": "IBAN de rétrofacturation",
+    "Chargeback address": "Adresse de rétrofacturation",
+    "Chargeback amount": "Montant de la rétrofacturation",
+    "Chargeback TX": "TX de rétrofacturation",
+    "Chargeback date": "Date de rétrofacturation",
+    "Transaction amount": "Montant de la transaction",
+    "Refund amount": "Montant du remboursement",
+    "Fee": "Frais",
+    "Refund amount is the transaction amount minus the fee.": "Le montant du remboursement correspond au montant de la transaction moins les frais.",
 
     "Type": "Type",
     "Buy": "Achat",
@@ -399,7 +438,8 @@
     "Cancelled": "Annulé",
     "Expired": "Expiré",
     "Failed": "Échec",
-    "Returned": "Retourné",
+    "Refund pending": "Remboursement en attente",
+    "Refunded": "Remboursé",
     "Unassigned": "Non attribué",
     "LNURL decoded": "LNURL décodé",
 
@@ -428,6 +468,8 @@
     "Address deleted": "Adresse supprimée",
     "Video identification required": "Identification par vidéo nécessaire",
 
+    "Loading countries...": "Chargement des pays...",
+
     "Payment method": "Mode de paiement",
     "Standard bank transaction": "Transaction bancaire standard",
     "Instant bank transaction": "Transaction bancaire instantanée",
@@ -452,6 +494,7 @@
     "The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.": "Le taux de change de {{rate}} {{currency}}/{{asset}} est fixé pour {{timer}}, après quoi il sera recalculé.",
     "Please send the specified amount to the address below.": "Veuillez envoyer le montant spécifié à l'adresse ci-dessous.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales.",
+    "By using this service, the outstanding claim of the above-mentioned company against DFX is assigned, and the General Terms and Conditions of DFX AG apply.": "En utilisant ce service, la créance en souffrance de l’entreprise susmentionnée envers DFX est cédée, et les Conditions Générales de DFX AG s’appliquent.",
 
     "Payment routes": "Itinéraires de paiement",
     "Payment route": "Itinéraire de paiement",
@@ -467,6 +510,7 @@
     "Multiple": "Multiples",
     "Active": "Actif",
     "Inactive": "Inactif",
+    "Edit recipient": "Modifier le bénéficiaire",
     "Create Payment Link": "Créer un Payment Link",
     "Create payment": "Créer un paiement",
     "Cancel payment": "Annuler le paiement",
@@ -476,6 +520,12 @@
     "Activate": "Activer",
     "Deactivate": "Désactiver",
     "Expires at": "Expire à",
+
+    "Token contract": "Contrat de token",
+
+    "Create Invoice": "Créer une facture",
+    "Invoice ID": "ID de facture",
+    "Recipient not found": "Bénéficiaire non trouvé",
 
     "Route": "Route",
     "Summary": "Résumé",
@@ -495,6 +545,8 @@
     "Invalid Payment Link": "Payment Link invalide",
 
     "Cointracking": "Cointracking",
+    "Compact": "Compact",
+    "Chain-Report": "Chain-Report",
     "Saved": "Enregistré",
     "Cointracking Link (read rights)": "Lien Cointracking (droits de lecture)",
     "Cointracking homepage": "Page d'accueil Cointracking",
@@ -519,6 +571,7 @@
     "Accounts already used with DFX": "Comptes déjà utilisés avec DFX",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Pour retrouver votre transaction manquante, veuillez ajouter le compte bancaire à partir duquel vous avez envoyé l'argent.",
     "The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.": "Le compte bancaire a été ajouté, toutes les transactions de cet IBAN seront désormais associées à votre compte. Veuillez vérifier l'aperçu des transactions pour voir si la transaction manquante est maintenant visible.",
+    "The bank account has been added, all transactions from this IBAN will now be associated with your account.": "Le compte bancaire a été ajouté, toutes les transactions de cet IBAN seront désormais associées à votre compte.",
     "Add bank account": "Ajouter un compte bancaire",
     "No IBAN, only account number": "Pas d'IBAN, seulement numéro de compte",
     "This IBAN already exists in another DFX customer account.": "Cet IBAN existe déjà sur un autre compte client de DFX.",
@@ -535,6 +588,7 @@
     "Limit increase request": "Demande d'augmentation de limite",
     "Partnership request": "Demande de partenariat",
     "Notification of changes": "Notification de changements",
+    "Bug report": "Rapport de bug",
 
     "Reason": "Motif",
     "Other": "Autres",
@@ -568,18 +622,34 @@
     "Write a message...": "Écrire un message...",
     "Downloading...": "Téléchargement...",
     "Image": "Image",
-    "Document": "Document"
+    "Document": "Document",
+
+    "Created on": "Créé le",
+    "Hide completed tickets": "Masquer les tickets terminés",
+    "Show completed tickets": "Afficher les tickets terminés"
   },
   "screens/settings": {
     "Settings": "Paramètres",
-    "Your Wallets": "Vos Portefeuilles",
+    "Your Addresses": "Vos adresses",
     "Active": "Actif",
     "Language": "Langue",
     "Currency": "Devise",
     "Label": "Étiquette",
+    "Address name": "Nom de l'adresse",
+
+    "Show deleted addresses": "Afficher les adresses supprimées",
+    "Hide deleted addresses": "Masquer les adresses supprimées",
 
     "delete": "Êtes-vous sûr de vouloir supprimer l'adresse <1>{{address}}</1> de votre compte DFX ? Cette action est irréversible.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support."
+  },
+  "screens/blockchain": {
+    "Transaction signing": "Signature de la transaction",
+    "Transaction hash": "Hash de transaction",
+    "Transaction (Input data)": "Transaction (Données d'entrée)",
+    "Sign transaction": "Signer la transaction",
+    "Signer": "Signataire",
+    "Contract address": "Adresse du contrat"
   },
   "navigation/links": {
     "Buy": "Acheter",
