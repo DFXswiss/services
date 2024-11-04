@@ -65,8 +65,7 @@ interface FormData {
   recipientPhone: string;
   recipientEmail: string;
   recipientWebsite: string;
-  configStandards: PaymentStandardType[];
-  configBlockchain: Blockchain[];
+  configStandards: ConfigStandard[];
   configMinCompletionStatus: PaymentQuoteStatus;
   configDisplayQr: boolean;
   configPaymentTimeout: number;
@@ -78,6 +77,8 @@ interface FormData {
   paymentCurrency: Fiat;
   paymentExpiryDate: Date;
 }
+
+type ConfigStandard = PaymentStandardType | Blockchain;
 
 interface RouteIdSelectData {
   id: string;
@@ -457,7 +458,10 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                 [
                                   {
                                     label: translate('screens/support', 'Standards'),
-                                    text: (link as any).config.standards?.toString(),
+                                    text: toConfigStandards(
+                                      (link as any).config.standards,
+                                      (link as any).config.blockchains,
+                                    ).join('\n'),
                                   },
                                   {
                                     label: translate('screens/home', 'Blockchains'),
@@ -660,6 +664,27 @@ const PaymentLinkFormStepToTitle = {
   [PaymentLinkFormStep.DONE]: 'Summary',
 };
 
+const filterPaymentStandards = (standards?: any) =>
+  standards?.filter(
+    (item: PaymentStandardType) =>
+      Object.values(PaymentStandardType).includes(item) && item !== PaymentStandardType.PAY_TO_ADDRESS,
+  );
+
+const filterBlockchains = (blockchains?: any) =>
+  blockchains?.filter((item: Blockchain) => Object.values(Blockchain).includes(item) && item !== Blockchain.LIGHTNING);
+
+const fromConfigStandards = (configStandards: ConfigStandard[]) => {
+  const standards = filterPaymentStandards(configStandards);
+  const blockchains = filterBlockchains(configStandards);
+  if (blockchains.length > 0) standards.push(PaymentStandardType.PAY_TO_ADDRESS);
+
+  return { standards, blockchains };
+};
+
+const toConfigStandards = (standards?: PaymentStandardType[], blockchains?: Blockchain[]) => {
+  return filterPaymentStandards(standards).concat(filterBlockchains(blockchains));
+};
+
 function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: PaymentLinkFormProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
@@ -722,8 +747,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
       const prefilledPaymentConfig = (paymentLink as any)?.config;
       if (prefilledPaymentConfig) {
         reset({
-          configStandards: prefilledPaymentConfig.standards,
-          configBlockchain: prefilledPaymentConfig.blockchain,
+          configStandards: toConfigStandards(prefilledPaymentConfig.standards, prefilledPaymentConfig.blockchains),
           configMinCompletionStatus: prefilledPaymentConfig.minCompletionStatus,
           configDisplayQr: prefilledPaymentConfig.displayQr,
           configFee: prefilledPaymentConfig.fee,
@@ -781,10 +805,12 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
       }
 
       if (hasConfigData) {
+        const { standards, blockchains } = fromConfigStandards(data.configStandards);
+
         request.config = {
           ...request.config,
-          standards: data.configStandards,
-          blockchain: data.configBlockchain,
+          standards: standards,
+          blockchains: blockchains,
           minCompletionStatus: data.configMinCompletionStatus,
           displayQr: data.configDisplayQr,
           fee: data.configFee,
@@ -855,7 +881,6 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
   );
   const hasConfigData = Boolean(
     data.configStandards?.length ||
-      data.configBlockchain?.length ||
       data.configMinCompletionStatus ||
       data.configDisplayQr !== undefined ||
       data.configFee !== undefined ||
@@ -1039,17 +1064,18 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
           )}
           {step === PaymentLinkFormStep.CONFIG && (
             <>
-              <StyledDropdownMultiChoice<PaymentStandardType | Blockchain>
+              <StyledDropdownMultiChoice<ConfigStandard>
                 rootRef={rootRef}
                 name="configStandards"
                 label={translate('screens/payment', 'Standards')}
                 smallLabel
                 full
                 placeholder={translate('general/actions', 'Select...')}
-                items={[...Object.values(PaymentStandardType), ...Object.values(Blockchain)].filter(
-                  (item) => item !== PaymentStandardType.PAY_TO_ADDRESS,
-                )}
-                labelFunc={(item) => translate('screens/payment', item)}
+                items={[
+                  ...filterPaymentStandards(Object.values(PaymentStandardType)),
+                  ...filterBlockchains(Object.values(Blockchain)),
+                ]}
+                labelFunc={(item) => item}
               />
 
               <StyledDropdown
@@ -1132,10 +1158,6 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                     {
                       label: translate('screens/support', 'Standards'),
                       text: data.configStandards?.toString() ?? naString,
-                    },
-                    {
-                      label: translate('screens/home', 'Blockchains'),
-                      text: data.configBlockchain?.toString() ?? naString,
                     },
                     {
                       label: translate('screens/kyc', 'Min. completion status'),
@@ -1229,7 +1251,6 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                       }),
                       ...(!hasConfigData && {
                         configStandards: undefined,
-                        configBlockchain: undefined,
                         configMinCompletionStatus: undefined,
                         configDisplayQr: undefined,
                         configFee: undefined,
