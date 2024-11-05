@@ -94,7 +94,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
-  const { user } = useUserContext();
+  const { user, updatePaymentLinksConfig: updateUserConfig } = useUserContext();
   const {
     paymentRoutes,
     paymentLinks,
@@ -114,6 +114,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const [isUpdatingPaymentLink, setIsUpdatingPaymentLink] = useState<string[]>([]);
   const [expandedPaymentLinkId, setExpandedPaymentLinkId] = useState<string>();
   const [showPaymentLinkForm, setShowPaymentLinkForm] = useState<PaymentLinkFormState>();
+  const [updateGlobalConfig, setUpdateGlobalConfig] = useState<boolean>(false);
 
   useAddressGuard('/login');
 
@@ -143,6 +144,13 @@ export default function PaymentRoutesScreen(): JSX.Element {
     });
   }
 
+  async function updatePaymentLinksConfig(data: any) {
+    console.log('calling submit function updatePaymentLinksConfig');
+    updateUserConfig(data.config)
+      .then(() => console.log('payment link config update successful'))
+      .catch((e: ApiError) => console.error('payment link config update failed', e));
+  }
+
   function onCloseForm(id?: string) {
     setShowPaymentLinkForm(undefined);
 
@@ -165,7 +173,9 @@ export default function PaymentRoutesScreen(): JSX.Element {
     ? 'Delete payment route?'
     : 'Payment routes';
 
-  const onBack = showPaymentLinkForm
+  const onBack = updateGlobalConfig
+    ? () => setUpdateGlobalConfig(false)
+    : showPaymentLinkForm
     ? () =>
         setShowPaymentLinkForm((prev) =>
           prev && prev.step > 0 && !prev.paymentLinkId ? { ...prev, step: prev.step - 1 } : undefined,
@@ -174,10 +184,32 @@ export default function PaymentRoutesScreen(): JSX.Element {
     ? () => setDeleteRoute(undefined)
     : undefined;
 
+  const userPaymentLinkConfig = JSON.parse((user?.paymentLink as any)?.config ?? '{}');
+
   return (
     <Layout title={translate('screens/payment', title)} onBack={onBack} textStart rootRef={rootRef}>
       {error ? (
         <ErrorHint message={error} />
+      ) : updateGlobalConfig ? (
+        <PaymentLinkForm
+          state={{
+            step: PaymentLinkFormStep.CONFIG,
+            paymentLinkId: undefined,
+            prefilledData: {
+              configStandards: toConfigStandards(userPaymentLinkConfig.standards, userPaymentLinkConfig.blockchains),
+              configMinCompletionStatus: userPaymentLinkConfig.minCompletionStatus,
+              configDisplayQr: userPaymentLinkConfig.displayQr,
+              configFee: userPaymentLinkConfig.fee,
+              configPaymentTimeout: userPaymentLinkConfig.paymentTimeout,
+            },
+          }}
+          setStep={(step) => setShowPaymentLinkForm((prev) => ({ ...prev, step }))}
+          onClose={() => setUpdateGlobalConfig(false)}
+          onSubmit={(data) => {
+            setUpdateGlobalConfig(false);
+            updatePaymentLinksConfig(data);
+          }}
+        />
       ) : showPaymentLinkForm ? (
         <PaymentLinkForm
           state={showPaymentLinkForm}
@@ -303,6 +335,50 @@ export default function PaymentRoutesScreen(): JSX.Element {
           {paymentLinks?.length ? (
             <StyledVerticalStack gap={2} full>
               <h2 className="ml-3.5 mb-1.5 text-dfxGray-700">{translate('screens/payment', 'Payment Links')}</h2>
+              <StyledDataTable>
+                <StyledDataTableExpandableRow
+                  label={translate('screens/payment', 'Default Payment Link configuration')}
+                  expansionItems={
+                    [
+                      {
+                        label: translate('screens/support', 'Standards'),
+                        text: toConfigStandards(
+                          userPaymentLinkConfig.standards,
+                          userPaymentLinkConfig.blockchains,
+                        )?.join('\n'),
+                      },
+                      {
+                        label: translate('screens/home', 'Blockchains'),
+                        text: userPaymentLinkConfig.blockchain?.toString(),
+                      },
+                      {
+                        label: translate('screens/kyc', 'Min. completion status'),
+                        text: userPaymentLinkConfig.minCompletionStatus,
+                      },
+                      {
+                        label: translate('screens/kyc', 'Display QR Code'),
+                        text: userPaymentLinkConfig.displayQr?.toString(),
+                      },
+                      {
+                        label: translate('screens/kyc', 'Fee'),
+                        text: userPaymentLinkConfig.fee?.toString(),
+                      },
+                      {
+                        label: translate('screens/kyc', 'Payment timeout (in seconds)'),
+                        text: userPaymentLinkConfig.paymentTimeout?.toString(),
+                      },
+                    ].filter((item) => item.text) as any
+                  }
+                  expansionContent={
+                    <StyledButton
+                      label={translate('screens/payment', 'Edit default configuration')}
+                      onClick={() => setUpdateGlobalConfig(true)}
+                      color={StyledButtonColor.STURDY_WHITE}
+                      width={StyledButtonWidth.FULL}
+                    />
+                  }
+                />
+              </StyledDataTable>
               {paymentLinks.map((link) => {
                 return (
                   <div key={link.id} ref={(el) => paymentLinkRefs.current && (paymentLinkRefs.current[link.id] = el)}>
@@ -648,12 +724,14 @@ export enum PaymentQuoteStatus {
 interface PaymentLinkFormState {
   step: PaymentLinkFormStep;
   paymentLinkId?: string;
+  prefilledData?: any;
 }
 
 interface PaymentLinkFormProps {
   state: PaymentLinkFormState;
   setStep: (title: PaymentLinkFormStep) => void;
   onClose: (id?: string) => void;
+  onSubmit?: (data: any) => void;
 }
 
 const PaymentLinkFormStepToTitle = {
@@ -682,10 +760,15 @@ const fromConfigStandards = (configStandards: ConfigStandard[]) => {
 };
 
 const toConfigStandards = (standards?: PaymentStandardType[], blockchains?: Blockchain[]) => {
-  return filterPaymentStandards(standards).concat(filterBlockchains(blockchains));
+  return filterPaymentStandards(standards)?.concat(filterBlockchains(blockchains));
 };
 
-function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: PaymentLinkFormProps): JSX.Element {
+function PaymentLinkForm({
+  state: { step, paymentLinkId, prefilledData },
+  setStep,
+  onClose,
+  onSubmit: onSubmitForm,
+}: PaymentLinkFormProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
   const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink } = usePaymentRoutesContext();
@@ -754,6 +837,8 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
           configPaymentTimeout: prefilledPaymentConfig.paymentTimeout,
         });
       }
+    } else if (prefilledData) {
+      reset(prefilledData);
     }
   }, [paymentLinks, countries]);
 
@@ -816,6 +901,13 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
           fee: data.configFee,
           paymentTimeout: data.configPaymentTimeout,
         };
+      }
+
+      if (onSubmitForm) {
+        onSubmitForm(request);
+        onClose();
+        reset();
+        return;
       }
 
       switch (step) {
@@ -1201,9 +1293,9 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
             </div>
           )}
 
-          {step === PaymentLinkFormStep.DONE || paymentLinkId ? (
+          {step === PaymentLinkFormStep.DONE || paymentLinkId || prefilledData ? (
             <div className="flex flex-col w-full gap-4">
-              {paymentLinkId && (
+              {(paymentLinkId || prefilledData) && (
                 <StyledButton
                   type="submit"
                   label={translate('general/actions', 'Cancel')}
@@ -1213,10 +1305,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 />
               )}
               <StyledButton
-                label={translate(
-                  'general/actions',
-                  paymentLinkId && step === PaymentLinkFormStep.RECIPIENT ? 'Save' : 'Create',
-                )}
+                label={translate('general/actions', paymentLinkId || prefilledData ? 'Save' : 'Create')}
                 onClick={handleSubmit(onSubmit)}
                 width={StyledButtonWidth.FULL}
                 isLoading={isLoading}
