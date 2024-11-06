@@ -45,6 +45,7 @@ import { Trans } from 'react-i18next';
 import { Layout } from 'src/components/layout';
 import { ConfirmationOverlay } from 'src/components/overlays';
 import { QrBasic } from 'src/components/payment/qr-code';
+import { PaymentQuoteStatusLabels } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
@@ -165,7 +166,9 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const hasRoutes =
     paymentRoutes && Boolean(paymentRoutes?.buy.length || paymentRoutes?.sell.length || paymentRoutes?.swap.length);
 
-  const title = showPaymentLinkForm
+  const title = updateGlobalConfig
+    ? 'Default configuration'
+    : showPaymentLinkForm
     ? `Payment Link: ${translate('screens/payment', PaymentLinkFormStepToTitle[showPaymentLinkForm.step])}`
     : deleteRoute
     ? 'Delete payment route?'
@@ -340,26 +343,31 @@ export default function PaymentRoutesScreen(): JSX.Element {
                   expansionItems={
                     [
                       {
-                        label: translate('screens/support', 'Standards'),
+                        label: translate('screens/payment', 'Payment standards'),
                         text: toConfigStandards(
                           user?.paymentLink?.config?.standards,
                           user?.paymentLink?.config?.blockchains,
                         )?.join('\n'),
                       },
                       {
-                        label: translate('screens/kyc', 'Min. completion status'),
-                        text: user?.paymentLink?.config?.minCompletionStatus,
+                        label: translate('screens/payment', 'Min. completion status'),
+                        text:
+                          user?.paymentLink?.config?.minCompletionStatus &&
+                          translate(
+                            'screens/payment',
+                            PaymentQuoteStatusLabels[user.paymentLink.config.minCompletionStatus],
+                          ),
                       },
                       {
-                        label: translate('screens/kyc', 'Display QR Code'),
+                        label: translate('screens/payment', 'Display QR code'),
                         text: user?.paymentLink?.config?.displayQr?.toString(),
                       },
                       {
-                        label: translate('screens/kyc', 'Fee'),
+                        label: translate('screens/payment', 'Fee'),
                         text: user?.paymentLink?.config?.fee?.toString(),
                       },
                       {
-                        label: translate('screens/kyc', 'Payment timeout (in seconds)'),
+                        label: translate('screens/payment', 'Payment timeout (seconds)'),
                         text: user?.paymentLink?.config?.paymentTimeout?.toString(),
                       },
                     ].filter((item) => item.text) as any
@@ -528,23 +536,28 @@ export default function PaymentRoutesScreen(): JSX.Element {
                               expansionItems={
                                 [
                                   {
-                                    label: translate('screens/support', 'Standards'),
+                                    label: translate('screens/payment', 'Payment standards'),
                                     text: toConfigStandards(link.config.standards, link.config.blockchains).join('\n'),
                                   },
                                   {
-                                    label: translate('screens/kyc', 'Min. completion status'),
-                                    text: link.config.minCompletionStatus,
+                                    label: translate('screens/payment', 'Min. completion status'),
+                                    text:
+                                      link.config.minCompletionStatus &&
+                                      translate(
+                                        'screens/payment',
+                                        PaymentQuoteStatusLabels[link.config.minCompletionStatus],
+                                      ),
                                   },
                                   {
-                                    label: translate('screens/kyc', 'Display QR Code'),
+                                    label: translate('screens/payment', 'Display QR code'),
                                     text: link.config.displayQr?.toString(),
                                   },
                                   {
-                                    label: translate('screens/kyc', 'Fee'),
+                                    label: translate('screens/payment', 'Fee'),
                                     text: link.config.fee?.toString(),
                                   },
                                   {
-                                    label: translate('screens/kyc', 'Payment timeout (in seconds)'),
+                                    label: translate('screens/payment', 'Payment timeout (seconds)'),
                                     text: link.config.paymentTimeout?.toString(),
                                   },
                                 ].filter((item) => item.text) as any
@@ -1135,7 +1148,7 @@ function PaymentLinkForm({
               <StyledDropdownMultiChoice<ConfigStandard>
                 rootRef={rootRef}
                 name="configStandards"
-                label={translate('screens/payment', 'Standards')}
+                label={translate('screens/payment', 'Payment standards')}
                 smallLabel
                 full
                 placeholder={translate('general/actions', 'Select...')}
@@ -1154,7 +1167,7 @@ function PaymentLinkForm({
                 full
                 placeholder={translate('general/actions', 'Select...')}
                 items={Object.values(PaymentQuoteStatus)}
-                labelFunc={(item) => translate('screens/payment', item)}
+                labelFunc={(item) => translate('screens/payment', PaymentQuoteStatusLabels[item])}
               />
 
               <StyledInput
@@ -1169,7 +1182,7 @@ function PaymentLinkForm({
               <StyledInput
                 type="number"
                 name="configPaymentTimeout"
-                label={translate('screens/payment', 'Payment timeout (in seconds)')}
+                label={translate('screens/payment', 'Payment timeout (seconds)')}
                 smallLabel
                 placeholder={'60'}
                 full
@@ -1178,12 +1191,12 @@ function PaymentLinkForm({
               <StyledDropdown
                 rootRef={rootRef}
                 name="configDisplayQr"
-                label={translate('screens/payment', 'Display QR Code')}
+                label={translate('screens/payment', 'Display QR code')}
                 smallLabel
                 full
                 placeholder={translate('general/actions', 'Select...')}
                 items={[true, false]}
-                labelFunc={(item) => translate('screens/payment', item.toString())}
+                labelFunc={(item) => translate('general/actions', item ? 'Yes' : 'No')}
               />
             </>
           )}
@@ -1224,20 +1237,25 @@ function PaymentLinkForm({
                   discreet={!hasConfigData}
                   expansionItems={[
                     {
-                      label: translate('screens/support', 'Standards'),
+                      label: translate('screens/payment', 'Payment standards'),
                       text: data.configStandards?.toString() ?? naString,
                     },
                     {
-                      label: translate('screens/kyc', 'Min. completion status'),
-                      text: data.configMinCompletionStatus ?? naString,
+                      label: translate('screens/payment', 'Min. completion status'),
+                      text: data.configMinCompletionStatus
+                        ? translate('screens/payment', PaymentQuoteStatusLabels[data.configMinCompletionStatus])
+                        : naString,
                     },
                     {
-                      label: translate('screens/kyc', 'Display QR Code'),
-                      text: data.configDisplayQr?.toString() ?? naString,
+                      label: translate('screens/payment', 'Display QR code'),
+                      text:
+                        data.configDisplayQr !== undefined
+                          ? translate('general/actions', data.configDisplayQr ? 'Yes' : 'No')
+                          : naString,
                     },
-                    { label: translate('screens/kyc', 'Fee'), text: data.configFee?.toString() ?? naString },
+                    { label: translate('screens/payment', 'Fee'), text: data.configFee?.toString() ?? naString },
                     {
-                      label: translate('screens/kyc', 'Payment timeout'),
+                      label: translate('screens/payment', 'Payment timeout (seconds)'),
                       text: data.configPaymentTimeout?.toString() ?? naString,
                     },
                   ]}
