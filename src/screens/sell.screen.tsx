@@ -564,7 +564,7 @@ export default function SellScreen(): JSX.Element {
                     <StyledSearchDropdown<Asset>
                       rootRef={rootRef}
                       name="asset"
-                      placeholder={translate('general/actions', 'Select...')}
+                      placeholder={translate('general/actions', 'Select') + '...'}
                       items={availableAssets}
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
@@ -609,7 +609,7 @@ export default function SellScreen(): JSX.Element {
                     <StyledDropdown<Fiat>
                       rootRef={rootRef}
                       name="currency"
-                      placeholder={translate('general/actions', 'Select...')}
+                      placeholder={translate('general/actions', 'Select') + '...'}
                       items={currencies}
                       labelFunc={(item) => item.name}
                       descriptionFunc={(item) => toDescription(item)}

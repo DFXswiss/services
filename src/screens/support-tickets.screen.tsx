@@ -147,7 +147,7 @@ export default function SupportTicketsScreen(): JSX.Element {
               </table>
             </div>
             <StyledButton
-              label={translate('screens/support', 'Create Ticket')}
+              label={translate('general/actions', 'Create ticket')}
               onClick={() => navigate('/support/issue')}
               width={StyledButtonWidth.FULL}
             />

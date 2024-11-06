@@ -310,7 +310,7 @@ export default function SupportIssueScreen(): JSX.Element {
               items={issues.filter((t) => t !== SupportIssueType.LIMIT_REQUEST || isKycComplete)}
               labelFunc={(item) => item && translate('screens/support', IssueTypeLabels[item])}
               name="type"
-              placeholder={translate('general/actions', 'Select...')}
+              placeholder={translate('general/actions', 'Select') + '...'}
               full
             />
 
@@ -321,7 +321,7 @@ export default function SupportIssueScreen(): JSX.Element {
                 items={reasons}
                 labelFunc={(item) => translate('screens/support', IssueReasonLabels[item])}
                 name="reason"
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 full
               />
             )}
@@ -359,7 +359,7 @@ export default function SupportIssueScreen(): JSX.Element {
                     }
                     descriptionFunc={(item) => bankAccounts.find((a) => a.iban === item)?.label ?? ''}
                     name="senderIban"
-                    placeholder={translate('general/actions', 'Select...')}
+                    placeholder={translate('general/actions', 'Select') + '...'}
                     full
                   />
 
@@ -369,7 +369,7 @@ export default function SupportIssueScreen(): JSX.Element {
                     items={banks.map((b) => b.iban)}
                     labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
                     name="receiverIban"
-                    placeholder={translate('general/actions', 'Select...')}
+                    placeholder={translate('general/actions', 'Select') + '...'}
                     full
                   />
 
@@ -400,7 +400,7 @@ export default function SupportIssueScreen(): JSX.Element {
                   items={Object.values(Limit).filter((i) => typeof i !== 'string') as number[]}
                   labelFunc={(item) => LimitLabels[item]}
                   name="limit"
-                  placeholder={translate('general/actions', 'Select...')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
                   full
                 />
 
@@ -410,7 +410,7 @@ export default function SupportIssueScreen(): JSX.Element {
                   items={Object.values(InvestmentDate)}
                   labelFunc={(item) => translate('screens/limit', DateLabels[item])}
                   name="investmentDate"
-                  placeholder={translate('general/actions', 'Select...')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
                   full
                 />
 
@@ -425,7 +425,7 @@ export default function SupportIssueScreen(): JSX.Element {
                     )
                   }
                   name="fundOrigin"
-                  placeholder={translate('general/actions', 'Select...')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
                   full
                 />
               </>
