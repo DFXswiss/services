@@ -1,5 +1,6 @@
 import {
   ApiError,
+  Blockchain,
   Country,
   Fiat,
   PaymentLinkPaymentMode,
@@ -29,12 +30,14 @@ import {
   StyledDataTableRow,
   StyledDateAndTimePicker,
   StyledDropdown,
+  StyledDropdownMultiChoice,
   StyledHorizontalStack,
   StyledInput,
   StyledLoadingSpinner,
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { PaymentQuoteStatus, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -42,6 +45,7 @@ import { Trans } from 'react-i18next';
 import { Layout } from 'src/components/layout';
 import { ConfirmationOverlay } from 'src/components/overlays';
 import { QrBasic } from 'src/components/payment/qr-code';
+import { PaymentQuoteStatusLabels } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
@@ -62,12 +66,20 @@ interface FormData {
   recipientPhone: string;
   recipientEmail: string;
   recipientWebsite: string;
+  configStandards: ConfigStandard[];
+  configMinCompletionStatus: PaymentQuoteStatus;
+  configDisplayQr: boolean;
+  configPaymentTimeout: number;
+  configFee: number;
+  configTimeout: number;
   paymentMode: PaymentLinkPaymentMode;
   paymentAmount: string;
   paymentExternalId: string;
   paymentCurrency: Fiat;
   paymentExpiryDate: Date;
 }
+
+type ConfigStandard = PaymentStandardType | Blockchain;
 
 interface RouteIdSelectData {
   id: string;
@@ -83,7 +95,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
-  const { user } = useUserContext();
+  const { user, updatePaymentLinksConfig: updateUserConfig } = useUserContext();
   const {
     paymentRoutes,
     paymentLinks,
@@ -92,17 +104,19 @@ export default function PaymentRoutesScreen(): JSX.Element {
     updatePaymentLink,
     cancelPaymentLinkPayment,
     deletePaymentRoute,
-    error,
+    error: apiError,
   } = usePaymentRoutesContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const [error, setError] = useState<string>();
   const [deleteRoute, setDeleteRoute] = useState<DeletePaymentRoute>();
   const [isDeletingRoute, setIsDeletingRoute] = useState<string[]>([]);
   const [isUpdatingPaymentLink, setIsUpdatingPaymentLink] = useState<string[]>([]);
   const [expandedPaymentLinkId, setExpandedPaymentLinkId] = useState<string>();
   const [showPaymentLinkForm, setShowPaymentLinkForm] = useState<PaymentLinkFormState>();
+  const [updateGlobalConfig, setUpdateGlobalConfig] = useState<boolean>(false);
 
   useAddressGuard('/login');
 
@@ -132,6 +146,10 @@ export default function PaymentRoutesScreen(): JSX.Element {
     });
   }
 
+  async function updatePaymentLinksConfig(data: any) {
+    await updateUserConfig(data.config).catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
+  }
+
   function onCloseForm(id?: string) {
     setShowPaymentLinkForm(undefined);
 
@@ -148,13 +166,17 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const hasRoutes =
     paymentRoutes && Boolean(paymentRoutes?.buy.length || paymentRoutes?.sell.length || paymentRoutes?.swap.length);
 
-  const title = showPaymentLinkForm
+  const title = updateGlobalConfig
+    ? 'Default configuration'
+    : showPaymentLinkForm
     ? `Payment Link: ${translate('screens/payment', PaymentLinkFormStepToTitle[showPaymentLinkForm.step])}`
     : deleteRoute
     ? 'Delete payment route?'
     : 'Payment routes';
 
-  const onBack = showPaymentLinkForm
+  const onBack = updateGlobalConfig
+    ? () => setUpdateGlobalConfig(false)
+    : showPaymentLinkForm
     ? () =>
         setShowPaymentLinkForm((prev) =>
           prev && prev.step > 0 && !prev.paymentLinkId ? { ...prev, step: prev.step - 1 } : undefined,
@@ -165,8 +187,31 @@ export default function PaymentRoutesScreen(): JSX.Element {
 
   return (
     <Layout title={translate('screens/payment', title)} onBack={onBack} textStart rootRef={rootRef}>
-      {error ? (
-        <ErrorHint message={error} />
+      {apiError || error ? (
+        <ErrorHint message={apiError ?? error ?? ''} />
+      ) : updateGlobalConfig ? (
+        <PaymentLinkForm
+          state={{
+            step: PaymentLinkFormStep.CONFIG,
+            paymentLinkId: undefined,
+            prefilledData: {
+              configStandards: toConfigStandards(
+                user?.paymentLink?.config?.standards,
+                user?.paymentLink?.config?.blockchains,
+              ),
+              configMinCompletionStatus: user?.paymentLink?.config?.minCompletionStatus,
+              configDisplayQr: user?.paymentLink?.config?.displayQr,
+              configFee: user?.paymentLink?.config?.fee,
+              configPaymentTimeout: user?.paymentLink?.config?.paymentTimeout,
+            },
+          }}
+          setStep={(step) => setShowPaymentLinkForm((prev) => ({ ...prev, step }))}
+          onClose={() => setUpdateGlobalConfig(false)}
+          onSubmit={async (data) => {
+            await updatePaymentLinksConfig(data);
+            setUpdateGlobalConfig(false);
+          }}
+        />
       ) : showPaymentLinkForm ? (
         <PaymentLinkForm
           state={showPaymentLinkForm}
@@ -292,6 +337,51 @@ export default function PaymentRoutesScreen(): JSX.Element {
           {paymentLinks?.length ? (
             <StyledVerticalStack gap={2} full>
               <h2 className="ml-3.5 mb-1.5 text-dfxGray-700">{translate('screens/payment', 'Payment Links')}</h2>
+              <StyledDataTable>
+                <StyledDataTableExpandableRow
+                  label={translate('screens/payment', 'Default configuration')}
+                  expansionItems={
+                    [
+                      {
+                        label: translate('screens/payment', 'Payment standards'),
+                        text: toConfigStandards(
+                          user?.paymentLink?.config?.standards,
+                          user?.paymentLink?.config?.blockchains,
+                        )?.join('\n'),
+                      },
+                      {
+                        label: translate('screens/payment', 'Min. completion status'),
+                        text:
+                          user?.paymentLink?.config?.minCompletionStatus &&
+                          translate(
+                            'screens/payment',
+                            PaymentQuoteStatusLabels[user.paymentLink.config.minCompletionStatus],
+                          ),
+                      },
+                      {
+                        label: translate('screens/payment', 'Display QR code'),
+                        text: user?.paymentLink?.config?.displayQr?.toString(),
+                      },
+                      {
+                        label: translate('screens/payment', 'Fee'),
+                        text: user?.paymentLink?.config?.fee?.toString(),
+                      },
+                      {
+                        label: translate('screens/payment', 'Payment timeout (seconds)'),
+                        text: user?.paymentLink?.config?.paymentTimeout?.toString(),
+                      },
+                    ].filter((item) => item.text) as any
+                  }
+                  expansionContent={
+                    <StyledButton
+                      label={translate('screens/payment', 'Edit configuration')}
+                      onClick={() => setUpdateGlobalConfig(true)}
+                      color={StyledButtonColor.STURDY_WHITE}
+                      width={StyledButtonWidth.FULL}
+                    />
+                  }
+                />
+              </StyledDataTable>
               {paymentLinks.map((link) => {
                 return (
                   <div key={link.id} ref={(el) => paymentLinkRefs.current && (paymentLinkRefs.current[link.id] = el)}>
@@ -379,10 +469,10 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                     // open absolute URL in new tab
                                     onClick: () => {
                                       const url =
-                                        link.recipient.website?.startsWith('http://') ||
-                                        link.recipient.website?.startsWith('https://')
-                                          ? link.recipient.website
-                                          : `https://${link.recipient.website}`;
+                                        link.recipient?.website?.startsWith('http://') ||
+                                        link.recipient?.website?.startsWith('https://')
+                                          ? link.recipient?.website
+                                          : `https://${link.recipient?.website}`;
 
                                       window.open(url, '_blank');
                                     },
@@ -439,6 +529,53 @@ export default function PaymentRoutesScreen(): JSX.Element {
                             >
                               <p>{translate('screens/payment', link.payment.status)}</p>
                             </StyledDataTableExpandableRow>
+                          )}
+                          {link.config != null && (
+                            <StyledDataTableExpandableRow
+                              label={translate('screens/payment', 'Configuration')}
+                              expansionItems={
+                                [
+                                  {
+                                    label: translate('screens/payment', 'Payment standards'),
+                                    text: toConfigStandards(link.config.standards, link.config.blockchains).join('\n'),
+                                  },
+                                  {
+                                    label: translate('screens/payment', 'Min. completion status'),
+                                    text:
+                                      link.config.minCompletionStatus &&
+                                      translate(
+                                        'screens/payment',
+                                        PaymentQuoteStatusLabels[link.config.minCompletionStatus],
+                                      ),
+                                  },
+                                  {
+                                    label: translate('screens/payment', 'Display QR code'),
+                                    text: link.config.displayQr?.toString(),
+                                  },
+                                  {
+                                    label: translate('screens/payment', 'Fee'),
+                                    text: link.config.fee?.toString(),
+                                  },
+                                  {
+                                    label: translate('screens/payment', 'Payment timeout (seconds)'),
+                                    text: link.config.paymentTimeout?.toString(),
+                                  },
+                                ].filter((item) => item.text) as any
+                              }
+                              expansionContent={
+                                <StyledButton
+                                  label={translate('screens/payment', 'Edit configuration')}
+                                  onClick={() =>
+                                    setShowPaymentLinkForm({
+                                      step: PaymentLinkFormStep.CONFIG,
+                                      paymentLinkId: link.id,
+                                    })
+                                  }
+                                  color={StyledButtonColor.STURDY_WHITE}
+                                  width={StyledButtonWidth.FULL}
+                                />
+                              }
+                            />
                           )}
                         </StyledDataTable>
                         <div className="flex w-full items-center justify-center">
@@ -568,28 +705,58 @@ enum PaymentLinkFormStep {
   ROUTE,
   RECIPIENT,
   PAYMENT,
+  CONFIG,
   DONE,
 }
 
 interface PaymentLinkFormState {
   step: PaymentLinkFormStep;
   paymentLinkId?: string;
+  prefilledData?: any;
 }
 
 interface PaymentLinkFormProps {
   state: PaymentLinkFormState;
   setStep: (title: PaymentLinkFormStep) => void;
   onClose: (id?: string) => void;
+  onSubmit?: (data: any) => Promise<void>;
 }
 
 const PaymentLinkFormStepToTitle = {
   [PaymentLinkFormStep.ROUTE]: 'Route',
   [PaymentLinkFormStep.RECIPIENT]: 'Recipient',
   [PaymentLinkFormStep.PAYMENT]: 'Payment',
+  [PaymentLinkFormStep.CONFIG]: 'Configuration',
   [PaymentLinkFormStep.DONE]: 'Summary',
 };
 
-function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: PaymentLinkFormProps): JSX.Element {
+const filterPaymentStandards = (standards?: any) =>
+  standards?.filter(
+    (item: PaymentStandardType) =>
+      Object.values(PaymentStandardType).includes(item) && item !== PaymentStandardType.PAY_TO_ADDRESS,
+  );
+
+const filterBlockchains = (blockchains?: any) =>
+  blockchains?.filter((item: Blockchain) => Object.values(Blockchain).includes(item) && item !== Blockchain.LIGHTNING);
+
+const fromConfigStandards = (configStandards: ConfigStandard[]) => {
+  const standards = filterPaymentStandards(configStandards);
+  const blockchains = filterBlockchains(configStandards);
+  if (blockchains.length > 0) standards.push(PaymentStandardType.PAY_TO_ADDRESS);
+
+  return { standards, blockchains };
+};
+
+const toConfigStandards = (standards?: PaymentStandardType[], blockchains?: Blockchain[]) => {
+  return filterPaymentStandards(standards)?.concat(filterBlockchains(blockchains));
+};
+
+function PaymentLinkForm({
+  state: { step, paymentLinkId, prefilledData },
+  setStep,
+  onClose,
+  onSubmit: onSubmitForm,
+}: PaymentLinkFormProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
   const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink } = usePaymentRoutesContext();
@@ -628,7 +795,9 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
 
   useEffect(() => {
     if (paymentLinkId) {
-      const prefilledRecipientData = paymentLinks?.find((link) => link.id === paymentLinkId)?.recipient;
+      const paymentLink = paymentLinks?.find((link) => link.id === paymentLinkId);
+
+      const prefilledRecipientData = paymentLink?.recipient;
       if (prefilledRecipientData && countries) {
         const prefilledCountry = countries.find(
           (country) => country.symbol === prefilledRecipientData.address?.country,
@@ -645,6 +814,19 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
           recipientWebsite: prefilledRecipientData.website,
         });
       }
+
+      const prefilledPaymentConfig = paymentLink?.config;
+      if (prefilledPaymentConfig) {
+        reset({
+          configStandards: toConfigStandards(prefilledPaymentConfig.standards, prefilledPaymentConfig.blockchains),
+          configMinCompletionStatus: prefilledPaymentConfig.minCompletionStatus,
+          configDisplayQr: prefilledPaymentConfig.displayQr,
+          configFee: prefilledPaymentConfig.fee,
+          configPaymentTimeout: prefilledPaymentConfig.paymentTimeout,
+        });
+      }
+    } else if (prefilledData) {
+      reset(prefilledData);
     }
   }, [paymentLinks, countries]);
 
@@ -669,7 +851,8 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
       }
 
       if (hasRecipientData) {
-        request.recipient = {
+        request.config = {};
+        request.config.recipient = {
           name: data.recipientName,
           address: {
             street: data.recipientStreet,
@@ -694,8 +877,31 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
         };
       }
 
+      if (hasConfigData) {
+        const { standards, blockchains } = fromConfigStandards(data.configStandards);
+
+        request.config = {
+          ...request.config,
+          standards: standards,
+          blockchains: blockchains,
+          minCompletionStatus: data.configMinCompletionStatus,
+          displayQr: data.configDisplayQr,
+          fee: data.configFee,
+          paymentTimeout: data.configPaymentTimeout,
+        };
+      }
+
+      if (onSubmitForm) {
+        await onSubmitForm(request);
+        setIsLoading(false);
+        onClose();
+        reset();
+        return;
+      }
+
       switch (step) {
         case PaymentLinkFormStep.RECIPIENT:
+        case PaymentLinkFormStep.CONFIG:
           if (!paymentLinkId) break;
           await updatePaymentLink(request, paymentLinkId);
           break;
@@ -754,9 +960,17 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
       data.paymentCurrency &&
       data.paymentExpiryDate,
   );
+  const hasConfigData = Boolean(
+    data.configStandards?.length ||
+      data.configMinCompletionStatus ||
+      data.configDisplayQr !== undefined ||
+      data.configFee !== undefined ||
+      data.configPaymentTimeout !== undefined,
+  );
 
   const skipRecipientData = Boolean(!hasRecipientData && step === PaymentLinkFormStep.RECIPIENT);
   const skipPaymentData = Boolean(!hasPaymentData && step === PaymentLinkFormStep.PAYMENT);
+  const skipConfigData = Boolean(!hasConfigData && step === PaymentLinkFormStep.CONFIG);
 
   return (
     <>
@@ -929,6 +1143,63 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
               />
             </>
           )}
+          {step === PaymentLinkFormStep.CONFIG && (
+            <>
+              <StyledDropdownMultiChoice<ConfigStandard>
+                rootRef={rootRef}
+                name="configStandards"
+                label={translate('screens/payment', 'Payment standards')}
+                smallLabel
+                full
+                placeholder={translate('general/actions', 'Select...')}
+                items={[
+                  ...filterPaymentStandards(Object.values(PaymentStandardType)),
+                  ...filterBlockchains(Object.values(Blockchain)),
+                ]}
+                labelFunc={(item) => item}
+              />
+
+              <StyledDropdown
+                rootRef={rootRef}
+                name="configMinCompletionStatus"
+                label={translate('screens/payment', 'Min. completion status')}
+                smallLabel
+                full
+                placeholder={translate('general/actions', 'Select...')}
+                items={Object.values(PaymentQuoteStatus)}
+                labelFunc={(item) => translate('screens/payment', PaymentQuoteStatusLabels[item])}
+              />
+
+              <StyledInput
+                type="number"
+                name="configFee"
+                label={translate('screens/payment', 'Fee')}
+                smallLabel
+                placeholder={'0.002'}
+                full
+              />
+
+              <StyledInput
+                type="number"
+                name="configPaymentTimeout"
+                label={translate('screens/payment', 'Payment timeout (seconds)')}
+                smallLabel
+                placeholder={'60'}
+                full
+              />
+
+              <StyledDropdown
+                rootRef={rootRef}
+                name="configDisplayQr"
+                label={translate('screens/payment', 'Display QR code')}
+                smallLabel
+                full
+                placeholder={translate('general/actions', 'Select...')}
+                items={[true, false]}
+                labelFunc={(item) => translate('general/actions', item ? 'Yes' : 'No')}
+              />
+            </>
+          )}
           {step === PaymentLinkFormStep.DONE && (
             <StyledVerticalStack center full gap={2}>
               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
@@ -961,6 +1232,35 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                   ]}
                 />
                 <StyledDataTableExpandableRow
+                  label={translate('screens/payment', 'Configuration')}
+                  isExpanded={hasConfigData}
+                  discreet={!hasConfigData}
+                  expansionItems={[
+                    {
+                      label: translate('screens/payment', 'Payment standards'),
+                      text: data.configStandards?.toString() ?? naString,
+                    },
+                    {
+                      label: translate('screens/payment', 'Min. completion status'),
+                      text: data.configMinCompletionStatus
+                        ? translate('screens/payment', PaymentQuoteStatusLabels[data.configMinCompletionStatus])
+                        : naString,
+                    },
+                    {
+                      label: translate('screens/payment', 'Display QR code'),
+                      text:
+                        data.configDisplayQr !== undefined
+                          ? translate('general/actions', data.configDisplayQr ? 'Yes' : 'No')
+                          : naString,
+                    },
+                    { label: translate('screens/payment', 'Fee'), text: data.configFee?.toString() ?? naString },
+                    {
+                      label: translate('screens/payment', 'Payment timeout (seconds)'),
+                      text: data.configPaymentTimeout?.toString() ?? naString,
+                    },
+                  ]}
+                />
+                <StyledDataTableExpandableRow
                   label={translate('screens/payment', 'Payment')}
                   isExpanded={data.paymentMode ? true : false}
                   discreet={!data.paymentMode}
@@ -987,9 +1287,9 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
             </div>
           )}
 
-          {step === PaymentLinkFormStep.DONE || paymentLinkId ? (
+          {step === PaymentLinkFormStep.DONE || paymentLinkId || prefilledData ? (
             <div className="flex flex-col w-full gap-4">
-              {paymentLinkId && (
+              {(paymentLinkId || prefilledData) && (
                 <StyledButton
                   type="submit"
                   label={translate('general/actions', 'Cancel')}
@@ -999,10 +1299,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 />
               )}
               <StyledButton
-                label={translate(
-                  'general/actions',
-                  paymentLinkId && step === PaymentLinkFormStep.RECIPIENT ? 'Save' : 'Create',
-                )}
+                label={translate('general/actions', paymentLinkId || prefilledData ? 'Save' : 'Create')}
                 onClick={handleSubmit(onSubmit)}
                 width={StyledButtonWidth.FULL}
                 isLoading={isLoading}
@@ -1011,7 +1308,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
             </div>
           ) : (
             <div className="flex flex-col w-full gap-4">
-              {(skipPaymentData || skipRecipientData) && (
+              {(skipPaymentData || skipRecipientData || skipConfigData) && (
                 <StyledButton
                   label={translate('general/actions', 'Skip')}
                   onClick={() => {
@@ -1035,6 +1332,13 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                         recipientEmail: undefined,
                         recipientWebsite: undefined,
                       }),
+                      ...(!hasConfigData && {
+                        configStandards: undefined,
+                        configMinCompletionStatus: undefined,
+                        configDisplayQr: undefined,
+                        configFee: undefined,
+                        configPaymentTimeout: undefined,
+                      }),
                     });
                     setStep(step + 1);
                   }}
@@ -1046,7 +1350,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 label={translate('general/actions', 'Next')}
                 onClick={() => setStep(step + 1)}
                 width={StyledButtonWidth.FULL}
-                disabled={skipPaymentData || skipRecipientData}
+                disabled={skipPaymentData || skipRecipientData || skipConfigData}
               />
             </div>
           )}
