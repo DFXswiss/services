@@ -252,6 +252,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
           transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
         )}
         onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
+        color={StyledButtonColor.STURDY_WHITE}
         hidden={
           ![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
             transaction.state,
