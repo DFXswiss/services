@@ -1,4 +1,4 @@
-import { Asset, Blockchain, useApi, useAssetContext, Utils } from '@dfx.swiss/react';
+import { Asset, Blockchain, PaymentLinkPaymentStatus, useApi, useAssetContext, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -21,6 +21,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -28,12 +29,7 @@ import { GoCheckCircleFill, GoClockFill, GoXCircleFill } from 'react-icons/go';
 
 import { useSearchParams } from 'react-router-dom';
 import { QrBasic } from 'src/components/payment/qr-code';
-import {
-  CompatibleWallets,
-  PaymentStandards,
-  PaymentStandardType,
-  RecommendedWallets,
-} from 'src/config/payment-link-wallets';
+import { CompatibleWallets, PaymentStandards, RecommendedWallets } from 'src/config/payment-link-wallets';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -107,13 +103,6 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
   maxSendable: number;
   requestedAmount: Amount;
   transferAmounts: TransferInfo[];
-}
-
-enum PaymentLinkPaymentStatus {
-  PENDING = 'Pending',
-  COMPLETED = 'Completed',
-  CANCELLED = 'Cancelled',
-  EXPIRED = 'Expired',
 }
 
 interface PaymentStatus {

@@ -37,6 +37,7 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { PaymentQuoteStatus, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -44,7 +45,6 @@ import { Trans } from 'react-i18next';
 import { Layout } from 'src/components/layout';
 import { ConfirmationOverlay } from 'src/components/overlays';
 import { QrBasic } from 'src/components/payment/qr-code';
-import { PaymentStandardType } from 'src/config/payment-link-wallets';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
@@ -182,8 +182,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
     ? () => setDeleteRoute(undefined)
     : undefined;
 
-  const userPaymentLinkConfig = JSON.parse(user?.paymentLink?.config ?? '{}');
-
   return (
     <Layout title={translate('screens/payment', title)} onBack={onBack} textStart rootRef={rootRef}>
       {apiError || error ? (
@@ -194,11 +192,14 @@ export default function PaymentRoutesScreen(): JSX.Element {
             step: PaymentLinkFormStep.CONFIG,
             paymentLinkId: undefined,
             prefilledData: {
-              configStandards: toConfigStandards(userPaymentLinkConfig.standards, userPaymentLinkConfig.blockchains),
-              configMinCompletionStatus: userPaymentLinkConfig.minCompletionStatus,
-              configDisplayQr: userPaymentLinkConfig.displayQr,
-              configFee: userPaymentLinkConfig.fee,
-              configPaymentTimeout: userPaymentLinkConfig.paymentTimeout,
+              configStandards: toConfigStandards(
+                user?.paymentLink?.config?.standards,
+                user?.paymentLink?.config?.blockchains,
+              ),
+              configMinCompletionStatus: user?.paymentLink?.config?.minCompletionStatus,
+              configDisplayQr: user?.paymentLink?.config?.displayQr,
+              configFee: user?.paymentLink?.config?.fee,
+              configPaymentTimeout: user?.paymentLink?.config?.paymentTimeout,
             },
           }}
           setStep={(step) => setShowPaymentLinkForm((prev) => ({ ...prev, step }))}
@@ -335,41 +336,37 @@ export default function PaymentRoutesScreen(): JSX.Element {
               <h2 className="ml-3.5 mb-1.5 text-dfxGray-700">{translate('screens/payment', 'Payment Links')}</h2>
               <StyledDataTable>
                 <StyledDataTableExpandableRow
-                  label={translate('screens/payment', 'Payment Links configuration')}
+                  label={translate('screens/payment', 'Default configuration')}
                   expansionItems={
                     [
                       {
                         label: translate('screens/support', 'Standards'),
                         text: toConfigStandards(
-                          userPaymentLinkConfig.standards,
-                          userPaymentLinkConfig.blockchains,
+                          user?.paymentLink?.config?.standards,
+                          user?.paymentLink?.config?.blockchains,
                         )?.join('\n'),
                       },
                       {
-                        label: translate('screens/home', 'Blockchains'),
-                        text: userPaymentLinkConfig.blockchain?.toString(),
-                      },
-                      {
                         label: translate('screens/kyc', 'Min. completion status'),
-                        text: userPaymentLinkConfig.minCompletionStatus,
+                        text: user?.paymentLink?.config?.minCompletionStatus,
                       },
                       {
                         label: translate('screens/kyc', 'Display QR Code'),
-                        text: userPaymentLinkConfig.displayQr?.toString(),
+                        text: user?.paymentLink?.config?.displayQr?.toString(),
                       },
                       {
                         label: translate('screens/kyc', 'Fee'),
-                        text: userPaymentLinkConfig.fee?.toString(),
+                        text: user?.paymentLink?.config?.fee?.toString(),
                       },
                       {
                         label: translate('screens/kyc', 'Payment timeout (in seconds)'),
-                        text: userPaymentLinkConfig.paymentTimeout?.toString(),
+                        text: user?.paymentLink?.config?.paymentTimeout?.toString(),
                       },
                     ].filter((item) => item.text) as any
                   }
                   expansionContent={
                     <StyledButton
-                      label={translate('screens/payment', 'Edit default configuration')}
+                      label={translate('screens/payment', 'Edit configuration')}
                       onClick={() => setUpdateGlobalConfig(true)}
                       color={StyledButtonColor.STURDY_WHITE}
                       width={StyledButtonWidth.FULL}
@@ -533,10 +530,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                   {
                                     label: translate('screens/support', 'Standards'),
                                     text: toConfigStandards(link.config.standards, link.config.blockchains).join('\n'),
-                                  },
-                                  {
-                                    label: translate('screens/home', 'Blockchains'),
-                                    text: link.config.blockchain?.toString(),
                                   },
                                   {
                                     label: translate('screens/kyc', 'Min. completion status'),
@@ -809,7 +802,7 @@ function PaymentLinkForm({
         });
       }
 
-      const prefilledPaymentConfig = paymentLink.config;
+      const prefilledPaymentConfig = paymentLink?.config;
       if (prefilledPaymentConfig) {
         reset({
           configStandards: toConfigStandards(prefilledPaymentConfig.standards, prefilledPaymentConfig.blockchains),
