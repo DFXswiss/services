@@ -103,12 +103,13 @@ export default function PaymentRoutesScreen(): JSX.Element {
     updatePaymentLink,
     cancelPaymentLinkPayment,
     deletePaymentRoute,
-    error,
+    error: apiError,
   } = usePaymentRoutesContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const [error, setError] = useState<string>();
   const [deleteRoute, setDeleteRoute] = useState<DeletePaymentRoute>();
   const [isDeletingRoute, setIsDeletingRoute] = useState<string[]>([]);
   const [isUpdatingPaymentLink, setIsUpdatingPaymentLink] = useState<string[]>([]);
@@ -145,10 +146,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
   }
 
   async function updatePaymentLinksConfig(data: any) {
-    console.log('calling submit function updatePaymentLinksConfig');
-    updateUserConfig(data.config)
-      .then(() => console.log('payment link config update successful'))
-      .catch((e: ApiError) => console.error('payment link config update failed', e));
+    await updateUserConfig(data.config).catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
   }
 
   function onCloseForm(id?: string) {
@@ -184,12 +182,12 @@ export default function PaymentRoutesScreen(): JSX.Element {
     ? () => setDeleteRoute(undefined)
     : undefined;
 
-  const userPaymentLinkConfig = JSON.parse((user?.paymentLink as any)?.config ?? '{}');
+  const userPaymentLinkConfig = JSON.parse(user?.paymentLink?.config ?? '{}');
 
   return (
     <Layout title={translate('screens/payment', title)} onBack={onBack} textStart rootRef={rootRef}>
-      {error ? (
-        <ErrorHint message={error} />
+      {apiError || error ? (
+        <ErrorHint message={apiError ?? error ?? ''} />
       ) : updateGlobalConfig ? (
         <PaymentLinkForm
           state={{
@@ -205,9 +203,9 @@ export default function PaymentRoutesScreen(): JSX.Element {
           }}
           setStep={(step) => setShowPaymentLinkForm((prev) => ({ ...prev, step }))}
           onClose={() => setUpdateGlobalConfig(false)}
-          onSubmit={(data) => {
+          onSubmit={async (data) => {
+            await updatePaymentLinksConfig(data);
             setUpdateGlobalConfig(false);
-            updatePaymentLinksConfig(data);
           }}
         />
       ) : showPaymentLinkForm ? (
@@ -337,7 +335,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
               <h2 className="ml-3.5 mb-1.5 text-dfxGray-700">{translate('screens/payment', 'Payment Links')}</h2>
               <StyledDataTable>
                 <StyledDataTableExpandableRow
-                  label={translate('screens/payment', 'Default Payment Link configuration')}
+                  label={translate('screens/payment', 'Payment Links configuration')}
                   expansionItems={
                     [
                       {
@@ -527,37 +525,34 @@ export default function PaymentRoutesScreen(): JSX.Element {
                               <p>{translate('screens/payment', link.payment.status)}</p>
                             </StyledDataTableExpandableRow>
                           )}
-                          {(link as any).config != null && (
+                          {link.config != null && (
                             <StyledDataTableExpandableRow
                               label={translate('screens/payment', 'Configuration')}
                               expansionItems={
                                 [
                                   {
                                     label: translate('screens/support', 'Standards'),
-                                    text: toConfigStandards(
-                                      (link as any).config.standards,
-                                      (link as any).config.blockchains,
-                                    ).join('\n'),
+                                    text: toConfigStandards(link.config.standards, link.config.blockchains).join('\n'),
                                   },
                                   {
                                     label: translate('screens/home', 'Blockchains'),
-                                    text: (link as any).config.blockchain?.toString(),
+                                    text: link.config.blockchain?.toString(),
                                   },
                                   {
                                     label: translate('screens/kyc', 'Min. completion status'),
-                                    text: (link as any).config.minCompletionStatus,
+                                    text: link.config.minCompletionStatus,
                                   },
                                   {
                                     label: translate('screens/kyc', 'Display QR Code'),
-                                    text: (link as any).config.displayQr?.toString(),
+                                    text: link.config.displayQr?.toString(),
                                   },
                                   {
                                     label: translate('screens/kyc', 'Fee'),
-                                    text: (link as any).config.fee?.toString(),
+                                    text: link.config.fee?.toString(),
                                   },
                                   {
                                     label: translate('screens/kyc', 'Payment timeout (in seconds)'),
-                                    text: (link as any).config.paymentTimeout?.toString(),
+                                    text: link.config.paymentTimeout?.toString(),
                                   },
                                 ].filter((item) => item.text) as any
                               }
@@ -708,19 +703,6 @@ enum PaymentLinkFormStep {
   DONE,
 }
 
-// TODO: Add to packages
-export enum PaymentQuoteStatus {
-  ACTUAL = 'Actual',
-  CANCELLED = 'Cancelled',
-  EXPIRED = 'Expired',
-
-  TX_RECEIVED = 'TxReceived',
-  TX_MEMPOOL = 'TxMempool',
-  TX_BLOCKCHAIN = 'TxBlockchain',
-  TX_COMPLETED = 'TxCompleted',
-  TX_FAILED = 'TxFailed',
-}
-
 interface PaymentLinkFormState {
   step: PaymentLinkFormStep;
   paymentLinkId?: string;
@@ -731,7 +713,7 @@ interface PaymentLinkFormProps {
   state: PaymentLinkFormState;
   setStep: (title: PaymentLinkFormStep) => void;
   onClose: (id?: string) => void;
-  onSubmit?: (data: any) => void;
+  onSubmit?: (data: any) => Promise<void>;
 }
 
 const PaymentLinkFormStepToTitle = {
@@ -827,7 +809,7 @@ function PaymentLinkForm({
         });
       }
 
-      const prefilledPaymentConfig = (paymentLink as any)?.config;
+      const prefilledPaymentConfig = paymentLink.config;
       if (prefilledPaymentConfig) {
         reset({
           configStandards: toConfigStandards(prefilledPaymentConfig.standards, prefilledPaymentConfig.blockchains),
@@ -904,7 +886,8 @@ function PaymentLinkForm({
       }
 
       if (onSubmitForm) {
-        onSubmitForm(request);
+        await onSubmitForm(request);
+        setIsLoading(false);
         onClose();
         reset();
         return;
