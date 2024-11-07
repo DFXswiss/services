@@ -1329,14 +1329,15 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
 }
 
 export interface KycManualIdentFormData {
+  gender: GenderType;
   firstName: string;
   lastName: string;
   birthName: string;
-  documentType: DocumentType;
-  documentNumber?: string;
+  birthday: string;
   nationality: Country;
   birthplace: string;
-  gender: GenderType;
+  identificationDocType: DocumentType;
+  identificationDocNumber?: string;
   file: File;
 }
 
@@ -1379,12 +1380,13 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
       firstName: data.firstName,
       lastName: data.lastName,
       birthName: data.birthName,
-      documentType: data.documentType,
-      documentNumber: data.documentNumber,
+      birthday: new Date(data.birthday),
       nationality: data.nationality,
       birthplace: data.birthplace,
       gender: data.gender,
-      document: { file: (await toBase64(data.file)) ?? '', fileName: data.file.name },
+      identificationDocType: data.identificationDocType,
+      identificationDocNumber: data.identificationDocNumber,
+      identificationDoc: { file: (await toBase64(data.file)) ?? '', fileName: data.file.name },
     };
 
     setIsUpdating(true);
@@ -1398,10 +1400,16 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
   const rules = Utils.createRules({
     firstName: Validations.Required,
     lastName: Validations.Required,
-    birthName: Validations.Required,
-    documentType: Validations.Required,
-    documentNumber: Validations.Required,
+    birthday: [
+      Validations.Required,
+      Validations.Custom((birthday) => {
+        const date = new Date(birthday);
+        return date instanceof Date && !isNaN(date.getTime()) ? true : 'date_format';
+      }),
+    ],
     nationality: Validations.Required,
+    identificationDocType: Validations.Required,
+    identificationDocNumber: Validations.Required,
     file: [
       Validations.Required,
       Validations.Custom((file) =>
@@ -1463,6 +1471,16 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                   full
                   smallLabel
                 />
+
+                <StyledInput
+                  name="birthday"
+                  autocomplete="birthday"
+                  label={translate('screens/kyc', 'Birthday')}
+                  placeholder={translate('screens/kyc', 'YYYY-MM-DD')}
+                  full
+                  smallLabel
+                />
+
                 <StyledInput
                   name="birthplace"
                   autocomplete="birthplace"
@@ -1494,7 +1512,7 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                 </p>
                 <StyledDropdown
                   rootRef={rootRef}
-                  name="documentType"
+                  name="identificationDocType"
                   label={translate('screens/kyc', 'Document type')}
                   placeholder={translate('general/actions', 'Select...')}
                   items={Object.values(DocumentType)}
@@ -1502,7 +1520,7 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                   smallLabel
                 />
                 <StyledInput
-                  name="documentNumber"
+                  name="identificationDocNumber"
                   label={translate('screens/kyc', 'Document number')}
                   placeholder="12345"
                   full
