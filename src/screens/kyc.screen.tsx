@@ -1329,15 +1329,15 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
 }
 
 export interface KycManualIdentFormData {
-  gender: GenderType;
+  gender?: GenderType;
   firstName: string;
   lastName: string;
-  birthName: string;
+  birthName?: string;
   birthday: string;
   nationality: Country;
-  birthplace: string;
-  identificationDocType: DocumentType;
-  identificationDocNumber?: string;
+  birthplace?: string;
+  documentType: DocumentType;
+  documentNumber: string;
   file: File;
 }
 
@@ -1384,9 +1384,9 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
       nationality: data.nationality,
       birthplace: data.birthplace,
       gender: data.gender,
-      identificationDocType: data.identificationDocType,
-      identificationDocNumber: data.identificationDocNumber,
-      identificationDoc: { file: (await toBase64(data.file)) ?? '', fileName: data.file.name },
+      documentType: data.documentType,
+      documentNumber: data.documentNumber,
+      document: { file: (await toBase64(data.file)) ?? '', fileName: data.file.name },
     };
 
     setIsUpdating(true);
@@ -1408,8 +1408,8 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
       }),
     ],
     nationality: Validations.Required,
-    identificationDocType: Validations.Required,
-    identificationDocNumber: Validations.Required,
+    documentType: Validations.Required,
+    documentNumber: Validations.Required,
     file: [
       Validations.Required,
       Validations.Custom((file) =>
@@ -1512,7 +1512,7 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                 </p>
                 <StyledDropdown
                   rootRef={rootRef}
-                  name="identificationDocType"
+                  name="documentType"
                   label={translate('screens/kyc', 'Document type')}
                   placeholder={translate('general/actions', 'Select...')}
                   items={Object.values(DocumentType)}
@@ -1520,7 +1520,7 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                   smallLabel
                 />
                 <StyledInput
-                  name="identificationDocNumber"
+                  name="documentNumber"
                   label={translate('screens/kyc', 'Document number')}
                   placeholder="12345"
                   full
