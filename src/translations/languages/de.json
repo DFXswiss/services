@@ -613,7 +613,7 @@
     "Select the transaction for which you would like to create an issue.": "Wähle die Transaktion aus, für die Du eine Anfrage erstellen möchtest.",
     "Please provide us with all relevant information about the transaction you are missing.": "Bitte gib uns alle relevanten Informationen über die fehlende Transaktion an.",
     "Sender IBAN": "Absender-IBAN",
-    "Receiver IBAN": "Empfängers-IBAN",
+    "Receiver IBAN": "Empfänger-IBAN",
     "Date of the transaction": "Datum der Transaktion",
 
     "Telegram support": "Telegram-Support",
