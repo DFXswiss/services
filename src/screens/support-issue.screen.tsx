@@ -3,7 +3,6 @@ import {
   Bank,
   CreateSupportIssue,
   FundOrigin,
-  Iban,
   InvestmentDate,
   KycLevel,
   Limit,
@@ -12,7 +11,7 @@ import {
   Utils,
   Validations,
   useBank,
-  useBankAccount,
+  useBankAccountContext,
   useSessionContext,
   useSupportChatContext,
   useUserContext,
@@ -109,15 +108,14 @@ export default function SupportIssueScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { user } = useUserContext();
   const { isLoggedIn } = useSessionContext();
-  const { getIbans } = useBankAccount();
   const { getBanks } = useBank();
+  const { bankAccounts } = useBankAccountContext();
   const [urlParams, setUrlParams] = useSearchParams();
   const { createSupportIssue } = useSupportChatContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [selectTransaction, setSelectTransaction] = useState(false);
-  const [accounts, setAccounts] = useState<Iban[]>();
   const [isKycComplete, setIsKycComplete] = useState<boolean>();
   const [banks, setBanks] = useState<Bank[]>();
   const [supportIssue, setSupportIssue] = useState<Partial<CreateSupportIssue>>();
@@ -198,9 +196,9 @@ export default function SupportIssueScreen(): JSX.Element {
 
   useEffect(() => {
     if (isLoggedIn)
-      Promise.all([getIbans().then(setAccounts), getBanks().then(setBanks)]).catch((error: ApiError) =>
-        setError(error.message ?? 'Unknown error'),
-      );
+      getBanks()
+        .then(setBanks)
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
   }, [isLoggedIn]);
 
   async function onSubmit(data: FormData) {
@@ -312,7 +310,7 @@ export default function SupportIssueScreen(): JSX.Element {
               items={issues.filter((t) => t !== SupportIssueType.LIMIT_REQUEST || isKycComplete)}
               labelFunc={(item) => item && translate('screens/support', IssueTypeLabels[item])}
               name="type"
-              placeholder={translate('general/actions', 'Select...')}
+              placeholder={translate('general/actions', 'Select') + '...'}
               full
             />
 
@@ -323,7 +321,7 @@ export default function SupportIssueScreen(): JSX.Element {
                 items={reasons}
                 labelFunc={(item) => translate('screens/support', IssueReasonLabels[item])}
                 name="reason"
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 full
               />
             )}
@@ -345,12 +343,12 @@ export default function SupportIssueScreen(): JSX.Element {
                     forceEnable
                   />
                 </StyledVerticalStack>
-              ) : accounts && banks ? (
+              ) : bankAccounts && banks ? (
                 <>
                   <StyledDropdown<string>
                     rootRef={rootRef}
                     label={translate('screens/support', 'Sender IBAN')}
-                    items={[...accounts.map((a) => a.iban), NoIban, AddAccount]}
+                    items={[...bankAccounts.map((a) => a.iban), NoIban, AddAccount]}
                     labelFunc={(item) =>
                       blankedAddress(
                         [NoIban, AddAccount].includes(item)
@@ -359,8 +357,9 @@ export default function SupportIssueScreen(): JSX.Element {
                         { displayLength: 30 },
                       )
                     }
+                    descriptionFunc={(item) => bankAccounts.find((a) => a.iban === item)?.label ?? ''}
                     name="senderIban"
-                    placeholder={translate('general/actions', 'Select...')}
+                    placeholder={translate('general/actions', 'Select') + '...'}
                     full
                   />
 
@@ -370,7 +369,7 @@ export default function SupportIssueScreen(): JSX.Element {
                     items={banks.map((b) => b.iban)}
                     labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
                     name="receiverIban"
-                    placeholder={translate('general/actions', 'Select...')}
+                    placeholder={translate('general/actions', 'Select') + '...'}
                     full
                   />
 
@@ -401,7 +400,7 @@ export default function SupportIssueScreen(): JSX.Element {
                   items={Object.values(Limit).filter((i) => typeof i !== 'string') as number[]}
                   labelFunc={(item) => LimitLabels[item]}
                   name="limit"
-                  placeholder={translate('general/actions', 'Select...')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
                   full
                 />
 
@@ -411,7 +410,7 @@ export default function SupportIssueScreen(): JSX.Element {
                   items={Object.values(InvestmentDate)}
                   labelFunc={(item) => translate('screens/limit', DateLabels[item])}
                   name="investmentDate"
-                  placeholder={translate('general/actions', 'Select...')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
                   full
                 />
 
@@ -426,7 +425,7 @@ export default function SupportIssueScreen(): JSX.Element {
                     )
                   }
                   name="fundOrigin"
-                  placeholder={translate('general/actions', 'Select...')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
                   full
                 />
               </>

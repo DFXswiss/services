@@ -5,7 +5,6 @@ import {
   DetailTransaction,
   Fiat,
   FiatPaymentMethod,
-  Iban,
   Transaction,
   TransactionState,
   TransactionTarget,
@@ -15,7 +14,7 @@ import {
   Validations,
   useApi,
   useAuthContext,
-  useBankAccount,
+  useBankAccountContext,
   useSessionContext,
   useTransaction,
   useUserContext,
@@ -253,6 +252,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
           transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
         )}
         onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
+        color={StyledButtonColor.STURDY_WHITE}
         hidden={
           ![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
             transaction.state,
@@ -293,7 +293,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
-  const { getIbans } = useBankAccount();
+  const { bankAccounts } = useBankAccountContext();
   const { isLoggedIn } = useSessionContext();
   const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
 
@@ -303,7 +303,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [refundDetails, setRefundDetails] = useState<RefundDetails>();
   const [transaction, setTransaction] = useState<Transaction>();
-  const [ibans, setIbans] = useState<Iban[]>();
   const [addresses, setAddresses] = useState<UserAddress[]>();
 
   const isBuy = transaction?.type === TransactionType.BUY;
@@ -324,11 +323,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
     }
   }, [id, transaction, isLoggedIn]);
-
-  useEffect(() => {
-    if (isLoggedIn)
-      Promise.all([getIbans().then(setIbans)]).catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
-  }, [isLoggedIn]);
 
   useEffect(() => {
     async function fetchRefund(txId: number) {
@@ -427,17 +421,18 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
           )}
           {!refundDetails.refundTarget &&
             transaction.inputPaymentMethod !== FiatPaymentMethod.CARD &&
-            ibans &&
+            bankAccounts &&
             isBuy && (
               <StyledDropdown<string>
                 rootRef={rootRef}
                 name="iban"
                 label={translate('screens/payment', 'Chargeback IBAN')}
-                items={[...ibans.map((b) => b.iban), AddAccount]}
+                items={[...bankAccounts.map((b) => b.iban), AddAccount]}
                 labelFunc={(item) =>
                   item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
                 }
-                placeholder={translate('general/actions', 'Select...')}
+                descriptionFunc={(item) => bankAccounts.find((b) => b.iban === item)?.label ?? ''}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 forceEnable
                 full
               />
@@ -641,7 +636,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                       rootRef={rootRef}
                                       items={transactionTargets ?? []}
                                       labelFunc={(item) => `${item.bankUsage}`}
-                                      placeholder={translate('general/actions', 'Select...')}
+                                      placeholder={translate('general/actions', 'Select') + '...'}
                                       descriptionFunc={(item) =>
                                         `${toString(item.asset.blockchain)}/${item.asset.name} ${blankedAddress(
                                           item.address,

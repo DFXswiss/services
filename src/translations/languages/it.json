@@ -1,6 +1,5 @@
 {
   "general/actions": {
-    "Select...": "Selezionare...",
     "Select": "Selezionare",
     "Search...": "Ricerca...",
     "Start": "Iniziare",
@@ -39,7 +38,8 @@
     "Confirm refund": "Confermare il rimborso",
     "Request refund": "Richiedi un rimborso",
     "Copy Link": "Copia il link",
-    "Open invoice": "Apri la fattura"
+    "Open invoice": "Apri la fattura",
+    "Create ticket": "Crea un ticket"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -50,6 +50,7 @@
     "Only XML files are allowed": "Sono consentiti solo file XML",
     "Only JSON files are allowed": "Sono consentiti solo file JSON",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Formati consentiti: PDF, JPG, JPEG, PNG",
+    "Invalid date format": "Formato data non valido",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto.",
     "invoice": "DFX non riconosce un destinatario con il nome <strong>{{recipient}}</strong>. Questo servizio può essere utilizzato solo per i destinatari che hanno un account attivo con DFX e sono attivati per il servizio di fatturazione. Se desideri registrarti come destinatario presso DFX, contatta l’assistenza all’indirizzo <link>{{supportLink}}</link>."
@@ -95,6 +96,8 @@
 
     "Female": "Femmina",
     "Male": "Maschio",
+
+    "Birthday": "Compleanno",
 
     "Passport": "Passaporto",
     "ID card": "Carta d'identità",
@@ -397,6 +400,7 @@
     "Transactions": "Transazioni",
     "Transaction": "Transazione",
     "Your Transactions": "Le vostre transazioni",
+    "Loading transaction...": "Caricamento della transazione...",
     "No transactions found": "Nessuna transazione trovata",
     "My transaction is missing": "La mia transazione è scomparsa",
     "Transaction status": "Stato della transazione",
@@ -541,7 +545,8 @@
     "You have no payment routes yet": "Non hai ancora nessuna modalità di pagamento",
     "Scan the QR-Code with a compatible wallet to complete the payment.": "Scansiona il codice QR con un portafoglio compatibile per completare il pagamento.",
     "Recommended wallets": "Portafogli consigliati",
-    "Other compatible wallets": "Altri portafogli compatibili",
+    "Compatible wallets": "Portafogli compatibili",
+    "Invalid Payment Link": "Payment Link non valido",
 
     "Cointracking": "Cointracking",
     "Compact": "Compatto",
@@ -577,6 +582,9 @@
     "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Questo è un IBAN multi-account e non può essere aggiunto come conto personale. Si prega di inviare la conferma della transazione bancaria in formato PDF a support@dfx.swiss."
   },
   "screens/support": {
+    "Support": "Supporto",
+    "Support tickets": "Ticket di supporto",
+
     "Support issue": "Problema di supporto",
     "The issue has been successfully submitted. You will be contacted by email.": "Il problema è stato inviato con successo. Sarete contattati via e-mail.",
 
@@ -621,7 +629,11 @@
     "Write a message...": "Scrivi un messaggio...",
     "Downloading...": "Scaricamento...",
     "Image": "Immagine",
-    "Document": "Documento"
+    "Document": "Documento",
+
+    "Created on": "Creato il",
+    "Hide completed tickets": "Nascondi i ticket completati",
+    "Show completed tickets": "Mostra i ticket completati"
   },
   "screens/settings": {
     "Settings": "Impostazioni",

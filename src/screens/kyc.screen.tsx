@@ -625,7 +625,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
             rootRef={rootRef}
             name="accountType"
             label=""
-            placeholder={translate('general/actions', 'Select...')}
+            placeholder={translate('general/actions', 'Select') + '...'}
             items={Object.values(AccountType)}
             labelFunc={(item) => translate('screens/kyc', item)}
           />
@@ -698,7 +698,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                   name="address.country"
                   autocomplete="country"
                   label={translate('screens/kyc', 'Country')}
-                  placeholder={translate('general/actions', 'Select...')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
                   items={countries}
                   labelFunc={(item) => item.name}
                   filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
@@ -770,7 +770,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                     name="organizationAddress.country"
                     autocomplete="country"
                     label={translate('screens/kyc', 'Country')}
-                    placeholder={translate('general/actions', 'Select...')}
+                    placeholder={translate('general/actions', 'Select') + '...'}
                     items={countries}
                     labelFunc={(item) => item.name}
                     filterFunc={(i, s) =>
@@ -844,7 +844,7 @@ function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps):
             name="legalEntity"
             full
             label=""
-            placeholder={translate('general/actions', 'Select...')}
+            placeholder={translate('general/actions', 'Select') + '...'}
             items={Object.values(LegalEntity)}
             labelFunc={(item) => legalEntityToString(item)}
           />
@@ -923,7 +923,7 @@ function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps):
               name="nationality"
               autocomplete="nationality"
               label=""
-              placeholder={translate('general/actions', 'Select...')}
+              placeholder={translate('general/actions', 'Select') + '...'}
               items={countries}
               labelFunc={(item) => item.name}
               filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
@@ -1080,7 +1080,7 @@ function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProp
             name="signatoryPower"
             full
             label=""
-            placeholder={translate('general/actions', 'Select...')}
+            placeholder={translate('general/actions', 'Select') + '...'}
             items={Object.values(SignatoryPower)}
             labelFunc={(item) => signatoryPowerToString(item)}
           />
@@ -1295,7 +1295,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
               name="selection"
               rootRef={rootRef}
               label={currentQuestion.description}
-              placeholder={translate('general/actions', 'Select...')}
+              placeholder={translate('general/actions', 'Select') + '...'}
               items={currentOptions}
               labelFunc={(item) => item.text}
               full
@@ -1306,7 +1306,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
             name="selectionMC"
             rootRef={rootRef}
             label={currentQuestion.description}
-            placeholder={translate('general/actions', 'Select...')}
+            placeholder={translate('general/actions', 'Select') + '...'}
             items={currentOptions}
             labelFunc={(item) => item.text}
             full
@@ -1329,14 +1329,15 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
 }
 
 export interface KycManualIdentFormData {
+  gender?: GenderType;
   firstName: string;
   lastName: string;
-  birthName: string;
-  documentType: DocumentType;
-  documentNumber?: string;
+  birthName?: string;
+  birthday: string;
   nationality: Country;
-  birthplace: string;
-  gender: GenderType;
+  birthplace?: string;
+  documentType: DocumentType;
+  documentNumber: string;
   file: File;
 }
 
@@ -1379,11 +1380,12 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
       firstName: data.firstName,
       lastName: data.lastName,
       birthName: data.birthName,
-      documentType: data.documentType,
-      documentNumber: data.documentNumber,
+      birthday: new Date(data.birthday),
       nationality: data.nationality,
       birthplace: data.birthplace,
       gender: data.gender,
+      documentType: data.documentType,
+      documentNumber: data.documentNumber,
       document: { file: (await toBase64(data.file)) ?? '', fileName: data.file.name },
     };
 
@@ -1398,10 +1400,16 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
   const rules = Utils.createRules({
     firstName: Validations.Required,
     lastName: Validations.Required,
-    birthName: Validations.Required,
+    birthday: [
+      Validations.Required,
+      Validations.Custom((birthday) => {
+        const date = new Date(birthday);
+        return date instanceof Date && !isNaN(date.getTime()) ? true : 'date_format';
+      }),
+    ],
+    nationality: Validations.Required,
     documentType: Validations.Required,
     documentNumber: Validations.Required,
-    nationality: Validations.Required,
     file: [
       Validations.Required,
       Validations.Custom((file) =>
@@ -1431,7 +1439,7 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                     'screens/kyc',
                     'Optional',
                   ).toLowerCase()})`}
-                  placeholder={translate('general/actions', 'Select...')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
                   items={Object.values(GenderType)}
                   labelFunc={(item) => genderTypeToString(item)}
                   smallLabel
@@ -1463,6 +1471,16 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                   full
                   smallLabel
                 />
+
+                <StyledInput
+                  name="birthday"
+                  autocomplete="birthday"
+                  label={translate('screens/kyc', 'Birthday')}
+                  placeholder={translate('screens/kyc', 'YYYY-MM-DD')}
+                  full
+                  smallLabel
+                />
+
                 <StyledInput
                   name="birthplace"
                   autocomplete="birthplace"
@@ -1479,7 +1497,7 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                   name="nationality"
                   autocomplete="nationality"
                   label={translate('screens/kyc', 'Nationality')}
-                  placeholder={translate('general/actions', 'Select...')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
                   items={countries}
                   labelFunc={(item) => item.name}
                   filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
@@ -1496,7 +1514,7 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                   rootRef={rootRef}
                   name="documentType"
                   label={translate('screens/kyc', 'Document type')}
-                  placeholder={translate('general/actions', 'Select...')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
                   items={Object.values(DocumentType)}
                   labelFunc={(item) => documentTypeToString(item)}
                   smallLabel

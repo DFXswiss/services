@@ -213,7 +213,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
                 label={translate('screens/payment', 'Import filter')}
                 name="filterMode"
                 rootRef={rootRef}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 items={filterOptions}
                 labelFunc={(item) => translate('screens/payment', item.label)}
                 descriptionFunc={(item) => translate('screens/payment', item.value)}

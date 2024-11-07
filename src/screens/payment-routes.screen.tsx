@@ -379,10 +379,10 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                     // open absolute URL in new tab
                                     onClick: () => {
                                       const url =
-                                        link.recipient.website?.startsWith('http://') ||
-                                        link.recipient.website?.startsWith('https://')
+                                        link.recipient?.website?.startsWith('http://') ||
+                                        link.recipient?.website?.startsWith('https://')
                                           ? link.recipient.website
-                                          : `https://${link.recipient.website}`;
+                                          : `https://${link.recipient?.website}`;
 
                                       window.open(url, '_blank');
                                     },
@@ -630,13 +630,15 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
     if (paymentLinkId) {
       const prefilledRecipientData = paymentLinks?.find((link) => link.id === paymentLinkId)?.recipient;
       if (prefilledRecipientData && countries) {
-        const prefilledCountry = countries.find((country) => country.symbol === prefilledRecipientData.address.country);
+        const prefilledCountry = countries.find(
+          (country) => country.symbol === prefilledRecipientData.address?.country,
+        );
         reset({
           recipientName: prefilledRecipientData.name,
-          recipientStreet: prefilledRecipientData.address.street,
-          recipientHouseNumber: prefilledRecipientData.address.houseNumber,
-          recipientZip: prefilledRecipientData.address.zip,
-          recipientCity: prefilledRecipientData.address.city,
+          recipientStreet: prefilledRecipientData.address?.street,
+          recipientHouseNumber: prefilledRecipientData.address?.houseNumber,
+          recipientZip: prefilledRecipientData.address?.zip,
+          recipientCity: prefilledRecipientData.address?.city,
           recipientCountry: prefilledCountry,
           recipientPhone: prefilledRecipientData.phone,
           recipientEmail: prefilledRecipientData.mail,
@@ -843,7 +845,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 placeholder={
                   isCountryLoading
                     ? translate('screens/payment', 'Loading countries...')
-                    : translate('general/actions', 'Select...')
+                    : translate('general/actions', 'Select') + '...'
                 }
                 items={countries ?? []}
                 labelFunc={(item) => item.name}
@@ -887,7 +889,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 label={translate('screens/payment', 'Mode')}
                 smallLabel
                 full
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 items={Object.values(PaymentLinkPaymentMode)}
                 labelFunc={(item) => translate('screens/payment', item)}
               />
@@ -915,7 +917,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 label={translate('screens/settings', 'Currency')}
                 full
                 smallLabel={true}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 items={currencies ?? []}
                 labelFunc={(item) => item.name}
               />
