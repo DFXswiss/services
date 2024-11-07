@@ -27,6 +27,7 @@ const ValidationErrors: Record<string, string> = {
   xml_file: 'Only XML files are allowed',
   json_file: 'Only JSON files are allowed',
   file_type: 'Allowed formats: PDF, JPG, JPEG, PNG',
+  date_format: 'Invalid date format',
 };
 
 const languageToLocale: { [language: string]: string } = {
