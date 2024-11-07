@@ -523,7 +523,7 @@ export default function SwapScreen(): JSX.Element {
                     <StyledSearchDropdown<Asset>
                       rootRef={rootRef}
                       name="sourceAsset"
-                      placeholder={translate('general/actions', 'Select...')}
+                      placeholder={translate('general/actions', 'Select') + '...'}
                       items={sourceAssets}
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
@@ -559,7 +559,7 @@ export default function SwapScreen(): JSX.Element {
                       <StyledSearchDropdown<Asset>
                         rootRef={rootRef}
                         name="targetAsset"
-                        placeholder={translate('general/actions', 'Select...')}
+                        placeholder={translate('general/actions', 'Select') + '...'}
                         items={targetAssets}
                         labelFunc={(item) => item.name}
                         balanceFunc={findBalanceString}

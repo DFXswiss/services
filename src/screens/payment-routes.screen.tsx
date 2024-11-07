@@ -845,7 +845,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 placeholder={
                   isCountryLoading
                     ? translate('screens/payment', 'Loading countries...')
-                    : translate('general/actions', 'Select...')
+                    : translate('general/actions', 'Select') + '...'
                 }
                 items={countries ?? []}
                 labelFunc={(item) => item.name}
@@ -889,7 +889,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 label={translate('screens/payment', 'Mode')}
                 smallLabel
                 full
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 items={Object.values(PaymentLinkPaymentMode)}
                 labelFunc={(item) => translate('screens/payment', item)}
               />
@@ -917,7 +917,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 label={translate('screens/settings', 'Currency')}
                 full
                 smallLabel={true}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 items={currencies ?? []}
                 labelFunc={(item) => item.name}
               />

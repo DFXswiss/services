@@ -116,7 +116,7 @@ export default function SettingsScreen(): JSX.Element {
                 name="language"
                 label={translate('screens/settings', 'Language')}
                 smallLabel={true}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 items={availableLanguages}
                 labelFunc={(item) => item.name}
                 descriptionFunc={(item) => item.foreignName}
@@ -128,7 +128,7 @@ export default function SettingsScreen(): JSX.Element {
                 name="currency"
                 label={translate('screens/settings', 'Currency')}
                 smallLabel={true}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 items={currencies ?? []}
                 labelFunc={(item) => item.name}
               />

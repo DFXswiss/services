@@ -167,7 +167,7 @@ function Content({
                 labelFunc={(item) => item.toString()}
                 full
                 disabled={addressLoading}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 label={translate('screens/home', 'Account index')}
               />
               <StyledDropdown<Address>
@@ -178,7 +178,7 @@ function Content({
                 descriptionFunc={(item) => `Index ${item.index}`}
                 full
                 disabled={addressLoading}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 label={translate('screens/home', 'Address index')}
               />
 

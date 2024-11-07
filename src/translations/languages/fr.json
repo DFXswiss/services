@@ -1,6 +1,5 @@
 {
   "general/actions": {
-    "Select...": "Choisir...",
     "Select": "Choisir",
     "Search...": "Recherche...",
     "Start": "Lancer",
@@ -39,7 +38,8 @@
     "Confirm refund": "Confirmer le remboursement",
     "Request refund": "Demander un remboursement",
     "Copy Link": "Copier le lien",
-    "Open invoice": "Ouvrir la facture"
+    "Open invoice": "Ouvrir la facture",
+    "Create ticket": "Créer un ticket"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -400,6 +400,7 @@
     "Transactions": "Transactions",
     "Transaction": "Transaction",
     "Your Transactions": "Vos transactions",
+    "Loading transaction...": "Chargement de la transaction...",
     "No transactions found": "Aucune transaction trouvée",
     "My transaction is missing": "Ma transaction est manquante",
     "Transaction status": "Statut de la transaction",
@@ -581,6 +582,9 @@
     "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez envoyer la confirmation de la transaction bancaire au format PDF à support@dfx.swiss."
   },
   "screens/support": {
+    "Support": "Support",
+    "Support tickets": "Tickets de support",
+
     "Support issue": "Demande de support",
     "The issue has been successfully submitted. You will be contacted by email.": "La demande a été soumise avec succès. Vous serez contacté par e-mail.",
 

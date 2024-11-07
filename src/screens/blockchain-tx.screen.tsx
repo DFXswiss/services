@@ -125,7 +125,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
             rootRef={rootRef}
             label={translate('screens/home', 'Blockchain')}
             smallLabel={true}
-            placeholder={translate('general/actions', 'Select...')}
+            placeholder={translate('general/actions', 'Select') + '...'}
             items={availableBlockchains}
             labelFunc={(item) => item}
             descriptionFunc={(item) => `Chain ID - ${toChainId(item)?.toString()}`}
@@ -160,7 +160,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
             rootRef={rootRef}
             label={translate('screens/blockchain', 'Signer')}
             smallLabel={true}
-            placeholder={translate('general/actions', 'Select...')}
+            placeholder={translate('general/actions', 'Select') + '...'}
             items={availableSigners}
             labelFunc={(item) => blankedAddress(item, { width, scale: 1.2 })}
           />
