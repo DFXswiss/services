@@ -85,7 +85,7 @@ interface ValidatedData extends BuyPaymentInfo {
 const EmbeddedWallet = 'CakeWallet';
 
 export default function BuyScreen(): JSX.Element {
-  useAddressGuard();
+  useAddressGuard('/login');
 
   const { translate, translateError, currency: prefCurrency } = useSettingsContext();
   const { logout } = useSessionContext();

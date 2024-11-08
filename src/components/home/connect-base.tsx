@@ -85,7 +85,9 @@ export function ConnectBase({
   }
 
   async function doLogin(account: Account & { blockchain: Blockchain }) {
-    return activeWallet === wallet && 'address' in account && account.address === session?.address
+    return activeWallet === wallet &&
+      'address' in account &&
+      account.address.toLowerCase() === session?.address?.toLowerCase()
       ? switchBlockchain(account.blockchain)
       : logout().then(() =>
           'session' in account

@@ -84,7 +84,7 @@ interface ValidatedData extends SwapPaymentInfo {
 }
 
 export default function SwapScreen(): JSX.Element {
-  useAddressGuard('/connect');
+  useAddressGuard('/login');
 
   const { translate, translateError } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
