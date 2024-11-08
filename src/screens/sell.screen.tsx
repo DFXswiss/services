@@ -94,7 +94,7 @@ interface ValidatedData extends SellPaymentInfo {
 }
 
 export default function SellScreen(): JSX.Element {
-  useAddressGuard();
+  useAddressGuard('/login');
 
   const { translate, translateError, currency: prefCurrency } = useSettingsContext();
   const { isInitialized, closeServices } = useAppHandlingContext();
