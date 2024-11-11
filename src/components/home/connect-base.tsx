@@ -1,6 +1,7 @@
 import { Blockchain, useAuthContext, useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
+import { WalletSwitchError } from 'src/util/wallet-switch-error';
 import { BitcoinAddressType } from '../../config/key-path';
 import { WalletBlockchains, WalletType, supportsBlockchain, useWalletContext } from '../../contexts/wallet.context';
 import { AbortError } from '../../util/abort-error';
@@ -11,7 +12,7 @@ import { SignHint } from './sign-hint';
 interface Props extends ConnectProps {
   isSupported: () => boolean | Promise<boolean>;
   fallback?: WalletType;
-  getAccount: (blockchain: Blockchain, isReconnect: boolean) => Promise<Account>;
+  getAccount: (wallet: WalletType, blockchain: Blockchain, isReconnect: boolean) => Promise<Account>;
   signMessage: (
     msg: string,
     address: string,
@@ -70,7 +71,7 @@ export function ConnectBase({
     if (!usedChain) throw new Error('No blockchain');
     if (!supportsBlockchain(wallet, usedChain)) throw new Error('Invalid blockchain');
 
-    await getAccount(usedChain, activeWallet === wallet)
+    await getAccount(wallet, usedChain, activeWallet === wallet)
       .then((a) => doLogin({ ...a, blockchain: usedChain }))
       .then(onLogin)
       .catch((e) => {
@@ -78,6 +79,9 @@ export function ConnectBase({
 
         if (e instanceof AbortError) {
           onCancel();
+        } else if (e instanceof WalletSwitchError) {
+          onSwitch(e.wallet);
+          return getAccount(e.wallet, usedChain, activeWallet === e.wallet);
         } else {
           setConnectError(e.message);
         }

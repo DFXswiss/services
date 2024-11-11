@@ -54,7 +54,7 @@ export default function ConnectCli(props: ConnectProps): JSX.Element {
     defaultValues: { blockchain: props.blockchain ?? SupportedBlockchains[0] },
   });
 
-  async function getAccount(_: Blockchain, isReconnect: boolean): Promise<Account> {
+  async function getAccount(_w: WalletType, _b: Blockchain, isReconnect: boolean): Promise<Account> {
     if (isReconnect && session?.address) return { address: session.address };
 
     const values = form.getValues();

@@ -8,6 +8,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
+import { WalletType } from 'src/contexts/wallet.context';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { useDeferredPromise } from '../../../hooks/deferred-promise.hook';
 import { QrCopy } from '../../payment/qr-code';
@@ -21,9 +22,9 @@ export default function ConnectTaro(props: ConnectProps): JSX.Element {
   const [auth, setAuth] = useState<LnurlAuth>();
   const [createTokenPromise, tokenPromise] = useDeferredPromise<string>();
 
-  const link = auth && `bluewallet:lightning:${auth.lnurl}`;
+  const link = auth && `dfxtaro:lightning:${auth.lnurl}`;
 
-  async function getAccount(_: Blockchain, isReconnect: boolean): Promise<Account> {
+  async function getAccount(_w: WalletType, _b: Blockchain, isReconnect: boolean): Promise<Account> {
     if (isReconnect && session?.address) return { address: session.address };
 
     await createLnurlAuth().then(setAuth);
