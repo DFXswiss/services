@@ -42,7 +42,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
 import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
@@ -150,7 +149,6 @@ export default function TransactionScreen(): JSX.Element {
             width={StyledButtonWidth.FULL}
             label={translate('screens/payment', 'Cointracking')}
             onClick={() => setShowCoinTracking(!showCoinTracking)}
-            hidden={session?.role === UserRole.ACCOUNT}
           />
           <StyledButton
             color={StyledButtonColor.STURDY_WHITE}
