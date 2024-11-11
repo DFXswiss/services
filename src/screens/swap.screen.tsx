@@ -152,6 +152,8 @@ export default function SwapScreen(): JSX.Element {
     Blockchain.ARBITRUM,
     Blockchain.OPTIMISM,
     Blockchain.POLYGON,
+    Blockchain.BASE,
+    Blockchain.BINANCE_SMART_CHAIN,
   ];
 
   const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
