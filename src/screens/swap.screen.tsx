@@ -84,7 +84,7 @@ interface ValidatedData extends SwapPaymentInfo {
 }
 
 export default function SwapScreen(): JSX.Element {
-  useAddressGuard('/connect');
+  useAddressGuard('/login');
 
   const { translate, translateError } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
@@ -152,6 +152,8 @@ export default function SwapScreen(): JSX.Element {
     Blockchain.ARBITRUM,
     Blockchain.OPTIMISM,
     Blockchain.POLYGON,
+    Blockchain.BASE,
+    Blockchain.BINANCE_SMART_CHAIN,
   ];
 
   const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);

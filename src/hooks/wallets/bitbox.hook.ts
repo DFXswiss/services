@@ -2,6 +2,7 @@ import { Blockchain } from '@dfx.swiss/react';
 import { PairedBitBox, bitbox02ConnectWebHID } from 'bitbox-api';
 import { hasWebHID } from 'bitbox-api/webhid';
 import { useMemo } from 'react';
+import { WalletSwitchError } from 'src/util/wallet-switch-error';
 import KeyPath, { BitcoinAddressType } from '../../config/key-path';
 import { useSettingsContext } from '../../contexts/settings.context';
 import { WalletType } from '../../contexts/wallet.context';
@@ -82,7 +83,7 @@ export function useBitbox(): BitboxInterface {
 
       // verify product
       if (wallet !== WalletType.BITBOX_BTC && !bitBox.ethSupported())
-        throw new TranslatedError('Your BitBox only supports Bitcoin');
+        throw new WalletSwitchError(WalletType.BITBOX_BTC, 'Your BitBox only supports Bitcoin');
 
       // fetch address
       return wallet === WalletType.BITBOX_BTC

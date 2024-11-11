@@ -9,6 +9,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
+import { WalletType } from 'src/contexts/wallet.context';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { useResizeObserver } from '../../../hooks/resize-observer.hook';
 import { DeepWallet, useWalletConnect } from '../../../hooks/wallets/wallet-connect.hook';
@@ -22,7 +23,7 @@ export default function ConnectWalletConnect(props: ConnectProps): JSX.Element {
 
   const [connectUri, setConnectUri] = useState<string>();
 
-  async function getAccount(blockchain: Blockchain, isReconnect: boolean): Promise<Account> {
+  async function getAccount(_w: WalletType, blockchain: Blockchain, isReconnect: boolean): Promise<Account> {
     const address =
       isReconnect && session?.address
         ? session.address
