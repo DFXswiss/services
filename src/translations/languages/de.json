@@ -39,7 +39,8 @@
     "Request refund": "Rückerstattung beantragen",
     "Copy Link": "Link kopieren",
     "Open invoice": "Rechnung öffnen",
-    "Create ticket": "Ticket erstellen"
+    "Create ticket": "Ticket erstellen",
+    "View file": "Datei anzeigen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",

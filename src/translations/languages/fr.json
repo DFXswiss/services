@@ -39,7 +39,8 @@
     "Request refund": "Demander un remboursement",
     "Copy Link": "Copier le lien",
     "Open invoice": "Ouvrir la facture",
-    "Create ticket": "Créer un ticket"
+    "Create ticket": "Créer un ticket",
+    "View file": "Voir le fichier"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",

@@ -38,7 +38,7 @@ export default function KycFileScreen(): JSX.Element {
   useEffect(() => {
     if (kycFileId) {
       setIsLoading(true);
-      call<KycFileData>({
+      call<any>({
         url: `kyc/file/${kycFileId}`,
         version: 'v2',
         method: 'GET',
@@ -55,10 +55,10 @@ export default function KycFileScreen(): JSX.Element {
 
   return (
     <Layout title={translate('screens/kyc', 'KYC file')}>
-      {isLoading || !file ? (
-        <StyledLoadingSpinner size={SpinnerSize.LG} />
-      ) : error ? (
+      {error ? (
         <ErrorHint message={error} />
+      ) : isLoading || !file ? (
+        <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <FilePreview file={file} setErrorMessage={setError} />
       )}
@@ -78,7 +78,7 @@ function FilePreview({ file, setErrorMessage }: FilePreviewProps): JSX.Element {
   const [fileType] = contentType.split('/');
 
   if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
-    setErrorMessage('Invalid file content');
+    setErrorMessage('Invalid file type');
     return <></>;
   }
 
@@ -105,7 +105,11 @@ function FilePreview({ file, setErrorMessage }: FilePreviewProps): JSX.Element {
           <p>{translate('screens/kyc', FileTypeLabels[file.type])}</p>
         </StyledDataTableRow>
       </StyledDataTable>
-      <StyledButton width={StyledButtonWidth.FULL} onClick={handleOpenFile} label="View File"></StyledButton>
+      <StyledButton
+        width={StyledButtonWidth.FULL}
+        onClick={handleOpenFile}
+        label={translate('general/actions', 'View file')}
+      ></StyledButton>
     </StyledVerticalStack>
   );
 }

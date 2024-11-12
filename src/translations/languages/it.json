@@ -39,7 +39,8 @@
     "Request refund": "Richiedi un rimborso",
     "Copy Link": "Copia il link",
     "Open invoice": "Apri la fattura",
-    "Create ticket": "Crea un ticket"
+    "Create ticket": "Crea un ticket",
+    "View file": "Visualizza il file"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
