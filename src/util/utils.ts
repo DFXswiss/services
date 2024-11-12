@@ -64,6 +64,12 @@ export function openPdfFromString(pdf: string) {
   window.open(fileURL);
 }
 
+export function openImageFromString(image: string, contentType: string) {
+  const imageBlob = new Blob([Uint8Array.from(atob(image), (c) => c.charCodeAt(0))], { type: contentType });
+  const imageUrl = URL.createObjectURL(imageBlob);
+  window.open(imageUrl);
+}
+
 export function sortAddressesByBlockchain(a: UserAddress, b: UserAddress): number {
   return a.blockchains[0].localeCompare(b.blockchains[0]);
 }

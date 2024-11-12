@@ -181,7 +181,15 @@
     "My account": "Mon compte",
 
     "Upload your SEPA file here": "Téléchargez votre fichier SEPA ici",
-    "Uploaded": "Téléchargé"
+    "Uploaded": "Téléchargé",
+
+    "KYC file": "KYC-Datei",
+    "Name check": "Vérification de nom",
+    "User information": "Informations utilisateur",
+    "User notes": "Notes utilisateur",
+    "Transaction notes": "Notes de transaction",
+    "Stock register": "Registre des actions",
+    "Authority": "Autorité"
   },
   "screens/2fa": {
     "2FA": "2FA",

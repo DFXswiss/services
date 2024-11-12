@@ -9,6 +9,20 @@ import {
   TransactionState,
 } from '@dfx.swiss/react';
 
+// TODO: Add to packages
+export enum FileType {
+  NAME_CHECK = 'NameCheck',
+  USER_INFORMATION = 'UserInformation',
+  IDENTIFICATION = 'Identification',
+  USER_NOTES = 'UserNotes',
+  TRANSACTION_NOTES = 'TransactionNotes',
+  STOCK_REGISTER = 'StockRegister',
+  COMMERCIAL_REGISTER = 'CommercialRegister',
+  RESIDENCE_PERMIT = 'ResidencePermit',
+  ADDITIONAL_DOCUMENTS = 'AdditionalDocuments',
+  AUTHORITY = 'Authority',
+}
+
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
   [FiatPaymentMethod.BANK]: 'Standard bank transaction',
@@ -112,4 +126,17 @@ export const IssueReasonLabels = {
   [SupportIssueReason.OTHER]: 'Other',
   [SupportIssueReason.FUNDS_NOT_RECEIVED]: 'Funds not received',
   [SupportIssueReason.TRANSACTION_MISSING]: 'Transaction missing',
+};
+
+export const FileTypeLabels = {
+  [FileType.NAME_CHECK]: 'Name check',
+  [FileType.USER_INFORMATION]: 'User information',
+  [FileType.IDENTIFICATION]: 'Identification',
+  [FileType.USER_NOTES]: 'User notes',
+  [FileType.TRANSACTION_NOTES]: 'Transaction notes',
+  [FileType.STOCK_REGISTER]: 'Stock register',
+  [FileType.COMMERCIAL_REGISTER]: 'Commercial register',
+  [FileType.RESIDENCE_PERMIT]: 'Residence permit',
+  [FileType.ADDITIONAL_DOCUMENTS]: 'Additional documents',
+  [FileType.AUTHORITY]: 'Authority',
 };
