@@ -42,6 +42,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Controller, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { AddressSwitch } from 'src/components/payment/address-switch';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
+import { PrivateAssetHint } from 'src/components/private-asset-hint';
 import { useWindowContext } from 'src/contexts/window.context';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
@@ -117,6 +118,7 @@ export default function SellScreen(): JSX.Element {
     bankAccount,
     blockchain,
     externalTransactionId,
+    flags,
     setParams,
     hideTargetSelection,
     availableBlockchains,
@@ -690,54 +692,60 @@ export default function SellScreen(): JSX.Element {
                     </StyledVerticalStack>
                   )}
 
-                  {paymentInfo && !kycError && !errorMessage && !customAmountError?.hideInfos && (
-                    <>
-                      <ExchangeRate
-                        exchangeRate={1 / paymentInfo.exchangeRate}
-                        rate={1 / paymentInfo.rate}
-                        fees={paymentInfo.feesTarget}
-                        feeCurrency={paymentInfo.currency}
-                        from={paymentInfo.currency}
-                        to={paymentInfo.asset}
-                        steps={paymentInfo.priceSteps}
-                        amountIn={paymentInfo.amount}
-                        amountOut={paymentInfo.estimatedAmount}
-                        type="sell"
-                      />
-
-                      <PaymentInformationContent
-                        info={paymentInfo}
-                        infoText={getPaymentInfoString(paymentInfo, selectedBankAccount)}
-                      />
-
-                      <SanctionHint />
-
-                      <div className="w-full leading-none">
-                        <StyledLink
-                          label={translate(
-                            'screens/payment',
-                            'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
-                          )}
-                          url={process.env.REACT_APP_TNC_URL}
-                          small
-                          dark
+                  {paymentInfo &&
+                    !kycError &&
+                    !errorMessage &&
+                    !customAmountError?.hideInfos &&
+                    (selectedAsset?.category === AssetCategory.PRIVATE && !flags?.includes('private') ? (
+                      <PrivateAssetHint asset={selectedAsset} />
+                    ) : (
+                      <>
+                        <ExchangeRate
+                          exchangeRate={1 / paymentInfo.exchangeRate}
+                          rate={1 / paymentInfo.rate}
+                          fees={paymentInfo.feesTarget}
+                          feeCurrency={paymentInfo.currency}
+                          from={paymentInfo.currency}
+                          to={paymentInfo.asset}
+                          steps={paymentInfo.priceSteps}
+                          amountIn={paymentInfo.amount}
+                          amountOut={paymentInfo.estimatedAmount}
+                          type="sell"
                         />
-                        <StyledButton
-                          width={StyledButtonWidth.FULL}
-                          label={translate(
-                            'screens/sell',
-                            canSendTransaction()
-                              ? 'Complete transaction in your wallet'
-                              : 'Click here once you have issued the transaction',
-                          )}
-                          onClick={() => handleNext(paymentInfo)}
-                          caps={false}
-                          className="mt-4"
-                          isLoading={isProcessing}
+
+                        <PaymentInformationContent
+                          info={paymentInfo}
+                          infoText={getPaymentInfoString(paymentInfo, selectedBankAccount)}
                         />
-                      </div>
-                    </>
-                  )}
+
+                        <SanctionHint />
+
+                        <div className="w-full leading-none">
+                          <StyledLink
+                            label={translate(
+                              'screens/payment',
+                              'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                            )}
+                            url={process.env.REACT_APP_TNC_URL}
+                            small
+                            dark
+                          />
+                          <StyledButton
+                            width={StyledButtonWidth.FULL}
+                            label={translate(
+                              'screens/sell',
+                              canSendTransaction()
+                                ? 'Complete transaction in your wallet'
+                                : 'Click here once you have issued the transaction',
+                            )}
+                            onClick={() => handleNext(paymentInfo)}
+                            caps={false}
+                            className="mt-4"
+                            isLoading={isProcessing}
+                          />
+                        </div>
+                      </>
+                    ))}
                 </>
               )}
             </StyledVerticalStack>
