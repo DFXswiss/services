@@ -1,6 +1,6 @@
 import { PropsWithChildren, Ref, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useSettingsContext } from 'src/contexts/settings.context';
+import { useServiceWorker } from 'src/hooks/service-worker.hook';
 import { Routes } from '../App';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -38,7 +38,11 @@ export function Layout({
   const { pathname } = useLocation();
   const { clearParams } = useNavigation();
   const { borderless } = useAppParams();
-  const { translate } = useSettingsContext();
+  const { showReload, reloadPage } = useServiceWorker();
+
+  useEffect(() => {
+    if (showReload) reloadPage();
+  }, [showReload]);
 
   useEffect(() => {
     const kycRoutes = Routes.filter((r) => r.isKycScreen);

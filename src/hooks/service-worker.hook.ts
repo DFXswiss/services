@@ -23,6 +23,9 @@ export const useServiceWorker = () => {
           registration.onupdatefound = () => {
             onSWUpdate(registration);
           };
+
+          const intervalId = setInterval(() => registration.update(), 60000);
+          return () => clearInterval(intervalId);
         })
         .catch((error) => console.error('Service worker registration failed:', error));
     }
