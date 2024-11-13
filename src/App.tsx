@@ -1,7 +1,7 @@
 import { DfxContextProvider, PaymentRoutesContextProvider, SupportChatContextProvider } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Navigate, Outlet, RouteObject, RouterProvider } from 'react-router-dom';
 import { Layout } from './components/layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
@@ -9,6 +9,7 @@ import { BalanceContextProvider } from './contexts/balance.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { WindowContextProvider } from './contexts/window.context';
+import { useServiceWorker } from './hooks/service-worker.hook';
 import ErrorScreen from './screens/error.screen';
 import HomeScreen from './screens/home.screen';
 import { setupLanguages } from './translations';
@@ -233,6 +234,11 @@ interface AppProps {
 
 function App({ routerFactory, params }: AppProps) {
   const router = routerFactory(Routes);
+  const { showReload, reloadPage } = useServiceWorker();
+
+  useEffect(() => {
+    if (showReload) reloadPage();
+  }, [showReload]);
 
   const home = params?.service && `/${params.service}`;
   if (home) router.navigate(home);
