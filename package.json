@@ -52,8 +52,8 @@
   },
   "scripts": {
     "start": "env-cmd -f .env.loc react-app-rewired start",
-    "build": "env-cmd -f .env.prd react-app-rewired build",
-    "build:dev": "env-cmd -f .env.dev react-app-rewired build",
+    "build": "env-cmd -f .env.prd react-app-rewired build && cp src/custom-service-worker.js build/",
+    "build:dev": "env-cmd -f .env.dev react-app-rewired build && cp src/custom-service-worker.js build/",
     "build:lib": "tsc",
     "link": "npm run build:lib && npm link",
     "widget": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.prd env-cmd -f .env.widget react-app-rewired build && mv src/index.bak.tsx src/index.tsx",
