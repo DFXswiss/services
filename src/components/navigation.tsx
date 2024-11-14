@@ -10,7 +10,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { PropsWithChildren, SetStateAction, forwardRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { BUILD_ID } from 'src/version';
+import { REACT_APP_BUILD_ID } from 'src/version';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -211,7 +211,7 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
           />
 
           <div className="flex mt-4 text-xs text-dfxGray-700 w-full justify-center">
-            <p>v{BUILD_ID}</p>
+            <p>{REACT_APP_BUILD_ID}</p>
           </div>
         </div>
       </div>
