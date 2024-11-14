@@ -13,6 +13,7 @@ export const useServiceWorker = () => {
     waitingWorker?.postMessage({ type: 'SKIP_WAITING' });
     setShowReload(false);
     window.location.reload();
+    console.log('Service worker updated');
   }, [waitingWorker]);
 
   useEffect(() => {
