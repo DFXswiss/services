@@ -211,7 +211,7 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
           />
 
           <div className="flex mt-4 text-xs text-dfxGray-700 w-full justify-center">
-            <p>v{BUILD_ID}</p>
+            <p>{BUILD_ID}</p>
           </div>
         </div>
       </div>
