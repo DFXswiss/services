@@ -5,8 +5,7 @@ import { Trans } from 'react-i18next';
 import { useSettingsContext } from '../contexts/settings.context';
 
 const PrivateAssets: { [symbol: string]: { name: string; urlText: string; url: string } } = {
-  FPS: { name: 'Frankencoin', urlText: 'www.frankencoin.com', url: 'https://www.frankencoin.com/pool' },
-  WFPS: { name: 'Frankencoin', urlText: 'www.frankencoin.com', url: 'https://www.frankencoin.com/pool' },
+  EDLC: { name: 'Edelcoin', urlText: 'edelcoin.com', url: 'https://edelcoin.com' },
 };
 
 export function PrivateAssetHint({ asset }: { asset: Asset }): JSX.Element {
