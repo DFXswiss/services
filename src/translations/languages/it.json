@@ -189,8 +189,7 @@
     "User information": "Informazioni utente",
     "User notes": "Note utente",
     "Transaction notes": "Note di transazione",
-    "Stock register": "Registro azionario",
-    "Authority": "Autorità"
+    "Stock register": "Registro azionario"
   },
   "screens/2fa": {
     "2FA": "2FA",

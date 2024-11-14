@@ -138,5 +138,5 @@ export const FileTypeLabels = {
   [FileType.COMMERCIAL_REGISTER]: 'Commercial register',
   [FileType.RESIDENCE_PERMIT]: 'Residence permit',
   [FileType.ADDITIONAL_DOCUMENTS]: 'Additional documents',
-  [FileType.AUTHORITY]: 'Authority',
+  [FileType.AUTHORITY]: 'Power of Attorney',
 };
