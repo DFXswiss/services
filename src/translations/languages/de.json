@@ -39,7 +39,8 @@
     "Request refund": "Rückerstattung beantragen",
     "Copy Link": "Link kopieren",
     "Open invoice": "Rechnung öffnen",
-    "Create ticket": "Ticket erstellen"
+    "Create ticket": "Ticket erstellen",
+    "View file": "Datei anzeigen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -181,7 +182,14 @@
     "My account": "Mein Konto",
 
     "Upload your SEPA file here": "Lade Deine SEPA-Datei hier hoch",
-    "Uploaded": "Hochgeladen"
+    "Uploaded": "Hochgeladen",
+
+    "KYC file": "KYC Datei",
+    "Name check": "Namensprüfung",
+    "User information": "Benutzerinformationen",
+    "User notes": "Benutzernotizen",
+    "Transaction notes": "Transaktionsnotizen",
+    "Stock register": "Aktienregister"
   },
   "screens/2fa": {
     "2FA": "2FA",

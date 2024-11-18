@@ -39,7 +39,8 @@
     "Request refund": "Demander un remboursement",
     "Copy Link": "Copier le lien",
     "Open invoice": "Ouvrir la facture",
-    "Create ticket": "Créer un ticket"
+    "Create ticket": "Créer un ticket",
+    "View file": "Voir le fichier"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -181,7 +182,14 @@
     "My account": "Mon compte",
 
     "Upload your SEPA file here": "Téléchargez votre fichier SEPA ici",
-    "Uploaded": "Téléchargé"
+    "Uploaded": "Téléchargé",
+
+    "KYC file": "KYC-Datei",
+    "Name check": "Vérification de nom",
+    "User information": "Informations utilisateur",
+    "User notes": "Notes utilisateur",
+    "Transaction notes": "Notes de transaction",
+    "Stock register": "Registre des actions"
   },
   "screens/2fa": {
     "2FA": "2FA",
