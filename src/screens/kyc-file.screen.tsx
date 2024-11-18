@@ -1,4 +1,4 @@
-import { ApiError, useApi } from '@dfx.swiss/react';
+import { ApiError, KycFile, useKyc } from '@dfx.swiss/react';
 import {
   AlignContent,
   SpinnerSize,
@@ -13,36 +13,23 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
-import { FileType, FileTypeLabels } from 'src/config/labels';
+import { FileTypeLabels } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { openImageFromString, openPdfFromString } from 'src/util/utils';
 
-// TODO: Add to packages
-interface KycFileData {
-  uid: string;
-  name: string;
-  type: FileType;
-  contentType: string;
-  content: any;
-}
-
 export default function KycFileScreen(): JSX.Element {
-  const { call } = useApi();
   const { translate } = useSettingsContext();
   const { id: kycFileId } = useParams();
+  const { getFile } = useKyc();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
-  const [file, setFile] = useState<KycFileData>();
+  const [file, setFile] = useState<KycFile>();
 
   useEffect(() => {
     if (kycFileId) {
       setIsLoading(true);
-      call<any>({
-        url: `kyc/file/${kycFileId}`,
-        version: 'v2',
-        method: 'GET',
-      })
+      getFile(kycFileId)
         .then(setFile)
         .catch((e: ApiError) => {
           setError(e.message ?? 'Unknown error');
@@ -67,7 +54,7 @@ export default function KycFileScreen(): JSX.Element {
 }
 
 interface FilePreviewProps {
-  file: KycFileData;
+  file: KycFile;
   setErrorMessage: (message: string) => void;
 }
 

@@ -1,5 +1,6 @@
 import {
   FiatPaymentMethod,
+  FileType,
   FundOrigin,
   InvestmentDate,
   Limit,
@@ -8,20 +9,6 @@ import {
   TransactionFailureReason,
   TransactionState,
 } from '@dfx.swiss/react';
-
-// TODO: Add to packages
-export enum FileType {
-  NAME_CHECK = 'NameCheck',
-  USER_INFORMATION = 'UserInformation',
-  IDENTIFICATION = 'Identification',
-  USER_NOTES = 'UserNotes',
-  TRANSACTION_NOTES = 'TransactionNotes',
-  STOCK_REGISTER = 'StockRegister',
-  COMMERCIAL_REGISTER = 'CommercialRegister',
-  RESIDENCE_PERMIT = 'ResidencePermit',
-  ADDITIONAL_DOCUMENTS = 'AdditionalDocuments',
-  AUTHORITY = 'Authority',
-}
 
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
