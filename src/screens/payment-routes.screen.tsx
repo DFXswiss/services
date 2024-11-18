@@ -95,7 +95,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
-  const { user, reloadUser } = useUserContext();
+  const { user } = useUserContext();
   const {
     paymentRoutes,
     paymentLinks,
