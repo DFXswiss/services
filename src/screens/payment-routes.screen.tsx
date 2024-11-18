@@ -95,13 +95,16 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
-  const { user, updatePaymentLinksConfig: updateUserConfig } = useUserContext();
+  const { user, reloadUser } = useUserContext();
   const {
     paymentRoutes,
     paymentLinks,
     paymentRoutesLoading,
     paymentLinksLoading,
+    userPaymentLinksConfig,
+    userPaymentLinksConfigLoading,
     updatePaymentLink,
+    updateUserPaymentLinksConfig,
     cancelPaymentLinkPayment,
     deletePaymentRoute,
     error: apiError,
@@ -147,7 +150,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
   }
 
   async function updatePaymentLinksConfig(data: any) {
-    await updateUserConfig(data.config).catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
+    await updateUserPaymentLinksConfig(data.config).catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
   }
 
   function onCloseForm(id?: string) {
@@ -196,13 +199,13 @@ export default function PaymentRoutesScreen(): JSX.Element {
             paymentLinkId: undefined,
             prefilledData: {
               configStandards: toConfigStandards(
-                user?.paymentLink?.config?.standards,
-                user?.paymentLink?.config?.blockchains,
+                userPaymentLinksConfig?.standards,
+                userPaymentLinksConfig?.blockchains,
               ),
-              configMinCompletionStatus: user?.paymentLink?.config?.minCompletionStatus,
-              configDisplayQr: user?.paymentLink?.config?.displayQr,
-              configFee: user?.paymentLink?.config?.fee,
-              configPaymentTimeout: user?.paymentLink?.config?.paymentTimeout,
+              configMinCompletionStatus: userPaymentLinksConfig?.minCompletionStatus,
+              configDisplayQr: userPaymentLinksConfig?.displayQr,
+              configFee: userPaymentLinksConfig?.fee,
+              configPaymentTimeout: userPaymentLinksConfig?.paymentTimeout,
             },
           }}
           setStep={(step) => setShowPaymentLinkForm((prev) => ({ ...prev, step }))}
@@ -345,30 +348,30 @@ export default function PaymentRoutesScreen(): JSX.Element {
                       {
                         label: translate('screens/payment', 'Payment standards'),
                         text: toConfigStandards(
-                          user?.paymentLink?.config?.standards,
-                          user?.paymentLink?.config?.blockchains,
-                        )?.join('\n'),
+                          userPaymentLinksConfig?.standards,
+                          userPaymentLinksConfig?.blockchains,
+                        )?.join(', '),
                       },
                       {
                         label: translate('screens/payment', 'Min. completion status'),
                         text:
-                          user?.paymentLink?.config?.minCompletionStatus &&
+                          userPaymentLinksConfig?.minCompletionStatus &&
                           translate(
                             'screens/payment',
-                            PaymentQuoteStatusLabels[user.paymentLink.config.minCompletionStatus],
+                            PaymentQuoteStatusLabels[userPaymentLinksConfig.minCompletionStatus],
                           ),
                       },
                       {
                         label: translate('screens/payment', 'Display QR code'),
-                        text: user?.paymentLink?.config?.displayQr?.toString(),
+                        text: userPaymentLinksConfig?.displayQr?.toString(),
                       },
                       {
                         label: translate('screens/payment', 'Fee'),
-                        text: user?.paymentLink?.config?.fee?.toString(),
+                        text: userPaymentLinksConfig?.fee?.toString(),
                       },
                       {
                         label: translate('screens/payment', 'Payment timeout (seconds)'),
-                        text: user?.paymentLink?.config?.paymentTimeout?.toString(),
+                        text: userPaymentLinksConfig?.paymentTimeout?.toString(),
                       },
                     ].filter((item) => item.text) as any
                   }
@@ -380,6 +383,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
                       width={StyledButtonWidth.FULL}
                     />
                   }
+                  isLoading={userPaymentLinksConfigLoading}
                 />
               </StyledDataTable>
               {paymentLinks.map((link) => {
@@ -537,7 +541,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                 [
                                   {
                                     label: translate('screens/payment', 'Payment standards'),
-                                    text: toConfigStandards(link.config.standards, link.config.blockchains).join('\n'),
+                                    text: toConfigStandards(link.config.standards, link.config.blockchains).join(', '),
                                   },
                                   {
                                     label: translate('screens/payment', 'Min. completion status'),
