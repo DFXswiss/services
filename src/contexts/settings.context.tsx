@@ -42,6 +42,7 @@ const languageToLocale: { [language: string]: string } = {
 interface SettingsInterface {
   availableLanguages: Language[];
   allowedCountries: Country[];
+  nationalityCountries: Country[];
   locale: string;
   language?: Language;
   currency?: Fiat;
@@ -104,8 +105,8 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { getInfoBanner } = useSettings();
 
   const [language, setLanguage] = useState<Language>();
-  const [allowedCountries, setAllowedCountries] = useState<Country[]>([]);
   const [currency, setCurrency] = useState<Fiat>();
+  const [countries, setCountries] = useState<Country[]>([]);
   const [store, setStore] = useState<Record<string, any>>({});
   const [processingKycData, setProcessingKycData] = useState(true);
   const [infoBanner, setInfoBanner] = useState<InfoBanner>();
@@ -122,7 +123,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, []);
 
   useEffect(() => {
-    getCountries().then((countries) => setAllowedCountries(countries.filter((c) => c.kycAllowed)));
+    getCountries().then(setCountries);
   }, []);
 
   useEffect(() => {
@@ -142,12 +143,14 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, [user, mail]);
 
   useEffect(() => {
-    if (!user?.kyc.hash || !isInitialized || !allowedCountries.length) return;
+    if (!user?.kyc.hash || !isInitialized || !countries.length) return;
 
     if (!accountType) {
       setProcessingKycData(false);
       return;
     }
+
+    const filteredCountries = countries.filter((c) => c.kycAllowed);
 
     setData({
       mail,
@@ -160,7 +163,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
         houseNumber: houseNumber,
         city: city,
         zip: zip,
-        country: allowedCountries.find((c) => c.symbol === country || c.name === country),
+        country: filteredCountries.find((c) => c.symbol === country || c.name === country),
       },
       organizationName,
       organizationAddress: organizationName && {
@@ -168,7 +171,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
         houseNumber: organizationHouseNumber,
         city: organizationCity,
         zip: organizationZip,
-        country: allowedCountries.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
+        country: filteredCountries.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
       },
     } as UserData)
       .catch(() => {
@@ -194,7 +197,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     organizationCountry,
     phone,
     isInitialized,
-    allowedCountries,
+    countries,
   ]);
 
   function closeInfoBanner() {
@@ -251,7 +254,8 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const context = useMemo(
     () => ({
       availableLanguages,
-      allowedCountries,
+      allowedCountries: countries.filter((c) => c.kycAllowed),
+      nationalityCountries: countries.filter((c) => c.nationalityAllowed),
       locale: languageToLocale[language?.symbol.toLowerCase() ?? 'en'],
       language,
       currency,

@@ -856,14 +856,11 @@ function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps):
 }
 
 function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
-  const { translate, translateError } = useSettingsContext();
+  const { nationalityCountries, translate, translateError } = useSettingsContext();
   const { setNationalityData } = useKyc();
-  const { countries } = useUserContext();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
-
-  const nationalityCountries = countries?.filter((c) => c.nationalityAllowed);
 
   const {
     control,
@@ -1319,16 +1316,13 @@ export interface KycManualIdentFormData {
 }
 
 function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.Element {
-  const { translate, translateError } = useSettingsContext();
+  const { nationalityCountries, translate, translateError } = useSettingsContext();
   const { setManualIdentData } = useKyc();
-  const { countries } = useUserContext();
   const { genderTypeToString, documentTypeToString } = useKycHelper();
   const { countryCode } = useGeoLocation();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
-
-  const nationalityCountries = countries?.filter((c) => c.nationalityAllowed);
 
   useEffect(() => {
     const ipCountry = nationalityCountries?.find((c) => c.symbol === countryCode);
