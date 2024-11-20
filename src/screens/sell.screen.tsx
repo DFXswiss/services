@@ -18,7 +18,6 @@ import {
   useFiat,
   useSell,
   useSessionContext,
-  useUserContext,
 } from '@dfx.swiss/react';
 import {
   AssetIconVariant,
@@ -97,7 +96,7 @@ interface ValidatedData extends SellPaymentInfo {
 export default function SellScreen(): JSX.Element {
   useAddressGuard('/login');
 
-  const { translate, translateError, currency: prefCurrency } = useSettingsContext();
+  const { allowedCountries, translate, translateError, currency: prefCurrency } = useSettingsContext();
   const { isInitialized, closeServices } = useAppHandlingContext();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
@@ -125,7 +124,6 @@ export default function SellScreen(): JSX.Element {
   } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
-  const { countries } = useUserContext();
   const { toString } = useBlockchain();
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -236,17 +234,14 @@ export default function SellScreen(): JSX.Element {
       const account = getAccount(bankAccounts, bankAccount);
       if (account) {
         setVal('bankAccount', account);
-      } else if (
-        !isCreatingAccount &&
-        Validations.Iban(countries.filter((c) => c.kycAllowed)).validate(bankAccount) === true
-      ) {
+      } else if (!isCreatingAccount && Validations.Iban(allowedCountries).validate(bankAccount) === true) {
         setIsCreatingAccount(true);
         createAccount({ iban: bankAccount })
           .then((b) => setVal('bankAccount', b))
           .finally(() => setIsCreatingAccount(false));
       }
     }
-  }, [bankAccount, getAccount, bankAccounts, countries]);
+  }, [bankAccount, getAccount, bankAccounts, allowedCountries]);
 
   useEffect(() => {
     if (selectedBankAccount && selectedBankAccount.preferredCurrency)

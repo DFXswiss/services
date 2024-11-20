@@ -31,7 +31,6 @@ import {
   Utils,
   Validations,
   isStepDone,
-  useCountry,
   useKyc,
   useSessionContext,
   useUserContext,
@@ -553,31 +552,20 @@ function ContactData({ code, mode, isLoading, step, onDone, showLinkHint }: Edit
 }
 
 function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
-  const { translate, translateError } = useSettingsContext();
+  const { allowedCountries, translate, translateError } = useSettingsContext();
   const { setPersonalData } = useKyc();
-  const { getCountries } = useCountry();
   const { countryCode } = useGeoLocation();
 
-  const [isCountryLoading, setIsCountryLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
-  const [countries, setCountries] = useState<Country[]>([]);
 
   useEffect(() => {
-    getCountries()
-      .then((countries) => countries.filter((c) => c.kycAllowed))
-      .then(setCountries)
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsCountryLoading(false));
-  }, []);
-
-  useEffect(() => {
-    const ipCountry = countries.find((c) => c.symbol === countryCode);
+    const ipCountry = allowedCountries.find((c) => c.symbol === countryCode);
     if (ipCountry && !isDirty) {
       setValue('address.country', ipCountry);
       setValue('organizationAddress.country', ipCountry);
     }
-  }, [countries, countryCode]);
+  }, [allowedCountries, countryCode]);
 
   const {
     control,
@@ -633,36 +621,104 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
             labelFunc={(item) => translate('screens/kyc', item)}
           />
         </StyledVerticalStack>
-        {selectedAccountType &&
-          (isCountryLoading ? (
-            <StyledLoadingSpinner size={SpinnerSize.LG} />
-          ) : (
-            <>
+        {selectedAccountType && (
+          <>
+            <StyledVerticalStack gap={2} full>
+              <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+                {translate('screens/kyc', 'Personal Information')}
+              </p>
+              <StyledHorizontalStack gap={2}>
+                <StyledInput
+                  name="firstName"
+                  autocomplete="firstname"
+                  label={translate('screens/kyc', 'First name')}
+                  placeholder={translate('screens/kyc', 'John')}
+                  full
+                  smallLabel
+                />
+                <StyledInput
+                  name="lastName"
+                  autocomplete="lastname"
+                  label={translate('screens/kyc', 'Last name')}
+                  placeholder={translate('screens/kyc', 'Doe')}
+                  full
+                  smallLabel
+                />
+              </StyledHorizontalStack>
+              <StyledHorizontalStack gap={2}>
+                <StyledInput
+                  name="address.street"
+                  autocomplete="street"
+                  label={translate('screens/kyc', 'Street')}
+                  placeholder={translate('screens/kyc', 'Street')}
+                  full
+                  smallLabel
+                />
+                <StyledInput
+                  name="address.houseNumber"
+                  autocomplete="house-number"
+                  label={translate('screens/kyc', 'House nr.')}
+                  placeholder="xx"
+                  small
+                  smallLabel
+                />
+              </StyledHorizontalStack>
+              <StyledHorizontalStack gap={2}>
+                <StyledInput
+                  name="address.zip"
+                  autocomplete="zip"
+                  label={translate('screens/kyc', 'ZIP code')}
+                  placeholder="12345"
+                  small
+                  smallLabel
+                />
+                <StyledInput
+                  name="address.city"
+                  autocomplete="city"
+                  label={translate('screens/kyc', 'City')}
+                  placeholder="Berlin"
+                  full
+                  smallLabel
+                />
+              </StyledHorizontalStack>
+              <StyledSearchDropdown
+                rootRef={rootRef}
+                name="address.country"
+                autocomplete="country"
+                label={translate('screens/kyc', 'Country')}
+                placeholder={translate('general/actions', 'Select') + '...'}
+                items={allowedCountries}
+                labelFunc={(item) => item.name}
+                filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+                matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+                smallLabel
+              />
+              <StyledInput
+                name="phone"
+                autocomplete="phone"
+                type="tel"
+                label={translate('screens/kyc', 'Mobile number')}
+                placeholder="+49 12345678"
+                smallLabel
+              />
+            </StyledVerticalStack>
+
+            {selectedAccountType !== AccountType.PERSONAL && (
               <StyledVerticalStack gap={2} full>
                 <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-                  {translate('screens/kyc', 'Personal Information')}
+                  {translate('screens/kyc', 'Organization Information')}
                 </p>
+                <StyledInput
+                  name="organizationName"
+                  autocomplete="organization-name"
+                  label={translate('screens/kyc', 'Organization name')}
+                  placeholder={translate('screens/kyc', 'Example inc.')}
+                  full
+                  smallLabel
+                />
                 <StyledHorizontalStack gap={2}>
                   <StyledInput
-                    name="firstName"
-                    autocomplete="firstname"
-                    label={translate('screens/kyc', 'First name')}
-                    placeholder={translate('screens/kyc', 'John')}
-                    full
-                    smallLabel
-                  />
-                  <StyledInput
-                    name="lastName"
-                    autocomplete="lastname"
-                    label={translate('screens/kyc', 'Last name')}
-                    placeholder={translate('screens/kyc', 'Doe')}
-                    full
-                    smallLabel
-                  />
-                </StyledHorizontalStack>
-                <StyledHorizontalStack gap={2}>
-                  <StyledInput
-                    name="address.street"
+                    name="organizationAddress.street"
                     autocomplete="street"
                     label={translate('screens/kyc', 'Street')}
                     placeholder={translate('screens/kyc', 'Street')}
@@ -670,8 +726,8 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                     smallLabel
                   />
                   <StyledInput
-                    name="address.houseNumber"
-                    autocomplete="house-number"
+                    name="organizationAddress.houseNumber"
+                    autocomplete="houseNumber"
                     label={translate('screens/kyc', 'House nr.')}
                     placeholder="xx"
                     small
@@ -680,15 +736,16 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                 </StyledHorizontalStack>
                 <StyledHorizontalStack gap={2}>
                   <StyledInput
-                    name="address.zip"
+                    name="organizationAddress.zip"
                     autocomplete="zip"
+                    type="number"
                     label={translate('screens/kyc', 'ZIP code')}
                     placeholder="12345"
                     small
                     smallLabel
                   />
                   <StyledInput
-                    name="address.city"
+                    name="organizationAddress.city"
                     autocomplete="city"
                     label={translate('screens/kyc', 'City')}
                     placeholder="Berlin"
@@ -698,109 +755,35 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                 </StyledHorizontalStack>
                 <StyledSearchDropdown
                   rootRef={rootRef}
-                  name="address.country"
+                  name="organizationAddress.country"
                   autocomplete="country"
                   label={translate('screens/kyc', 'Country')}
                   placeholder={translate('general/actions', 'Select') + '...'}
-                  items={countries}
+                  items={allowedCountries}
                   labelFunc={(item) => item.name}
                   filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                   matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
                   smallLabel
                 />
-                <StyledInput
-                  name="phone"
-                  autocomplete="phone"
-                  type="tel"
-                  label={translate('screens/kyc', 'Mobile number')}
-                  placeholder="+49 12345678"
-                  smallLabel
-                />
               </StyledVerticalStack>
+            )}
 
-              {selectedAccountType !== AccountType.PERSONAL && (
-                <StyledVerticalStack gap={2} full>
-                  <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-                    {translate('screens/kyc', 'Organization Information')}
-                  </p>
-                  <StyledInput
-                    name="organizationName"
-                    autocomplete="organization-name"
-                    label={translate('screens/kyc', 'Organization name')}
-                    placeholder={translate('screens/kyc', 'Example inc.')}
-                    full
-                    smallLabel
-                  />
-                  <StyledHorizontalStack gap={2}>
-                    <StyledInput
-                      name="organizationAddress.street"
-                      autocomplete="street"
-                      label={translate('screens/kyc', 'Street')}
-                      placeholder={translate('screens/kyc', 'Street')}
-                      full
-                      smallLabel
-                    />
-                    <StyledInput
-                      name="organizationAddress.houseNumber"
-                      autocomplete="houseNumber"
-                      label={translate('screens/kyc', 'House nr.')}
-                      placeholder="xx"
-                      small
-                      smallLabel
-                    />
-                  </StyledHorizontalStack>
-                  <StyledHorizontalStack gap={2}>
-                    <StyledInput
-                      name="organizationAddress.zip"
-                      autocomplete="zip"
-                      type="number"
-                      label={translate('screens/kyc', 'ZIP code')}
-                      placeholder="12345"
-                      small
-                      smallLabel
-                    />
-                    <StyledInput
-                      name="organizationAddress.city"
-                      autocomplete="city"
-                      label={translate('screens/kyc', 'City')}
-                      placeholder="Berlin"
-                      full
-                      smallLabel
-                    />
-                  </StyledHorizontalStack>
-                  <StyledSearchDropdown
-                    rootRef={rootRef}
-                    name="organizationAddress.country"
-                    autocomplete="country"
-                    label={translate('screens/kyc', 'Country')}
-                    placeholder={translate('general/actions', 'Select') + '...'}
-                    items={countries}
-                    labelFunc={(item) => item.name}
-                    filterFunc={(i, s) =>
-                      !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))
-                    }
-                    matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
-                    smallLabel
-                  />
-                </StyledVerticalStack>
-              )}
+            {error && (
+              <div>
+                <ErrorHint message={error} />
+              </div>
+            )}
 
-              {error && (
-                <div>
-                  <ErrorHint message={error} />
-                </div>
-              )}
-
-              <StyledButton
-                type="submit"
-                label={translate('general/actions', 'Next')}
-                onClick={handleSubmit(onSubmit)}
-                width={StyledButtonWidth.FULL}
-                disabled={!isValid}
-                isLoading={isUpdating || isLoading}
-              />
-            </>
-          ))}
+            <StyledButton
+              type="submit"
+              label={translate('general/actions', 'Next')}
+              onClick={handleSubmit(onSubmit)}
+              width={StyledButtonWidth.FULL}
+              disabled={!isValid}
+              isLoading={isUpdating || isLoading}
+            />
+          </>
+        )}
       </StyledVerticalStack>
     </Form>
   );
@@ -875,20 +858,12 @@ function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps):
 function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setNationalityData } = useKyc();
-  const { getCountries } = useCountry();
+  const { countries } = useUserContext();
 
-  const [isCountryLoading, setIsCountryLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
-  const [countries, setCountries] = useState<Country[]>([]);
 
-  useEffect(() => {
-    getCountries()
-      .then((countries) => countries.filter((c) => c.nationalityAllowed))
-      .then(setCountries)
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsCountryLoading(false));
-  }, []);
+  const nationalityCountries = countries.filter((c) => c.nationalityAllowed);
 
   const {
     control,
@@ -918,9 +893,7 @@ function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps):
           <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
             {translate('screens/kyc', 'Nationality (according to identification document)')}
           </p>
-          {isCountryLoading ? (
-            <StyledLoadingSpinner size={SpinnerSize.LG} />
-          ) : (
+          {
             <StyledSearchDropdown
               rootRef={rootRef}
               full
@@ -928,12 +901,12 @@ function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps):
               autocomplete="nationality"
               label=""
               placeholder={translate('general/actions', 'Select') + '...'}
-              items={countries}
+              items={nationalityCountries}
               labelFunc={(item) => item.name}
               filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
               matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
             />
-          )}
+          }
         </StyledVerticalStack>
 
         {error && (
@@ -1348,29 +1321,21 @@ export interface KycManualIdentFormData {
 function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setManualIdentData } = useKyc();
-  const { getCountries } = useCountry();
+  const { countries } = useUserContext();
   const { genderTypeToString, documentTypeToString } = useKycHelper();
   const { countryCode } = useGeoLocation();
 
-  const [isCountryLoading, setIsCountryLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
-  const [countries, setCountries] = useState<Country[]>([]);
+
+  const nationalityCountries = countries.filter((c) => c.nationalityAllowed);
 
   useEffect(() => {
-    getCountries()
-      .then((countries) => countries.filter((c) => c.nationalityAllowed))
-      .then(setCountries)
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsCountryLoading(false));
-  }, []);
-
-  useEffect(() => {
-    const ipCountry = countries.find((c) => c.symbol === countryCode);
+    const ipCountry = nationalityCountries.find((c) => c.symbol === countryCode);
     if (ipCountry && !isDirty) {
       setValue('nationality', ipCountry);
     }
-  }, [countries, countryCode]);
+  }, [nationalityCountries, countryCode]);
 
   const {
     control,
@@ -1504,7 +1469,7 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
                   autocomplete="nationality"
                   label={translate('screens/kyc', 'Nationality')}
                   placeholder={translate('general/actions', 'Select') + '...'}
-                  items={countries}
+                  items={nationalityCountries}
                   labelFunc={(item) => item.name}
                   filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                   matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}

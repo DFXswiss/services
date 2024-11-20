@@ -7,7 +7,6 @@ import {
   PaymentLinkStatus,
   PaymentRouteType,
   SellRoute,
-  useCountry,
   useFiatContext,
   usePaymentRoutesContext,
   useUserContext,
@@ -591,14 +590,11 @@ const PaymentLinkFormStepToTitle = {
 
 function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: PaymentLinkFormProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
-  const { translate, translateError } = useSettingsContext();
+  const { allowedCountries, translate, translateError } = useSettingsContext();
   const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink } = usePaymentRoutesContext();
   const { currencies } = useFiatContext();
-  const { getCountries } = useCountry();
   const { paymentRoutes, paymentLinks } = usePaymentRoutesContext();
 
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [isCountryLoading, setIsCountryLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -620,18 +616,10 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
   const data = watch();
 
   useEffect(() => {
-    getCountries()
-      .then((countries) => countries.filter((c) => c.kycAllowed))
-      .then(setCountries)
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsCountryLoading(false));
-  }, []);
-
-  useEffect(() => {
     if (paymentLinkId) {
       const prefilledRecipientData = paymentLinks?.find((link) => link.id === paymentLinkId)?.recipient;
-      if (prefilledRecipientData && countries) {
-        const prefilledCountry = countries.find(
+      if (prefilledRecipientData && allowedCountries) {
+        const prefilledCountry = allowedCountries.find(
           (country) => country.symbol === prefilledRecipientData.address?.country,
         );
         reset({
@@ -647,7 +635,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
         });
       }
     }
-  }, [paymentLinks, countries]);
+  }, [paymentLinks, allowedCountries]);
 
   useEffect(() => {
     const maxIdRoute = paymentRoutes?.sell.reduce((prev, current) => (prev.id < current.id ? prev : current));
@@ -843,12 +831,8 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
                 name="recipientCountry"
                 autocomplete="country"
                 label={translate('screens/kyc', 'Country')}
-                placeholder={
-                  isCountryLoading
-                    ? translate('screens/payment', 'Loading countries...')
-                    : translate('general/actions', 'Select') + '...'
-                }
-                items={countries ?? []}
+                placeholder={translate('general/actions', 'Select') + '...'}
+                items={allowedCountries ?? []}
                 labelFunc={(item) => item.name}
                 filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                 matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}

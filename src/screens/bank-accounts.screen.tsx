@@ -1,4 +1,4 @@
-import { ApiError, Utils, Validations, useBankAccountContext, useUserContext } from '@dfx.swiss/react';
+import { ApiError, Utils, Validations, useBankAccountContext } from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
@@ -26,9 +26,8 @@ export default function BankAccountsScreen(): JSX.Element {
 
   const { state } = useLocation();
   const { goBack } = useNavigation();
-  const { translate, translateError } = useSettingsContext();
+  const { allowedCountries, translate, translateError } = useSettingsContext();
   const { createAccount } = useBankAccountContext();
-  const { countries } = useUserContext();
 
   const isMissingTxIssue = useRef<boolean>(state?.isMissingTxIssue);
   const newIban = useRef<string>();
@@ -50,7 +49,7 @@ export default function BankAccountsScreen(): JSX.Element {
   } = useForm<FormData>();
 
   const rules = Utils.createRules({
-    iban: [Validations.Required, Validations.Iban(countries)],
+    iban: [Validations.Required, Validations.Iban(allowedCountries)],
   });
 
   function onSubmit({ iban, label }: FormData) {
