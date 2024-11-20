@@ -863,7 +863,7 @@ function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps):
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
 
-  const nationalityCountries = countries.filter((c) => c.nationalityAllowed);
+  const nationalityCountries = countries?.filter((c) => c.nationalityAllowed);
 
   const {
     control,
@@ -901,7 +901,7 @@ function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps):
               autocomplete="nationality"
               label=""
               placeholder={translate('general/actions', 'Select') + '...'}
-              items={nationalityCountries}
+              items={nationalityCountries ?? []}
               labelFunc={(item) => item.name}
               filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
               matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
@@ -1328,10 +1328,10 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
 
-  const nationalityCountries = countries.filter((c) => c.nationalityAllowed);
+  const nationalityCountries = countries?.filter((c) => c.nationalityAllowed);
 
   useEffect(() => {
-    const ipCountry = nationalityCountries.find((c) => c.symbol === countryCode);
+    const ipCountry = nationalityCountries?.find((c) => c.symbol === countryCode);
     if (ipCountry && !isDirty) {
       setValue('nationality', ipCountry);
     }
@@ -1397,133 +1397,124 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
   return (
     <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
       <StyledVerticalStack gap={6} full center>
-        {isCountryLoading ? (
-          <StyledLoadingSpinner size={SpinnerSize.LG} />
-        ) : (
-          <>
-            <StyledVerticalStack gap={6} full>
-              <StyledVerticalStack gap={2} full>
-                <StyledDropdown
-                  rootRef={rootRef}
-                  name="gender"
-                  label={`${translate('screens/kyc', 'Gender')} (${translate(
-                    'screens/kyc',
-                    'Optional',
-                  ).toLowerCase()})`}
-                  placeholder={translate('general/actions', 'Select') + '...'}
-                  items={Object.values(GenderType)}
-                  labelFunc={(item) => genderTypeToString(item)}
-                  smallLabel
-                />
-                <StyledHorizontalStack gap={2}>
-                  <StyledInput
-                    name="firstName"
-                    autocomplete="firstname"
-                    label={translate('screens/kyc', 'First name')}
-                    placeholder={translate('screens/kyc', 'John')}
-                    full
-                    smallLabel
-                  />
-                  <StyledInput
-                    name="lastName"
-                    autocomplete="lastname"
-                    label={translate('screens/kyc', 'Last name')}
-                    placeholder={translate('screens/kyc', 'Doe')}
-                    full
-                    smallLabel
-                  />
-                </StyledHorizontalStack>
-
-                <StyledInput
-                  name="birthName"
-                  autocomplete="birthName"
-                  label={translate('screens/kyc', 'Birth name')}
-                  placeholder={translate('screens/kyc', 'John Doe')}
-                  full
-                  smallLabel
-                />
-
-                <StyledInput
-                  name="birthday"
-                  autocomplete="birthday"
-                  label={translate('screens/kyc', 'Birthday')}
-                  placeholder={translate('screens/kyc', 'YYYY-MM-DD')}
-                  full
-                  smallLabel
-                />
-
-                <StyledInput
-                  name="birthplace"
-                  autocomplete="birthplace"
-                  label={`${translate('screens/kyc', 'Birthplace')} (${translate(
-                    'screens/kyc',
-                    'Optional',
-                  ).toLowerCase()})`}
-                  placeholder={translate('screens/kyc', 'New York, USA')}
-                  full
-                  smallLabel
-                />
-                <StyledSearchDropdown
-                  rootRef={rootRef}
-                  name="nationality"
-                  autocomplete="nationality"
-                  label={translate('screens/kyc', 'Nationality')}
-                  placeholder={translate('general/actions', 'Select') + '...'}
-                  items={nationalityCountries}
-                  labelFunc={(item) => item.name}
-                  filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
-                  matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
-                  smallLabel
-                />
-              </StyledVerticalStack>
-
-              <StyledVerticalStack gap={2}>
-                <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-                  {translate('screens/kyc', 'Identification document')}
-                </p>
-                <StyledDropdown
-                  rootRef={rootRef}
-                  name="documentType"
-                  label={translate('screens/kyc', 'Document type')}
-                  placeholder={translate('general/actions', 'Select') + '...'}
-                  items={Object.values(DocumentType)}
-                  labelFunc={(item) => documentTypeToString(item)}
-                  smallLabel
-                />
-                <StyledInput
-                  name="documentNumber"
-                  label={translate('screens/kyc', 'Document number')}
-                  placeholder="12345"
-                  full
-                  smallLabel
-                />
-                <StyledFileUpload
-                  name="file"
-                  label={translate('screens/support', 'Document')}
-                  placeholder={translate('general/actions', 'Drop files here')}
-                  buttonLabel={translate('general/actions', 'Browse')}
-                  full
-                  smallLabel
-                />
-              </StyledVerticalStack>
-            </StyledVerticalStack>
-
-            {error && (
-              <div>
-                <ErrorHint message={error} />
-              </div>
-            )}
-
-            <StyledButton
-              type="submit"
-              label={translate('general/actions', 'Next')}
-              onClick={handleSubmit(onSubmit)}
-              width={StyledButtonWidth.FULL}
-              disabled={!isValid}
-              isLoading={isUpdating}
+        <StyledVerticalStack gap={6} full>
+          <StyledVerticalStack gap={2} full>
+            <StyledDropdown
+              rootRef={rootRef}
+              name="gender"
+              label={`${translate('screens/kyc', 'Gender')} (${translate('screens/kyc', 'Optional').toLowerCase()})`}
+              placeholder={translate('general/actions', 'Select') + '...'}
+              items={Object.values(GenderType)}
+              labelFunc={(item) => genderTypeToString(item)}
+              smallLabel
             />
-          </>
+            <StyledHorizontalStack gap={2}>
+              <StyledInput
+                name="firstName"
+                autocomplete="firstname"
+                label={translate('screens/kyc', 'First name')}
+                placeholder={translate('screens/kyc', 'John')}
+                full
+                smallLabel
+              />
+              <StyledInput
+                name="lastName"
+                autocomplete="lastname"
+                label={translate('screens/kyc', 'Last name')}
+                placeholder={translate('screens/kyc', 'Doe')}
+                full
+                smallLabel
+              />
+            </StyledHorizontalStack>
+
+            <StyledInput
+              name="birthName"
+              autocomplete="birthName"
+              label={translate('screens/kyc', 'Birth name')}
+              placeholder={translate('screens/kyc', 'John Doe')}
+              full
+              smallLabel
+            />
+
+            <StyledInput
+              name="birthday"
+              autocomplete="birthday"
+              label={translate('screens/kyc', 'Birthday')}
+              placeholder={translate('screens/kyc', 'YYYY-MM-DD')}
+              full
+              smallLabel
+            />
+
+            <StyledInput
+              name="birthplace"
+              autocomplete="birthplace"
+              label={`${translate('screens/kyc', 'Birthplace')} (${translate(
+                'screens/kyc',
+                'Optional',
+              ).toLowerCase()})`}
+              placeholder={translate('screens/kyc', 'New York, USA')}
+              full
+              smallLabel
+            />
+            <StyledSearchDropdown
+              rootRef={rootRef}
+              name="nationality"
+              autocomplete="nationality"
+              label={translate('screens/kyc', 'Nationality')}
+              placeholder={translate('general/actions', 'Select') + '...'}
+              items={nationalityCountries}
+              labelFunc={(item) => item.name}
+              filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+              matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+              smallLabel
+            />
+          </StyledVerticalStack>
+
+          <StyledVerticalStack gap={2}>
+            <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+              {translate('screens/kyc', 'Identification document')}
+            </p>
+            <StyledDropdown
+              rootRef={rootRef}
+              name="documentType"
+              label={translate('screens/kyc', 'Document type')}
+              placeholder={translate('general/actions', 'Select') + '...'}
+              items={Object.values(DocumentType)}
+              labelFunc={(item) => documentTypeToString(item)}
+              smallLabel
+            />
+            <StyledInput
+              name="documentNumber"
+              label={translate('screens/kyc', 'Document number')}
+              placeholder="12345"
+              full
+              smallLabel
+            />
+            <StyledFileUpload
+              name="file"
+              label={translate('screens/support', 'Document')}
+              placeholder={translate('general/actions', 'Drop files here')}
+              buttonLabel={translate('general/actions', 'Browse')}
+              full
+              smallLabel
+            />
+          </StyledVerticalStack>
+        </StyledVerticalStack>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
         )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUpdating}
+        />
       </StyledVerticalStack>
     </Form>
   );
