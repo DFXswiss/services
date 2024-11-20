@@ -111,7 +111,7 @@ export default function SellInfoScreen(): JSX.Element {
       if (account) {
         setBankAccount(account);
       } else if (!isCreatingAccount) {
-        const ibanIsValid = Validations.Iban(countries).validate(bankAccountParam);
+        const ibanIsValid = Validations.Iban(countries.filter((c) => c.kycAllowed)).validate(bankAccountParam);
         if (ibanIsValid !== true) {
           setErrorMessage(`Invalid IBAN: ${ibanIsValid}`);
           return;

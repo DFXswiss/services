@@ -31,6 +31,7 @@ import {
   Utils,
   Validations,
   isStepDone,
+  useCountry,
   useKyc,
   useSessionContext,
   useUserContext,
@@ -553,7 +554,8 @@ function ContactData({ code, mode, isLoading, step, onDone, showLinkHint }: Edit
 
 function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
-  const { getCountries, setPersonalData } = useKyc();
+  const { setPersonalData } = useKyc();
+  const { getCountries } = useCountry();
   const { countryCode } = useGeoLocation();
 
   const [isCountryLoading, setIsCountryLoading] = useState(true);
@@ -562,7 +564,8 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
   const [countries, setCountries] = useState<Country[]>([]);
 
   useEffect(() => {
-    getCountries(code)
+    getCountries()
+      .then((countries) => countries.filter((c) => c.kycAllowed))
       .then(setCountries)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsCountryLoading(false));
@@ -872,7 +875,7 @@ function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps):
 function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setNationalityData } = useKyc();
-  const { getCountries } = useKyc();
+  const { getCountries } = useCountry();
 
   const [isCountryLoading, setIsCountryLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -880,7 +883,8 @@ function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps):
   const [countries, setCountries] = useState<Country[]>([]);
 
   useEffect(() => {
-    getCountries(code)
+    getCountries()
+      .then((countries) => countries.filter((c) => c.nationalityAllowed))
       .then(setCountries)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsCountryLoading(false));
@@ -1343,7 +1347,8 @@ export interface KycManualIdentFormData {
 
 function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
-  const { getCountries, setManualIdentData } = useKyc();
+  const { setManualIdentData } = useKyc();
+  const { getCountries } = useCountry();
   const { genderTypeToString, documentTypeToString } = useKycHelper();
   const { countryCode } = useGeoLocation();
 
@@ -1353,7 +1358,8 @@ function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.El
   const [countries, setCountries] = useState<Country[]>([]);
 
   useEffect(() => {
-    getCountries(code)
+    getCountries()
+      .then((countries) => countries.filter((c) => c.nationalityAllowed))
       .then(setCountries)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsCountryLoading(false));

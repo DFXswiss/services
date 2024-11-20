@@ -236,7 +236,10 @@ export default function SellScreen(): JSX.Element {
       const account = getAccount(bankAccounts, bankAccount);
       if (account) {
         setVal('bankAccount', account);
-      } else if (!isCreatingAccount && Validations.Iban(countries).validate(bankAccount) === true) {
+      } else if (
+        !isCreatingAccount &&
+        Validations.Iban(countries.filter((c) => c.kycAllowed)).validate(bankAccount) === true
+      ) {
         setIsCreatingAccount(true);
         createAccount({ iban: bankAccount })
           .then((b) => setVal('bankAccount', b))

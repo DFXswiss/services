@@ -2,6 +2,7 @@ import {
   Fiat,
   InfoBanner,
   Language,
+  useCountry,
   useFiatContext,
   useKyc,
   useLanguage,
@@ -74,7 +75,8 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     changeCurrency: changeUserCurrency,
   } = useUserContext();
   const { language: storedLanguage, infoBanner: storedInfoBanner } = useStore();
-  const { getCountries, setData } = useKyc();
+  const { getCountries } = useCountry();
+  const { setData } = useKyc();
   const {
     lang,
     mail,
@@ -138,34 +140,36 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
       setProcessingKycData(false);
       return;
     }
-    getCountries(user.kyc.hash).then((cs) => {
-      setData({
-        mail,
-        accountType,
-        firstName,
-        lastName,
-        phone,
-        address: {
-          street: street,
-          houseNumber: houseNumber,
-          city: city,
-          zip: zip,
-          country: cs.find((c) => c.symbol === country || c.name === country),
-        },
-        organizationName,
-        organizationAddress: organizationName && {
-          street: organizationStreet,
-          houseNumber: organizationHouseNumber,
-          city: organizationCity,
-          zip: organizationZip,
-          country: cs.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
-        },
-      } as UserData)
-        .catch(() => {
-          // Ignore API errors
-        })
-        .finally(() => setProcessingKycData(false));
-    });
+    getCountries()
+      .then((countries) => countries.filter((c) => c.kycAllowed))
+      .then((cs) => {
+        setData({
+          mail,
+          accountType,
+          firstName,
+          lastName,
+          phone,
+          address: {
+            street: street,
+            houseNumber: houseNumber,
+            city: city,
+            zip: zip,
+            country: cs.find((c) => c.symbol === country || c.name === country),
+          },
+          organizationName,
+          organizationAddress: organizationName && {
+            street: organizationStreet,
+            houseNumber: organizationHouseNumber,
+            city: organizationCity,
+            zip: organizationZip,
+            country: cs.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
+          },
+        } as UserData)
+          .catch(() => {
+            // Ignore API errors
+          })
+          .finally(() => setProcessingKycData(false));
+      });
   }, [
     user,
     mail,

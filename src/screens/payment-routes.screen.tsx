@@ -621,6 +621,7 @@ function PaymentLinkForm({ state: { step, paymentLinkId }, setStep, onClose }: P
 
   useEffect(() => {
     getCountries()
+      .then((countries) => countries.filter((c) => c.kycAllowed))
       .then(setCountries)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsCountryLoading(false));
