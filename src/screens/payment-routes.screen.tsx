@@ -70,7 +70,6 @@ interface FormData {
   configMinCompletionStatus: PaymentQuoteStatus;
   configDisplayQr: boolean;
   configPaymentTimeout: number;
-  configFee: number;
   configTimeout: number;
   paymentMode: PaymentLinkPaymentMode;
   paymentAmount: string;
@@ -204,7 +203,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
               ),
               configMinCompletionStatus: userPaymentLinksConfig?.minCompletionStatus,
               configDisplayQr: userPaymentLinksConfig?.displayQr,
-              configFee: userPaymentLinksConfig?.fee,
               configPaymentTimeout: userPaymentLinksConfig?.paymentTimeout,
             },
           }}
@@ -825,7 +823,6 @@ function PaymentLinkForm({
           configStandards: toConfigStandards(prefilledPaymentConfig.standards, prefilledPaymentConfig.blockchains),
           configMinCompletionStatus: prefilledPaymentConfig.minCompletionStatus,
           configDisplayQr: prefilledPaymentConfig.displayQr,
-          configFee: prefilledPaymentConfig.fee,
           configPaymentTimeout: prefilledPaymentConfig.paymentTimeout,
         });
       }
@@ -890,8 +887,7 @@ function PaymentLinkForm({
           blockchains: blockchains,
           minCompletionStatus: data.configMinCompletionStatus,
           displayQr: data.configDisplayQr,
-          fee: data.configFee,
-          paymentTimeout: data.configPaymentTimeout,
+          paymentTimeout: Number(data.configPaymentTimeout),
         };
       }
 
@@ -968,7 +964,6 @@ function PaymentLinkForm({
     data.configStandards?.length ||
       data.configMinCompletionStatus ||
       data.configDisplayQr !== undefined ||
-      data.configFee !== undefined ||
       data.configPaymentTimeout !== undefined,
   );
 
@@ -1176,15 +1171,6 @@ function PaymentLinkForm({
 
               <StyledInput
                 type="number"
-                name="configFee"
-                label={translate('screens/payment', 'Fee')}
-                smallLabel
-                placeholder={'0.002'}
-                full
-              />
-
-              <StyledInput
-                type="number"
                 name="configPaymentTimeout"
                 label={translate('screens/payment', 'Payment timeout (seconds)')}
                 smallLabel
@@ -1257,7 +1243,6 @@ function PaymentLinkForm({
                           ? translate('general/actions', data.configDisplayQr ? 'Yes' : 'No')
                           : naString,
                     },
-                    { label: translate('screens/payment', 'Fee'), text: data.configFee?.toString() ?? naString },
                     {
                       label: translate('screens/payment', 'Payment timeout (seconds)'),
                       text: data.configPaymentTimeout?.toString() ?? naString,
@@ -1340,7 +1325,6 @@ function PaymentLinkForm({
                         configStandards: undefined,
                         configMinCompletionStatus: undefined,
                         configDisplayQr: undefined,
-                        configFee: undefined,
                         configPaymentTimeout: undefined,
                       }),
                     });
