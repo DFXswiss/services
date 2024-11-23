@@ -39,10 +39,10 @@ export default function ConnectTrezor(props: Props): JSX.Element {
   const [selectedType, setSelectedType] = useState<BitcoinAddressType>();
   const [selectedAccountIndex, setSelectedAccountIndex] = useState<number>();
 
-  async function getAccount(_: Blockchain, isReconnect: boolean): Promise<Account> {
+  async function getAccount(wallet: WalletType, _b: Blockchain, isReconnect: boolean): Promise<Account> {
     if (isReconnect && session?.address) return { address: session.address };
 
-    const address = await connect(props.wallet, defaultAddressType);
+    const address = await connect(wallet as TrezorWallet, defaultAddressType);
     setAddresses([address]);
 
     return createAddressPromise();
@@ -167,7 +167,7 @@ function Content({
                 labelFunc={(item) => item.toString()}
                 full
                 disabled={addressLoading}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 label={translate('screens/home', 'Account index')}
               />
               <StyledDropdown<Address>
@@ -178,7 +178,7 @@ function Content({
                 descriptionFunc={(item) => `Index ${item.index}`}
                 full
                 disabled={addressLoading}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 label={translate('screens/home', 'Address index')}
               />
 

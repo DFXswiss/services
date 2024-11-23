@@ -30,9 +30,11 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
+import { PrivateAssetHint } from 'src/components/private-asset-hint';
 import { useWindowContext } from 'src/contexts/window.context';
 import useDebounce from 'src/hooks/debounce.hook';
 import { blankedAddress } from 'src/util/utils';
@@ -84,7 +86,7 @@ interface ValidatedData extends SwapPaymentInfo {
 }
 
 export default function SwapScreen(): JSX.Element {
-  useAddressGuard('/connect');
+  useAddressGuard('/login');
 
   const { translate, translateError } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
@@ -105,6 +107,7 @@ export default function SwapScreen(): JSX.Element {
     blockchain,
     hideTargetSelection,
     externalTransactionId,
+    flags,
     setParams,
   } = useAppParams();
   const { receiveFor } = useSwap();
@@ -152,6 +155,8 @@ export default function SwapScreen(): JSX.Element {
     Blockchain.ARBITRUM,
     Blockchain.OPTIMISM,
     Blockchain.POLYGON,
+    Blockchain.BASE,
+    Blockchain.BINANCE_SMART_CHAIN,
   ];
 
   const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
@@ -523,7 +528,7 @@ export default function SwapScreen(): JSX.Element {
                     <StyledSearchDropdown<Asset>
                       rootRef={rootRef}
                       name="sourceAsset"
-                      placeholder={translate('general/actions', 'Select...')}
+                      placeholder={translate('general/actions', 'Select') + '...'}
                       items={sourceAssets}
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
@@ -559,7 +564,7 @@ export default function SwapScreen(): JSX.Element {
                       <StyledSearchDropdown<Asset>
                         rootRef={rootRef}
                         name="targetAsset"
-                        placeholder={translate('general/actions', 'Select...')}
+                        placeholder={translate('general/actions', 'Select') + '...'}
                         items={targetAssets}
                         labelFunc={(item) => item.name}
                         balanceFunc={findBalanceString}
@@ -610,51 +615,65 @@ export default function SwapScreen(): JSX.Element {
                     </StyledVerticalStack>
                   )}
 
-                  {paymentInfo && !kycError && !errorMessage && !customAmountError?.hideInfos && (
-                    <>
-                      <ExchangeRate
-                        exchangeRate={paymentInfo.exchangeRate}
-                        rate={paymentInfo.rate}
-                        fees={paymentInfo.fees}
-                        feeCurrency={paymentInfo.sourceAsset}
-                        from={paymentInfo.sourceAsset}
-                        to={paymentInfo.targetAsset}
-                        steps={paymentInfo.priceSteps}
-                        amountIn={paymentInfo.amount}
-                        amountOut={paymentInfo.estimatedAmount}
-                        type="buy"
+                  {paymentInfo &&
+                    !kycError &&
+                    !errorMessage &&
+                    !customAmountError?.hideInfos &&
+                    ((selectedSourceAsset?.category === AssetCategory.PRIVATE ||
+                      selectedTargetAsset?.category === AssetCategory.PRIVATE) &&
+                    !flags?.includes('private') ? (
+                      <PrivateAssetHint
+                        asset={
+                          selectedSourceAsset?.category === AssetCategory.PRIVATE
+                            ? selectedSourceAsset
+                            : selectedTargetAsset
+                        }
                       />
-
-                      <PaymentInformationContent info={paymentInfo} infoText={getPaymentInfoString(paymentInfo)} />
-
-                      <SanctionHint />
-
-                      <div className="w-full leading-none">
-                        <StyledLink
-                          label={translate(
-                            'screens/payment',
-                            'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
-                          )}
-                          url={process.env.REACT_APP_TNC_URL}
-                          small
-                          dark
+                    ) : (
+                      <>
+                        <ExchangeRate
+                          exchangeRate={paymentInfo.exchangeRate}
+                          rate={paymentInfo.rate}
+                          fees={paymentInfo.fees}
+                          feeCurrency={paymentInfo.sourceAsset}
+                          from={paymentInfo.sourceAsset}
+                          to={paymentInfo.targetAsset}
+                          steps={paymentInfo.priceSteps}
+                          amountIn={paymentInfo.amount}
+                          amountOut={paymentInfo.estimatedAmount}
+                          type="buy"
                         />
-                        <StyledButton
-                          width={StyledButtonWidth.FULL}
-                          label={translate(
-                            'screens/sell',
-                            canSendTransaction()
-                              ? 'Complete transaction in your wallet'
-                              : 'Click here once you have issued the transaction',
-                          )}
-                          onClick={() => handleNext(paymentInfo)}
-                          caps={false}
-                          className="mt-4"
-                          isLoading={isProcessing}
-                        />
-                      </div>
-                    </>
-                  )}
+
+                        <PaymentInformationContent info={paymentInfo} infoText={getPaymentInfoString(paymentInfo)} />
+
+                        <SanctionHint />
+
+                        <div className="w-full leading-none">
+                          <StyledLink
+                            label={translate(
+                              'screens/payment',
+                              'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                            )}
+                            url={process.env.REACT_APP_TNC_URL}
+                            small
+                            dark
+                          />
+                          <StyledButton
+                            width={StyledButtonWidth.FULL}
+                            label={translate(
+                              'screens/sell',
+                              canSendTransaction()
+                                ? 'Complete transaction in your wallet'
+                                : 'Click here once you have issued the transaction',
+                            )}
+                            onClick={() => handleNext(paymentInfo)}
+                            caps={false}
+                            className="mt-4"
+                            isLoading={isProcessing}
+                          />
+                        </div>
+                      </>
+                    ))}
                 </>
               )}
             </StyledVerticalStack>

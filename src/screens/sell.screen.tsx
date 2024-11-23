@@ -18,7 +18,6 @@ import {
   useFiat,
   useSell,
   useSessionContext,
-  useUserContext,
 } from '@dfx.swiss/react';
 import {
   AssetIconVariant,
@@ -42,6 +41,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Controller, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { AddressSwitch } from 'src/components/payment/address-switch';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
+import { PrivateAssetHint } from 'src/components/private-asset-hint';
 import { useWindowContext } from 'src/contexts/window.context';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
@@ -94,9 +94,9 @@ interface ValidatedData extends SellPaymentInfo {
 }
 
 export default function SellScreen(): JSX.Element {
-  useAddressGuard();
+  useAddressGuard('/login');
 
-  const { translate, translateError, currency: prefCurrency } = useSettingsContext();
+  const { allowedCountries, translate, translateError, currency: prefCurrency } = useSettingsContext();
   const { isInitialized, closeServices } = useAppHandlingContext();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
@@ -117,13 +117,13 @@ export default function SellScreen(): JSX.Element {
     bankAccount,
     blockchain,
     externalTransactionId,
+    flags,
     setParams,
     hideTargetSelection,
     availableBlockchains,
   } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
-  const { countries } = useUserContext();
   const { toString } = useBlockchain();
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -234,14 +234,14 @@ export default function SellScreen(): JSX.Element {
       const account = getAccount(bankAccounts, bankAccount);
       if (account) {
         setVal('bankAccount', account);
-      } else if (!isCreatingAccount && Validations.Iban(countries).validate(bankAccount) === true) {
+      } else if (!isCreatingAccount && Validations.Iban(allowedCountries).validate(bankAccount) === true) {
         setIsCreatingAccount(true);
         createAccount({ iban: bankAccount })
           .then((b) => setVal('bankAccount', b))
           .finally(() => setIsCreatingAccount(false));
       }
     }
-  }, [bankAccount, getAccount, bankAccounts, countries]);
+  }, [bankAccount, getAccount, bankAccounts, allowedCountries]);
 
   useEffect(() => {
     if (selectedBankAccount && selectedBankAccount.preferredCurrency)
@@ -564,7 +564,7 @@ export default function SellScreen(): JSX.Element {
                     <StyledSearchDropdown<Asset>
                       rootRef={rootRef}
                       name="asset"
-                      placeholder={translate('general/actions', 'Select...')}
+                      placeholder={translate('general/actions', 'Select') + '...'}
                       items={availableAssets}
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
@@ -609,7 +609,7 @@ export default function SellScreen(): JSX.Element {
                     <StyledDropdown<Fiat>
                       rootRef={rootRef}
                       name="currency"
-                      placeholder={translate('general/actions', 'Select...')}
+                      placeholder={translate('general/actions', 'Select') + '...'}
                       items={currencies}
                       labelFunc={(item) => item.name}
                       descriptionFunc={(item) => toDescription(item)}
@@ -690,54 +690,60 @@ export default function SellScreen(): JSX.Element {
                     </StyledVerticalStack>
                   )}
 
-                  {paymentInfo && !kycError && !errorMessage && !customAmountError?.hideInfos && (
-                    <>
-                      <ExchangeRate
-                        exchangeRate={1 / paymentInfo.exchangeRate}
-                        rate={1 / paymentInfo.rate}
-                        fees={paymentInfo.feesTarget}
-                        feeCurrency={paymentInfo.currency}
-                        from={paymentInfo.currency}
-                        to={paymentInfo.asset}
-                        steps={paymentInfo.priceSteps}
-                        amountIn={paymentInfo.amount}
-                        amountOut={paymentInfo.estimatedAmount}
-                        type="sell"
-                      />
-
-                      <PaymentInformationContent
-                        info={paymentInfo}
-                        infoText={getPaymentInfoString(paymentInfo, selectedBankAccount)}
-                      />
-
-                      <SanctionHint />
-
-                      <div className="w-full leading-none">
-                        <StyledLink
-                          label={translate(
-                            'screens/payment',
-                            'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
-                          )}
-                          url={process.env.REACT_APP_TNC_URL}
-                          small
-                          dark
+                  {paymentInfo &&
+                    !kycError &&
+                    !errorMessage &&
+                    !customAmountError?.hideInfos &&
+                    (selectedAsset?.category === AssetCategory.PRIVATE && !flags?.includes('private') ? (
+                      <PrivateAssetHint asset={selectedAsset} />
+                    ) : (
+                      <>
+                        <ExchangeRate
+                          exchangeRate={1 / paymentInfo.exchangeRate}
+                          rate={1 / paymentInfo.rate}
+                          fees={paymentInfo.feesTarget}
+                          feeCurrency={paymentInfo.currency}
+                          from={paymentInfo.currency}
+                          to={paymentInfo.asset}
+                          steps={paymentInfo.priceSteps}
+                          amountIn={paymentInfo.amount}
+                          amountOut={paymentInfo.estimatedAmount}
+                          type="sell"
                         />
-                        <StyledButton
-                          width={StyledButtonWidth.FULL}
-                          label={translate(
-                            'screens/sell',
-                            canSendTransaction()
-                              ? 'Complete transaction in your wallet'
-                              : 'Click here once you have issued the transaction',
-                          )}
-                          onClick={() => handleNext(paymentInfo)}
-                          caps={false}
-                          className="mt-4"
-                          isLoading={isProcessing}
+
+                        <PaymentInformationContent
+                          info={paymentInfo}
+                          infoText={getPaymentInfoString(paymentInfo, selectedBankAccount)}
                         />
-                      </div>
-                    </>
-                  )}
+
+                        <SanctionHint />
+
+                        <div className="w-full leading-none">
+                          <StyledLink
+                            label={translate(
+                              'screens/payment',
+                              'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                            )}
+                            url={process.env.REACT_APP_TNC_URL}
+                            small
+                            dark
+                          />
+                          <StyledButton
+                            width={StyledButtonWidth.FULL}
+                            label={translate(
+                              'screens/sell',
+                              canSendTransaction()
+                                ? 'Complete transaction in your wallet'
+                                : 'Click here once you have issued the transaction',
+                            )}
+                            onClick={() => handleNext(paymentInfo)}
+                            caps={false}
+                            className="mt-4"
+                            isLoading={isProcessing}
+                          />
+                        </div>
+                      </>
+                    ))}
                 </>
               )}
             </StyledVerticalStack>

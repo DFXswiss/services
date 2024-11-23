@@ -225,7 +225,7 @@ export default function AccountScreen(): JSX.Element {
               <Form control={control} errors={errors}>
                 <StyledDropdown
                   name="address"
-                  placeholder={translate('general/actions', 'Select...')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
                   items={user.addresses.sort(sortAddressesByBlockchain)}
                   labelFunc={(item) => blankedAddress(item.address, { width })}
                   descriptionFunc={(item) => item.label ?? item.wallet}

@@ -56,7 +56,7 @@ export default function SupportScreen(): JSX.Element {
             icon={<FaTelegram className="h-auto w-6" />}
           />
           <StyledButtonTile
-            title={translate('screens/support', 'Support ticket')}
+            title={translate('screens/support', 'Support tickets')}
             description={translate(
               'screens/support',
               'If you have a specific question or problem, you can submit a ticket here.',

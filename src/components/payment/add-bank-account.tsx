@@ -1,11 +1,4 @@
-import {
-  BankAccount,
-  CreateBankAccount,
-  Utils,
-  Validations,
-  useBankAccountContext,
-  useUserContext,
-} from '@dfx.swiss/react';
+import { BankAccount, CreateBankAccount, Utils, Validations, useBankAccountContext } from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
@@ -35,7 +28,7 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
     formState: { errors, isValid },
   } = useForm<CreateBankAccount>({ mode: 'onTouched' });
   const { createAccount, isAccountLoading } = useBankAccountContext();
-  const { countries } = useUserContext();
+  const { allowedCountries } = useSettingsContext();
 
   async function createBankAccount(newAccount: CreateBankAccount): Promise<void> {
     setError(undefined);
@@ -45,7 +38,7 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
   }
 
   const rules = Utils.createRules({
-    iban: [Validations.Required, Validations.Iban(countries)],
+    iban: [Validations.Required, Validations.Iban(allowedCountries)],
   });
 
   return (

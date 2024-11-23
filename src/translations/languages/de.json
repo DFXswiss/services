@@ -1,6 +1,5 @@
 {
   "general/actions": {
-    "Select...": "Auswählen...",
     "Select": "Auswählen",
     "Search...": "Suchen...",
     "Start": "Starten",
@@ -39,7 +38,9 @@
     "Confirm refund": "Rückerstattung bestätigen",
     "Request refund": "Rückerstattung beantragen",
     "Copy Link": "Link kopieren",
-    "Open invoice": "Rechnung öffnen"
+    "Open invoice": "Rechnung öffnen",
+    "Create ticket": "Ticket erstellen",
+    "View file": "Datei anzeigen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -50,6 +51,7 @@
     "Only XML files are allowed": "Nur XML-Dateien sind erlaubt",
     "Only JSON files are allowed": "Nur JSON-Dateien sind erlaubt",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Erlaubte Formate: PDF, JPG, JPEG, PNG",
+    "Invalid date format": "Ungültiges Datumsformat",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.",
     "invoice": "DFX kennt keinen Empfänger mit dem Namen <strong>{{recipient}}</strong>. Dieser Service kann nur für Empfänger verwendet werden, die ein aktives Konto bei DFX haben und für den Rechnungsservice aktiviert sind. Solltest Du dich als Empfänger bei DFX registrieren wollen, dann melde Dich beim Support unter <link>{{supportLink}}</link>."
@@ -95,6 +97,8 @@
 
     "Female": "Weiblich",
     "Male": "Männlich",
+
+    "Birthday": "Geburtstag",
 
     "Passport": "Pass",
     "ID card": "ID-Karte",
@@ -178,7 +182,14 @@
     "My account": "Mein Konto",
 
     "Upload your SEPA file here": "Lade Deine SEPA-Datei hier hoch",
-    "Uploaded": "Hochgeladen"
+    "Uploaded": "Hochgeladen",
+
+    "KYC file": "KYC Datei",
+    "Name check": "Namensprüfung",
+    "User information": "Benutzerinformationen",
+    "User notes": "Benutzernotizen",
+    "Transaction notes": "Transaktionsnotizen",
+    "Stock register": "Aktienregister"
   },
   "screens/2fa": {
     "2FA": "2FA",
@@ -397,6 +408,7 @@
     "Transactions": "Transaktionen",
     "Transaction": "Transaktion",
     "Your Transactions": "Deine Transaktionen",
+    "Loading transaction...": "Transaktion wird geladen...",
     "No transactions found": "Keine Transaktionen gefunden",
     "My transaction is missing": "Meine Transaktion fehlt",
     "Transaction status": "Status der Transaktion",
@@ -578,6 +590,10 @@
     "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Dies ist eine Mehrkonten-IBAN und kann nicht als persönliches Konto hinzugefügt werden. Bitte sende die Bestätigung der Banktransaktion als PDF an support@dfx.swiss."
   },
   "screens/support": {
+    "Support": "Support",
+    "Support tickets": "Support-Tickets",
+    "View tickets": "Tickets anzeigen",
+
     "Support issue": "Supportanfrage",
     "The issue has been successfully submitted. You will be contacted by email.": "Die Anfrage wurde erfolgreich eingereicht. Du wirst per E-Mail kontaktiert.",
 
@@ -605,7 +621,7 @@
     "Select the transaction for which you would like to create an issue.": "Wähle die Transaktion aus, für die Du eine Anfrage erstellen möchtest.",
     "Please provide us with all relevant information about the transaction you are missing.": "Bitte gib uns alle relevanten Informationen über die fehlende Transaktion an.",
     "Sender IBAN": "Absender-IBAN",
-    "Receiver IBAN": "Empfängers-IBAN",
+    "Receiver IBAN": "Empfänger-IBAN",
     "Date of the transaction": "Datum der Transaktion",
 
     "Telegram support": "Telegram-Support",
