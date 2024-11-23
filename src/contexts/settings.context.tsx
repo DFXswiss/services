@@ -123,7 +123,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, []);
 
   useEffect(() => {
-    getCountries().then(setCountries);
+    getCountries().then((countries) => setCountries(countries.sort((a, b) => a.name.localeCompare(b.name))));
   }, []);
 
   useEffect(() => {
