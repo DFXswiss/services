@@ -39,7 +39,8 @@
     "Request refund": "Richiedi un rimborso",
     "Copy Link": "Copia il link",
     "Open invoice": "Apri la fattura",
-    "Create ticket": "Crea un ticket"
+    "Create ticket": "Crea un ticket",
+    "View file": "Visualizza il file"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -181,7 +182,14 @@
     "My account": "Il mio account",
 
     "Upload your SEPA file here": "Carica il tuo file SEPA qui",
-    "Uploaded": "Caricato"
+    "Uploaded": "Caricato",
+
+    "KYC file": "KYC-Datei",
+    "Name check": "Controllo del nome",
+    "User information": "Informazioni utente",
+    "User notes": "Note utente",
+    "Transaction notes": "Note di transazione",
+    "Stock register": "Registro azionario"
   },
   "screens/2fa": {
     "2FA": "2FA",
