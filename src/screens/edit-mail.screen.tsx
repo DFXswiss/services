@@ -27,6 +27,7 @@ export default function EditMailScreen(): JSX.Element {
   const [mailVerificationStep, setMailVerificationStep] = useState(false);
   const [tokenInvalid, setTokenInvalid] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showLinkHint, setShowLinkHint] = useState(false);
   const [error, setError] = useState<string>();
 
   useEffect(() => {
@@ -44,7 +45,17 @@ export default function EditMailScreen(): JSX.Element {
   async function onSubmit(newEmail: string) {
     return updateMail(newEmail)
       .then(() => setMailVerificationStep(true))
-      .catch((e: ApiError) => setError(e.message));
+      .catch((e: ApiError) => {
+        if (e.statusCode === 409 && e.message?.includes('exists')) {
+          if (e.message.includes('merge')) {
+            setShowLinkHint(true);
+          } else {
+            setError(e.message);
+          }
+        } else {
+          setError(e.message);
+        }
+      });
   }
 
   async function onVerify(data: { token: string }) {
@@ -54,7 +65,15 @@ export default function EditMailScreen(): JSX.Element {
 
     verifyMail(data.token)
       .then(() => navigate('/settings'))
-      .catch((e: ApiError) => (e.statusCode === 403 ? setTokenInvalid(true) : setError(e.message ?? 'Unknown error')))
+      .catch((e: ApiError) =>
+        e.statusCode === 403
+          ? setTokenInvalid(true)
+          : e.statusCode === 409 && e.message?.includes('exists')
+          ? e.message.includes('merge')
+            ? setShowLinkHint(true)
+            : setError(e.message ?? 'Unknown error')
+          : setError(e.message ?? 'Unknown error'),
+      )
       .finally(() => setIsSubmitting(false));
   }
 
@@ -65,7 +84,22 @@ export default function EditMailScreen(): JSX.Element {
   return (
     <Layout title={translate('general/actions', 'Edit email')}>
       <StyledVerticalStack gap={4} full center>
-        {checking2fa ? (
+        {showLinkHint ? (
+          <StyledVerticalStack gap={6} full>
+            <p className="text-dfxGray-700">
+              {translate('screens/kyc', 'It looks like you already have an account with DFX.')}{' '}
+              {translate(
+                'screens/kyc',
+                'We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.',
+              )}
+            </p>
+            <StyledButton
+              width={StyledButtonWidth.MIN}
+              label={translate('general/actions', 'OK')}
+              onClick={() => navigate('/account')}
+            />
+          </StyledVerticalStack>
+        ) : checking2fa ? (
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         ) : !mailVerificationStep ? (
           <EditOverlay

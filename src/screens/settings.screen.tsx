@@ -351,7 +351,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
   const { width } = useWindowContext();
   const { translate } = useSettingsContext();
   const { setWallet } = useWalletContext();
-  const { deleteAddress, deleteAccount, renameAddress, updateMail, updatePhone } = useUserContext();
+  const { deleteAddress, deleteAccount, renameAddress, updatePhone } = useUserContext();
 
   switch (type) {
     case OverlayType.DELETE_ADDRESS:
