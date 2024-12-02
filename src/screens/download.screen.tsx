@@ -1,4 +1,4 @@
-import { Utils, Validations } from '@dfx.swiss/react';
+import { useApi, Utils, Validations } from '@dfx.swiss/react';
 import { Form, StyledButton, StyledButtonWidth, StyledInput, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -7,11 +7,12 @@ import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
 
 interface FormData {
-  userIds: string;
+  userDataIds: string;
 }
 
 export default function DownloadScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
+  const { call } = useApi();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -23,11 +24,25 @@ export default function DownloadScreen(): JSX.Element {
   } = useForm<FormData>({ mode: 'onChange' });
 
   async function onSubmit(data: FormData) {
-    // const file = data.file[0];
+    setIsLoading(true);
+
+    try {
+      const response = await call({
+        url: `userData/download`,
+        method: 'POST',
+        data: { userDataIds: data.userDataIds.split(',').map((id) => Number(id)) },
+      });
+
+      console.log('Download response: ', response);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const rules = Utils.createRules({
-    userIds: [
+    userDataIds: [
       Validations.Required,
       Validations.Custom((ids) => ids.split(',').every((id: string) => !isNaN(Number(id)))),
     ],
@@ -45,7 +60,7 @@ export default function DownloadScreen(): JSX.Element {
         <StyledVerticalStack gap={6} full center>
           <StyledVerticalStack gap={2} full>
             <StyledInput
-              name="userIds"
+              name="userDataIds"
               type="text"
               label={translate('screens/kyc', 'User IDs')}
               placeholder={translate('screens/kyc', '1234, 5678, 9012')}
