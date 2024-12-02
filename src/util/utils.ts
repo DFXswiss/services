@@ -1,4 +1,4 @@
-import { UserAddress } from '@dfx.swiss/react';
+import { KycFile, UserAddress } from '@dfx.swiss/react';
 
 export function isDefined<T>(item: T | undefined): item is T {
   return item != null;
@@ -68,6 +68,23 @@ export function openImageFromString(image: string, contentType: string) {
   const imageBlob = new Blob([Uint8Array.from(atob(image), (c) => c.charCodeAt(0))], { type: contentType });
   const imageUrl = URL.createObjectURL(imageBlob);
   window.open(imageUrl);
+}
+
+export function handleOpenFile(file: KycFile, setErrorMessage: (message: string) => void) {
+  const { content, contentType } = file;
+  const [fileType] = contentType.split('/');
+
+  if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
+    setErrorMessage('Invalid file type');
+  }
+
+  const base64Data = Buffer.from(content.data).toString('base64');
+
+  if (fileType === 'application') {
+    openPdfFromString(base64Data);
+  } else if (fileType === 'image') {
+    openImageFromString(base64Data, contentType);
+  }
 }
 
 export function sortAddressesByBlockchain(a: UserAddress, b: UserAddress): number {
