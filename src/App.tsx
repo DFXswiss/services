@@ -138,7 +138,7 @@ export const Routes = [
     isKycScreen: true,
   },
   {
-    path: '/download',
+    path: '/file/download',
     element: withSuspense(<DownloadScreen />),
     isKycScreen: true,
   },
