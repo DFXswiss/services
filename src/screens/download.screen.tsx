@@ -1,4 +1,4 @@
-import { useApi, Utils, Validations } from '@dfx.swiss/react';
+import { useAuthContext, Utils, Validations } from '@dfx.swiss/react';
 import { Form, StyledButton, StyledButtonWidth, StyledInput, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -12,7 +12,7 @@ interface FormData {
 
 export default function DownloadScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
-  const { call } = useApi();
+  const { authenticationToken } = useAuthContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -27,12 +27,18 @@ export default function DownloadScreen(): JSX.Element {
     setIsLoading(true);
 
     try {
-      const response = await call({
-        url: `userData/download`,
+      const response = fetch(`${process.env.REACT_APP_API_URL}/v1/userData/download`, {
         method: 'POST',
-        data: { userDataIds: data.userDataIds.split(',').map((id) => Number(id)) },
-        noJsonResponse: true,
-      });
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authenticationToken ? `Bearer ${authenticationToken}` : '',
+        },
+        body: JSON.stringify({ userDataIds: data.userDataIds.split(',').map((id) => Number(id)) }),
+      })
+        .then((response) => response.text())
+        .catch((e) => {
+          setError(e.message);
+        });
 
       const link = document.createElement('a');
       link.href = `data:application/zip;base64,${response}`;
