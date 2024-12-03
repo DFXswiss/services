@@ -31,9 +31,13 @@ export default function DownloadScreen(): JSX.Element {
         url: `userData/download`,
         method: 'POST',
         data: { userDataIds: data.userDataIds.split(',').map((id) => Number(id)) },
+        noJsonResponse: true,
       });
 
-      console.log('Download response: ', response);
+      const link = document.createElement('a');
+      link.href = `data:application/zip;base64,${response}`;
+      link.download = 'userData.zip';
+      link.click();
     } catch (e: any) {
       setError(e.message);
     } finally {
