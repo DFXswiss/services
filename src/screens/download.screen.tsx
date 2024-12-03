@@ -5,12 +5,15 @@ import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useAdminGuard } from 'src/hooks/guard.hook';
 
 interface FormData {
   userDataIds: string;
 }
 
 export default function DownloadScreen(): JSX.Element {
+  useAdminGuard();
+
   const { translate, translateError } = useSettingsContext();
   const { authenticationToken } = useAuthContext();
 
@@ -27,7 +30,7 @@ export default function DownloadScreen(): JSX.Element {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/v1/userData/download`, {
+      fetch(`${process.env.REACT_APP_API_URL}/v1/userData/download`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -36,14 +39,15 @@ export default function DownloadScreen(): JSX.Element {
         body: JSON.stringify({ userDataIds: data.userDataIds.split(',').map((id) => Number(id)) }),
       })
         .then((response) => response.text())
+        .then((response) => {
+          const link = document.createElement('a');
+          link.href = `data:application/zip;base64,${response}`;
+          link.download = 'userData.zip';
+          link.click();
+        })
         .catch((e) => {
           setError(e.message);
         });
-
-      const link = document.createElement('a');
-      link.href = `data:application/zip;base64,${response}`;
-      link.download = 'userData.zip';
-      link.click();
     } catch (e: any) {
       setError(e.message);
     } finally {
