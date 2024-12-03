@@ -15,7 +15,7 @@ import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
 import { FileTypeLabels } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { openImageFromString, openPdfFromString } from 'src/util/utils';
+import { handleOpenFile } from 'src/util/utils';
 
 export default function KycFileScreen(): JSX.Element {
   const { translate } = useSettingsContext();
@@ -25,6 +25,8 @@ export default function KycFileScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [file, setFile] = useState<KycFile>();
+
+  const show = new URLSearchParams(window.location.search).has('show');
 
   useEffect(() => {
     if (kycFileId) {
@@ -40,11 +42,17 @@ export default function KycFileScreen(): JSX.Element {
     }
   }, [kycFileId]);
 
+  useEffect(() => {
+    if (show && file) {
+      handleOpenFile(file, setError, false);
+    }
+  }, [show, file]);
+
   return (
     <Layout title={translate('screens/kyc', 'KYC file')}>
       {error ? (
         <ErrorHint message={error} />
-      ) : isLoading || !file ? (
+      ) : show || isLoading || !file ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <FilePreview file={file} setErrorMessage={setError} />
@@ -61,24 +69,6 @@ interface FilePreviewProps {
 function FilePreview({ file, setErrorMessage }: FilePreviewProps): JSX.Element {
   const { translate } = useSettingsContext();
 
-  const { content, contentType } = file;
-  const [fileType] = contentType.split('/');
-
-  if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
-    setErrorMessage('Invalid file type');
-    return <></>;
-  }
-
-  const base64Data = Buffer.from(content.data).toString('base64');
-
-  const handleOpenFile = () => {
-    if (fileType === 'application') {
-      openPdfFromString(base64Data);
-    } else if (fileType === 'image') {
-      openImageFromString(base64Data, contentType);
-    }
-  };
-
   return (
     <StyledVerticalStack full center gap={2}>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
@@ -94,7 +84,7 @@ function FilePreview({ file, setErrorMessage }: FilePreviewProps): JSX.Element {
       </StyledDataTable>
       <StyledButton
         width={StyledButtonWidth.FULL}
-        onClick={handleOpenFile}
+        onClick={() => handleOpenFile(file, setErrorMessage)}
         label={translate('general/actions', 'View file')}
       ></StyledButton>
     </StyledVerticalStack>

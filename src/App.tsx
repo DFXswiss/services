@@ -24,6 +24,7 @@ const BuySuccessScreen = lazy(() => import('./screens/buy-success.screen'));
 const BuyScreen = lazy(() => import('./screens/buy.screen'));
 const KycRedirectScreen = lazy(() => import('./screens/kyc-redirect.screen'));
 const KycFileScreen = lazy(() => import('./screens/kyc-file.screen'));
+const DownloadScreen = lazy(() => import('./screens/download.screen'));
 const KycScreen = lazy(() => import('./screens/kyc.screen'));
 const LinkScreen = lazy(() => import('./screens/link.screen'));
 const PaymentRoutesScreen = lazy(() => import('./screens/payment-routes.screen'));
@@ -132,7 +133,12 @@ export const Routes = [
     isKycScreen: true,
   },
   {
-    path: '/kyc/file/:id',
+    path: '/file/download',
+    element: withSuspense(<DownloadScreen />),
+    isKycScreen: true,
+  },
+  {
+    path: '/file/:id',
     element: withSuspense(<KycFileScreen />),
     isKycScreen: true,
   },
