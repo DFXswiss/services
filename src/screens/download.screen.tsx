@@ -48,7 +48,7 @@ export default function DownloadScreen(): JSX.Element {
   const rules = Utils.createRules({
     userDataIds: [
       Validations.Required,
-      Validations.Custom((ids) => ids.split(',').every((id: string) => !isNaN(Number(id)))),
+      Validations.Custom((ids) => (ids.split(',').every((id: string) => !isNaN(Number(id))) ? true : 'pattern')),
     ],
   });
 
@@ -66,7 +66,7 @@ export default function DownloadScreen(): JSX.Element {
             <StyledInput
               name="userDataIds"
               type="text"
-              label={translate('screens/kyc', 'User IDs')}
+              label={translate('screens/kyc', 'UserData IDs')}
               placeholder={translate('screens/kyc', '1234, 5678, 9012')}
             />
           </StyledVerticalStack>
