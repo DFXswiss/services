@@ -138,7 +138,7 @@ export const Routes = [
     isKycScreen: true,
   },
   {
-    path: '/kyc/file/:id',
+    path: '/file/:id',
     element: withSuspense(<KycFileScreen />),
     isKycScreen: true,
   },
