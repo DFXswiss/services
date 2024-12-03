@@ -57,20 +57,30 @@ export function readFileAsText(file: File): Promise<string> {
   });
 }
 
-export function openPdfFromString(pdf: string) {
+export function openPdfFromString(pdf: string, newTab = true) {
   const byteArray = Uint8Array.from(atob(pdf), (c) => c.charCodeAt(0));
   const file = new Blob([byteArray], { type: 'application/pdf;base64' });
   const fileURL = URL.createObjectURL(file);
-  window.open(fileURL);
+
+  if (newTab) {
+    window.open(fileURL);
+  } else {
+    window.location.href = fileURL;
+  }
 }
 
-export function openImageFromString(image: string, contentType: string) {
+export function openImageFromString(image: string, contentType: string, newTab = true) {
   const imageBlob = new Blob([Uint8Array.from(atob(image), (c) => c.charCodeAt(0))], { type: contentType });
   const imageUrl = URL.createObjectURL(imageBlob);
-  window.open(imageUrl);
+
+  if (newTab) {
+    window.open(imageUrl);
+  } else {
+    window.location.href = imageUrl;
+  }
 }
 
-export function handleOpenFile(file: KycFile, setErrorMessage: (message: string) => void) {
+export function handleOpenFile(file: KycFile, setErrorMessage: (message: string) => void, newTab = true) {
   const { content, contentType } = file;
   const [fileType] = contentType.split('/');
 
@@ -81,9 +91,9 @@ export function handleOpenFile(file: KycFile, setErrorMessage: (message: string)
   const base64Data = Buffer.from(content.data).toString('base64');
 
   if (fileType === 'application') {
-    openPdfFromString(base64Data);
+    openPdfFromString(base64Data, newTab);
   } else if (fileType === 'image') {
-    openImageFromString(base64Data, contentType);
+    openImageFromString(base64Data, contentType, newTab);
   }
 }
 

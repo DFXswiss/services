@@ -44,7 +44,7 @@ export default function KycFileScreen(): JSX.Element {
 
   useEffect(() => {
     if (show && file) {
-      handleOpenFile(file, setError);
+      handleOpenFile(file, setError, false);
     }
   }, [show, file]);
 
@@ -52,7 +52,7 @@ export default function KycFileScreen(): JSX.Element {
     <Layout title={translate('screens/kyc', 'KYC file')}>
       {error ? (
         <ErrorHint message={error} />
-      ) : isLoading || !file ? (
+      ) : show || isLoading || !file ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <FilePreview file={file} setErrorMessage={setError} />
