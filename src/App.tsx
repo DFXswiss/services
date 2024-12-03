@@ -133,13 +133,13 @@ export const Routes = [
     isKycScreen: true,
   },
   {
-    path: '/kyc/file/:id',
-    element: withSuspense(<KycFileScreen />),
+    path: '/file/download',
+    element: withSuspense(<DownloadScreen />),
     isKycScreen: true,
   },
   {
-    path: '/file/download',
-    element: withSuspense(<DownloadScreen />),
+    path: '/kyc/file/:id',
+    element: withSuspense(<KycFileScreen />),
     isKycScreen: true,
   },
   {

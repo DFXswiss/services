@@ -27,7 +27,7 @@ export default function DownloadScreen(): JSX.Element {
     setIsLoading(true);
 
     try {
-      const response = fetch(`${process.env.REACT_APP_API_URL}/v1/userData/download`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/v1/userData/download`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
