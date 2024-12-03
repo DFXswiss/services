@@ -189,7 +189,10 @@
     "User information": "Informations utilisateur",
     "User notes": "Notes utilisateur",
     "Transaction notes": "Notes de transaction",
-    "Stock register": "Registre des actions"
+    "Stock register": "Registre des actions",
+
+    "File download": "Téléchargement de fichier",
+    "UserData IDs": "UserData IDs"
   },
   "screens/2fa": {
     "2FA": "2FA",
