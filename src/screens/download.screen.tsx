@@ -6,6 +6,7 @@ import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAdminGuard } from 'src/hooks/guard.hook';
+import { generateExportFileName } from 'src/util/utils';
 
 interface FormData {
   userDataIds: string;
@@ -29,30 +30,24 @@ export default function DownloadScreen(): JSX.Element {
   async function onSubmit(data: FormData) {
     setIsLoading(true);
 
-    try {
-      fetch(`${process.env.REACT_APP_API_URL}/v1/userData/download`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: authenticationToken ? `Bearer ${authenticationToken}` : '',
-        },
-        body: JSON.stringify({ userDataIds: data.userDataIds.split(',').map((id) => Number(id)) }),
+    fetch(`${process.env.REACT_APP_API_URL}/v1/userData/download`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: authenticationToken ? `Bearer ${authenticationToken}` : '',
+      },
+      body: JSON.stringify({ userDataIds: data.userDataIds.split(',').map((id) => Number(id)) }),
+    })
+      .then((response) => (response.ok ? response.text() : response.json()))
+      .then((response) => {
+        if (response.message) throw response;
+        const link = document.createElement('a');
+        link.href = `data:application/zip;base64,${response}`;
+        link.download = generateExportFileName();
+        link.click();
       })
-        .then((response) => response.text())
-        .then((response) => {
-          const link = document.createElement('a');
-          link.href = `data:application/zip;base64,${response}`;
-          link.download = 'userData.zip';
-          link.click();
-        })
-        .catch((e) => {
-          setError(e.message);
-        });
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setIsLoading(false);
-    }
+      .catch((e) => setError(e.message))
+      .finally(() => setIsLoading(false));
   }
 
   const rules = Utils.createRules({
