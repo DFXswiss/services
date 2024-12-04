@@ -152,3 +152,8 @@ export function formatUnits(value: string, decimals = 18): string {
 
   return `${integerPart.toString()}.${fractionalStr}`;
 }
+
+export function generateExportFileName(): string {
+  const [date, time] = new Date().toISOString().replace(/[-:]/g, '').split(/[T\.]/);
+  return `DFX_export_${date}_${time}.zip`;
+}
