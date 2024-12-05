@@ -1,4 +1,4 @@
-import { IconVariant, StyledButton, StyledButtonColor } from '@dfx.swiss/react-components';
+import { StyledButton, StyledButtonColor } from '@dfx.swiss/react-components';
 import { useSettingsContext } from '../contexts/settings.context';
 
 export function ErrorHint({ message, onBack }: { message: string; onBack?: () => void }): JSX.Element {
@@ -16,7 +16,6 @@ export function ErrorHint({ message, onBack }: { message: string; onBack?: () =>
       <div className="flex justify-center" hidden={!onBack}>
         <StyledButton
           className="mt-4"
-          icon={IconVariant.BACK}
           label={translate('general/actions', 'Back')}
           color={StyledButtonColor.GRAY_OUTLINE}
           onClick={onBack!}
