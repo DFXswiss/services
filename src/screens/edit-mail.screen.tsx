@@ -43,6 +43,9 @@ export default function EditMailScreen(): JSX.Element {
   } = useForm<{ token: string }>({ mode: 'onTouched' });
 
   async function onSubmit(newEmail: string) {
+    setError(undefined);
+    setShowLinkHint(false);
+
     return updateMail(newEmail)
       .then(() => setMailVerificationStep(true))
       .catch((e: ApiError) => {
@@ -122,7 +125,7 @@ export default function EditMailScreen(): JSX.Element {
               <h2 className="text-dfxGray-700">
                 <span className="font-medium">
                   {translate(
-                    'screens/2fa',
+                    'screens/kyc',
                     'We have sent a 6-digit code to your new email address. Please enter it here.',
                   )}
                 </span>

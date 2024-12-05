@@ -18,6 +18,7 @@ import {
   KycSession,
   KycSignatoryPowerData,
   KycStep,
+  KycStepBase,
   KycStepName,
   KycStepReason,
   KycStepSession,
@@ -501,16 +502,11 @@ function ContactData({ code, mode, isLoading, step, onDone, showLinkHint }: Edit
     setIsUpdating(true);
     setError(undefined);
     setContactData(code, step.session.url, data)
-      .then((r) => isStepDone(r) && onDone())
-      .catch((error: ApiError) => {
-        if (error.statusCode === 409 && error.message?.includes('exists')) {
-          if (error.message.includes('merge')) {
-            showLinkHint();
-          } else {
-            setError(error.message);
-          }
-        } else {
-          setError(error.message ?? 'Unknown error');
+      .then((r) => {
+        if (isStepDone(r)) {
+          onDone();
+        } else if (r.status === KycStepStatus.FAILED) {
+          r.reason === KycStepReason.ACCOUNT_MERGE_REQUESTED ? showLinkHint() : setError(r.reason);
         }
       })
       .finally(() => setIsUpdating(false));
@@ -1114,7 +1110,7 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
 
   function onMessage(e: Event) {
     const message = (e as MessageEvent<{ type: string; status: KycStepStatus }>).data;
-    if (message.type === IframeMessageType) isStepDone(message) ? onDone() : onBack();
+    if (message.type === IframeMessageType) isStepDone(message as KycStepBase) ? onDone() : onBack();
   }
 
   return step.session ? (
