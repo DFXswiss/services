@@ -483,7 +483,7 @@ function KycEdit(props: EditProps): JSX.Element {
   }
 }
 
-function ContactData({ code, mode, isLoading, step, onDone, showLinkHint }: EditProps): JSX.Element {
+function ContactData({ code, mode, isLoading, step, onDone, onBack, showLinkHint }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setContactData } = useKyc();
 
@@ -518,47 +518,47 @@ function ContactData({ code, mode, isLoading, step, onDone, showLinkHint }: Edit
 
   return (
     <StyledVerticalStack gap={6} full>
-      <Form
-        control={control}
-        rules={rules}
-        errors={errors}
-        onSubmit={handleSubmit(onSubmit)}
-        translate={translateError}
-      >
-        <StyledVerticalStack gap={6} full center>
-          {mode !== Mode.KYC && (
-            <>
-              <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
-              <p className="text-base font-bold text-dfxBlue-800">
-                {translate('screens/kyc', 'Please fill in personal information to continue')}
-              </p>
-            </>
-          )}
-
-          <StyledInput
-            name="mail"
-            autocomplete="email"
-            type="email"
-            label={translate('screens/kyc', 'Email address')}
-            placeholder={translate('screens/kyc', 'example@mail.com')}
-            full
-          />
-
-          <StyledButton
-            type="submit"
-            label={translate('general/actions', 'Next')}
-            onClick={handleSubmit(onSubmit)}
-            width={StyledButtonWidth.FULL}
-            disabled={!isValid}
-            isLoading={isUpdating || isLoading}
-          />
-        </StyledVerticalStack>
-      </Form>
-
-      {error && (
+      {error ? (
         <div>
-          <ErrorHint message={error} />
+          <ErrorHint message={error} onBack={onBack} />
         </div>
+      ) : (
+        <Form
+          control={control}
+          rules={rules}
+          errors={errors}
+          onSubmit={handleSubmit(onSubmit)}
+          translate={translateError}
+        >
+          <StyledVerticalStack gap={6} full center>
+            {mode !== Mode.KYC && (
+              <>
+                <DfxIcon icon={IconVariant.USER_DATA} color={IconColor.BLUE} />
+                <p className="text-base font-bold text-dfxBlue-800">
+                  {translate('screens/kyc', 'Please fill in personal information to continue')}
+                </p>
+              </>
+            )}
+
+            <StyledInput
+              name="mail"
+              autocomplete="email"
+              type="email"
+              label={translate('screens/kyc', 'Email address')}
+              placeholder={translate('screens/kyc', 'example@mail.com')}
+              full
+            />
+
+            <StyledButton
+              type="submit"
+              label={translate('general/actions', 'Next')}
+              onClick={handleSubmit(onSubmit)}
+              width={StyledButtonWidth.FULL}
+              disabled={!isValid}
+              isLoading={isUpdating || isLoading}
+            />
+          </StyledVerticalStack>
+        </Form>
       )}
     </StyledVerticalStack>
   );
