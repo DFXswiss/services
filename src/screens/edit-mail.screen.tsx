@@ -1,4 +1,4 @@
-import { ApiError, TfaLevel, useApi, useUserContext, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, TfaLevel, useKyc, useUserContext, Utils, Validations } from '@dfx.swiss/react';
 import {
   Form,
   SpinnerSize,
@@ -21,7 +21,7 @@ export default function EditMailScreen(): JSX.Element {
   const { updateMail, verifyMail } = useUserContext();
   const { navigate } = useNavigation();
   const { user } = useUserContext();
-  const { call } = useApi();
+  const { check2fa } = useKyc();
 
   const [checking2fa, setChecking2fa] = useState(true);
   const [mailVerificationStep, setMailVerificationStep] = useState(false);
@@ -31,7 +31,7 @@ export default function EditMailScreen(): JSX.Element {
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    call({ url: 'kyc/2fa?level=Basic', version: 'v2', method: 'GET' })
+    check2fa(TfaLevel.BASIC)
       .catch(() => navigate('/2fa', { state: { level: TfaLevel.BASIC }, setRedirect: true }))
       .finally(() => setChecking2fa(false));
   }, []);
@@ -107,7 +107,7 @@ export default function EditMailScreen(): JSX.Element {
             prefill={user?.mail}
             placeholder={translate('screens/kyc', 'Email address')}
             validation={Validations.Mail}
-            onCancel={() => navigate('/account')}
+            onCancel={() => navigate('/settings')}
             onEdit={onSubmit}
           />
         ) : (

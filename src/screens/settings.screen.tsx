@@ -94,7 +94,7 @@ export default function SettingsScreen(): JSX.Element {
   }, [selectedCurrency]);
 
   useEffect(() => {
-    if (overlayType === OverlayType.EDIT_EMAIL) navigate('/edit-mail', { setRedirect: true });
+    if (overlayType === OverlayType.EDIT_EMAIL) navigate('/settings/edit-mail', { setRedirect: true });
   }, [overlayType]);
 
   function onCloseOverlay(): void {
