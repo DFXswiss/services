@@ -24,6 +24,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
+import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 
 interface FormData {
@@ -53,6 +54,7 @@ export default function SettingsScreen(): JSX.Element {
   const { translate, language, currency, availableLanguages, changeLanguage, changeCurrency } = useSettingsContext();
   const { currencies } = useFiatContext();
   const { user, isUserLoading } = useUserContext();
+  const { navigate } = useNavigation();
   const { width } = useWindowContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -90,6 +92,10 @@ export default function SettingsScreen(): JSX.Element {
       changeCurrency(selectedCurrency);
     }
   }, [selectedCurrency]);
+
+  useEffect(() => {
+    if (overlayType === OverlayType.EDIT_EMAIL) navigate('/settings/mail', { setRedirect: true });
+  }, [overlayType]);
 
   function onCloseOverlay(): void {
     setOverlayType(OverlayType.NONE);
@@ -135,35 +141,45 @@ export default function SettingsScreen(): JSX.Element {
             </Form>
           </StyledVerticalStack>
 
-          <StyledVerticalStack full gap={2}>
-            <StyledDataTable
-              label={translate('screens/kyc', 'Personal Information')}
-              alignContent={AlignContent.BETWEEN}
-            >
-              <StyledDataTableRow>
-                <div className="flex flex-col items-start gap-1">
-                  <div className="flex flex-row gap-2 font-semibold">{translate('screens/kyc', 'Email address')}</div>
-                  <div className="text-xs text-dfxGray-700">{user?.mail}</div>
-                </div>
-                <div className="relative flex items-center">
-                  <button onClick={() => setOverlayType(OverlayType.EDIT_EMAIL)}>
-                    <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
-                  </button>
-                </div>
-              </StyledDataTableRow>
-              <StyledDataTableRow>
-                <div className="flex flex-col items-start gap-1">
-                  <div className="flex flex-row gap-2 font-semibold">{translate('screens/kyc', 'Phone number')}</div>
-                  <div className="text-xs text-dfxGray-700">{user?.phone}</div>
-                </div>
-                <div className="relative flex items-center">
-                  <button onClick={() => setOverlayType(OverlayType.EDIT_PHONE)}>
-                    <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
-                  </button>
-                </div>
-              </StyledDataTableRow>
-            </StyledDataTable>
-          </StyledVerticalStack>
+          {!!(user?.mail || user?.phone) && (
+            <StyledVerticalStack full gap={2}>
+              <StyledDataTable
+                label={translate('screens/kyc', 'Personal Information')}
+                alignContent={AlignContent.BETWEEN}
+              >
+                {user?.mail && (
+                  <StyledDataTableRow>
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex flex-row gap-2 font-semibold">
+                        {translate('screens/kyc', 'Email address')}
+                      </div>
+                      <div className="text-xs text-dfxGray-700">{user?.mail}</div>
+                    </div>
+                    <div className="relative flex items-center">
+                      <button onClick={() => setOverlayType(OverlayType.EDIT_EMAIL)}>
+                        <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
+                      </button>
+                    </div>
+                  </StyledDataTableRow>
+                )}
+                {user?.phone && (
+                  <StyledDataTableRow>
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex flex-row gap-2 font-semibold">
+                        {translate('screens/kyc', 'Phone number')}
+                      </div>
+                      <div className="text-xs text-dfxGray-700">{user?.phone}</div>
+                    </div>
+                    <div className="relative flex items-center">
+                      <button onClick={() => setOverlayType(OverlayType.EDIT_PHONE)}>
+                        <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
+                      </button>
+                    </div>
+                  </StyledDataTableRow>
+                )}
+              </StyledDataTable>
+            </StyledVerticalStack>
+          )}
 
           {isUserLoading ? (
             <div className="flex mt-4 w-full justify-center items-center">
@@ -335,7 +351,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
   const { width } = useWindowContext();
   const { translate } = useSettingsContext();
   const { setWallet } = useWalletContext();
-  const { deleteAddress, deleteAccount, renameAddress, changeMail, changePhone } = useUserContext();
+  const { deleteAddress, deleteAccount, renameAddress, updatePhone } = useUserContext();
 
   switch (type) {
     case OverlayType.DELETE_ADDRESS:
@@ -393,20 +409,6 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
           }}
         />
       );
-    case OverlayType.EDIT_EMAIL:
-      return (
-        <EditOverlay
-          label={translate('screens/kyc', 'Email address')}
-          prefill={user?.mail}
-          placeholder={translate('screens/kyc', 'Email address')}
-          validation={Validations.Mail}
-          onCancel={onClose}
-          onEdit={async (result) => {
-            await changeMail(result);
-            onClose();
-          }}
-        />
-      );
     case OverlayType.EDIT_PHONE:
       return (
         <EditOverlay
@@ -416,7 +418,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
           validation={Validations.Phone}
           onCancel={onClose}
           onEdit={async (result) => {
-            await changePhone(result);
+            await updatePhone(result);
             onClose();
           }}
         />

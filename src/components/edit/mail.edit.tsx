@@ -48,12 +48,12 @@ export function MailEdit({
     handleSubmit,
     formState: { isValid, errors },
   } = useForm<FormData>({ mode: 'onTouched' });
-  const { changeMail, isUserUpdating } = useUserContext();
+  const { updateMail, isUserUpdating } = useUserContext();
   const { translate, translateError } = useSettingsContext();
 
   async function saveUser({ email }: FormData): Promise<void> {
     if (!email || email.length === 0) return onSubmit(email);
-    return changeMail(email).then(() => onSubmit(email));
+    return updateMail(email).then(() => onSubmit(email));
   }
 
   const rules = Utils.createRules({

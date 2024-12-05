@@ -19,6 +19,7 @@ import {
   KycSignatoryPowerData,
   KycStep,
   KycStepName,
+  KycStepReason,
   KycStepSession,
   KycStepStatus,
   KycStepType,
@@ -213,7 +214,9 @@ export default function KycScreen(): JSX.Element {
       setInfo(info);
 
       if (info.currentStep?.name === KycStepName.CONTACT_DATA && info.currentStep?.status === KycStepStatus.FAILED) {
-        onLink();
+        info.currentStep.reason === KycStepReason.ACCOUNT_MERGE_REQUESTED
+          ? onLink()
+          : setError(info.currentStep.reason);
       } else {
         setStepInProgress(info.currentStep);
       }
@@ -229,7 +232,11 @@ export default function KycScreen(): JSX.Element {
       } else if (e.statusCode === 403 && e.message?.includes('2FA')) {
         navigate('/2fa', { setRedirect: true });
       } else if (e.statusCode === 409 && e.message?.includes('exists')) {
-        onLink();
+        if (e.message.includes('merge')) {
+          onLink();
+        } else {
+          setError(e.message);
+        }
       }
 
       throw e;
@@ -494,8 +501,18 @@ function ContactData({ code, mode, isLoading, step, onDone, showLinkHint }: Edit
     setIsUpdating(true);
     setError(undefined);
     setContactData(code, step.session.url, data)
-      .then((r) => (isStepDone(r) ? onDone() : showLinkHint()))
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .then((r) => isStepDone(r) && onDone())
+      .catch((error: ApiError) => {
+        if (error.statusCode === 409 && error.message?.includes('exists')) {
+          if (error.message.includes('merge')) {
+            showLinkHint();
+          } else {
+            setError(error.message);
+          }
+        } else {
+          setError(error.message ?? 'Unknown error');
+        }
+      })
       .finally(() => setIsUpdating(false));
   }
 

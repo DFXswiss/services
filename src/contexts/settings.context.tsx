@@ -72,10 +72,10 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { getDefaultLanguage } = useLanguage();
   const {
     user,
-    changeLanguage: changeUserLanguage,
-    changeMail: changeUserMail,
-    changePhone: changeUserPhone,
-    changeCurrency: changeUserCurrency,
+    updateLanguage: updateUserLanguage,
+    updateMail: updateUserMail,
+    updatePhone: updateUserPhone,
+    updateCurrency: updateUserCurrency,
   } = useUserContext();
   const { language: storedLanguage, infoBanner: storedInfoBanner } = useStore();
   const { getCountries } = useCountry();
@@ -139,7 +139,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, [user, lang, languages, currencies]);
 
   useEffect(() => {
-    if (user && mail && user.mail !== mail) changeUserMail(mail);
+    if (user && mail && user.mail !== mail) updateUserMail(mail);
   }, [user, mail]);
 
   useEffect(() => {
@@ -216,23 +216,23 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
 
     setParams({ lang: undefined });
     changeAppLanguage(lang);
-    changeUserLanguage(lang);
+    updateUserLanguage(lang);
   }
 
   function changeCurrency(newCurrency: Fiat) {
     if (!currencies?.some((c) => c.id === newCurrency.id) || currency?.id === newCurrency.id) return;
 
-    changeUserCurrency(newCurrency);
+    updateUserCurrency(newCurrency);
   }
 
   function changeMail(mail: string) {
     setParams({ mail });
-    changeUserMail(mail);
+    updateUserMail(mail);
   }
 
   function changePhone(phone: string) {
     setParams({ phone });
-    changeUserPhone(phone);
+    updateUserPhone(phone);
   }
 
   function translate(key: string, defaultValue: string, interpolation?: Record<string, string | number>): string {
