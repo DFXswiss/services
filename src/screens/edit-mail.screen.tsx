@@ -123,7 +123,7 @@ export default function EditMailScreen(): JSX.Element {
                 <span className="font-medium">
                   {translate(
                     'screens/2fa',
-                    'We just sent you an Email to your new Email address. Enter the 6-digit code from this Email.',
+                    'We have sent a 6-digit code to your new email address. Please enter it here.',
                   )}
                 </span>
               </h2>
