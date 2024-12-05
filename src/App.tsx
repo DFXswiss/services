@@ -59,7 +59,7 @@ export const Routes = [
     element: withSuspense(<SettingsScreen />),
   },
   {
-    path: 'settings/edit-mail',
+    path: 'settings/mail',
     element: withSuspense(<EditMailScreen />),
   },
   {
