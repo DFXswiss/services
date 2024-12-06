@@ -325,7 +325,9 @@
     "Credit": "Guthaben",
     "Paid credit": "Ausgezahltes Guthaben",
     "User count": "Anzahl Benutzer",
-    "Active user count": "Anzahl aktiver Benutzer"
+    "Active user count": "Anzahl aktiver Benutzer",
+
+    "Address selection": "Adressauswahl"
   },
   "screens/buy": {
     "You spend": "Du zahlst",
