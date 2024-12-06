@@ -1,17 +1,16 @@
-import { UserAddress, useSessionContext, useUserContext } from '@dfx.swiss/react';
+import { UserAddress, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
-  SpinnerSize,
+  StyledButton,
+  StyledButtonWidth,
   StyledDropdown,
-  StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { ConnectProps } from 'src/components/home/connect-shared';
 import { useWindowContext } from 'src/contexts/window.context';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
-import { Layout } from '../components/layout';
-import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 
@@ -19,16 +18,12 @@ interface FormData {
   address: UserAddress;
 }
 
-export default function AddressSelectionScreen(): JSX.Element {
+export default function AddressSelectionScreen({ onLogin, onCancel }: ConnectProps): JSX.Element {
   const { translate } = useSettingsContext();
-  const { isLoggedIn } = useSessionContext();
-  const { user, isUserLoading } = useUserContext();
+  const { user } = useUserContext();
   const { width } = useWindowContext();
-  const { canClose, isEmbedded } = useAppHandlingContext();
-  const { isInitialized, setWallet } = useWalletContext();
+  const { setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
-
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const {
     control,
@@ -47,7 +42,10 @@ export default function AddressSelectionScreen(): JSX.Element {
   useEffect(() => {
     if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address) {
       changeAddress(selectedAddress.address)
-        .then(() => setWallet())
+        .then(() => {
+          setWallet();
+          onLogin();
+        })
         .catch(() => {
           // ignore errors
         });
@@ -55,31 +53,24 @@ export default function AddressSelectionScreen(): JSX.Element {
   }, [selectedAddress]);
 
   return (
-    <Layout
-      title={translate('screens/home', 'Address selection')}
-      backButton={canClose && !isEmbedded}
-      rootRef={rootRef}
-    >
-      {!isInitialized || !isLoggedIn || isUserLoading ? (
-        <div className="mt-4">
-          <StyledLoadingSpinner size={SpinnerSize.LG} />
-        </div>
-      ) : (
-        <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
-          {user?.addresses.length && (
-            <Form control={control} errors={errors}>
-              <StyledDropdown
-                name="address"
-                placeholder={translate('general/actions', 'Select') + '...'}
-                items={user.addresses.sort(sortAddressesByBlockchain)}
-                labelFunc={(item) => blankedAddress(item.address, { width })}
-                descriptionFunc={(item) => item.label ?? item.wallet}
-                forceEnable={user?.activeAddress === undefined}
-              />
-            </Form>
-          )}
-        </StyledVerticalStack>
+    <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
+      {user?.addresses.length && (
+        <Form control={control} errors={errors}>
+          <StyledDropdown
+            name="address"
+            placeholder={translate('general/actions', 'Select') + '...'}
+            items={user.addresses.sort(sortAddressesByBlockchain)}
+            labelFunc={(item) => blankedAddress(item.address, { width })}
+            descriptionFunc={(item) => item.label ?? item.wallet}
+            forceEnable={user?.activeAddress === undefined}
+          />
+        </Form>
       )}
-    </Layout>
+      <StyledButton
+        label={translate('general/actions', 'Add new address')}
+        width={StyledButtonWidth.FULL}
+        onClick={onCancel}
+      />
+    </StyledVerticalStack>
   );
 }

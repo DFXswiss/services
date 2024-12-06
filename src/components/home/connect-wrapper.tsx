@@ -1,4 +1,5 @@
 import { lazy } from 'react';
+import AddressSelectionScreen from 'src/screens/address-selection.screen';
 import { WalletType } from '../../contexts/wallet.context';
 import { ConnectProps } from './connect-shared';
 
@@ -53,5 +54,8 @@ export function ConnectWrapper(props: ConnectProps): JSX.Element {
 
     case WalletType.MAIL:
       return <ConnectMail {...props} />;
+
+    case WalletType.ADDRESS:
+      return <AddressSelectionScreen {...props} />;
   }
 }
