@@ -17,6 +17,7 @@ const SellScreen = lazy(() => import('./screens/sell.screen'));
 const SwapScreen = lazy(() => import('./screens/swap.screen'));
 const AccountScreen = lazy(() => import('./screens/account.screen'));
 const SettingsScreen = lazy(() => import('./screens/settings.screen'));
+const AddressSelectionScreen = lazy(() => import('./screens/address-selection.screen'));
 const BankAccountsScreen = lazy(() => import('./screens/bank-accounts.screen'));
 const BuyFailureScreen = lazy(() => import('./screens/buy-failure.screen'));
 const BuyInfoScreen = lazy(() => import('./screens/buy-info.screen'));
@@ -62,6 +63,10 @@ export const Routes = [
   {
     path: 'settings/mail',
     element: withSuspense(<EditMailScreen />),
+  },
+  {
+    path: '/address',
+    element: withSuspense(<AddressSelectionScreen />),
   },
   {
     path: '/login',
