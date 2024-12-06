@@ -1,5 +1,4 @@
 import { lazy } from 'react';
-import AddressSelectionScreen from 'src/screens/address-selection.screen';
 import { WalletType } from '../../contexts/wallet.context';
 import { ConnectProps } from './connect-shared';
 
@@ -13,6 +12,7 @@ const ConnectTaro = lazy(() => import('./wallet/connect-taro'));
 const ConnectWalletConnect = lazy(() => import('./wallet/connect-wallet-connect'));
 const ConnectMonero = lazy(() => import('./wallet/connect-monero'));
 const ConnectMail = lazy(() => import('./wallet/connect-mail'));
+const ConnectAddress = lazy(() => import('./wallet/connect-address'));
 
 export function ConnectWrapper(props: ConnectProps): JSX.Element {
   switch (props.wallet) {
@@ -56,6 +56,6 @@ export function ConnectWrapper(props: ConnectProps): JSX.Element {
       return <ConnectMail {...props} />;
 
     case WalletType.ADDRESS:
-      return <AddressSelectionScreen {...props} />;
+      return <ConnectAddress {...props} />;
   }
 }

@@ -9,16 +9,16 @@ import {
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { ConnectProps } from 'src/components/home/connect-shared';
+import { useSettingsContext } from 'src/contexts/settings.context';
+import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
-import { useSettingsContext } from '../contexts/settings.context';
-import { useWalletContext } from '../contexts/wallet.context';
 
 interface FormData {
   address: UserAddress;
 }
 
-export default function AddressSelectionScreen({ onLogin, onCancel }: ConnectProps): JSX.Element {
+export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
   const { width } = useWindowContext();
