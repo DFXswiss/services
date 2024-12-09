@@ -337,7 +337,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
           {paymentLinks?.length ? (
             <StyledVerticalStack gap={2} full>
               <h2 className="ml-3.5 mb-1.5 text-dfxGray-700">{translate('screens/payment', 'Payment Links')}</h2>
-              <StyledDataTable>
+              <StyledDataTable alignContent={AlignContent.RIGHT}>
                 <StyledDataTableExpandableRow
                   label={translate('screens/payment', 'Default configuration')}
                   expansionItems={
