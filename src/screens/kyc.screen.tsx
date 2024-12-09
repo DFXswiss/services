@@ -46,7 +46,6 @@ import {
   IconVariant,
   SpinnerSize,
   StyledButton,
-  StyledButtonColor,
   StyledButtonWidth,
   StyledCheckboxRow,
   StyledDataTable,
@@ -1238,15 +1237,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
 
   return error ? (
     <StyledVerticalStack gap={6} full center>
-      <div>
-        <ErrorHint message={error} />
-      </div>
-      <StyledButton
-        width={StyledButtonWidth.MIN}
-        label={translate('general/actions', 'Back')}
-        onClick={onBack}
-        color={StyledButtonColor.STURDY_WHITE}
-      />
+      <ErrorHint message={error} onBack={onBack} />
     </StyledVerticalStack>
   ) : index && currentQuestion && !isLoading ? (
     <Form control={control} errors={{}} onSubmit={handleSubmit(onSubmit)}>

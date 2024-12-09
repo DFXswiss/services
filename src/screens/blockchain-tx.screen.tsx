@@ -14,7 +14,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { ethers } from 'ethers';
+import { JsonRpcProvider, TransactionResponse } from 'ethers';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -83,16 +83,16 @@ export default function BlockchainTransactionScreen(): JSX.Element {
     try {
       const { blockchain, contractAddress, signer, file } = data;
 
-      const txResponse = await call<ethers.providers.TransactionResponse>({
+      const txResponse = await call<TransactionResponse>({
         url: `gs/evm/contractTransaction`,
         method: 'POST',
         data: { blockchain, contractAddress, signer, callData: await readFileAsText(file) },
       });
 
-      const provider = new ethers.providers.JsonRpcProvider(chainObject.rpcUrls[0]);
+      const provider = new JsonRpcProvider(chainObject.rpcUrls[0]);
       const receipt = await provider.waitForTransaction(txResponse.hash);
 
-      setTxExplorerUrl(chainObject?.blockExplorerUrls[0] + `tx/${receipt.transactionHash}`);
+      setTxExplorerUrl(chainObject?.blockExplorerUrls[0] + `tx/${receipt?.hash}`);
     } catch (error: any) {
       setError(error.message ?? 'Error signing or sending the transaction');
     } finally {

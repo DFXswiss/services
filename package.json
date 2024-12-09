@@ -29,6 +29,7 @@
     "buffer": "^6.0.3",
     "copy-to-clipboard": "^3.3.3",
     "env-cmd": "^10.1.0",
+    "ethers": "^6.13.4",
     "https-browserify": "^1.0.0",
     "i18next": "^22.4.13",
     "i18next-browser-languagedetector": "^7.1.0",
