@@ -1,7 +1,9 @@
 import {
+  Country,
   Fiat,
   InfoBanner,
   Language,
+  useCountry,
   useFiatContext,
   useKyc,
   useLanguage,
@@ -27,6 +29,7 @@ const ValidationErrors: Record<string, string> = {
   xml_file: 'Only XML files are allowed',
   json_file: 'Only JSON files are allowed',
   file_type: 'Allowed formats: PDF, JPG, JPEG, PNG',
+  date_format: 'Invalid date format',
 };
 
 const languageToLocale: { [language: string]: string } = {
@@ -38,6 +41,8 @@ const languageToLocale: { [language: string]: string } = {
 
 interface SettingsInterface {
   availableLanguages: Language[];
+  allowedCountries: Country[];
+  nationalityCountries: Country[];
   locale: string;
   language?: Language;
   currency?: Fiat;
@@ -67,13 +72,14 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const { getDefaultLanguage } = useLanguage();
   const {
     user,
-    changeLanguage: changeUserLanguage,
-    changeMail: changeUserMail,
-    changePhone: changeUserPhone,
-    changeCurrency: changeUserCurrency,
+    updateLanguage: updateUserLanguage,
+    updateMail: updateUserMail,
+    updatePhone: updateUserPhone,
+    updateCurrency: updateUserCurrency,
   } = useUserContext();
   const { language: storedLanguage, infoBanner: storedInfoBanner } = useStore();
-  const { getCountries, setData } = useKyc();
+  const { getCountries } = useCountry();
+  const { setData } = useKyc();
   const {
     lang,
     mail,
@@ -100,6 +106,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
 
   const [language, setLanguage] = useState<Language>();
   const [currency, setCurrency] = useState<Fiat>();
+  const [countries, setCountries] = useState<Country[]>([]);
   const [store, setStore] = useState<Record<string, any>>({});
   const [processingKycData, setProcessingKycData] = useState(true);
   const [infoBanner, setInfoBanner] = useState<InfoBanner>();
@@ -116,6 +123,10 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, []);
 
   useEffect(() => {
+    getCountries().then((countries) => setCountries(countries.sort((a, b) => a.name.localeCompare(b.name))));
+  }, []);
+
+  useEffect(() => {
     const browserLanguage = browserLang({ languages: appLanguages.map((l) => l.toLowerCase()), fallback: 'en' });
     const customLanguage =
       lang?.toUpperCase() ?? user?.language.symbol ?? storedLanguage.get() ?? browserLanguage.toUpperCase();
@@ -128,43 +139,45 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   }, [user, lang, languages, currencies]);
 
   useEffect(() => {
-    if (user && mail && user.mail !== mail) changeUserMail(mail);
+    if (user && mail && user.mail !== mail) updateUserMail(mail);
   }, [user, mail]);
 
   useEffect(() => {
-    if (!user?.kyc.hash || !isInitialized) return;
+    if (!user?.kyc.hash || !isInitialized || !countries.length) return;
+
     if (!accountType) {
       setProcessingKycData(false);
       return;
     }
-    getCountries(user.kyc.hash).then((cs) => {
-      setData({
-        mail,
-        accountType,
-        firstName,
-        lastName,
-        phone,
-        address: {
-          street: street,
-          houseNumber: houseNumber,
-          city: city,
-          zip: zip,
-          country: cs.find((c) => c.symbol === country || c.name === country),
-        },
-        organizationName,
-        organizationAddress: organizationName && {
-          street: organizationStreet,
-          houseNumber: organizationHouseNumber,
-          city: organizationCity,
-          zip: organizationZip,
-          country: cs.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
-        },
-      } as UserData)
-        .catch(() => {
-          // Ignore API errors
-        })
-        .finally(() => setProcessingKycData(false));
-    });
+
+    const filteredCountries = countries.filter((c) => c.kycAllowed);
+
+    setData({
+      mail,
+      accountType,
+      firstName,
+      lastName,
+      phone,
+      address: {
+        street: street,
+        houseNumber: houseNumber,
+        city: city,
+        zip: zip,
+        country: filteredCountries.find((c) => c.symbol === country || c.name === country),
+      },
+      organizationName,
+      organizationAddress: organizationName && {
+        street: organizationStreet,
+        houseNumber: organizationHouseNumber,
+        city: organizationCity,
+        zip: organizationZip,
+        country: filteredCountries.find((c) => c.symbol === organizationCountry || c.name === organizationCountry),
+      },
+    } as UserData)
+      .catch(() => {
+        // Ignore API errors
+      })
+      .finally(() => setProcessingKycData(false));
   }, [
     user,
     mail,
@@ -184,6 +197,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     organizationCountry,
     phone,
     isInitialized,
+    countries,
   ]);
 
   function closeInfoBanner() {
@@ -202,23 +216,23 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
 
     setParams({ lang: undefined });
     changeAppLanguage(lang);
-    changeUserLanguage(lang);
+    updateUserLanguage(lang);
   }
 
   function changeCurrency(newCurrency: Fiat) {
     if (!currencies?.some((c) => c.id === newCurrency.id) || currency?.id === newCurrency.id) return;
 
-    changeUserCurrency(newCurrency);
+    updateUserCurrency(newCurrency);
   }
 
   function changeMail(mail: string) {
     setParams({ mail });
-    changeUserMail(mail);
+    updateUserMail(mail);
   }
 
   function changePhone(phone: string) {
     setParams({ phone });
-    changeUserPhone(phone);
+    updateUserPhone(phone);
   }
 
   function translate(key: string, defaultValue: string, interpolation?: Record<string, string | number>): string {
@@ -240,6 +254,8 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const context = useMemo(
     () => ({
       availableLanguages,
+      allowedCountries: countries.filter((c) => c.kycAllowed),
+      nationalityCountries: countries.filter((c) => c.nationalityAllowed),
       locale: languageToLocale[language?.symbol.toLowerCase() ?? 'en'],
       language,
       currency,

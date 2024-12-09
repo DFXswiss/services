@@ -60,7 +60,9 @@ export default function LinkScreen(): JSX.Element {
     if (info.kycLevel > 0 || !kycCode) {
       goBack();
     } else {
-      return continueKyc(kycCode, false).then(handleReload);
+      return continueKyc(kycCode, false)
+        .then(handleReload)
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
     }
   }
 

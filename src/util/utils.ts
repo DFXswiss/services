@@ -1,4 +1,4 @@
-import { UserAddress } from '@dfx.swiss/react';
+import { KycFile, UserAddress } from '@dfx.swiss/react';
 
 export function isDefined<T>(item: T | undefined): item is T {
   return item != null;
@@ -57,11 +57,44 @@ export function readFileAsText(file: File): Promise<string> {
   });
 }
 
-export function openPdfFromString(pdf: string) {
+export function openPdfFromString(pdf: string, newTab = true) {
   const byteArray = Uint8Array.from(atob(pdf), (c) => c.charCodeAt(0));
   const file = new Blob([byteArray], { type: 'application/pdf;base64' });
   const fileURL = URL.createObjectURL(file);
-  window.open(fileURL);
+
+  if (newTab) {
+    window.open(fileURL);
+  } else {
+    window.location.href = fileURL;
+  }
+}
+
+export function openImageFromString(image: string, contentType: string, newTab = true) {
+  const imageBlob = new Blob([Uint8Array.from(atob(image), (c) => c.charCodeAt(0))], { type: contentType });
+  const imageUrl = URL.createObjectURL(imageBlob);
+
+  if (newTab) {
+    window.open(imageUrl);
+  } else {
+    window.location.href = imageUrl;
+  }
+}
+
+export function handleOpenFile(file: KycFile, setErrorMessage: (message: string) => void, newTab = true) {
+  const { content, contentType } = file;
+  const [fileType] = contentType.split('/');
+
+  if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
+    setErrorMessage('Invalid file type');
+  }
+
+  const base64Data = Buffer.from(content.data).toString('base64');
+
+  if (fileType === 'application') {
+    openPdfFromString(base64Data, newTab);
+  } else if (fileType === 'image') {
+    openImageFromString(base64Data, contentType, newTab);
+  }
 }
 
 export function sortAddressesByBlockchain(a: UserAddress, b: UserAddress): number {
@@ -118,4 +151,9 @@ export function formatUnits(value: string, decimals = 18): string {
   }
 
   return `${integerPart.toString()}.${fractionalStr}`;
+}
+
+export function generateExportFileName(): string {
+  const [date, time] = new Date().toISOString().replace(/[-:]/g, '').split(/[T\.]/);
+  return `DFX_export_${date}_${time}.zip`;
 }

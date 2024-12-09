@@ -1,6 +1,5 @@
 {
   "general/actions": {
-    "Select...": "Auswählen...",
     "Select": "Auswählen",
     "Search...": "Suchen...",
     "Start": "Starten",
@@ -39,7 +38,9 @@
     "Confirm refund": "Rückerstattung bestätigen",
     "Request refund": "Rückerstattung beantragen",
     "Copy Link": "Link kopieren",
-    "Open invoice": "Rechnung öffnen"
+    "Open invoice": "Rechnung öffnen",
+    "Create ticket": "Ticket erstellen",
+    "View file": "Datei anzeigen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -50,6 +51,7 @@
     "Only XML files are allowed": "Nur XML-Dateien sind erlaubt",
     "Only JSON files are allowed": "Nur JSON-Dateien sind erlaubt",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Erlaubte Formate: PDF, JPG, JPEG, PNG",
+    "Invalid date format": "Ungültiges Datumsformat",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.",
     "invoice": "DFX kennt keinen Empfänger mit dem Namen <strong>{{recipient}}</strong>. Dieser Service kann nur für Empfänger verwendet werden, die ein aktives Konto bei DFX haben und für den Rechnungsservice aktiviert sind. Solltest Du dich als Empfänger bei DFX registrieren wollen, dann melde Dich beim Support unter <link>{{supportLink}}</link>."
@@ -95,6 +97,8 @@
 
     "Female": "Weiblich",
     "Male": "Männlich",
+
+    "Birthday": "Geburtstag",
 
     "Passport": "Pass",
     "ID card": "ID-Karte",
@@ -154,6 +158,7 @@
 
     "It looks like you already have an account with DFX.": "Wie es aussieht, hast Du bereits ein Konto bei DFX.",
     "We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.": "Wir haben Dir gerade eine E-Mail geschickt. Um mit Deinem bestehenden Konto fortzufahren, bestätige bitte Deine E-Mail-Adresse, indem Du auf den zugesandten Link klickst.",
+    "We have sent a 6-digit code to your new email address. Please enter it here.": "Wir haben einen 6-stelligen Code an Deine neue E-Mail-Adresse gesendet. Bitte gib ihn hier ein.",
     "Start the KYC process with the same email to merge your accounts.": "Starte den KYC-Prozess mit der gleichen E-Mail, um Deine Konten zusammenzuführen.",
     "No matching account was found.": "Es wurde kein passendes Konto gefunden.",
     "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Dein Konto muss verifiziert werden, sobald Dein tägliches Transaktionsvolumen {{limit}} überschreitet. Wenn Du Dein tägliches Handelslimit erhöhen möchtest, schliesse bitte unseren KYC-Prozess (Know-Your-Customer) ab.",
@@ -178,7 +183,17 @@
     "My account": "Mein Konto",
 
     "Upload your SEPA file here": "Lade Deine SEPA-Datei hier hoch",
-    "Uploaded": "Hochgeladen"
+    "Uploaded": "Hochgeladen",
+
+    "KYC file": "KYC Datei",
+    "Name check": "Namensprüfung",
+    "User information": "Benutzerinformationen",
+    "User notes": "Benutzernotizen",
+    "Transaction notes": "Transaktionsnotizen",
+    "Stock register": "Aktienregister",
+
+    "File download": "Datei-Download",
+    "UserData IDs": "UserData IDs"
   },
   "screens/2fa": {
     "2FA": "2FA",
@@ -188,7 +203,7 @@
     "Click + in Google Authenticator to add a new account. You can scan the QR code or enter the secret provided to create your account in Google Authenticator.": "Klicke in Google Authenticator auf +, um ein neues Konto hinzuzufügen. Du kannst den QR-Code scannen oder den angegebenen Schlüssel eingeben, um Dein Konto in Google Authenticator zu erstellen.",
     "Secret": "Schlüssel",
     "Enter the 6-digit dynamic code from your authenticator app": "Gib den 6-stelligen dynamischen Code aus Deiner Authenticator-App ein",
-    "Enter the 6-digit code from your email": "Gib den 6-stelligen Code aus Deiner E-Mail ein",
+    "We have emailed you a 6-digit code. Please enter it here.": "Wir haben Dir einen 6-stelligen Code per E-Mail geschickt. Bitte gib ihn hier ein.",
     "Authenticator code": "Authenticator-Code",
     "Email code": "E-Mail-Code",
     "Invalid or expired code": "Ungültiger oder abgelaufener Code",
@@ -397,6 +412,7 @@
     "Transactions": "Transaktionen",
     "Transaction": "Transaktion",
     "Your Transactions": "Deine Transaktionen",
+    "Loading transaction...": "Transaktion wird geladen...",
     "No transactions found": "Keine Transaktionen gefunden",
     "My transaction is missing": "Meine Transaktion fehlt",
     "Transaction status": "Status der Transaktion",
@@ -593,6 +609,10 @@
     "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Dies ist eine Mehrkonten-IBAN und kann nicht als persönliches Konto hinzugefügt werden. Bitte sende die Bestätigung der Banktransaktion als PDF an support@dfx.swiss."
   },
   "screens/support": {
+    "Support": "Support",
+    "Support tickets": "Support-Tickets",
+    "View tickets": "Tickets anzeigen",
+
     "Support issue": "Supportanfrage",
     "The issue has been successfully submitted. You will be contacted by email.": "Die Anfrage wurde erfolgreich eingereicht. Du wirst per E-Mail kontaktiert.",
 
@@ -620,7 +640,7 @@
     "Select the transaction for which you would like to create an issue.": "Wähle die Transaktion aus, für die Du eine Anfrage erstellen möchtest.",
     "Please provide us with all relevant information about the transaction you are missing.": "Bitte gib uns alle relevanten Informationen über die fehlende Transaktion an.",
     "Sender IBAN": "Absender-IBAN",
-    "Receiver IBAN": "Empfängers-IBAN",
+    "Receiver IBAN": "Empfänger-IBAN",
     "Date of the transaction": "Datum der Transaktion",
 
     "Telegram support": "Telegram-Support",

@@ -179,7 +179,7 @@ function TransactionComponent({ transactionUid }: TransactionComponentProps): JS
         <div className="flex flex-row gap-2 justify-center bg-dfxGray-300/50 w-full rounded-md p-4">
           {!error && <StyledLoadingSpinner size={SpinnerSize.MD} variant={SpinnerVariant.LIGHT_MODE} />}
           <span className={`text-sm ${error ? 'text-dfxRed-100' : 'text-dfxBlue-600'}`}>
-            {error ?? translate('screen/payments', 'Loading transaction...')}
+            {error ?? translate('screens/payment', 'Loading transaction...')}
           </span>
         </div>
       ) : (

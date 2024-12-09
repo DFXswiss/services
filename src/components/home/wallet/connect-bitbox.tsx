@@ -42,10 +42,10 @@ export default function ConnectBitbox(props: Props): JSX.Element {
 
   const [pairingCode, setPairingCode] = useState<string>();
 
-  async function getAccount(blockchain: Blockchain, isReconnect: boolean): Promise<Account> {
+  async function getAccount(wallet: WalletType, blockchain: Blockchain, isReconnect: boolean): Promise<Account> {
     if (isReconnect && session?.address) return { address: session.address };
 
-    const address = await connect(props.wallet, blockchain, defaultAddressType, setPairingCode).finally(() =>
+    const address = await connect(wallet as BitboxWallet, blockchain, defaultAddressType, setPairingCode).finally(() =>
       setPairingCode(undefined),
     );
 
@@ -193,7 +193,7 @@ function Content({
                     labelFunc={(item) => item.toString()}
                     full
                     disabled={addressLoading}
-                    placeholder={translate('general/actions', 'Select...')}
+                    placeholder={translate('general/actions', 'Select') + '...'}
                     label={translate('screens/home', 'Account index')}
                   />
                 </>
@@ -206,7 +206,7 @@ function Content({
                 descriptionFunc={(item) => `Index ${item.index}`}
                 full
                 disabled={addressLoading}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 label={translate('screens/home', 'Address index')}
               />
               <StyledButton

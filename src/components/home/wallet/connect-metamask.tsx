@@ -16,7 +16,7 @@ import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../con
 export default function ConnectMetaMask(props: ConnectProps): JSX.Element {
   const { isInstalled, requestAccount, requestBlockchain, requestChangeToBlockchain, sign } = useMetaMask();
 
-  async function getAccount(blockchain: Blockchain): Promise<Account> {
+  async function getAccount(_w: WalletType, blockchain: Blockchain): Promise<Account> {
     const address = await requestAccount();
     if (!address) throw new Error('Permission denied or account not verified');
 

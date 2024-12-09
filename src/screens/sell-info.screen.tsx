@@ -16,7 +16,6 @@ import {
   useFiat,
   useSell,
   useTransaction,
-  useUserContext,
 } from '@dfx.swiss/react';
 import {
   AlignContent,
@@ -56,7 +55,7 @@ interface Timer {
 export default function SellInfoScreen(): JSX.Element {
   useAddressGuard();
 
-  const { translate } = useSettingsContext();
+  const { allowedCountries, translate } = useSettingsContext();
   const { bankAccounts, createAccount } = useBankAccountContext();
   const { getAccount } = useBankAccount();
   const {
@@ -72,7 +71,6 @@ export default function SellInfoScreen(): JSX.Element {
   const { getAsset } = useAsset();
   const { getCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
-  const { countries } = useUserContext();
   const { closeServices } = useAppHandlingContext();
   const { sendTransaction, canSendTransaction } = useTxHelper();
   const { activeWallet } = useWalletContext();
@@ -111,7 +109,7 @@ export default function SellInfoScreen(): JSX.Element {
       if (account) {
         setBankAccount(account);
       } else if (!isCreatingAccount) {
-        const ibanIsValid = Validations.Iban(countries).validate(bankAccountParam);
+        const ibanIsValid = Validations.Iban(allowedCountries).validate(bankAccountParam);
         if (ibanIsValid !== true) {
           setErrorMessage(`Invalid IBAN: ${ibanIsValid}`);
           return;
@@ -124,7 +122,7 @@ export default function SellInfoScreen(): JSX.Element {
           .finally(() => setIsCreatingAccount(false));
       }
     }
-  }, [bankAccountParam, getAccount, bankAccounts, countries]);
+  }, [bankAccountParam, getAccount, bankAccounts, allowedCountries]);
 
   useEffect(() => {
     if (!paymentInfo || isLoading) return;

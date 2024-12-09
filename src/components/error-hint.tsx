@@ -1,6 +1,7 @@
+import { StyledButton, StyledButtonColor } from '@dfx.swiss/react-components';
 import { useSettingsContext } from '../contexts/settings.context';
 
-export function ErrorHint({ message }: { message: string }): JSX.Element {
+export function ErrorHint({ message, onBack }: { message: string; onBack?: () => void }): JSX.Element {
   const { translate } = useSettingsContext();
 
   return (
@@ -12,6 +13,14 @@ export function ErrorHint({ message }: { message: string }): JSX.Element {
         )}
       </p>
       <p className="text-dfxGray-800 text-sm">{message}</p>
+      <div className="flex justify-center" hidden={!onBack}>
+        <StyledButton
+          className="mt-4"
+          label={translate('general/actions', 'Back')}
+          color={StyledButtonColor.GRAY_OUTLINE}
+          onClick={onBack!}
+        />
+      </div>
     </>
   );
 }

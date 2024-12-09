@@ -188,7 +188,7 @@ export default function TfaScreen(): JSX.Element {
                       {translate(
                         'screens/2fa',
                         setupInfo?.type === TfaType.MAIL
-                          ? 'Enter the 6-digit code from your email'
+                          ? 'We have emailed you a 6-digit code. Please enter it here.'
                           : 'Enter the 6-digit dynamic code from your authenticator app',
                       )}
                     </span>

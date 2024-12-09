@@ -3,6 +3,7 @@ import {
   Asset,
   CryptoPaymentMethod,
   DetailTransaction,
+  ExportFormat,
   Fiat,
   FiatPaymentMethod,
   Transaction,
@@ -12,7 +13,6 @@ import {
   UserAddress,
   Utils,
   Validations,
-  useApi,
   useAuthContext,
   useBankAccountContext,
   useSessionContext,
@@ -42,7 +42,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
 import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
@@ -68,13 +67,12 @@ export enum ExportType {
 
 export default function TransactionScreen(): JSX.Element {
   const { id } = useParams();
-  const { call } = useApi();
   const { user } = useUserContext();
   const { pathname } = useLocation();
   const { navigate } = useNavigation();
   const { session } = useAuthContext();
   const { translate } = useSettingsContext();
-  const { getTransactionCsv } = useTransaction();
+  const { getTransactionCsv, getTransactionHistory } = useTransaction();
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -96,12 +94,11 @@ export default function TransactionScreen(): JSX.Element {
           break;
         case ExportType.COIN_TRACKING:
         case ExportType.CHAIN_REPORT:
-          await call<string>({
-            url: `transaction/${type}?userAddress=${user?.activeAddress?.address}&format=csv`,
-            method: 'GET',
-            noJson: true,
-          }).then((csv) => {
-            const blob = new Blob([csv], { type: 'text/csv' });
+          await getTransactionHistory(type, {
+            userAddress: user.activeAddress?.address,
+            format: ExportFormat.CSV,
+          }).then((response) => {
+            const blob = new Blob([response], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
 
             window.open(url, '_blank');
@@ -150,7 +147,6 @@ export default function TransactionScreen(): JSX.Element {
             width={StyledButtonWidth.FULL}
             label={translate('screens/payment', 'Cointracking')}
             onClick={() => setShowCoinTracking(!showCoinTracking)}
-            hidden={session?.role === UserRole.ACCOUNT}
           />
           <StyledButton
             color={StyledButtonColor.STURDY_WHITE}
@@ -252,6 +248,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
           transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
         )}
         onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
+        color={StyledButtonColor.STURDY_WHITE}
         hidden={
           ![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
             transaction.state,
@@ -431,7 +428,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
                   item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
                 }
                 descriptionFunc={(item) => bankAccounts.find((b) => b.iban === item)?.label ?? ''}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 forceEnable
                 full
               />
@@ -635,7 +632,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                       rootRef={rootRef}
                                       items={transactionTargets ?? []}
                                       labelFunc={(item) => `${item.bankUsage}`}
-                                      placeholder={translate('general/actions', 'Select...')}
+                                      placeholder={translate('general/actions', 'Select') + '...'}
                                       descriptionFunc={(item) =>
                                         `${toString(item.asset.blockchain)}/${item.asset.name} ${blankedAddress(
                                           item.address,

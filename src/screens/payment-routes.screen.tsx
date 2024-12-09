@@ -8,7 +8,6 @@ import {
   PaymentLinkStatus,
   PaymentRouteType,
   SellRoute,
-  useCountry,
   useFiatContext,
   usePaymentRoutesContext,
   useUserContext,
@@ -470,6 +469,8 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                     text: link.recipient.website,
                                     // open absolute URL in new tab
                                     onClick: () => {
+                                      if (!link.recipient?.website) return;
+
                                       const url =
                                         link.recipient?.website?.startsWith('http://') ||
                                         link.recipient?.website?.startsWith('https://')
@@ -760,14 +761,11 @@ function PaymentLinkForm({
   onSubmit: onSubmitForm,
 }: PaymentLinkFormProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
-  const { translate, translateError } = useSettingsContext();
+  const { allowedCountries, translate, translateError } = useSettingsContext();
   const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink } = usePaymentRoutesContext();
   const { currencies } = useFiatContext();
-  const { getCountries } = useCountry();
   const { paymentRoutes, paymentLinks } = usePaymentRoutesContext();
 
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [isCountryLoading, setIsCountryLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -789,19 +787,10 @@ function PaymentLinkForm({
   const data = watch();
 
   useEffect(() => {
-    getCountries()
-      .then(setCountries)
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsCountryLoading(false));
-  }, []);
-
-  useEffect(() => {
     if (paymentLinkId) {
-      const paymentLink = paymentLinks?.find((link) => link.id === paymentLinkId);
-
-      const prefilledRecipientData = paymentLink?.recipient;
-      if (prefilledRecipientData && countries) {
-        const prefilledCountry = countries.find(
+      const prefilledRecipientData = paymentLinks?.find((link) => link.id === paymentLinkId)?.recipient;
+      if (prefilledRecipientData && allowedCountries) {
+        const prefilledCountry = allowedCountries.find(
           (country) => country.symbol === prefilledRecipientData.address?.country,
         );
         reset({
@@ -817,7 +806,7 @@ function PaymentLinkForm({
         });
       }
 
-      const prefilledPaymentConfig = paymentLink?.config;
+      const prefilledPaymentConfig = paymentLinks?.find((link) => link.id === paymentLinkId)?.config;
       if (prefilledPaymentConfig) {
         reset({
           configStandards: toConfigStandards(prefilledPaymentConfig.standards, prefilledPaymentConfig.blockchains),
@@ -829,7 +818,7 @@ function PaymentLinkForm({
     } else if (prefilledData) {
       reset(prefilledData);
     }
-  }, [paymentLinks, countries]);
+  }, [paymentLinks, allowedCountries]);
 
   useEffect(() => {
     const maxIdRoute = paymentRoutes?.sell.reduce((prev, current) => (prev.id < current.id ? prev : current));
@@ -1055,12 +1044,8 @@ function PaymentLinkForm({
                 name="recipientCountry"
                 autocomplete="country"
                 label={translate('screens/kyc', 'Country')}
-                placeholder={
-                  isCountryLoading
-                    ? translate('screens/payment', 'Loading countries...')
-                    : translate('general/actions', 'Select...')
-                }
-                items={countries ?? []}
+                placeholder={translate('general/actions', 'Select') + '...'}
+                items={allowedCountries ?? []}
                 labelFunc={(item) => item.name}
                 filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                 matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
@@ -1102,7 +1087,7 @@ function PaymentLinkForm({
                 label={translate('screens/payment', 'Mode')}
                 smallLabel
                 full
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 items={Object.values(PaymentLinkPaymentMode)}
                 labelFunc={(item) => translate('screens/payment', item)}
               />
@@ -1130,7 +1115,7 @@ function PaymentLinkForm({
                 label={translate('screens/settings', 'Currency')}
                 full
                 smallLabel={true}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 items={currencies ?? []}
                 labelFunc={(item) => item.name}
               />

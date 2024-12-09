@@ -165,7 +165,7 @@ export default function InvoiceScreen(): JSX.Element {
                     name="currency"
                     full
                     smallLabel={true}
-                    placeholder={translate('general/actions', 'Select...')}
+                    placeholder={translate('general/actions', 'Select') + '...'}
                     items={currencies ?? []}
                     labelFunc={(item) => item.name}
                   />

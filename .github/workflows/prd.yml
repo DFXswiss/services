@@ -57,7 +57,10 @@ jobs:
           regex: false
 
       - name: Build code
+        env:
+          REACT_APP_BUILD_ID: ${{ github.run_number }}-${{ github.run_id }}
         run: |
+          echo "REACT_APP_BUILD_ID=$REACT_APP_BUILD_ID" >> .env.prd
           npm run build
 
       - name: Run tests

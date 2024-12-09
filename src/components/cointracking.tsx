@@ -98,27 +98,27 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
   const filter = useWatch({ control, name: 'filter' })?.map((f) => f.key);
 
   useEffect(() => {
-    if (!filter) {
+    if (!filterMode) {
       setValue('filterMode', filterOptions[filterCT?.length ? 1 : 0]);
       setValue(
         'filter',
         filterTypes.filter((f) => filterCT?.includes(f.key)),
       );
     }
-  }, [filterCT]);
+  }, [filterMode, filterCT]);
 
   useEffect(() => {
     if (filterMode === 'all' && filterCT?.length) {
       setValue('filter', undefined);
       updateFilter();
     }
-  }, [filterMode]);
+  }, [filterMode, filterCT]);
 
   useEffect(() => {
     if (filter && !equalKeys(filterCT, filter)) {
       updateFilter(filter);
     }
-  }, [filter]);
+  }, [filter, filterCT]);
 
   const toggleNotification = () => {
     setShowNotification(true);
@@ -213,7 +213,7 @@ export default function CoinTracking({ rootRef }: { rootRef: React.RefObject<HTM
                 label={translate('screens/payment', 'Import filter')}
                 name="filterMode"
                 rootRef={rootRef}
-                placeholder={translate('general/actions', 'Select...')}
+                placeholder={translate('general/actions', 'Select') + '...'}
                 items={filterOptions}
                 labelFunc={(item) => translate('screens/payment', item.label)}
                 descriptionFunc={(item) => translate('screens/payment', item.value)}
