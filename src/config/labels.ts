@@ -10,6 +10,8 @@ import {
   TransactionState,
 } from '@dfx.swiss/react';
 
+import { PaymentQuoteStatus } from '@dfx.swiss/react/dist/definitions/route';
+
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
   [FiatPaymentMethod.BANK]: 'Standard bank transaction',
@@ -63,6 +65,17 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.CARD_NAME_MISMATCH]: 'Card name mismatch',
   [TransactionFailureReason.USER_DELETED]: 'Address deleted',
   [TransactionFailureReason.VIDEO_IDENT_NEEDED]: 'Video identification required',
+};
+
+export const PaymentQuoteStatusLabels = {
+  [PaymentQuoteStatus.ACTUAL]: 'Actual',
+  [PaymentQuoteStatus.CANCELLED]: 'Cancelled',
+  [PaymentQuoteStatus.EXPIRED]: 'Expired',
+  [PaymentQuoteStatus.TX_RECEIVED]: 'Transaction received',
+  [PaymentQuoteStatus.TX_MEMPOOL]: 'Transaction in mempool',
+  [PaymentQuoteStatus.TX_BLOCKCHAIN]: 'Transaction in blockchain',
+  [PaymentQuoteStatus.TX_COMPLETED]: 'Transaction completed',
+  [PaymentQuoteStatus.TX_FAILED]: 'Transaction failed',
 };
 
 // --- Limit increase requestS --- //

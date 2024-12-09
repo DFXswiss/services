@@ -5,7 +5,7 @@ export function ErrorHint({ message, onBack }: { message: string; onBack?: () =>
   const { translate } = useSettingsContext();
 
   return (
-    <>
+    <div>
       <p className="text-dfxRed-100">
         {translate(
           'general/errors',
@@ -13,14 +13,16 @@ export function ErrorHint({ message, onBack }: { message: string; onBack?: () =>
         )}
       </p>
       <p className="text-dfxGray-800 text-sm">{message}</p>
-      <div className="flex justify-center" hidden={!onBack}>
-        <StyledButton
-          className="mt-4"
-          label={translate('general/actions', 'Back')}
-          color={StyledButtonColor.GRAY_OUTLINE}
-          onClick={onBack!}
-        />
-      </div>
-    </>
+      {onBack && (
+        <div className="flex justify-center">
+          <StyledButton
+            className="mt-4"
+            label={translate('general/actions', 'Back')}
+            color={StyledButtonColor.GRAY_OUTLINE}
+            onClick={onBack}
+          />
+        </div>
+      )}
+    </div>
   );
 }

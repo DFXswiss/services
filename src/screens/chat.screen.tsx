@@ -75,7 +75,7 @@ export default function ChatScreen(): JSX.Element {
     }
   }, [supportIssue?.messages.length]);
 
-  function onChatBubbleClick(e?: React.MouseEvent<HTMLDivElement>, message?: SupportMessage) {
+  function onChatBubbleClick(e?: React.MouseEvent<HTMLDivElement>, _message?: SupportMessage) {
     if (!e) {
       setClickedMessage(undefined);
       return;
