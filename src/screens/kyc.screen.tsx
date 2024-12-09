@@ -1319,7 +1319,7 @@ export interface KycManualIdentFormData {
   file: File;
 }
 
-function ManualIdent({ rootRef, code, step, onDone, onBack }: EditProps): JSX.Element {
+function ManualIdent({ rootRef, code, step, onDone }: EditProps): JSX.Element {
   const { nationalityCountries, translate, translateError } = useSettingsContext();
   const { setManualIdentData } = useKyc();
   const { genderTypeToString, documentTypeToString } = useKycHelper();

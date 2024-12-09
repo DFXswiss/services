@@ -384,20 +384,6 @@ export default function PaymentLinkScreen(): JSX.Element {
     return !!request && 'quote' in request;
   }
 
-  function isValidPayRequest(error?: string, message?: string): boolean {
-    if (!error) return true;
-
-    if (message === 'No pending payment found') {
-      return true;
-    } else if (message?.includes('Active payment link not found')) {
-      setError(translate('screens/payment', 'Invalid Payment Link'));
-    } else {
-      setError(message ?? 'Unknown Error');
-    }
-
-    return false;
-  }
-
   const assetsList =
     hasQuote(payRequest) &&
     payRequest.transferAmounts.find((item) => item.method === selectedPaymentStandard?.blockchain)?.assets;
