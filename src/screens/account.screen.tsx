@@ -209,7 +209,7 @@ export default function AccountScreen(): JSX.Element {
                   <p>{limitToString(user.tradingLimit)}</p>
                   <StyledIconButton
                     icon={IconVariant.ARROW_UP}
-                    onClick={() => navigate('/support/issue?issue-type=LimitRequest')}
+                    onClick={() => navigate(user.kyc.level < 50 ? '/kyc' : '/support/issue?issue-type=LimitRequest')}
                   />
                 </div>
               </StyledDataTableRow>
