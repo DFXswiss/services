@@ -1,4 +1,4 @@
-import { useAuthContext, Utils, Validations } from '@dfx.swiss/react';
+import { ResponseType, useApi, Utils, Validations } from '@dfx.swiss/react';
 import { Form, StyledButton, StyledButtonWidth, StyledInput, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -16,7 +16,7 @@ export default function DownloadScreen(): JSX.Element {
   useAdminGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { authenticationToken } = useAuthContext();
+  const { call } = useApi();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -29,22 +29,21 @@ export default function DownloadScreen(): JSX.Element {
 
   async function onSubmit(data: FormData) {
     setIsLoading(true);
+    setError(undefined);
 
-    fetch(`${process.env.REACT_APP_API_URL}/v1/userData/download`, {
+    call<Blob>({
+      url: 'userData/download',
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: authenticationToken ? `Bearer ${authenticationToken}` : '',
-      },
-      body: JSON.stringify({ userDataIds: data.userDataIds.split(',').map((id) => Number(id)) }),
+      data: { userDataIds: data.userDataIds.split(',').map((id) => Number(id)) },
+      responseType: ResponseType.BLOB,
     })
-      .then((response) => (response.ok ? response.text() : response.json()))
-      .then((response) => {
-        if (response.message) throw response;
+      .then((blob) => {
         const link = document.createElement('a');
-        link.href = `data:application/zip;base64,${response}`;
+        const url = URL.createObjectURL(blob);
+        link.href = url;
         link.download = generateExportFileName();
         link.click();
+        URL.revokeObjectURL(url);
       })
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
