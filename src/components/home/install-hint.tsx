@@ -33,6 +33,7 @@ export function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: 
     case WalletType.CAKE:
     case WalletType.MONERO:
     case WalletType.MAIL:
+    case WalletType.ADDRESS:
       return <></>;
   }
 }
