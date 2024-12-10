@@ -78,14 +78,14 @@ export default function AccountScreen(): JSX.Element {
   }, [isLoggedIn]);
 
   useEffect(() => {
-    if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address) {
+    if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address && !isUserLoading) {
       changeAddress(selectedAddress.address)
         .then(() => setWallet())
         .catch(() => {
           // ignore errors
         });
     }
-  }, [selectedAddress, user?.activeAddress]);
+  }, [selectedAddress, user?.activeAddress, !isUserLoading]);
 
   async function loadRefferal(): Promise<void> {
     return getRef().then(setRefferal);

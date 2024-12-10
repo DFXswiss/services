@@ -20,7 +20,7 @@ interface FormData {
 
 export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX.Element {
   const { translate } = useSettingsContext();
-  const { user } = useUserContext();
+  const { user, isUserLoading } = useUserContext();
   const { width } = useWindowContext();
   const { setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
@@ -40,7 +40,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
   }, [user?.activeAddress]);
 
   useEffect(() => {
-    if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address) {
+    if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address && !isUserLoading) {
       changeAddress(selectedAddress.address)
         .then(() => {
           setWallet();
@@ -50,7 +50,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
           // ignore errors
         });
     }
-  }, [selectedAddress, user?.activeAddress]);
+  }, [selectedAddress, user?.activeAddress, isUserLoading]);
 
   return (
     <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
