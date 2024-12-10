@@ -50,7 +50,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
           // ignore errors
         });
     }
-  }, [selectedAddress]);
+  }, [selectedAddress, user?.activeAddress]);
 
   return (
     <StyledVerticalStack gap={4} center full marginY={4} className="z-10">

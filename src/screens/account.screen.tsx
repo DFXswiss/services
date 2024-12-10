@@ -85,7 +85,7 @@ export default function AccountScreen(): JSX.Element {
           // ignore errors
         });
     }
-  }, [selectedAddress]);
+  }, [selectedAddress, user?.activeAddress]);
 
   async function loadRefferal(): Promise<void> {
     return getRef().then(setRefferal);
