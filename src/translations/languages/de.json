@@ -537,6 +537,20 @@
     "Deactivate": "Deaktivieren",
     "Expires at": "Gültig bis",
 
+    "Configuration": "Konfiguration",
+    "Default configuration": "Standardkonfiguration",
+    "Payment standards": "Zahlungsstandards",
+    "Min. completion status": "Min. Abschlussstatus",
+    "Display QR code": "QR-Code anzeigen",
+    "Payment timeout (seconds)": "Zahlungs-Timeout (Sekunden)",
+
+    "Actual": "Aktuell",
+    "Transaction received": "Transaktion erhalten",
+    "Transaction in mempool": "Transaktion im Mempool",
+    "Transaction in blockchain": "Transaktion in der Blockchain",
+    "Transaction completed": "Transaktion abgeschlossen",
+    "Transaction failed": "Transaktion fehlgeschlagen",
+
     "Token contract": "Token-Contract",
 
     "Create Invoice": "Rechnung erstellen",
@@ -580,7 +594,8 @@
     "Buy transactions": "Kauftransaktionen",
     "Sell transactions": "Verkaufstransaktionen",
     "Staking transactions": "Staking-Transaktionen",
-    "Referral rewards": "Referral-Rewards"
+    "Referral rewards": "Referral-Rewards",
+    "Edit configuration": "Konfiguration bearbeiten"
   },
   "screens/iban": {
     "Bank Accounts": "Bankkonten",
