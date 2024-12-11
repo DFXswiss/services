@@ -176,6 +176,7 @@
     "Start video identification": "Video-Identifikation starten",
     "I am already verified with DFX": "Ich bin bereits bei DFX verifiziert",
     "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Hiermit beauftrage ich DFX, meine KYC-Daten an {{client}} zu übermitteln.",
+    "The identification has failed.": "Die Identifizierung ist fehlgeschlagen.",
 
     "Merging your accounts...": "Deine Konten werden zusammengeführt...",
     "Account merged successfully!": "Konto erfolgreich zusammengeführt!",

@@ -46,6 +46,7 @@ import {
   IconVariant,
   SpinnerSize,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
   StyledCheckboxRow,
   StyledDataTable,
@@ -68,6 +69,7 @@ import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { SumsubMessage, SumsubReviewAnswer } from 'src/dto/sumsub.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
@@ -1092,7 +1094,10 @@ function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProp
 }
 
 function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element {
+  const { translate } = useSettingsContext();
+
   const [isDone, setIsDone] = useState(false);
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
     onDone();
@@ -1113,7 +1118,21 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
   }
 
   return step.session ? (
-    isDone ? (
+    error ? (
+      <div>
+        <p className="text-dfxRed-100">{translate('screens/kyc', 'The identification has failed.')}</p>
+        <p className="text-dfxGray-800 text-sm">{error}</p>
+
+        <div className="flex justify-center">
+          <StyledButton
+            className="mt-4"
+            label={translate('general/actions', 'Ok')}
+            color={StyledButtonColor.GRAY_OUTLINE}
+            onClick={onBack}
+          />
+        </div>
+      </div>
+    ) : isDone ? (
       <StyledLoadingSpinner size={SpinnerSize.LG} />
     ) : (
       <>
@@ -1123,12 +1142,16 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
             accessToken={step.session.url}
             expirationHandler={() => onError('Token expired')}
             config={{ lang: lang.symbol.toLowerCase() }}
-            onMessage={(type: string, payload: any) =>
-              type === 'idCheck.onApplicantStatusChanged' &&
-              ['pending', 'completed'].includes(payload?.reviewStatus) &&
-              setIsDone(true)
-            }
-            onError={onError}
+            onMessage={(type: string, payload: SumsubMessage) => {
+              if (type === 'idCheck.onApplicantStatusChanged') {
+                if (payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.RED) {
+                  setError(payload.reviewResult.moderationComment ?? 'Unknown error');
+                } else if (payload?.reviewStatus === 'completed') {
+                  setIsDone(true);
+                }
+              }
+            }}
+            onError={setError}
           />
         ) : (
           <iframe
