@@ -569,19 +569,10 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
   const { allowedCountries, allowedOrganizationCountries, translate, translateError } = useSettingsContext();
   const { setPersonalData } = useKyc();
   const { countryCode } = useGeoLocation();
-  const { user } = useUserContext();
 
   const [countries, setCountries] = useState<Country[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
-
-  useEffect(() => {
-    if (!user) return;
-
-    user?.accountType === AccountType.ORGANIZATION
-      ? setCountries(allowedOrganizationCountries)
-      : setCountries(allowedCountries);
-  }, [user]);
 
   useEffect(() => {
     const ipCountry = countries.find((c) => c.symbol === countryCode);
@@ -597,7 +588,16 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
     setValue,
     formState: { isValid, isDirty, errors },
   } = useForm<KycPersonalData>({ mode: 'onTouched' });
+
   const selectedAccountType = useWatch({ control, name: 'accountType' });
+
+  useEffect(() => {
+    if (!selectedAccountType) return;
+
+    selectedAccountType === AccountType.ORGANIZATION
+      ? setCountries(allowedOrganizationCountries)
+      : setCountries(allowedCountries);
+  }, [selectedAccountType]);
 
   function onSubmit(data: KycPersonalData) {
     if (!step.session) return;
