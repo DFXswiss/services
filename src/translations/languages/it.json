@@ -406,6 +406,7 @@
     "Base rate": "Tasso base",
     "DFX fee": "Commissioni DFX",
     "Network fee": "Commissione di rete",
+    "Bank fee": "Commissione bancaria",
     "Network start fee": "Commissione di avvio della rete",
 
     "Your payment has failed. Please try again.": "Il tuo pagamento non è andato a buon fine. Per favore, riprova.",
@@ -456,6 +457,7 @@
     "Expired": "Scaduto",
     "Failed": "Fallito",
     "Refund pending": "Rimborso in sospeso",
+    "Limit exceeded": "Limite superato",
     "Refunded": "Rimborsato",
     "Unassigned": "Non assegnato",
     "LNURL decoded": "LNURL decodificato",

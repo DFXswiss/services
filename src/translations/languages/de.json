@@ -406,6 +406,7 @@
     "Base rate": "Basiskurs",
     "DFX fee": "DFX-Gebühr",
     "Network fee": "Netzwerk-Gebühr",
+    "Bank fee": "Bank-Gebühr",
     "Network start fee": "Netzwerk-Startgebühr",
 
     "Your payment has failed. Please try again.": "Deine Zahlung ist fehlgeschlagen. Bitte versuche es erneut.",
@@ -456,6 +457,7 @@
     "Expired": "Abgelaufen",
     "Failed": "Gescheitert",
     "Refund pending": "Rückerstattung ausstehend",
+    "Limit exceeded": "Limit überschritten",
     "Refunded": "Rückerstattet",
     "Unassigned": "Nicht zugeordnet",
     "LNURL decoded": "LNURL dekodiert",
