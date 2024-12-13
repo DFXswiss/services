@@ -69,12 +69,18 @@ export default function HomeScreen(): JSX.Element {
   useEffect(() => {
     const isConnectAddress = connectTo?.type === WalletType.ADDRESS;
 
-    if (specialMode === SpecialMode.CONNECT && isLoggedIn && user?.addresses?.length && !isConnectAddress) {
+    if (
+      specialMode === SpecialMode.CONNECT &&
+      isLoggedIn &&
+      !session?.address &&
+      user?.addresses?.length &&
+      !isConnectAddress
+    ) {
       setConnectTo({ type: WalletType.ADDRESS });
     } else if (!isLoggedIn && isConnectAddress) {
       setConnectTo(undefined);
     }
-  }, [specialMode, isLoggedIn, user?.addresses]);
+  }, [specialMode, isLoggedIn, session, user?.addresses]);
 
   useEffect(() => {
     if (isInitialized && isLoggedIn && user && loginSuccessful) {

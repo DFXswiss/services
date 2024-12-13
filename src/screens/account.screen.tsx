@@ -3,6 +3,7 @@ import {
   Referral,
   UserAddress,
   Utils,
+  useAuthContext,
   useSessionContext,
   useTransaction,
   useUser,
@@ -51,6 +52,7 @@ export default function AccountScreen(): JSX.Element {
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized, setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
+  const { session } = useAuthContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
@@ -67,11 +69,11 @@ export default function AccountScreen(): JSX.Element {
   const selectedAddress = useWatch({ control, name: 'address' });
 
   useEffect(() => {
-    if (user?.activeAddress) {
+    if (user?.activeAddress && !isUserLoading) {
       loadRefferal();
       setValue('address', user.activeAddress);
     }
-  }, [user?.activeAddress]);
+  }, [user?.activeAddress, isUserLoading, session?.role]);
 
   useEffect(() => {
     if (isLoggedIn) loadTransactions();
