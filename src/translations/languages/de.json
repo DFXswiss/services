@@ -176,6 +176,7 @@
     "Start video identification": "Video-Identifikation starten",
     "I am already verified with DFX": "Ich bin bereits bei DFX verifiziert",
     "I hereby authorize DFX to transfer my KYC data to {{client}}.": "Hiermit beauftrage ich DFX, meine KYC-Daten an {{client}} zu übermitteln.",
+    "The identification has failed.": "Die Identifizierung ist fehlgeschlagen.",
 
     "Merging your accounts...": "Deine Konten werden zusammengeführt...",
     "Account merged successfully!": "Konto erfolgreich zusammengeführt!",
@@ -539,6 +540,20 @@
     "Deactivate": "Deaktivieren",
     "Expires at": "Gültig bis",
 
+    "Configuration": "Konfiguration",
+    "Default configuration": "Standardkonfiguration",
+    "Payment standards": "Zahlungsstandards",
+    "Min. completion status": "Min. Abschlussstatus",
+    "Display QR code": "QR-Code anzeigen",
+    "Payment timeout (seconds)": "Zahlungs-Timeout (Sekunden)",
+
+    "Actual": "Aktuell",
+    "Transaction received": "Transaktion erhalten",
+    "Transaction in mempool": "Transaktion im Mempool",
+    "Transaction in blockchain": "Transaktion in der Blockchain",
+    "Transaction completed": "Transaktion abgeschlossen",
+    "Transaction failed": "Transaktion fehlgeschlagen",
+
     "Token contract": "Token-Contract",
 
     "Create Invoice": "Rechnung erstellen",
@@ -582,7 +597,8 @@
     "Buy transactions": "Kauftransaktionen",
     "Sell transactions": "Verkaufstransaktionen",
     "Staking transactions": "Staking-Transaktionen",
-    "Referral rewards": "Referral-Rewards"
+    "Referral rewards": "Referral-Rewards",
+    "Edit configuration": "Konfiguration bearbeiten"
   },
   "screens/iban": {
     "Bank Accounts": "Bankkonten",

@@ -47,11 +47,6 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 
-interface Timer {
-  minutes: number;
-  seconds: number;
-}
-
 export default function SellInfoScreen(): JSX.Element {
   useAddressGuard();
 

@@ -13,7 +13,6 @@ import {
   UserAddress,
   Utils,
   Validations,
-  useAuthContext,
   useBankAccountContext,
   useSessionContext,
   useTransaction,
@@ -70,7 +69,6 @@ export default function TransactionScreen(): JSX.Element {
   const { user } = useUserContext();
   const { pathname } = useLocation();
   const { navigate } = useNavigation();
-  const { session } = useAuthContext();
   const { translate } = useSettingsContext();
   const { getTransactionCsv, getTransactionHistory } = useTransaction();
   const rootRef = useRef<HTMLDivElement>(null);

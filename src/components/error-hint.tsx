@@ -19,7 +19,7 @@ export function ErrorHint({ message, onBack }: { message: string; onBack?: () =>
             className="mt-4"
             label={translate('general/actions', 'Back')}
             color={StyledButtonColor.GRAY_OUTLINE}
-            onClick={onBack!}
+            onClick={onBack}
           />
         </div>
       )}
