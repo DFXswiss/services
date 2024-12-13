@@ -43,6 +43,7 @@ interface SettingsInterface {
   availableLanguages: Language[];
   allowedCountries: Country[];
   nationalityCountries: Country[];
+  allowedOrganizationCountries: Country[];
   locale: string;
   language?: Language;
   currency?: Fiat;
@@ -255,6 +256,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
     () => ({
       availableLanguages,
       allowedCountries: countries.filter((c) => c.kycAllowed),
+      allowedOrganizationCountries: countries.filter((c) => c.kycOrganizationAllowed),
       nationalityCountries: countries.filter((c) => c.nationalityAllowed),
       locale: languageToLocale[language?.symbol.toLowerCase() ?? 'en'],
       language,

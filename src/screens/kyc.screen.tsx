@@ -566,20 +566,30 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack, showLinkHint
 }
 
 function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
-  const { allowedCountries, translate, translateError } = useSettingsContext();
+  const { allowedCountries, allowedOrganizationCountries, translate, translateError } = useSettingsContext();
   const { setPersonalData } = useKyc();
   const { countryCode } = useGeoLocation();
+  const { user } = useUserContext();
 
+  const [countries, setCountries] = useState<Country[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    const ipCountry = allowedCountries.find((c) => c.symbol === countryCode);
+    if (!user) return;
+
+    user?.accountType === AccountType.ORGANIZATION
+      ? setCountries(allowedOrganizationCountries)
+      : setCountries(allowedCountries);
+  }, [user]);
+
+  useEffect(() => {
+    const ipCountry = countries.find((c) => c.symbol === countryCode);
     if (ipCountry && !isDirty) {
       setValue('address.country', ipCountry);
       setValue('organizationAddress.country', ipCountry);
     }
-  }, [allowedCountries, countryCode]);
+  }, [countries, countryCode]);
 
   const {
     control,
@@ -701,7 +711,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                 autocomplete="country"
                 label={translate('screens/kyc', 'Country')}
                 placeholder={translate('general/actions', 'Select') + '...'}
-                items={allowedCountries}
+                items={countries}
                 labelFunc={(item) => item.name}
                 filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                 matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
@@ -773,7 +783,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                   autocomplete="country"
                   label={translate('screens/kyc', 'Country')}
                   placeholder={translate('general/actions', 'Select') + '...'}
-                  items={allowedCountries}
+                  items={countries}
                   labelFunc={(item) => item.name}
                   filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                   matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
