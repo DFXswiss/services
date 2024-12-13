@@ -40,6 +40,7 @@ export function ExchangeRate({
   const minFee = `, min. ${fees.min}${feeSymbol}`;
   const dfxFee = `${fees.dfx}${feeSymbol} (${(fees.rate * 100).toFixed(2)}%${fees.min ? minFee : ''})`;
   const networkFee = `${fees.network}${feeSymbol}`;
+  const bankFee = fees?.bank ? `${fees.bank}${feeSymbol}` : undefined;
   const networkStartFee = fees?.networkStart ? `${fees?.networkStart}${feeSymbol}` : undefined;
 
   const l1Replacement =
@@ -99,6 +100,12 @@ export function ExchangeRate({
               </div>
             )}
           </StyledVerticalStack>
+          {bankFee && (
+            <>
+              <div className="text-dfxGray-800">{translate('screens/payment', 'Bank fee')}</div>
+              <div>{bankFee}</div>
+            </>
+          )}
           {networkStartFee && (
             <>
               <div className="text-dfxGray-800">{translate('screens/payment', 'Network start fee')}</div>
