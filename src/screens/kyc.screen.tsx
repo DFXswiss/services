@@ -594,9 +594,9 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
   useEffect(() => {
     if (!selectedAccountType) return;
 
-    selectedAccountType === AccountType.ORGANIZATION
-      ? setCountries(allowedOrganizationCountries)
-      : setCountries(allowedCountries);
+    selectedAccountType === AccountType.PERSONAL
+      ? setCountries(allowedCountries)
+      : setCountries(allowedOrganizationCountries);
   }, [selectedAccountType]);
 
   function onSubmit(data: KycPersonalData) {
