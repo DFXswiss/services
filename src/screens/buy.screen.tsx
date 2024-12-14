@@ -583,7 +583,7 @@ export default function BuyScreen(): JSX.Element {
                             steps={paymentInfo.priceSteps}
                             amountIn={paymentInfo.amount}
                             amountOut={paymentInfo.estimatedAmount}
-                            type="buy"
+                            type={TransactionType.BUY}
                           />
 
                           {selectedPaymentMethod !== FiatPaymentMethod.CARD ? (

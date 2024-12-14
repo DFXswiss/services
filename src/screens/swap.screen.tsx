@@ -641,7 +641,7 @@ export default function SwapScreen(): JSX.Element {
                           steps={paymentInfo.priceSteps}
                           amountIn={paymentInfo.amount}
                           amountOut={paymentInfo.estimatedAmount}
-                          type="buy"
+                          type={TransactionType.SWAP}
                         />
 
                         <PaymentInformationContent info={paymentInfo} infoText={getPaymentInfoString(paymentInfo)} />
