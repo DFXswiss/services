@@ -240,19 +240,31 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
           width={StyledButtonWidth.FULL}
         />
       )}
-      <StyledButton
-        label={translate(
-          'general/actions',
-          transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
-        )}
-        onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
-        color={StyledButtonColor.STURDY_WHITE}
-        hidden={
-          ![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
-            transaction.state,
-          ) || !!transaction.chargebackAmount
-        }
-      />
+
+      <StyledVerticalStack gap={4} full>
+        <StyledButton
+          label={translate(
+            'general/actions',
+            transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+          )}
+          onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
+          hidden={
+            ![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
+              transaction.state,
+            ) || !!transaction.chargebackAmount
+          }
+        />
+        <StyledButton
+          label={translate('general/actions', 'Create support ticket')}
+          onClick={() => handleTransactionNavigation('/support/issue?issue-type=TransactionIssue')}
+          color={StyledButtonColor.STURDY_WHITE}
+          hidden={
+            ![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
+              transaction.state,
+            ) || !!transaction.chargebackAmount
+          }
+        />
+      </StyledVerticalStack>
     </StyledVerticalStack>
   ) : (
     <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -431,7 +443,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
                 full
               />
             )}
-
           <StyledButton
             type="submit"
             label={translate(
