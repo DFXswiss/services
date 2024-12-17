@@ -100,6 +100,7 @@ export default function ActionableList({ label, items, buttonLabel, buttonAction
 interface MenuItem {
   label: string;
   onClick: () => void;
+  closeOnClick?: boolean;
   hidden?: boolean;
 }
 
@@ -139,6 +140,7 @@ function OverflowMenu({ menuItems, onClose }: OverflowMenuProps): JSX.Element {
               onClick={(e) => {
                 e.stopPropagation();
                 item.onClick();
+                item.closeOnClick && onClose();
               }}
             >
               {item.label}

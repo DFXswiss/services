@@ -204,10 +204,12 @@ export default function SettingsScreen(): JSX.Element {
                     {
                       label: translate('general/actions', 'Copy'),
                       onClick: () => copy(address.address),
+                      closeOnClick: true,
                     },
                     {
                       label: translate('general/actions', 'Open Explorer'),
                       onClick: () => window.open(address.explorerUrl, '_blank'),
+                      closeOnClick: true,
                     },
                     {
                       label: translate('general/actions', 'Rename'),
@@ -229,58 +231,6 @@ export default function SettingsScreen(): JSX.Element {
         </StyledVerticalStack>
       )}
     </Layout>
-  );
-}
-
-interface MenuItem {
-  label: string;
-  hidden?: boolean;
-  onClick: () => void;
-}
-
-interface OverflowMenuProps {
-  menuItems: MenuItem[];
-  onClose: () => void;
-}
-
-function OverflowMenu({ menuItems, onClose }: OverflowMenuProps): JSX.Element {
-  const menuRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (document) {
-      function closeMenu(event: Event) {
-        if (!menuRef.current?.contains(event.target as Node)) {
-          onClose();
-        }
-      }
-
-      document.addEventListener('mousedown', closeMenu);
-      return () => document.removeEventListener('mousedown', closeMenu);
-    }
-  }, []);
-
-  return (
-    <div
-      ref={menuRef}
-      className="absolute right-5 top-3 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip"
-    >
-      <div className="flex flex-col divide-y-0.5 divide-dfxGray-400 items-start bg-dfxGray-100 w-36">
-        {menuItems
-          .filter((item) => !item.hidden)
-          .map((item) => (
-            <button
-              key={item.label}
-              className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                item.onClick();
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
-      </div>
-    </div>
   );
 }
 
