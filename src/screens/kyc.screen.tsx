@@ -574,30 +574,41 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
 
-  useEffect(() => {
-    const ipCountry = countries.find((c) => c.symbol === countryCode);
-    if (ipCountry && !isDirty) {
-      setValue('address.country', ipCountry);
-      setValue('organizationAddress.country', ipCountry);
-    }
-  }, [countries, countryCode]);
-
   const {
     control,
     handleSubmit,
-    setValue,
-    formState: { isValid, isDirty, errors },
-  } = useForm<KycPersonalData>({ mode: 'onTouched' });
+    getValues,
+    reset,
+    formState: { isValid, errors },
+  } = useForm<KycPersonalData>({ mode: 'onTouched', defaultValues: { organizationAddress: {} } });
 
   const selectedAccountType = useWatch({ control, name: 'accountType' });
 
   useEffect(() => {
     if (!selectedAccountType) return;
 
-    selectedAccountType === AccountType.PERSONAL
-      ? setCountries(allowedCountries)
-      : setCountries(allowedOrganizationCountries);
-  }, [selectedAccountType]);
+    const countries = selectedAccountType === AccountType.PERSONAL ? allowedCountries : allowedOrganizationCountries;
+    const ipCountry = countries.find((c) => c.symbol === countryCode);
+
+    reset({
+      ...getValues(),
+      accountType: selectedAccountType,
+      address: {
+        street: undefined,
+        zip: undefined,
+        city: undefined,
+        country: ipCountry,
+      },
+      organizationAddress: {
+        street: undefined,
+        zip: undefined,
+        city: undefined,
+        country: undefined,
+      },
+    });
+
+    setCountries(countries);
+  }, [selectedAccountType, countryCode, allowedCountries, allowedOrganizationCountries]);
 
   function onSubmit(data: KycPersonalData) {
     if (!step.session) return;
@@ -705,7 +716,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                   smallLabel
                 />
               </StyledHorizontalStack>
-              <StyledSearchDropdown
+              <StyledSearchDropdown<Country>
                 rootRef={rootRef}
                 name="address.country"
                 autocomplete="country"
@@ -777,7 +788,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                     smallLabel
                   />
                 </StyledHorizontalStack>
-                <StyledSearchDropdown
+                <StyledSearchDropdown<Country>
                   rootRef={rootRef}
                   name="organizationAddress.country"
                   autocomplete="country"
