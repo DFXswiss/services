@@ -17,14 +17,14 @@ interface Item {
   key: string | number;
   label: string;
   subLabel: string;
-  isDisabled: boolean;
+  isDisabled?: boolean;
   tag?: string;
   menuItems?: MenuItem[];
 }
 
 type ActionableListProps = {
-  label: string;
-  items: Item[];
+  label?: string;
+  items?: Item[];
   buttonLabel?: string;
   buttonAction?: () => void;
 };

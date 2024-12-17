@@ -23,7 +23,6 @@ import {
   AssetIconVariant,
   Form,
   SpinnerSize,
-  StyledBankAccountListItem,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
@@ -39,6 +38,7 @@ import {
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+import ActionableList from 'src/components/actionable-list';
 import { AddressSwitch } from 'src/components/payment/address-switch';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
@@ -633,7 +633,7 @@ export default function SellScreen(): JSX.Element {
                       {bankAccountSelection && (
                         <>
                           <div className="absolute h-full w-full z-1 top-0 bg-white">
-                            {bankAccounts.length && (
+                            {/* {bankAccounts.length && (
                               <>
                                 <StyledVerticalStack gap={4}>
                                   {bankAccounts.map((account, i) => (
@@ -652,7 +652,20 @@ export default function SellScreen(): JSX.Element {
 
                                 <div className={`h-[1px] bg-dfxGray-400 w-full my-6`} />
                               </>
-                            )}
+                            )} */}
+
+                            <ActionableList
+                              items={bankAccounts.map((account) => {
+                                return {
+                                  key: account.id,
+                                  label: account.label ?? `${account.iban.slice(0, 2)} ${account.iban.slice(-4)}`,
+                                  subLabel: blankedAddress(Utils.formatIban(account.iban)!, { width }),
+                                  tag: account.default
+                                    ? translate('screens/settings', 'Default').toUpperCase()
+                                    : undefined,
+                                };
+                              })}
+                            />
 
                             <AddBankAccount
                               onSubmit={(account) => {
