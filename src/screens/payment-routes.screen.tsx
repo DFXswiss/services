@@ -810,7 +810,7 @@ function PaymentLinkForm({
       if (prefilledPaymentConfig) {
         reset({
           configStandards: toConfigStandards(prefilledPaymentConfig.standards, prefilledPaymentConfig.blockchains),
-          configMinCompletionStatus: prefilledPaymentConfig.minCompletionStatus,
+          configMinCompletionStatus: prefilledPaymentConfig.minCompletionStatus as any,
           configDisplayQr: prefilledPaymentConfig.displayQr,
           configPaymentTimeout: prefilledPaymentConfig.paymentTimeout,
         });

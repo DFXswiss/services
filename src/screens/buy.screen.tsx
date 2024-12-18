@@ -367,6 +367,7 @@ export default function BuyScreen(): JSX.Element {
       case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
+      case TransactionError.NATIONALITY_NOT_ALLOWED:
         setKycError(buy.error);
         return;
     }
