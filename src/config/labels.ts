@@ -36,6 +36,7 @@ export const PaymentStateLabels = {
   [TransactionState.FAILED]: 'Failed',
   [TransactionState.RETURNED]: 'Refunded',
   [TransactionState.RETURN_PENDING]: 'Refund pending',
+  [TransactionState.LIMIT_EXCEEDED]: 'Limit exceeded',
 };
 
 export function toPaymentStateLabel(state: TransactionState): string {

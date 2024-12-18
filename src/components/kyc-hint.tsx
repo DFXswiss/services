@@ -64,6 +64,12 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
             limit: limitToString(defaultLimit),
           },
         );
+
+      case TransactionError.NATIONALITY_NOT_ALLOWED:
+        return translate(
+          'screens/kyc',
+          'We are unable to process this transaction due to restrictions based on your nationality.',
+        );
     }
   }
 
@@ -78,6 +84,12 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
           width={StyledButtonWidth.FULL}
           label={translate('screens/kyc', 'Start video identification')}
           onClick={() => startStep(KycStepName.IDENT, KycStepType.VIDEO)}
+        />
+      ) : error === TransactionError.NATIONALITY_NOT_ALLOWED ? (
+        <StyledButton
+          width={StyledButtonWidth.FULL}
+          label={translate('general/actions', 'Ok')}
+          onClick={() => navigate('/account')}
         />
       ) : (
         <>

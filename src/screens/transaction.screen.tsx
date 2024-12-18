@@ -1,12 +1,11 @@
 import {
   ApiError,
-  Asset,
   CryptoPaymentMethod,
   DetailTransaction,
   ExportFormat,
-  Fiat,
   FiatPaymentMethod,
   Transaction,
+  TransactionRefundData,
   TransactionState,
   TransactionTarget,
   TransactionType,
@@ -266,11 +265,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
   );
 }
 
-interface RefundDetails {
-  expiryDate: Date;
-  feeAmount: number;
-  refundAmount: number;
-  refundAsset: Asset | Fiat;
+interface RefundDetails extends TransactionRefundData {
   refundTarget?: string;
 }
 
@@ -388,9 +383,14 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
             {transaction.inputAmount} {transaction.inputAsset}
           </p>
         </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/payment', 'Fee')}>
+        <StyledDataTableRow label={translate('screens/payment', 'Bank fee')}>
           <p>
-            {refundDetails.feeAmount} {refundDetails.refundAsset.name}
+            {refundDetails.fee.bank} {refundDetails.refundAsset.name}
+          </p>
+        </StyledDataTableRow>
+        <StyledDataTableRow label={translate('screens/payment', 'Network fee')}>
+          <p>
+            {refundDetails.fee.network} {refundDetails.refundAsset.name}
           </p>
         </StyledDataTableRow>
         <StyledDataTableRow
@@ -762,6 +762,11 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
     rateItems.push({
       label: translate('screens/payment', 'Network fee'),
       text: `${tx.fees.network} ${tx.inputAsset}`,
+    });
+  tx.fees?.bank != null &&
+    rateItems.push({
+      label: translate('screens/payment', 'Bank fee'),
+      text: `${tx.fees.bank} ${tx.inputAsset}`,
     });
   tx?.fees?.networkStart &&
     rateItems.push({
