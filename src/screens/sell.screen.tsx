@@ -631,29 +631,8 @@ export default function SellScreen(): JSX.Element {
                       />
 
                       {bankAccountSelection && (
-                        <>
-                          <div className="absolute h-full w-full z-1 top-0 bg-white">
-                            {/* {bankAccounts.length && (
-                              <>
-                                <StyledVerticalStack gap={4}>
-                                  {bankAccounts.map((account, i) => (
-                                    <button
-                                      key={i}
-                                      className="text-start"
-                                      onClick={() => {
-                                        onChange(account);
-                                        setBankAccountSelection(false);
-                                      }}
-                                    >
-                                      <StyledBankAccountListItem bankAccount={account} />
-                                    </button>
-                                  ))}
-                                </StyledVerticalStack>
-
-                                <div className={`h-[1px] bg-dfxGray-400 w-full my-6`} />
-                              </>
-                            )} */}
-
+                        <div className="absolute h-full w-full z-1 top-0 bg-white">
+                          <StyledVerticalStack gap={6} center>
                             <ActionableList
                               items={bankAccounts.map((account) => {
                                 return {
@@ -677,8 +656,8 @@ export default function SellScreen(): JSX.Element {
                                 setBankAccountSelection(false);
                               }}
                             />
-                          </div>
-                        </>
+                          </StyledVerticalStack>
+                        </div>
                       )}
                     </>
                   )}
