@@ -546,6 +546,7 @@
     "Configuration": "Configuration",
     "Default configuration": "Configuration par défaut",
     "Payment standards": "Normes de paiement",
+    "Payment blockchains": "Blockchains de paiement",
     "Min. completion status": "Statut min. d'achèvement",
     "Display QR code": "Afficher le code QR",
     "Payment timeout (seconds)": "Délai de paiement (secondes)",
