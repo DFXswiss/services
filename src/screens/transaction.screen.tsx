@@ -240,25 +240,25 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
         />
       )}
 
-      {(![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
+      {[TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
         transaction.state,
-      ) ||
-        !!transaction.chargebackAmount) && (
-        <StyledVerticalStack gap={4} full>
-          <StyledButton
-            label={translate(
-              'general/actions',
-              transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
-            )}
-            onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
-          />
-          <StyledButton
-            label={translate('general/actions', 'Create support ticket')}
-            onClick={() => handleTransactionNavigation('/support/issue?issue-type=TransactionIssue')}
-            color={StyledButtonColor.STURDY_WHITE}
-          />
-        </StyledVerticalStack>
-      )}
+      ) &&
+        !transaction.chargebackAmount && (
+          <StyledVerticalStack gap={4} full>
+            <StyledButton
+              label={translate(
+                'general/actions',
+                transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+              )}
+              onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
+            />
+            <StyledButton
+              label={translate('general/actions', 'Create support ticket')}
+              onClick={() => handleTransactionNavigation('/support/issue?issue-type=TransactionIssue')}
+              color={StyledButtonColor.STURDY_WHITE}
+            />
+          </StyledVerticalStack>
+        )}
     </StyledVerticalStack>
   ) : (
     <StyledLoadingSpinner size={SpinnerSize.LG} />
