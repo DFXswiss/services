@@ -8,9 +8,9 @@ import { ConnectWrapper } from '../components/home/connect-wrapper';
 import { Layout } from '../components/layout';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
-import { supportsBlockchain, useWalletContext } from '../contexts/wallet.context';
+import { supportsBlockchain, useWalletContext, WalletType } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
-import { Tile, Wallet, isWallet, useFeatureTree } from '../hooks/feature-tree.hook';
+import { isWallet, Tile, useFeatureTree, Wallet } from '../hooks/feature-tree.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useResizeObserver } from '../hooks/resize-observer.hook';
 import { Stack } from '../util/stack';
@@ -49,7 +49,7 @@ export default function HomeScreen(): JSX.Element {
   const { user, isUserLoading } = useUserContext();
   const { hasSession, canClose, service, isEmbedded, redirectPath, closeServices } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
-  const { navigate } = useNavigation();
+  const { navigate, goBack } = useNavigation();
   const { pathname } = useLocation();
   const { getPage, getWallet, setOptions } = useFeatureTree();
   const appParams = useAppParams();
@@ -65,6 +65,22 @@ export default function HomeScreen(): JSX.Element {
 
   const selectedBlockchain = (connectTo?.blockchain ?? appParams.blockchain) as Blockchain | undefined;
   const specialMode = getMode(pathname);
+
+  useEffect(() => {
+    const isConnectAddress = connectTo?.type === WalletType.ADDRESS;
+
+    if (
+      specialMode === SpecialMode.CONNECT &&
+      isLoggedIn &&
+      !session?.address &&
+      user?.addresses?.length &&
+      !isConnectAddress
+    ) {
+      setConnectTo({ type: WalletType.ADDRESS });
+    } else if (!isLoggedIn && isConnectAddress) {
+      setConnectTo(undefined);
+    }
+  }, [specialMode, isLoggedIn, session, user?.addresses]);
 
   useEffect(() => {
     if (isInitialized && isLoggedIn && user && loginSuccessful) {
@@ -98,9 +114,11 @@ export default function HomeScreen(): JSX.Element {
   }
 
   function handleBack() {
-    if (connectTo) {
+    if (connectTo && connectTo.type !== WalletType.ADDRESS) {
       setConnectTo(undefined);
-    } else {
+    } else if (specialMode === SpecialMode.CONNECT && isLoggedIn) {
+      connectTo ? goBack() : setConnectTo({ type: WalletType.ADDRESS });
+    } else if (currentPageId) {
       setPages((p) => p.pop((i) => getPage(i.page, i.allowedTiles)?.tiles?.length === 1));
     }
   }
@@ -140,7 +158,9 @@ export default function HomeScreen(): JSX.Element {
     <Layout
       title={isEmbedded ? title : undefined}
       backButton={hasBackButton}
-      onBack={connectTo || currentPageId ? handleBack : undefined}
+      onBack={
+        connectTo || (specialMode === SpecialMode.CONNECT && isLoggedIn) || currentPageId ? handleBack : undefined
+      }
       rootRef={rootRef}
     >
       {!isInitialized || isUserLoading || !currentPage ? (

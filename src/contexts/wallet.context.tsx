@@ -25,6 +25,7 @@ export enum WalletType {
   CAKE = 'Cake',
   MONERO = 'Monero',
   MAIL = 'Mail',
+  ADDRESS = 'Address',
 }
 
 export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {

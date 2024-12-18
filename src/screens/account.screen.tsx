@@ -3,6 +3,7 @@ import {
   Referral,
   UserAddress,
   Utils,
+  useAuthContext,
   useSessionContext,
   useTransaction,
   useUser,
@@ -51,6 +52,7 @@ export default function AccountScreen(): JSX.Element {
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized, setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
+  const { session } = useAuthContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
@@ -67,25 +69,25 @@ export default function AccountScreen(): JSX.Element {
   const selectedAddress = useWatch({ control, name: 'address' });
 
   useEffect(() => {
-    if (user?.activeAddress) {
+    if (user?.activeAddress && !isUserLoading) {
       loadRefferal();
       setValue('address', user.activeAddress);
     }
-  }, [user?.activeAddress]);
+  }, [user?.activeAddress, isUserLoading, session?.role]);
 
   useEffect(() => {
     if (isLoggedIn) loadTransactions();
   }, [isLoggedIn]);
 
   useEffect(() => {
-    if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address) {
+    if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address && !isUserLoading) {
       changeAddress(selectedAddress.address)
         .then(() => setWallet())
         .catch(() => {
           // ignore errors
         });
     }
-  }, [selectedAddress]);
+  }, [selectedAddress, user?.activeAddress, !isUserLoading]);
 
   async function loadRefferal(): Promise<void> {
     return getRef().then(setRefferal);
