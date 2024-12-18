@@ -189,7 +189,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
 
   return (
     <Layout title={translate('screens/payment', title)} onBack={onBack} textStart rootRef={rootRef}>
-      {apiError || error ? (
+      {(apiError && apiError !== 'permission denied') || error ? (
         <ErrorHint message={apiError ?? error ?? ''} />
       ) : updateGlobalConfig ? (
         <PaymentLinkForm

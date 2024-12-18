@@ -46,6 +46,7 @@ import {
   IconVariant,
   SpinnerSize,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
   StyledCheckboxRow,
   StyledDataTable,
@@ -68,6 +69,7 @@ import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { SumsubMessage, SumsubReviewAnswer } from 'src/dto/sumsub.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
@@ -564,28 +566,49 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack, showLinkHint
 }
 
 function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
-  const { allowedCountries, translate, translateError } = useSettingsContext();
+  const { allowedCountries, allowedOrganizationCountries, translate, translateError } = useSettingsContext();
   const { setPersonalData } = useKyc();
   const { countryCode } = useGeoLocation();
 
+  const [countries, setCountries] = useState<Country[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
-
-  useEffect(() => {
-    const ipCountry = allowedCountries.find((c) => c.symbol === countryCode);
-    if (ipCountry && !isDirty) {
-      setValue('address.country', ipCountry);
-      setValue('organizationAddress.country', ipCountry);
-    }
-  }, [allowedCountries, countryCode]);
 
   const {
     control,
     handleSubmit,
-    setValue,
-    formState: { isValid, isDirty, errors },
-  } = useForm<KycPersonalData>({ mode: 'onTouched' });
+    getValues,
+    reset,
+    formState: { isValid, errors },
+  } = useForm<KycPersonalData>({ mode: 'onTouched', defaultValues: { organizationAddress: {} } });
+
   const selectedAccountType = useWatch({ control, name: 'accountType' });
+
+  useEffect(() => {
+    if (!selectedAccountType) return;
+
+    const countries = selectedAccountType === AccountType.PERSONAL ? allowedCountries : allowedOrganizationCountries;
+    const ipCountry = countries.find((c) => c.symbol === countryCode);
+
+    reset({
+      ...getValues(),
+      accountType: selectedAccountType,
+      address: {
+        street: undefined,
+        zip: undefined,
+        city: undefined,
+        country: ipCountry,
+      },
+      organizationAddress: {
+        street: undefined,
+        zip: undefined,
+        city: undefined,
+        country: undefined,
+      },
+    });
+
+    setCountries(countries);
+  }, [selectedAccountType, countryCode, allowedCountries, allowedOrganizationCountries]);
 
   function onSubmit(data: KycPersonalData) {
     if (!step.session) return;
@@ -693,13 +716,13 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                   smallLabel
                 />
               </StyledHorizontalStack>
-              <StyledSearchDropdown
+              <StyledSearchDropdown<Country>
                 rootRef={rootRef}
                 name="address.country"
                 autocomplete="country"
                 label={translate('screens/kyc', 'Country')}
                 placeholder={translate('general/actions', 'Select') + '...'}
-                items={allowedCountries}
+                items={countries}
                 labelFunc={(item) => item.name}
                 filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                 matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
@@ -765,13 +788,13 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                     smallLabel
                   />
                 </StyledHorizontalStack>
-                <StyledSearchDropdown
+                <StyledSearchDropdown<Country>
                   rootRef={rootRef}
                   name="organizationAddress.country"
                   autocomplete="country"
                   label={translate('screens/kyc', 'Country')}
                   placeholder={translate('general/actions', 'Select') + '...'}
-                  items={allowedCountries}
+                  items={countries}
                   labelFunc={(item) => item.name}
                   filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                   matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
@@ -1092,7 +1115,10 @@ function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProp
 }
 
 function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element {
+  const { translate } = useSettingsContext();
+
   const [isDone, setIsDone] = useState(false);
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
     onDone();
@@ -1113,7 +1139,21 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
   }
 
   return step.session ? (
-    isDone ? (
+    error ? (
+      <div>
+        <p className="text-dfxRed-100">{translate('screens/kyc', 'The identification has failed.')}</p>
+        <p className="text-dfxGray-800 text-sm">{error}</p>
+
+        <div className="flex justify-center">
+          <StyledButton
+            className="mt-4"
+            label={translate('general/actions', 'Ok')}
+            color={StyledButtonColor.GRAY_OUTLINE}
+            onClick={onBack}
+          />
+        </div>
+      </div>
+    ) : isDone ? (
       <StyledLoadingSpinner size={SpinnerSize.LG} />
     ) : (
       <>
@@ -1123,12 +1163,16 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
             accessToken={step.session.url}
             expirationHandler={() => onError('Token expired')}
             config={{ lang: lang.symbol.toLowerCase() }}
-            onMessage={(type: string, payload: any) =>
-              type === 'idCheck.onApplicantStatusChanged' &&
-              ['pending', 'completed'].includes(payload?.reviewStatus) &&
-              setIsDone(true)
-            }
-            onError={onError}
+            onMessage={(type: string, payload: SumsubMessage) => {
+              if (type === 'idCheck.onApplicantStatusChanged') {
+                if (payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.RED) {
+                  setError(payload.reviewResult.moderationComment ?? 'Unknown error');
+                } else if (payload?.reviewStatus === 'completed') {
+                  setIsDone(true);
+                }
+              }
+            }}
+            onError={setError}
           />
         ) : (
           <iframe
