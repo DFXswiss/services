@@ -566,28 +566,49 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack, showLinkHint
 }
 
 function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
-  const { allowedCountries, translate, translateError } = useSettingsContext();
+  const { allowedCountries, allowedOrganizationCountries, translate, translateError } = useSettingsContext();
   const { setPersonalData } = useKyc();
   const { countryCode } = useGeoLocation();
 
+  const [countries, setCountries] = useState<Country[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
-
-  useEffect(() => {
-    const ipCountry = allowedCountries.find((c) => c.symbol === countryCode);
-    if (ipCountry && !isDirty) {
-      setValue('address.country', ipCountry);
-      setValue('organizationAddress.country', ipCountry);
-    }
-  }, [allowedCountries, countryCode]);
 
   const {
     control,
     handleSubmit,
-    setValue,
-    formState: { isValid, isDirty, errors },
-  } = useForm<KycPersonalData>({ mode: 'onTouched' });
+    getValues,
+    reset,
+    formState: { isValid, errors },
+  } = useForm<KycPersonalData>({ mode: 'onTouched', defaultValues: { organizationAddress: {} } });
+
   const selectedAccountType = useWatch({ control, name: 'accountType' });
+
+  useEffect(() => {
+    if (!selectedAccountType) return;
+
+    const countries = selectedAccountType === AccountType.PERSONAL ? allowedCountries : allowedOrganizationCountries;
+    const ipCountry = countries.find((c) => c.symbol === countryCode);
+
+    reset({
+      ...getValues(),
+      accountType: selectedAccountType,
+      address: {
+        street: undefined,
+        zip: undefined,
+        city: undefined,
+        country: ipCountry,
+      },
+      organizationAddress: {
+        street: undefined,
+        zip: undefined,
+        city: undefined,
+        country: undefined,
+      },
+    });
+
+    setCountries(countries);
+  }, [selectedAccountType, countryCode, allowedCountries, allowedOrganizationCountries]);
 
   function onSubmit(data: KycPersonalData) {
     if (!step.session) return;
@@ -695,13 +716,13 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                   smallLabel
                 />
               </StyledHorizontalStack>
-              <StyledSearchDropdown
+              <StyledSearchDropdown<Country>
                 rootRef={rootRef}
                 name="address.country"
                 autocomplete="country"
                 label={translate('screens/kyc', 'Country')}
                 placeholder={translate('general/actions', 'Select') + '...'}
-                items={allowedCountries}
+                items={countries}
                 labelFunc={(item) => item.name}
                 filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                 matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
@@ -767,13 +788,13 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                     smallLabel
                   />
                 </StyledHorizontalStack>
-                <StyledSearchDropdown
+                <StyledSearchDropdown<Country>
                   rootRef={rootRef}
                   name="organizationAddress.country"
                   autocomplete="country"
                   label={translate('screens/kyc', 'Country')}
                   placeholder={translate('general/actions', 'Select') + '...'}
-                  items={allowedCountries}
+                  items={countries}
                   labelFunc={(item) => item.name}
                   filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                   matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}

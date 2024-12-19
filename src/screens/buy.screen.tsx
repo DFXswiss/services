@@ -367,6 +367,7 @@ export default function BuyScreen(): JSX.Element {
       case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
+      case TransactionError.NATIONALITY_NOT_ALLOWED:
         setKycError(buy.error);
         return;
     }
@@ -583,7 +584,7 @@ export default function BuyScreen(): JSX.Element {
                             steps={paymentInfo.priceSteps}
                             amountIn={paymentInfo.amount}
                             amountOut={paymentInfo.estimatedAmount}
-                            type="buy"
+                            type={TransactionType.BUY}
                           />
 
                           {selectedPaymentMethod !== FiatPaymentMethod.CARD ? (
