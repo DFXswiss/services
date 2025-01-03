@@ -380,7 +380,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'Transaction amount')}>
           <p>
-            {transaction.inputAmount} {transaction.inputAsset}
+            {refundDetails.inputAmount} {refundDetails.inputAsset.name}
           </p>
         </StyledDataTableRow>
         <StyledDataTableRow label={translate('screens/payment', 'Bank fee')}>
