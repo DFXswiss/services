@@ -240,9 +240,12 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
         />
       )}
 
-      {[TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
-        transaction.state,
-      ) &&
+      {[
+        TransactionState.FAILED,
+        TransactionState.AML_PENDING,
+        TransactionState.KYC_REQUIRED,
+        TransactionState.LIMIT_EXCEEDED,
+      ].includes(transaction.state) &&
         !transaction.chargebackAmount && (
           <StyledVerticalStack gap={4} full>
             <StyledButton
@@ -380,7 +383,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'Transaction amount')}>
           <p>
-            {transaction.inputAmount} {transaction.inputAsset}
+            {refundDetails.inputAmount} {refundDetails.inputAsset.name}
           </p>
         </StyledDataTableRow>
         <StyledDataTableRow label={translate('screens/payment', 'Bank fee')}>
