@@ -1140,7 +1140,7 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
   }
 
   useEffect(() => {
-    if (step.type === (KycStepType as any).SUMSUB_VIDEO && step.session?.url) {
+    if (step.type === KycStepType.SUMSUB_VIDEO && step.session?.url) {
       launchWebSdk(step.session.url);
     }
   }, [step]);
@@ -1149,11 +1149,10 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
     const snsWebSdkInstance = snsWebSdk
       .init(accessToken, () => {
         onError('Token expired');
-        return Promise.resolve('EXPIRED_ACCESS_TOKEN');
+        return Promise.resolve('');
       })
       .withConf({
         lang: lang.symbol.toLowerCase(),
-        uiConf: { customCss: 'https://url.com/styles.css' },
       })
       .withOptions({ addViewportTag: false, adaptIframeHeight: true })
       .on('idCheck.stepCompleted', (_payload) => setIsDone(true))
@@ -1180,7 +1179,7 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
       </div>
     ) : isDone ? (
       <StyledLoadingSpinner size={SpinnerSize.LG} />
-    ) : step.type === (KycStepType as any).SUMSUB_VIDEO ? (
+    ) : step.type === KycStepType.SUMSUB_VIDEO ? (
       <div id="sumsub-websdk-container"></div>
     ) : (
       <>
@@ -1190,7 +1189,7 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
             accessToken={step.session.url}
             expirationHandler={() => {
               onError('Token expired');
-              return Promise.resolve('EXPIRED_ACCESS_TOKEN');
+              return Promise.resolve('');
             }}
             config={{ lang: lang.symbol.toLowerCase() }}
             onMessage={(type: string, payload: any) => {
