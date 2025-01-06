@@ -52,6 +52,7 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepType.VIDEO]: 'video',
     [KycStepType.MANUAL]: 'manual',
     [KycStepType.SUMSUB_AUTO]: 'auto',
+    [KycStepType.SUMSUB_VIDEO]: 'video',
   };
 
   const legalEntityMap: Record<LegalEntity, string> = {
