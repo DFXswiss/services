@@ -169,7 +169,7 @@ export default function KycScreen(): JSX.Element {
           startStep(
             kycCode,
             stepName as KycStepName,
-            stepType.toLowerCase() === KycStepType.VIDEO.toLowerCase()
+            [KycStepType.VIDEO.toLowerCase(), KycStepType.AUTO.toLowerCase()].includes(stepType.toLowerCase())
               ? KycStepType.SUMSUB_VIDEO
               : (stepType as KycStepType),
             stepSequence ? +stepSequence : undefined,
