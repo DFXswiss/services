@@ -66,6 +66,7 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.CARD_NAME_MISMATCH]: 'Card name mismatch',
   [TransactionFailureReason.USER_DELETED]: 'Address deleted',
   [TransactionFailureReason.VIDEO_IDENT_NEEDED]: 'Video identification required',
+  [TransactionFailureReason.MISSING_LIQUIDITY]: 'Missing liquidity',
 };
 
 export const PaymentQuoteStatusLabels = {
