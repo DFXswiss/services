@@ -36,8 +36,12 @@ function useSessionGuard(requireActiveAddress: boolean, redirectPath: string, is
   const { navigate } = useNavigation();
 
   useEffect(() => {
-    if (isActive && isInitialized && (!isLoggedIn || (requireActiveAddress && !session?.address))) {
-      navigate(redirectPath, { setRedirect: true });
+    if (isActive && isInitialized) {
+      if (!isLoggedIn) {
+        navigate(redirectPath, { setRedirect: true });
+      } else if (isLoggedIn && requireActiveAddress && !session?.address) {
+        navigate('/connect', { setRedirect: true });
+      }
     }
   }, [session, isInitialized, isLoggedIn, navigate, isActive]);
 }

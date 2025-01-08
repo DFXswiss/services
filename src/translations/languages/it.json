@@ -328,7 +328,9 @@
     "Credit": "Credito",
     "Paid credit": "Credito pagato",
     "User count": "Conteggio utenti",
-    "Active user count": "Conteggio utenti attivi"
+    "Active user count": "Conteggio utenti attivi",
+
+    "Address selection": "Selezione dell'indirizzo"
   },
   "screens/buy": {
     "You spend": "Si spende",
