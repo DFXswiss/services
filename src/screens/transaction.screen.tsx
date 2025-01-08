@@ -1,12 +1,11 @@
 import {
   ApiError,
-  Asset,
   CryptoPaymentMethod,
   DetailTransaction,
   ExportFormat,
-  Fiat,
   FiatPaymentMethod,
   Transaction,
+  TransactionRefundData,
   TransactionState,
   TransactionTarget,
   TransactionType,
@@ -240,30 +239,36 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
           width={StyledButtonWidth.FULL}
         />
       )}
-      <StyledButton
-        label={translate(
-          'general/actions',
-          transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+
+      {[
+        TransactionState.FAILED,
+        TransactionState.AML_PENDING,
+        TransactionState.KYC_REQUIRED,
+        TransactionState.LIMIT_EXCEEDED,
+      ].includes(transaction.state) &&
+        !transaction.chargebackAmount && (
+          <StyledVerticalStack gap={4} full>
+            <StyledButton
+              label={translate(
+                'general/actions',
+                transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+              )}
+              onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
+            />
+            <StyledButton
+              label={translate('general/actions', 'Create support ticket')}
+              onClick={() => handleTransactionNavigation('/support/issue?issue-type=TransactionIssue')}
+              color={StyledButtonColor.STURDY_WHITE}
+            />
+          </StyledVerticalStack>
         )}
-        onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
-        color={StyledButtonColor.STURDY_WHITE}
-        hidden={
-          ![TransactionState.FAILED, TransactionState.AML_PENDING, TransactionState.KYC_REQUIRED].includes(
-            transaction.state,
-          ) || !!transaction.chargebackAmount
-        }
-      />
     </StyledVerticalStack>
   ) : (
     <StyledLoadingSpinner size={SpinnerSize.LG} />
   );
 }
 
-interface RefundDetails {
-  expiryDate: Date;
-  feeAmount: number;
-  refundAmount: number;
-  refundAsset: Asset | Fiat;
+interface RefundDetails extends TransactionRefundData {
   refundTarget?: string;
 }
 
@@ -378,12 +383,17 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'Transaction amount')}>
           <p>
-            {transaction.inputAmount} {transaction.inputAsset}
+            {refundDetails.inputAmount} {refundDetails.inputAsset.name}
           </p>
         </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/payment', 'Fee')}>
+        <StyledDataTableRow label={translate('screens/payment', 'Bank fee')}>
           <p>
-            {refundDetails.feeAmount} {refundDetails.refundAsset.name}
+            {refundDetails.fee.bank} {refundDetails.refundAsset.name}
+          </p>
+        </StyledDataTableRow>
+        <StyledDataTableRow label={translate('screens/payment', 'Network fee')}>
+          <p>
+            {refundDetails.fee.network} {refundDetails.refundAsset.name}
           </p>
         </StyledDataTableRow>
         <StyledDataTableRow
@@ -431,7 +441,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
                 full
               />
             )}
-
           <StyledButton
             type="submit"
             label={translate(
@@ -673,6 +682,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   TransactionState.FAILED,
                                   TransactionState.AML_PENDING,
                                   TransactionState.KYC_REQUIRED,
+                                  TransactionState.LIMIT_EXCEEDED,
                                 ].includes(tx.state) || !!tx.chargebackAmount
                               }
                             />
@@ -756,6 +766,11 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
     rateItems.push({
       label: translate('screens/payment', 'Network fee'),
       text: `${tx.fees.network} ${tx.inputAsset}`,
+    });
+  tx.fees?.bank != null &&
+    rateItems.push({
+      label: translate('screens/payment', 'Bank fee'),
+      text: `${tx.fees.bank} ${tx.inputAsset}`,
     });
   tx?.fees?.networkStart &&
     rateItems.push({

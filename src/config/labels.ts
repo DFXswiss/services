@@ -36,6 +36,7 @@ export const PaymentStateLabels = {
   [TransactionState.FAILED]: 'Failed',
   [TransactionState.RETURNED]: 'Refunded',
   [TransactionState.RETURN_PENDING]: 'Refund pending',
+  [TransactionState.LIMIT_EXCEEDED]: 'Limit exceeded',
 };
 
 export function toPaymentStateLabel(state: TransactionState): string {
@@ -65,6 +66,7 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.CARD_NAME_MISMATCH]: 'Card name mismatch',
   [TransactionFailureReason.USER_DELETED]: 'Address deleted',
   [TransactionFailureReason.VIDEO_IDENT_NEEDED]: 'Video identification required',
+  [TransactionFailureReason.MISSING_LIQUIDITY]: 'Missing liquidity',
 };
 
 export const PaymentQuoteStatusLabels = {

@@ -40,6 +40,7 @@
     "Copy Link": "Copia il link",
     "Open invoice": "Apri la fattura",
     "Create ticket": "Crea un ticket",
+    "Create support ticket": "Crea un ticket di supporto",
     "View file": "Visualizza il file"
   },
   "general/errors": {
@@ -165,6 +166,7 @@
     "This transaction exceeds your trading limit of {{limit}}. If you would like to increase your limit, please submit a request using the button below.": "Questa transazione supera il limite delle transazioni di {{limit}}. Se desiderate aumentare il vostro limite, inviate una richiesta utilizzando il pulsante sottostante.",
     "This transaction is only possible with a verified account. Please complete our KYC (Know-Your-Customer) process.": "Questa transazione è possibile solo con un conto verificato. Completare il processo KYC (Know-Your-Customer).",
     "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Le transazioni bancarie istantanee sono possibili solo con un conto verificato. Se desiderate utilizzare SEPA Instant, completate il nostro processo KYC (Know-Your-Customer).",
+    "We are unable to process this transaction due to restrictions based on your nationality.": "Non possiamo elaborare questa transazione a causa di restrizioni basate sulla vostra nazionalità.",
     "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Nota: il vostro conto non è verificato. La vostra transazione sarà elaborata solo se non avete lo stesso nome di una persona sanzionata o esposta politicamente.",
     "A buy bank transaction or identification by video is required once {{volume}} exceeds {{limit}}.": "Una transazione di acquisto o un'identificazione tramite video viene richiesta non appena {{volume}} supera il {{limit}}.",
     "your daily sell transaction volume": "il volume giornaliero delle transazioni di vendita",
@@ -326,7 +328,9 @@
     "Credit": "Credito",
     "Paid credit": "Credito pagato",
     "User count": "Conteggio utenti",
-    "Active user count": "Conteggio utenti attivi"
+    "Active user count": "Conteggio utenti attivi",
+
+    "Address selection": "Selezione dell'indirizzo"
   },
   "screens/buy": {
     "You spend": "Si spende",
@@ -356,7 +360,7 @@
     "PDF Invoice": "Fattura PDF",
     "QR-bill": "QR-fattura",
 
-    "The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "L'importo di output è calcolato come l'importo di input meno la commissione DFX e la commissione di rete sul tasso base. Cioè, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.",
+    "The output amount is computed as the input amount minus the DFX fee, bank fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "L'importo di output è calcolato come l'importo di input meno la commissione DFX, la commissione bancaria e la commissione di rete sul tasso base. Cioè, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.",
     "Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Importo di output = (Importo di input - Commissione DFX - Commissione di rete) ÷ Tasso base."
   },
   "screens/sell": {
@@ -376,12 +380,13 @@
 
     "As soon as the transaction arrives in our wallet, we will transfer your money to your bank account.": "Non appena la transazione arriva nel nostro portafoglio, trasferiamo il denaro sul vostro conto bancario.",
 
-    "The output amount is computed as the input amount times the base rate minus the DFX fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.": "L'importo di output è calcolato come l'importo di input moltiplicato per il tasso base meno la commissione DFX e la commissione di rete. Cioè, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.",
+    "The output amount is computed as the input amount times the base rate minus the DFX fee, bank fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.": "L'importo di output è calcolato come l'importo di input moltiplicato per il tasso base meno la commissione DFX, la commissione bancaria e la commissione di rete. Cioè, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.",
     "Output amount = Input amount × Base rate - DFX fee - Network fee.": "Importo di output = Importo di input × Tasso base - Commissione DFX - Commissione di rete."
   },
   "screens/swap": {
     "Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.": "Inviare l'importo selezionato all'indirizzo sottostante. Questo indirizzo può essere utilizzato più volte, è sempre lo stesso per gli swap da {{sourceChain}} a {{asset}} su {{targetChain}}.",
-    "As soon as the transaction arrives in our wallet, we will transfer your asset to your wallet.": "Non appena la transazione arriva nel nostro portafoglio, trasferiremo l'asset nel vostro portafoglio."
+    "As soon as the transaction arrives in our wallet, we will transfer your asset to your wallet.": "Non appena la transazione arriva nel nostro portafoglio, trasferiremo l'asset nel vostro portafoglio.",
+    "The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "L'importo di output è calcolato come l'importo di input meno la commissione DFX e la commissione di rete sul tasso base. Cioè, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}."
   },
   "screens/payment": {
     "Payment Information": "Informazioni sul pagamento",
@@ -406,6 +411,7 @@
     "Base rate": "Tasso base",
     "DFX fee": "Commissioni DFX",
     "Network fee": "Commissione di rete",
+    "Bank fee": "Commissione bancaria",
     "Network start fee": "Commissione di avvio della rete",
 
     "Your payment has failed. Please try again.": "Il tuo pagamento non è andato a buon fine. Per favore, riprova.",
@@ -456,6 +462,7 @@
     "Expired": "Scaduto",
     "Failed": "Fallito",
     "Refund pending": "Rimborso in sospeso",
+    "Limit exceeded": "Limite superato",
     "Refunded": "Rimborsato",
     "Unassigned": "Non assegnato",
     "LNURL decoded": "LNURL decodificato",
@@ -484,6 +491,7 @@
     "Card name mismatch": "Il nome sulla carta non corrisponde",
     "Address deleted": "Indirizzo cancellato",
     "Video identification required": "È necessaria l'identificazione video",
+    "Missing liquidity": "Liquidità mancante",
 
     "Loading countries...": "Caricamento dei paesi...",
 
@@ -541,6 +549,7 @@
     "Configuration": "Configurazione",
     "Default configuration": "Configurazione predefinita",
     "Payment standards": "Standard di pagamento",
+    "Payment blockchains": "Blockchain di pagamento",
     "Min. completion status": "Stato min. di completamento",
     "Display QR code": "Mostra codice QR",
     "Payment timeout (seconds)": "Timeout di pagamento (secondi)",
