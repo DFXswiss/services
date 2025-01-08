@@ -1,4 +1,4 @@
-import { Asset, Blockchain, Fiat, PriceStep, Utils, useFiat } from '@dfx.swiss/react';
+import { Asset, Blockchain, Fiat, PriceStep, TransactionType, Utils, useFiat } from '@dfx.swiss/react';
 import { IconColor, StyledCollapsible, StyledInfoText, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { Fees } from '@dfx.swiss/react/dist/definitions/fees';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -14,7 +14,7 @@ interface ExchangeRateProps {
   steps: PriceStep[];
   amountIn: number;
   amountOut: number;
-  type: 'buy' | 'sell';
+  type: TransactionType;
 }
 
 export function ExchangeRate({
@@ -40,6 +40,7 @@ export function ExchangeRate({
   const minFee = `, min. ${fees.min}${feeSymbol}`;
   const dfxFee = `${fees.dfx}${feeSymbol} (${(fees.rate * 100).toFixed(2)}%${fees.min ? minFee : ''})`;
   const networkFee = `${fees.network}${feeSymbol}`;
+  const bankFee = type !== TransactionType.SWAP && `${fees.bank}${feeSymbol}`;
   const networkStartFee = fees?.networkStart ? `${fees?.networkStart}${feeSymbol}` : undefined;
 
   const l1Replacement =
@@ -51,9 +52,11 @@ export function ExchangeRate({
       : undefined);
 
   const outputInfo =
-    type === 'buy'
+    type === TransactionType.BUY
+      ? 'The output amount is computed as the input amount minus the DFX fee, bank fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.'
+      : type === TransactionType.SWAP
       ? 'The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.'
-      : 'The output amount is computed as the input amount times the base rate minus the DFX fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.';
+      : 'The output amount is computed as the input amount times the base rate minus the DFX fee, bank fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.';
 
   return (
     <StyledCollapsible
@@ -86,6 +89,12 @@ export function ExchangeRate({
           </StyledVerticalStack>
           <div className="text-dfxGray-800">{translate('screens/payment', 'DFX fee')}</div>
           <div>{dfxFee}</div>
+          {bankFee && (
+            <>
+              <div className="text-dfxGray-800">{translate('screens/payment', 'Bank fee')}</div>
+              <div>{bankFee}</div>
+            </>
+          )}
           <div className="text-dfxGray-800">{translate('screens/payment', 'Network fee')}</div>
           <StyledVerticalStack>
             <div>{networkFee}</div>
@@ -99,6 +108,7 @@ export function ExchangeRate({
               </div>
             )}
           </StyledVerticalStack>
+
           {networkStartFee && (
             <>
               <div className="text-dfxGray-800">{translate('screens/payment', 'Network start fee')}</div>
@@ -107,12 +117,13 @@ export function ExchangeRate({
           )}
         </div>
         <StyledInfoText iconColor={IconColor.GRAY} discreet>
-          {translate(`screens/${type}`, outputInfo, {
+          {translate(`screens/${type.toLowerCase()}`, outputInfo, {
             input: amountIn,
             inputSymbol: from.name,
             output: amountOut,
             outputSymbol: to.name,
             dfxFee: fees.dfx,
+            bankFee: fees.bank,
             networkFee: fees.network,
             feeSymbol,
             baseRate,

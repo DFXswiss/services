@@ -63,13 +63,14 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import snsWebSdk from '@sumsub/websdk';
 import SumsubWebSdk from '@sumsub/websdk-react';
 import { RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
-import { SumsubMessage, SumsubReviewAnswer } from 'src/dto/sumsub.dto';
+import { SumsubReviewAnswer } from 'src/dto/sumsub.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
@@ -168,7 +169,11 @@ export default function KycScreen(): JSX.Element {
           startStep(
             kycCode,
             stepName as KycStepName,
-            stepType as KycStepType,
+            stepType?.toLowerCase() === KycStepType.VIDEO.toLowerCase()
+              ? KycStepType.SUMSUB_VIDEO
+              : stepType?.toLowerCase() === KycStepType.AUTO.toLowerCase()
+              ? KycStepType.SUMSUB_AUTO
+              : (stepType as KycStepType),
             stepSequence ? +stepSequence : undefined,
           ),
         )
@@ -566,28 +571,49 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack, showLinkHint
 }
 
 function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
-  const { allowedCountries, translate, translateError } = useSettingsContext();
+  const { allowedCountries, allowedOrganizationCountries, translate, translateError } = useSettingsContext();
   const { setPersonalData } = useKyc();
   const { countryCode } = useGeoLocation();
 
+  const [countries, setCountries] = useState<Country[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
-
-  useEffect(() => {
-    const ipCountry = allowedCountries.find((c) => c.symbol === countryCode);
-    if (ipCountry && !isDirty) {
-      setValue('address.country', ipCountry);
-      setValue('organizationAddress.country', ipCountry);
-    }
-  }, [allowedCountries, countryCode]);
 
   const {
     control,
     handleSubmit,
-    setValue,
-    formState: { isValid, isDirty, errors },
-  } = useForm<KycPersonalData>({ mode: 'onTouched' });
+    getValues,
+    reset,
+    formState: { isValid, errors },
+  } = useForm<KycPersonalData>({ mode: 'onTouched', defaultValues: { organizationAddress: {} } });
+
   const selectedAccountType = useWatch({ control, name: 'accountType' });
+
+  useEffect(() => {
+    if (!selectedAccountType) return;
+
+    const countries = selectedAccountType === AccountType.PERSONAL ? allowedCountries : allowedOrganizationCountries;
+    const ipCountry = countries.find((c) => c.symbol === countryCode);
+
+    reset({
+      ...getValues(),
+      accountType: selectedAccountType,
+      address: {
+        street: undefined,
+        zip: undefined,
+        city: undefined,
+        country: ipCountry,
+      },
+      organizationAddress: {
+        street: undefined,
+        zip: undefined,
+        city: undefined,
+        country: undefined,
+      },
+    });
+
+    setCountries(countries);
+  }, [selectedAccountType, countryCode, allowedCountries, allowedOrganizationCountries]);
 
   function onSubmit(data: KycPersonalData) {
     if (!step.session) return;
@@ -695,13 +721,13 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                   smallLabel
                 />
               </StyledHorizontalStack>
-              <StyledSearchDropdown
+              <StyledSearchDropdown<Country>
                 rootRef={rootRef}
                 name="address.country"
                 autocomplete="country"
                 label={translate('screens/kyc', 'Country')}
                 placeholder={translate('general/actions', 'Select') + '...'}
-                items={allowedCountries}
+                items={countries}
                 labelFunc={(item) => item.name}
                 filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                 matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
@@ -767,13 +793,13 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                     smallLabel
                   />
                 </StyledHorizontalStack>
-                <StyledSearchDropdown
+                <StyledSearchDropdown<Country>
                   rootRef={rootRef}
                   name="organizationAddress.country"
                   autocomplete="country"
                   label={translate('screens/kyc', 'Country')}
                   placeholder={translate('general/actions', 'Select') + '...'}
-                  items={allowedCountries}
+                  items={countries}
                   labelFunc={(item) => item.name}
                   filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
                   matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
@@ -1117,6 +1143,29 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
     if (message.type === IframeMessageType) isStepDone(message as KycStepBase) ? onDone() : onBack();
   }
 
+  useEffect(() => {
+    if (step.type === KycStepType.SUMSUB_VIDEO && step.session?.url) {
+      launchWebSdk(step.session.url);
+    }
+  }, [step]);
+
+  function launchWebSdk(accessToken: string) {
+    const snsWebSdkInstance = snsWebSdk
+      .init(accessToken, () => {
+        onError('Token expired');
+        return Promise.resolve('');
+      })
+      .withConf({
+        lang: lang.symbol.toLowerCase(),
+      })
+      .withOptions({ addViewportTag: false, adaptIframeHeight: true })
+      .on('idCheck.stepCompleted', (_payload) => setIsDone(true))
+      .on('idCheck.onError', ({ error }) => onError(error))
+      .build();
+
+    snsWebSdkInstance.launch('#sumsub-websdk-container');
+  }
+
   return step.session ? (
     error ? (
       <div>
@@ -1134,15 +1183,20 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
       </div>
     ) : isDone ? (
       <StyledLoadingSpinner size={SpinnerSize.LG} />
+    ) : step.type === KycStepType.SUMSUB_VIDEO ? (
+      <div id="sumsub-websdk-container"></div>
     ) : (
       <>
         {step.session.type === UrlType.TOKEN ? (
           <SumsubWebSdk
             className="w-full h-full max-h-[900px]"
             accessToken={step.session.url}
-            expirationHandler={() => onError('Token expired')}
+            expirationHandler={() => {
+              onError('Token expired');
+              return Promise.resolve('');
+            }}
             config={{ lang: lang.symbol.toLowerCase() }}
-            onMessage={(type: string, payload: SumsubMessage) => {
+            onMessage={(type: string, payload: any) => {
               if (type === 'idCheck.onApplicantStatusChanged') {
                 if (payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.RED) {
                   setError(payload.reviewResult.moderationComment ?? 'Unknown error');
@@ -1151,7 +1205,7 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
                 }
               }
             }}
-            onError={setError}
+            onError={({ error }) => setError(error)}
           />
         ) : (
           <iframe

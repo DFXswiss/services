@@ -3,6 +3,8 @@ import {
   Blockchain,
   Country,
   Fiat,
+  MinCompletionStatus,
+  PaymentLinkBlockchain,
   PaymentLinkPaymentMode,
   PaymentLinkPaymentStatus,
   PaymentLinkStatus,
@@ -36,7 +38,7 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { PaymentQuoteStatus, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
+import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -65,8 +67,9 @@ interface FormData {
   recipientPhone: string;
   recipientEmail: string;
   recipientWebsite: string;
-  configStandards: ConfigStandard[];
-  configMinCompletionStatus: PaymentQuoteStatus;
+  configStandards: PaymentStandardType[];
+  configBlockchains: PaymentLinkBlockchain[];
+  configMinCompletionStatus: MinCompletionStatus;
   configDisplayQr: boolean;
   configPaymentTimeout: number;
   configTimeout: number;
@@ -76,8 +79,6 @@ interface FormData {
   paymentCurrency: Fiat;
   paymentExpiryDate: Date;
 }
-
-type ConfigStandard = PaymentStandardType | Blockchain;
 
 interface RouteIdSelectData {
   id: string;
@@ -188,7 +189,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
 
   return (
     <Layout title={translate('screens/payment', title)} onBack={onBack} textStart rootRef={rootRef}>
-      {apiError || error ? (
+      {(apiError && apiError !== 'permission denied') || error ? (
         <ErrorHint message={apiError ?? error ?? ''} />
       ) : updateGlobalConfig ? (
         <PaymentLinkForm
@@ -196,10 +197,8 @@ export default function PaymentRoutesScreen(): JSX.Element {
             step: PaymentLinkFormStep.CONFIG,
             paymentLinkId: undefined,
             prefilledData: {
-              configStandards: toConfigStandards(
-                userPaymentLinksConfig?.standards,
-                userPaymentLinksConfig?.blockchains,
-              ),
+              configStandards: userPaymentLinksConfig?.standards,
+              configBlockchains: userPaymentLinksConfig?.blockchains?.filter((b) => b !== Blockchain.LIGHTNING),
               configMinCompletionStatus: userPaymentLinksConfig?.minCompletionStatus,
               configDisplayQr: userPaymentLinksConfig?.displayQr,
               configPaymentTimeout: userPaymentLinksConfig?.paymentTimeout,
@@ -344,10 +343,11 @@ export default function PaymentRoutesScreen(): JSX.Element {
                     [
                       {
                         label: translate('screens/payment', 'Payment standards'),
-                        text: toConfigStandards(
-                          userPaymentLinksConfig?.standards,
-                          userPaymentLinksConfig?.blockchains,
-                        )?.join(', '),
+                        text: userPaymentLinksConfig?.standards?.join(', '),
+                      },
+                      {
+                        label: translate('screens/payment', 'Payment blockchains'),
+                        text: userPaymentLinksConfig?.blockchains?.join(', '),
                       },
                       {
                         label: translate('screens/payment', 'Min. completion status'),
@@ -540,7 +540,11 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                 [
                                   {
                                     label: translate('screens/payment', 'Payment standards'),
-                                    text: toConfigStandards(link.config.standards, link.config.blockchains).join(', '),
+                                    text: link.config.standards?.join(', '),
+                                  },
+                                  {
+                                    label: translate('screens/payment', 'Payment blockchains'),
+                                    text: link.config.blockchains?.join(', '),
                                   },
                                   {
                                     label: translate('screens/payment', 'Min. completion status'),
@@ -733,27 +737,6 @@ const PaymentLinkFormStepToTitle = {
   [PaymentLinkFormStep.DONE]: 'Summary',
 };
 
-const filterPaymentStandards = (standards?: any) =>
-  standards?.filter(
-    (item: PaymentStandardType) =>
-      Object.values(PaymentStandardType).includes(item) && item !== PaymentStandardType.PAY_TO_ADDRESS,
-  );
-
-const filterBlockchains = (blockchains?: any) =>
-  blockchains?.filter((item: Blockchain) => Object.values(Blockchain).includes(item) && item !== Blockchain.LIGHTNING);
-
-const fromConfigStandards = (configStandards: ConfigStandard[]) => {
-  const standards = filterPaymentStandards(configStandards);
-  const blockchains = filterBlockchains(configStandards);
-  if (blockchains.length > 0) standards.push(PaymentStandardType.PAY_TO_ADDRESS);
-
-  return { standards, blockchains };
-};
-
-const toConfigStandards = (standards?: PaymentStandardType[], blockchains?: Blockchain[]) => {
-  return filterPaymentStandards(standards)?.concat(filterBlockchains(blockchains));
-};
-
 function PaymentLinkForm({
   state: { step, paymentLinkId, prefilledData },
   setStep,
@@ -809,7 +792,8 @@ function PaymentLinkForm({
       const prefilledPaymentConfig = paymentLinks?.find((link) => link.id === paymentLinkId)?.config;
       if (prefilledPaymentConfig) {
         reset({
-          configStandards: toConfigStandards(prefilledPaymentConfig.standards, prefilledPaymentConfig.blockchains),
+          configStandards: prefilledPaymentConfig.standards,
+          configBlockchains: prefilledPaymentConfig.blockchains?.filter((b) => b !== Blockchain.LIGHTNING),
           configMinCompletionStatus: prefilledPaymentConfig.minCompletionStatus,
           configDisplayQr: prefilledPaymentConfig.displayQr,
           configPaymentTimeout: prefilledPaymentConfig.paymentTimeout,
@@ -868,12 +852,10 @@ function PaymentLinkForm({
       }
 
       if (hasConfigData) {
-        const { standards, blockchains } = fromConfigStandards(data.configStandards);
-
         request.config = {
           ...request.config,
-          standards: standards,
-          blockchains: blockchains,
+          standards: data.configStandards,
+          blockchains: Array.from(new Set([Blockchain.LIGHTNING, ...data.configBlockchains.flat()])),
           minCompletionStatus: data.configMinCompletionStatus,
           displayQr: data.configDisplayQr,
           paymentTimeout: Number(data.configPaymentTimeout),
@@ -1129,17 +1111,24 @@ function PaymentLinkForm({
           )}
           {step === PaymentLinkFormStep.CONFIG && (
             <>
-              <StyledDropdownMultiChoice<ConfigStandard>
+              <StyledDropdownMultiChoice<PaymentStandardType>
                 rootRef={rootRef}
                 name="configStandards"
                 label={translate('screens/payment', 'Payment standards')}
                 smallLabel
                 full
                 placeholder={translate('general/actions', 'Select...')}
-                items={[
-                  ...filterPaymentStandards(Object.values(PaymentStandardType)),
-                  ...filterBlockchains(Object.values(Blockchain)),
-                ]}
+                items={Object.values(PaymentStandardType)}
+                labelFunc={(item) => item}
+              />
+              <StyledDropdownMultiChoice<PaymentLinkBlockchain>
+                rootRef={rootRef}
+                name="configBlockchains"
+                label={translate('screens/payment', 'Payment blockchains')}
+                smallLabel
+                full
+                placeholder={translate('general/actions', 'Select...')}
+                items={Object.values(PaymentLinkBlockchain).filter((item) => item !== PaymentLinkBlockchain.LIGHTNING)}
                 labelFunc={(item) => item}
               />
 
@@ -1150,7 +1139,7 @@ function PaymentLinkForm({
                 smallLabel
                 full
                 placeholder={translate('general/actions', 'Select...')}
-                items={Object.values(PaymentQuoteStatus)}
+                items={Object.values(MinCompletionStatus)}
                 labelFunc={(item) => translate('screens/payment', PaymentQuoteStatusLabels[item])}
               />
 
@@ -1214,6 +1203,10 @@ function PaymentLinkForm({
                     {
                       label: translate('screens/payment', 'Payment standards'),
                       text: data.configStandards?.toString() ?? naString,
+                    },
+                    {
+                      label: translate('screens/payment', 'Payment blockchains'),
+                      text: data.configBlockchains?.toString() ?? naString,
                     },
                     {
                       label: translate('screens/payment', 'Min. completion status'),

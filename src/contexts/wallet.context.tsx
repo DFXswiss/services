@@ -112,7 +112,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const { getSignMessage } = useAuth();
   const { readBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
-  const { addDiscountCode } = useUserContext();
+  const { addSpecialCode } = useUserContext();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
@@ -126,7 +126,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     }
 
     if (isSessionInitialized && isInitialized && isLoggedIn && appParams.specialCode) {
-      addDiscountCode(appParams.specialCode).catch(() => undefined);
+      addSpecialCode(appParams.specialCode).catch(() => undefined);
     }
   }, [isSessionInitialized, isLoggedIn, isInitialized]);
 

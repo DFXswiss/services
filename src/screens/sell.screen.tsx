@@ -390,6 +390,7 @@ export default function SellScreen(): JSX.Element {
       case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
+      case TransactionError.NATIONALITY_NOT_ALLOWED:
         setKycError(sell.error);
         return;
     }
@@ -708,7 +709,7 @@ export default function SellScreen(): JSX.Element {
                           steps={paymentInfo.priceSteps}
                           amountIn={paymentInfo.amount}
                           amountOut={paymentInfo.estimatedAmount}
-                          type="sell"
+                          type={TransactionType.SELL}
                         />
 
                         <PaymentInformationContent
