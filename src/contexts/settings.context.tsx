@@ -23,6 +23,7 @@ import { useAppHandlingContext } from './app-handling.context';
 const ValidationErrors: Record<string, string> = {
   required: 'Mandatory field',
   pattern: 'Invalid pattern',
+  message_length: 'Maximum allowed characters: 4000.',
   code_and_number: 'Area code and number required',
   iban_blocked: 'IBAN not allowed',
   iban_country_blocked: 'IBAN country not allowed',
