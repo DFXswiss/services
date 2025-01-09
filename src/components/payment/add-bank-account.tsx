@@ -25,13 +25,14 @@ export function AddBankAccount({ onSubmit, confirmationText }: AddBankAccountPro
   const [error, setError] = useState<string>();
   const [customError, setCustomError] = useState<string>();
   const [confirmBankAccount, setConfirmBankAccount] = useState<BankAccount>();
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
   } = useForm<CreateBankAccount>({ mode: 'onTouched' });
-  const { createAccount, isAccountLoading } = useBankAccountContext();
+  const { createAccount } = useBankAccountContext();
   const { allowedCountries } = useSettingsContext();
 
   async function createBankAccount(newAccount: CreateBankAccount): Promise<void> {
@@ -39,6 +40,7 @@ export function AddBankAccount({ onSubmit, confirmationText }: AddBankAccountPro
     setCustomError(undefined);
     setConfirmBankAccount(undefined);
 
+    setIsLoading(true);
     createAccount(newAccount)
       .then(!confirmationText ? onSubmit : setConfirmBankAccount)
       .catch((e: ApiError) => {
@@ -64,7 +66,8 @@ export function AddBankAccount({ onSubmit, confirmationText }: AddBankAccountPro
         } else {
           setError(e.message ?? 'Unknown error');
         }
-      });
+      })
+      .finally(() => setIsLoading(false));
   }
 
   const rules = Utils.createRules({
@@ -120,7 +123,7 @@ export function AddBankAccount({ onSubmit, confirmationText }: AddBankAccountPro
           color={StyledButtonColor.RED}
           label={translate('screens/iban', 'Add bank account')}
           onClick={handleSubmit(createBankAccount)}
-          isLoading={isAccountLoading}
+          isLoading={isLoading}
           caps
           width={StyledButtonWidth.FULL}
           className="mb-4"

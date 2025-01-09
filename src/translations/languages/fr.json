@@ -41,7 +41,9 @@
     "Open invoice": "Ouvrir la facture",
     "Create ticket": "Créer un ticket",
     "Create support ticket": "Créer un ticket de support",
-    "View file": "Voir le fichier"
+    "View file": "Voir le fichier",
+    "Edit": "Modifier",
+    "Set default": "Définir par défaut"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -680,6 +682,7 @@
     "Currency": "Devise",
     "Label": "Étiquette",
     "Address name": "Nom de l'adresse",
+    "Default": "Défaut",
 
     "Show deleted addresses": "Afficher les adresses supprimées",
     "Hide deleted addresses": "Masquer les adresses supprimées",

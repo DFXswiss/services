@@ -41,7 +41,9 @@
     "Open invoice": "Rechnung öffnen",
     "Create ticket": "Ticket erstellen",
     "Create support ticket": "Support-Ticket erstellen",
-    "View file": "Datei anzeigen"
+    "View file": "Datei anzeigen",
+    "Edit": "Bearbeiten",
+    "Set default": "Standard setzen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -681,6 +683,7 @@
     "Currency": "Währung",
     "Label": "Bezeichnung",
     "Address name": "Adressname",
+    "Default": "Standard",
 
     "Show deleted addresses": "Gelöschte Adressen anzeigen",
     "Hide deleted addresses": "Gelöschte Adressen ausblenden",

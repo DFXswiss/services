@@ -43,7 +43,7 @@ export default function ActionableList({ label, items, buttonLabel, buttonAction
           <StyledDataTable label={label} alignContent={AlignContent.BETWEEN}>
             {items.map((item) => {
               return (
-                <StyledDataTableRow key={item.key} /* TODO: onClick={item.onClick} */>
+                <StyledDataTableRow key={item.key} onClick={item.onClick}>
                   <div className="flex flex-col items-start gap-1">
                     <div className={`flex flex-row gap-2 font-semibold ${item.isDisabled ? 'text-dfxGray-700' : ''}`}>
                       {item.label}

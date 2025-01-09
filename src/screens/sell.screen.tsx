@@ -632,33 +632,31 @@ export default function SellScreen(): JSX.Element {
                       />
 
                       {bankAccountSelection && (
-                        <div className="absolute h-full w-full z-1 top-0 bg-white">
-                          <StyledVerticalStack gap={6} center>
-                            <ActionableList
-                              items={bankAccounts.map((account) => {
-                                return {
-                                  key: account.id,
-                                  label: account.label ?? `${account.iban.slice(0, 2)} ${account.iban.slice(-4)}`,
-                                  subLabel: blankedAddress(Utils.formatIban(account.iban)!, { width }),
-                                  tag: (account as any).default // TODO: Remove any cast
-                                    ? translate('screens/settings', 'Default').toUpperCase()
-                                    : undefined,
-                                  onClick: () => {
-                                    onChange(account);
-                                    setBankAccountSelection(false);
-                                  },
-                                };
-                              })}
-                            />
+                        <StyledVerticalStack gap={6} center className="absolute h-screen w-full z-1 top-0 bg-white">
+                          <ActionableList
+                            items={bankAccounts.map((account) => {
+                              return {
+                                key: account.id,
+                                label: account.label ?? `${account.iban.slice(0, 2)} ${account.iban.slice(-4)}`,
+                                subLabel: blankedAddress(Utils.formatIban(account.iban)!, { width }),
+                                tag: (account as any).default // TODO: Remove any cast
+                                  ? translate('screens/settings', 'Default').toUpperCase()
+                                  : undefined,
+                                onClick: () => {
+                                  onChange(account);
+                                  setBankAccountSelection(false);
+                                },
+                              };
+                            })}
+                          />
 
-                            <AddBankAccount
-                              onSubmit={(account) => {
-                                onChange(account);
-                                setBankAccountSelection(false);
-                              }}
-                            />
-                          </StyledVerticalStack>
-                        </div>
+                          <AddBankAccount
+                            onSubmit={(account) => {
+                              onChange(account);
+                              setBankAccountSelection(false);
+                            }}
+                          />
+                        </StyledVerticalStack>
                       )}
                     </>
                   )}
