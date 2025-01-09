@@ -258,7 +258,7 @@ export default function SupportIssueScreen(): JSX.Element {
     name: Validations.Required,
     transaction: Validations.Required,
     reason: Validations.Required,
-    message: Validations.Required,
+    message: [Validations.Required, Validations.Custom((message) => message.length <= 4000 || 'message_length')],
     limit: Validations.Required,
     investmentDate: Validations.Required,
     fundOrigin: Validations.Required,
