@@ -126,6 +126,7 @@ export const IssueTypeLabels = {
 
 export const IssueReasonLabels = {
   [SupportIssueReason.OTHER]: 'Other',
+  [SupportIssueReason.DATA_REQUEST]: 'Data request',
   [SupportIssueReason.FUNDS_NOT_RECEIVED]: 'Funds not received',
   [SupportIssueReason.TRANSACTION_MISSING]: 'Transaction missing',
 };
