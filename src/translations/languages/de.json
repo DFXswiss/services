@@ -28,6 +28,7 @@
     "Browse": "Durchsuchen",
     "Rename address": "Adresse umbenennen",
     "Delete address": "Adresse löschen",
+    "Add new address": "Adresse hinzufügen",
     "Delete account": "Konto löschen",
     "Edit email": "E-Mail bearbeiten",
     "Edit phone number": "Telefonnummer bearbeiten",
@@ -331,7 +332,7 @@
     "User count": "Anzahl Benutzer",
     "Active user count": "Anzahl aktiver Benutzer",
 
-    "Address selection": "Adressauswahl"
+    "Please select an address or add a new one to continue.": "Bitte wähle eine Adresse aus oder füge eine neue hinzu, um fortzufahren."
   },
   "screens/buy": {
     "You spend": "Du zahlst",

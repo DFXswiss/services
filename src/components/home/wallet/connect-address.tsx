@@ -55,16 +55,22 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
   return (
     <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
       {user?.addresses.length && (
-        <Form control={control} errors={errors}>
-          <StyledDropdown
-            name="address"
-            placeholder={translate('general/actions', 'Select') + '...'}
-            items={user.addresses.sort(sortAddressesByBlockchain)}
-            labelFunc={(item) => blankedAddress(item.address, { width })}
-            descriptionFunc={(item) => item.label ?? item.wallet}
-            forceEnable={user?.activeAddress === undefined}
-          />
-        </Form>
+        <>
+          <p className="text-dfxGray-700">
+            {translate('screens/home', 'Please select an address or add a new one to continue.')}
+          </p>
+
+          <Form control={control} errors={errors}>
+            <StyledDropdown
+              name="address"
+              placeholder={translate('general/actions', 'Select') + '...'}
+              items={user.addresses.sort(sortAddressesByBlockchain)}
+              labelFunc={(item) => blankedAddress(item.address, { width })}
+              descriptionFunc={(item) => item.label ?? item.wallet}
+              forceEnable={user?.activeAddress === undefined}
+            />
+          </Form>
+        </>
       )}
       <StyledButton
         label={translate('general/actions', 'Add new address')}
