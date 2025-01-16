@@ -94,7 +94,11 @@ export default function ChatScreen(): JSX.Element {
   }
 
   return (
-    <Layout title={supportIssue && translate('screens/support', IssueTypeLabels[supportIssue?.type])} noPadding>
+    <Layout
+      title={supportIssue && translate('screens/support', IssueTypeLabels[supportIssue?.type])}
+      onBack={() => navigate('/support/tickets')}
+      noPadding
+    >
       {isLoading || !supportIssue ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />

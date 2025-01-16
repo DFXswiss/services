@@ -100,9 +100,6 @@ const formDefaultValues = {
 };
 
 export default function SupportIssueScreen(): JSX.Element {
-  useUserGuard('/login');
-  useKycLevelGuard(KycLevel.Link, '/contact');
-
   const { navigate } = useNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
@@ -111,7 +108,12 @@ export default function SupportIssueScreen(): JSX.Element {
   const { getBanks } = useBank();
   const { bankAccounts } = useBankAccountContext();
   const [urlParams, setUrlParams] = useSearchParams();
-  const { createSupportIssue } = useSupportChatContext();
+  const {
+    createSupportIssue,
+    loadSupportIssue,
+    isLoading: isIssueLoading,
+    supportIssue: existingIssue,
+  } = useSupportChatContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -135,6 +137,15 @@ export default function SupportIssueScreen(): JSX.Element {
 
   const issues = Object.values(SupportIssueType);
   const reasons = IssueReasons[selectedType] ?? [];
+
+  const quoteParam = urlParams.get('quote');
+
+  useUserGuard('/login', !quoteParam);
+  useKycLevelGuard(KycLevel.Link, '/contact');
+
+  function startChat(issueUid: string) {
+    navigate({ pathname: `/support/chat/${issueUid}` }, { clearParams: ['quote'] });
+  }
 
   useEffect(() => {
     const kycCompleted = user && user.kyc.level >= KycLevel.Completed;
@@ -170,6 +181,22 @@ export default function SupportIssueScreen(): JSX.Element {
       setUrlParams(urlParams);
     }
   }, [urlParams]);
+
+  useEffect(() => {
+    if (quoteParam) {
+      const issueType = SupportIssueType.TRANSACTION_ISSUE;
+      setSupportIssue((prev) => ({ ...prev, type: issueType }));
+      setValue('type', issueType);
+
+      loadSupportIssue(quoteParam).catch(() => undefined); // ignore error
+    }
+  }, [quoteParam]);
+
+  useEffect(() => {
+    if (quoteParam && !isLoading && existingIssue) {
+      startChat(existingIssue.uid);
+    }
+  }, [isIssueLoading, existingIssue]);
 
   useEffect(() => {
     if (selectedSender === AddAccount)
@@ -216,7 +243,7 @@ export default function SupportIssueScreen(): JSX.Element {
 
       if (data.type === SupportIssueType.TRANSACTION_ISSUE) {
         if (data.reason !== SupportIssueReason.TRANSACTION_MISSING) {
-          request.transaction = { id: +data.transaction.id };
+          request.transaction = { id: +data.transaction?.id };
         } else {
           request.transaction = {
             senderIban: data.senderIban,
@@ -224,6 +251,7 @@ export default function SupportIssueScreen(): JSX.Element {
             date: new Date(data.date),
           };
         }
+        quoteParam && (request.transaction.quoteUid = quoteParam);
       }
 
       if (data.type === SupportIssueType.LIMIT_REQUEST && data.limit) {
@@ -236,7 +264,7 @@ export default function SupportIssueScreen(): JSX.Element {
       }
 
       await createSupportIssue(request, data.file)
-        .then((response) => navigate(`/support/chat/${response}`))
+        .then((response) => startChat(response))
         .catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
@@ -286,7 +314,7 @@ export default function SupportIssueScreen(): JSX.Element {
           : undefined
       }
     >
-      {selectedType === SupportIssueType.LIMIT_REQUEST && isKycComplete === undefined ? (
+      {(selectedType === SupportIssueType.LIMIT_REQUEST && isKycComplete === undefined) || isIssueLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : selectTransaction ? (
         <>
@@ -311,6 +339,7 @@ export default function SupportIssueScreen(): JSX.Element {
               labelFunc={(item) => item && translate('screens/support', IssueTypeLabels[item])}
               name="type"
               placeholder={translate('general/actions', 'Select') + '...'}
+              disabled={!!quoteParam}
               full
             />
 
@@ -329,49 +358,55 @@ export default function SupportIssueScreen(): JSX.Element {
             {selectedType === SupportIssueType.TRANSACTION_ISSUE &&
               selectedReason &&
               (selectedReason !== SupportIssueReason.TRANSACTION_MISSING ? (
-                <StyledVerticalStack gap={3.5} full center>
-                  <p className="w-full text-left text-dfxBlue-800 text-base font-semibold pl-3.5 -mb-1">
-                    {translate('screens/payment', 'Transaction')}
-                  </p>
-                  <StyledDropdown<SelectTransactionFormData>
-                    rootRef={rootRef}
-                    name="transaction"
-                    items={[{ id: selectTxButtonLabel, description: 'Select a transaction to proceed with' }]}
-                    labelFunc={(item) => translate('general/actions', item.id)}
-                    descriptionFunc={(item) => translate('screens/support', item.description)}
-                    full
-                    forceEnable
-                  />
-                </StyledVerticalStack>
-              ) : bankAccounts && banks ? (
+                !quoteParam && (
+                  <StyledVerticalStack gap={3.5} full center>
+                    <p className="w-full text-left text-dfxBlue-800 text-base font-semibold pl-3.5 -mb-1">
+                      {translate('screens/payment', 'Transaction')}
+                    </p>
+                    <StyledDropdown<SelectTransactionFormData>
+                      rootRef={rootRef}
+                      name="transaction"
+                      items={[{ id: selectTxButtonLabel, description: 'Select a transaction to proceed with' }]}
+                      labelFunc={(item) => translate('general/actions', item.id)}
+                      descriptionFunc={(item) => translate('screens/support', item.description)}
+                      full
+                      forceEnable
+                    />
+                  </StyledVerticalStack>
+                )
+              ) : (
                 <>
-                  <StyledDropdown<string>
-                    rootRef={rootRef}
-                    label={translate('screens/support', 'Sender IBAN')}
-                    items={[...bankAccounts.map((a) => a.iban), NoIban, AddAccount]}
-                    labelFunc={(item) =>
-                      blankedAddress(
-                        [NoIban, AddAccount].includes(item)
-                          ? translate('screens/iban', item)
-                          : Utils.formatIban(item) ?? '',
-                        { displayLength: 30 },
-                      )
-                    }
-                    descriptionFunc={(item) => bankAccounts.find((a) => a.iban === item)?.label ?? ''}
-                    name="senderIban"
-                    placeholder={translate('general/actions', 'Select') + '...'}
-                    full
-                  />
+                  {bankAccounts && (
+                    <StyledDropdown<string>
+                      rootRef={rootRef}
+                      label={translate('screens/support', 'Sender IBAN')}
+                      items={[...bankAccounts.map((a) => a.iban), NoIban, AddAccount]}
+                      labelFunc={(item) =>
+                        blankedAddress(
+                          [NoIban, AddAccount].includes(item)
+                            ? translate('screens/iban', item)
+                            : Utils.formatIban(item) ?? '',
+                          { displayLength: 30 },
+                        )
+                      }
+                      descriptionFunc={(item) => bankAccounts.find((a) => a.iban === item)?.label ?? ''}
+                      name="senderIban"
+                      placeholder={translate('general/actions', 'Select') + '...'}
+                      full
+                    />
+                  )}
 
-                  <StyledDropdown<string>
-                    rootRef={rootRef}
-                    label={translate('screens/support', 'Receiver IBAN')}
-                    items={banks.map((b) => b.iban)}
-                    labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
-                    name="receiverIban"
-                    placeholder={translate('general/actions', 'Select') + '...'}
-                    full
-                  />
+                  {banks && (
+                    <StyledDropdown<string>
+                      rootRef={rootRef}
+                      label={translate('screens/support', 'Receiver IBAN')}
+                      items={banks.map((b) => b.iban)}
+                      labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
+                      name="receiverIban"
+                      placeholder={translate('general/actions', 'Select') + '...'}
+                      full
+                    />
+                  )}
 
                   <StyledInput
                     name="date"
@@ -380,8 +415,6 @@ export default function SupportIssueScreen(): JSX.Element {
                     full
                   />
                 </>
-              ) : (
-                <></>
               ))}
 
             <StyledInput
