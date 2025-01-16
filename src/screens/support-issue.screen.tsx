@@ -193,7 +193,7 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [quoteParam]);
 
   useEffect(() => {
-    if (!isLoading && existingIssue) {
+    if (quoteParam && !isLoading && existingIssue) {
       startChat(existingIssue.uid);
     }
   }, [isIssueLoading, existingIssue]);
