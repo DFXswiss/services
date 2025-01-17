@@ -49,9 +49,9 @@ import { TransactionList } from './transaction.screen';
 const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.GENERIC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.TRANSACTION_ISSUE]: [
-    SupportIssueReason.OTHER,
     SupportIssueReason.FUNDS_NOT_RECEIVED,
     SupportIssueReason.TRANSACTION_MISSING,
+    SupportIssueReason.OTHER,
   ],
   [SupportIssueType.KYC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.LIMIT_REQUEST]: [SupportIssueReason.OTHER],
@@ -104,7 +104,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
   const { user } = useUserContext();
-  const { isLoggedIn } = useSessionContext();
+  const { isLoggedIn, logout } = useSessionContext();
   const { getBanks } = useBank();
   const { bankAccounts } = useBankAccountContext();
   const [urlParams, setUrlParams] = useSearchParams();
@@ -191,6 +191,10 @@ export default function SupportIssueScreen(): JSX.Element {
       loadSupportIssue(quoteParam).catch(() => undefined); // ignore error
     }
   }, [quoteParam]);
+
+  useEffect(() => {
+    if (quoteParam && isLoggedIn) logout();
+  }, [quoteParam, isLoggedIn]);
 
   useEffect(() => {
     if (quoteParam && !isLoading && existingIssue) {
@@ -347,7 +351,7 @@ export default function SupportIssueScreen(): JSX.Element {
               <StyledDropdown<SupportIssueReason>
                 rootRef={rootRef}
                 label={translate('screens/support', 'Reason')}
-                items={reasons}
+                items={reasons.filter((r) => r !== SupportIssueReason.FUNDS_NOT_RECEIVED || !quoteParam)}
                 labelFunc={(item) => translate('screens/support', IssueReasonLabels[item])}
                 name="reason"
                 placeholder={translate('general/actions', 'Select') + '...'}
