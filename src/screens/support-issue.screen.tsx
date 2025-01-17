@@ -49,9 +49,9 @@ import { TransactionList } from './transaction.screen';
 const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.GENERIC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.TRANSACTION_ISSUE]: [
-    SupportIssueReason.OTHER,
     SupportIssueReason.FUNDS_NOT_RECEIVED,
     SupportIssueReason.TRANSACTION_MISSING,
+    SupportIssueReason.OTHER,
   ],
   [SupportIssueType.KYC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.LIMIT_REQUEST]: [SupportIssueReason.OTHER],
@@ -347,7 +347,7 @@ export default function SupportIssueScreen(): JSX.Element {
               <StyledDropdown<SupportIssueReason>
                 rootRef={rootRef}
                 label={translate('screens/support', 'Reason')}
-                items={reasons}
+                items={reasons.filter((r) => r !== SupportIssueReason.FUNDS_NOT_RECEIVED || !quoteParam)}
                 labelFunc={(item) => translate('screens/support', IssueReasonLabels[item])}
                 name="reason"
                 placeholder={translate('general/actions', 'Select') + '...'}
