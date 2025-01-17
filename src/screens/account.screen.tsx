@@ -3,6 +3,7 @@ import {
   Referral,
   UserAddress,
   Utils,
+  useAuthContext,
   useSessionContext,
   useTransaction,
   useUser,
@@ -51,6 +52,7 @@ export default function AccountScreen(): JSX.Element {
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized, setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
+  const { session } = useAuthContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
@@ -67,25 +69,25 @@ export default function AccountScreen(): JSX.Element {
   const selectedAddress = useWatch({ control, name: 'address' });
 
   useEffect(() => {
-    if (user?.activeAddress) {
+    if (user?.activeAddress && !isUserLoading) {
       loadRefferal();
       setValue('address', user.activeAddress);
     }
-  }, [user?.activeAddress]);
+  }, [user?.activeAddress, isUserLoading, session?.role]);
 
   useEffect(() => {
     if (isLoggedIn) loadTransactions();
   }, [isLoggedIn]);
 
   useEffect(() => {
-    if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address) {
+    if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address && !isUserLoading) {
       changeAddress(selectedAddress.address)
         .then(() => setWallet())
         .catch(() => {
           // ignore errors
         });
     }
-  }, [selectedAddress]);
+  }, [selectedAddress, user?.activeAddress, !isUserLoading]);
 
   async function loadRefferal(): Promise<void> {
     return getRef().then(setRefferal);
@@ -215,24 +217,27 @@ export default function AccountScreen(): JSX.Element {
               </StyledDataTableRow>
             </StyledDataTable>
           )}
-          <div className="border-b my-2.5 border-dfxGray-400 w-full"></div>
           {/* Wallet Selector */}
           {user?.addresses.length ? (
-            <div className="bg-white w-full rounded-md mb-2">
-              <h2 className="text-center text-dfxBlue-800 text-sm font-semibold ml-3.5 mb-1.5">
-                {translate('screens/home', 'Active address')}
-              </h2>
-              <Form control={control} errors={errors}>
-                <StyledDropdown
-                  name="address"
-                  placeholder={translate('general/actions', 'Select') + '...'}
-                  items={user.addresses.sort(sortAddressesByBlockchain)}
-                  labelFunc={(item) => blankedAddress(item.address, { width })}
-                  descriptionFunc={(item) => item.label ?? item.wallet}
-                  forceEnable={user?.activeAddress === undefined}
-                />
-              </Form>
-            </div>
+            <>
+              <div className="border-b my-2.5 border-dfxGray-400 w-full"></div>
+
+              <div className="bg-white w-full rounded-md mb-2">
+                <h2 className="text-center text-dfxBlue-800 text-sm font-semibold ml-3.5 mb-1.5">
+                  {translate('screens/home', 'Active address')}
+                </h2>
+                <Form control={control} errors={errors}>
+                  <StyledDropdown
+                    name="address"
+                    placeholder={translate('general/actions', 'Select') + '...'}
+                    items={user.addresses.sort(sortAddressesByBlockchain)}
+                    labelFunc={(item) => blankedAddress(item.address, { width })}
+                    descriptionFunc={(item) => item.label ?? item.wallet}
+                    forceEnable={user?.activeAddress === undefined}
+                  />
+                </Form>
+              </div>
+            </>
           ) : (
             <></>
           )}

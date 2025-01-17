@@ -94,7 +94,11 @@ export default function ChatScreen(): JSX.Element {
   }
 
   return (
-    <Layout title={supportIssue && translate('screens/support', IssueTypeLabels[supportIssue?.type])} noPadding>
+    <Layout
+      title={supportIssue && translate('screens/support', IssueTypeLabels[supportIssue?.type])}
+      onBack={() => navigate('/support/tickets')}
+      noPadding
+    >
       {isLoading || !supportIssue ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -241,12 +245,15 @@ interface InputComponentProps {
 }
 
 function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentProps): JSX.Element {
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
   const { submitMessage } = useSupportChatContext();
   const [inputValue, setInputValue] = useState<string>();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [error, setError] = useState<string>();
 
   function handleSend() {
+    if (!inputValue || error) return;
+
     submitMessage(inputValue, selectedFiles, replyToMessage);
 
     setInputValue('');
@@ -277,6 +284,18 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
         handleSend();
       }
     }
+  }
+
+  function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const value = e.target.value;
+
+    if (value.length > 4000) {
+      setError(translateError('message_length'));
+    } else if (error) {
+      setError(undefined);
+    }
+
+    setInputValue(value);
   }
 
   return (
@@ -369,13 +388,15 @@ function InputComponent({ replyToMessage, setReplyToMessage }: InputComponentPro
             value={inputValue}
             onInput={(e) => setInputValue(e.currentTarget.value)}
             onKeyDown={handleKeyDown}
+            onChange={handleChange}
             placeholder={translate('screens/support', 'Write a message...')}
             required
           />
+          {error && <p className="text-dfxRed-150 text-xs px-3.5 text-left">{error}</p>}
         </div>
 
-        <button onClick={handleSend} className="items-center p-2 cursor-pointer">
-          <MdSend className="text-2xl text-dfxBlue-800" />
+        <button onClick={handleSend} className="items-center p-2">
+          <MdSend className={`text-2xl ${!inputValue || !!error ? 'text-dfxBlue-800/40' : 'text-dfxBlue-800'}`} />
         </button>
       </div>
     </div>

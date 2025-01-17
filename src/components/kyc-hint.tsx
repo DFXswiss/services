@@ -83,7 +83,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
         <StyledButton
           width={StyledButtonWidth.FULL}
           label={translate('screens/kyc', 'Start video identification')}
-          onClick={() => startStep(KycStepName.IDENT, KycStepType.VIDEO)}
+          onClick={() => startStep(KycStepName.IDENT, KycStepType.SUMSUB_VIDEO)}
         />
       ) : error === TransactionError.NATIONALITY_NOT_ALLOWED ? (
         <StyledButton

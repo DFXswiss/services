@@ -28,6 +28,7 @@
     "Browse": "Parcourir",
     "Rename address": "Renommer l'adresse",
     "Delete address": "Supprimer l'adresse",
+    "Add new address": "Ajouter une adresse",
     "Delete account": "Supprimer le compte",
     "Edit email": "Modifier l'e-mail",
     "Edit phone number": "Modifier le numéro de téléphone",
@@ -53,6 +54,7 @@
     "Only JSON files are allowed": "Seuls les fichiers JSON sont autorisés",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Formats autorisés : PDF, JPG, JPEG, PNG",
     "Invalid date format": "Format de date invalide",
+    "Maximum allowed characters: 4000": "Nombre maximum de caractères autorisés : 4000",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer. Si le problème persiste, veuillez contacter notre service d'assistance.",
     "invoice": "DFX ne reconnaît pas un destinataire nommé <strong>{{recipient}}</strong>. Ce service ne peut être utilisé que pour des destinataires ayant un compte actif chez DFX et activés pour le service de facturation. Si vous souhaitez vous inscrire en tant que destinataire chez DFX, veuillez contacter le support à <link>{{supportLink}}</link>."
@@ -328,7 +330,9 @@
     "Credit": "Crédit",
     "Paid credit": "Crédit payé",
     "User count": "Nombre d'utilisateurs",
-    "Active user count": "Nombre d'utilisateurs actifs"
+    "Active user count": "Nombre d'utilisateurs actifs",
+
+    "Please select an address or add a new one to continue.": "Veuillez sélectionner une adresse ou en ajouter une nouvelle pour continuer."
   },
   "screens/buy": {
     "You spend": "Vous dépensez",
@@ -489,6 +493,7 @@
     "Card name mismatch": "Le nom sur la carte ne correspond pas",
     "Address deleted": "Adresse supprimée",
     "Video identification required": "Identification par vidéo nécessaire",
+    "Missing liquidity": "Liquidité manquante",
 
     "Loading countries...": "Chargement des pays...",
 
@@ -633,6 +638,7 @@
 
     "Reason": "Motif",
     "Other": "Autres",
+    "Data request": "Demande de données",
     "Funds not received": "Fonds non reçus",
     "Transaction missing": "Transaction manquante",
 

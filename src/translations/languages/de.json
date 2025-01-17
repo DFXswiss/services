@@ -28,6 +28,7 @@
     "Browse": "Durchsuchen",
     "Rename address": "Adresse umbenennen",
     "Delete address": "Adresse löschen",
+    "Add new address": "Adresse hinzufügen",
     "Delete account": "Konto löschen",
     "Edit email": "E-Mail bearbeiten",
     "Edit phone number": "Telefonnummer bearbeiten",
@@ -53,6 +54,7 @@
     "Only JSON files are allowed": "Nur JSON-Dateien sind erlaubt",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Erlaubte Formate: PDF, JPG, JPEG, PNG",
     "Invalid date format": "Ungültiges Datumsformat",
+    "Maximum allowed characters: 4000": "Maximal erlaubte Zeichen: 4000",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.",
     "invoice": "DFX kennt keinen Empfänger mit dem Namen <strong>{{recipient}}</strong>. Dieser Service kann nur für Empfänger verwendet werden, die ein aktives Konto bei DFX haben und für den Rechnungsservice aktiviert sind. Solltest Du dich als Empfänger bei DFX registrieren wollen, dann melde Dich beim Support unter <link>{{supportLink}}</link>."
@@ -328,7 +330,9 @@
     "Credit": "Guthaben",
     "Paid credit": "Ausgezahltes Guthaben",
     "User count": "Anzahl Benutzer",
-    "Active user count": "Anzahl aktiver Benutzer"
+    "Active user count": "Anzahl aktiver Benutzer",
+
+    "Please select an address or add a new one to continue.": "Bitte wähle eine Adresse aus oder füge eine neue hinzu, um fortzufahren."
   },
   "screens/buy": {
     "You spend": "Du zahlst",
@@ -489,6 +493,7 @@
     "Card name mismatch": "Kartenname stimmt nicht überein",
     "Address deleted": "Adresse gelöscht",
     "Video identification required": "Video-Identifikation erforderlich",
+    "Missing liquidity": "Fehlende Liquidität",
 
     "Loading countries...": "Länder werden geladen...",
 
@@ -634,6 +639,7 @@
 
     "Reason": "Grund",
     "Other": "Andere",
+    "Data request": "Datenanfrage",
     "Funds not received": "Zahlung nicht erhalten",
     "Transaction missing": "Transaktion fehlt",
 
