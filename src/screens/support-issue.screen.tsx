@@ -104,7 +104,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError } = useSettingsContext();
   const { user } = useUserContext();
-  const { isLoggedIn } = useSessionContext();
+  const { isLoggedIn, logout } = useSessionContext();
   const { getBanks } = useBank();
   const { bankAccounts } = useBankAccountContext();
   const [urlParams, setUrlParams] = useSearchParams();
@@ -191,6 +191,10 @@ export default function SupportIssueScreen(): JSX.Element {
       loadSupportIssue(quoteParam).catch(() => undefined); // ignore error
     }
   }, [quoteParam]);
+
+  useEffect(() => {
+    if (quoteParam && isLoggedIn) logout();
+  }, [quoteParam, isLoggedIn]);
 
   useEffect(() => {
     if (quoteParam && !isLoading && existingIssue) {
