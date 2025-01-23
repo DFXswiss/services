@@ -1076,7 +1076,7 @@ function PaymentLinkForm({
 
               <StyledInput
                 name="paymentAmount"
-                autocomplete="paymentAmount"
+                autocomplete="amount"
                 label={translate('screens/payment', 'Amount')}
                 smallLabel
                 placeholder={'0.00'}
@@ -1085,7 +1085,7 @@ function PaymentLinkForm({
 
               <StyledInput
                 name="paymentExternalId"
-                autocomplete="paymentExternalId"
+                autocomplete="externalId"
                 label={translate('screens/payment', 'Payment ID')}
                 placeholder={translate('screens/payment', 'Payment ID')}
                 full

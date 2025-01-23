@@ -128,7 +128,7 @@ export default function InvoiceScreen(): JSX.Element {
           <StyledVerticalStack gap={6} full center>
             <StyledInput
               name="recipient"
-              autocomplete="recipient"
+              autocomplete="name"
               label={translate('screens/payment', 'Recipient')}
               placeholder={translate('screens/kyc', 'John Doe')}
               full
@@ -136,7 +136,6 @@ export default function InvoiceScreen(): JSX.Element {
             />
             <StyledInput
               name="invoiceId"
-              autocomplete="invoiceId"
               label={translate('screens/payment', 'Invoice ID')}
               placeholder={translate('screens/payment', 'Invoice ID')}
               full
