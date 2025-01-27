@@ -28,6 +28,7 @@ export function useKycHelper(): KycHelperInterface {
 
   const periodMap: Record<LimitPeriod, string> = {
     [LimitPeriod.DAY]: 'per 24h',
+    [LimitPeriod.MONTH]: 'per 30 days',
     [LimitPeriod.YEAR]: 'per year',
   };
 

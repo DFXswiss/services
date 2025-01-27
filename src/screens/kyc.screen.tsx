@@ -767,7 +767,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                   />
                   <StyledInput
                     name="organizationAddress.houseNumber"
-                    autocomplete="houseNumber"
+                    autocomplete="house-number"
                     label={translate('screens/kyc', 'House nr.')}
                     placeholder="xx"
                     small
@@ -1504,7 +1504,7 @@ function ManualIdent({ rootRef, code, step, onDone }: EditProps): JSX.Element {
 
             <StyledInput
               name="birthName"
-              autocomplete="birthName"
+              autocomplete="lastname"
               label={translate('screens/kyc', 'Birth name')}
               placeholder={translate('screens/kyc', 'John Doe')}
               full
@@ -1560,6 +1560,7 @@ function ManualIdent({ rootRef, code, step, onDone }: EditProps): JSX.Element {
             />
             <StyledInput
               name="documentNumber"
+              autocomplete="ident-document"
               label={translate('screens/kyc', 'Document number')}
               placeholder="12345"
               full

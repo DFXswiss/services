@@ -102,7 +102,7 @@ const formDefaultValues = {
 export default function SupportIssueScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
-  const { translate, translateError } = useSettingsContext();
+  const { translate, translateError, allowedCountries } = useSettingsContext();
   const { user } = useUserContext();
   const { isLoggedIn, logout } = useSessionContext();
   const { getBanks } = useBank();
@@ -146,6 +146,12 @@ export default function SupportIssueScreen(): JSX.Element {
   function startChat(issueUid: string) {
     navigate({ pathname: `/support/chat/${issueUid}` }, { clearParams: ['quote'] });
   }
+
+  useEffect(() => {
+    getBanks()
+      .then(setBanks)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+  }, []);
 
   useEffect(() => {
     const kycCompleted = user && user.kyc.level >= KycLevel.Completed;
@@ -284,7 +290,7 @@ export default function SupportIssueScreen(): JSX.Element {
 
   const rules = Utils.createRules({
     type: Validations.Required,
-    senderIban: Validations.Required,
+    senderIban: [Validations.Required, !!quoteParam && Validations.Iban(allowedCountries)],
     receiverIban: Validations.Required,
     date: [Validations.Required, Validations.Custom((date) => (/\d{4}-\d{2}-\d{2}/g.test(date) ? true : 'pattern'))],
     name: Validations.Required,
@@ -380,7 +386,7 @@ export default function SupportIssueScreen(): JSX.Element {
                 )
               ) : (
                 <>
-                  {bankAccounts && (
+                  {bankAccounts ? (
                     <StyledDropdown<string>
                       rootRef={rootRef}
                       label={translate('screens/support', 'Sender IBAN')}
@@ -396,6 +402,14 @@ export default function SupportIssueScreen(): JSX.Element {
                       descriptionFunc={(item) => bankAccounts.find((a) => a.iban === item)?.label ?? ''}
                       name="senderIban"
                       placeholder={translate('general/actions', 'Select') + '...'}
+                      full
+                    />
+                  ) : (
+                    <StyledInput
+                      name="senderIban"
+                      autocomplete="iban"
+                      label={translate('screens/support', 'Sender IBAN')}
+                      placeholder="XX XXXX XXXX XXXX XXXX X"
                       full
                     />
                   )}

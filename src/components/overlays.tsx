@@ -53,6 +53,7 @@ interface FormData {
 
 interface EditOverlayProps {
   label?: string;
+  autocomplete?: string;
   prefill?: string;
   placeholder?: string;
   validation?: ValidationRule;
@@ -62,6 +63,7 @@ interface EditOverlayProps {
 
 export function EditOverlay({
   label,
+  autocomplete,
   prefill,
   placeholder,
   validation,
@@ -103,7 +105,7 @@ export function EditOverlay({
         <StyledVerticalStack gap={3} full>
           <StyledInput
             name="label"
-            autocomplete="label"
+            autocomplete={autocomplete}
             label={label ?? translate('screens/settings', 'Label')}
             placeholder={placeholder ?? translate('screens/settings', 'Label')}
             full

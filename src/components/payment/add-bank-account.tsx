@@ -50,9 +50,15 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
       translate={translateError}
     >
       <StyledVerticalStack gap={4}>
-        <StyledInput name="iban" label={translate('screens/payment', 'IBAN')} placeholder="XX XXXX XXXX XXXX XXXX X" />
+        <StyledInput
+          name="iban"
+          autocomplete="iban"
+          label={translate('screens/payment', 'IBAN')}
+          placeholder="XX XXXX XXXX XXXX XXXX X"
+        />
         <StyledInput
           name="label"
+          autocomplete="iban-label"
           label={translate('screens/sell', 'Optional - Account Designation')}
           placeholder={translate('screens/sell', 'e.g. Deutsche Bank')}
         />
