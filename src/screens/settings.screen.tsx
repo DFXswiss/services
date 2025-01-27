@@ -400,6 +400,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
       return (
         <EditOverlay
           label={translate('screens/settings', 'Address name')}
+          autocomplete="address-label"
           prefill={address?.label ?? address?.wallet}
           placeholder={translate('screens/settings', 'Address name')}
           onCancel={onClose}
@@ -413,6 +414,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
       return (
         <EditOverlay
           label={translate('screens/kyc', 'Phone number')}
+          autocomplete="phone"
           prefill={user?.phone}
           placeholder={translate('screens/kyc', 'Phone number')}
           validation={Validations.Phone}

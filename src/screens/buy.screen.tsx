@@ -470,7 +470,6 @@ export default function BuyScreen(): JSX.Element {
                         placeholder="0.00"
                         prefix={selectedCurrency && toSymbol(selectedCurrency)}
                         name="amount"
-                        autocomplete="amount"
                         forceError={customAmountError != null}
                         forceErrorMessage={customAmountError}
                         loading={isLoading === Side.SPEND}

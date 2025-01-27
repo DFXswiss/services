@@ -136,6 +136,7 @@ export default function InvoiceScreen(): JSX.Element {
             />
             <StyledInput
               name="invoiceId"
+              autocomplete="invoice-id"
               label={translate('screens/payment', 'Invoice ID')}
               placeholder={translate('screens/payment', 'Invoice ID')}
               full
@@ -150,7 +151,6 @@ export default function InvoiceScreen(): JSX.Element {
                   <StyledInput
                     type="number"
                     name="amount"
-                    autocomplete="amount"
                     placeholder={translate('screens/payment', 'Amount')}
                     full
                     smallLabel

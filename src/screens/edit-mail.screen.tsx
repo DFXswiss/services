@@ -107,6 +107,7 @@ export default function EditMailScreen(): JSX.Element {
         ) : !mailVerificationStep ? (
           <EditOverlay
             label={translate('screens/kyc', 'Email address')}
+            autocomplete="email"
             prefill={user?.mail}
             placeholder={translate('screens/kyc', 'Email address')}
             validation={Validations.Mail}

@@ -507,7 +507,6 @@ export default function SwapScreen(): JSX.Element {
                       placeholder="0.00"
                       prefix={selectedSourceAsset && selectedSourceAsset.name}
                       name="amount"
-                      autocomplete="amount"
                       buttonLabel={availableBalance ? 'MAX' : undefined}
                       buttonClick={() => availableBalance && setVal('amount', `${availableBalance}`)}
                       forceError={
@@ -556,7 +555,6 @@ export default function SwapScreen(): JSX.Element {
                     <StyledInput
                       type="number"
                       name="targetAmount"
-                      autocomplete="amount"
                       loading={isLoading === Side.GET}
                       disabled={isLoading === Side.GET}
                       full

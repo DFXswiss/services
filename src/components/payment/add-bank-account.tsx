@@ -58,7 +58,7 @@ export function AddBankAccount({ onSubmit }: AddBankAccountProps): JSX.Element {
         />
         <StyledInput
           name="label"
-          autocomplete="label"
+          autocomplete="iban-label"
           label={translate('screens/sell', 'Optional - Account Designation')}
           placeholder={translate('screens/sell', 'e.g. Deutsche Bank')}
         />

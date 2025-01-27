@@ -195,8 +195,8 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch }: Conte
             </div>
 
             <StyledInput
+              type="password"
               name="signature"
-              autocomplete="password"
               label={translate('screens/home', 'Signature')}
               disabled={isConnecting}
               full

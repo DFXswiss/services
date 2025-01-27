@@ -428,7 +428,6 @@ export default function SupportIssueScreen(): JSX.Element {
 
                   <StyledInput
                     name="date"
-                    autocomplete="date"
                     label={translate('screens/support', 'Date of the transaction')}
                     placeholder={new Date().toISOString().split('T')[0]}
                     full
