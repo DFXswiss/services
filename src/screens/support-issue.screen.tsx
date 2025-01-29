@@ -30,6 +30,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
+import { DefaultFileTypes } from 'src/config/file-types';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import {
@@ -300,15 +301,7 @@ export default function SupportIssueScreen(): JSX.Element {
     limit: Validations.Required,
     investmentDate: Validations.Required,
     fundOrigin: Validations.Required,
-    file: Validations.Custom((file) =>
-      !file ||
-      file.type === 'application/pdf' ||
-      file.type === 'image/png' ||
-      file.type === 'image/jpg' ||
-      file.type === 'image/jpeg'
-        ? true
-        : 'file_type',
-    ),
+    file: Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
   });
 
   return (
