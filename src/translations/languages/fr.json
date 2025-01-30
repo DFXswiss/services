@@ -199,7 +199,11 @@
     "Stock register": "Registre des actions",
 
     "File download": "Téléchargement de fichier",
-    "UserData IDs": "UserData IDs"
+    "Data upload": "Téléchargement des données",
+    "UserData ID": "UserData ID",
+    "UserData IDs": "UserData IDs",
+    "Event date": "Date de l'événement",
+    "Comment": "Commentaire"
   },
   "screens/2fa": {
     "2FA": "2FA",
