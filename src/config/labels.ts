@@ -46,6 +46,7 @@ export function toPaymentStateLabel(state: TransactionState): string {
 export const PaymentFailureReasons = {
   [TransactionFailureReason.UNKNOWN]: 'Unknown',
   [TransactionFailureReason.DAILY_LIMIT_EXCEEDED]: 'Daily limit exceeded',
+  [TransactionFailureReason.MONTHLY_LIMIT_EXCEEDED]: 'Monthly limit exceeded',
   [TransactionFailureReason.ANNUAL_LIMIT_EXCEEDED]: 'Annual limit exceeded',
   [TransactionFailureReason.ACCOUNT_HOLDER_MISMATCH]: 'Account holder mismatch',
   [TransactionFailureReason.KYC_REJECTED]: 'KYC rejected',
