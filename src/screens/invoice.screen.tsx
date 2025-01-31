@@ -191,11 +191,7 @@ export default function InvoiceScreen(): JSX.Element {
                       components={{
                         strong: <strong />,
                         link: (
-                          <StyledLink
-                            label={'https://services.dfx.swiss/support'}
-                            url={`https://services.dfx.swiss/support`}
-                            dark
-                          />
+                          <StyledLink label={`app.dfx.swiss/support`} url={`${process.env.PUBLIC_URL}/support`} dark />
                         ),
                       }}
                     />

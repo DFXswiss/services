@@ -69,6 +69,7 @@ import { RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
+import { DefaultFileTypes } from 'src/config/file-types';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { SumsubReviewAnswer } from 'src/dto/sumsub.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
@@ -1007,14 +1008,7 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
   const rules = Utils.createRules({
     file: [
       Validations.Required,
-      Validations.Custom((file) =>
-        file?.type === 'application/pdf' ||
-        file?.type === 'image/png' ||
-        file?.type === 'image/jpg' ||
-        file?.type === 'image/jpeg'
-          ? true
-          : 'file_type',
-      ),
+      Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
     ],
   });
 
@@ -1242,7 +1236,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const currentQuestion = index != null ? questions[index - 1] : undefined;
   const currentOptions = currentQuestion?.options ?? [];
   const currentResponse = responses.find((r) => currentQuestion?.key === r.key);
-  const nocLinkText = 'services.dfx.swiss/support/issue';
+  const nocLinkText = 'app.dfx.swiss/support/issue';
   const nocSupportLink = `${process.env.PUBLIC_URL}/support/issue?issue-type=${SupportIssueType.NOTIFICATION_OF_CHANGES}`;
 
   useEffect(() => {
@@ -1458,14 +1452,7 @@ function ManualIdent({ rootRef, code, step, onDone }: EditProps): JSX.Element {
     documentNumber: Validations.Required,
     file: [
       Validations.Required,
-      Validations.Custom((file) =>
-        file?.type === 'application/pdf' ||
-        file?.type === 'image/png' ||
-        file?.type === 'image/jpg' ||
-        file?.type === 'image/jpeg'
-          ? true
-          : 'file_type',
-      ),
+      Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
     ],
   });
 

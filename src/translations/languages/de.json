@@ -199,7 +199,11 @@
     "Stock register": "Aktienregister",
 
     "File download": "Datei-Download",
-    "UserData IDs": "UserData IDs"
+    "Data upload": "Data Upload",
+    "UserData ID": "UserData ID",
+    "UserData IDs": "UserData IDs",
+    "Event date": "Datum des Ereignisses",
+    "Comment": "Kommentar"
   },
   "screens/2fa": {
     "2FA": "2FA",
@@ -474,6 +478,7 @@
     "Unknown": "Unbekannt",
     "Annual volume": "Jährliches Volumen",
     "Daily limit exceeded": "Tageslimit überschritten",
+    "Monthly limit exceeded": "Monatslimit überschritten",
     "Annual limit exceeded": "Jahreslimit überschritten",
     "Account holder mismatch": "Kontoinhaber stimmt nicht überein",
     "KYC rejected": "KYC abgelehnt",
