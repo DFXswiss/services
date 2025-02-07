@@ -297,6 +297,9 @@ export default function KycScreen(): JSX.Element {
 
       case KycStepStatus.OUTDATED:
         return { icon: IconVariant.REPEAT, label: translate('screens/kyc', 'Outdated'), size: IconSize.MD };
+
+      case KycStepStatus.DATA_REQUESTED:
+        return { icon: IconVariant.HELP, label: translate('screens/kyc', 'Data requested'), size: IconSize.MD };
     }
   }
 

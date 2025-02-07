@@ -122,6 +122,7 @@
     "Completed": "Completato",
     "Failed": "Fallito",
     "Outdated": "Obsoleto",
+    "Data requested": "Dati richiesti",
 
     "Optional": "Opzionale",
 
@@ -466,6 +467,7 @@
     "Completed": "Completato",
     "Pending": "In attesa",
     "Cancelled": "Annullato",
+    "Canceled": "Annullato",
     "Expired": "Scaduto",
     "Failed": "Fallito",
     "Refund pending": "Rimborso in sospeso",
