@@ -122,6 +122,7 @@
     "Completed": "Terminé",
     "Failed": "Échoué",
     "Outdated": "Obsolète",
+    "Data requested": "Données demandées",
 
     "Optional": "Facultatif",
 
@@ -466,6 +467,7 @@
     "Completed": "Terminé",
     "Pending": "En attente",
     "Cancelled": "Annulé",
+    "Canceled": "Annulé",
     "Expired": "Expiré",
     "Failed": "Échec",
     "Refund pending": "Remboursement en attente",
@@ -482,8 +484,8 @@
     "Annual limit exceeded": "Limite annuelle dépassée",
     "Account holder mismatch": "Le titulaire du compte ne correspond pas",
     "KYC rejected": "KYC refusé",
-    "Fraud suspicion": "Soupçon de fraude",
-    "Sanction suspicion": "Soupçon de sanction",
+    "Regulatory requirements": "Exigences réglementaires",
+    "Name corresponds to a PEP or sanctioned person": "Le nom correspond à une personne politiquement exposée ou sanctionnée",
     "Minimum deposit not reached": "Dépôt minimum non atteint",
     "Asset not available": "Actif non disponible",
     "Asset not available with chosen bank": "Actif non disponible avec la banque sélectionnée",
