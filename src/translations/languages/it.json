@@ -268,6 +268,7 @@
     "Please confirm the connection in your wallet.": "Confermare la connessione nel portafoglio.",
     "Please confirm the connection with your Ledger.": "Confermare il collegamento con il Ledger.",
     "Connection failed!": "Connessione fallita!",
+    "Please make sure that all applications and browser extensions are completely closed when you try to establish a connection.\nThis includes third-party wallets (Ledger live, Metamask, Daedalus, MyEtherWallet) or other applications that could interfere with the connection between DFX.swiss and your Ledger device.": "Assicurarsi che tutte le applicazioni e le estensioni del browser siano completamente chiuse quando si cerca di stabilire una connessione.\nQuesto include portafogli di terze parti (Ledger Live, Metamask, Daedalus, MyEtherWallet) o altre applicazioni che potrebbero interferire con la connessione tra DFX.swiss e il dispositivo Ledger.",
 
     "Connect your {{device}} with your computer": "Collegare il  {{device}} al computer",
     "Click on \"Connect\"": "Fare clic su \"Collegare\"",
