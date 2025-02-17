@@ -143,7 +143,7 @@ export function useKycHelper(): KycHelperInterface {
       start,
       startStep,
       isComplete,
-      defaultLimit: { limit: 1000, period: LimitPeriod.DAY },
+      defaultLimit: { limit: 1000, period: LimitPeriod.MONTH },
       limit,
       levelToString,
       limitToString,

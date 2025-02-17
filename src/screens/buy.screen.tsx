@@ -294,6 +294,14 @@ export default function BuyScreen(): JSX.Element {
     data && setValidatedData({ ...data, sideToUpdate });
   }
 
+  // name edited
+  useEffect(() => {
+    if (showsNameForm && paymentInfo?.isValid) {
+      openPaymentLink();
+    }
+  }, [showsNameForm, paymentInfo?.isValid]);
+
+  // load payment infos
   useEffect(() => {
     let isRunning = true;
 
@@ -367,6 +375,7 @@ export default function BuyScreen(): JSX.Element {
       case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
+      case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
         setKycError(buy.error);
         return;
@@ -416,7 +425,7 @@ export default function BuyScreen(): JSX.Element {
   }
 
   function onCardBuy(info: Buy) {
-    if (info.nameRequired) {
+    if (info.error === TransactionError.NAME_REQUIRED) {
       setShowsNameForm(true);
     } else {
       openPaymentLink();
@@ -455,7 +464,7 @@ export default function BuyScreen(): JSX.Element {
       ) : showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose />
       ) : showsNameForm ? (
-        <NameEdit onSuccess={openPaymentLink} />
+        <NameEdit onSuccess={() => updateData(Side.GET)} />
       ) : (
         <Form control={control} rules={rules} errors={{}} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
           <StyledVerticalStack gap={8} full center>
@@ -616,29 +625,27 @@ export default function BuyScreen(): JSX.Element {
                               </div>
                             </>
                           ) : (
-                            paymentInfo.paymentLink && (
-                              <>
-                                <SanctionHint />
-                                <div className="leading-none">
-                                  <StyledLink
-                                    label={translate(
-                                      'screens/payment',
-                                      'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
-                                    )}
-                                    url={process.env.REACT_APP_TNC_URL}
-                                    small
-                                    dark
-                                  />
-                                  <StyledButton
-                                    width={StyledButtonWidth.FULL}
-                                    label={translate('general/actions', 'Next')}
-                                    onClick={() => onCardBuy(paymentInfo)}
-                                    isLoading={isContinue}
-                                    className="mt-4"
-                                  />
-                                </div>
-                              </>
-                            )
+                            <>
+                              <SanctionHint />
+                              <div className="leading-none">
+                                <StyledLink
+                                  label={translate(
+                                    'screens/payment',
+                                    'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
+                                  )}
+                                  url={process.env.REACT_APP_TNC_URL}
+                                  small
+                                  dark
+                                />
+                                <StyledButton
+                                  width={StyledButtonWidth.FULL}
+                                  label={translate('general/actions', 'Next')}
+                                  onClick={() => onCardBuy(paymentInfo)}
+                                  isLoading={isContinue}
+                                  className="mt-4"
+                                />
+                              </div>
+                            </>
                           )}
                         </>
                       ))}
