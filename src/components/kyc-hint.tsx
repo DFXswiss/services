@@ -65,6 +65,15 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
           },
         );
 
+      case TransactionError.VIDEO_IDENT_REQUIRED:
+        return translate(
+          'screens/kyc',
+          'Identification by video is required once your transaction volume exceeds {{limit}}.',
+          {
+            limit: limitToString(defaultLimit),
+          },
+        );
+
       case TransactionError.NATIONALITY_NOT_ALLOWED:
         return translate(
           'screens/kyc',
@@ -79,7 +88,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
     <StyledVerticalStack gap={4} full center>
       {hint && <StyledInfoText invertedIcon>{hint}</StyledInfoText>}
 
-      {error === TransactionError.BANK_TRANSACTION_MISSING ? (
+      {[TransactionError.BANK_TRANSACTION_MISSING, TransactionError.VIDEO_IDENT_REQUIRED].includes(error) ? (
         <StyledButton
           width={StyledButtonWidth.FULL}
           label={translate('screens/kyc', 'Start video identification')}

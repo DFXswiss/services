@@ -176,6 +176,7 @@
     "your daily sell transaction volume": "votre volume quotidien de transactions de vente",
     "your daily swap transaction volume": "votre volume quotidien d'opérations de swap",
     "your daily credit card transaction volume": "votre volume quotidien de transactions par carte de crédit",
+    "Identification by video is required once your transaction volume exceeds {{limit}}.": "Une identification par vidéo est requise dès que votre volume de transactions dépasse {{limit}}.",
     "Complete KYC": "Compléter le KYC",
     "Enter user data": "Saisir les données",
     "Increase limit": "Augmenter la limite",
