@@ -29,7 +29,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
             )
           : translate(
               'screens/kyc',
-              'Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.',
+              'Your account needs to get verified once your transaction volume exceeds {{limit}}. If you want to increase your trading limit, please complete our KYC (Know-Your-Customer) process.',
               { limit: limit ?? '' },
             );
 
@@ -56,10 +56,10 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
             volume: translate(
               'screens/kyc',
               type === TransactionType.SELL
-                ? 'your daily sell transaction volume'
+                ? 'your sell transaction volume'
                 : type === TransactionType.SWAP
-                ? 'your daily swap transaction volume'
-                : 'your daily credit card transaction volume',
+                ? 'your swap transaction volume'
+                : 'your credit card transaction volume',
             ),
             limit: limitToString(defaultLimit),
           },
