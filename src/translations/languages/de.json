@@ -470,6 +470,7 @@
     "Cancelled": "Abgebrochen",
     "Canceled": "Abgebrochen",
     "Expired": "Abgelaufen",
+    "No payment active": "Keine Zahlung aktiv",
     "Failed": "Gescheitert",
     "Refund pending": "Rückerstattung ausstehend",
     "Limit exceeded": "Limit überschritten",

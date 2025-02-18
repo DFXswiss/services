@@ -471,6 +471,7 @@
     "Canceled": "Annullato",
     "Expired": "Scaduto",
     "Failed": "Fallito",
+    "No payment active": "Nessun pagamento attivo",
     "Refund pending": "Rimborso in sospeso",
     "Limit exceeded": "Limite superato",
     "Refunded": "Rimborsato",
