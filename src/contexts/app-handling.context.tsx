@@ -1,6 +1,7 @@
 import { Blockchain, Buy, Sell, Swap, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useChange } from 'src/hooks/change.hook';
 import { Service } from '../App';
 import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
@@ -199,12 +200,12 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const search = (window as Window).location.search;
   const query = new URLSearchParams(search);
 
-  // useEffect(() => {
-  //   if (isSessionInitialized && !isLoggedIn) {
-  //     storeQueryParams.remove();
-  //     setParams({});
-  //   }
-  // }, [isSessionInitialized, isLoggedIn]);
+  useChange((newVal, oldVal) => {
+    if (!newVal && oldVal) {
+      storeQueryParams.remove();
+      setParams({});
+    }
+  }, isLoggedIn);
 
   useEffect(() => {
     isSessionInitialized && init();
@@ -249,7 +250,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     let queryParams = extractUrlParams(props.params);
 
     const storedParams = storeQueryParams.get();
-    if ((paramsIsNotEmpty(queryParams) && !paramsHasSession(storedParams)) || paramsHasSession(queryParams)) {
+    if (paramsIsNotEmpty(queryParams)) {
       storeQueryParams.set(removeSession(queryParams));
     } else {
       queryParams = storedParams ?? {};
