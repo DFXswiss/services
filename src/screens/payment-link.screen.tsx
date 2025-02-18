@@ -234,12 +234,15 @@ export default function PaymentLinkScreen(): JSX.Element {
     }
   }, [selectedAsset, selectedPaymentStandard]);
 
-  async function fetchPayRequest(url: string): Promise<number | undefined> {
+  async function fetchPayRequest(url: string, isRefetch = false): Promise<number | undefined> {
     setError(undefined);
     let refetchDelay: number | undefined;
 
     try {
-      const payRequest = await fetchJson(url);
+      const urlObj = new URL(url);
+      urlObj.searchParams.set('timeout', isRefetch ? '10' : '0');
+
+      const payRequest = await fetchJson(urlObj);
       if (sessionApiUrl.current !== url) return undefined;
 
       setPayRequest(payRequest);
@@ -251,6 +254,7 @@ export default function PaymentLinkScreen(): JSX.Element {
           .then((response) => {
             if (response.status !== PaymentLinkPaymentStatus.PENDING) {
               setPaymentStatus(response.status);
+              if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
               if (response.status === PaymentLinkPaymentStatus.COMPLETED && redirectUri) {
                 closeServices({ type: CloseType.PAYMENT }, false);
               }
@@ -262,11 +266,11 @@ export default function PaymentLinkScreen(): JSX.Element {
         refetchDelay = new Date(payRequest.quote.expiration).getTime() - Date.now();
         startTimer(new Date(payRequest.quote.expiration));
       } else {
-        refetchDelay = 1000;
+        refetchDelay = 100;
       }
 
       if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
-      refetchTimeout.current = setTimeout(() => fetchPayRequest(url), refetchDelay);
+      refetchTimeout.current = setTimeout(() => fetchPayRequest(url, true), refetchDelay);
     } catch (error: any) {
       setError(error.message ?? 'Unknown Error');
     }
