@@ -199,12 +199,12 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const search = (window as Window).location.search;
   const query = new URLSearchParams(search);
 
-  useEffect(() => {
-    if (isSessionInitialized && !isLoggedIn) {
-      storeQueryParams.remove();
-      setParams({});
-    }
-  }, [isSessionInitialized, isLoggedIn]);
+  // useEffect(() => {
+  //   if (isSessionInitialized && !isLoggedIn) {
+  //     storeQueryParams.remove();
+  //     setParams({});
+  //   }
+  // }, [isSessionInitialized, isLoggedIn]);
 
   useEffect(() => {
     isSessionInitialized && init();
