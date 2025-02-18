@@ -627,9 +627,10 @@ export default function PaymentLinkScreen(): JSX.Element {
                   </StyledVerticalStack>
                 </StyledCollapsible>
               )}
-              {[PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
-                selectedPaymentStandard?.id as PaymentStandardType,
-              ) && (
+              {(!selectedPaymentStandard ||
+                [PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
+                  selectedPaymentStandard.id as PaymentStandardType,
+                )) && (
                 <StyledVerticalStack full gap={8} center>
                   {hasQuote(payRequest) && (
                     <div className="flex flex-col w-full items-center justify-center">
