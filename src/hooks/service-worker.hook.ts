@@ -19,7 +19,7 @@ export const useServiceWorker = () => {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register(`${process.env.PUBLIC_URL}/custom-service-worker.js`)
+        .register(`${window.location.origin}/custom-service-worker.js`)
         .then((registration) => {
           registration.onupdatefound = () => {
             onSWUpdate(registration);

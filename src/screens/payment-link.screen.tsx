@@ -25,7 +25,7 @@ import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { GoCheckCircleFill, GoClockFill, GoXCircleFill } from 'react-icons/go';
+import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
 
 import { useSearchParams } from 'react-router-dom';
 import { QrBasic } from 'src/components/payment/qr-code';
@@ -109,6 +109,12 @@ interface PaymentStatus {
   status: PaymentLinkPaymentStatus;
 }
 
+enum NoPaymentLinkPaymentStatus {
+  NO_PAYMENT = 'NoPayment',
+}
+
+type ExtendedPaymentLinkStatus = PaymentLinkPaymentStatus | NoPaymentLinkPaymentStatus;
+
 interface FormData {
   paymentStandard: PaymentStandard;
   asset?: string;
@@ -133,7 +139,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [paymentStandards, setPaymentStandards] = useState<PaymentStandard[]>();
   const [assetObject, setAssetObject] = useState<Asset>();
   const [showContract, setShowContract] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<PaymentLinkPaymentStatus>();
+  const [paymentStatus, setPaymentStatus] = useState<ExtendedPaymentLinkStatus>(PaymentLinkPaymentStatus.PENDING);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
   const refetchTimeout = useRef<NodeJS.Timeout>();
@@ -234,23 +240,28 @@ export default function PaymentLinkScreen(): JSX.Element {
     }
   }, [selectedAsset, selectedPaymentStandard]);
 
-  async function fetchPayRequest(url: string): Promise<number | undefined> {
+  async function fetchPayRequest(url: string, isRefetch = false): Promise<number | undefined> {
     setError(undefined);
     let refetchDelay: number | undefined;
 
     try {
-      const payRequest = await fetchJson(url);
+      const urlObj = new URL(url);
+      urlObj.searchParams.set('timeout', isRefetch ? '10' : '0');
+
+      const payRequest = await fetchJson(urlObj);
       if (sessionApiUrl.current !== url) return undefined;
 
       setPayRequest(payRequest);
-      setPaymentStatus(undefined);
 
       if (hasQuote(payRequest)) {
+        setPaymentStatus(PaymentLinkPaymentStatus.PENDING);
+
         setPaymentStandardSelection(payRequest);
         awaitPayment(payRequest.quote.payment)
           .then((response) => {
             if (response.status !== PaymentLinkPaymentStatus.PENDING) {
               setPaymentStatus(response.status);
+              if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
               if (response.status === PaymentLinkPaymentStatus.COMPLETED && redirectUri) {
                 closeServices({ type: CloseType.PAYMENT }, false);
               }
@@ -262,11 +273,12 @@ export default function PaymentLinkScreen(): JSX.Element {
         refetchDelay = new Date(payRequest.quote.expiration).getTime() - Date.now();
         startTimer(new Date(payRequest.quote.expiration));
       } else {
-        refetchDelay = 1000;
+        setPaymentStatus(NoPaymentLinkPaymentStatus.NO_PAYMENT);
+        refetchDelay = 100;
       }
 
       if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
-      refetchTimeout.current = setTimeout(() => fetchPayRequest(url), refetchDelay);
+      refetchTimeout.current = setTimeout(() => fetchPayRequest(url, true), refetchDelay);
     } catch (error: any) {
       setError(error.message ?? 'Unknown Error');
     }
@@ -416,7 +428,7 @@ export default function PaymentLinkScreen(): JSX.Element {
             )}
           </div>
           <PaymentStatusTile status={paymentStatus} />
-          {!paymentStatus && hasQuote(payRequest) && paymentStandards?.length && (
+          {paymentStatus === PaymentLinkPaymentStatus.PENDING && hasQuote(payRequest) && paymentStandards?.length && (
             <Form control={control} errors={errors}>
               <StyledVerticalStack full gap={4} center>
                 <StyledDropdown<PaymentStandard>
@@ -445,7 +457,7 @@ export default function PaymentLinkScreen(): JSX.Element {
               </StyledVerticalStack>
             </Form>
           )}
-          {!paymentStatus && (
+          {[PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(paymentStatus) && (
             <>
               {(hasQuote(payRequest) || payRequest.recipient) && (
                 <StyledCollapsible
@@ -627,9 +639,10 @@ export default function PaymentLinkScreen(): JSX.Element {
                   </StyledVerticalStack>
                 </StyledCollapsible>
               )}
-              {[PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
-                selectedPaymentStandard?.id as PaymentStandardType,
-              ) && (
+              {(!selectedPaymentStandard ||
+                [PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
+                  selectedPaymentStandard.id as PaymentStandardType,
+                )) && (
                 <StyledVerticalStack full gap={8} center>
                   {hasQuote(payRequest) && (
                     <div className="flex flex-col w-full items-center justify-center">
@@ -673,7 +686,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 }
 
 interface PaymentStatusTileProps {
-  status?: PaymentLinkPaymentStatus;
+  status?: ExtendedPaymentLinkStatus;
 }
 
 function PaymentStatusTile({ status }: PaymentStatusTileProps): JSX.Element {
@@ -699,19 +712,31 @@ function PaymentStatusTile({ status }: PaymentStatusTileProps): JSX.Element {
       tileBackgroundStyle += ' bg-[#65728A]/10 border-[#65728A]';
       iconStyle += ' text-[#65728A]';
       break;
+    case NoPaymentLinkPaymentStatus.NO_PAYMENT:
+      tileBackgroundStyle += ' bg-[#65728A]/10 border-[#65728A]';
+      iconStyle += ' text-[#65728A]';
+      break;
   }
 
   const statusIcon = {
     [PaymentLinkPaymentStatus.COMPLETED]: <GoCheckCircleFill />,
     [PaymentLinkPaymentStatus.CANCELLED]: <GoXCircleFill />,
     [PaymentLinkPaymentStatus.EXPIRED]: <GoClockFill />,
+    [NoPaymentLinkPaymentStatus.NO_PAYMENT]: <GoSkip />,
+  };
+
+  const statusLabel = {
+    [PaymentLinkPaymentStatus.COMPLETED]: 'Completed',
+    [PaymentLinkPaymentStatus.CANCELLED]: 'Cancelled',
+    [PaymentLinkPaymentStatus.EXPIRED]: 'Expired',
+    [NoPaymentLinkPaymentStatus.NO_PAYMENT]: 'No payment active',
   };
 
   return (
     <div className={tileBackgroundStyle}>
       <div className={iconStyle}>{statusIcon[status]}</div>
       <p className="text-dfxBlue-800 font-bold text-xl mt-4 leading-snug">
-        {translate('screens/payment', status).toUpperCase()}
+        {translate('screens/payment', statusLabel[status]).toUpperCase()}
       </p>
     </div>
   );

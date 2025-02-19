@@ -470,11 +470,16 @@
     "Cancelled": "Abgebrochen",
     "Canceled": "Abgebrochen",
     "Expired": "Abgelaufen",
+    "No payment active": "Keine Zahlung aktiv",
     "Failed": "Gescheitert",
     "Refund pending": "Rückerstattung ausstehend",
     "Limit exceeded": "Limit überschritten",
     "Refunded": "Rückerstattet",
     "Unassigned": "Nicht zugeordnet",
+    "Liquidity pending": "Liquidität ausstehend",
+    "Payout in progress": "Auszahlung in Bearbeitung",
+    "Price undeterminable": "Preis nicht bestimmbar",
+
     "LNURL decoded": "LNURL dekodiert",
 
     "Failure reason": "Fehlerursache",

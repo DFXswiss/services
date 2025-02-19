@@ -133,7 +133,7 @@ export function formatBytes(bytes: number, decimals = 2): string {
   return `${parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
 }
 
-export async function fetchJson(url: string): Promise<any> {
+export async function fetchJson(url: string | URL): Promise<any> {
   const response = await fetch(url);
   return response.json();
 }

@@ -471,10 +471,15 @@
     "Canceled": "Annullato",
     "Expired": "Scaduto",
     "Failed": "Fallito",
+    "No payment active": "Nessun pagamento attivo",
     "Refund pending": "Rimborso in sospeso",
     "Limit exceeded": "Limite superato",
     "Refunded": "Rimborsato",
     "Unassigned": "Non assegnato",
+    "Liquidity pending": "Liquidità in sospeso",
+    "Payout in progress": "Pagamento in corso",
+    "Price undeterminable": "Prezzo indeterminabile",
+
     "LNURL decoded": "LNURL decodificato",
 
     "Failure reason": "Causa dell'errore",
