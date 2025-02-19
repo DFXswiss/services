@@ -100,9 +100,15 @@ export function useLedger(): LedgerInterface {
       } else if (statusText === 'UNKNOWN_ERROR') {
         throw new TranslatedError('Please open the Bitcoin app on your Ledger.');
       }
-
-      throw e;
+      throw defaultError(e as LedgerError);
     }
+  }
+
+  async function defaultError(e: LedgerError): Promise<TranslatedError> {
+    console.log(e);
+    return new TranslatedError(
+      'Please make sure that all other applications and browser extensions that are connected to the ledger are completely closed when you try to connect.\nThis includes third-party wallets (Ledger Live, Metamask, Daedalus, MyEtherWallet) or other applications that could interfere with the connection between DFX.swiss and your ledger device.',
+    );
   }
 
   async function setupTransport(): Promise<Transport> {
@@ -118,7 +124,7 @@ export function useLedger(): LedgerInterface {
         throw new TranslatedError('Please connect your Ledger.');
       }
 
-      throw e;
+      throw defaultError(e as LedgerError);
     }
   }
 
@@ -187,7 +193,7 @@ export function useLedger(): LedgerInterface {
         throw new AbortError('User cancelled');
       }
 
-      throw e;
+      throw defaultError(e as LedgerError);
     }
   }
 
@@ -209,7 +215,7 @@ export function useLedger(): LedgerInterface {
         throw new AbortError('User cancelled');
       }
 
-      throw e;
+      throw defaultError(e as LedgerError);
     }
   }
 
