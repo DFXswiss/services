@@ -107,7 +107,7 @@ export function useLedger(): LedgerInterface {
   async function defaultError(e: LedgerError): Promise<TranslatedError> {
     console.log(e);
     return new TranslatedError(
-      'Please make sure that all applications and browser extensions are completely closed when you try to establish a connection.\nThis includes third-party wallets (Ledger live, Metamask, Daedalus, MyEtherWallet) or other applications that could interfere with the connection between DFX.swiss and your Ledger device.',
+      'Please make sure that all other applications and browser extensions that are connected to the ledger are completely closed when you try to connect.\nThis includes third-party wallets (Ledger Live, Metamask, Daedalus, MyEtherWallet) or other applications that could interfere with the connection between DFX.swiss and your ledger device.',
     );
   }
 
