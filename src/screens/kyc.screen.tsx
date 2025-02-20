@@ -1182,7 +1182,7 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
     ) : isDone ? (
       <StyledLoadingSpinner size={SpinnerSize.LG} />
     ) : step.type === KycStepType.SUMSUB_VIDEO ? (
-      <div id="sumsub-websdk-container"></div>
+      <div id="sumsub-websdk-container" className="w-full"></div>
     ) : (
       <>
         {step.session.type === UrlType.TOKEN ? (
