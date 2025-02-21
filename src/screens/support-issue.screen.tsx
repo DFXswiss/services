@@ -145,7 +145,7 @@ export default function SupportIssueScreen(): JSX.Element {
   useKycLevelGuard(KycLevel.Link, '/contact');
 
   function startChat(issueUid: string) {
-    navigate({ pathname: `/support/chat/${issueUid}` }, { clearParams: ['quote'] });
+    navigate({ pathname: `/support/chat/${issueUid}` }, { clearParams: ['quote', 'order'] });
   }
 
   useEffect(() => {
@@ -379,7 +379,7 @@ export default function SupportIssueScreen(): JSX.Element {
                 )
               ) : (
                 <>
-                  {bankAccounts ? (
+                  {bankAccounts?.length ? (
                     <StyledDropdown<string>
                       rootRef={rootRef}
                       label={translate('screens/support', 'Sender IBAN')}
