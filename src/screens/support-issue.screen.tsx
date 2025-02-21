@@ -139,13 +139,13 @@ export default function SupportIssueScreen(): JSX.Element {
   const issues = Object.values(SupportIssueType);
   const reasons = IssueReasons[selectedType] ?? [];
 
-  const quoteParam = urlParams.get('quote');
+  const orderParam = urlParams.get('quote') ?? urlParams.get('order');
 
-  useUserGuard('/login', !quoteParam);
+  useUserGuard('/login', !orderParam);
   useKycLevelGuard(KycLevel.Link, '/contact');
 
   function startChat(issueUid: string) {
-    navigate({ pathname: `/support/chat/${issueUid}` }, { clearParams: ['quote'] });
+    navigate({ pathname: `/support/chat/${issueUid}` }, { clearParams: ['quote', 'order'] });
   }
 
   useEffect(() => {
@@ -190,21 +190,21 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [urlParams]);
 
   useEffect(() => {
-    if (quoteParam) {
+    if (orderParam) {
       const issueType = SupportIssueType.TRANSACTION_ISSUE;
       setSupportIssue((prev) => ({ ...prev, type: issueType }));
       setValue('type', issueType);
 
-      loadSupportIssue(quoteParam).catch(() => undefined); // ignore error
+      loadSupportIssue(orderParam).catch(() => undefined); // ignore error
     }
-  }, [quoteParam]);
+  }, [orderParam]);
 
   useEffect(() => {
-    if (quoteParam && isLoggedIn) logout();
-  }, [quoteParam, isLoggedIn]);
+    if (orderParam && isLoggedIn) logout();
+  }, [orderParam, isLoggedIn]);
 
   useEffect(() => {
-    if (quoteParam && !isLoading && existingIssue) {
+    if (orderParam && !isLoading && existingIssue) {
       startChat(existingIssue.uid);
     }
   }, [isIssueLoading, existingIssue]);
@@ -262,7 +262,7 @@ export default function SupportIssueScreen(): JSX.Element {
             date: new Date(data.date),
           };
         }
-        quoteParam && (request.transaction.quoteUid = quoteParam);
+        orderParam && (request.transaction.orderUid = orderParam);
       }
 
       if (data.type === SupportIssueType.LIMIT_REQUEST && data.limit) {
@@ -291,7 +291,7 @@ export default function SupportIssueScreen(): JSX.Element {
 
   const rules = Utils.createRules({
     type: Validations.Required,
-    senderIban: [Validations.Required, !!quoteParam && Validations.Iban(allowedCountries)],
+    senderIban: [Validations.Required, !!orderParam && Validations.Iban(allowedCountries)],
     receiverIban: Validations.Required,
     date: [Validations.Required, Validations.Custom((date) => (/\d{4}-\d{2}-\d{2}/g.test(date) ? true : 'pattern'))],
     name: Validations.Required,
@@ -342,7 +342,7 @@ export default function SupportIssueScreen(): JSX.Element {
               labelFunc={(item) => item && translate('screens/support', IssueTypeLabels[item])}
               name="type"
               placeholder={translate('general/actions', 'Select') + '...'}
-              disabled={!!quoteParam}
+              disabled={!!orderParam}
               full
             />
 
@@ -350,7 +350,7 @@ export default function SupportIssueScreen(): JSX.Element {
               <StyledDropdown<SupportIssueReason>
                 rootRef={rootRef}
                 label={translate('screens/support', 'Reason')}
-                items={reasons.filter((r) => r !== SupportIssueReason.FUNDS_NOT_RECEIVED || !quoteParam)}
+                items={reasons.filter((r) => r !== SupportIssueReason.FUNDS_NOT_RECEIVED || !orderParam)}
                 labelFunc={(item) => translate('screens/support', IssueReasonLabels[item])}
                 name="reason"
                 placeholder={translate('general/actions', 'Select') + '...'}
@@ -361,7 +361,7 @@ export default function SupportIssueScreen(): JSX.Element {
             {selectedType === SupportIssueType.TRANSACTION_ISSUE &&
               selectedReason &&
               (selectedReason !== SupportIssueReason.TRANSACTION_MISSING ? (
-                !quoteParam && (
+                !orderParam && (
                   <StyledVerticalStack gap={3.5} full center>
                     <p className="w-full text-left text-dfxBlue-800 text-base font-semibold pl-3.5 -mb-1">
                       {translate('screens/payment', 'Transaction')}
@@ -379,7 +379,7 @@ export default function SupportIssueScreen(): JSX.Element {
                 )
               ) : (
                 <>
-                  {bankAccounts ? (
+                  {bankAccounts?.length ? (
                     <StyledDropdown<string>
                       rootRef={rootRef}
                       label={translate('screens/support', 'Sender IBAN')}
