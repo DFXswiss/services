@@ -56,6 +56,7 @@ const urlParamsToRemove = [
   'bank-account',
   'external-transaction-id',
   'lightning',
+  'trezor-connect-src',
 ];
 
 export interface AppParams {
