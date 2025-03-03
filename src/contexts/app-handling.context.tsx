@@ -248,13 +248,14 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   }
 
   function loadQueryParams(): AppParams {
-    let queryParams = extractUrlParams(props.params);
+    const queryParams = extractUrlParams(props.params);
+    const storeParams = removeSession(queryParams);
 
     const storedParams = storeQueryParams.get();
-    if (paramsIsNotEmpty(queryParams)) {
-      storeQueryParams.set(removeSession(queryParams));
+    if (paramsIsNotEmpty(storeParams)) {
+      storeQueryParams.set(storeParams);
     } else {
-      queryParams = storedParams ?? {};
+      Object.assign(queryParams, storedParams ?? {});
     }
 
     setParams(queryParams);
