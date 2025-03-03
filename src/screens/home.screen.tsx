@@ -15,6 +15,8 @@ import { useNavigation } from '../hooks/navigation.hook';
 import { useResizeObserver } from '../hooks/resize-observer.hook';
 import { Stack } from '../util/stack';
 
+const CustodyAssets = ['ZCHF', 'FPS', 'DEPSPresale'];
+
 enum SpecialMode {
   LOGIN = 'Login',
   CONNECT = 'Connect',
@@ -73,8 +75,8 @@ export default function HomeScreen(): JSX.Element {
       specialMode === SpecialMode.CONNECT &&
       isLoggedIn &&
       !session?.address &&
-      user?.addresses?.length &&
-      !isConnectAddress
+      !isConnectAddress &&
+      (user?.addresses?.length || CustodyAssets.includes(appParams.assetOut ?? ''))
     ) {
       setConnectTo({ type: WalletType.ADDRESS });
     } else if (!isLoggedIn && isConnectAddress) {

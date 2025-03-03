@@ -824,7 +824,7 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
           )}
         </StyledDataTableRow>
       )}
-      {tx.outputAsset && (
+      {tx.outputAsset && ![TransactionState.RETURN_PENDING, TransactionState.RETURNED].includes(tx.state) && (
         <StyledDataTableRow label={translate('screens/payment', 'Output')}>
           <p>
             {tx.outputAmount ?? ''} {tx.outputAsset}

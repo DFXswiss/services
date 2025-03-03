@@ -34,6 +34,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
+import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
@@ -154,7 +155,7 @@ export default function BuyScreen(): JSX.Element {
     session?.address && blockchains?.length
       ? [
           ...blockchains.map((b) => ({
-            address: session.address ?? '',
+            address: session.role === UserRole.CUSTODY ? 'DFX Safe' : session.address ?? '',
             label: toString(b),
             chain: b,
           })),
