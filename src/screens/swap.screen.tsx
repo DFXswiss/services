@@ -2,10 +2,12 @@ import {
   ApiError,
   Asset,
   Blockchain,
+  Session,
   Swap,
   SwapPaymentInfo,
   TransactionError,
   TransactionType,
+  UserAddress,
   Utils,
   Validations,
   useAsset,
@@ -35,6 +37,7 @@ import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
+import { addressLabel } from 'src/config/labels';
 import { useWindowContext } from 'src/contexts/window.context';
 import useDebounce from 'src/hooks/debounce.hook';
 import { blankedAddress } from 'src/util/utils';
@@ -164,12 +167,11 @@ export default function SwapScreen(): JSX.Element {
     (b) => SwapInputBlockchains.includes(b) && filteredAssets?.some((a) => a.blockchain === b),
   );
 
-  const userAddresses = (
-    [
-      session?.address && { address: session.address, blockchains: session.blockchains },
-      ...(user?.addresses.map((a) => ({ address: a.address, blockchains: a.blockchains })) ?? []),
-    ] as { address: string; blockchains: Blockchain[] }[]
-  ).filter((a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i);
+  const userSessions = [session, ...(user?.addresses ?? [])].filter(
+    (a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i,
+  ) as (Session | UserAddress)[];
+
+  const userAddresses = userSessions.map((a) => ({ address: addressLabel(a), blockchains: a.blockchains }));
 
   const targetBlockchains = userAddresses
     .flatMap((a) => a.blockchains)
