@@ -1,9 +1,11 @@
 import {
   AccountType,
   ApiError,
+  BeneficialOwnerData,
   Country,
   DocumentType,
   GenderType,
+  KycBeneficialData,
   KycContactData,
   KycFileData,
   KycFinancialOption,
@@ -458,7 +460,7 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.LEGAL_ENTITY:
       return <LegalEntityData {...props} />;
 
-    case KycStepName.STOCK_REGISTER:
+    case KycStepName.OWNER_DIRECTORY:
       return <FileUpload {...props} />;
 
     case KycStepName.NATIONALITY_DATA:
@@ -472,6 +474,9 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.AUTHORITY:
       return <FileUpload {...props} />;
+
+    case KycStepName.BENEFICIAL_OWNER:
+      return <BeneficialOwner {...props} />;
 
     case KycStepName.IDENT:
       if (props.step.type === KycStepType.MANUAL) {
@@ -1113,6 +1118,208 @@ function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProp
           isLoading={isUpdating || isLoading}
         />
       </StyledVerticalStack>
+    </Form>
+  );
+}
+
+interface BeneficialOwnerFormData {
+  ownerCount: number;
+  owners: BeneficialOwnerData[];
+}
+
+function BeneficialOwner({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError, allowedCountries } = useSettingsContext();
+  const { setBeneficialData } = useKyc();
+
+  const [reload, setReload] = useState(false);
+  const [ownerIndex, setOwnerIndex] = useState<number>();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<BeneficialOwnerFormData>({ mode: 'onTouched' });
+
+  const maxOwnerCount = 4;
+  const ownerCount = useWatch({ control, name: 'ownerCount' });
+
+  function onSubmit(formData: BeneficialOwnerFormData) {
+    if (!step.session) return;
+
+    setError(undefined);
+
+    if (ownerCount && (ownerIndex == null || ownerIndex + 1 < ownerCount)) {
+      setOwnerIndex((i) => (i ?? -1) + 1);
+      clearInputs();
+      return;
+    }
+
+    const data: KycBeneficialData = {
+      hasBeneficialOwners: ownerCount > 0,
+      beneficialOwners: formData.owners,
+    };
+
+    setIsUpdating(true);
+    setBeneficialData(code, step.session.url, data)
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  function clearInputs() {
+    // reload input fields to trigger UI refresh
+    setReload(true);
+    setTimeout(() => setReload(false));
+  }
+
+  function back() {
+    setOwnerIndex((i) => (i ? i - 1 : undefined));
+    clearInputs();
+  }
+
+  const rules = Utils.createRules({
+    ownerCount: Validations.Required,
+
+    ...Array.from({ length: maxOwnerCount })
+      .map((_, i) => i)
+      .map((c) => ({
+        [`owners.${c}.firstName`]: Validations.Required,
+        [`owners.${c}.lastName`]: Validations.Required,
+        [`owners.${c}.street`]: Validations.Required,
+        [`owners.${c}.zip`]: Validations.Required,
+        [`owners.${c}.city`]: Validations.Required,
+        [`owners.${c}.country`]: Validations.Required,
+      }))
+      .reduce((prev, curr) => ({ ...prev, ...curr })),
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      {!reload && (
+        <StyledVerticalStack gap={6} full center>
+          {ownerIndex != null ? (
+            <>
+              <StyledVerticalStack gap={2} full>
+                <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+                  {translate('screens/kyc', 'Beneficial owner')} {ownerIndex + 1}/{ownerCount}
+                </p>
+                <StyledHorizontalStack gap={2}>
+                  <StyledInput
+                    name={`owners.${ownerIndex}.firstName`}
+                    autocomplete="firstname"
+                    label={translate('screens/kyc', 'First name')}
+                    placeholder={translate('screens/kyc', 'John')}
+                    full
+                    smallLabel
+                  />
+                  <StyledInput
+                    name={`owners.${ownerIndex}.lastName`}
+                    autocomplete="lastname"
+                    label={translate('screens/kyc', 'Last name')}
+                    placeholder={translate('screens/kyc', 'Doe')}
+                    full
+                    smallLabel
+                  />
+                </StyledHorizontalStack>
+                <StyledHorizontalStack gap={2}>
+                  <StyledInput
+                    name={`owners.${ownerIndex}.street`}
+                    autocomplete="street"
+                    label={translate('screens/kyc', 'Street')}
+                    placeholder={translate('screens/kyc', 'Street')}
+                    full
+                    smallLabel
+                  />
+                  <StyledInput
+                    name={`owners.${ownerIndex}.houseNumber`}
+                    autocomplete="house-number"
+                    label={translate('screens/kyc', 'House nr.')}
+                    placeholder="xx"
+                    small
+                    smallLabel
+                  />
+                </StyledHorizontalStack>
+                <StyledHorizontalStack gap={2}>
+                  <StyledInput
+                    name={`owners.${ownerIndex}.zip`}
+                    autocomplete="zip"
+                    label={translate('screens/kyc', 'ZIP code')}
+                    placeholder="12345"
+                    small
+                    smallLabel
+                  />
+                  <StyledInput
+                    name={`owners.${ownerIndex}.city`}
+                    autocomplete="city"
+                    label={translate('screens/kyc', 'City')}
+                    placeholder="Berlin"
+                    full
+                    smallLabel
+                  />
+                </StyledHorizontalStack>
+                <StyledSearchDropdown<Country>
+                  rootRef={rootRef}
+                  name={`owners.${ownerIndex}.country`}
+                  autocomplete="country"
+                  label={translate('screens/kyc', 'Country')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
+                  items={allowedCountries}
+                  labelFunc={(item) => item.name}
+                  filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+                  matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+                  smallLabel
+                />
+              </StyledVerticalStack>
+            </>
+          ) : (
+            <StyledVerticalStack gap={2} full center>
+              <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+                {translate(
+                  'screens/kyc',
+                  'How many natural persons are there who directly or indirectly hold 25% or more of company shares?',
+                )}
+              </p>
+              <StyledDropdown
+                rootRef={rootRef}
+                name="ownerCount"
+                full
+                label=""
+                placeholder={translate('general/actions', 'Select') + '...'}
+                items={Array.from({ length: maxOwnerCount + 1 }).map((_, i) => i)}
+                labelFunc={(item) => (item ? `${item}` : translate('screens/kyc', 'None'))}
+              />
+            </StyledVerticalStack>
+          )}
+
+          {error && (
+            <div>
+              <ErrorHint message={error} />
+            </div>
+          )}
+
+          <div className="w-full flex flex-col gap-2">
+            <StyledButton
+              type="submit"
+              label={translate('general/actions', 'Next')}
+              onClick={handleSubmit(onSubmit)}
+              width={StyledButtonWidth.FULL}
+              disabled={!isValid}
+              isLoading={isUpdating || isLoading}
+            />
+            {ownerIndex != null && !(isUpdating || isLoading) && (
+              <StyledButton
+                type="button"
+                label={translate('general/actions', 'Back')}
+                onClick={back}
+                width={StyledButtonWidth.FULL}
+                color={StyledButtonColor.STURDY_WHITE}
+              />
+            )}
+          </div>
+        </StyledVerticalStack>
+      )}
     </Form>
   );
 }
