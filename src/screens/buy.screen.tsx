@@ -8,8 +8,6 @@ import {
   FiatPaymentMethod,
   TransactionError,
   TransactionType,
-  Utils,
-  Validations,
   useAsset,
   useAssetContext,
   useAuthContext,
@@ -17,6 +15,8 @@ import {
   useFiat,
   useSessionContext,
   useUserContext,
+  Utils,
+  Validations,
 } from '@dfx.swiss/react';
 import {
   AssetIconVariant,
@@ -34,7 +34,6 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
-import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
 import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
@@ -49,7 +48,7 @@ import { AddressSwitch } from '../components/payment/address-switch';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PrivateAssetHint } from '../components/private-asset-hint';
 import { SanctionHint } from '../components/sanction-hint';
-import { PaymentMethodDescriptions, PaymentMethodLabels } from '../config/labels';
+import { addressLabel, PaymentMethodDescriptions, PaymentMethodLabels } from '../config/labels';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
@@ -155,7 +154,7 @@ export default function BuyScreen(): JSX.Element {
     session?.address && blockchains?.length
       ? [
           ...blockchains.map((b) => ({
-            address: session.role === UserRole.CUSTODY ? 'DFX Safe' : session.address ?? '',
+            address: addressLabel(session),
             label: toString(b),
             chain: b,
           })),
@@ -167,7 +166,8 @@ export default function BuyScreen(): JSX.Element {
       : [];
   const availablePaymentMethods = [FiatPaymentMethod.BANK];
 
-  (!selectedAsset || selectedAsset.instantBuyable) && availablePaymentMethods.push(FiatPaymentMethod.INSTANT);
+  // no instant payments ATM
+  // (!selectedAsset || selectedAsset.instantBuyable) && availablePaymentMethods.push(FiatPaymentMethod.INSTANT);
 
   (isDfxHosted || !isEmbedded) &&
     wallet !== EmbeddedWallet &&

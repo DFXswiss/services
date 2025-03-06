@@ -2004,8 +2004,8 @@ export const FeatureTree: Page[] = [
 
   {
     id: 'frankencoin-buy-optimism',
-    header: 'Buy Frankencoin Assets on Ethereum',
-    description: 'Buy Frankencoin Assets on Ethereum',
+    header: 'Buy Frankencoin Assets on Optimism',
+    description: 'Buy Frankencoin Assets on Optimism',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
@@ -2111,8 +2111,8 @@ export const FeatureTree: Page[] = [
 
   {
     id: 'frankencoin-sell-polygon',
-    header: 'Sell Frankencoin Assets on Ethereum',
-    description: 'Sell Frankencoin Assets on Ethereum',
+    header: 'Sell Frankencoin Assets on Polygon',
+    description: 'Sell Frankencoin Assets on Polygon',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
@@ -2168,8 +2168,8 @@ export const FeatureTree: Page[] = [
 
   {
     id: 'frankencoin-sell-arbitrum',
-    header: 'Sell Frankencoin Assets on Ethereum',
-    description: 'Sell Frankencoin Assets on Ethereum',
+    header: 'Sell Frankencoin Assets on Arbitrum',
+    description: 'Sell Frankencoin Assets on Arbitrum',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
@@ -2218,8 +2218,8 @@ export const FeatureTree: Page[] = [
 
   {
     id: 'frankencoin-sell-optimism',
-    header: 'Sell Frankencoin Assets on Ethereum',
-    description: 'Sell Frankencoin Assets on Ethereum',
+    header: 'Sell Frankencoin Assets on Optimism',
+    description: 'Sell Frankencoin Assets on Optimism',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
@@ -2268,8 +2268,8 @@ export const FeatureTree: Page[] = [
 
   {
     id: 'frankencoin-wallets',
-    header: 'Frankencoin Assets on Ethereum',
-    description: 'Buy and Sell Frankencoin Assets on Ethereum',
+    header: 'Frankencoin Assets',
+    description: 'Buy and Sell Frankencoin Assets',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
     tiles: [
       {
@@ -2308,9 +2308,671 @@ export const FeatureTree: Page[] = [
 
   {
     id: 'frankencoin-hw-wallets',
-    header: 'Frankencoin Assets on Ethereum',
-    description: 'Buy and Sell Frankencoin Assets on Ethereum',
+    header: 'Frankencoin Assets',
+    description: 'Buy and Sell Frankencoin Assets',
     bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    tiles: [
+      {
+        id: 'bitbox',
+        img: 'bitbox',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.BITBOX_BTC : WalletType.BITBOX_ETH,
+        }),
+      },
+      {
+        id: 'ledger',
+        img: 'ledger',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.LEDGER_BTC : WalletType.LEDGER_ETH,
+        }),
+      },
+      {
+        id: 'trezor',
+        img: 'trezor',
+        wallet: (params) => ({
+          type: params.blockchain === Blockchain.BITCOIN ? WalletType.TREZOR_BTC : WalletType.TREZOR_ETH,
+        }),
+      },
+    ],
+  },
+
+  // --- dEURO --- //
+  {
+    id: 'deuro',
+    header: 'dEURO',
+    description: 'Buy and sell decentralized EURO Assets',
+    tiles: [
+      {
+        id: 'buy',
+        img: 'kaufen',
+        next: {
+          page: 'deuro-buy',
+        },
+      },
+      {
+        id: 'sell',
+        img: 'verkaufen',
+        next: {
+          page: 'deuro-sell',
+        },
+      },
+      {
+        id: 'swap',
+        img: 'swap',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'swap',
+          },
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-buy',
+    header: 'Blockchain',
+    description: 'Select a blockchain to buy dEURO Assets',
+    tiles: [
+      {
+        id: 'ethereum',
+        img: 'ethereum',
+        next: {
+          page: 'deuro-buy-ethereum',
+        },
+      },
+      {
+        id: 'polygon',
+        img: 'polygon',
+        next: {
+          page: 'deuro-buy-polygon',
+        },
+      },
+      {
+        id: 'arbitrum',
+        img: 'arbitrum',
+        next: {
+          page: 'deuro-buy-arbitrum',
+        },
+      },
+      {
+        id: 'optimism',
+        img: 'optimism',
+        next: {
+          page: 'deuro-buy-optimism',
+        },
+      },
+      {
+        id: 'base',
+        img: 'basechain',
+        next: {
+          page: 'deuro-buy-base',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-sell',
+    header: 'Blockchain',
+    description: 'Select a blockchain to sell dEURO Assets',
+    tiles: [
+      {
+        id: 'ethereum',
+        img: 'ethereum',
+        next: {
+          page: 'deuro-sell-ethereum',
+        },
+      },
+      {
+        id: 'polygon',
+        img: 'polygon',
+        next: {
+          page: 'deuro-sell-polygon',
+        },
+      },
+      {
+        id: 'arbitrum',
+        img: 'arbitrum',
+        next: {
+          page: 'deuro-sell-arbitrum',
+        },
+      },
+      {
+        id: 'optimism',
+        img: 'optimism',
+        next: {
+          page: 'deuro-sell-optimism',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-buy-ethereum',
+    header: 'Buy dEURO Assets on Ethereum',
+    description: 'Buy dEURO Assets on Ethereum',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'dEURO',
+        img: 'deuro',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'dEURO' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'nDEPS',
+        img: 'ndeps',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'nDEPS' },
+          },
+        },
+      },
+      {
+        id: 'DEPS',
+        img: 'deps',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ETHEREUM, assetOut: 'DEPS' },
+          },
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-buy-polygon',
+    header: 'Buy dEURO Assets on Polygon',
+    description: 'Buy dEURO Assets on Polygon',
+    tiles: [
+      {
+        id: 'pol',
+        img: 'Pol',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'POL' },
+          },
+        },
+      },
+      {
+        id: 'dEURO',
+        img: 'deuro',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'dEURO' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'DEPS',
+        img: 'deps',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.POLYGON, assetOut: 'DEPS' },
+          },
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-buy-arbitrum',
+    header: 'Buy dEURO Assets on Arbitrum',
+    description: 'Buy dEURO Assets on Arbitrum',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'dEURO',
+        img: 'deuro',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'dEURO' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ARBITRUM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'DEPS',
+        img: 'deps',
+        disabled: true,
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-buy-base',
+    header: 'Buy dEURO Assets on Base',
+    description: 'Buy dEURO Assets on Base',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BASE, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'dEURO',
+        img: 'deuro',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.BASE, assetOut: 'dEURO' },
+          },
+        },
+      },
+      {
+        id: 'DEPS',
+        img: 'deps',
+        disabled: true,
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-buy-optimism',
+    header: 'Buy dEURO Assets on Optimism',
+    description: 'Buy dEURO Assets on Optimism',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'dEURO',
+        img: 'deuro',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'dEURO' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.OPTIMISM, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'DEPS',
+        img: 'deps',
+        disabled: true,
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-sell-ethereum',
+    header: 'Sell dEURO Assets on Ethereum',
+    description: 'Sell dEURO Assets on Ethereum',
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'dEURO',
+        img: 'deuro',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'dEURO' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'nDEPS',
+        img: 'ndeps',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'nDEPS' },
+          },
+        },
+      },
+      {
+        id: 'DEPS',
+        img: 'deps',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ETHEREUM, assetIn: 'DEPS' },
+          },
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-sell-polygon',
+    header: 'Sell dEURO Assets on Polygon',
+    description: 'Sell dEURO Assets on Polygon',
+    tiles: [
+      {
+        id: 'pol',
+        img: 'Pol',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'POL' },
+          },
+        },
+      },
+      {
+        id: 'dEURO',
+        img: 'deuro',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'dEURO' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'DEPS',
+        img: 'deps',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.POLYGON, assetIn: 'DEPS' },
+          },
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-sell-arbitrum',
+    header: 'Sell dEURO Assets on Arbitrum',
+    description: 'Sell dEURO Assets on Arbitrum',
+    tiles: [
+      {
+        id: 'pol',
+        img: 'Pol',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'POL' },
+          },
+        },
+      },
+      {
+        id: 'dEURO',
+        img: 'deuro',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'dEURO' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ARBITRUM, assetIn: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'DEPS',
+        img: 'deps',
+        disabled: true,
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-sell-optimism',
+    header: 'Sell dEURO Assets on Optimism',
+    description: 'Sell dEURO Assets on Optimism',
+    tiles: [
+      {
+        id: 'pol',
+        img: 'Pol',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'POL' },
+          },
+        },
+      },
+      {
+        id: 'dEURO',
+        img: 'deuro',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'dEURO' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'deuro-wallets',
+          tiles: ['metamask', 'hw-wallet', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.OPTIMISM, assetIn: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'DEPS',
+        img: 'deps',
+        disabled: true,
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-wallets',
+    header: 'dEURO Assets',
+    description: 'Buy and Sell dEURO Assets',
+    tiles: [
+      {
+        id: 'metamask',
+        img: 'metamaskrabby',
+        wallet: { type: WalletType.META_MASK },
+      },
+      {
+        id: 'hw-wallet',
+        img: 'hardwarewallets',
+        next: {
+          page: 'deuro-hw-wallets',
+        },
+      },
+      {
+        id: 'walletconnect',
+        img: 'walletconnect',
+        wallet: { type: WalletType.WALLET_CONNECT },
+      },
+      {
+        id: 'cli',
+        img: 'command',
+        wallet: (params) => {
+          switch (params.blockchain) {
+            case Blockchain.BITCOIN:
+              return { type: WalletType.CLI_BTC };
+            case Blockchain.MONERO:
+              return { type: WalletType.CLI_XMR };
+            default:
+              return { type: WalletType.CLI_ETH };
+          }
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'deuro-hw-wallets',
+    header: 'dEURO Assets',
+    description: 'Buy and Sell dEURO Assets',
     tiles: [
       {
         id: 'bitbox',

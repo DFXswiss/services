@@ -20,6 +20,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { Layout } from 'src/components/layout';
 import { ConfirmationOverlay, EditOverlay } from 'src/components/overlays';
+import { addressLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -211,7 +212,9 @@ export default function SettingsScreen(): JSX.Element {
                                 </div>
                               )}
                             </div>
-                            <div className="text-xs text-dfxGray-700">{blankedAddress(address.address, { width })}</div>
+                            <div className="text-xs text-dfxGray-700">
+                              {blankedAddress(addressLabel(address), { width })}
+                            </div>
                           </div>
                           <div className="relative flex items-center">
                             <button onClick={() => setMenuAddress(address)}>
@@ -355,7 +358,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
 
   switch (type) {
     case OverlayType.DELETE_ADDRESS:
-      const formattedAddress = blankedAddress(address?.address ?? '', { width });
+      const formattedAddress = blankedAddress(address ? addressLabel(address) : '', { width });
 
       return (
         <ConfirmationOverlay
