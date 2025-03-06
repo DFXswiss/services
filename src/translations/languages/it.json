@@ -83,10 +83,12 @@
     "Legal entity": "Persona giuridica",
     "Nationality": "Nazionalità",
     "Nationality (according to identification document)": "Nazionalità (secondo il documento d'identità)",
-    "Shareholder register": "Registro degli azionisti",
+    "Owner directory": "Elenco dei proprietari",
     "Commercial register": "Registro commerciale",
     "Signatory power": "Potere di firma",
     "Power of Attorney": "Procura",
+    "Beneficial owner": "Titolare effettivo",
+    "Beneficial owners": "Titolari effettivi",
     "Additional documents": "Documenti aggiuntivi",
     "Residence permit": "Permesso di soggiorno",
     "DFX approval": "Approvazione DFX",
@@ -160,6 +162,8 @@
 
     "Please fill in personal information to continue": "Compilare i dati personali per continuare",
     "Please enter your contact information so that we can find your account": "Inserite le vostre informazioni di contatto per consentirci di trovare il vostro account",
+
+    "How many natural persons are there who directly or indirectly hold 25% or more of company shares?": "Quante persone fisiche detengono direttamente o indirettamente il 25% o più delle quote societarie?",
 
     "It looks like you already have an account with DFX.": "Sembra che tu abbia già un account con DFX.",
     "We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.": "Le abbiamo appena inviato un'e-mail. Per continuare con l'account esistente, confermare l'indirizzo e-mail facendo clic sul link inviato.",
