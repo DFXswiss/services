@@ -29,7 +29,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
   const { changeAddress } = useUserContext();
   const { call } = useApi();
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
   const isCustodySignup = !user?.addresses.length;
