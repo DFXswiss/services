@@ -166,6 +166,7 @@ export default function BuyScreen(): JSX.Element {
       : [];
   const availablePaymentMethods = [FiatPaymentMethod.BANK];
 
+  // no instant payments ATM
   // (!selectedAsset || selectedAsset.instantBuyable) && availablePaymentMethods.push(FiatPaymentMethod.INSTANT);
 
   (isDfxHosted || !isEmbedded) &&
