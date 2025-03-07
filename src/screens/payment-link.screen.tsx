@@ -37,6 +37,7 @@ import { useAppParams } from 'src/hooks/app-params.hook';
 import { useCountdown } from 'src/hooks/countdown.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useSessionStore } from 'src/hooks/session-store.hook';
+import { useMetaMask, WalletType } from 'src/hooks/wallets/metamask.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
@@ -133,6 +134,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { lightning, redirectUri, setParams } = useAppParams();
   const { closeServices } = useAppHandlingContext();
   const [urlParams, setUrlParams] = useSearchParams();
+  const { isInstalled, getWalletType, requestAccount, sign } = useMetaMask();
 
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
@@ -162,6 +164,16 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   const selectedPaymentStandard = useWatch({ control, name: 'paymentStandard' });
   const selectedAsset = useWatch({ control, name: 'asset' });
+
+  useEffect(() => {
+    // MM browser test code
+    if (isInstalled() && getWalletType() === WalletType.META_MASK_BROWSER) {
+      requestAccount()
+        .then((a) => a && confirm(`Your address is ${a}. Do you want to sign a message?`) && a)
+        .then((a) => (a ? sign(a, 'Test Message') : undefined))
+        .then((s) => s && alert(`The signature for 'Test Message' is ${s}`));
+    }
+  }, [isInstalled, getWalletType]);
 
   useEffect(() => {
     const lightningParam = lightning;

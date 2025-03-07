@@ -12,8 +12,9 @@ import { timeout } from '../../util/utils';
 import { useWeb3 } from '../web3.hook';
 
 export enum WalletType {
-  META_MASK = 'MetaMask',
   RABBY = 'Rabby',
+  META_MASK = 'MetaMask',
+  META_MASK_BROWSER = 'MetaMaskBrowser',
 }
 
 export interface MetaMaskInterface {
@@ -56,7 +57,8 @@ export function useMetaMask(): MetaMaskInterface {
     const eth = ethereum();
     if (eth) {
       if (eth.isRabby) return WalletType.RABBY;
-      if (eth.isMetaMask) return WalletType.META_MASK;
+      if (eth.isMetaMask)
+        return window.navigator.userAgent.includes('MetaMask') ? WalletType.META_MASK_BROWSER : WalletType.META_MASK;
     }
   }
 
