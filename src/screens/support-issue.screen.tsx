@@ -147,7 +147,7 @@ export default function SupportIssueScreen(): JSX.Element {
   useKycLevelGuard(KycLevel.Link, '/contact');
 
   function startChat(issueUid: string) {
-    navigate({ pathname: `/support/chat/${issueUid}` }, { clearParams: ['quote', 'order'] });
+    navigate({ pathname: `/support/chat/${issueUid}` }, { clearParams: ['quote', 'order', 'issue-type', 'reason'] });
   }
 
   useEffect(() => {
