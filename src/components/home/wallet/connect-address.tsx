@@ -15,7 +15,10 @@ import { ConnectProps } from 'src/components/home/connect-shared';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useAppParams } from 'src/hooks/app-params.hook';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
+
+export const CustodyAssets = ['ZCHF', 'FPS', 'DEPSPresale'];
 
 interface FormData {
   address: UserAddress;
@@ -28,11 +31,12 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
   const { setWallet, setSession } = useWalletContext();
   const { changeAddress } = useUserContext();
   const { call } = useApi();
+  const { assetOut } = useAppParams();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
-  const isCustodySignup = !user?.addresses.length;
+  const isCustodySignup = !user?.addresses.length && CustodyAssets.includes(assetOut ?? '');
 
   const {
     control,

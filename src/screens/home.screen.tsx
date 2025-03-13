@@ -3,6 +3,7 @@ import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
+import { CustodyAssets } from 'src/components/home/wallet/connect-address';
 import { Service } from '../App';
 import { ConnectWrapper } from '../components/home/connect-wrapper';
 import { Layout } from '../components/layout';
@@ -14,8 +15,6 @@ import { isWallet, Tile, useFeatureTree, Wallet } from '../hooks/feature-tree.ho
 import { useNavigation } from '../hooks/navigation.hook';
 import { useResizeObserver } from '../hooks/resize-observer.hook';
 import { Stack } from '../util/stack';
-
-const CustodyAssets = ['ZCHF', 'FPS', 'DEPSPresale'];
 
 enum SpecialMode {
   LOGIN = 'Login',
@@ -119,7 +118,9 @@ export default function HomeScreen(): JSX.Element {
     if (connectTo && connectTo.type !== WalletType.ADDRESS) {
       setConnectTo(undefined);
     } else if (specialMode === SpecialMode.CONNECT && isLoggedIn) {
-      connectTo ? goBack() : setConnectTo({ type: WalletType.ADDRESS });
+      connectTo || !CustodyAssets.includes(appParams.assetOut ?? '')
+        ? goBack()
+        : setConnectTo({ type: WalletType.ADDRESS });
     } else if (currentPageId) {
       setPages((p) => p.pop((i) => getPage(i.page, i.allowedTiles)?.tiles?.length === 1));
     }
