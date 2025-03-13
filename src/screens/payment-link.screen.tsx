@@ -644,7 +644,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                   selectedPaymentStandard.id as PaymentStandardType,
                 )) && (
                 <StyledVerticalStack full gap={8} center>
-                  {hasQuote(payRequest) && (
+                  {hasQuote(payRequest) ? (
                     <div className="flex flex-col w-full items-center justify-center">
                       {payRequest.displayQr && (
                         <div className="w-48 my-3">
@@ -658,6 +658,13 @@ export default function PaymentLinkScreen(): JSX.Element {
                         )}
                       </p>
                     </div>
+                  ) : (
+                    <p className="text-base pt-3 text-dfxGray-700">
+                      {translate(
+                        'screens/payment',
+                        'Tell the cashier that you want to pay with crypto and then scan the QR-Code with a compatible wallet to complete the payment.',
+                      )}
+                    </p>
                   )}
                   <WalletGrid
                     wallets={RecommendedWallets}
@@ -668,6 +675,14 @@ export default function PaymentLinkScreen(): JSX.Element {
               )}
             </>
           )}
+          <div>
+            <StyledLink
+              label={translate('screens/payment', 'Find out more about the OpenCryptoPay payment standard')}
+              url="https://opencryptopay.io"
+              dark
+            />
+          </div>
+
           <div className="p-1 w-full leading-none">
             <StyledLink
               label={translate(

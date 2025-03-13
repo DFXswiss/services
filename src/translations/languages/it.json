@@ -541,6 +541,7 @@
     "Please send the specified amount to the address below.": "Si prega di inviare l'importo specificato all'indirizzo sottostante.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
     "By using this service, the outstanding claim of the above-mentioned company against DFX is assigned, and the General Terms and Conditions of DFX AG apply.": "Con l’utilizzo di questo servizio, il credito insoluto della suddetta azienda nei confronti di DFX viene ceduto, e si applicano i Termini e Condizioni Generali della DFX AG.",
+    "Find out more about the OpenCryptoPay payment standard": "Scopri di più sullo standard di pagamento OpenCryptoPay",
 
     "Payment routes": "Modalità di pagamento",
     "Payment route": "Modalità di pagamento",
@@ -601,6 +602,7 @@
     "Pay to a {{blockchain}} Blockchain address": "Paga a un indirizzo blockchain {{blockchain}}",
     "You have no payment routes yet": "Non hai ancora nessuna modalità di pagamento",
     "Scan the QR-Code with a compatible wallet to complete the payment.": "Scansiona il codice QR con un portafoglio compatibile per completare il pagamento.",
+    "Tell the cashier that you want to pay with crypto and then scan the QR-Code with a compatible wallet to complete the payment.": "Dica al cassiere che vuole pagare con la crypto e poi scansioni il codice QR con un wallet compatibile per completare il pagamento.",
     "Recommended wallets": "Portafogli consigliati",
     "Compatible wallets": "Portafogli compatibili",
     "Invalid Payment Link": "Payment Link non valido",
