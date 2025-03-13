@@ -89,6 +89,7 @@
     "Power of Attorney": "Procura",
     "Beneficial owner": "Titolare effettivo",
     "Beneficial owners": "Titolari effettivi",
+    "Operational activity": "Attività operativa",
     "Additional documents": "Documenti aggiuntivi",
     "Residence permit": "Permesso di soggiorno",
     "DFX approval": "Approvazione DFX",
@@ -164,6 +165,11 @@
     "Please enter your contact information so that we can find your account": "Inserite le vostre informazioni di contatto per consentirci di trovare il vostro account",
 
     "How many natural persons are there who directly or indirectly hold 25% or more of company shares?": "Quante persone fisiche detengono direttamente o indirettamente il 25% o più delle quote societarie?",
+    "None": "Nessuna",
+    "Is the account holder {{name}}{{role}}?": "Il titolare del conto {{name}}è {{role}}?",
+    "the managing director": "il direttore generale",
+    "a beneficial owner": "un beneficiario effettivo",
+    "Managing director": "Direttore generale",
 
     "It looks like you already have an account with DFX.": "Sembra che tu abbia già un account con DFX.",
     "We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.": "Le abbiamo appena inviato un'e-mail. Per continuare con l'account esistente, confermare l'indirizzo e-mail facendo clic sul link inviato.",
@@ -209,7 +215,12 @@
     "UserData ID": "UserData ID",
     "UserData IDs": "UserData IDs",
     "Event date": "Data dell'evento",
-    "Comment": "Commento"
+    "Comment": "Commento",
+
+    "Is the organization operationally active?": "L'organizzazione è operativamente attiva?",
+    "Organizations that primarily manage their own money, such as investment companies, are considered non-operating. Operationally active organizations are those that offer and sell goods or services, conduct regular business activities that generate revenue, employ staff and have operational structures.": "Le organizzazioni che gestiscono principalmente il proprio denaro, come le società di investimento, sono considerate non operative. Le organizzazioni operative sono quelle che offrono e vendono beni o servizi, svolgono attività commerciali regolari che generano entrate, impiegano personale e dispongono di strutture operative.",
+    "Organization website (optional)": "Sito web dell'organizzazione (opzionale)",
+    "https://my-organization.org": "https://mia-azienda.org"
   },
   "screens/2fa": {
     "2FA": "2FA",
