@@ -143,6 +143,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
   const refetchTimeout = useRef<NodeJS.Timeout>();
+  const [merchant, setMerchant] = useState<string>();
 
   const sessionApiUrl = useRef<string>(paymentLinkApiUrlStore.get() ?? '');
   const currentCallback = useRef<string>();
@@ -165,6 +166,12 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   useEffect(() => {
     const lightningParam = lightning;
+
+    const merchantParam = urlParams.get('merchant');
+    if (merchantParam) {
+      setMerchant(merchantParam);
+      return;
+    }
 
     let apiUrl: string | undefined;
     if (lightningParam) {
@@ -409,21 +416,25 @@ export default function PaymentLinkScreen(): JSX.Element {
     <Layout backButton={false} smallMenu>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
-      ) : !payRequest ? (
+      ) : !payRequest && !merchant ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
-        <StyledVerticalStack full gap={4} center>
-          <div className="flex flex-col w-full gap-6 py-8 justify-center">
-            <p className="text-dfxBlue-800 font-bold text-xl">{payRequest.displayName}</p>
+        <StyledVerticalStack full gap={4} center className="pt-8">
+          <div className="flex flex-col w-full gap-6 justify-center">
+            <p className="text-dfxBlue-800 font-bold text-xl">{payRequest?.displayName ?? merchant}</p>
             <div className="w-full h-[1px] bg-gradient-to-r bg-dfxGray-500 from-white via-dfxGray-500 to-white" />
-            {hasQuote(payRequest) ? (
-              <p className="text-xl font-bold text-dfxBlue-800">
-                <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
-                {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
-              </p>
-            ) : (
-              <div className="flex w-full justify-center">
-                <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
+            {!merchant && (
+              <div className="mb-8">
+                {hasQuote(payRequest) ? (
+                  <p className="text-xl font-bold text-dfxBlue-800">
+                    <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
+                    {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
+                  </p>
+                ) : (
+                  <div className="flex w-full justify-center">
+                    <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -457,9 +468,10 @@ export default function PaymentLinkScreen(): JSX.Element {
               </StyledVerticalStack>
             </Form>
           )}
+
           {[PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(paymentStatus) && (
             <>
-              {(hasQuote(payRequest) || payRequest.recipient) && (
+              {payRequest && (hasQuote(payRequest) || payRequest.recipient) && (
                 <StyledCollapsible
                   full
                   titleContent={
@@ -639,6 +651,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                   </StyledVerticalStack>
                 </StyledCollapsible>
               )}
+
               {(!selectedPaymentStandard ||
                 [PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
                   selectedPaymentStandard.id as PaymentStandardType,
@@ -675,6 +688,7 @@ export default function PaymentLinkScreen(): JSX.Element {
               )}
             </>
           )}
+
           <div>
             <StyledLink
               label={translate('screens/payment', 'Find out more about the OpenCryptoPay payment standard')}

@@ -1,7 +1,7 @@
 import {
   AccountType,
   ApiError,
-  BeneficialOwnerData,
+  ContactPersonData,
   Country,
   DocumentType,
   GenderType,
@@ -16,6 +16,7 @@ import {
   KycLevel,
   KycManualIdentData,
   KycNationalityData,
+  KycOperationalData,
   KycPersonalData,
   KycSession,
   KycSignatoryPowerData,
@@ -477,6 +478,9 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.BENEFICIAL_OWNER:
       return <BeneficialOwner {...props} />;
+
+    case KycStepName.OPERATIONAL_ACTIVITY:
+      return <OperationalActivity {...props} />;
 
     case KycStepName.IDENT:
       if (props.step.type === KycStepType.MANUAL) {
@@ -1122,17 +1126,27 @@ function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProp
   );
 }
 
+enum BeneficialDataStep {
+  OWNER_COUNT = 'OwnerCount',
+  ACCOUNT_HOLDER_INVOLVED = 'AccountHolderInvolved',
+  CONTACT_DATA = 'ContactData',
+}
+
 interface BeneficialOwnerFormData {
   ownerCount: number;
-  owners: BeneficialOwnerData[];
+  isAccountHolderInvolved: boolean;
+  owners?: ContactPersonData[];
+  director?: ContactPersonData;
 }
 
 function BeneficialOwner({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError, allowedCountries } = useSettingsContext();
   const { setBeneficialData } = useKyc();
 
+  const [currentStep, setCurrentStep] = useState(BeneficialDataStep.OWNER_COUNT);
+  const [ownerIndex, setOwnerIndex] = useState(0);
+
   const [reload, setReload] = useState(false);
-  const [ownerIndex, setOwnerIndex] = useState<number>();
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -1140,25 +1154,54 @@ function BeneficialOwner({ rootRef, code, isLoading, step, onDone }: EditProps):
     control,
     handleSubmit,
     formState: { isValid, errors },
+    setValue,
   } = useForm<BeneficialOwnerFormData>({ mode: 'onTouched' });
 
   const maxOwnerCount = 4;
   const ownerCount = useWatch({ control, name: 'ownerCount' });
+  const isAccountHolderInvolved = useWatch({ control, name: 'isAccountHolderInvolved' });
+  const currentOwner = ownerIndex + 1 + (isAccountHolderInvolved ? 1 : 0);
 
   function onSubmit(formData: BeneficialOwnerFormData) {
     if (!step.session) return;
 
     setError(undefined);
 
-    if (ownerCount && (ownerIndex == null || ownerIndex + 1 < ownerCount)) {
-      setOwnerIndex((i) => (i ?? -1) + 1);
-      clearInputs();
-      return;
+    const requiredOwnerCount = ownerCount - (formData.isAccountHolderInvolved ? 1 : 0);
+
+    switch (currentStep) {
+      case BeneficialDataStep.OWNER_COUNT:
+        if (ownerCount === 0) {
+          setValue('owners', undefined);
+        } else {
+          setValue('director', undefined);
+        }
+        setCurrentStep(BeneficialDataStep.ACCOUNT_HOLDER_INVOLVED);
+        clearInputs();
+        return;
+
+      case BeneficialDataStep.ACCOUNT_HOLDER_INVOLVED:
+        if ((ownerCount === 0 && !formData.isAccountHolderInvolved) || requiredOwnerCount > 0) {
+          setCurrentStep(BeneficialDataStep.CONTACT_DATA);
+          clearInputs();
+          return;
+        }
+        break;
+
+      case BeneficialDataStep.CONTACT_DATA:
+        if (ownerIndex + 1 < requiredOwnerCount) {
+          setOwnerIndex((i) => (i ?? -1) + 1);
+          clearInputs();
+          return;
+        }
+        break;
     }
 
     const data: KycBeneficialData = {
       hasBeneficialOwners: ownerCount > 0,
+      isAccountHolderInvolved: formData.isAccountHolderInvolved,
       beneficialOwners: formData.owners,
+      managingDirector: formData.director,
     };
 
     setIsUpdating(true);
@@ -1175,12 +1218,26 @@ function BeneficialOwner({ rootRef, code, isLoading, step, onDone }: EditProps):
   }
 
   function back() {
-    setOwnerIndex((i) => (i ? i - 1 : undefined));
+    switch (currentStep) {
+      case BeneficialDataStep.ACCOUNT_HOLDER_INVOLVED:
+        setCurrentStep(BeneficialDataStep.OWNER_COUNT);
+        break;
+
+      case BeneficialDataStep.CONTACT_DATA:
+        if (ownerIndex) {
+          setOwnerIndex((i) => i - 1);
+        } else {
+          setCurrentStep(BeneficialDataStep.ACCOUNT_HOLDER_INVOLVED);
+        }
+        break;
+    }
+
     clearInputs();
   }
 
   const rules = Utils.createRules({
     ownerCount: Validations.Required,
+    isAccountHolderInvolved: Validations.Custom((v) => (v == null ? 'required' : true)),
 
     ...Array.from({ length: maxOwnerCount })
       .map((_, i) => i)
@@ -1193,87 +1250,27 @@ function BeneficialOwner({ rootRef, code, isLoading, step, onDone }: EditProps):
         [`owners.${c}.country`]: Validations.Required,
       }))
       .reduce((prev, curr) => ({ ...prev, ...curr })),
+
+    [`director.firstName`]: Validations.Required,
+    [`director.lastName`]: Validations.Required,
+    [`director.street`]: Validations.Required,
+    [`director.zip`]: Validations.Required,
+    [`director.city`]: Validations.Required,
+    [`director.country`]: Validations.Required,
   });
+
+  const contactPersonLabel =
+    ownerCount === 0
+      ? translate('screens/kyc', 'Managing director')
+      : translate('screens/kyc', 'Beneficial owner') +
+        (currentOwner === 1 && ownerCount === 1 ? '' : ` ${currentOwner}/${ownerCount}`);
+  const contactPersonPrefix = ownerCount === 0 ? 'director' : `owners.${ownerIndex}`;
 
   return (
     <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
       {!reload && (
         <StyledVerticalStack gap={6} full center>
-          {ownerIndex != null ? (
-            <>
-              <StyledVerticalStack gap={2} full>
-                <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-                  {translate('screens/kyc', 'Beneficial owner')} {ownerIndex + 1}/{ownerCount}
-                </p>
-                <StyledHorizontalStack gap={2}>
-                  <StyledInput
-                    name={`owners.${ownerIndex}.firstName`}
-                    autocomplete="firstname"
-                    label={translate('screens/kyc', 'First name')}
-                    placeholder={translate('screens/kyc', 'John')}
-                    full
-                    smallLabel
-                  />
-                  <StyledInput
-                    name={`owners.${ownerIndex}.lastName`}
-                    autocomplete="lastname"
-                    label={translate('screens/kyc', 'Last name')}
-                    placeholder={translate('screens/kyc', 'Doe')}
-                    full
-                    smallLabel
-                  />
-                </StyledHorizontalStack>
-                <StyledHorizontalStack gap={2}>
-                  <StyledInput
-                    name={`owners.${ownerIndex}.street`}
-                    autocomplete="street"
-                    label={translate('screens/kyc', 'Street')}
-                    placeholder={translate('screens/kyc', 'Street')}
-                    full
-                    smallLabel
-                  />
-                  <StyledInput
-                    name={`owners.${ownerIndex}.houseNumber`}
-                    autocomplete="house-number"
-                    label={translate('screens/kyc', 'House nr.')}
-                    placeholder="xx"
-                    small
-                    smallLabel
-                  />
-                </StyledHorizontalStack>
-                <StyledHorizontalStack gap={2}>
-                  <StyledInput
-                    name={`owners.${ownerIndex}.zip`}
-                    autocomplete="zip"
-                    label={translate('screens/kyc', 'ZIP code')}
-                    placeholder="12345"
-                    small
-                    smallLabel
-                  />
-                  <StyledInput
-                    name={`owners.${ownerIndex}.city`}
-                    autocomplete="city"
-                    label={translate('screens/kyc', 'City')}
-                    placeholder="Berlin"
-                    full
-                    smallLabel
-                  />
-                </StyledHorizontalStack>
-                <StyledSearchDropdown<Country>
-                  rootRef={rootRef}
-                  name={`owners.${ownerIndex}.country`}
-                  autocomplete="country"
-                  label={translate('screens/kyc', 'Country')}
-                  placeholder={translate('general/actions', 'Select') + '...'}
-                  items={allowedCountries}
-                  labelFunc={(item) => item.name}
-                  filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
-                  matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
-                  smallLabel
-                />
-              </StyledVerticalStack>
-            </>
-          ) : (
+          {currentStep === BeneficialDataStep.OWNER_COUNT ? (
             <StyledVerticalStack gap={2} full center>
               <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
                 {translate(
@@ -1289,6 +1286,99 @@ function BeneficialOwner({ rootRef, code, isLoading, step, onDone }: EditProps):
                 placeholder={translate('general/actions', 'Select') + '...'}
                 items={Array.from({ length: maxOwnerCount + 1 }).map((_, i) => i)}
                 labelFunc={(item) => (item ? `${item}` : translate('screens/kyc', 'None'))}
+              />
+            </StyledVerticalStack>
+          ) : currentStep === BeneficialDataStep.ACCOUNT_HOLDER_INVOLVED ? (
+            <StyledVerticalStack gap={2} full center>
+              <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+                {translate('screens/kyc', 'Is the account holder {{name}}{{role}}?', {
+                  name: step.session?.additionalInfo?.accountHolder
+                    ? `(${step.session?.additionalInfo?.accountHolder}) `
+                    : '',
+                  role:
+                    ownerCount === 0
+                      ? translate('screens/kyc', 'the managing director')
+                      : translate('screens/kyc', 'a beneficial owner'),
+                })}
+              </p>
+              <StyledDropdown
+                rootRef={rootRef}
+                name="isAccountHolderInvolved"
+                full
+                label=""
+                placeholder={translate('general/actions', 'Select') + '...'}
+                items={[true, false]}
+                labelFunc={(item) => translate('general/actions', item ? 'Yes' : 'No')}
+              />
+            </StyledVerticalStack>
+          ) : (
+            <StyledVerticalStack gap={2} full>
+              <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">{contactPersonLabel}</p>
+              <StyledHorizontalStack gap={2}>
+                <StyledInput
+                  name={`${contactPersonPrefix}.firstName`}
+                  autocomplete="firstname"
+                  label={translate('screens/kyc', 'First name')}
+                  placeholder={translate('screens/kyc', 'John')}
+                  full
+                  smallLabel
+                />
+                <StyledInput
+                  name={`${contactPersonPrefix}.lastName`}
+                  autocomplete="lastname"
+                  label={translate('screens/kyc', 'Last name')}
+                  placeholder={translate('screens/kyc', 'Doe')}
+                  full
+                  smallLabel
+                />
+              </StyledHorizontalStack>
+              <StyledHorizontalStack gap={2}>
+                <StyledInput
+                  name={`${contactPersonPrefix}.street`}
+                  autocomplete="street"
+                  label={translate('screens/kyc', 'Street')}
+                  placeholder={translate('screens/kyc', 'Street')}
+                  full
+                  smallLabel
+                />
+                <StyledInput
+                  name={`${contactPersonPrefix}.houseNumber`}
+                  autocomplete="house-number"
+                  label={translate('screens/kyc', 'House nr.')}
+                  placeholder="xx"
+                  small
+                  smallLabel
+                />
+              </StyledHorizontalStack>
+              <StyledHorizontalStack gap={2}>
+                <StyledInput
+                  name={`${contactPersonPrefix}.zip`}
+                  autocomplete="zip"
+                  label={translate('screens/kyc', 'ZIP code')}
+                  placeholder="12345"
+                  small
+                  smallLabel
+                />
+                <StyledInput
+                  name={`${contactPersonPrefix}.city`}
+                  autocomplete="city"
+                  label={translate('screens/kyc', 'City')}
+                  placeholder="Berlin"
+                  full
+                  smallLabel
+                />
+              </StyledHorizontalStack>
+              <StyledSearchDropdown<Country>
+                rootRef={rootRef}
+                name={`${contactPersonPrefix}.country`}
+                autocomplete="country"
+                label={translate('screens/kyc', 'Country')}
+                placeholder={translate('general/actions', 'Select') + '...'}
+                items={allowedCountries}
+                labelFunc={(item) => item.name}
+                filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+                matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+                smallLabel
               />
             </StyledVerticalStack>
           )}
@@ -1308,7 +1398,7 @@ function BeneficialOwner({ rootRef, code, isLoading, step, onDone }: EditProps):
               disabled={!isValid}
               isLoading={isUpdating || isLoading}
             />
-            {ownerIndex != null && !(isUpdating || isLoading) && (
+            {currentStep !== BeneficialDataStep.OWNER_COUNT && !(isUpdating || isLoading) && (
               <StyledButton
                 type="button"
                 label={translate('general/actions', 'Back')}
@@ -1320,6 +1410,113 @@ function BeneficialOwner({ rootRef, code, isLoading, step, onDone }: EditProps):
           </div>
         </StyledVerticalStack>
       )}
+    </Form>
+  );
+}
+
+interface OperationalActivityFormData {
+  isOperational: boolean;
+  website?: string;
+}
+
+function OperationalActivity({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { setOperationalData } = useKyc();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<OperationalActivityFormData>({ mode: 'onTouched' });
+
+  const isOperational = useWatch({ control, name: 'isOperational' });
+
+  function onSubmit(formData: OperationalActivityFormData) {
+    if (!step.session) return;
+
+    setError(undefined);
+
+    const data: KycOperationalData = {
+      isOperational: formData.isOperational,
+      websiteUrl: formData.website,
+    };
+
+    setIsUpdating(true);
+    setOperationalData(code, step.session.url, data)
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    isOperational: Validations.Custom((v) => (v == null ? 'required' : true)),
+    website: Validations.Custom((v) =>
+      !v || /^https:\/\/[a-zA-Z0-9.-]+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?$/.test(v) ? true : 'pattern',
+    ),
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      {
+        <StyledVerticalStack gap={6} full center>
+          <StyledVerticalStack gap={2} full center>
+            <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+              {translate('screens/kyc', 'Is the organization operationally active?')}
+            </p>
+            <p className="w-full text-dfxGray-700 text-xs text-start">
+              {translate(
+                'screens/kyc',
+                'Organizations that primarily manage their own money, such as investment companies, are considered non-operating. Operationally active organizations are those that offer and sell goods or services, conduct regular business activities that generate revenue, employ staff and have operational structures.',
+              )}
+            </p>
+            <StyledDropdown
+              rootRef={rootRef}
+              name="isOperational"
+              full
+              label=""
+              placeholder={translate('general/actions', 'Select') + '...'}
+              items={[true, false]}
+              labelFunc={(item) => translate('general/actions', item ? 'Yes' : 'No')}
+            />
+          </StyledVerticalStack>
+
+          {isOperational && (
+            <StyledVerticalStack gap={2} full>
+              <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+                {translate('screens/kyc', 'Organization website (optional)')}
+              </p>
+              <StyledInput
+                name="website"
+                autocomplete="website"
+                type="url"
+                placeholder={translate('screens/kyc', 'https://my-organization.org')}
+                full
+                smallLabel
+              />
+            </StyledVerticalStack>
+          )}
+
+          {error && (
+            <div>
+              <ErrorHint message={error} />
+            </div>
+          )}
+
+          <div className="w-full flex flex-col gap-2">
+            <StyledButton
+              type="submit"
+              label={translate('general/actions', 'Next')}
+              onClick={handleSubmit(onSubmit)}
+              width={StyledButtonWidth.FULL}
+              disabled={!isValid}
+              isLoading={isUpdating || isLoading}
+            />
+          </div>
+        </StyledVerticalStack>
+      }
     </Form>
   );
 }
