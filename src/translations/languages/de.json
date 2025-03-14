@@ -89,6 +89,7 @@
     "Power of Attorney": "Vollmacht",
     "Beneficial owner": "Wirtschaftlich Berechtigter",
     "Beneficial owners": "Wirtschaftlich Berechtigte",
+    "Operational activity": "Operative Tätigkeit",
     "Additional documents": "Zusätzliche Dokumente",
     "Residence permit": "Aufenthaltsbewilligung",
     "DFX approval": "DFX-Genehmigung",
@@ -164,6 +165,11 @@
     "Please enter your contact information so that we can find your account": "Bitte gib Deine Kontaktinformationen ein, damit wir Dein Konto finden können",
 
     "How many natural persons are there who directly or indirectly hold 25% or more of company shares?": "Wie viele natürliche Personen gibt es, die direkt oder indirekt 25 % oder mehr der Unternehmensanteile halten?",
+    "None": "Keine",
+    "Is the account holder {{name}}{{role}}?": "Ist der Kontoinhaber {{name}}{{role}}?",
+    "the managing director": "der Geschäftsführer",
+    "a beneficial owner": "ein wirtschaftlich Berechtigter",
+    "Managing director": "Geschäftsführer",
 
     "It looks like you already have an account with DFX.": "Wie es aussieht, hast Du bereits ein Konto bei DFX.",
     "We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.": "Wir haben Dir gerade eine E-Mail geschickt. Um mit Deinem bestehenden Konto fortzufahren, bestätige bitte Deine E-Mail-Adresse, indem Du auf den zugesandten Link klickst.",
@@ -209,7 +215,12 @@
     "UserData ID": "UserData ID",
     "UserData IDs": "UserData IDs",
     "Event date": "Datum des Ereignisses",
-    "Comment": "Kommentar"
+    "Comment": "Kommentar",
+
+    "Is the organization operationally active?": "Ist die Organisation operativ tätig?",
+    "Organizations that primarily manage their own money, such as investment companies, are considered non-operating. Operationally active organizations are those that offer and sell goods or services, conduct regular business activities that generate revenue, employ staff and have operational structures.": "Organisationen, die in erster Linie ihr eigenes Geld verwalten, wie z. B. Investmentgesellschaften, gelten als nicht-operativ. Operativ tätige Organisationen sind solche, die Waren oder Dienstleistungen anbieten und verkaufen, regelmäßige Geschäftstätigkeiten durchführen, die Einnahmen generieren, Personal beschäftigen und über betriebliche Strukturen verfügen.",
+    "Organization website (optional)": "Website der Organisation (optional)",
+    "https://my-organization.org": "https://meine-firma.org"
   },
   "screens/2fa": {
     "2FA": "2FA",
