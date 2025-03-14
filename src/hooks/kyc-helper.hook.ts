@@ -42,6 +42,7 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepName.SIGNATORY_POWER]: 'Signatory power',
     [KycStepName.AUTHORITY]: 'Power of Attorney',
     [KycStepName.BENEFICIAL_OWNER]: 'Beneficial owners',
+    [KycStepName.OPERATIONAL_ACTIVITY]: 'Operational activity',
     [KycStepName.IDENT]: 'Identification',
     [KycStepName.FINANCIAL_DATA]: 'Additional data',
     [KycStepName.ADDITIONAL_DOCUMENTS]: 'Additional documents',

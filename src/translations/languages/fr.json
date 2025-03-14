@@ -89,6 +89,7 @@
     "Power of Attorney": "Procuration",
     "Beneficial owner": "Bénéficiaire effectif",
     "Beneficial owners": "Bénéficiaires effectifs",
+    "Operational activity": "Activité opérationnelle",
     "Additional documents": "Documents supplémentaires",
     "Residence permit": "Permis de séjour",
     "DFX approval": "Approbation DFX",
@@ -164,6 +165,11 @@
     "Please enter your contact information so that we can find your account": "Veuillez saisir vos coordonnées afin que nous puissions retrouver votre compte",
 
     "How many natural persons are there who directly or indirectly hold 25% or more of company shares?": "Combien de personnes physiques détiennent directement ou indirectement 25 % ou plus des parts de l'entreprise ?",
+    "None": "Aucune",
+    "Is the account holder {{name}}{{role}}?": "Le titulaire du compte {{name}}est-il {{role}} ?",
+    "the managing director": "le directeur général",
+    "a beneficial owner": "un bénéficiaire effectif",
+    "Managing director": "Directeur général",
 
     "It looks like you already have an account with DFX.": "Il semble que vous ayez déjà un compte chez DFX.",
     "We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.": "Nous venons de vous envoyer un e-mail. Pour continuer avec votre compte existant, veuillez confirmer votre adresse e-mail en cliquant sur le lien envoyé.",
@@ -209,7 +215,12 @@
     "UserData ID": "UserData ID",
     "UserData IDs": "UserData IDs",
     "Event date": "Date de l'événement",
-    "Comment": "Commentaire"
+    "Comment": "Commentaire",
+
+    "Is the organization operationally active?": "L'organisation est-elle opérationnellement active ?",
+    "Organizations that primarily manage their own money, such as investment companies, are considered non-operating. Operationally active organizations are those that offer and sell goods or services, conduct regular business activities that generate revenue, employ staff and have operational structures.": "Les organisations qui gèrent principalement leur propre argent, comme les sociétés d'investissement, sont considérées comme non opérationnelles. Les organisations opérationnelles sont celles qui offrent et vendent des biens ou des services, exercent des activités commerciales régulières générant des revenus, emploient du personnel et disposent de structures opérationnelles.",
+    "Organization website (optional)": "Site web de l'organisation (optionnel)",
+    "https://my-organization.org": "https://mon-entreprise.org"
   },
   "screens/2fa": {
     "2FA": "2FA",
