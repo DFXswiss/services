@@ -76,6 +76,7 @@ export default function TfaScreen(): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>();
   const [tokenInvalid, setTokenInvalid] = useState(false);
+  const [isFirstSetup, setIsFirstSetup] = useState(false); // New state variable
 
   const [setupInfo, setSetupInfo] = useState<TfaSetup>();
 
@@ -85,11 +86,16 @@ export default function TfaScreen(): JSX.Element {
 
   const handleChoice = (choice: string) => {
     if (setupInfo) {
+      console.log('handle choice', choice);
+      const newSetupInfo = { ...setupInfo }; // Create a new object to avoid direct mutation
       if (choice === 'choice2') {
-        setupInfo.type = TfaType.PASSKEY;
+        newSetupInfo.type = TfaType.PASSKEY;
+        setSetupInfo(newSetupInfo); // Update the state
+        setIsFirstSetup(true); // Set the flag to true
         initiatePasskeyLogin(true);
       } else {
-        setupInfo.type = TfaType.APP;
+        newSetupInfo.type = TfaType.APP;
+        setSetupInfo(newSetupInfo); // Update the state
       }
     }
   };
@@ -99,18 +105,12 @@ export default function TfaScreen(): JSX.Element {
       console.log('initiate PasskeyLogin', user?.kyc.hash);
       const userHash = user?.kyc.hash || '';
 
+      console.log('setupInfo', setupInfo);
+      console.log('isFirstSetup', isFirstSetup);
+
       if (!setupInfo) {
-        return
+        return;
       }
-      // Fetch the challenge and credential IDs from your server
-      // const response = await fetch('/api/get-passkey-options', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ userId: user?.id }),
-      // });
-      // const { challenge, credentialIds } = await response.json();
 
       const uuidToUint8Array = (uuid: string) => {
         return new Uint8Array(
@@ -123,18 +123,61 @@ export default function TfaScreen(): JSX.Element {
       };
 
       if (isFirstSetup) {
-        // const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions = {
-        //   challenge: Uint8Array.from(atob(setupInfo?.challenge), (c) => c.charCodeAt(0)), // Decode the base64 challenge
-        //   allowCredentials: user?.kyc.hash.map((id: string) => ({
-        //     id: Uint8Array.from(atob(id), (c) => c.charCodeAt(0)), // Decode the base64 credential ID
-        //     type: 'public-key',
-        //   })),
-        //   timeout: 60000,
-        //   userVerification: 'preferred',
-        // };
+        const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions = {
+          challenge: Uint8Array.from(atob(setupInfo.secret), (c) => c.charCodeAt(0)), // Decode the base64 challenge
+          rp: {
+            name: 'dfx', // Replace with your RP name
+          },
+          user: {
+            id: uuidToUint8Array(userHash),
+            name: user?.mail ?? '', // Replace with the actual user name
+            displayName: user?.accountId.toString() ?? '', // Replace with the actual display name
+          },
+          pubKeyCredParams: [
+            {
+              type: 'public-key',
+              alg: -7, // ES256 algorithm
+            },
+          ],
+          timeout: 60000,
+          attestation: 'direct',
+        };
 
-        const userHash = user ? user?.kyc.hash : '';
+        console.log('create');
 
+        const credential = await navigator.credentials.create({
+          publicKey: publicKeyCredentialCreationOptions,
+        });
+
+        if (credential) {
+          console.log('Passkey creation successful:', credential);
+
+          // Extract the necessary information from the credential
+          const { id, rawId, response } = credential as PublicKeyCredential;
+          const { attestationObject, clientDataJSON } = response as AuthenticatorAttestationResponse;
+
+          // Convert rawId and response to base64 or base64url format
+          const rawIdBase64 = btoa(String.fromCharCode(...new Uint8Array(rawId)));
+          const attestationObjectBase64 = btoa(String.fromCharCode(...new Uint8Array(attestationObject)));
+          const clientDataJSONBase64 = btoa(String.fromCharCode(...new Uint8Array(clientDataJSON)));
+
+          // Send the extracted information to your server for storage
+          await fetch('/api/save-credential', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id,
+              rawId: rawIdBase64,
+              attestationObject: attestationObjectBase64,
+              clientDataJSON: clientDataJSONBase64,
+            }),
+          });
+
+          console.log('Credential saved to server');
+        }
+      } else {
         const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions = {
           challenge: Uint8Array.from(atob(setupInfo.secret), (c) => c.charCodeAt(0)), // Decode the base64 challenge
           allowCredentials: [
@@ -153,35 +196,36 @@ export default function TfaScreen(): JSX.Element {
 
         if (credential) {
           console.log('Passkey login successful:', credential);
-          // Handle the successful login, e.g., send the credential to your server for verification
-        }
-      } else {
-        const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions = {
-          //  challenge: Uint8Array.from(atob(setupInfo?.challenge || ''), (c) => c.charCodeAt(0)), // Decode the base64 challenge
-          challenge: Uint8Array.from(atob('test'), (c) => c.charCodeAt(0)),
-          rp: {
-            name: 'Your RP Name', // Replace with your RP name
-          },
-          user: {
-            id: uuidToUint8Array(userHash),
-            name: 'user@example.com', // Replace with the actual user name
-            displayName: 'User Name', // Replace with the actual display name
-          },
-          pubKeyCredParams: [
-            {
-              type: 'public-key',
-              alg: -7, // ES256 algorithm
+
+          // Extract the necessary information from the credential
+          const { id, rawId, response } = credential as PublicKeyCredential;
+          const { authenticatorData, clientDataJSON, signature, userHandle } = response as AuthenticatorAssertionResponse;
+
+          // Convert rawId and response to base64 or base64url format
+          const rawIdBase64 = btoa(String.fromCharCode(...new Uint8Array(rawId)));
+          const authenticatorDataBase64 = btoa(String.fromCharCode(...new Uint8Array(authenticatorData)));
+          const clientDataJSONBase64 = btoa(String.fromCharCode(...new Uint8Array(clientDataJSON)));
+          const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
+          const userHandleBase64 = userHandle ? btoa(String.fromCharCode(...new Uint8Array(userHandle))) : null;
+
+          // Send the extracted information to your server for verification
+          await fetch('/api/verify-credential', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-          ],
-          timeout: 60000,
-          attestation: 'direct',
-        };
+            body: JSON.stringify({
+              id,
+              rawId: rawIdBase64,
+              authenticatorData: authenticatorDataBase64,
+              clientDataJSON: clientDataJSONBase64,
+              signature: signatureBase64,
+              userHandle: userHandleBase64,
+            }),
+          });
 
-        console.log('create');
-
-        const credential = await navigator.credentials.create({
-          publicKey: publicKeyCredentialCreationOptions,
-        });
+          console.log('Credential verified by server');
+        }
       }
     } catch (error) {
       console.error('Passkey login failed:', error);
@@ -196,10 +240,8 @@ export default function TfaScreen(): JSX.Element {
 
   useEffect(() => {
     console.log('setupInfo', setupInfo);
-    if (setupInfo) {
-      if (setupInfo.type === TfaType.PASSKEY) {
-        initiatePasskeyLogin(false);
-      }
+    if (setupInfo && setupInfo.type === TfaType.PASSKEY && !isFirstSetup) {
+      initiatePasskeyLogin(false);
     }
   }, [setupInfo]);
 
