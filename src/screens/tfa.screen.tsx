@@ -67,7 +67,7 @@ function TileComponent({ tile, onClick }: { tile: Tile; onClick: (t: Tile) => vo
 export default function TfaScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { user } = useUserContext();
-  const { setup2fa, verify2fa } = useKyc();
+  const { setup2fa, verify2fa, setupPasskey, verifyPasskey } = useKyc();
   const { search, state } = useLocation();
   const { copy } = useClipboard();
   const { goBack } = useNavigation();
@@ -161,21 +161,20 @@ export default function TfaScreen(): JSX.Element {
           const attestationObjectBase64 = btoa(String.fromCharCode(...new Uint8Array(attestationObject)));
           const clientDataJSONBase64 = btoa(String.fromCharCode(...new Uint8Array(clientDataJSON)));
 
-          // Send the extracted information to your server for storage
-          await fetch('/api/save-credential', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              id,
-              rawId: rawIdBase64,
-              attestationObject: attestationObjectBase64,
-              clientDataJSON: clientDataJSONBase64,
-            }),
-          });
-
-          console.log('Credential saved to server');
+          // Send the extracted information to your server for storage and verification
+          setupPasskey({
+            id,
+            rawId: rawIdBase64,
+            attestationObject: attestationObjectBase64,
+            clientDataJSON: clientDataJSONBase64,
+          })
+            .then(() => {
+              console.log('Credential saved and verified by server');
+            })
+            .catch((error: ApiError) => {
+              console.error('Credential verification failed', error);
+              setError(error.message ?? 'Unknown error');
+            });
         }
       } else {
         const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions = {
@@ -209,26 +208,26 @@ export default function TfaScreen(): JSX.Element {
           const userHandleBase64 = userHandle ? btoa(String.fromCharCode(...new Uint8Array(userHandle))) : null;
 
           // Send the extracted information to your server for verification
-          await fetch('/api/verify-credential', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              id,
-              rawId: rawIdBase64,
-              authenticatorData: authenticatorDataBase64,
-              clientDataJSON: clientDataJSONBase64,
-              signature: signatureBase64,
-              userHandle: userHandleBase64,
-            }),
-          });
-
-          console.log('Credential verified by server');
+          verifyPasskey({
+            id,
+            rawId: rawIdBase64,
+            authenticatorData: authenticatorDataBase64,
+            clientDataJSON: clientDataJSONBase64,
+            signature: signatureBase64,
+            userHandle: userHandleBase64,
+          })
+            .then(() => {
+              console.log('Credential verified by server');
+            })
+            .catch((error: ApiError) => {
+              console.error('Credential verification failed', error);
+              setError(error.message ?? 'Unknown error');
+            });
         }
       }
     } catch (error) {
       console.error('Passkey login failed:', error);
+      setError('Passkey login failed');
     }
   };
 
