@@ -104,6 +104,7 @@ export default function AccountScreen(): JSX.Element {
         setTransactions(
           sorted.map((t) => ({
             id: t.id,
+            uid: t.uid,
             inputAsset: t.inputAsset,
             inputAmount: t.inputAmount,
             outputAsset: t.outputAsset,
@@ -127,7 +128,7 @@ export default function AccountScreen(): JSX.Element {
       t.inputAsset && t.outputAsset ? ' → ' : ''
     } ${t.outputAsset ? `${t.outputAmount ?? ''} ${t.outputAsset}` : ''}`,
     icon: IconVariant.ARROW_RIGHT,
-    onClick: () => navigate(`/tx/${t.id}`),
+    onClick: () => navigate(`/tx/${t.id ?? t.uid}`),
   }));
 
   const referralItems = referral?.code

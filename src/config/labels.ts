@@ -30,6 +30,7 @@ export const PaymentMethodDescriptions = {
 
 export const PaymentStateLabels = {
   [TransactionState.UNASSIGNED]: 'Unassigned',
+  ['WaitingForPayment']: 'Waiting for payment',
   [TransactionState.CREATED]: 'Created',
   [TransactionState.PROCESSING]: 'Processing',
   [TransactionState.AML_PENDING]: 'AML pending',

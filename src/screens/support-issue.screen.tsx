@@ -77,7 +77,7 @@ interface FormData {
 }
 
 interface SelectTransactionFormData {
-  id: string;
+  uid: string;
   description: string;
 }
 
@@ -209,7 +209,7 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [selectedSender]);
 
   useEffect(() => {
-    if (selectedTransaction?.id === selectTxButtonLabel) setSelectTransaction(true);
+    if (selectedTransaction?.uid === selectTxButtonLabel) setSelectTransaction(true);
   }, [selectedTransaction]);
 
   useEffect(() => {
@@ -248,7 +248,7 @@ export default function SupportIssueScreen(): JSX.Element {
 
       if (data.type === SupportIssueType.TRANSACTION_ISSUE) {
         if (data.reason !== SupportIssueReason.TRANSACTION_MISSING) {
-          request.transaction = { id: +data.transaction?.id };
+          request.transaction = { uid: data.transaction?.uid };
         } else {
           request.transaction = {
             senderIban: data.senderIban,
@@ -285,8 +285,8 @@ export default function SupportIssueScreen(): JSX.Element {
     }
   }
 
-  function onSelectTransaction(id: number) {
-    setValue('transaction', { id: id.toString(), description: 'Transaction ID' });
+  function onSelectTransaction(uid: string) {
+    setValue('transaction', { uid, description: 'Transaction ID' });
     setSelectTransaction(false);
   }
 
@@ -370,8 +370,8 @@ export default function SupportIssueScreen(): JSX.Element {
                     <StyledDropdown<SelectTransactionFormData>
                       rootRef={rootRef}
                       name="transaction"
-                      items={[{ id: selectTxButtonLabel, description: 'Select a transaction to proceed with' }]}
-                      labelFunc={(item) => translate('general/actions', item.id)}
+                      items={[{ uid: selectTxButtonLabel, description: 'Select a transaction to proceed with' }]}
+                      labelFunc={(item) => translate('general/actions', item.uid)}
                       descriptionFunc={(item) => translate('screens/support', item.description)}
                       full
                       forceEnable
