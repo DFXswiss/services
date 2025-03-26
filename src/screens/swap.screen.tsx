@@ -64,7 +64,8 @@ enum Side {
 }
 
 interface Address {
-  address: string;
+  address?: string;
+  addressLabel: string;
   label: string;
   chain?: Blockchain;
 }
@@ -171,7 +172,11 @@ export default function SwapScreen(): JSX.Element {
     (a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i,
   ) as (Session | UserAddress)[];
 
-  const userAddresses = userSessions.map((a) => ({ address: addressLabel(a), blockchains: a.blockchains }));
+  const userAddresses = userSessions.map((a) => ({
+    address: a.address,
+    addressLabel: addressLabel(a),
+    blockchains: a.blockchains,
+  }));
 
   const targetBlockchains = userAddresses
     .flatMap((a) => a.blockchains)
@@ -183,10 +188,15 @@ export default function SwapScreen(): JSX.Element {
       ? [
           ...targetBlockchains.flatMap((b) => {
             const addresses = userAddresses.filter((a) => a.blockchains.includes(b));
-            return addresses.map((a) => ({ address: a.address, label: toString(b), chain: b }));
+            return addresses.map((a) => ({
+              address: a.address,
+              addressLabel: a.addressLabel,
+              label: toString(b),
+              chain: b,
+            }));
           }),
           {
-            address: translate('screens/buy', 'Switch address'),
+            addressLabel: translate('screens/buy', 'Switch address'),
             label: translate('screens/buy', 'Login with a different address'),
           },
         ]
@@ -589,7 +599,7 @@ export default function SwapScreen(): JSX.Element {
                     rootRef={rootRef}
                     name="address"
                     items={addressItems}
-                    labelFunc={(item) => blankedAddress(item.address, { width })}
+                    labelFunc={(item) => blankedAddress(item.addressLabel, { width })}
                     descriptionFunc={(item) => item.label}
                     full
                     forceEnable
