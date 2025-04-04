@@ -3,6 +3,7 @@ import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
 import { useMemo } from 'react';
 import Web3 from 'web3';
+import { TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
 import { AssetBalance } from '../../contexts/balance.context';
 import ERC20_ABI from '../../static/erc20.abi.json';
@@ -32,7 +33,13 @@ export interface MetaMaskInterface {
   sign: (address: string, message: string) => Promise<string>;
   addContract: (asset: Asset, svgData: string, currentBlockchain?: Blockchain) => Promise<boolean>;
   readBalance: (asset: Asset, address?: string) => Promise<AssetBalance>;
-  createTransaction: (amount: BigNumber, asset: Asset, from: string, to: string) => Promise<string>;
+  createTransaction: (
+    amount: BigNumber,
+    asset: Asset,
+    from: string,
+    to: string,
+    config?: { isWeiAmount?: boolean; gasPrice?: number },
+  ) => Promise<string>;
 }
 
 interface MetaMaskError {
@@ -192,24 +199,36 @@ export function useMetaMask(): MetaMaskInterface {
     }
   }
 
-  async function createTransaction(amount: BigNumber, asset: Asset, from: string, to: string): Promise<string> {
+  async function createTransaction(
+    amount: BigNumber,
+    asset: Asset,
+    from: string,
+    to: string,
+    config?: { isWeiAmount?: boolean; gasPrice?: number },
+  ): Promise<string> {
     if (asset.type === AssetType.COIN) {
-      const transactionData = {
+      const transactionData: TransactionConfig = {
         from,
         to,
-        value: web3.utils.toWei(amount.toString(), 'ether'),
+        value: config?.isWeiAmount ? amount.toString() : web3.utils.toWei(amount.toString(), 'ether'),
         maxPriorityFeePerGas: null as any,
         maxFeePerGas: null as any,
+        gasPrice: config?.gasPrice,
       };
+
       return web3.eth.sendTransaction(transactionData).then((value) => value.transactionHash);
     } else {
       const tokenContract = createContract(asset.chainId);
-      const decimals = await tokenContract.methods.decimals().call();
-      const adjustedAmount = amount.multipliedBy(Math.pow(10, decimals)).toFixed();
+
+      let adjustedAmount = amount.toString();
+      if (!config?.isWeiAmount) {
+        const decimals = await tokenContract.methods.decimals().call();
+        adjustedAmount = amount.multipliedBy(Math.pow(10, decimals)).toFixed();
+      }
 
       return tokenContract.methods
         .transfer(to, adjustedAmount)
-        .send({ from, maxPriorityFeePerGas: null, maxFeePerGas: null })
+        .send({ from, maxPriorityFeePerGas: null, maxFeePerGas: null, gasPrice: config?.gasPrice })
         .then((value: any) => value.transactionHash);
     }
   }
