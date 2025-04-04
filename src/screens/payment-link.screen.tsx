@@ -526,13 +526,12 @@ export default function PaymentLinkScreen(): JSX.Element {
         isWeiAmount: true,
         gasPrice: metaMaskInfo.minFee,
       });
-      const response = await fetchJson(
+      await fetchJson(
         url(
           payRequest.callback.replace('/cb', '/tx'),
           new URLSearchParams({ quote: payRequest.quote.id, method: asset.blockchain, tx }),
         ),
       );
-      console.log(response);
     } catch (e) {
       const error = e as Error;
       setMetaMaskError(error.message);
