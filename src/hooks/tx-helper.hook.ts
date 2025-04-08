@@ -28,8 +28,8 @@ export function useTxHelper(): TxHelperInterface {
   const { session } = useAuthContext();
   const { canClose } = useAppHandlingContext();
 
-  async function getBalances(assets: Asset[], address: string): Promise<AssetBalance[] | undefined> {
-    if (!activeWallet) return getParamBalances(assets);
+  async function getBalances(assets: Asset[], address: string | undefined): Promise<AssetBalance[] | undefined> {
+    if (!activeWallet || !address) return getParamBalances(assets);
 
     switch (activeWallet) {
       case (WalletType.META_MASK, WalletType.WALLET_CONNECT):

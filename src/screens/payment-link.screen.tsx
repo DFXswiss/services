@@ -47,12 +47,14 @@ import { useAppParams } from 'src/hooks/app-params.hook';
 import { useCountdown } from 'src/hooks/countdown.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useSessionStore } from 'src/hooks/session-store.hook';
+import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { useMetaMask, WalletType } from 'src/hooks/wallets/metamask.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, fetchJson, formatLocationAddress, formatUnits, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
+const { getBalances } = useTxHelper();
 
 export interface PaymentStandard {
   id: PaymentStandardType;
@@ -151,8 +153,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { lightning, redirectUri, setParams } = useAppParams();
   const { closeServices } = useAppHandlingContext();
   const [urlParams, setUrlParams] = useSearchParams();
-  const { isInstalled, getWalletType, requestAccount, requestBlockchain, readBalance, createTransaction } =
-    useMetaMask();
+  const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction } = useMetaMask();
 
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
@@ -491,8 +492,9 @@ export default function PaymentLinkScreen(): JSX.Element {
       const asset = assets.get(blockchain)?.find((a) => a.name === transferAmount.asset);
       if (!asset) continue;
 
-      const balance = await readBalance(asset, address);
-      if (balance.amount >= transferAmount.amount) return { asset: asset, amount: transferAmount.amount };
+      const balances = await getBalances([asset], address);
+      if (balances && balances[0].amount >= transferAmount.amount)
+        return { asset: asset, amount: transferAmount.amount };
     }
   }
 

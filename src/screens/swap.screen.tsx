@@ -142,7 +142,9 @@ export default function SwapScreen(): JSX.Element {
   const selectedAddress = useWatch({ control, name: 'address' });
 
   useEffect(() => {
-    sourceAssets && getBalances(sourceAssets, selectedAddress.address).then(setBalances);
+    if (sourceAssets && selectedAddress?.address) {
+      getBalances(sourceAssets, selectedAddress.address).then(setBalances);
+    }
   }, [getBalances, sourceAssets]);
 
   // default params
