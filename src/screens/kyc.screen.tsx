@@ -1687,7 +1687,12 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const [responses, setResponses] = useState<KycFinancialResponse[]>([]);
   const [index, setIndex] = useState<number>();
 
-  const currentQuestion = index != null ? questions[index - 1] : undefined;
+  const visibleQuestions = questions.filter(
+    (q) =>
+      !q.conditions?.length ||
+      q.conditions.some((c) => responses.some((r) => r.key === c.question && r.value === c.response)),
+  );
+  const currentQuestion = index != null ? visibleQuestions[index - 1] : undefined;
   const currentOptions = currentQuestion?.options ?? [];
   const currentResponse = responses.find((r) => currentQuestion?.key === r.key);
   const nocLinkText = 'app.dfx.swiss/support/issue';
@@ -1702,8 +1707,15 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
         setQuestions(questions);
         setResponses(responses);
 
-        const currentQuestion = questions.find((q) => !responses.find((r) => q.key === r.key));
-        currentQuestion && setIndex(questions.indexOf(currentQuestion) + 1);
+        const visibleQuestions = questions.filter(
+          (q) =>
+            !q.conditions?.length ||
+            q.conditions.some((c) => responses.some((r) => r.key === c.question && r.value === c.response)),
+        );
+
+        const currentQuestion = visibleQuestions.find((q) => !responses.find((r) => q.key === r.key));
+
+        currentQuestion && setIndex(visibleQuestions.indexOf(currentQuestion) + 1);
       })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
@@ -1771,7 +1783,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
           {index > 1 ? <StyledIconButton icon={IconVariant.CHEV_LEFT} size={IconSize.XL} onClick={goBack} /> : <div />}
           <h2 className="text-dfxGray-700">{currentQuestion.title}</h2>
           <p className="text-dfxGray-700">
-            {index}/{questions.length}
+            {index}/{visibleQuestions.length}
           </p>
         </div>
 
