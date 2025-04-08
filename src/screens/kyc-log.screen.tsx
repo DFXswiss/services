@@ -16,7 +16,7 @@ import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
 import { DefaultFileTypes } from 'src/config/file-types';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { useAdminGuard } from 'src/hooks/guard.hook';
+import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { toBase64 } from 'src/util/utils';
 
 interface FormData {
@@ -27,7 +27,7 @@ interface FormData {
 }
 
 export default function KycLogScreen(): JSX.Element {
-  useAdminGuard();
+  useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
   const { call } = useApi();
@@ -40,6 +40,7 @@ export default function KycLogScreen(): JSX.Element {
     control,
     handleSubmit,
     formState: { isValid, errors },
+    reset,
   } = useForm<FormData>({ mode: 'onChange' });
 
   async function onSubmit(data: FormData) {
@@ -59,7 +60,10 @@ export default function KycLogScreen(): JSX.Element {
       method: 'POST',
       data: payload,
     })
-      .then(() => toggleNotification())
+      .then(() => {
+        toggleNotification();
+        reset();
+      })
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
   }

@@ -16,6 +16,10 @@ export function useAdminGuard(redirectPath = '/', isActive = true) {
   useUserRoleGuard([UserRole.ADMIN], redirectPath, isActive);
 }
 
+export function useComplianceGuard(redirectPath = '/', isActive = true) {
+  useUserRoleGuard([UserRole.ADMIN, UserRole.COMPLIANCE], redirectPath, isActive);
+}
+
 function useUserRoleGuard(requiresUserRoles: UserRole[], redirectPath = '/', isActive = true) {
   const { isLoggedIn } = useSessionContext();
   const { isInitialized } = useWalletContext();
