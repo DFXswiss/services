@@ -128,10 +128,6 @@ export default function SwapScreen(): JSX.Element {
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
   const [validatedData, setValidatedData] = useState<ValidatedData>();
 
-  useEffect(() => {
-    sourceAssets && getBalances(sourceAssets).then(setBalances);
-  }, [getBalances, sourceAssets]);
-
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
 
@@ -140,6 +136,10 @@ export default function SwapScreen(): JSX.Element {
   const selectedTargetAmount = useWatch({ control, name: 'targetAmount' });
   const selectedTargetAsset = useWatch({ control, name: 'targetAsset' });
   const selectedAddress = useWatch({ control, name: 'address' });
+
+  useEffect(() => {
+    sourceAssets && getBalances(sourceAssets, selectedAddress.address).then(setBalances);
+  }, [getBalances, sourceAssets]);
 
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {

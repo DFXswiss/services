@@ -1,4 +1,5 @@
-import { Asset, Sell, Swap, useAuthContext } from '@dfx.swiss/react';
+import { Asset, AssetType, Sell, Swap, useAuthContext } from '@dfx.swiss/react';
+import { Alchemy } from 'alchemy-sdk';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -7,22 +8,17 @@ import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { useAlby } from './wallets/alby.hook';
 import { useMetaMask } from './wallets/metamask.hook';
 import { useWalletConnect } from './wallets/wallet-connect.hook';
-
 export interface TxHelperInterface {
-  getBalances: (assets: Asset[]) => Promise<AssetBalance[] | undefined>;
+  getBalances: (assets: Asset[], address: string) => Promise<AssetBalance[] | undefined>;
   sendTransaction: (tx: Sell | Swap) => Promise<string>;
   canSendTransaction: () => boolean;
 }
 
 // CAUTION: This is a helper hook for all blockchain transaction functionalities. Think about lazy loading, as soon as it gets bigger.
 export function useTxHelper(): TxHelperInterface {
+  const { createTransaction: createTransactionMetaMask, requestChangeToBlockchain: requestChangeToBlockchainMetaMask } =
+    useMetaMask();
   const {
-    readBalance: readBalanceMetaMask,
-    createTransaction: createTransactionMetaMask,
-    requestChangeToBlockchain: requestChangeToBlockchainMetaMask,
-  } = useMetaMask();
-  const {
-    readBalance: readBalanceWalletConnect,
     createTransaction: createTransactionWalletConnect,
     requestChangeToBlockchain: requestChangeToBlockchainWalletConnect,
   } = useWalletConnect();
@@ -32,22 +28,41 @@ export function useTxHelper(): TxHelperInterface {
   const { session } = useAuthContext();
   const { canClose } = useAppHandlingContext();
 
-  async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {
+  async function getBalances(assets: Asset[], address: string): Promise<AssetBalance[] | undefined> {
     if (!activeWallet) return getParamBalances(assets);
 
     switch (activeWallet) {
-      case WalletType.META_MASK:
-        return (await Promise.all(assets.map((asset: Asset) => readBalanceMetaMask(asset, session?.address)))).filter(
-          (b) => b.amount > 0,
+      case (WalletType.META_MASK, WalletType.WALLET_CONNECT):
+        const results: AssetBalance[] = [];
+
+        const alchemy = new Alchemy({ apiKey: process.env.REACT_APP_ALCHEMY_KEY });
+
+        const tokenAssets = assets.filter((a) => a.type === AssetType.TOKEN);
+        const nativeAsset = assets.find((a) => a.type === AssetType.COIN);
+
+        const tokenRes = await alchemy.core.getTokenBalances(
+          address,
+          tokenAssets.map((t) => t.chainId!),
         );
 
-      case WalletType.WALLET_CONNECT:
-        return (
-          await Promise.all(assets.map((asset: Asset) => readBalanceWalletConnect(asset, session?.address)))
-        ).filter((b) => b.amount > 0);
+        const tokenMeta = await Promise.all(tokenAssets.map((t) => alchemy.core.getTokenMetadata(t.chainId!)));
 
+        tokenAssets.forEach((asset, i) => {
+          const balanceRaw = tokenRes.tokenBalances[i]?.tokenBalance ?? '0';
+          const decimals = tokenMeta[i]?.decimals ?? 18;
+          const amount = parseFloat(new BigNumber(balanceRaw).toString()) / 10 ** decimals;
+
+          results.push({ asset, amount });
+        });
+
+        if (nativeAsset) {
+          const nativeRes = await alchemy.core.getBalance(address);
+          const amount = parseFloat(nativeRes.toString()) / 1e18;
+          results.push({ asset: nativeAsset, amount });
+        }
+
+        return results;
       default:
-        // no balance available
         return undefined;
     }
   }
@@ -94,14 +109,6 @@ export function useTxHelper(): TxHelperInterface {
   }
   return useMemo(
     () => ({ getBalances, sendTransaction, canSendTransaction }),
-    [
-      readBalanceMetaMask,
-      readBalanceWalletConnect,
-      createTransactionMetaMask,
-      createTransactionWalletConnect,
-      sendPayment,
-      activeWallet,
-      session,
-    ],
+    [createTransactionMetaMask, createTransactionWalletConnect, sendPayment, activeWallet, session],
   );
 }

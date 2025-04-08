@@ -142,10 +142,6 @@ export default function SellScreen(): JSX.Element {
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
   const [validatedData, setValidatedData] = useState<ValidatedData>();
 
-  useEffect(() => {
-    availableAssets && getBalances(availableAssets).then(setBalances);
-  }, [getBalances, availableAssets]);
-
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
 
@@ -157,6 +153,10 @@ export default function SellScreen(): JSX.Element {
   const selectedAddress = useWatch({ control, name: 'address' });
 
   const availableBalance = selectedAsset && findBalance(selectedAsset);
+
+  useEffect(() => {
+    availableAssets && getBalances(availableAssets, selectedAddress.address).then(setBalances);
+  }, [getBalances, availableAssets]);
 
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
@@ -187,8 +187,8 @@ export default function SellScreen(): JSX.Element {
     const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false }).filter(
       (a) => a.category === AssetCategory.PUBLIC || a.name === assetIn,
     );
-    const activeAssets = filterAssets(blockchainAssets, assetFilter);
 
+    const activeAssets = filterAssets(blockchainAssets, assetFilter);
     setAvailableAssets(activeAssets);
 
     const asset = getAsset(activeAssets, assetIn) ?? (activeAssets.length === 1 && activeAssets[0]);
@@ -566,7 +566,11 @@ export default function SellScreen(): JSX.Element {
                       rootRef={rootRef}
                       name="asset"
                       placeholder={translate('general/actions', 'Select') + '...'}
-                      items={availableAssets}
+                      items={availableAssets.sort((a, b) => {
+                        const balanceA = findBalance(a) || 0;
+                        const balanceB = findBalance(b) || 0;
+                        return balanceB - balanceA;
+                      })}
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
                       assetIconFunc={(item) => item.name as AssetIconVariant}
