@@ -26,6 +26,7 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { addressLabel } from 'src/config/labels';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
@@ -231,7 +232,7 @@ export default function AccountScreen(): JSX.Element {
                     name="address"
                     placeholder={translate('general/actions', 'Select') + '...'}
                     items={user.addresses.sort(sortAddressesByBlockchain)}
-                    labelFunc={(item) => blankedAddress(item.address, { width })}
+                    labelFunc={(item) => blankedAddress(addressLabel(item), { width })}
                     descriptionFunc={(item) => item.label ?? item.wallet}
                     forceEnable={user?.activeAddress === undefined}
                   />

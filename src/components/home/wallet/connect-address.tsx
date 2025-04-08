@@ -1,18 +1,24 @@
-import { UserAddress, useUserContext } from '@dfx.swiss/react';
+import { ApiError, useApi, UserAddress, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
+  SpinnerSize,
   StyledButton,
   StyledButtonWidth,
   StyledDropdown,
+  StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { ErrorHint } from 'src/components/error-hint';
 import { ConnectProps } from 'src/components/home/connect-shared';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useAppParams } from 'src/hooks/app-params.hook';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
+
+export const CustodyAssets = ['ZCHF', 'FPS', 'DEPSPresale'];
 
 interface FormData {
   address: UserAddress;
@@ -22,8 +28,15 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
   const { translate } = useSettingsContext();
   const { user, isUserLoading } = useUserContext();
   const { width } = useWindowContext();
-  const { setWallet } = useWalletContext();
+  const { setWallet, setSession } = useWalletContext();
   const { changeAddress } = useUserContext();
+  const { call } = useApi();
+  const { assetOut } = useAppParams();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const isCustodySignup = !user?.addresses.length && CustodyAssets.includes(assetOut ?? '');
 
   const {
     control,
@@ -34,25 +47,48 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
   const selectedAddress = useWatch({ control, name: 'address' });
 
   useEffect(() => {
-    if (user?.activeAddress) {
-      setValue('address', user.activeAddress);
+    const preselectedAddress = user?.activeAddress ?? (user?.addresses.length === 1 ? user.addresses[0] : undefined);
+    if (preselectedAddress) {
+      setValue('address', preselectedAddress);
     }
-  }, [user?.activeAddress]);
+  }, [user?.activeAddress, user?.addresses]);
 
   useEffect(() => {
     if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address && !isUserLoading) {
+      setIsLoading(true);
       changeAddress(selectedAddress.address)
         .then(() => {
           setWallet();
           onLogin();
         })
-        .catch(() => {
-          // ignore errors
-        });
+        .catch(() => setIsLoading(false));
     }
   }, [selectedAddress, user?.activeAddress, isUserLoading]);
 
-  return (
+  useEffect(() => {
+    if (!isUserLoading && isCustodySignup) {
+      call<{ accessToken: string }>({
+        url: 'custody',
+        method: 'POST',
+        data: {
+          addressType: 'EVM',
+        },
+      })
+        .then(({ accessToken }) => {
+          setSession(accessToken);
+          onLogin();
+        })
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+    }
+  }, [isCustodySignup, isUserLoading]);
+
+  return (isLoading || isUserLoading || isCustodySignup) && !error ? (
+    <StyledLoadingSpinner size={SpinnerSize.LG} />
+  ) : error ? (
+    <div>
+      <ErrorHint message={error} />
+    </div>
+  ) : (
     <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
       {user?.addresses.length && (
         <>

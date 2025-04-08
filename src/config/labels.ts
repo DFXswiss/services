@@ -4,11 +4,14 @@ import {
   FundOrigin,
   InvestmentDate,
   Limit,
+  Session,
   SupportIssueReason,
   SupportIssueType,
   TransactionFailureReason,
   TransactionState,
+  UserAddress,
 } from '@dfx.swiss/react';
+import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
 
 import { PaymentQuoteStatus } from '@dfx.swiss/react/dist/definitions/route';
 
@@ -37,6 +40,9 @@ export const PaymentStateLabels = {
   [TransactionState.RETURNED]: 'Refunded',
   [TransactionState.RETURN_PENDING]: 'Refund pending',
   [TransactionState.LIMIT_EXCEEDED]: 'Limit exceeded',
+  [TransactionState.LIQUIDITY_PENDING]: 'Liquidity pending',
+  [TransactionState.PAYOUT_IN_PROGRESS]: 'Payout in progress',
+  [TransactionState.PRICE_UNDETERMINABLE]: 'Price undeterminable',
 };
 
 export function toPaymentStateLabel(state: TransactionState): string {
@@ -144,3 +150,11 @@ export const FileTypeLabels = {
   [FileType.ADDITIONAL_DOCUMENTS]: 'Additional documents',
   [FileType.AUTHORITY]: 'Power of Attorney',
 };
+
+// --- ADDRESSES --- //
+export function addressLabel(wallet: UserAddress | Session): string {
+  const custodyLabel = 'DFX Safe';
+  return ('role' in wallet && wallet.role === UserRole.CUSTODY) || ('isCustody' in wallet && wallet.isCustody)
+    ? custodyLabel
+    : wallet.address ?? '';
+}
