@@ -156,7 +156,7 @@ export default function SellScreen(): JSX.Element {
   const availableBalance = selectedAsset && findBalance(selectedAsset);
 
   useEffect(() => {
-    availableAssets && getBalances(availableAssets, selectedAddress.address).then(setBalances);
+    availableAssets && getBalances(availableAssets, selectedAddress?.address).then(setBalances);
   }, [getBalances, availableAssets]);
 
   // default params

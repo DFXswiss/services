@@ -32,7 +32,8 @@ export function useTxHelper(): TxHelperInterface {
     if (!activeWallet || !address) return getParamBalances(assets);
 
     switch (activeWallet) {
-      case (WalletType.META_MASK, WalletType.WALLET_CONNECT):
+      case WalletType.META_MASK:
+      case WalletType.WALLET_CONNECT:
         const results: AssetBalance[] = [];
 
         const alchemy = new Alchemy({ apiKey: process.env.REACT_APP_ALCHEMY_KEY });
