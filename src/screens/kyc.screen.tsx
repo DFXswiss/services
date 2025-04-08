@@ -1690,7 +1690,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const visibleQuestions = questions.filter(
     (q) =>
       !q.conditions?.length ||
-      q.conditions.some((c) => responses.some((r) => r.key === c.question && r.value === c.response)),
+      q.conditions?.some((c) => responses.some((r) => r.key === c.question && r.value === c.response)),
   );
   const currentQuestion = index != null ? visibleQuestions[index - 1] : undefined;
   const currentOptions = currentQuestion?.options ?? [];
