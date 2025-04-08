@@ -3,7 +3,6 @@ import {
   BaseError,
   Connector,
   getAccount,
-  getBalance,
   getConnectors,
   readContract,
   sendTransaction,
@@ -18,8 +17,7 @@ import {
 import BigNumber from 'bignumber.js';
 import { useEffect, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
-import { formatUnits, parseEther, parseUnits } from 'viem';
-import { AssetBalance } from '../../contexts/balance.context';
+import { parseEther, parseUnits } from 'viem';
 import ERC20_ABI from '../../static/erc20.abi.json';
 import { config } from '../../wagmi.config';
 import { useWeb3 } from '../web3.hook';
@@ -29,7 +27,6 @@ export interface WalletConnectInterface {
   signMessage: (msg: string, address: string, blockchain: Blockchain) => Promise<string>;
   requestChangeToBlockchain: (blockchain?: Blockchain) => Promise<void>;
   createTransaction: (amount: BigNumber, asset: Asset, from: string, to: string) => Promise<string>;
-  readBalance: (asset: Asset, address?: string) => Promise<AssetBalance>;
   wallets: DeepWallet[];
 }
 
@@ -139,21 +136,6 @@ export function useWalletConnect(): WalletConnectInterface {
     }
   }
 
-  async function readBalance(asset: Asset, address?: string): Promise<AssetBalance> {
-    if (!address || !asset) return { asset, amount: 0 };
-
-    try {
-      const balance = await getBalance(config, {
-        address: address as any,
-        token: asset.type === AssetType.COIN ? undefined : (asset.chainId as any),
-        chainId: Number(toChainId(asset.blockchain)) as any,
-      });
-      return { asset, amount: Number(formatUnits(balance.value, balance.decimals)) };
-    } catch (error) {
-      return { asset, amount: 0 };
-    }
-  }
-
   async function requestChangeToBlockchain(blockchain?: Blockchain): Promise<void> {
     if (!blockchain) return;
     const chainId = Number(toChainId(blockchain));
@@ -213,7 +195,6 @@ export function useWalletConnect(): WalletConnectInterface {
       signMessage,
       requestChangeToBlockchain,
       createTransaction,
-      readBalance,
       wallets,
     }),
     [wallets],

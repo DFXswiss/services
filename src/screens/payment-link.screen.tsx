@@ -41,18 +41,21 @@ import { useSearchParams } from 'react-router-dom';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { CompatibleWallets, PaymentStandards, RecommendedWallets } from 'src/config/payment-link-wallets';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { AssetBalance } from 'src/contexts/balance.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { useCountdown } from 'src/hooks/countdown.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useSessionStore } from 'src/hooks/session-store.hook';
+import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { useMetaMask, WalletType } from 'src/hooks/wallets/metamask.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, fetchJson, formatLocationAddress, formatUnits, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
+const { getBalances } = useTxHelper();
 
 export interface PaymentStandard {
   id: PaymentStandardType;
@@ -151,8 +154,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { lightning, redirectUri, setParams } = useAppParams();
   const { closeServices } = useAppHandlingContext();
   const [urlParams, setUrlParams] = useSearchParams();
-  const { isInstalled, getWalletType, requestAccount, requestBlockchain, readBalance, createTransaction } =
-    useMetaMask();
+  const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction } = useMetaMask();
 
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
@@ -486,13 +488,18 @@ export default function PaymentLinkScreen(): JSX.Element {
     address: string,
     blockchain: Blockchain,
     transferAmounts: Amount[],
-  ): Promise<{ asset: Asset; amount: number } | undefined> {
+  ): Promise<AssetBalance | undefined> {
+    const assetList = Array.from(assets.values())
+      .flat()
+      .filter((a) => transferAmounts.some((b) => blockchain === a.blockchain && b.asset === a.name));
+
+    const balances = await getBalances(assetList, address, blockchain);
+    if (!balances) return;
+
     for (const transferAmount of transferAmounts) {
       const asset = assets.get(blockchain)?.find((a) => a.name === transferAmount.asset);
       if (!asset) continue;
-
-      const balance = await readBalance(asset, address);
-      if (balance.amount >= transferAmount.amount) return { asset: asset, amount: transferAmount.amount };
+      return balances.find((balance) => balance.asset.name == asset.name && balance.amount >= transferAmount.amount);
     }
   }
 

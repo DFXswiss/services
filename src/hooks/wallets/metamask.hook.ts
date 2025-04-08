@@ -5,7 +5,6 @@ import { useMemo } from 'react';
 import Web3 from 'web3';
 import { TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
-import { AssetBalance } from '../../contexts/balance.context';
 import ERC20_ABI from '../../static/erc20.abi.json';
 import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
@@ -29,10 +28,8 @@ export interface MetaMaskInterface {
   requestAccount: () => Promise<string | undefined>;
   requestBlockchain: () => Promise<Blockchain | undefined>;
   requestChangeToBlockchain: (blockchain?: Blockchain) => Promise<void>;
-  requestBalance: (account: string) => Promise<string | undefined>;
   sign: (address: string, message: string) => Promise<string>;
   addContract: (asset: Asset, svgData: string, currentBlockchain?: Blockchain) => Promise<boolean>;
-  readBalance: (asset: Asset, address?: string) => Promise<AssetBalance>;
   createTransaction: (
     amount: BigNumber,
     asset: Asset,
@@ -137,10 +134,6 @@ export function useMetaMask(): MetaMaskInterface {
     });
   }
 
-  async function requestBalance(account: string): Promise<string | undefined> {
-    return web3.eth.getBalance(account);
-  }
-
   async function sign(address: string, message: string): Promise<string> {
     return web3.eth.personal.sign(message, address, '').catch(handleError);
   }
@@ -174,29 +167,6 @@ export function useMetaMask(): MetaMaskInterface {
     if ((accounts?.length ?? 0) <= 0) return undefined;
     // check if address is valid
     return Web3.utils.toChecksumAddress(accounts[0]);
-  }
-
-  function toUsableNumber(balance: any, decimals = 18): BigNumber {
-    return new BigNumber(balance).dividedBy(Math.pow(10, decimals));
-  }
-
-  async function readBalance(asset: Asset, address?: string): Promise<AssetBalance> {
-    if (!address || !asset) return { asset, amount: 0 };
-
-    try {
-      if (asset.type === AssetType.COIN) {
-        return web3.eth.getBalance(address).then((balance) => ({ asset, amount: toUsableNumber(balance).toNumber() }));
-      }
-
-      const tokenContract = createContract(asset.chainId);
-      const decimals = await tokenContract.methods.decimals().call();
-      return await tokenContract.methods
-        .balanceOf(address)
-        .call()
-        .then((balance: any) => ({ asset, amount: toUsableNumber(balance, decimals) }));
-    } catch {
-      return { asset, amount: 0 };
-    }
   }
 
   async function createTransaction(
@@ -258,10 +228,8 @@ export function useMetaMask(): MetaMaskInterface {
       requestAccount,
       requestBlockchain,
       requestChangeToBlockchain,
-      requestBalance,
       sign,
       addContract,
-      readBalance,
       createTransaction,
     }),
     [],
