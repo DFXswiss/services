@@ -489,20 +489,17 @@ export default function PaymentLinkScreen(): JSX.Element {
     blockchain: Blockchain,
     transferAmounts: Amount[],
   ): Promise<AssetBalance | undefined> {
-    const assetList = Object.values(assets)
+    const assetList = Array.from(assets.values())
       .flat()
-      .filter((a) => transferAmounts.some((b) => b.asset === (a as Asset).name));
+      .filter((a) => transferAmounts.some((b) => blockchain === a.blockchain && b.asset === a.name));
+
+    const balances = await getBalances(assetList, address, blockchain);
+    if (!balances) return;
 
     for (const transferAmount of transferAmounts) {
       const asset = assets.get(blockchain)?.find((a) => a.name === transferAmount.asset);
       if (!asset) continue;
-
-      const balances = await getBalances(assetList, address);
-
-      if (!balances) continue;
-      for (const asset of balances) {
-        if (asset.amount >= transferAmount.amount) return asset;
-      }
+      return balances.find((balance) => balance.asset.name == asset.name && balance.amount >= transferAmount.amount);
     }
   }
 
