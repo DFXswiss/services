@@ -3,8 +3,8 @@ import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
 import { useMemo } from 'react';
 import Web3 from 'web3';
+import { TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
-import { AssetBalance } from '../../contexts/balance.context';
 import ERC20_ABI from '../../static/erc20.abi.json';
 import { AbortError } from '../../util/abort-error';
 import { TranslatedError } from '../../util/translated-error';
@@ -28,11 +28,15 @@ export interface MetaMaskInterface {
   requestAccount: () => Promise<string | undefined>;
   requestBlockchain: () => Promise<Blockchain | undefined>;
   requestChangeToBlockchain: (blockchain?: Blockchain) => Promise<void>;
-  requestBalance: (account: string) => Promise<string | undefined>;
   sign: (address: string, message: string) => Promise<string>;
   addContract: (asset: Asset, svgData: string, currentBlockchain?: Blockchain) => Promise<boolean>;
-  readBalance: (asset: Asset, address?: string) => Promise<AssetBalance>;
-  createTransaction: (amount: BigNumber, asset: Asset, from: string, to: string) => Promise<string>;
+  createTransaction: (
+    amount: BigNumber,
+    asset: Asset,
+    from: string,
+    to: string,
+    config?: { isWeiAmount?: boolean; gasPrice?: number },
+  ) => Promise<string>;
 }
 
 interface MetaMaskError {
@@ -130,10 +134,6 @@ export function useMetaMask(): MetaMaskInterface {
     });
   }
 
-  async function requestBalance(account: string): Promise<string | undefined> {
-    return web3.eth.getBalance(account);
-  }
-
   async function sign(address: string, message: string): Promise<string> {
     return web3.eth.personal.sign(message, address, '').catch(handleError);
   }
@@ -169,47 +169,36 @@ export function useMetaMask(): MetaMaskInterface {
     return Web3.utils.toChecksumAddress(accounts[0]);
   }
 
-  function toUsableNumber(balance: any, decimals = 18): BigNumber {
-    return new BigNumber(balance).dividedBy(Math.pow(10, decimals));
-  }
-
-  async function readBalance(asset: Asset, address?: string): Promise<AssetBalance> {
-    if (!address || !asset) return { asset, amount: 0 };
-
-    try {
-      if (asset.type === AssetType.COIN) {
-        return web3.eth.getBalance(address).then((balance) => ({ asset, amount: toUsableNumber(balance).toNumber() }));
-      }
-
-      const tokenContract = createContract(asset.chainId);
-      const decimals = await tokenContract.methods.decimals().call();
-      return await tokenContract.methods
-        .balanceOf(address)
-        .call()
-        .then((balance: any) => ({ asset, amount: toUsableNumber(balance, decimals) }));
-    } catch {
-      return { asset, amount: 0 };
-    }
-  }
-
-  async function createTransaction(amount: BigNumber, asset: Asset, from: string, to: string): Promise<string> {
+  async function createTransaction(
+    amount: BigNumber,
+    asset: Asset,
+    from: string,
+    to: string,
+    config?: { isWeiAmount?: boolean; gasPrice?: number },
+  ): Promise<string> {
     if (asset.type === AssetType.COIN) {
-      const transactionData = {
+      const transactionData: TransactionConfig = {
         from,
         to,
-        value: web3.utils.toWei(amount.toString(), 'ether'),
+        value: config?.isWeiAmount ? amount.toString() : web3.utils.toWei(amount.toString(), 'ether'),
         maxPriorityFeePerGas: null as any,
         maxFeePerGas: null as any,
+        gasPrice: config?.gasPrice,
       };
+
       return web3.eth.sendTransaction(transactionData).then((value) => value.transactionHash);
     } else {
       const tokenContract = createContract(asset.chainId);
-      const decimals = await tokenContract.methods.decimals().call();
-      const adjustedAmount = amount.multipliedBy(Math.pow(10, decimals)).toFixed();
+
+      let adjustedAmount = amount.toString();
+      if (!config?.isWeiAmount) {
+        const decimals = await tokenContract.methods.decimals().call();
+        adjustedAmount = amount.multipliedBy(Math.pow(10, decimals)).toFixed();
+      }
 
       return tokenContract.methods
         .transfer(to, adjustedAmount)
-        .send({ from, maxPriorityFeePerGas: null, maxFeePerGas: null })
+        .send({ from, maxPriorityFeePerGas: null, maxFeePerGas: null, gasPrice: config?.gasPrice })
         .then((value: any) => value.transactionHash);
     }
   }
@@ -239,10 +228,8 @@ export function useMetaMask(): MetaMaskInterface {
       requestAccount,
       requestBlockchain,
       requestChangeToBlockchain,
-      requestBalance,
       sign,
       addContract,
-      readBalance,
       createTransaction,
     }),
     [],

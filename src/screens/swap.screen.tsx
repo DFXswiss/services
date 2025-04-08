@@ -132,10 +132,6 @@ export default function SwapScreen(): JSX.Element {
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
   const [validatedData, setValidatedData] = useState<ValidatedData>();
 
-  useEffect(() => {
-    sourceAssets && getBalances(sourceAssets).then(setBalances);
-  }, [getBalances, sourceAssets]);
-
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
 
@@ -144,6 +140,12 @@ export default function SwapScreen(): JSX.Element {
   const selectedTargetAmount = useWatch({ control, name: 'targetAmount' });
   const selectedTargetAsset = useWatch({ control, name: 'targetAsset' });
   const selectedAddress = useWatch({ control, name: 'address' });
+
+  useEffect(() => {
+    if (sourceAssets && selectedAddress?.address) {
+      getBalances(sourceAssets, selectedAddress.address, selectedAddress?.chain).then(setBalances);
+    }
+  }, [getBalances, sourceAssets]);
 
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
@@ -543,7 +545,11 @@ export default function SwapScreen(): JSX.Element {
                       rootRef={rootRef}
                       name="sourceAsset"
                       placeholder={translate('general/actions', 'Select') + '...'}
-                      items={sourceAssets}
+                      items={sourceAssets.sort((a, b) => {
+                        const balanceA = findBalance(a) || 0;
+                        const balanceB = findBalance(b) || 0;
+                        return balanceB - balanceA;
+                      })}
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
                       assetIconFunc={(item) => item.name as AssetIconVariant}

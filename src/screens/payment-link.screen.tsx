@@ -1,4 +1,12 @@
-import { Asset, Blockchain, PaymentLinkPaymentStatus, useApi, useAssetContext, Utils } from '@dfx.swiss/react';
+import {
+  Asset,
+  AssetType,
+  Blockchain,
+  PaymentLinkPaymentStatus,
+  useApi,
+  useAssetContext,
+  Utils,
+} from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -8,6 +16,8 @@ import {
   IconVariant,
   SpinnerSize,
   SpinnerVariant,
+  StyledButton,
+  StyledButtonColor,
   StyledCollapsible,
   StyledDataTable,
   StyledDataTableExpandableRow,
@@ -22,26 +32,30 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
+import BigNumber from 'bignumber.js';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
-
 import { useSearchParams } from 'react-router-dom';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { CompatibleWallets, PaymentStandards, RecommendedWallets } from 'src/config/payment-link-wallets';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { AssetBalance } from 'src/contexts/balance.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { useCountdown } from 'src/hooks/countdown.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useSessionStore } from 'src/hooks/session-store.hook';
+import { useTxHelper } from 'src/hooks/tx-helper.hook';
+import { useMetaMask, WalletType } from 'src/hooks/wallets/metamask.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, fetchJson, formatLocationAddress, formatUnits, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
+const { getBalances } = useTxHelper();
 
 export interface PaymentStandard {
   id: PaymentStandardType;
@@ -120,6 +134,13 @@ interface FormData {
   asset?: string;
 }
 
+interface MetaMaskInfo {
+  accountAddress: string;
+  transferAsset: Asset;
+  transferAmount: number;
+  minFee: number;
+}
+
 export default function PaymentLinkScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
@@ -133,6 +154,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { lightning, redirectUri, setParams } = useAppParams();
   const { closeServices } = useAppHandlingContext();
   const [urlParams, setUrlParams] = useSearchParams();
+  const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction } = useMetaMask();
 
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
@@ -140,10 +162,15 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [assetObject, setAssetObject] = useState<Asset>();
   const [showContract, setShowContract] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<ExtendedPaymentLinkStatus>(PaymentLinkPaymentStatus.PENDING);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const refetchTimeout = useRef<NodeJS.Timeout>();
   const [merchant, setMerchant] = useState<string>();
+
+  const [isMetaMaskLoading, setIsMetaMaskLoading] = useState(false);
+  const [metaMaskInfo, setMetaMaskInfo] = useState<MetaMaskInfo>();
+  const [isMetaMaskPaying, setIsMetaMaskPaying] = useState(false);
+  const [metaMaskError, setMetaMaskError] = useState<string>();
 
   const sessionApiUrl = useRef<string>(paymentLinkApiUrlStore.get() ?? '');
   const currentCallback = useRef<string>();
@@ -194,6 +221,14 @@ export default function PaymentLinkScreen(): JSX.Element {
       if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (hasQuote(payRequest) && isInstalled() && getWalletType() === WalletType.META_MASK_BROWSER) {
+      loadMetaMaskInfo();
+    } else {
+      setMetaMaskInfo(undefined);
+    }
+  }, [payRequest, isInstalled, getWalletType]);
 
   useEffect(() => {
     if (!hasQuote(payRequest)) return;
@@ -358,16 +393,18 @@ export default function PaymentLinkScreen(): JSX.Element {
     });
   }
 
-  async function invokeCallback(callbackUrl: string): Promise<void> {
+  async function invokeCallback(callbackUrl: string): Promise<string | undefined> {
     if (currentCallback.current === callbackUrl) return;
     currentCallback.current = callbackUrl;
 
     setIsLoading(true);
     setPaymentIdentifier(undefined);
-    fetchJson(callbackUrl)
+    return fetchJson(callbackUrl)
       .then((response) => {
         if (response && response.statusCode !== 409 && callbackUrl === currentCallback.current) {
-          response && setPaymentIdentifier(response.uri ?? response.pr);
+          const identifier = response.uri ?? response.pr;
+          setPaymentIdentifier(identifier);
+          return identifier;
         }
       })
       .catch((error) => {
@@ -412,11 +449,109 @@ export default function PaymentLinkScreen(): JSX.Element {
       ? EvmUri.decode(paymentIdentifier)
       : undefined;
 
+  // --- META MASK IN-APP BROWSER --- //
+  async function loadMetaMaskInfo() {
+    if (!hasQuote(payRequest)) return;
+
+    setIsMetaMaskLoading(true);
+
+    try {
+      const address = await requestAccount();
+      const blockchain = await requestBlockchain();
+      if (!address || !blockchain) throw new Error('Failed to get account');
+
+      const matchingTransferAmount = payRequest.transferAmounts.find((item) => item.method === blockchain);
+      if (!matchingTransferAmount) throw new Error('Selected blockchain is not supported');
+
+      const transferAsset = await findAssetWithBalance(
+        address,
+        blockchain as Blockchain,
+        matchingTransferAmount.assets,
+      );
+      if (!transferAsset) throw new Error('No asset with enough balance');
+
+      setMetaMaskInfo({
+        accountAddress: address,
+        transferAsset: transferAsset.asset,
+        transferAmount: transferAsset.amount,
+        minFee: matchingTransferAmount.minFee,
+      });
+    } catch (e) {
+      const error = e as Error;
+      setMetaMaskError(error.message);
+    } finally {
+      setIsMetaMaskLoading(false);
+    }
+  }
+
+  async function findAssetWithBalance(
+    address: string,
+    blockchain: Blockchain,
+    transferAmounts: Amount[],
+  ): Promise<AssetBalance | undefined> {
+    const assetList = Array.from(assets.values())
+      .flat()
+      .filter((a) => transferAmounts.some((b) => blockchain === a.blockchain && b.asset === a.name));
+
+    const balances = await getBalances(assetList, address, blockchain);
+    if (!balances) return;
+
+    for (const transferAmount of transferAmounts) {
+      const asset = assets.get(blockchain)?.find((a) => a.name === transferAmount.asset);
+      if (!asset) continue;
+      return balances.find((balance) => balance.asset.name == asset.name && balance.amount >= transferAmount.amount);
+    }
+  }
+
+  async function payWithMetaMask() {
+    if (!hasQuote(payRequest) || !metaMaskInfo) return;
+
+    setIsMetaMaskPaying(true);
+
+    try {
+      const asset = metaMaskInfo.transferAsset;
+
+      const paymentUri = await invokeCallback(
+        url(
+          payRequest.callback,
+          new URLSearchParams({
+            quote: payRequest.quote.id,
+            method: asset.blockchain,
+            asset: asset.name,
+          }),
+        ),
+      );
+      if (!paymentUri) throw new Error('Failed to get payment information');
+
+      const paymentData = EvmUri.decode(paymentUri);
+
+      const address = asset.type === AssetType.COIN ? paymentData?.address : paymentData?.tokenContractAddress;
+      const amount = paymentData?.amount;
+      if (!address || !amount) throw new Error('Failed to get payment information');
+
+      const tx = await createTransaction(new BigNumber(amount), asset, metaMaskInfo.accountAddress, address, {
+        isWeiAmount: true,
+        gasPrice: metaMaskInfo.minFee,
+      });
+      await fetchJson(
+        url(
+          payRequest.callback.replace('/cb', '/tx'),
+          new URLSearchParams({ quote: payRequest.quote.id, method: asset.blockchain, tx }),
+        ),
+      );
+    } catch (e) {
+      const error = e as Error;
+      setMetaMaskError(error.message);
+    } finally {
+      setIsMetaMaskPaying(false);
+    }
+  }
+
   return (
     <Layout backButton={false} smallMenu>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
-      ) : !payRequest && !merchant ? (
+      ) : (!payRequest && !merchant) || isMetaMaskLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center className="pt-8">
@@ -439,36 +574,38 @@ export default function PaymentLinkScreen(): JSX.Element {
             )}
           </div>
           <PaymentStatusTile status={paymentStatus} />
-          {paymentStatus === PaymentLinkPaymentStatus.PENDING && hasQuote(payRequest) && paymentStandards?.length && (
-            <Form control={control} errors={errors}>
-              <StyledVerticalStack full gap={4} center>
-                <StyledDropdown<PaymentStandard>
-                  name="paymentStandard"
-                  items={paymentStandards}
-                  labelFunc={(item) =>
-                    translate('screens/payment', item.label, { blockchain: item.blockchain?.toString() ?? '' })
-                  }
-                  descriptionFunc={(item) =>
-                    translate('screens/payment', item.description, { blockchain: item.blockchain?.toString() ?? '' })
-                  }
-                  smallLabel
-                  full
-                />
-
-                {assetsList && (
-                  <StyledDropdown<string>
-                    name="asset"
-                    items={assetsList?.map((item) => item.asset) ?? []}
-                    labelFunc={(item) => item}
-                    descriptionFunc={() => selectedPaymentStandard?.blockchain ?? ''}
-                    full
+          {paymentStatus === PaymentLinkPaymentStatus.PENDING &&
+            hasQuote(payRequest) &&
+            paymentStandards?.length &&
+            !(metaMaskInfo || metaMaskError) && (
+              <Form control={control} errors={errors}>
+                <StyledVerticalStack full gap={4} center>
+                  <StyledDropdown<PaymentStandard>
+                    name="paymentStandard"
+                    items={paymentStandards}
+                    labelFunc={(item) =>
+                      translate('screens/payment', item.label, { blockchain: item.blockchain?.toString() ?? '' })
+                    }
+                    descriptionFunc={(item) =>
+                      translate('screens/payment', item.description, { blockchain: item.blockchain?.toString() ?? '' })
+                    }
                     smallLabel
+                    full
                   />
-                )}
-              </StyledVerticalStack>
-            </Form>
-          )}
 
+                  {assetsList && (
+                    <StyledDropdown<string>
+                      name="asset"
+                      items={assetsList?.map((item) => item.asset) ?? []}
+                      labelFunc={(item) => item}
+                      descriptionFunc={() => selectedPaymentStandard?.blockchain ?? ''}
+                      full
+                      smallLabel
+                    />
+                  )}
+                </StyledVerticalStack>
+              </Form>
+            )}
           {[PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(paymentStatus) && (
             <>
               {payRequest && (hasQuote(payRequest) || payRequest.recipient) && (
@@ -651,40 +788,66 @@ export default function PaymentLinkScreen(): JSX.Element {
                   </StyledVerticalStack>
                 </StyledCollapsible>
               )}
-
-              {(!selectedPaymentStandard ||
-                [PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
-                  selectedPaymentStandard.id as PaymentStandardType,
-                )) && (
-                <StyledVerticalStack full gap={8} center>
-                  {hasQuote(payRequest) ? (
-                    <div className="flex flex-col w-full items-center justify-center">
-                      {payRequest.displayQr && (
-                        <div className="w-48 my-3">
-                          <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
-                        </div>
-                      )}
+              {metaMaskError ? (
+                <>
+                  <p className="text-dfxRed-100 font-bold my-6">{translate('screens/payment', metaMaskError)}</p>
+                </>
+              ) : metaMaskInfo ? (
+                <>
+                  <p className="text-base pt-3 text-dfxGray-700">
+                    {translate(
+                      'screens/payment',
+                      'Complete this payment using {{amount}} {{asset}} on {{blockchain}}.',
+                      {
+                        amount: metaMaskInfo.transferAmount,
+                        asset: metaMaskInfo.transferAsset.name,
+                        blockchain: metaMaskInfo.transferAsset.blockchain,
+                      },
+                    )}
+                  </p>
+                  <StyledButton
+                    label={translate('screens/payment', 'Pay')}
+                    onClick={payWithMetaMask}
+                    color={StyledButtonColor.RED}
+                    className="mb-5"
+                    isLoading={isMetaMaskPaying}
+                  />
+                </>
+              ) : (
+                (!selectedPaymentStandard ||
+                  [PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
+                    selectedPaymentStandard.id as PaymentStandardType,
+                  )) && (
+                  <StyledVerticalStack full gap={8} center>
+                    {hasQuote(payRequest) ? (
+                      <div className="flex flex-col w-full items-center justify-center">
+                        {payRequest.displayQr && (
+                          <div className="w-48 my-3">
+                            <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
+                          </div>
+                        )}
+                        <p className="text-base pt-3 text-dfxGray-700">
+                          {translate(
+                            'screens/payment',
+                            'Scan the QR-Code with a compatible wallet to complete the payment.',
+                          )}
+                        </p>
+                      </div>
+                    ) : (
                       <p className="text-base pt-3 text-dfxGray-700">
                         {translate(
                           'screens/payment',
-                          'Scan the QR-Code with a compatible wallet to complete the payment.',
+                          'Tell the cashier that you want to pay with crypto and then scan the QR-Code with a compatible wallet to complete the payment.',
                         )}
                       </p>
-                    </div>
-                  ) : (
-                    <p className="text-base pt-3 text-dfxGray-700">
-                      {translate(
-                        'screens/payment',
-                        'Tell the cashier that you want to pay with crypto and then scan the QR-Code with a compatible wallet to complete the payment.',
-                      )}
-                    </p>
-                  )}
-                  <WalletGrid
-                    wallets={RecommendedWallets}
-                    header={translate('screens/payment', 'Recommended wallets')}
-                  />
-                  <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
-                </StyledVerticalStack>
+                    )}
+                    <WalletGrid
+                      wallets={RecommendedWallets}
+                      header={translate('screens/payment', 'Recommended wallets')}
+                    />
+                    <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
+                  </StyledVerticalStack>
+                )
               )}
             </>
           )}

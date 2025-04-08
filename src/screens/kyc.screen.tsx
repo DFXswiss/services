@@ -451,6 +451,8 @@ interface EditProps {
 }
 
 function KycEdit(props: EditProps): JSX.Element {
+  const { translate } = useSettingsContext();
+
   switch (props.step.name) {
     case KycStepName.CONTACT_DATA:
       return <ContactData {...props} />;
@@ -461,20 +463,42 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.LEGAL_ENTITY:
       return <LegalEntityData {...props} />;
 
-    case KycStepName.OWNER_DIRECTORY:
-      return <FileUpload {...props} />;
+    case KycStepName.OWNER_DIRECTORY: {
+      const urls = {
+        EN: 'https://docs.google.com/document/d/1ICxt-RZihMyiz486NMS4gEJZdgrZG_LVTuDiLMbzyC0/edit',
+        DE: 'https://docs.google.com/document/d/11m3MkP0RALZFYRoxZNdY0SwVv8oN3Vl_gzXaIO_YIxY/edit',
+        FR: 'https://docs.google.com/document/d/1uRV6Z1D6FYmF6VQZLfXK8GniR7hf5a9phBRqGNYlqW4/edit',
+      };
+
+      return <FileUpload {...props} templateUrls={urls} />;
+    }
 
     case KycStepName.NATIONALITY_DATA:
       return <NationalityData {...props} />;
 
     case KycStepName.COMMERCIAL_REGISTER:
-      return <FileUpload {...props} />;
+      return (
+        <FileUpload
+          {...props}
+          hint={translate(
+            'screens/kyc',
+            'An internet excerpt is sufficient. No notarization is required. The extract must not be older than 2 months.',
+          )}
+        />
+      );
 
     case KycStepName.SIGNATORY_POWER:
       return <SignatoryPowerData {...props} />;
 
-    case KycStepName.AUTHORITY:
-      return <FileUpload {...props} />;
+    case KycStepName.AUTHORITY: {
+      const urls = {
+        EN: 'https://docs.google.com/document/d/1PKk0XvX6v7wdcO-bjCVJXj56uuIlDToca6Zpzff_t6g/edit',
+        DE: 'https://docs.google.com/document/d/1Sqob5OAM93Uwni7U099XOXxztytXfN6i6upO9ymDgGw/edit',
+        FR: 'https://docs.google.com/document/d/17H2f0gAlNpp8e_1aEE6jTbEHbQnoLgr821yWfaSElms/edit',
+      };
+
+      return <FileUpload {...props} templateUrls={urls} />;
+    }
 
     case KycStepName.BENEFICIAL_OWNER:
       return <BeneficialOwner {...props} />;
@@ -587,6 +611,8 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack, showLinkHint
 function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
   const { allowedCountries, allowedOrganizationCountries, translate, translateError } = useSettingsContext();
   const { setPersonalData } = useKyc();
+  const { accountTypeToString } = useKycHelper();
+
   const { countryCode } = useGeoLocation();
 
   const [countries, setCountries] = useState<Country[]>([]);
@@ -672,7 +698,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
             label=""
             placeholder={translate('general/actions', 'Select') + '...'}
             items={Object.values(AccountType)}
-            labelFunc={(item) => translate('screens/kyc', item)}
+            labelFunc={(item) => translate('screens/kyc', accountTypeToString(item))}
           />
         </StyledVerticalStack>
         {selectedAccountType && (
@@ -846,7 +872,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
 function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setLegalEntityData } = useKyc();
-  const { legalEntityToString } = useKycHelper();
+  const { legalEntityToString, legalEntityToDescription } = useKycHelper();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
@@ -887,6 +913,7 @@ function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps):
             placeholder={translate('general/actions', 'Select') + '...'}
             items={Object.values(LegalEntity)}
             labelFunc={(item) => legalEntityToString(item)}
+            descriptionFunc={(item) => legalEntityToDescription(item) ?? ''}
           />
         </StyledVerticalStack>
 
@@ -983,13 +1010,20 @@ interface FormDataFile {
   file: File;
 }
 
-function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
-  const { translate, translateError } = useSettingsContext();
+interface FileUploadProps extends EditProps {
+  templateUrls?: { [lang: string]: string };
+  hint?: string;
+}
+
+function FileUpload({ code, isLoading, step, onDone, templateUrls, hint }: FileUploadProps): JSX.Element {
+  const { translate, translateError, language } = useSettingsContext();
   const { nameToString } = useKycHelper();
   const { setFileData } = useKyc();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
+
+  const templateUrl = language && templateUrls && (templateUrls[language.symbol] ?? templateUrls.EN);
 
   const {
     control,
@@ -1040,6 +1074,18 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
             full
           />
         </StyledVerticalStack>
+
+        {templateUrl && (
+          <StyledButton
+            type="button"
+            label={translate('screens/kyc', 'Document template')}
+            onClick={() => window.open(templateUrl, '_blank')}
+            width={StyledButtonWidth.FULL}
+            color={StyledButtonColor.GRAY_OUTLINE}
+          />
+        )}
+
+        {hint && <div className="text-dfxGray-700 text-sm">{hint}</div>}
 
         {error && (
           <div>
