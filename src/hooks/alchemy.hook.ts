@@ -18,42 +18,38 @@ const networkMapper: { [b in Blockchain]?: Network } = {
 };
 
 export function useAlchemy(): AlchemyInterface {
-  const getAddressBalances = useMemo(() => {
-    return async (assets: Asset[], address: string, blockchain: Blockchain): Promise<AssetBalance[]> => {
-      console.log('test');
-      const alchemy = new Alchemy({ apiKey: process.env.REACT_APP_ALCHEMY_KEY, network: networkMapper[blockchain] });
-      const results: AssetBalance[] = [];
+  async function getAddressBalances(assets: Asset[], address: string, blockchain: Blockchain): Promise<AssetBalance[]> {
+    const alchemy = new Alchemy({ apiKey: process.env.REACT_APP_ALCHEMY_KEY, network: networkMapper[blockchain] });
+    const results: AssetBalance[] = [];
 
-      const evmAssets = assets.filter((a) => Object.keys(networkMapper).includes(a.blockchain));
+    const evmAssets = assets.filter((a) => Object.keys(networkMapper).includes(a.blockchain));
 
-      const tokenAssets = evmAssets.filter((a) => a.type === AssetType.TOKEN);
-      const nativeAsset = evmAssets.find((a) => a.type === AssetType.COIN);
+    const tokenAssets = evmAssets.filter((a) => a.type === AssetType.TOKEN);
+    const nativeAsset = evmAssets.find((a) => a.type === AssetType.COIN);
 
-      if (tokenAssets.length > 0) {
-        const tokenRes = await alchemy.core.getTokenBalances(
-          address,
-          // can not be null because of evm filter
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          tokenAssets.map((t) => t.chainId!),
-        );
+    if (tokenAssets.length > 0) {
+      const tokenRes = await alchemy.core.getTokenBalances(
+        address,
+        // can not be null because of evm filter
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        tokenAssets.map((t) => t.chainId!),
+      );
 
-        tokenAssets.forEach((asset, i) => {
-          const balanceRaw = tokenRes.tokenBalances[i]?.tokenBalance ?? '0';
-          const decimals = asset.decimals ?? 18;
-          const amount = Number(formatUnits(balanceRaw, decimals));
-          results.push({ asset, amount });
-        });
-      }
+      tokenAssets.forEach((asset, i) => {
+        const balanceRaw = tokenRes.tokenBalances[i]?.tokenBalance ?? '0';
+        const decimals = asset.decimals ?? 18;
+        const amount = Number(formatUnits(balanceRaw, decimals));
+        results.push({ asset, amount });
+      });
+    }
 
-      if (nativeAsset) {
-        const nativeRes = await alchemy.core.getBalance(address);
-        const amount = Number(formatUnits(nativeRes.toString(), 18));
-        results.push({ asset: nativeAsset, amount });
-      }
+    if (nativeAsset) {
+      const nativeRes = await alchemy.core.getBalance(address);
+      const amount = Number(formatUnits(nativeRes.toString(), 18));
+      results.push({ asset: nativeAsset, amount });
+    }
 
-      return results;
-    };
-  }, []);
-
-  return { getAddressBalances };
+    return results;
+  }
+  return useMemo(() => ({ getAddressBalances }), []);
 }
