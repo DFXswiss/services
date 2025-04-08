@@ -545,7 +545,11 @@ export default function SwapScreen(): JSX.Element {
                       rootRef={rootRef}
                       name="sourceAsset"
                       placeholder={translate('general/actions', 'Select') + '...'}
-                      items={sourceAssets}
+                      items={sourceAssets.sort((a, b) => {
+                        const balanceA = findBalance(a) || 0;
+                        const balanceB = findBalance(b) || 0;
+                        return balanceB - balanceA;
+                      })}
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
                       assetIconFunc={(item) => item.name as AssetIconVariant}

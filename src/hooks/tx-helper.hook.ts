@@ -1,7 +1,8 @@
-import { Asset, AssetType, Sell, Swap, useAuthContext } from '@dfx.swiss/react';
+import { Asset, AssetType, Blockchain, Sell, Swap, useAuthContext } from '@dfx.swiss/react';
 import { Alchemy } from 'alchemy-sdk';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
+import { formatUnits } from 'src/util/utils';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance, useBalanceContext } from '../contexts/balance.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
@@ -31,41 +32,47 @@ export function useTxHelper(): TxHelperInterface {
   async function getBalances(assets: Asset[], address: string | undefined): Promise<AssetBalance[] | undefined> {
     if (!activeWallet || !address) return getParamBalances(assets);
 
-    switch (activeWallet) {
-      case WalletType.META_MASK:
-      case WalletType.WALLET_CONNECT:
-        const results: AssetBalance[] = [];
+    if (!process.env.REACT_APP_ALCHEMY_KEY) throw new Error('Alchemy Key not defined');
 
-        const alchemy = new Alchemy({ apiKey: process.env.REACT_APP_ALCHEMY_KEY });
+    const alchemy = new Alchemy({ apiKey: process.env.REACT_APP_ALCHEMY_KEY });
 
-        const tokenAssets = assets.filter((a) => a.type === AssetType.TOKEN);
-        const nativeAsset = assets.find((a) => a.type === AssetType.COIN);
+    const results: AssetBalance[] = [];
 
-        const tokenRes = await alchemy.core.getTokenBalances(
-          address,
-          tokenAssets.map((t) => t.chainId!),
-        );
+    const evmAssets = assets.filter((a) =>
+      [
+        Blockchain.ETHEREUM,
+        Blockchain.BINANCE_SMART_CHAIN,
+        Blockchain.ARBITRUM,
+        Blockchain.OPTIMISM,
+        Blockchain.POLYGON,
+        Blockchain.BASE,
+        Blockchain.HAQQ,
+      ].includes(a.blockchain),
+    );
+    const tokenAssets = evmAssets.filter((a) => a.type === AssetType.TOKEN);
+    const nativeAsset = evmAssets.find((a) => a.type === AssetType.COIN);
 
-        const tokenMeta = await Promise.all(tokenAssets.map((t) => alchemy.core.getTokenMetadata(t.chainId!)));
+    if (tokenAssets) {
+      const tokenRes = await alchemy.core.getTokenBalances(
+        address,
+        tokenAssets.map((t) => t.chainId!),
+      );
 
-        tokenAssets.forEach((asset, i) => {
-          const balanceRaw = tokenRes.tokenBalances[i]?.tokenBalance ?? '0';
-          const decimals = tokenMeta[i]?.decimals ?? 18;
-          const amount = parseFloat(new BigNumber(balanceRaw).toString()) / 10 ** decimals;
-
-          results.push({ asset, amount });
-        });
-
-        if (nativeAsset) {
-          const nativeRes = await alchemy.core.getBalance(address);
-          const amount = parseFloat(nativeRes.toString()) / 1e18;
-          results.push({ asset: nativeAsset, amount });
-        }
-
-        return results;
-      default:
-        return undefined;
+      tokenAssets.forEach((asset, i) => {
+        const balanceRaw = tokenRes.tokenBalances[i]?.tokenBalance ?? '0';
+        const decimals = asset.decimals ?? 18;
+        const amount = Number(formatUnits(balanceRaw, decimals));
+        results.push({ asset, amount });
+      });
     }
+
+    if (nativeAsset) {
+      const nativeRes = await alchemy.core.getBalance(address);
+      const amount = Number(formatUnits(nativeRes.toString(), 18));
+      results.push({ asset: nativeAsset, amount });
+    }
+
+    return results;
   }
 
   async function sendTransaction(tx: Sell | Swap): Promise<string> {
