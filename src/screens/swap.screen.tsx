@@ -143,7 +143,7 @@ export default function SwapScreen(): JSX.Element {
 
   useEffect(() => {
     if (sourceAssets && selectedAddress?.address) {
-      getBalances(sourceAssets, selectedAddress.address, selectedAddress.chain).then(setBalances);
+      getBalances(sourceAssets, selectedAddress.address, selectedAddress?.chain).then(setBalances);
     }
   }, [getBalances, sourceAssets]);
 
