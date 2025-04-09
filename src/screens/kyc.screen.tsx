@@ -1574,7 +1574,7 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    onDone();
+    isDone && onDone();
 
     const refreshInterval = setInterval(() => isDone && onDone(), 1000);
     return () => clearInterval(refreshInterval);
@@ -1607,6 +1607,10 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
         lang: lang.symbol.toLowerCase(),
       })
       .withOptions({ addViewportTag: false, adaptIframeHeight: true })
+      .on(
+        'idCheck.applicantStatus',
+        (payload: any) => payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.GREEN && setIsDone(true),
+      )
       .on('idCheck.stepCompleted', (_payload) => setIsDone(true))
       .on('idCheck.onError', ({ error }) => onError(error))
       .build();
