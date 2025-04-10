@@ -1574,7 +1574,7 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    isDone && onDone();
+    onDone();
 
     const refreshInterval = setInterval(() => isDone && onDone(), 1000);
     return () => clearInterval(refreshInterval);
