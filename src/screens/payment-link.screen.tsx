@@ -55,7 +55,6 @@ import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, fetchJson, formatLocationAddress, formatUnits, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
-const { getBalances } = useTxHelper();
 
 export interface PaymentStandard {
   id: PaymentStandardType;
@@ -155,6 +154,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { closeServices } = useAppHandlingContext();
   const [urlParams, setUrlParams] = useSearchParams();
   const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction } = useMetaMask();
+  const { getBalances } = useTxHelper();
 
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
