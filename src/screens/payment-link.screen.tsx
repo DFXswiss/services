@@ -499,7 +499,11 @@ export default function PaymentLinkScreen(): JSX.Element {
     for (const transferAmount of transferAmounts) {
       const asset = assets.get(blockchain)?.find((a) => a.name === transferAmount.asset);
       if (!asset) continue;
-      return balances.find((balance) => balance.asset.name == asset.name && balance.amount >= transferAmount.amount);
+
+      const balance = balances.find(
+        (balance) => balance.asset.name == asset.name && balance.amount >= transferAmount.amount,
+      );
+      if (balance) return { asset, amount: transferAmount.amount };
     }
   }
 
