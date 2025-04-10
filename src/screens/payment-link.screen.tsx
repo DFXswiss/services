@@ -48,7 +48,6 @@ import { useAppParams } from 'src/hooks/app-params.hook';
 import { useCountdown } from 'src/hooks/countdown.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useSessionStore } from 'src/hooks/session-store.hook';
-import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { useMetaMask, WalletType } from 'src/hooks/wallets/metamask.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { EvmUri } from 'src/util/evm-uri';
@@ -153,8 +152,8 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { lightning, redirectUri, setParams } = useAppParams();
   const { closeServices } = useAppHandlingContext();
   const [urlParams, setUrlParams] = useSearchParams();
-  const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction } = useMetaMask();
-  const { getBalances } = useTxHelper();
+  const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction, readBalance } =
+    useMetaMask();
 
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
@@ -489,21 +488,12 @@ export default function PaymentLinkScreen(): JSX.Element {
     blockchain: Blockchain,
     transferAmounts: Amount[],
   ): Promise<AssetBalance | undefined> {
-    const assetList = Array.from(assets.values())
-      .flat()
-      .filter((a) => transferAmounts.some((b) => blockchain === a.blockchain && b.asset === a.name));
-
-    const balances = await getBalances(assetList, address, blockchain);
-    if (!balances) return;
-
     for (const transferAmount of transferAmounts) {
       const asset = assets.get(blockchain)?.find((a) => a.name === transferAmount.asset);
       if (!asset) continue;
 
-      const balance = balances.find(
-        (balance) => balance.asset.name == asset.name && balance.amount >= transferAmount.amount,
-      );
-      if (balance) return { asset, amount: transferAmount.amount };
+      const balance = await readBalance(asset, address);
+      if (balance.amount >= transferAmount.amount) return { asset: asset, amount: transferAmount.amount };
     }
   }
 
