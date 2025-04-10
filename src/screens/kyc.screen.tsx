@@ -1691,11 +1691,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const [responses, setResponses] = useState<KycFinancialResponse[]>([]);
   const [index, setIndex] = useState<number>();
 
-  const visibleQuestions = questions.filter(
-    (q) =>
-      !q.conditions?.length ||
-      q.conditions?.some((c) => responses.some((r) => r.key === c.question && r.value === c.response)),
-  );
+  const visibleQuestions = filterQuestions(questions);
   const currentQuestion = index != null ? visibleQuestions[index - 1] : undefined;
   const currentOptions = currentQuestion?.options ?? [];
   const currentResponse = responses.find((r) => currentQuestion?.key === r.key);
@@ -1711,12 +1707,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
         setQuestions(questions);
         setResponses(responses);
 
-        const visibleQuestions = questions.filter(
-          (q) =>
-            !q.conditions?.length ||
-            q.conditions.some((c) => responses.some((r) => r.key === c.question && r.value === c.response)),
-        );
-
+        const visibleQuestions = filterQuestions(questions);
         const currentQuestion = visibleQuestions.find((q) => !responses.find((r) => q.key === r.key));
 
         currentQuestion && setIndex(visibleQuestions.indexOf(currentQuestion) + 1);
@@ -1773,6 +1764,14 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
     setFormValue(
       'selectionMC',
       isMC ? currentQuestion?.options?.filter((o) => value?.split(',').includes(o.key)) : undefined,
+    );
+  }
+
+  function filterQuestions(questions: KycFinancialQuestion[]): KycFinancialQuestion[] {
+    return questions.filter(
+      (q) =>
+        !q.conditions?.length ||
+        q.conditions.some((c) => responses.some((r) => r.key === c.question && r.value === c.response)),
     );
   }
 
