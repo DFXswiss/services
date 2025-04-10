@@ -1607,6 +1607,10 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
         lang: lang.symbol.toLowerCase(),
       })
       .withOptions({ addViewportTag: false, adaptIframeHeight: true })
+      .on(
+        'idCheck.applicantStatus',
+        (payload: any) => payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.GREEN && setIsDone(true),
+      )
       .on('idCheck.stepCompleted', (_payload) => setIsDone(true))
       .on('idCheck.onError', ({ error }) => onError(error))
       .build();
@@ -1687,7 +1691,8 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const [responses, setResponses] = useState<KycFinancialResponse[]>([]);
   const [index, setIndex] = useState<number>();
 
-  const currentQuestion = index != null ? questions[index - 1] : undefined;
+  const visibleQuestions = filterQuestions(questions);
+  const currentQuestion = index != null ? visibleQuestions[index - 1] : undefined;
   const currentOptions = currentQuestion?.options ?? [];
   const currentResponse = responses.find((r) => currentQuestion?.key === r.key);
   const nocLinkText = 'app.dfx.swiss/support/issue';
@@ -1702,8 +1707,10 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
         setQuestions(questions);
         setResponses(responses);
 
-        const currentQuestion = questions.find((q) => !responses.find((r) => q.key === r.key));
-        currentQuestion && setIndex(questions.indexOf(currentQuestion) + 1);
+        const visibleQuestions = filterQuestions(questions);
+        const currentQuestion = visibleQuestions.find((q) => !responses.find((r) => q.key === r.key));
+
+        currentQuestion && setIndex(visibleQuestions.indexOf(currentQuestion) + 1);
       })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
@@ -1760,6 +1767,14 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
     );
   }
 
+  function filterQuestions(questions: KycFinancialQuestion[]): KycFinancialQuestion[] {
+    return questions.filter(
+      (q) =>
+        !q.conditions?.length ||
+        q.conditions.some((c) => responses.some((r) => r.key === c.question && r.value === c.response)),
+    );
+  }
+
   return error ? (
     <StyledVerticalStack gap={6} full center>
       <ErrorHint message={error} onBack={onBack} />
@@ -1771,7 +1786,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
           {index > 1 ? <StyledIconButton icon={IconVariant.CHEV_LEFT} size={IconSize.XL} onClick={goBack} /> : <div />}
           <h2 className="text-dfxGray-700">{currentQuestion.title}</h2>
           <p className="text-dfxGray-700">
-            {index}/{questions.length}
+            {index}/{visibleQuestions.length}
           </p>
         </div>
 
