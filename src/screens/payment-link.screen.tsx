@@ -494,7 +494,7 @@ export default function PaymentLinkScreen(): JSX.Element {
       const asset = assets.get(blockchain)?.find((a) => a.name === transferAmount.asset);
       if (!asset) continue;
 
-      const balance = await readBalance(asset, address);
+      const balance = await readBalance(asset, address, true);
       if (balance.amount >= transferAmount.amount) return { asset: asset, amount: transferAmount.amount };
     }
   }

@@ -33,7 +33,7 @@ export interface MetaMaskInterface {
   requestBalance: (account: string) => Promise<string | undefined>;
   sign: (address: string, message: string) => Promise<string>;
   addContract: (asset: Asset, svgData: string, currentBlockchain?: Blockchain) => Promise<boolean>;
-  readBalance: (asset: Asset, address?: string) => Promise<AssetBalance>;
+  readBalance: (asset: Asset, address?: string, passOnException?: boolean) => Promise<AssetBalance>;
   createTransaction: (
     amount: BigNumber,
     asset: Asset,
@@ -185,7 +185,7 @@ export function useMetaMask(): MetaMaskInterface {
     return new BigNumber(balance).dividedBy(Math.pow(10, decimals));
   }
 
-  async function readBalance(asset: Asset, address?: string): Promise<AssetBalance> {
+  async function readBalance(asset: Asset, address?: string, passOnException?: boolean): Promise<AssetBalance> {
     if (!address || !asset) return { asset, amount: 0 };
 
     try {
@@ -198,8 +198,10 @@ export function useMetaMask(): MetaMaskInterface {
       return await tokenContract.methods
         .balanceOf(address)
         .call()
-        .then((balance: any) => ({ asset, amount: toUsableNumber(balance, decimals) }));
-    } catch {
+        .then((balance: any) => ({ asset, amount: toUsableNumber(balance, decimals).toNumber() }));
+    } catch (e) {
+      if (passOnException) throw e;
+
       return { asset, amount: 0 };
     }
   }
