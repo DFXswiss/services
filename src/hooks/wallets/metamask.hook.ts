@@ -2,6 +2,7 @@ import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
 import { useMemo } from 'react';
+import { isMobile } from 'react-device-detect';
 import Web3 from 'web3';
 import { TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
@@ -15,7 +16,7 @@ import { useWeb3 } from '../web3.hook';
 export enum WalletType {
   RABBY = 'Rabby',
   META_MASK = 'MetaMask',
-  META_MASK_BROWSER = 'MetaMaskBrowser',
+  IN_APP_BROWSER = 'InAppBrowser',
 }
 
 export interface MetaMaskInterface {
@@ -57,15 +58,19 @@ export function useMetaMask(): MetaMaskInterface {
 
   function isInstalled(): boolean {
     const eth = ethereum();
-    return Boolean(eth && eth.isMetaMask);
+    return Boolean(eth && (eth.isMetaMask || eth.isRabby || eth.isCoinbaseWallet || eth.isTrust));
   }
 
   function getWalletType(): WalletType | undefined {
     const eth = ethereum();
     if (eth) {
+      const hasInAppWalletAgent = /MetaMask|CoinbaseWallet|Trust|Rainbow|Zerion/i.test(window.navigator.userAgent);
+      const isInApp = (eth.isTrust || eth.isCoinbaseWallet) && isMobile;
+
+      if (hasInAppWalletAgent || isInApp) return WalletType.IN_APP_BROWSER;
+
       if (eth.isRabby) return WalletType.RABBY;
-      if (eth.isMetaMask)
-        return window.navigator.userAgent.includes('MetaMask') ? WalletType.META_MASK_BROWSER : WalletType.META_MASK;
+      if (eth.isMetaMask) return WalletType.META_MASK;
     }
   }
 

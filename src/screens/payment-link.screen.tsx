@@ -222,7 +222,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (hasQuote(payRequest) && isInstalled() && getWalletType() === WalletType.META_MASK_BROWSER) {
+    if (hasQuote(payRequest) && isInstalled() && getWalletType() === WalletType.IN_APP_BROWSER) {
       loadMetaMaskInfo();
     } else {
       setMetaMaskInfo(undefined);
