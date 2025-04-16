@@ -32,7 +32,12 @@ export default function KycFileScreen(): JSX.Element {
     if (kycFileId) {
       setIsLoading(true);
       getFile(kycFileId)
-        .then(setFile)
+        .then((fetchedFile) => {
+          setFile(fetchedFile);
+          if (show) {
+            handleOpenFile(fetchedFile, setError, false);
+          }
+        })
         .catch((e: ApiError) => {
           setError(e.message ?? 'Unknown error');
         })
@@ -40,19 +45,13 @@ export default function KycFileScreen(): JSX.Element {
     } else {
       setError('No key provided');
     }
-  }, [kycFileId]);
-
-  useEffect(() => {
-    if (show && file) {
-      handleOpenFile(file, setError, false);
-    }
-  }, [show, file]);
+  }, [kycFileId, show]);
 
   return (
     <Layout title={translate('screens/kyc', 'KYC file')}>
       {error ? (
         <ErrorHint message={error} />
-      ) : show || isLoading || !file ? (
+      ) : isLoading || !file ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <FilePreview file={file} setErrorMessage={setError} />

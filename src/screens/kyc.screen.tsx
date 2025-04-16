@@ -266,7 +266,9 @@ export default function KycScreen(): JSX.Element {
   }
 
   function onContinue() {
-    return allStepsCompleted ? navigate('/support/issue?issue-type=LimitRequest') : onLoad(true);
+    return allStepsCompleted
+      ? navigate({ pathname: '/support/issue', search: '?issue-type=LimitRequest' })
+      : onLoad(true);
   }
 
   function onConsent(client: string) {

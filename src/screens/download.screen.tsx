@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { useAdminGuard } from 'src/hooks/guard.hook';
+import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { generateExportFileName } from 'src/util/utils';
 
 interface FormData {
@@ -13,7 +13,7 @@ interface FormData {
 }
 
 export default function DownloadScreen(): JSX.Element {
-  useAdminGuard();
+  useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
   const { call } = useApi();

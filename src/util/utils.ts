@@ -59,13 +59,21 @@ export function readFileAsText(file: File): Promise<string> {
 
 export function openPdfFromString(pdf: string, newTab = true) {
   const byteArray = Uint8Array.from(atob(pdf), (c) => c.charCodeAt(0));
-  const file = new Blob([byteArray], { type: 'application/pdf;base64' });
+  const file = new Blob([byteArray], { type: 'application/pdf' });
   const fileURL = URL.createObjectURL(file);
 
   if (newTab) {
     window.open(fileURL);
   } else {
-    window.location.href = fileURL;
+    const viewerContainer = createFullScreenContainer();
+    const embed = document.createElement('embed');
+    embed.style.flex = '1';
+    embed.style.border = 'none';
+    embed.style.backgroundColor = 'white';
+    embed.type = 'application/pdf';
+    embed.src = fileURL + '#toolbar=1&navpanes=1&scrollbar=1';
+    viewerContainer.appendChild(embed);
+    document.body.appendChild(viewerContainer);
   }
 }
 
@@ -76,7 +84,15 @@ export function openImageFromString(image: string, contentType: string, newTab =
   if (newTab) {
     window.open(imageUrl);
   } else {
-    window.location.href = imageUrl;
+    const viewerContainer = createFullScreenContainer();
+    const imageElement = document.createElement('img');
+    imageElement.style.maxWidth = '100%';
+    imageElement.style.maxHeight = '100%';
+    imageElement.style.objectFit = 'contain';
+    imageElement.style.transition = 'transform 0.2s';
+    imageElement.src = imageUrl;
+    viewerContainer.appendChild(imageElement);
+    document.body.appendChild(viewerContainer);
   }
 }
 
@@ -86,6 +102,7 @@ export function handleOpenFile(file: KycFile, setErrorMessage: (message: string)
 
   if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
     setErrorMessage('Invalid file type');
+    return;
   }
 
   const base64Data = Buffer.from(content.data).toString('base64');
@@ -95,6 +112,18 @@ export function handleOpenFile(file: KycFile, setErrorMessage: (message: string)
   } else if (fileType === 'image') {
     openImageFromString(base64Data, contentType, newTab);
   }
+}
+
+function createFullScreenContainer(): HTMLDivElement {
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.width = '100%';
+  container.style.height = '100%';
+  container.style.backgroundColor = 'rgba(0,0,0,0.9)';
+  container.style.zIndex = '9999';
+  return container;
 }
 
 export function sortAddressesByBlockchain(a: UserAddress, b: UserAddress): number {
