@@ -680,9 +680,11 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                             <StyledButton
                               label={translate('general/actions', 'Open invoice')}
                               onClick={() => {
+                                const endpoint =
+                                  tx.type === TransactionType.REFERRAL ? 'reward/ref' : tx.type.toLowerCase();
                                 setIsInvoiceLoading(true);
                                 call<Invoice>({
-                                  url: `buy/transaction/${tx.id}/invoice`,
+                                  url: `${endpoint}/transaction/${tx.id}/invoice`,
                                   method: 'PUT',
                                 })
                                   .then((response) => {
@@ -690,7 +692,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   })
                                   .finally(() => setIsInvoiceLoading(false));
                               }}
-                              hidden={tx.type !== TransactionType.BUY || !tx.outputTxUrl}
+                              hidden={tx.state !== TransactionState.COMPLETED}
                               isLoading={isInvoiceLoading}
                               color={StyledButtonColor.STURDY_WHITE}
                             />
