@@ -491,7 +491,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const [isTargetsLoading, setIsTargetsLoading] = useState(false);
   const [isTransactionLoading, setIsTransactionLoading] = useState(false);
   const [editTransaction, setEditTransaction] = useState<number>();
-  const [isInvoiceLoading, setIsInvoiceLoading] = useState(false);
+  const [isInvoiceLoading, setIsInvoiceLoading] = useState<number>();
 
   useEffect(() => {
     if (id) setTimeout(() => txRefs.current[id]?.scrollIntoView());
@@ -682,18 +682,18 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               onClick={() => {
                                 const endpoint =
                                   tx.type === TransactionType.REFERRAL ? 'reward/ref' : tx.type.toLowerCase();
-                                setIsInvoiceLoading(true);
+                                setIsInvoiceLoading(tx.id);
                                 call<Invoice>({
-                                  url: `${endpoint}/transaction/${tx.id}/invoice`,
+                                  url: `transaction/${tx.id}/invoice`,
                                   method: 'PUT',
                                 })
                                   .then((response) => {
                                     openPdfFromString(response.invoicePdf);
                                   })
-                                  .finally(() => setIsInvoiceLoading(false));
+                                  .finally(() => setIsInvoiceLoading(undefined));
                               }}
                               hidden={tx.state !== TransactionState.COMPLETED}
-                              isLoading={isInvoiceLoading}
+                              isLoading={isInvoiceLoading === tx.id}
                               color={StyledButtonColor.STURDY_WHITE}
                             />
                             <StyledButton
