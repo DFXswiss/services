@@ -855,7 +855,7 @@ function PaymentLinkForm({
         request.config = {
           ...request.config,
           standards: data.configStandards,
-          blockchains: Array.from(new Set([Blockchain.LIGHTNING, ...data.configBlockchains.flat()])),
+          blockchains: Array.from(new Set([Blockchain.LIGHTNING, ...(data.configBlockchains ?? []).flat()])),
           minCompletionStatus: data.configMinCompletionStatus,
           displayQr: data.configDisplayQr,
           paymentTimeout: Number(data.configPaymentTimeout),
