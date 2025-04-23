@@ -35,8 +35,18 @@ export function useTxHelper(): TxHelperInterface {
     blockchain?: Blockchain,
   ): Promise<AssetBalance[] | undefined> {
     if (!activeWallet || !address || !blockchain) return getParamBalances(assets);
-
-    return getAddressBalances(assets, address, blockchain);
+    switch (activeWallet) {
+      case WalletType.META_MASK:
+      case WalletType.WALLET_CONNECT:
+      case WalletType.LEDGER_ETH:
+      case WalletType.TREZOR_ETH:
+      case WalletType.BITBOX_ETH:
+      case WalletType.CLI_ETH:
+        return getAddressBalances(assets, address, blockchain);
+      default:
+        // no balance available
+        return undefined;
+    }
   }
 
   async function sendTransaction(tx: Sell | Swap): Promise<string> {
