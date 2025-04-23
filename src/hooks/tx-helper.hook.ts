@@ -41,6 +41,7 @@ export function useTxHelper(): TxHelperInterface {
       case WalletType.LEDGER_ETH:
       case WalletType.TREZOR_ETH:
       case WalletType.BITBOX_ETH:
+      case WalletType.CLI_ETH:
         return getAddressBalances(assets, address, blockchain);
       default:
         // no balance available
