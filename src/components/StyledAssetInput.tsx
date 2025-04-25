@@ -10,12 +10,10 @@ export interface StyledAssetInputProps extends ControlProps {
   maxButtonClick?: () => void;
   forceError?: boolean;
   forceErrorMessage?: string;
-  hideLabel?: boolean;
-  small?: boolean;
-  smallLabel?: boolean;
   autocomplete?: string;
   fiatRate?: number;
   fiatCurrency?: string;
+  coloredBackground?: boolean;
   assetSelector?: React.ReactNode;
 }
 
@@ -34,11 +32,9 @@ export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputPro
       maxButtonClick,
       forceError = false,
       forceErrorMessage,
-      hideLabel = false,
-      small = false,
-      smallLabel = false,
       fiatRate,
       fiatCurrency = 'USD',
+      coloredBackground = false,
       assetSelector,
       ...props
     }: StyledAssetInputProps,
@@ -49,19 +45,22 @@ export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputPro
         control={control}
         render={({ field: { onChange, value } }) => {
           return (
-            <div className="w-full">
-              {label && (
-                <label
-                  hidden={hideLabel}
-                  className={`text-start ${smallLabel ? 'text-sm' : 'text-base'} font-semibold pl-3 text-dfxBlue-800`}
-                >
-                  {label}
-                </label>
-              )}
-              <div className="w-full flex flex-row items-center gap-3 border-0.5 border-dfxGray-500 rounded-md p-2 pl-4">
+            <div
+              className={`flex flex-col gap-1 justify-center w-full rounded-md p-4 ${
+                coloredBackground ? 'bg-dfxGray-300/75' : 'border-0.5 border-dfxGray-500'
+              }`}
+            >
+              <label
+                hidden={!label}
+                className="text-start leading-none text-base w-full font-semibold text-dfxBlue-800"
+              >
+                {label}
+              </label>
+              <div className="w-full flex flex-row items-center gap-4">
                 <div className="flex flex-col w-full">
                   <input
-                    className="text-base text-dfxBlue-800 font-normal rounded-md border-none w-full focus:outline-none pl-1"
+                    style={{ backgroundColor: 'transparent' }}
+                    className="text-lg text-dfxBlue-800 font-normal rounded-md border-none w-full focus:outline-none pl-1"
                     type="number"
                     inputMode="decimal"
                     onChange={(value: any) => onChange(value.target.value)}
@@ -73,15 +72,10 @@ export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputPro
                     name={autocomplete}
                     {...props}
                   />
-                  {fiatRate && (
-                    <div className="text-xs text-dfxGray-600 leading-none">
-                      {`~ ${formatCurrency((value ?? 0) * fiatRate, 2, 2)} ${fiatCurrency}`}
-                    </div>
-                  )}
                 </div>
 
                 {maxButtonClick && (
-                  <div className="text-dfxBlue-800 text-xs font-medium bg-dfxGray-300 h-min rounded-sm p-1 flex justify-center items-center">
+                  <div className="text-dfxBlue-800 text-xs font-medium hover:bg-dfxGray-500 border border-dfxGray-500 shadow-sm h-min rounded-[0.5rem] p-1 flex justify-center items-center">
                     <button type="button" onClick={maxButtonClick} className="px-1 hover:text-dfxRed-200">
                       MAX
                     </button>
@@ -90,6 +84,11 @@ export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputPro
 
                 {assetSelector}
               </div>
+              {fiatRate && (
+                <div className="text-sm text-dfxGray-700 leading-none">
+                  {`~ ${formatCurrency((value ?? 0) * fiatRate, 2, 2)} ${fiatCurrency}`}
+                </div>
+              )}
               {(forceErrorMessage || error) && (
                 <p className="text-start text-sm text-dfxRed-100 pl-3">{forceErrorMessage ?? error?.message}</p>
               )}
@@ -115,7 +114,6 @@ export interface AssetDropdownProps<T> extends ControlProps {
   showSelectedValue?: boolean;
   placeholder?: string;
   placeholderDescription?: string;
-  full?: boolean;
 }
 
 export function AssetDropdown<T>({
@@ -126,7 +124,6 @@ export function AssetDropdown<T>({
   items,
   placeholder,
   placeholderDescription,
-  full,
   labelFunc,
   balanceFunc,
   descriptionFunc,
@@ -154,15 +151,18 @@ export function AssetDropdown<T>({
   function closeDropdown(e: Event) {
     if (
       isOpen &&
-      e.target != null &&
-      'nodeType' in e.target &&
+      isNode(e.target) &&
       dropdownRef.current &&
-      !dropdownRef.current.contains(e.target as Node) &&
+      !dropdownRef.current.contains(e.target) &&
       buttonRef.current &&
-      !buttonRef.current.contains(e.target as Node)
+      !buttonRef.current.contains(e.target)
     ) {
       setIsOpen(false);
     }
+  }
+
+  function isNode(target: EventTarget | null): target is Node {
+    return target != null && 'nodeType' in target;
   }
 
   return (

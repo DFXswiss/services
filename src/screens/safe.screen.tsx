@@ -149,6 +149,7 @@ export default function SafeScreen(): JSX.Element {
             </div>
           </div>
           <Portfolio portfolio={portfolio} currency={currency} />
+          <div className="h-[1px] bg-dfxGray-500 w-full rounded-full" />
           <DepositWithdraw />
         </div>
       )}
@@ -229,7 +230,6 @@ export const DepositWithdraw = () => {
     control,
     setValue,
     resetField,
-    handleSubmit,
     formState: { errors, isValid },
   } = useForm<FormData>({ mode: 'onTouched' });
 
@@ -324,13 +324,17 @@ export const DepositWithdraw = () => {
 
   return (
     <Form control={control} rules={rules} errors={errors} hasFormElement={false}>
-      <StyledVerticalStack gap={4} full center>
-        <div className="h-[1px] bg-dfxGray-500 w-full rounded-full" />
-        <StyledVerticalStack gap={2} full className={`text-left ${side === Side.WITHDRAW ? 'flex-col-reverse' : ''}`}>
+      <StyledVerticalStack gap={2} full center>
+        <StyledVerticalStack
+          gap={2}
+          full
+          className={`relative text-left ${side === Side.WITHDRAW ? 'flex-col-reverse' : ''}`}
+        >
           <StyledHorizontalStack gap={1}>
             <StyledAssetInput
               type="number"
               name="amount"
+              label="You spend"
               placeholder="0.00"
               maxButtonClick={() => availableBalance && setValue('amount', `${availableBalance}`)}
               fiatRate={1 + Math.random()} // TODO
@@ -350,90 +354,21 @@ export const DepositWithdraw = () => {
               }
             />
           </StyledHorizontalStack>
-          <div className="flex flex-row gap-2 items-stretch justify-between">
-            <div className="flex items-center justify-center h-[58px] w-[58px] rounded-md bg-dfxGray-300">
-              <button
-                type="button"
-                className="w-full h-full flex items-center justify-center bg-dfxGray-300 hover:bg-dfxGray-500 rounded-md"
-                onClick={() => setSide((prevSide) => (prevSide === Side.DEPOSIT ? Side.WITHDRAW : Side.DEPOSIT))}
-              >
-                <DfxIcon icon={IconVariant.ARROW_DOWN} size={IconSize.MD} color={IconColor.BLACK} />
-              </button>
-            </div>
-            <div className="flex-1">
-              {side === Side.DEPOSIT ? (
-                <StyledDropdown<FiatPaymentMethod>
-                  rootRef={rootRef}
-                  name="paymentMethod"
-                  placeholder={translate('general/actions', 'Select') + '...'}
-                  items={availablePaymentMethods}
-                  labelFunc={(item) => translate('screens/payment', PaymentMethodLabels[item])}
-                  descriptionFunc={(item) => translate('screens/payment', PaymentMethodDescriptions[item])}
-                  full
-                />
-              ) : (
-                <Controller
-                  name="bankAccount"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <>
-                      <StyledModalButton
-                        onClick={() => setBankAccountSelection(true)}
-                        onBlur={onBlur}
-                        placeholder={translate('screens/sell', 'Add or select your IBAN')}
-                        value={Utils.formatIban(value?.iban) ?? undefined}
-                        description={value?.label}
-                      />
-
-                      {bankAccountSelection && (
-                        <div className="absolute h-full w-full z-10 top-0 left-0 bg-white p-4">
-                          <div className="flex flex-row items-center mb-4">
-                            <button className="p-2 mr-2" onClick={() => setBankAccountSelection(false)}>
-                              <DfxIcon icon={IconVariant.ARROW_LEFT} size={IconSize.MD} color={IconColor.BLACK} />
-                            </button>
-                            <h2 className="text-lg font-medium">
-                              {translate('screens/sell', 'Select payment account')}
-                            </h2>
-                          </div>
-
-                          {bankAccounts?.length && (
-                            <>
-                              <StyledVerticalStack gap={4}>
-                                {bankAccounts.map((account, i) => (
-                                  <button
-                                    key={i}
-                                    className="text-start"
-                                    onClick={() => {
-                                      onChange(account);
-                                      setBankAccountSelection(false);
-                                    }}
-                                  >
-                                    <StyledBankAccountListItem bankAccount={account} />
-                                  </button>
-                                ))}
-                              </StyledVerticalStack>
-
-                              <div className={`h-[1px] bg-dfxGray-400 w-full my-6`} />
-                            </>
-                          )}
-
-                          <AddBankAccount
-                            onSubmit={(account) => {
-                              onChange(account);
-                              setBankAccountSelection(false);
-                            }}
-                          />
-                        </div>
-                      )}
-                    </>
-                  )}
-                />
-              )}
-            </div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center h-14 w-14">
+            <button
+              type="button"
+              className="w-full h-full flex items-center justify-center bg-dfxGray-300 hover:bg-dfxGray-500 rounded-md border-[6px] border-white"
+              onClick={() => setSide((prevSide) => (prevSide === Side.DEPOSIT ? Side.WITHDRAW : Side.DEPOSIT))}
+            >
+              <DfxIcon icon={IconVariant.ARROW_DOWN} size={IconSize.MD} color={IconColor.BLACK} />
+            </button>
           </div>
           <StyledHorizontalStack gap={1}>
             <StyledAssetInput
               type="number"
               name="targetAmount"
+              label="You get"
+              coloredBackground={true}
               placeholder="0.00"
               maxButtonClick={() => availableBalance && setValue('amount', `${availableBalance}`)}
               fiatRate={1 + Math.random()} // TODO
@@ -454,17 +389,82 @@ export const DepositWithdraw = () => {
             />
           </StyledHorizontalStack>
         </StyledVerticalStack>
-        <div className="w-full">
-          <StyledHorizontalStack gap={1.5}>
-            <StyledButton
-              type="button"
-              isLoading={false}
-              label={translate('screens/safe', side === Side.DEPOSIT ? 'Deposit' : 'Withdraw')}
-              width={StyledButtonWidth.FULL}
-              disabled={!isValid}
-              onClick={() => console.log(`${side === Side.DEPOSIT ? 'Deposit' : 'Withdraw'} clicked`)}
+        <div className="flex-1 w-full">
+          {side === Side.DEPOSIT ? (
+            <StyledDropdown<FiatPaymentMethod>
+              rootRef={rootRef}
+              name="paymentMethod"
+              placeholder={translate('general/actions', 'Select') + '...'}
+              items={availablePaymentMethods}
+              labelFunc={(item) => translate('screens/payment', PaymentMethodLabels[item])}
+              descriptionFunc={(item) => translate('screens/payment', PaymentMethodDescriptions[item])}
+              full
             />
-          </StyledHorizontalStack>
+          ) : (
+            <Controller
+              name="bankAccount"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <>
+                  <StyledModalButton
+                    onClick={() => setBankAccountSelection(true)}
+                    onBlur={onBlur}
+                    placeholder={translate('screens/sell', 'Add or select your IBAN')}
+                    value={Utils.formatIban(value?.iban) ?? undefined}
+                    description={value?.label}
+                  />
+
+                  {bankAccountSelection && (
+                    <div className="absolute h-full w-full z-10 top-0 left-0 bg-white p-4">
+                      <div className="flex flex-row items-center mb-4">
+                        <button className="p-2 mr-2" onClick={() => setBankAccountSelection(false)}>
+                          <DfxIcon icon={IconVariant.ARROW_LEFT} size={IconSize.MD} color={IconColor.BLACK} />
+                        </button>
+                        <h2 className="text-lg font-medium">{translate('screens/sell', 'Select payment account')}</h2>
+                      </div>
+
+                      {bankAccounts?.length && (
+                        <>
+                          <StyledVerticalStack gap={4}>
+                            {bankAccounts.map((account, i) => (
+                              <button
+                                key={i}
+                                className="text-start"
+                                onClick={() => {
+                                  onChange(account);
+                                  setBankAccountSelection(false);
+                                }}
+                              >
+                                <StyledBankAccountListItem bankAccount={account} />
+                              </button>
+                            ))}
+                          </StyledVerticalStack>
+
+                          <div className={`h-[1px] bg-dfxGray-400 w-full my-6`} />
+                        </>
+                      )}
+
+                      <AddBankAccount
+                        onSubmit={(account) => {
+                          onChange(account);
+                          setBankAccountSelection(false);
+                        }}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            />
+          )}
+        </div>
+        <div className="w-full">
+          <StyledButton
+            type="button"
+            isLoading={false}
+            label={translate('screens/safe', side === Side.DEPOSIT ? 'Deposit' : 'Withdraw')}
+            width={StyledButtonWidth.FULL}
+            disabled={!isValid}
+            onClick={() => console.log(`${side === Side.DEPOSIT ? 'Deposit' : 'Withdraw'} clicked`)}
+          />
         </div>
       </StyledVerticalStack>
     </Form>
