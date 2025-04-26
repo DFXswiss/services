@@ -28,7 +28,7 @@ export const PaymentStandards = {
   },
 };
 
-export const RecommendedWallets = ['Frankencoin', 'Cake Wallet', 'Phoenix', 'Wallet of Satoshi', 'BtcTaro'];
+export const RecommendedWallets = ['Cake Wallet', 'Frankencoin', 'Phoenix', 'Wallet of Satoshi', 'BtcTaro'];
 
 export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: string; recommended?: boolean } } = {
   BitBanana: {
@@ -58,6 +58,10 @@ export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
   BtcTaro: {
     websiteUrl: 'https://dfx.swiss/bitcoin.html',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCTaroDFX.webp',
+  },
+  'Cake Wallet': {
+    websiteUrl: 'https://cakewallet.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CakeWallet.webp',
   },
   CoinCorner: {
     websiteUrl: 'https://www.coincorner.com/',
@@ -113,9 +117,5 @@ export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
   Zeus: {
     websiteUrl: 'https://zeusln.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Zeus.webp',
-  },
-  'Cake Wallet': {
-    websiteUrl: 'https://cakewallet.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CakeWallet.webp',
   },
 };
