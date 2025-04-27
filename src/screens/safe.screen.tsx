@@ -1,56 +1,21 @@
-import {
-  ApiError,
-  Asset,
-  BankAccount,
-  Blockchain,
-  Fiat,
-  FiatPaymentMethod,
-  useApi,
-  useAsset,
-  useAssetContext,
-  useBankAccount,
-  useBankAccountContext,
-  useBuy,
-  useFiat,
-  User,
-  useSessionContext,
-  useUserContext,
-  Utils,
-  Validations,
-} from '@dfx.swiss/react';
+import { ApiError, Blockchain, useApi, User, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import {
   AlignContent,
   AssetIconSize,
   AssetIconVariant,
   DfxAssetIcon,
-  DfxIcon,
-  Form,
-  IconColor,
-  IconSize,
-  IconVariant,
   SpinnerSize,
-  StyledBankAccountListItem,
-  StyledButton,
-  StyledButtonWidth,
   StyledDataTable,
   StyledDataTableRow,
-  StyledDropdown,
-  StyledHorizontalStack,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Chart from 'react-apexcharts';
-import { Controller, Noop, useForm, useWatch } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
-import { AddBankAccount } from 'src/components/payment/add-bank-account';
-import { AssetDropdown, StyledAssetInput } from 'src/components/StyledAssetInput';
-import { PaymentMethodDescriptions, PaymentMethodLabels } from 'src/config/labels';
-import { useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { DepositWithdraw } from 'src/components/safe/deposit-withdraw';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
-import { useAppParams } from 'src/hooks/app-params.hook';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { formatCurrency } from 'src/util/utils';
 import { Layout } from '../components/layout';
@@ -129,6 +94,7 @@ export default function SafeScreen(): JSX.Element {
                   <div className="z-10 w-min bg-white/80 rounded-md overflow-clip flex flex-row justify-center items-center">
                     {Object.values(FiatCurrency).map((_currency) => (
                       <SegmentedControlButton
+                        key={_currency}
                         selected={_currency === currency}
                         size={'sm'}
                         onClick={() => setCurrency(_currency)}
@@ -157,20 +123,6 @@ export default function SafeScreen(): JSX.Element {
   );
 }
 
-/**
- * ***********************************************
- *           DEPOSIT / WITHDRAW COMPONENT
- * ***********************************************
- */
-interface FormData {
-  amount: string;
-  targetAmount: string;
-  currency: Fiat;
-  asset: Asset;
-  paymentMethod: FiatPaymentMethod;
-  bankAccount: BankAccount;
-}
-
 interface AssetData {
   blockchain: Blockchain;
   name: string;
@@ -187,342 +139,6 @@ interface AssetData {
     minVolume: number;
     maxVolume: number;
   };
-}
-
-enum Side {
-  DEPOSIT = 'DEPOSIT',
-  WITHDRAW = 'WITHDRAW',
-}
-
-export const DepositWithdraw = () => {
-  const [bankSelectionVisible, setBankSelectionVisible] = useState(false);
-  const { allowedCountries, translate, translateError, currency: prefCurrency } = useSettingsContext();
-  const { toDescription, getDefaultCurrency } = useFiat();
-  const { getAssets } = useAssetContext();
-  const { blockchain: walletBlockchain } = useWalletContext();
-  const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
-  const { getAccount } = useBankAccount();
-  const { getAsset, isSameAsset } = useAsset();
-  const { currencies } = useBuy();
-  const { user } = useUserContext();
-  const {
-    assets: assetFilter,
-    assetOut,
-    amountOut,
-    blockchain,
-    availableBlockchains,
-    wallet,
-    bankAccount,
-  } = useAppParams();
-  const { isEmbedded, isDfxHosted } = useAppHandlingContext();
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
-  const [availableBalance, setAvailableBalance] = useState<string>();
-  const [bankAccountSelection, setBankAccountSelection] = useState(false);
-  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
-
-  const [side, setSide] = useState<Side>(Side.DEPOSIT);
-
-  const availablePaymentMethods = [FiatPaymentMethod.BANK];
-
-  const {
-    control,
-    setValue,
-    resetField,
-    formState: { errors, isValid },
-  } = useForm<FormData>({ mode: 'onTouched' });
-
-  const selectedAsset = useWatch({ control, name: 'asset' });
-  const selectedCurrency = useWatch({ control, name: 'currency' });
-  const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
-  const selectedBankAccount = useWatch({ control, name: 'bankAccount' });
-
-  (isDfxHosted || !isEmbedded) &&
-    wallet !== EmbeddedWallet &&
-    user?.activeAddress?.wallet !== EmbeddedWallet &&
-    (!selectedAsset || selectedAsset?.cardBuyable) &&
-    availablePaymentMethods.push(FiatPaymentMethod.CARD);
-
-  const availableCurrencies = currencies?.filter((c) =>
-    selectedPaymentMethod === FiatPaymentMethod.CARD
-      ? c.cardSellable
-      : selectedPaymentMethod === FiatPaymentMethod.INSTANT
-      ? c.instantSellable
-      : c.sellable,
-  );
-
-  useEffect(() => {
-    const activeBlockchain = walletBlockchain ?? blockchain;
-    const activeBlockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
-    const blockchainAssets = getAssets(activeBlockchains, { buyable: true, comingSoon: false }).filter(
-      (a) => a.category === AssetCategory.PUBLIC || a.name === assetOut,
-    );
-    const activeAssets = filterAssets(blockchainAssets, assetFilter);
-    if (activeAssets.length === 0) return;
-    console.log('activeAssets', activeAssets);
-
-    setAvailableAssets(activeAssets);
-    const presetAsset =
-      getAsset(activeAssets, assetOut) ??
-      (portfolio.length > 0 && getAsset(activeAssets, portfolio[0].name)) ??
-      (activeAssets.length > 0 && activeAssets[0]);
-    if (presetAsset) setValue('asset', presetAsset);
-  }, [assetOut, assetFilter, getAsset, getAssets, blockchain, walletBlockchain, availableBlockchains]);
-
-  useEffect(() => {
-    amountOut && setValue('amount', amountOut);
-  }, [amountOut]);
-
-  useEffect(() => {
-    const availableBalance = amountOut ?? portfolio.find((a) => a.name === selectedAsset?.name)?.amount?.toString();
-    availableBalance && setAvailableBalance(availableBalance);
-  }, [selectedAsset]);
-
-  useEffect(() => {
-    if (selectedCurrency) return;
-    const defaultCurrency = getDefaultCurrency(availableCurrencies);
-    const currency = defaultCurrency ?? (availableCurrencies && availableCurrencies[0]);
-    currency && setValue('currency', currency);
-  }, [availableCurrencies]);
-
-  useEffect(() => {
-    if (bankAccount && bankAccounts) {
-      const account = getAccount(bankAccounts, bankAccount);
-      if (account) {
-        setValue('bankAccount', account);
-      } else if (!isCreatingAccount && Validations.Iban(allowedCountries).validate(bankAccount) === true) {
-        setIsCreatingAccount(true);
-        createAccount({ iban: bankAccount })
-          .then((b) => setValue('bankAccount', b))
-          .finally(() => setIsCreatingAccount(false));
-      }
-    }
-  }, [side, bankAccount, getAccount, bankAccounts, allowedCountries]);
-
-  useEffect(() => {
-    if (side === Side.DEPOSIT) {
-      setBankAccountSelection(false);
-      setValue('paymentMethod', availablePaymentMethods[0]);
-      resetField('bankAccount');
-    } else {
-      resetField('paymentMethod');
-    }
-  }, [side, availablePaymentMethods, setValue, resetField]);
-
-  function filterAssets(assets: Asset[], filter?: string): Asset[] {
-    if (!filter) return assets;
-
-    const allowedAssets = filter.split(',');
-    return assets.filter((a) => allowedAssets.some((f) => isSameAsset(a, f)));
-  }
-
-  const rules = Utils.createRules({
-    asset: Validations.Required,
-    currency: Validations.Required,
-  });
-
-  return (
-    <Form control={control} rules={rules} errors={errors} hasFormElement={false}>
-      <StyledVerticalStack gap={2} full center>
-        <StyledVerticalStack
-          gap={2}
-          full
-          className={`relative text-left ${side === Side.WITHDRAW ? 'flex-col-reverse' : ''}`}
-        >
-          <StyledHorizontalStack gap={1}>
-            <StyledAssetInput
-              type="number"
-              name="amount"
-              label="You spend"
-              placeholder="0.00"
-              maxButtonClick={() => availableBalance && setValue('amount', `${availableBalance}`)}
-              fiatRate={1 + Math.random()} // TODO
-              fiatCurrency={selectedCurrency?.name}
-              assetSelector={
-                <AssetDropdown<Fiat>
-                  control={control}
-                  name="currency"
-                  items={availableCurrencies ?? []}
-                  labelFunc={(item) => item.name}
-                  descriptionFunc={(item) => toDescription(item)}
-                  balanceFunc={(_item) => (Math.random() * 1000).toFixed(2)} // TODO
-                  priceFunc={(_item) => (Math.random() * 1000).toFixed(2)} // TODO
-                  assetIconFunc={(item) => item.name as AssetIconVariant}
-                  showSelectedValue={true}
-                />
-              }
-            />
-          </StyledHorizontalStack>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center h-14 w-14">
-            <button
-              type="button"
-              className="w-full h-full flex items-center justify-center bg-dfxGray-300 hover:bg-dfxGray-500 rounded-md border-[6px] border-white"
-              onClick={() => setSide((prevSide) => (prevSide === Side.DEPOSIT ? Side.WITHDRAW : Side.DEPOSIT))}
-            >
-              <DfxIcon icon={IconVariant.ARROW_DOWN} size={IconSize.MD} color={IconColor.BLACK} />
-            </button>
-          </div>
-          <StyledHorizontalStack gap={1}>
-            <StyledAssetInput
-              type="number"
-              name="targetAmount"
-              label="You get"
-              coloredBackground={true}
-              placeholder="0.00"
-              maxButtonClick={() => availableBalance && setValue('amount', `${availableBalance}`)}
-              fiatRate={1 + Math.random()} // TODO
-              fiatCurrency={selectedCurrency?.name}
-              assetSelector={
-                <AssetDropdown<Asset>
-                  control={control}
-                  name="asset"
-                  items={availableAssets}
-                  labelFunc={(item) => item.name}
-                  descriptionFunc={(item) => item.description}
-                  balanceFunc={(_item) => (Math.random() * 1000).toFixed(2)} // TODO
-                  priceFunc={(_item) => (Math.random() * 1000).toFixed(2)} // TODO
-                  assetIconFunc={(item) => item.name as AssetIconVariant}
-                  showSelectedValue={true}
-                />
-              }
-            />
-          </StyledHorizontalStack>
-        </StyledVerticalStack>
-        <div className="flex-1 w-full">
-          {side === Side.DEPOSIT ? (
-            <StyledDropdown<FiatPaymentMethod>
-              rootRef={rootRef}
-              name="paymentMethod"
-              placeholder={translate('general/actions', 'Select') + '...'}
-              items={availablePaymentMethods}
-              labelFunc={(item) => translate('screens/payment', PaymentMethodLabels[item])}
-              descriptionFunc={(item) => translate('screens/payment', PaymentMethodDescriptions[item])}
-              full
-            />
-          ) : (
-            <Controller
-              name="bankAccount"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <>
-                  <StyledModalButton
-                    onClick={() => setBankAccountSelection(true)}
-                    onBlur={onBlur}
-                    placeholder={translate('screens/sell', 'Add or select your IBAN')}
-                    value={Utils.formatIban(value?.iban) ?? undefined}
-                    description={value?.label}
-                  />
-
-                  {bankAccountSelection && (
-                    <div className="absolute h-full w-full z-10 top-0 left-0 bg-white p-4">
-                      <div className="flex flex-row items-center mb-4">
-                        <button className="p-2 mr-2" onClick={() => setBankAccountSelection(false)}>
-                          <DfxIcon icon={IconVariant.ARROW_LEFT} size={IconSize.MD} color={IconColor.BLACK} />
-                        </button>
-                        <h2 className="text-lg font-medium">{translate('screens/sell', 'Select payment account')}</h2>
-                      </div>
-
-                      {bankAccounts?.length && (
-                        <>
-                          <StyledVerticalStack gap={4}>
-                            {bankAccounts.map((account, i) => (
-                              <button
-                                key={i}
-                                className="text-start"
-                                onClick={() => {
-                                  onChange(account);
-                                  setBankAccountSelection(false);
-                                }}
-                              >
-                                <StyledBankAccountListItem bankAccount={account} />
-                              </button>
-                            ))}
-                          </StyledVerticalStack>
-
-                          <div className={`h-[1px] bg-dfxGray-400 w-full my-6`} />
-                        </>
-                      )}
-
-                      <AddBankAccount
-                        onSubmit={(account) => {
-                          onChange(account);
-                          setBankAccountSelection(false);
-                        }}
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-            />
-          )}
-        </div>
-        <div className="w-full">
-          <StyledButton
-            type="button"
-            isLoading={false}
-            label={translate('screens/safe', side === Side.DEPOSIT ? 'Deposit' : 'Withdraw')}
-            width={StyledButtonWidth.FULL}
-            disabled={!isValid}
-            onClick={() => console.log(`${side === Side.DEPOSIT ? 'Deposit' : 'Withdraw'} clicked`)}
-          />
-        </div>
-      </StyledVerticalStack>
-    </Form>
-  );
-};
-
-/***
- * **********************************************************
- *    STYLED MODAL BUTTON COMPONENT (TMP, use from @react)
- * **********************************************************
- */
-
-export interface StyledModalButtonProps {
-  label?: string;
-  onClick: () => void;
-  onBlur: Noop;
-  value?: string;
-  description?: string;
-  placeholder: string;
-}
-
-export function StyledModalButton({
-  label,
-  onClick,
-  onBlur,
-  value,
-  description,
-  placeholder,
-  ...props
-}: StyledModalButtonProps): JSX.Element {
-  return (
-    <StyledVerticalStack gap={1}>
-      {label && <label className="text-dfxBlue-800 text-base font-semibold pl-4 text-start">{label}</label>}
-      <button
-        type="button"
-        className="flex justify-between border border-dfxGray-400 text-base font-normal rounded-md px-4 py-2 shadow-sm w-full h-[58px]"
-        onClick={onClick}
-        onBlur={onBlur}
-        {...props}
-      >
-        <div className="h-full flex flex-col justify-center text-left gap-1">
-          {value ? (
-            <>
-              {description && <span className="text-dfxGray-800 text-xs h-min leading-none">{description}</span>}
-              <span className={'text-dfxBlue-800 leading-none font-base'.concat(description ? '' : ' py-2')}>
-                {value}
-              </span>
-            </>
-          ) : (
-            <span className="text-dfxGray-600">{placeholder}</span>
-          )}
-        </div>
-        <div className="place-self-center">
-          <DfxIcon icon={IconVariant.UNFOLD_MORE} size={IconSize.LG} />
-        </div>
-      </button>
-    </StyledVerticalStack>
-  );
 }
 
 /**
