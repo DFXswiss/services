@@ -43,6 +43,10 @@ export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
     websiteUrl: 'https://de.blink.sv/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blink.webp',
   },
+  'Blitz Wallet': {
+    websiteUrl: 'https://blitz-wallet.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BlitzWalletApp.webp',
+  },
   Blixt: {
     websiteUrl: 'https://blixtwallet.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blixt.webp',
