@@ -12,9 +12,7 @@ import {
   UserAddress,
   Utils,
   Validations,
-  useApi,
   useBankAccountContext,
-  useBuy,
   useSessionContext,
   useTransaction,
   useUserContext,
@@ -479,8 +477,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const { id } = useParams();
   const { toString } = useBlockchain();
   const { pathname } = useLocation();
-  const { invoiceFor } = useBuy();
-  const { call } = useApi();
+  const { getTransactionInvoice } = useTransaction();
 
   const { width } = useWindowContext();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -680,14 +677,9 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                             <StyledButton
                               label={translate('general/actions', 'Open invoice')}
                               onClick={() => {
-                                const endpoint =
-                                  tx.type === TransactionType.REFERRAL ? 'reward/ref' : tx.type.toLowerCase();
                                 setIsInvoiceLoading(tx.id);
-                                call<Invoice>({
-                                  url: `transaction/${tx.id}/invoice`,
-                                  method: 'PUT',
-                                })
-                                  .then((response) => {
+                                getTransactionInvoice(tx.id)
+                                  .then((response: Invoice) => {
                                     openPdfFromString(response.invoicePdf);
                                   })
                                   .finally(() => setIsInvoiceLoading(undefined));
