@@ -43,6 +43,7 @@ const MailLoginScreen = lazy(() => import('./screens/mail-login.screen'));
 const SepaScreen = lazy(() => import('./screens/sepa.screen'));
 const BlockchainTransactionScreen = lazy(() => import('./screens/blockchain-tx.screen'));
 const EditMailScreen = lazy(() => import('./screens/edit-mail.screen'));
+const SafeScreen = lazy(() => import('./screens/safe.screen'));
 
 setupLanguages();
 
@@ -231,6 +232,11 @@ export const Routes = [
   {
     path: '/blockchain/tx',
     element: withSuspense(<BlockchainTransactionScreen />),
+  },
+
+  {
+    path: '/safe',
+    element: withSuspense(<SafeScreen />),
   },
 ];
 
