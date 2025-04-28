@@ -5,6 +5,7 @@ import {
   IconSize,
   IconVariant,
   StyledBankAccountListItem,
+  StyledModalButton,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import React, { useEffect, useState } from 'react';
@@ -12,7 +13,6 @@ import { Controller, useFormContext } from 'react-hook-form';
 import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
-import { StyledModalButton } from './styled-modal-button';
 
 interface BankAccountSelectorProps {
   name: string;

@@ -1,4 +1,15 @@
-import { Asset, BankAccount, Fiat, FiatPaymentMethod, useBuy, useFiat, Utils, Validations } from '@dfx.swiss/react';
+import {
+  Asset,
+  BankAccount,
+  Blockchain,
+  Fiat,
+  FiatPaymentMethod,
+  useAssetContext,
+  useBuy,
+  useFiat,
+  Utils,
+  Validations,
+} from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
@@ -10,7 +21,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { PaymentMethodDescriptions, PaymentMethodLabels } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { useAssetManagement } from 'src/hooks/safe/use-asset-management.hook';
 import { AssetInputSection } from './asset-input-section';
 import { BankAccountSelector } from './bank-account-selector';
 import { DirectionToggleButton } from './direction-toggle-button';
@@ -30,13 +40,14 @@ export interface FormData {
 }
 
 export const DepositWithdraw: React.FC = () => {
-  const { availableAssets } = useAssetManagement();
+  const { assets, getAssets } = useAssetContext();
   const { currencies } = useBuy();
   const { getDefaultCurrency } = useFiat();
   const { translate } = useSettingsContext();
   const rootRef = React.useRef<HTMLDivElement>(null);
 
   const [side, setSide] = useState<Side>(Side.DEPOSIT);
+  const [availableAssets, setAvailableAssets] = useState<Asset[]>([]);
 
   const methods = useForm<FormData>({ mode: 'onTouched' });
   const {
@@ -67,17 +78,17 @@ export const DepositWithdraw: React.FC = () => {
   );
 
   useEffect(() => {
+    const assets = getAssets([Blockchain.ETHEREUM], { buyable: true, comingSoon: false });
+    assets.filter((a) => a.name === 'dEURO' || a.name === 'ZCHF');
+    setAvailableAssets(assets);
+  }, [getAssets]);
+
+  useEffect(() => {
     if (selectedFiat) return;
     const defaultCurrency = getDefaultCurrency(availableCurrencies);
     const currency = defaultCurrency ?? (availableCurrencies && availableCurrencies[0]);
     currency && setValue('fiat', currency);
   }, [availableCurrencies, selectedFiat, getDefaultCurrency]);
-
-  useEffect(() => {
-    if (selectedAsset) return;
-    const defaultAsset = availableAssets.length && availableAssets[0];
-    defaultAsset && setValue('asset', defaultAsset);
-  }, [availableAssets, selectedAsset]);
 
   useEffect(() => {
     if (side === Side.DEPOSIT) {
