@@ -187,9 +187,6 @@ export function generateExportFileName(): string {
   return `DFX_export_${date}_${time}.zip`;
 }
 
-// ********* NEW FORMATTING FUNCTIONS *********
-// TODO: Review, do we have them already somewhere else?
-
 export enum FormatType {
   'us',
   'tiny',
@@ -227,17 +224,3 @@ export const formatCurrency = (
     return formatter.format(amount).split(',').join(' ');
   }
 };
-
-export function formatUnitsV2(value: bigint, decimals: number) {
-  let display = value.toString();
-
-  const negative = display.startsWith('-');
-  if (negative) display = display.slice(1);
-
-  display = display.padStart(decimals, '0');
-
-  const integer = display.slice(0, display.length - decimals);
-  let fraction = display.slice(display.length - decimals);
-  fraction = fraction.replace(/(0+)$/, '');
-  return `${negative ? '-' : ''}${integer || '0'}${fraction ? `.${fraction}` : ''}`;
-}
