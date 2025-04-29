@@ -112,7 +112,7 @@ export default function SafeScreen(): JSX.Element {
               <div className="p-2 gap-2 flex flex-col items-start">
                 <div className="w-full flex-col">
                   <h2 className="text-dfxBlue-800 text-left">{translate('screens/safe', 'Portfolio')}</h2>
-                  <p className="text-dfxGray-700 text-left">Total portfolio value</p>
+                  <p className="text-dfxGray-700 text-left">{translate('screens/safe', 'Total portfolio value')}</p>
                 </div>
                 <div className="flex flex-row items-center gap-2">
                   {isLoading ? (

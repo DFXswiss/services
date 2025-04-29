@@ -721,6 +721,12 @@
     "delete": "Êtes-vous sûr de vouloir supprimer l'adresse <1>{{address}}</1> de votre compte DFX ? Cette action est irréversible.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support."
   },
+  "screens/safe": {
+    "My DFX Safe": "Mon DFX Safe",
+    "Portfolio": "Portefeuille",
+    "Total portfolio value": "Valeur totale du portefeuille",
+    "No assets found": "Aucun actif trouvé"
+  },
   "screens/blockchain": {
     "Transaction signing": "Signature de la transaction",
     "Transaction hash": "Hash de transaction",
