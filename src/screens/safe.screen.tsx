@@ -1,4 +1,3 @@
-import { ApiError, Fiat, useApi, User, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import {
   AlignContent,
   AssetIconSize,
@@ -10,92 +9,20 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { useWalletContext } from 'src/contexts/wallet.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
+import { CustodyAssetBalance, FiatCurrency, useSafe } from 'src/hooks/safe.hook';
 import { formatCurrency } from 'src/util/utils';
 import { Layout } from '../components/layout';
-
-enum FiatCurrency {
-  CHF = 'CHF',
-  EUR = 'EUR',
-  USD = 'USD',
-}
-
-interface CustodyAsset {
-  name: string;
-  description: string;
-}
-
-interface CustodyAssetBalance {
-  asset: CustodyAsset;
-  balance: number;
-  value: number;
-}
-
-interface CustodyBalance {
-  totalValue: number;
-  currency: Fiat;
-  balances: CustodyAssetBalance[];
-}
 
 export default function SafeScreen(): JSX.Element {
   useUserGuard('/login');
 
-  const { call } = useApi();
-  const { user, isUserLoading } = useUserContext();
-  const { isLoggedIn } = useSessionContext();
-  const { setSession } = useWalletContext();
   const { translate } = useSettingsContext();
+  const { error, isInitialized, isLoading, currency, portfolio, totalValue } = useSafe();
   const rootRef = useRef<HTMLDivElement>(null);
-
-  const [error, setError] = useState<string>();
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
-  const [portfolio, setPortfolio] = useState<CustodyAssetBalance[]>([]);
-  const [totalValue, setTotalValue] = useState<number>(0);
-
-  useEffect(() => {
-    if (!isUserLoading && user && isLoggedIn) {
-      createAccountIfRequired(user)
-        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-        .finally(() => setIsInitialized(true));
-    }
-  }, [isUserLoading, user, isLoggedIn]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    setIsLoading(true);
-    call<CustodyBalance>({
-      url: `custody`,
-      method: 'GET',
-    })
-      .then(({ balances, currency, totalValue }) => {
-        setPortfolio(balances);
-        setCurrency(currency.name as FiatCurrency);
-        setTotalValue(totalValue);
-      })
-      .catch((error: ApiError) => {
-        setError(error.message ?? 'Unknown error');
-      })
-      .finally(() => setIsLoading(false));
-  }, [user]);
-
-  async function createAccountIfRequired(user: User): Promise<void> {
-    if (!user.addresses.some((a) => a.isCustody)) {
-      return call<{ accessToken: string }>({
-        url: 'custody',
-        method: 'POST',
-        data: {
-          addressType: 'EVM',
-        },
-      }).then(({ accessToken }) => setSession(accessToken));
-    }
-  }
 
   return (
     <Layout rootRef={rootRef} title={translate('screens/safe', 'My DFX Safe')}>
@@ -185,33 +112,5 @@ export const Portfolio = ({ portfolio, currency, isLoading }: PortfolioProps) =>
     <div className="w-full flex flex-col items-center justify-center gap-2 p-4">
       <p className="text-dfxBlue-300 text-left">{translate('screens/safe', 'No assets found')}</p>
     </div>
-  );
-};
-
-/**
- * ***********************************************
- *         SEGMENTCONTROL BUTTON COMPONENT
- * ***********************************************
- */
-interface SegmentedControlButtonProps {
-  selected?: boolean;
-  children?: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg';
-  onClick?: () => void;
-}
-
-export const SegmentedControlButton = ({ children, selected, size, onClick }: SegmentedControlButtonProps) => {
-  const padding = size === 'sm' ? 'px-2.5 py-2' : size === 'lg' ? 'px-4 py-3' : 'px-3 py-2.5';
-  return (
-    <button
-      className={`btn ${padding} leading-none ${
-        selected
-          ? 'bg-dfxBlue-800/15 text-dfxBlue-800'
-          : 'bg-dfxBlue-800/5 text-dfxBlue-800/40  hover:text-dfxBlue-800 hover:bg-dfxBlue-800/15'
-      } text-sm font-medium transition-all duration-300`}
-      onClick={onClick}
-    >
-      {children}
-    </button>
   );
 };
