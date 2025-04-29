@@ -1,52 +1,116 @@
-import { ApiError, useApi, User, useSessionContext, useUserContext } from '@dfx.swiss/react';
-import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import {
+  AlignContent,
+  AssetIconSize,
+  AssetIconVariant,
+  DfxAssetIcon,
+  SpinnerSize,
+  StyledDataTable,
+  StyledDataTableRow,
+  StyledLoadingSpinner,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
+import { useRef } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
-import { useWalletContext } from 'src/contexts/wallet.context';
+import { useSettingsContext } from 'src/contexts/settings.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
-import { useNavigation } from 'src/hooks/navigation.hook';
+import { CustodyAssetBalance, FiatCurrency, useSafe } from 'src/hooks/safe.hook';
+import { formatCurrency } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
-export default function ErrorScreen(): JSX.Element {
+export default function SafeScreen(): JSX.Element {
   useUserGuard('/login');
 
-  const { call } = useApi();
-  const { navigate } = useNavigation();
-  const { user, isUserLoading } = useUserContext();
-  const { isLoggedIn } = useSessionContext();
-  const { setSession } = useWalletContext();
-
-  const [error, setError] = useState<string>();
-
-  useEffect(() => {
-    if (!isUserLoading && user && isLoggedIn) {
-      createAccountIfRequired(user)
-        .then(() => navigate('/account'))
-        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
-    }
-  }, [isUserLoading, user, isLoggedIn]);
-
-  async function createAccountIfRequired(user: User): Promise<void> {
-    if (!user.addresses.some((a) => a.isCustody)) {
-      return call<{ accessToken: string }>({
-        url: 'custody',
-        method: 'POST',
-        data: {
-          addressType: 'EVM',
-        },
-      }).then(({ accessToken }) => setSession(accessToken));
-    }
-  }
+  const { translate } = useSettingsContext();
+  const { error, isInitialized, isLoading, currency, portfolio, totalValue } = useSafe();
+  const rootRef = useRef<HTMLDivElement>(null);
 
   return (
-    <Layout>
+    <Layout rootRef={rootRef} title={translate('screens/safe', 'My DFX Safe')}>
       {error ? (
         <div>
           <ErrorHint message={error} />
         </div>
-      ) : (
+      ) : !isInitialized ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
+      ) : (
+        <div className="flex flex-col w-full gap-2">
+          <div className="shadow-card rounded-xl">
+            <div id="chart-timeline" className="relative">
+              <div className="p-2 gap-2 flex flex-col items-start">
+                <div className="w-full flex-col">
+                  <h2 className="text-dfxBlue-800 text-left">{translate('screens/safe', 'Portfolio')}</h2>
+                  <p className="text-dfxGray-700 text-left">{translate('screens/safe', 'Total portfolio value')}</p>
+                </div>
+                <div className="flex flex-row items-center gap-2">
+                  {isLoading ? (
+                    <div className="leading-none">
+                      <StyledLoadingSpinner size={SpinnerSize.MD} />
+                    </div>
+                  ) : (
+                    <div className="text-dfxBlue-800">
+                      <span className="text-lg font-bold leading-tight">{formatCurrency(totalValue, 2, 2)}</span>{' '}
+                      <span className="text-base font-[350] leading-tight">{currency}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          <Portfolio portfolio={portfolio} currency={currency} isLoading={isLoading} />
+        </div>
       )}
     </Layout>
   );
 }
+
+/**
+ * ***********************************************
+ *               PORTFOLIO COMPONENT
+ * ***********************************************
+ */
+
+interface PortfolioProps {
+  portfolio: CustodyAssetBalance[];
+  currency: FiatCurrency;
+  isLoading: boolean;
+}
+
+export const Portfolio = ({ portfolio, currency, isLoading }: PortfolioProps) => {
+  const { translate } = useSettingsContext();
+
+  return isLoading ? (
+    <div className="w-full flex flex-col items-center justify-center gap-2 p-4">
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
+    </div>
+  ) : portfolio?.length ? (
+    <StyledVerticalStack full gap={2}>
+      <StyledDataTable alignContent={AlignContent.BETWEEN}>
+        {portfolio.map((custodyAsset: CustodyAssetBalance) => (
+          <StyledDataTableRow key={custodyAsset.asset.name}>
+            <div className="w-full flex flex-row justify-between items-center gap-2 text-dfxBlue-800 p-2">
+              <div className="w-full flex flex-row items-center gap-3">
+                <DfxAssetIcon asset={custodyAsset.asset.name as AssetIconVariant} size={AssetIconSize.LG} />
+                <div className="text-base flex flex-col font-semibold text-left leading-none gap-1 pb-1">
+                  {custodyAsset.asset.name}
+                  <div className="text-sm text-dfxGray-700">{custodyAsset.asset.name}</div>
+                </div>
+              </div>
+              <div className="text-base text-right w-full flex flex-col font-semibold leading-none gap-1 pb-1 pr-1">
+                {custodyAsset.balance}
+                <div className="text-sm text-dfxGray-700">{`${formatCurrency(
+                  custodyAsset.value,
+                  2,
+                  2,
+                )} ${currency}`}</div>
+              </div>
+            </div>
+          </StyledDataTableRow>
+        ))}
+      </StyledDataTable>
+    </StyledVerticalStack>
+  ) : (
+    <div className="w-full flex flex-col items-center justify-center gap-2 p-4">
+      <p className="text-dfxBlue-300 text-left">{translate('screens/safe', 'No assets found')}</p>
+    </div>
+  );
+};

@@ -186,3 +186,41 @@ export function generateExportFileName(): string {
   const [date, time] = new Date().toISOString().replace(/[-:]/g, '').split(/[T\.]/);
   return `DFX_export_${date}_${time}.zip`;
 }
+
+export enum FormatType {
+  'us',
+  'tiny',
+}
+
+export const formatCurrency = (
+  value: string | number,
+  minimumFractionDigits = 0,
+  maximumFractionDigits = 2,
+  format = FormatType.us,
+) => {
+  const amount = typeof value === 'string' ? parseFloat(value) : value;
+
+  // exceptions
+  if (amount === null || !!isNaN(amount)) return null;
+  if (amount < 0.01 && amount > 0 && maximumFractionDigits) {
+    return '< 0.01';
+  }
+
+  // us
+  if (format === FormatType.us) {
+    const formatter = new Intl.NumberFormat('en-US', {
+      maximumFractionDigits,
+      minimumFractionDigits,
+    });
+    return formatter.format(amount);
+  }
+
+  // tiny
+  if (format === FormatType.tiny) {
+    const formatter = new Intl.NumberFormat('en-US', {
+      maximumFractionDigits: amount < 1000 && amount > -1000 ? 2 : 0,
+      minimumFractionDigits: amount < 1000 && amount > -1000 ? 2 : 0,
+    });
+    return formatter.format(amount).split(',').join(' ');
+  }
+};
