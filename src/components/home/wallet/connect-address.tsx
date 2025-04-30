@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { ConnectProps } from 'src/components/home/connect-shared';
+import { addressLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -101,7 +102,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
               name="address"
               placeholder={translate('general/actions', 'Select') + '...'}
               items={user.addresses.sort(sortAddressesByBlockchain)}
-              labelFunc={(item) => blankedAddress(item.address, { width })}
+              labelFunc={(item) => blankedAddress(addressLabel(item), { width })}
               descriptionFunc={(item) => item.label ?? item.wallet}
               forceEnable={user?.activeAddress === undefined}
             />
