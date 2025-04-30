@@ -1267,19 +1267,17 @@ function PaymentLinkForm({
             </div>
           )}
 
-          {step === PaymentLinkFormStep.DONE || (paymentLinkId && configData !== undefined) ? (
+          {step === PaymentLinkFormStep.DONE || paymentLinkId || !setStep ? (
             <div className="flex flex-col w-full gap-4">
-              {paymentLinkId && (
-                <StyledButton
-                  type="submit"
-                  label={translate('general/actions', 'Cancel')}
-                  onClick={() => onClose()}
-                  width={StyledButtonWidth.FULL}
-                  color={StyledButtonColor.STURDY_WHITE}
-                />
-              )}
               <StyledButton
-                label={translate('general/actions', paymentLinkId ? 'Save' : 'Create')}
+                type="submit"
+                label={translate('general/actions', 'Cancel')}
+                onClick={() => onClose()}
+                width={StyledButtonWidth.FULL}
+                color={StyledButtonColor.STURDY_WHITE}
+              />
+              <StyledButton
+                label={translate('general/actions', paymentLinkId || !setStep ? 'Save' : 'Create')}
                 onClick={handleSubmit(onSubmit)}
                 width={StyledButtonWidth.FULL}
                 isLoading={isLoading}
