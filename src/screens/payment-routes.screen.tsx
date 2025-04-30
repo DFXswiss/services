@@ -52,7 +52,7 @@ import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress, formatLocationAddress } from 'src/util/utils';
+import { blankedAddress, changed, formatLocationAddress, isEmpty } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
 interface FormData {
@@ -72,7 +72,6 @@ interface FormData {
   configMinCompletionStatus: MinCompletionStatus;
   configDisplayQr: boolean;
   configPaymentTimeout: number;
-  configTimeout: number;
   paymentMode: PaymentLinkPaymentMode;
   paymentAmount: string;
   paymentExternalId: string;
@@ -769,7 +768,7 @@ function PaymentLinkForm({
     setValue,
     formState: { errors, isValid },
   } = useForm<FormData>({
-    mode: 'onTouched',
+    mode: 'all',
     defaultValues: {
       paymentExpiryDate: new Date(Date.now() + 60 * 60 * 1000),
       ...configData,
@@ -811,10 +810,15 @@ function PaymentLinkForm({
         });
       }
     } else if (configData) {
-      reset({
-        ...getValues(),
-        ...configData,
+      const currentValues = getValues();
+      const mergedData = { ...currentValues };
+      Object.entries(configData).forEach(([key, value]) => {
+        if (value !== undefined && isEmpty(currentValues[key as keyof FormData])) {
+          (mergedData as any)[key] = value;
+        }
       });
+
+      reset(mergedData);
     }
   }, [paymentLinks, allowedCountries, paymentLinkId, step, configData]);
 
@@ -865,16 +869,26 @@ function PaymentLinkForm({
         };
       }
 
-      if (hasConfigData) {
-        request.config = {
-          ...request.config,
-          standards: data.configStandards,
-          blockchains: Array.from(new Set([Blockchain.LIGHTNING, ...(data.configBlockchains ?? []).flat()])),
-          minCompletionStatus: data.configMinCompletionStatus,
-          displayQr: data.configDisplayQr,
-          paymentTimeout: Number(data.configPaymentTimeout),
-        };
-      }
+      // Only submit fields if they are changed
+      request.config = {
+        ...request.config,
+        ...Object.entries({
+          standards: changed(data.configStandards, configData?.configStandards),
+          blockchains: changed(
+            Array.from(new Set([Blockchain.LIGHTNING, ...(data.configBlockchains ?? []).flat()])),
+            configData?.configBlockchains,
+          ),
+          minCompletionStatus: changed(data.configMinCompletionStatus, configData?.configMinCompletionStatus),
+          displayQr: changed(data.configDisplayQr, configData?.configDisplayQr),
+          paymentTimeout: changed(Number(data.configPaymentTimeout), configData?.configPaymentTimeout),
+        })
+          // omit undefined values
+          .filter(([_, value]) => value !== undefined)
+          .reduce((obj, [key, value]) => {
+            obj[key] = value;
+            return obj;
+          }, {} as Record<string, any>),
+      };
 
       if (onSubmitForm) {
         await onSubmitForm(request);
@@ -922,6 +936,11 @@ function PaymentLinkForm({
     paymentExternalId: Validations.Required,
     paymentCurrency: Validations.Required,
     paymentExpiryDate: Validations.Required,
+    configStandards: Validations.Required,
+    configBlockchains: Validations.Required,
+    configMinCompletionStatus: Validations.Required,
+    configPaymentTimeout: Validations.Required,
+    configDisplayQr: Validations.Custom((value) => [true, false].includes(value) || 'invalid configDisplayQr'),
   });
 
   const availablePaymentRoutes: RouteIdSelectData[] = paymentRoutes?.sell?.map(routeToRouteIdSelectData) ?? [];
@@ -945,16 +964,9 @@ function PaymentLinkForm({
       data.paymentCurrency &&
       data.paymentExpiryDate,
   );
-  const hasConfigData = Boolean(
-    data.configStandards?.length ||
-      data.configMinCompletionStatus ||
-      data.configDisplayQr !== undefined ||
-      data.configPaymentTimeout !== undefined,
-  );
 
   const skipRecipientData = Boolean(!hasRecipientData && step === PaymentLinkFormStep.RECIPIENT);
   const skipPaymentData = Boolean(!hasPaymentData && step === PaymentLinkFormStep.PAYMENT);
-  const skipConfigData = Boolean(!hasConfigData && step === PaymentLinkFormStep.CONFIG);
 
   return (
     <>
@@ -1210,8 +1222,8 @@ function PaymentLinkForm({
                 />
                 <StyledDataTableExpandableRow
                   label={translate('screens/payment', 'Configuration')}
-                  isExpanded={hasConfigData}
-                  discreet={!hasConfigData}
+                  isExpanded={true}
+                  discreet={false}
                   expansionItems={[
                     {
                       label: translate('screens/payment', 'Payment standards'),
@@ -1286,7 +1298,7 @@ function PaymentLinkForm({
             </div>
           ) : (
             <div className="flex flex-col w-full gap-4">
-              {(skipPaymentData || skipRecipientData || skipConfigData) && (
+              {(skipPaymentData || skipRecipientData) && (
                 <StyledButton
                   label={translate('general/actions', 'Skip')}
                   onClick={() => {
@@ -1310,12 +1322,6 @@ function PaymentLinkForm({
                         recipientEmail: undefined,
                         recipientWebsite: undefined,
                       }),
-                      ...(!hasConfigData && {
-                        configStandards: undefined,
-                        configMinCompletionStatus: undefined,
-                        configDisplayQr: undefined,
-                        configPaymentTimeout: undefined,
-                      }),
                     });
                     setStep && setStep(step + 1);
                   }}
@@ -1327,7 +1333,7 @@ function PaymentLinkForm({
                 label={translate('general/actions', 'Next')}
                 onClick={() => setStep && setStep(step + 1)}
                 width={StyledButtonWidth.FULL}
-                disabled={skipPaymentData || skipRecipientData || skipConfigData}
+                disabled={!isValid || skipPaymentData || skipRecipientData}
               />
             </div>
           )}

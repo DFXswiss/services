@@ -4,6 +4,34 @@ export function isDefined<T>(item: T | undefined): item is T {
   return item != null;
 }
 
+export function isEmpty(val: any): boolean {
+  return val === undefined || val === '' || val === null || (Array.isArray(val) && val.length === 0);
+}
+
+/**
+ * Returns the new value if it's different from the default, otherwise undefined
+ */
+export function changed<T>(newValue: T, defaultValue: T): T | undefined {
+  if (Array.isArray(newValue) && Array.isArray(defaultValue)) {
+    const sortedNew = [...newValue].sort();
+    const sortedDefault = [...defaultValue].sort();
+    return JSON.stringify(sortedNew) !== JSON.stringify(sortedDefault) ? newValue : undefined;
+  }
+
+  if (
+    typeof newValue === 'object' &&
+    newValue !== null &&
+    typeof defaultValue === 'object' &&
+    defaultValue !== null &&
+    !Array.isArray(newValue) &&
+    !Array.isArray(defaultValue)
+  ) {
+    return JSON.stringify(newValue) !== JSON.stringify(defaultValue) ? newValue : undefined;
+  }
+
+  return newValue !== defaultValue ? newValue : undefined;
+}
+
 export function delay(s: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, s * 1000));
 }
