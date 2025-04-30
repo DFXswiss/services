@@ -92,11 +92,11 @@ export const Portfolio = ({ portfolio, currency, isLoading }: PortfolioProps) =>
                 <DfxAssetIcon asset={custodyAsset.asset.name as AssetIconVariant} size={AssetIconSize.LG} />
                 <div className="text-base flex flex-col font-semibold text-left leading-none gap-1 pb-1">
                   {custodyAsset.asset.name}
-                  <div className="text-sm text-dfxGray-700">{custodyAsset.asset.name}</div>
+                  <div className="text-sm text-dfxGray-700">{custodyAsset.asset.description}</div>
                 </div>
               </div>
               <div className="text-base text-right w-full flex flex-col font-semibold leading-none gap-1 pb-1 pr-1">
-                {custodyAsset.balance}
+                {formatCurrency(custodyAsset.balance, 0, 5)}
                 <div className="text-sm text-dfxGray-700">{`${formatCurrency(
                   custodyAsset.value,
                   2,
