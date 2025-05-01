@@ -185,8 +185,12 @@ export function useMetaMask(): MetaMaskInterface {
     return new BigNumber(balance).dividedBy(Math.pow(10, decimals));
   }
 
-  async function readBalance(asset: Asset, address?: string, passOnException?: boolean): Promise<AssetBalance> {
-    if (!address || !asset) return { asset, amount: 0 };
+  async function readBalance(asset: Asset, address?: string, throwExceptions?: boolean): Promise<AssetBalance> {
+    if (!address || !asset) {
+      if (throwExceptions) throw new Error('No address or asset provided');
+
+      return { asset, amount: 0 };
+    }
 
     try {
       if (asset.type === AssetType.COIN) {
@@ -200,7 +204,7 @@ export function useMetaMask(): MetaMaskInterface {
         .call()
         .then((balance: any) => ({ asset, amount: toUsableNumber(balance, decimals).toNumber() }));
     } catch (e) {
-      if (passOnException) throw e;
+      if (throwExceptions) throw e;
 
       return { asset, amount: 0 };
     }
