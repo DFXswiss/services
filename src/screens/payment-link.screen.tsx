@@ -467,7 +467,8 @@ export default function PaymentLinkScreen(): JSX.Element {
         blockchain as Blockchain,
         matchingTransferAmount.assets,
       );
-      if (!transferAsset) throw new Error('No asset with enough balance');
+      if (!transferAsset)
+        throw new Error('InApp Browser Payment is not yet activated. This function is still under development.');
 
       setMetaMaskInfo({
         accountAddress: address,
