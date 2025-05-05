@@ -34,7 +34,7 @@ export function PaymentQrCode({ value, txId }: GiroCodeProps): JSX.Element {
     try {
       setIsLoading(true);
       const response = await invoiceFor(txId);
-      openPdfFromString(response.invoicePdf);
+      openPdfFromString(response.pdfBase64);
     } catch (err) {
       console.error(`Error displaying PDF: ${err}`);
     } finally {
