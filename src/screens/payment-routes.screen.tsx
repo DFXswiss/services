@@ -183,7 +183,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
       context.drawImage(img, padding, padding, canvas.width - padding * 2, canvas.height - padding * 2);
       const dataUrl = canvas.toDataURL('image/png');
       const a = document.createElement('a');
-      const filename = `${user?.accountId}_${link.externalId || link.id}.png`;
+      const filename = `${user?.accountId}_${link.externalId || link.id}`.replace(' ', '_').toLowerCase();
       a.download = filename;
       a.href = dataUrl;
       a.click();
