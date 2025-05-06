@@ -73,8 +73,9 @@ export function useKycHelper(): KycHelperInterface {
   };
 
   const legalEntityMap: Record<LegalEntity, string> = {
-    [LegalEntity.PUBLIC_LIMITED_COMPANY]: 'Public Limited Company (PLC)',
-    [LegalEntity.LIMITED_LIABILITY_COMPANY]: 'Limited Liability Company (LLC)',
+    [LegalEntity.AG]: 'Public Limited Company (PLC)',
+    [LegalEntity.GMBH]: 'Limited Liability Company (LLC)',
+    [LegalEntity.UG]: 'Entrepreneurial Company (UG)',
     [LegalEntity.LIFE_INSURANCE]: 'Life Insurance',
     [LegalEntity.ASSOCIATION]: 'Association',
     [LegalEntity.FOUNDATION]: 'Foundation',
@@ -83,8 +84,9 @@ export function useKycHelper(): KycHelperInterface {
   };
 
   const legalEntityDescriptionMap: { [e in LegalEntity]?: string } = {
-    [LegalEntity.PUBLIC_LIMITED_COMPANY]: 'Publicly traded shares',
-    [LegalEntity.LIMITED_LIABILITY_COMPANY]: 'Privately held ownership stakes (no shareholders)',
+    [LegalEntity.AG]: 'Publicly traded shares',
+    [LegalEntity.GMBH]: 'Privately held ownership stakes (no shareholders)',
+    [LegalEntity.UG]: 'Privately held with limited liability, low capital requirement',
   };
 
   const genderTypeMap: Record<GenderType, string> = {
