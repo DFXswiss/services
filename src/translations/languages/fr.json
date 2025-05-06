@@ -96,6 +96,7 @@
 
     "Public Limited Company (PLC)": "Société anonyme (SA)",
     "Limited Liability Company (LLC)": "Société à responsabilité limitée (SARL)",
+    "Entrepreneurial Company (UG)": "Société entrepreneuriale (UG)",
     "Life Insurance": "Assurance-vie",
     "Association": "Association",
     "Foundation": "Fondation",
@@ -103,6 +104,7 @@
     "Other": "Autre",
     "Publicly traded shares": "Actions cotées en bourse",
     "Privately held ownership stakes (no shareholders)": "Participations privées (pas d'actionnaires)",
+    "Privately held with limited liability, low capital requirement": "Propriété privée à responsabilité limitée, faible exigence de capital",
     "An internet excerpt is sufficient. No notarization is required. The extract must not be older than 2 months.": "Un extrait d'internet suffit. Aucune authentification n'est requise. L'extrait ne doit pas dater de plus de 2 mois.",
     "Document template": "Modèle de document",
 
@@ -528,6 +530,7 @@
     "Address deleted": "Adresse supprimée",
     "Video identification required": "Identification par vidéo nécessaire",
     "Missing liquidity": "Liquidité manquante",
+    "KYC data needed": "Données KYC nécessaires",
 
     "Loading countries...": "Chargement des pays...",
 
