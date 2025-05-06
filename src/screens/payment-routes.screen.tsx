@@ -52,7 +52,7 @@ import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress, changed, formatLocationAddress, isEmpty } from 'src/util/utils';
+import { blankedAddress, changed, formatLocationAddress, isEmpty, removeNullFields } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
 interface FormData {
@@ -377,6 +377,8 @@ export default function PaymentRoutesScreen(): JSX.Element {
                 />
               </StyledDataTable>
               {paymentLinks.map((link) => {
+                const linkConfig = { ...userPaymentLinksConfig, ...removeNullFields(link.config) };
+
                 return (
                   <div key={link.id} ref={(el) => paymentLinkRefs.current && (paymentLinkRefs.current[link.id] = el)}>
                     <StyledCollapsible
@@ -526,39 +528,39 @@ export default function PaymentRoutesScreen(): JSX.Element {
                               <p>{translate('screens/payment', link.payment.status)}</p>
                             </StyledDataTableExpandableRow>
                           )}
-                          {link.config != null && (
+                          {linkConfig && (
                             <StyledDataTableExpandableRow
                               label={translate('screens/payment', 'Configuration')}
                               expansionItems={
                                 [
                                   {
                                     label: translate('screens/payment', 'Payment standards'),
-                                    text: link.config.standards?.join(', '),
+                                    text: linkConfig.standards?.join(', '),
                                   },
                                   {
                                     label: translate('screens/payment', 'Payment blockchains'),
-                                    text: link.config.blockchains?.join(', '),
+                                    text: linkConfig.blockchains?.join(', '),
                                   },
                                   {
                                     label: translate('screens/payment', 'Min. completion status'),
                                     text:
-                                      link.config.minCompletionStatus &&
+                                      linkConfig.minCompletionStatus &&
                                       translate(
                                         'screens/payment',
-                                        PaymentQuoteStatusLabels[link.config.minCompletionStatus],
+                                        PaymentQuoteStatusLabels[linkConfig.minCompletionStatus],
                                       ),
                                   },
                                   {
                                     label: translate('screens/payment', 'Display QR code'),
-                                    text: link.config.displayQr?.toString(),
+                                    text: linkConfig.displayQr?.toString(),
                                   },
                                   {
                                     label: translate('screens/payment', 'Fee'),
-                                    text: link.config.fee?.toString(),
+                                    text: linkConfig.fee?.toString(),
                                   },
                                   {
                                     label: translate('screens/payment', 'Payment timeout (seconds)'),
-                                    text: link.config.paymentTimeout?.toString(),
+                                    text: linkConfig.paymentTimeout?.toString(),
                                   },
                                 ].filter((item) => item.text) as any
                               }
@@ -747,7 +749,7 @@ function PaymentLinkForm({
 
   const configData = useMemo(
     () =>
-      step === PaymentLinkFormStep.CONFIG && userPaymentLinksConfig
+      userPaymentLinksConfig
         ? {
             configStandards: userPaymentLinksConfig.standards,
             configBlockchains: userPaymentLinksConfig.blockchains?.filter((b) => b !== Blockchain.LIGHTNING),
@@ -756,7 +758,7 @@ function PaymentLinkForm({
             configPaymentTimeout: userPaymentLinksConfig.paymentTimeout,
           }
         : undefined,
-    [step, userPaymentLinksConfig],
+    [userPaymentLinksConfig],
   );
 
   const {
@@ -798,7 +800,8 @@ function PaymentLinkForm({
         });
       }
 
-      const prefilledPaymentConfig = paymentLinks?.find((link) => link.id === paymentLinkId)?.config;
+      let prefilledPaymentConfig = paymentLinks?.find((link) => link.id === paymentLinkId)?.config;
+      prefilledPaymentConfig = { ...userPaymentLinksConfig, ...removeNullFields(prefilledPaymentConfig) };
       if (prefilledPaymentConfig) {
         reset({
           ...getValues(),
@@ -869,25 +872,14 @@ function PaymentLinkForm({
         };
       }
 
-      // Only submit fields if they are changed
+      // Only submit fields if they are change, otherwise submit null
       request.config = {
         ...request.config,
-        ...Object.entries({
-          standards: changed(data.configStandards, configData?.configStandards),
-          blockchains: changed(
-            Array.from(new Set([Blockchain.LIGHTNING, ...(data.configBlockchains ?? []).flat()])),
-            configData?.configBlockchains,
-          ),
-          minCompletionStatus: changed(data.configMinCompletionStatus, configData?.configMinCompletionStatus),
-          displayQr: changed(data.configDisplayQr, configData?.configDisplayQr),
-          paymentTimeout: changed(Number(data.configPaymentTimeout), configData?.configPaymentTimeout),
-        })
-          // omit undefined values
-          .filter(([_, value]) => value !== undefined)
-          .reduce((obj, [key, value]) => {
-            obj[key] = value;
-            return obj;
-          }, {} as Record<string, any>),
+        standards: changed(data.configStandards, configData?.configStandards),
+        blockchains: changed(data.configBlockchains, configData?.configBlockchains),
+        minCompletionStatus: changed(data.configMinCompletionStatus, configData?.configMinCompletionStatus),
+        displayQr: changed(data.configDisplayQr, configData?.configDisplayQr),
+        paymentTimeout: changed(Number(data.configPaymentTimeout), configData?.configPaymentTimeout),
       };
 
       if (onSubmitForm) {
