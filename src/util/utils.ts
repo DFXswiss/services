@@ -8,9 +8,11 @@ export function isEmpty(val: any): boolean {
   return val === undefined || val === '' || val === null || (Array.isArray(val) && val.length === 0);
 }
 
-/**
- * Returns the new value if it's different from the default, otherwise undefined
- */
+export function removeNullFields<T extends Record<any, any>>(entity?: T): Partial<T> {
+  if (!entity) return {} as Partial<T>;
+  return Object.fromEntries(Object.entries(entity).filter(([_, v]) => v != null)) as Partial<T>;
+}
+
 export function changed<T>(newValue: T, defaultValue: T): T | undefined {
   if (Array.isArray(newValue) && Array.isArray(defaultValue)) {
     const sortedNew = [...newValue].sort();
