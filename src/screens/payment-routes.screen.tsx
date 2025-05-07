@@ -38,7 +38,7 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
+import { PaymentLink, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -162,6 +162,36 @@ export default function PaymentRoutesScreen(): JSX.Element {
 
   function routeKey(id: number, type: PaymentRouteType): string {
     return `${type}/${id}`;
+  }
+
+  function downloadQrCode(link: PaymentLink) {
+    const qrCodeContainer = document.getElementById(`qr-code-${link.id}`);
+    const qrCodeSvg = qrCodeContainer?.querySelector('svg');
+    if (!qrCodeSvg) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1000;
+    canvas.height = 1000;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    const img = new Image();
+    img.onload = () => {
+      const padding = 100;
+      context.drawImage(img, padding, padding, canvas.width - padding * 2, canvas.height - padding * 2);
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      const filename = `${user?.accountId}_${link.externalId || link.id}`.replace(' ', '_').toLowerCase();
+      a.download = filename;
+      a.href = dataUrl;
+      a.click();
+    };
+
+    let svgData = new XMLSerializer().serializeToString(qrCodeSvg);
+    svgData = svgData.replace(/#072440/g, '#000000');
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
   }
 
   const hasRoutes =
@@ -581,10 +611,15 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           )}
                         </StyledDataTable>
                         <div className="flex w-full items-center justify-center">
-                          <div className="w-48 py-3">
+                          <div id={`qr-code-${link.id}`} className="w-48 py-3">
                             <QrBasic data={Lnurl.prependLnurl(link.lnurl)} />
                           </div>
                         </div>
+                        <StyledButton
+                          label={translate('general/actions', 'Download QR code')}
+                          onClick={() => downloadQrCode(link)}
+                          color={StyledButtonColor.STURDY_WHITE}
+                        />
                         {link.status === PaymentLinkStatus.ACTIVE &&
                           (!link.payment || link.payment.status !== PaymentLinkPaymentStatus.PENDING) && (
                             <StyledButton

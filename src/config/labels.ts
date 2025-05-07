@@ -74,6 +74,7 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.USER_DELETED]: 'Address deleted',
   [TransactionFailureReason.VIDEO_IDENT_NEEDED]: 'Video identification required',
   [TransactionFailureReason.MISSING_LIQUIDITY]: 'Missing liquidity',
+  [TransactionFailureReason.KYC_DATA_NEEDED]: 'KYC data needed',
 };
 
 export const PaymentQuoteStatusLabels = {
