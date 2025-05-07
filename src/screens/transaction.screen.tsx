@@ -893,7 +893,7 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
       {tx.chargebackAmount && (
         <StyledDataTableRow label={translate('screens/payment', 'Chargeback amount')}>
           <p>
-            {tx.chargebackAmount} {tx.inputAsset}
+            {tx.chargebackAmount} {tx.chargebackAsset}
           </p>
         </StyledDataTableRow>
       )}
