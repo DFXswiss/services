@@ -40,7 +40,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { Invoice } from '@dfx.swiss/react/dist/definitions/buy';
+import { PdfDocument } from '@dfx.swiss/react/dist/definitions/buy';
 import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
@@ -477,7 +477,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const { id } = useParams();
   const { toString } = useBlockchain();
   const { pathname } = useLocation();
-  const { getTransactionInvoice } = useTransaction();
+  const { getTransactionInvoice, getTransactionReceipt } = useTransaction();
 
   const { width } = useWindowContext();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -489,6 +489,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const [isTransactionLoading, setIsTransactionLoading] = useState(false);
   const [editTransaction, setEditTransaction] = useState<number>();
   const [isInvoiceLoading, setIsInvoiceLoading] = useState<number>();
+  const [isReceiptLoading, setIsReceiptLoading] = useState<number>();
 
   useEffect(() => {
     if (id) setTimeout(() => txRefs.current[id]?.scrollIntoView());
@@ -673,19 +674,32 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               onClick={() => window.open(tx.outputTxUrl, '_blank', 'noreferrer')}
                               hidden={!tx.outputTxUrl}
                             />
-
                             <StyledButton
                               label={translate('general/actions', 'Open invoice')}
                               onClick={() => {
                                 setIsInvoiceLoading(tx.id);
                                 getTransactionInvoice(tx.id)
-                                  .then((response: Invoice) => {
-                                    openPdfFromString(response.invoicePdf);
+                                  .then((response: PdfDocument) => {
+                                    openPdfFromString(response.pdfData);
                                   })
                                   .finally(() => setIsInvoiceLoading(undefined));
                               }}
                               hidden={tx.state !== TransactionState.COMPLETED}
                               isLoading={isInvoiceLoading === tx.id}
+                              color={StyledButtonColor.STURDY_WHITE}
+                            />
+                            <StyledButton
+                              label={translate('general/actions', 'Open receipt')}
+                              onClick={() => {
+                                setIsReceiptLoading(tx.id);
+                                getTransactionReceipt(tx.id)
+                                  .then((response: PdfDocument) => {
+                                    openPdfFromString(response.pdfData);
+                                  })
+                                  .finally(() => setIsReceiptLoading(undefined));
+                              }}
+                              hidden={tx.state !== TransactionState.COMPLETED}
+                              isLoading={isReceiptLoading === tx.id}
                               color={StyledButtonColor.STURDY_WHITE}
                             />
                             <StyledButton

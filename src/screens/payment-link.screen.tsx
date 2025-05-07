@@ -358,7 +358,6 @@ export default function PaymentLinkScreen(): JSX.Element {
 
     switch (payRequest.standard) {
       case PaymentStandardType.OPEN_CRYPTO_PAY:
-      case PaymentStandardType.FRANKENCOIN_PAY:
         currentCallback.current = payRequest.callback;
         setPaymentIdentifier(Lnurl.prependLnurl(Lnurl.encode(simplifyUrl(sessionApiUrl.current))));
         break;
@@ -812,9 +811,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                 </>
               ) : (
                 (!selectedPaymentStandard ||
-                  [PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
-                    selectedPaymentStandard.id as PaymentStandardType,
-                  )) && (
+                  PaymentStandardType.OPEN_CRYPTO_PAY === (selectedPaymentStandard.id as PaymentStandardType)) && (
                   <StyledVerticalStack full gap={8} center>
                     {hasQuote(payRequest) ? (
                       <div className="flex flex-col w-full items-center justify-center">
