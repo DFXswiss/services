@@ -680,7 +680,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                 setIsInvoiceLoading(tx.id);
                                 getTransactionInvoice(tx.id)
                                   .then((response: PdfDocument) => {
-                                    openPdfFromString(response.pdfBase64);
+                                    openPdfFromString(response.pdfData);
                                   })
                                   .finally(() => setIsInvoiceLoading(undefined));
                               }}
@@ -694,7 +694,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                 setIsReceiptLoading(tx.id);
                                 getTransactionReceipt(tx.id)
                                   .then((response: PdfDocument) => {
-                                    openPdfFromString(response.pdfBase64);
+                                    openPdfFromString(response.pdfData);
                                   })
                                   .finally(() => setIsReceiptLoading(undefined));
                               }}
