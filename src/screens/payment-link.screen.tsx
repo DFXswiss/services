@@ -82,6 +82,8 @@ export interface TransferInfo {
 }
 
 export interface PaymentLinkPayTerminal {
+  id: string;
+  externalId?: string;
   tag: string;
   displayName: string;
   standard: PaymentStandardType;
@@ -623,6 +625,11 @@ export default function PaymentLinkScreen(): JSX.Element {
                 >
                   <StyledVerticalStack full gap={4} className="text-left">
                     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                      {payRequest.externalId && (
+                        <StyledDataTableRow label={translate('screens/payment', 'External ID')} isLoading={isLoading}>
+                          <p>{payRequest.externalId}</p>
+                        </StyledDataTableRow>
+                      )}
                       {hasQuote(payRequest) && (
                         <>
                           {parsedEvmUri && paymentIdentifier && (
