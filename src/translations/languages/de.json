@@ -36,6 +36,7 @@
     "Open Explorer": "Explorer öffnen",
     "Select transaction": "Transaktion auswählen",
     "Download": "Herunterladen",
+    "Download QR code": "QR-Code herunterladen",
     "Confirm refund": "Rückerstattung bestätigen",
     "Request refund": "Rückerstattung beantragen",
     "Copy Link": "Link kopieren",
@@ -97,6 +98,7 @@
 
     "Public Limited Company (PLC)": "Aktiengesellschaft (AG)",
     "Limited Liability Company (LLC)": "Gesellschaft mit beschränkter Haftung (GmbH)",
+    "Entrepreneurial Company (UG)": "Unternehmergesellschaft (UG)",
     "Life Insurance": "Lebensversicherung",
     "Association": "Verein",
     "Foundation": "Stiftung",
@@ -104,6 +106,7 @@
     "Other": "Andere",
     "Publicly traded shares": "Öffentlich gehandelte Aktien",
     "Privately held ownership stakes (no shareholders)": "Privat gehaltene Beteiligungen (keine Aktionäre)",
+    "Privately held with limited liability, low capital requirement": "Privat gehalten mit beschränkter Haftung, geringe Kapitalanforderung",
     "An internet excerpt is sufficient. No notarization is required. The extract must not be older than 2 months.": "Ein Internetauszug ist ausreichend. Eine notarielle Beglaubigung ist nicht erforderlich. Der Auszug darf nicht älter als 2 Monate sein.",
     "Document template": "Dokument-Vorlage",
 
@@ -529,6 +532,7 @@
     "Address deleted": "Adresse gelöscht",
     "Video identification required": "Video-Identifikation erforderlich",
     "Missing liquidity": "Fehlende Liquidität",
+    "KYC data needed": "KYC-Daten benötigt",
 
     "Loading countries...": "Länder werden geladen...",
 
