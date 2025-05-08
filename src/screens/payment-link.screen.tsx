@@ -79,9 +79,12 @@ export interface TransferInfo {
   method: TransferMethod;
   minFee: number;
   assets: Amount[];
+  disabled?: boolean;
 }
 
 export interface PaymentLinkPayTerminal {
+  id: string;
+  externalId?: string;
   tag: string;
   displayName: string;
   standard: PaymentStandardType;
@@ -335,9 +338,10 @@ export default function PaymentLinkScreen(): JSX.Element {
         return paymentStandard;
       } else {
         return data.transferAmounts
-          .filter((chain) => chain.method !== 'Lightning')
-          .map((chain) => {
-            return { ...paymentStandard, blockchain: chain.method };
+          .filter((ta) => ta.method !== 'Lightning')
+          .filter((ta) => !ta.disabled)
+          .map((ta) => {
+            return { ...paymentStandard, blockchain: ta.method };
           });
       }
     });
@@ -358,7 +362,6 @@ export default function PaymentLinkScreen(): JSX.Element {
 
     switch (payRequest.standard) {
       case PaymentStandardType.OPEN_CRYPTO_PAY:
-      case PaymentStandardType.FRANKENCOIN_PAY:
         currentCallback.current = payRequest.callback;
         setPaymentIdentifier(Lnurl.prependLnurl(Lnurl.encode(simplifyUrl(sessionApiUrl.current))));
         break;
@@ -624,6 +627,11 @@ export default function PaymentLinkScreen(): JSX.Element {
                 >
                   <StyledVerticalStack full gap={4} className="text-left">
                     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                      {payRequest.externalId && (
+                        <StyledDataTableRow label={translate('screens/payment', 'External ID')} isLoading={isLoading}>
+                          <p>{payRequest.externalId}</p>
+                        </StyledDataTableRow>
+                      )}
                       {hasQuote(payRequest) && (
                         <>
                           {parsedEvmUri && paymentIdentifier && (
@@ -812,9 +820,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                 </>
               ) : (
                 (!selectedPaymentStandard ||
-                  [PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
-                    selectedPaymentStandard.id as PaymentStandardType,
-                  )) && (
+                  PaymentStandardType.OPEN_CRYPTO_PAY === (selectedPaymentStandard.id as PaymentStandardType)) && (
                   <StyledVerticalStack full gap={8} center>
                     {hasQuote(payRequest) ? (
                       <div className="flex flex-col w-full items-center justify-center">
