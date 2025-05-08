@@ -99,6 +99,7 @@
     "Public Limited Company (PLC)": "Société anonyme (SA)",
     "Limited Liability Company (LLC)": "Société à responsabilité limitée (SARL)",
     "Entrepreneurial Company (UG)": "Société entrepreneuriale (UG)",
+    "Company under civil law (GbR)": "Société civile (GbR)",
     "Life Insurance": "Assurance-vie",
     "Association": "Association",
     "Foundation": "Fondation",
@@ -107,6 +108,7 @@
     "Publicly traded shares": "Actions cotées en bourse",
     "Privately held ownership stakes (no shareholders)": "Participations privées (pas d'actionnaires)",
     "Privately held with limited liability, low capital requirement": "Propriété privée à responsabilité limitée, faible exigence de capital",
+    "Simple and flexible form of cooperation between two or more people who join forces for a common purpose": "Forme simple et flexible de coopération entre deux ou plusieurs personnes qui s'associent dans un but commun",
     "An internet excerpt is sufficient. No notarization is required. The extract must not be older than 2 months.": "Un extrait d'internet suffit. Aucune authentification n'est requise. L'extrait ne doit pas dater de plus de 2 mois.",
     "Document template": "Modèle de document",
 

@@ -76,6 +76,7 @@ export function useKycHelper(): KycHelperInterface {
     [LegalEntity.AG]: 'Public Limited Company (PLC)',
     [LegalEntity.GMBH]: 'Limited Liability Company (LLC)',
     [LegalEntity.UG]: 'Entrepreneurial Company (UG)',
+    [LegalEntity.GBR]: 'Company under civil law (GbR)',
     [LegalEntity.LIFE_INSURANCE]: 'Life Insurance',
     [LegalEntity.ASSOCIATION]: 'Association',
     [LegalEntity.FOUNDATION]: 'Foundation',
@@ -87,6 +88,8 @@ export function useKycHelper(): KycHelperInterface {
     [LegalEntity.AG]: 'Publicly traded shares',
     [LegalEntity.GMBH]: 'Privately held ownership stakes (no shareholders)',
     [LegalEntity.UG]: 'Privately held with limited liability, low capital requirement',
+    [LegalEntity.GBR]:
+      'Simple and flexible form of cooperation between two or more people who join forces for a common purpose',
   };
 
   const genderTypeMap: Record<GenderType, string> = {
