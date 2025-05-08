@@ -8,8 +8,8 @@ export function isEmpty(val: any): boolean {
   return val === undefined || val === '' || val === null || (Array.isArray(val) && val.length === 0);
 }
 
-export function removeNullFields<T extends Record<any, any>>(entity?: T): Partial<T> {
-  if (!entity) return {} as Partial<T>;
+export function removeNullFields<T extends Record<any, any>>(entity?: T): Partial<T> | undefined {
+  if (!entity) return entity;
   return Object.fromEntries(Object.entries(entity).filter(([_, v]) => v != null)) as Partial<T>;
 }
 
