@@ -45,10 +45,16 @@ export default function SafeScreen(): JSX.Element {
                         buttonLabel={(_currency) => _currency.toUpperCase()}
                         size={'sm'}
                       />
-                      <div className="text-dfxBlue-800">
-                        <span className="text-lg font-bold">{formatCurrency(totalValue[currency], 2, 2)}</span>{' '}
-                        <span className="text-base">{currency.toUpperCase()}</span>
-                      </div>
+                      {isLoadingPortfolio ? (
+                        <div className="">
+                          <StyledLoadingSpinner size={SpinnerSize.MD} />
+                        </div>
+                      ) : (
+                        <div className="text-dfxBlue-800">
+                          <span className="text-lg font-bold">{formatCurrency(totalValue[currency], 2, 2)}</span>{' '}
+                          <span className="text-base">{currency.toUpperCase()}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="absolute inset-0">
