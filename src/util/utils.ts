@@ -197,15 +197,16 @@ export function generateExportFileName(): string {
 }
 
 export enum FormatType {
-  'us',
-  'tiny',
+  US,
+  TINY,
+  SWISS,
 }
 
 export const formatCurrency = (
   value: string | number,
   minimumFractionDigits = 0,
   maximumFractionDigits = 2,
-  format = FormatType.us,
+  format = FormatType.SWISS,
 ) => {
   const amount = typeof value === 'string' ? parseFloat(value) : value;
 
@@ -215,8 +216,15 @@ export const formatCurrency = (
     return '< 0.01';
   }
 
-  // us
-  if (format === FormatType.us) {
+  if (format === FormatType.SWISS) {
+    const formatter = new Intl.NumberFormat('de-CH', {
+      maximumFractionDigits,
+      minimumFractionDigits,
+    });
+    return formatter.format(amount);
+  }
+
+  if (format === FormatType.US) {
     const formatter = new Intl.NumberFormat('en-US', {
       maximumFractionDigits,
       minimumFractionDigits,
@@ -224,8 +232,7 @@ export const formatCurrency = (
     return formatter.format(amount);
   }
 
-  // tiny
-  if (format === FormatType.tiny) {
+  if (format === FormatType.TINY) {
     const formatter = new Intl.NumberFormat('en-US', {
       maximumFractionDigits: amount < 1000 && amount > -1000 ? 2 : 0,
       minimumFractionDigits: amount < 1000 && amount > -1000 ? 2 : 0,
