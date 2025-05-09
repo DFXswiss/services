@@ -1,4 +1,5 @@
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import { ApexOptions } from 'apexcharts';
 import { useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -31,9 +32,9 @@ const getFromDateByTimeframe = (timeframe: Timeframe) => {
 };
 
 interface PriceChartProps {
-  isLoading: boolean;
   history: CustodyHistoryEntry[];
   currency: FiatCurrency;
+  isLoading: boolean;
 }
 
 export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) => {
@@ -48,84 +49,88 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
 
   const maxPrice = useMemo(
     () => filteredHistory.reduce((max, entry) => Math.max(max, entry.value[currency]), 0),
-    [filteredHistory],
+    [filteredHistory, currency],
   );
 
+  const chartOptions = useMemo(
+    (): ApexOptions => ({
+      theme: {
+        monochrome: {
+          color: '#092f62',
+          enabled: true,
+        },
+      },
+      chart: {
+        type: 'area' as const,
+        dropShadow: {
+          enabled: false,
+        },
+        toolbar: {
+          show: false,
+        },
+        zoom: {
+          enabled: false,
+        },
+        background: '0',
+      },
+      stroke: {
+        width: 3,
+      },
+      dataLabels: {
+        enabled: false,
+      },
+      grid: {
+        show: false,
+      },
+      xaxis: {
+        type: 'datetime',
+        labels: {
+          show: false,
+        },
+        axisBorder: {
+          show: false,
+        },
+        axisTicks: {
+          show: false,
+        },
+      },
+      yaxis: {
+        show: false,
+        min: 0,
+        max: maxPrice * 1.5,
+      },
+      fill: {
+        colors: ['#5A81BB'],
+        type: 'gradient',
+        gradient: {
+          type: 'vertical',
+          opacityFrom: 1,
+          opacityTo: 0.0,
+        },
+      },
+    }),
+    [maxPrice],
+  );
+
+  const chartSeries = useMemo(() => {
+    return [
+      {
+        name: translate('screens/safe', 'Portfolio value'),
+        data: filteredHistory.map((entry: CustodyHistoryEntry) => {
+          return [new Date(entry.date).getTime(), entry.value[currency]];
+        }),
+      },
+    ];
+  }, [filteredHistory, currency, translate]);
+
   return isLoading ? (
-    <div className="leading-none">
-      <StyledLoadingSpinner size={SpinnerSize.MD} />
+    <div className="flex justify-center items-center w-full h-full">
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
     </div>
   ) : (
     <div id="chart-timeline" className="relative text-dfxBlue-500">
-      <Chart
-        type="area"
-        height={250}
-        options={{
-          theme: {
-            monochrome: {
-              color: '#092f62',
-              enabled: true,
-            },
-          },
-          chart: {
-            type: 'area',
-            dropShadow: {
-              enabled: false,
-            },
-            toolbar: {
-              show: false,
-            },
-            zoom: {
-              enabled: false,
-            },
-            background: '0',
-          },
-          stroke: {
-            width: 3,
-          },
-          dataLabels: {
-            enabled: false,
-          },
-          grid: {
-            show: false,
-          },
-          xaxis: {
-            type: 'datetime',
-            labels: {
-              show: false,
-            },
-            axisBorder: {
-              show: false,
-            },
-            axisTicks: {
-              show: false,
-            },
-          },
-          yaxis: {
-            show: false,
-            min: 0,
-            max: maxPrice,
-          },
-          fill: {
-            colors: ['#5A81BB'],
-            type: 'gradient',
-            gradient: {
-              type: 'vertical',
-              opacityFrom: 1,
-              opacityTo: 0.0,
-            },
-          },
-        }}
-        series={[
-          {
-            name: translate('screens/safe', 'Portfolio value'),
-            data: filteredHistory.map((entry: CustodyHistoryEntry) => {
-              return [new Date(entry.date).getTime(), entry.value[currency]];
-            }),
-          },
-        ]}
-      />
-      <div className="absolute bottom-2.5 w-full flex justify-center py-2">
+      <Chart type="area" height={300} options={chartOptions} series={chartSeries} />
+      <div className="absolute bottom-1 w-full flex justify-center py-2">
         <ButtonGroup<Timeframe>
           items={Object.values(Timeframe)}
           selected={timeframe}
