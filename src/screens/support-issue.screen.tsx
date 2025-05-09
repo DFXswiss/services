@@ -101,7 +101,7 @@ const formDefaultValues = {
 };
 
 export default function SupportIssueScreen(): JSX.Element {
-  const { navigate } = useNavigation();
+  const { navigate, clearParams } = useNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
   const { translate, translateError, allowedCountries } = useSettingsContext();
   const { user } = useUserContext();
@@ -142,6 +142,18 @@ export default function SupportIssueScreen(): JSX.Element {
   const orderParam = urlParams.get('quote') ?? urlParams.get('order');
   const issueTypeParam = urlParams.get('issue-type');
   const reasonParam = urlParams.get('reason');
+
+  useEffect(() => {
+    const hasParams = orderParam || issueTypeParam || reasonParam;
+
+    if (hasParams) {
+      const timeoutId = setTimeout(() => {
+        clearParams([...Array.from(urlParams.keys())]);
+      }, 0);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, []);
 
   useUserGuard('/login', !orderParam);
   useKycLevelGuard(KycLevel.Link, '/contact');
