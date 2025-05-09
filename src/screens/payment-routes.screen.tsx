@@ -1,6 +1,5 @@
 import {
   ApiError,
-  Blockchain,
   Country,
   Fiat,
   MinCompletionStatus,
@@ -52,7 +51,7 @@ import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress, changed, formatLocationAddress, isEmpty, removeNullFields } from 'src/util/utils';
+import { blankedAddress, formatLocationAddress, isEmpty, removeNullFields } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
 interface FormData {
@@ -787,7 +786,7 @@ function PaymentLinkForm({
       userPaymentLinksConfig
         ? {
             configStandards: userPaymentLinksConfig.standards,
-            configBlockchains: userPaymentLinksConfig.blockchains?.filter((b) => b !== Blockchain.LIGHTNING),
+            configBlockchains: userPaymentLinksConfig.blockchains,
             configMinCompletionStatus: userPaymentLinksConfig.minCompletionStatus,
             configDisplayQr: userPaymentLinksConfig.displayQr,
             configPaymentTimeout: userPaymentLinksConfig.paymentTimeout,
@@ -841,7 +840,7 @@ function PaymentLinkForm({
         reset({
           ...getValues(),
           configStandards: prefilledPaymentConfig.standards,
-          configBlockchains: prefilledPaymentConfig.blockchains?.filter((b) => b !== Blockchain.LIGHTNING),
+          configBlockchains: prefilledPaymentConfig.blockchains,
           configMinCompletionStatus: prefilledPaymentConfig.minCompletionStatus,
           configDisplayQr: prefilledPaymentConfig.displayQr,
           configPaymentTimeout: prefilledPaymentConfig.paymentTimeout,
@@ -907,25 +906,13 @@ function PaymentLinkForm({
         };
       }
 
-      // Only submit fields if they are changed
       request.config = {
         ...request.config,
-        ...Object.entries({
-          standards: changed(data.configStandards, configData?.configStandards),
-          blockchains: changed(
-            Array.from(new Set([Blockchain.LIGHTNING, ...(data.configBlockchains ?? []).flat()])),
-            configData?.configBlockchains,
-          ),
-          minCompletionStatus: changed(data.configMinCompletionStatus, configData?.configMinCompletionStatus),
-          displayQr: changed(data.configDisplayQr, configData?.configDisplayQr),
-          paymentTimeout: changed(Number(data.configPaymentTimeout), configData?.configPaymentTimeout),
-        })
-          // omit undefined values
-          .filter(([_, value]) => value !== undefined)
-          .reduce((obj, [key, value]) => {
-            obj[key] = value;
-            return obj;
-          }, {} as Record<string, any>),
+        standards: data.configStandards,
+        blockchains: data.configBlockchains,
+        minCompletionStatus: data.configMinCompletionStatus,
+        displayQr: data.configDisplayQr,
+        paymentTimeout: Number(data.configPaymentTimeout),
       };
 
       if (onSubmitForm) {
