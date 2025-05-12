@@ -719,7 +719,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               }
                             />
                             <StyledButton
-                              label={translate('general/actions', 'Increase limit')}
+                              label={translate('screens/kyc', 'Increase limit')}
                               color={StyledButtonColor.STURDY_WHITE}
                               onClick={() => navigate(`/support/issue?issue-type=LimitRequest`)}
                               hidden={tx.state !== TransactionState.LIMIT_EXCEEDED || isSupport}

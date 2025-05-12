@@ -44,8 +44,7 @@
     "Open receipt": "Ouvrir le reçu",
     "Create ticket": "Créer un ticket",
     "Create support ticket": "Créer un ticket de support",
-    "View file": "Voir le fichier",
-    "Increase limit": "Augmenter la limite"
+    "View file": "Voir le fichier"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",

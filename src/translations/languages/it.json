@@ -44,8 +44,7 @@
     "Open receipt": "Apri la ricevuta",
     "Create ticket": "Crea un ticket",
     "Create support ticket": "Crea un ticket di supporto",
-    "View file": "Visualizza il file",
-    "Increase limit": "Aumenta il limite"
+    "View file": "Visualizza il file"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
