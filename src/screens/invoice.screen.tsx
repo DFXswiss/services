@@ -1,18 +1,16 @@
-import { ApiError, Fiat, useFiatContext, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, Sell, useApi, Utils, Validations } from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
-  StyledDropdown,
-  StyledHorizontalStack,
   StyledInput,
   StyledLink,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { addYears } from 'date-fns';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
@@ -28,7 +26,6 @@ interface FormData {
   recipient: string;
   invoiceId: string;
   amount: number;
-  currency: Fiat;
 }
 
 const baseUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment`;
@@ -37,67 +34,84 @@ const relativeBaseUrl = '/pl';
 export default function InvoiceScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { navigate } = useNavigation();
-  const { currencies } = useFiatContext();
+  const { call } = useApi();
+
+  const recipientInputRef = useRef<HTMLInputElement>(null);
 
   const [urlParams, setUrlParams] = useSearchParams();
-  const [validatedParams, setValidatedParams] = useState<URLSearchParams>();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [currency, setCurrency] = useState<string>();
+  const [isLoading, setIsLoading] = useState(false);
   const [callback, setCallback] = useState<string>();
   const [error, setError] = useState<string>();
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
 
   const {
     watch,
     control,
     setValue,
+    resetField,
     formState: { errors, isValid },
   } = useForm<FormData>({
     mode: 'onTouched',
   });
 
-  const data = useDebounce(watch(), 500);
+  const data = useDebounce(watch(), 1000);
+  const selectedRecipient = watch('recipient');
 
-  const nextYearDate = useMemo(() => addYears(new Date(), 1), []);
-  const formattedDate = useMemo(() => nextYearDate.toISOString(), [nextYearDate]);
+  const formattedDate = useMemo(() => addYears(new Date(), 1).toISOString(), []);
 
   useEffect(() => {
     const recipient = urlParams.get('recipient');
     if (recipient) setValue('recipient', recipient);
     setUrlParams(new URLSearchParams());
+    setTimeout(() => recipientInputRef.current?.focus(), 200);
   }, []);
 
   useEffect(() => {
-    data && validateParams(data);
-  }, [data?.recipient, data?.invoiceId, data?.amount, data?.currency]);
+    setError(undefined);
+    setCallback(undefined);
+    setCurrency(undefined);
+    resetField('invoiceId');
+    resetField('amount');
+  }, [selectedRecipient]);
 
   useEffect(() => {
-    validatedParams && setCallback(url(relativeBaseUrl, validatedParams));
-  }, [validatedParams]);
+    if (data?.recipient) {
+      setIsLoadingRoute(true);
+      call<Sell>({
+        url: `route/payment/${data.recipient}`,
+        method: 'GET',
+      })
+        .then(({ currency }) => setCurrency(currency.name))
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown Error'))
+        .finally(() => setIsLoadingRoute(false));
+    }
+  }, [data?.recipient]);
+
+  useEffect(() => {
+    if (data?.recipient && data.invoiceId && data.amount) {
+      validateParams(data);
+    }
+  }, [data?.recipient, data?.invoiceId, data?.amount]);
 
   async function validateParams(data: FormData) {
     setIsLoading(true);
     setError(undefined);
     setCallback(undefined);
-    setValidatedParams(undefined);
-
-    if (!data.recipient || !data.invoiceId || !data.amount || !data.currency) {
-      setIsLoading(false);
-      return;
-    }
 
     const searchParams = new URLSearchParams({
       [!isNaN(Number(data.recipient)) ? 'routeId' : 'route']: data.recipient,
       amount: data.amount?.toString(),
-      currency: data.currency?.name,
       message: data.invoiceId,
       expiryDate: formattedDate,
     });
 
     fetchJson(url(baseUrl, searchParams))
-      .then(({ error, message }) => {
-        if (error) {
-          setError(message ?? 'Unknown Error');
+      .then((response) => {
+        if (response.error) {
+          setError(response.message ?? 'Unknown Error');
         } else {
-          setValidatedParams(searchParams);
+          setCallback(url(relativeBaseUrl, searchParams));
         }
       })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown Error'))
@@ -108,7 +122,6 @@ export default function InvoiceScreen(): JSX.Element {
     recipient: Validations.Required,
     invoiceId: Validations.Required,
     amount: Validations.Required,
-    currency: Validations.Required,
   });
 
   return (
@@ -133,6 +146,9 @@ export default function InvoiceScreen(): JSX.Element {
               placeholder={translate('screens/kyc', 'John Doe')}
               full
               smallLabel
+              forceError={!!error}
+              loading={isLoadingRoute}
+              ref={recipientInputRef}
             />
             <StyledInput
               name="invoiceId"
@@ -141,37 +157,18 @@ export default function InvoiceScreen(): JSX.Element {
               placeholder={translate('screens/payment', 'Invoice ID')}
               full
               smallLabel
+              disabled={!currency}
             />
-            <StyledVerticalStack gap={2} full>
-              <StyledHorizontalStack gap={1}>
-                <div className="flex-[3_1_9rem]">
-                  <p className="text-dfxBlue-800 text-start text-sm font-semibold pl-3 pb-1">
-                    {translate('screens/payment', 'Amount')}
-                  </p>
-                  <StyledInput
-                    type="number"
-                    name="amount"
-                    placeholder={translate('screens/payment', 'Amount')}
-                    full
-                    smallLabel
-                  />
-                </div>
-                <div className="flex-[1_0_9rem]">
-                  <p className="text-dfxBlue-800 text-start text-sm font-semibold pl-3 pb-1">
-                    {translate('screens/settings', 'Currency')}
-                  </p>
-                  <StyledDropdown
-                    name="currency"
-                    full
-                    smallLabel={true}
-                    placeholder={translate('general/actions', 'Select') + '...'}
-                    items={currencies ?? []}
-                    labelFunc={(item) => item.name}
-                  />
-                </div>
-              </StyledHorizontalStack>
-            </StyledVerticalStack>
-
+            <StyledInput
+              type="number"
+              name="amount"
+              label={translate('screens/payment', 'Amount')}
+              placeholder={translate('screens/payment', 'Amount')}
+              full
+              smallLabel
+              prefix={currency}
+              disabled={!currency}
+            />
             <StyledButton
               label={translate('general/actions', 'Open invoice')}
               onClick={() => callback && navigate(callback)}
@@ -179,15 +176,14 @@ export default function InvoiceScreen(): JSX.Element {
               disabled={!isValid || !callback}
               isLoading={isLoading}
             />
-
             {error && (
               <div>
-                {error === 'Route not found' ? (
+                {error.toLowerCase().includes('route not found') ? (
                   <p className="text-dfxGray-800 text-sm">
                     <Trans
                       i18nKey="general/errors.invoice"
                       defaults="DFX does not recognize a recipient with the name <strong>{{recipient}}</strong>. This service can only be used for recipients who have an active account with DFX and are activated for the invoicing service. If you wish to register as a recipient with DFX, please contact support at <link>{{supportLink}}</link>."
-                      values={{ recipient: data?.recipient, supportLink: '' }}
+                      values={{ recipient: selectedRecipient, supportLink: '' }}
                       components={{
                         strong: <strong />,
                         link: (
