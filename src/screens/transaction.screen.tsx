@@ -718,6 +718,12 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                 ].includes(tx.state) || !!tx.chargebackAmount
                               }
                             />
+                            <StyledButton
+                              label={translate('screens/kyc', 'Increase limit')}
+                              color={StyledButtonColor.STURDY_WHITE}
+                              onClick={() => navigate(`/support/issue?issue-type=LimitRequest`)}
+                              hidden={tx.state !== TransactionState.LIMIT_EXCEEDED || isSupport}
+                            />
                             {tx.state === TransactionState.KYC_REQUIRED && (
                               <StyledButton
                                 label={translate('screens/kyc', 'Complete KYC')}
