@@ -79,7 +79,7 @@ export interface TransferInfo {
   method: TransferMethod;
   minFee: number;
   assets: Amount[];
-  disabled?: boolean;
+  available?: boolean;
 }
 
 export interface PaymentLinkPayTerminal {
@@ -339,7 +339,7 @@ export default function PaymentLinkScreen(): JSX.Element {
       } else {
         return data.transferAmounts
           .filter((ta) => ta.method !== 'Lightning')
-          .filter((ta) => !ta.disabled)
+          .filter((ta) => ta.available !== false)
           .map((ta) => {
             return { ...paymentStandard, blockchain: ta.method };
           });
