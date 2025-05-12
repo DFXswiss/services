@@ -108,7 +108,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const { isLoggedIn, logout } = useSessionContext();
   const { getBanks } = useBank();
   const { bankAccounts } = useBankAccountContext();
-  const [urlParams, setUrlParams] = useSearchParams();
+  const [urlParams] = useSearchParams();
   const {
     createSupportIssue,
     loadSupportIssue,
@@ -144,22 +144,34 @@ export default function SupportIssueScreen(): JSX.Element {
   const reasonParam = urlParams.get('reason');
 
   useEffect(() => {
-    const hasParams = orderParam || issueTypeParam || reasonParam;
-
-    if (hasParams) {
-      const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
+      if (orderParam || issueTypeParam || reasonParam) {
         clearParams([...Array.from(urlParams.keys())]);
-      }, 0);
+      }
+    }, 0);
 
-      return () => clearTimeout(timeoutId);
-    }
+    return () => clearTimeout(timeoutId);
   }, []);
+
+  useEffect(() => {
+    const issueType = issueTypeParam && issues.find((t) => t === issueTypeParam);
+    if (issueType) {
+      setSupportIssue((prev) => ({ ...prev, type: issueType }));
+      setValue('type', issueType);
+    }
+
+    const reasonEnum = issueType && reasonParam && IssueReasons[issueType].find((r) => r === reasonParam);
+    if (reasonEnum) {
+      setSupportIssue((prev) => ({ ...prev, reason: reasonEnum }));
+      setValue('reason', reasonEnum);
+    }
+  }, [issueTypeParam, reasonParam, issues]);
 
   useUserGuard('/login', !orderParam);
   useKycLevelGuard(KycLevel.Link, '/contact');
 
   function startChat(issueUid: string) {
-    navigate({ pathname: `/support/chat/${issueUid}` }, { clearParams: ['quote', 'order', 'issue-type', 'reason'] });
+    navigate({ pathname: `/support/chat/${issueUid}` });
   }
 
   useEffect(() => {
@@ -178,22 +190,6 @@ export default function SupportIssueScreen(): JSX.Element {
 
     setIsKycComplete(kycCompleted);
   }, [user, selectedType]);
-
-  useEffect(() => {
-    setSelectTransaction(false);
-
-    const issueType = issueTypeParam && issues.find((t) => t === issueTypeParam);
-    if (issueType) {
-      setSupportIssue((prev) => ({ ...prev, type: issueType }));
-      setValue('type', issueType);
-    }
-
-    const reasonEnum = issueType && reasonParam && IssueReasons[issueType].find((r) => r === reasonParam);
-    if (reasonEnum) {
-      setSupportIssue((prev) => ({ ...prev, reason: reasonEnum }));
-      setValue('reason', reasonEnum);
-    }
-  }, [urlParams]);
 
   useEffect(() => {
     if (orderParam) {
@@ -278,13 +274,6 @@ export default function SupportIssueScreen(): JSX.Element {
           fundOrigin: data.fundOrigin,
           fundOriginText: data.message,
         };
-      }
-
-      // reset URL params
-      if (issueTypeParam || reasonParam) {
-        issueTypeParam && urlParams.delete('issue-type');
-        reasonParam && urlParams.delete('reason');
-        setUrlParams(urlParams);
       }
 
       await createSupportIssue(request, data.file)
