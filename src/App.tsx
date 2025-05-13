@@ -26,6 +26,7 @@ const KycRedirectScreen = lazy(() => import('./screens/kyc-redirect.screen'));
 const KycFileScreen = lazy(() => import('./screens/kyc-file.screen'));
 const DownloadScreen = lazy(() => import('./screens/download.screen'));
 const KycScreen = lazy(() => import('./screens/kyc.screen'));
+const KycLogScreen = lazy(() => import('./screens/kyc-log.screen'));
 const LinkScreen = lazy(() => import('./screens/link.screen'));
 const PaymentRoutesScreen = lazy(() => import('./screens/payment-routes.screen'));
 const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
@@ -42,6 +43,7 @@ const MailLoginScreen = lazy(() => import('./screens/mail-login.screen'));
 const SepaScreen = lazy(() => import('./screens/sepa.screen'));
 const BlockchainTransactionScreen = lazy(() => import('./screens/blockchain-tx.screen'));
 const EditMailScreen = lazy(() => import('./screens/edit-mail.screen'));
+const SafeScreen = lazy(() => import('./screens/safe.screen'));
 
 setupLanguages();
 
@@ -138,16 +140,6 @@ export const Routes = [
     isKycScreen: true,
   },
   {
-    path: '/file/download',
-    element: withSuspense(<DownloadScreen />),
-    isKycScreen: true,
-  },
-  {
-    path: '/file/:id',
-    element: withSuspense(<KycFileScreen />),
-    isKycScreen: true,
-  },
-  {
     path: '/profile',
     element: withSuspense(<KycScreen />),
     isKycScreen: true,
@@ -166,6 +158,18 @@ export const Routes = [
     path: '/2fa',
     element: withSuspense(<TfaScreen />),
     isKycScreen: true,
+  },
+  {
+    path: '/file/download',
+    element: withSuspense(<DownloadScreen />),
+  },
+  {
+    path: '/file/:id',
+    element: withSuspense(<KycFileScreen />),
+  },
+  {
+    path: '/kyc/log',
+    element: withSuspense(<KycLogScreen />),
   },
   {
     path: '/tx',
@@ -228,6 +232,11 @@ export const Routes = [
   {
     path: '/blockchain/tx',
     element: withSuspense(<BlockchainTransactionScreen />),
+  },
+
+  {
+    path: '/safe',
+    element: withSuspense(<SafeScreen />),
   },
 ];
 

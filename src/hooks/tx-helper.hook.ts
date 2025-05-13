@@ -1,28 +1,24 @@
-import { Asset, Sell, Swap, useAuthContext } from '@dfx.swiss/react';
+import { Asset, Blockchain, Sell, Swap, useAuthContext } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance, useBalanceContext } from '../contexts/balance.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
+import { useAlchemy } from './alchemy.hook';
 import { useAlby } from './wallets/alby.hook';
 import { useMetaMask } from './wallets/metamask.hook';
 import { useWalletConnect } from './wallets/wallet-connect.hook';
-
 export interface TxHelperInterface {
-  getBalances: (assets: Asset[]) => Promise<AssetBalance[] | undefined>;
+  getBalances: (assets: Asset[], address: string, blockchain?: Blockchain) => Promise<AssetBalance[] | undefined>;
   sendTransaction: (tx: Sell | Swap) => Promise<string>;
   canSendTransaction: () => boolean;
 }
 
 // CAUTION: This is a helper hook for all blockchain transaction functionalities. Think about lazy loading, as soon as it gets bigger.
 export function useTxHelper(): TxHelperInterface {
+  const { createTransaction: createTransactionMetaMask, requestChangeToBlockchain: requestChangeToBlockchainMetaMask } =
+    useMetaMask();
   const {
-    readBalance: readBalanceMetaMask,
-    createTransaction: createTransactionMetaMask,
-    requestChangeToBlockchain: requestChangeToBlockchainMetaMask,
-  } = useMetaMask();
-  const {
-    readBalance: readBalanceWalletConnect,
     createTransaction: createTransactionWalletConnect,
     requestChangeToBlockchain: requestChangeToBlockchainWalletConnect,
   } = useWalletConnect();
@@ -31,21 +27,22 @@ export function useTxHelper(): TxHelperInterface {
   const { activeWallet } = useWalletContext();
   const { session } = useAuthContext();
   const { canClose } = useAppHandlingContext();
+  const { getAddressBalances } = useAlchemy();
 
-  async function getBalances(assets: Asset[]): Promise<AssetBalance[] | undefined> {
-    if (!activeWallet) return getParamBalances(assets);
-
+  async function getBalances(
+    assets: Asset[],
+    address: string | undefined,
+    blockchain?: Blockchain,
+  ): Promise<AssetBalance[] | undefined> {
+    if (!activeWallet || !address || !blockchain) return getParamBalances(assets);
     switch (activeWallet) {
       case WalletType.META_MASK:
-        return (await Promise.all(assets.map((asset: Asset) => readBalanceMetaMask(asset, session?.address)))).filter(
-          (b) => b.amount > 0,
-        );
-
       case WalletType.WALLET_CONNECT:
-        return (
-          await Promise.all(assets.map((asset: Asset) => readBalanceWalletConnect(asset, session?.address)))
-        ).filter((b) => b.amount > 0);
-
+      case WalletType.LEDGER_ETH:
+      case WalletType.TREZOR_ETH:
+      case WalletType.BITBOX_ETH:
+      case WalletType.CLI_ETH:
+        return getAddressBalances(assets, address, blockchain);
       default:
         // no balance available
         return undefined;
@@ -94,14 +91,6 @@ export function useTxHelper(): TxHelperInterface {
   }
   return useMemo(
     () => ({ getBalances, sendTransaction, canSendTransaction }),
-    [
-      readBalanceMetaMask,
-      readBalanceWalletConnect,
-      createTransactionMetaMask,
-      createTransactionWalletConnect,
-      sendPayment,
-      activeWallet,
-      session,
-    ],
+    [createTransactionMetaMask, createTransactionWalletConnect, sendPayment, activeWallet, session],
   );
 }

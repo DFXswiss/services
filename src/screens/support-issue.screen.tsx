@@ -30,6 +30,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
+import { DefaultFileTypes } from 'src/config/file-types';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import {
@@ -49,9 +50,9 @@ import { TransactionList } from './transaction.screen';
 const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.GENERIC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.TRANSACTION_ISSUE]: [
-    SupportIssueReason.OTHER,
     SupportIssueReason.FUNDS_NOT_RECEIVED,
     SupportIssueReason.TRANSACTION_MISSING,
+    SupportIssueReason.OTHER,
   ],
   [SupportIssueType.KYC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.LIMIT_REQUEST]: [SupportIssueReason.OTHER],
@@ -100,18 +101,20 @@ const formDefaultValues = {
 };
 
 export default function SupportIssueScreen(): JSX.Element {
-  useUserGuard('/login');
-  useKycLevelGuard(KycLevel.Link, '/contact');
-
-  const { navigate } = useNavigation();
+  const { navigate, clearParams } = useNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
-  const { translate, translateError } = useSettingsContext();
+  const { translate, translateError, allowedCountries } = useSettingsContext();
   const { user } = useUserContext();
-  const { isLoggedIn } = useSessionContext();
+  const { isLoggedIn, logout } = useSessionContext();
   const { getBanks } = useBank();
   const { bankAccounts } = useBankAccountContext();
-  const [urlParams, setUrlParams] = useSearchParams();
-  const { createSupportIssue } = useSupportChatContext();
+  const [urlParams] = useSearchParams();
+  const {
+    createSupportIssue,
+    loadSupportIssue,
+    isLoading: isIssueLoading,
+    supportIssue: existingIssue,
+  } = useSupportChatContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -136,6 +139,47 @@ export default function SupportIssueScreen(): JSX.Element {
   const issues = Object.values(SupportIssueType);
   const reasons = IssueReasons[selectedType] ?? [];
 
+  const orderParam = urlParams.get('quote') ?? urlParams.get('order');
+  const issueTypeParam = urlParams.get('issue-type');
+  const reasonParam = urlParams.get('reason');
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (orderParam || issueTypeParam || reasonParam) {
+        clearParams([...Array.from(urlParams.keys())]);
+      }
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    const issueType = issueTypeParam && issues.find((t) => t === issueTypeParam);
+    if (issueType) {
+      setSupportIssue((prev) => ({ ...prev, type: issueType }));
+      setValue('type', issueType);
+    }
+
+    const reasonEnum = issueType && reasonParam && IssueReasons[issueType].find((r) => r === reasonParam);
+    if (reasonEnum) {
+      setSupportIssue((prev) => ({ ...prev, reason: reasonEnum }));
+      setValue('reason', reasonEnum);
+    }
+  }, [issueTypeParam, reasonParam, issues]);
+
+  useUserGuard('/login', !orderParam);
+  useKycLevelGuard(KycLevel.Link, '/contact');
+
+  function startChat(issueUid: string) {
+    navigate({ pathname: `/support/chat/${issueUid}` });
+  }
+
+  useEffect(() => {
+    getBanks()
+      .then(setBanks)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+  }, []);
+
   useEffect(() => {
     const kycCompleted = user && user.kyc.level >= KycLevel.Completed;
 
@@ -148,28 +192,24 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [user, selectedType]);
 
   useEffect(() => {
-    setSelectTransaction(false);
-
-    const issueTypeParam = urlParams.get('issue-type');
-    const issueType = issueTypeParam && issues.find((t) => t === issueTypeParam);
-    if (issueType) {
+    if (orderParam) {
+      const issueType = SupportIssueType.TRANSACTION_ISSUE;
       setSupportIssue((prev) => ({ ...prev, type: issueType }));
       setValue('type', issueType);
-    }
 
-    const reasonParam = urlParams.get('reason');
-    const reasonEnum = issueType && reasonParam && IssueReasons[issueType].find((r) => r === reasonParam);
-    if (reasonEnum) {
-      setSupportIssue((prev) => ({ ...prev, reason: reasonEnum }));
-      setValue('reason', reasonEnum);
+      loadSupportIssue(orderParam).catch(() => undefined); // ignore error
     }
+  }, [orderParam]);
 
-    if (issueTypeParam || reasonParam) {
-      issueTypeParam && urlParams.delete('issue-type');
-      reasonParam && urlParams.delete('reason');
-      setUrlParams(urlParams);
+  useEffect(() => {
+    if (orderParam && isLoggedIn) logout();
+  }, [orderParam, isLoggedIn]);
+
+  useEffect(() => {
+    if (orderParam && !isLoading && existingIssue) {
+      startChat(existingIssue.uid);
     }
-  }, [urlParams]);
+  }, [isIssueLoading, existingIssue]);
 
   useEffect(() => {
     if (selectedSender === AddAccount)
@@ -216,7 +256,7 @@ export default function SupportIssueScreen(): JSX.Element {
 
       if (data.type === SupportIssueType.TRANSACTION_ISSUE) {
         if (data.reason !== SupportIssueReason.TRANSACTION_MISSING) {
-          request.transaction = { id: +data.transaction.id };
+          request.transaction = { id: +data.transaction?.id };
         } else {
           request.transaction = {
             senderIban: data.senderIban,
@@ -224,6 +264,7 @@ export default function SupportIssueScreen(): JSX.Element {
             date: new Date(data.date),
           };
         }
+        orderParam && (request.transaction.orderUid = orderParam);
       }
 
       if (data.type === SupportIssueType.LIMIT_REQUEST && data.limit) {
@@ -236,7 +277,7 @@ export default function SupportIssueScreen(): JSX.Element {
       }
 
       await createSupportIssue(request, data.file)
-        .then((response) => navigate(`/support/chat/${response}`))
+        .then((response) => startChat(response))
         .catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
@@ -252,25 +293,17 @@ export default function SupportIssueScreen(): JSX.Element {
 
   const rules = Utils.createRules({
     type: Validations.Required,
-    senderIban: Validations.Required,
+    senderIban: [Validations.Required, !!orderParam && Validations.Iban(allowedCountries)],
     receiverIban: Validations.Required,
     date: [Validations.Required, Validations.Custom((date) => (/\d{4}-\d{2}-\d{2}/g.test(date) ? true : 'pattern'))],
     name: Validations.Required,
     transaction: Validations.Required,
     reason: Validations.Required,
-    message: Validations.Required,
+    message: [Validations.Required, Validations.Custom((message) => message.length <= 4000 || 'message_length')],
     limit: Validations.Required,
     investmentDate: Validations.Required,
     fundOrigin: Validations.Required,
-    file: Validations.Custom((file) =>
-      !file ||
-      file.type === 'application/pdf' ||
-      file.type === 'image/png' ||
-      file.type === 'image/jpg' ||
-      file.type === 'image/jpeg'
-        ? true
-        : 'file_type',
-    ),
+    file: Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
   });
 
   return (
@@ -286,7 +319,7 @@ export default function SupportIssueScreen(): JSX.Element {
           : undefined
       }
     >
-      {selectedType === SupportIssueType.LIMIT_REQUEST && isKycComplete === undefined ? (
+      {(selectedType === SupportIssueType.LIMIT_REQUEST && isKycComplete === undefined) || isIssueLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : selectTransaction ? (
         <>
@@ -311,6 +344,7 @@ export default function SupportIssueScreen(): JSX.Element {
               labelFunc={(item) => item && translate('screens/support', IssueTypeLabels[item])}
               name="type"
               placeholder={translate('general/actions', 'Select') + '...'}
+              disabled={!!orderParam}
               full
             />
 
@@ -318,7 +352,7 @@ export default function SupportIssueScreen(): JSX.Element {
               <StyledDropdown<SupportIssueReason>
                 rootRef={rootRef}
                 label={translate('screens/support', 'Reason')}
-                items={reasons}
+                items={reasons.filter((r) => r !== SupportIssueReason.FUNDS_NOT_RECEIVED || !orderParam)}
                 labelFunc={(item) => translate('screens/support', IssueReasonLabels[item])}
                 name="reason"
                 placeholder={translate('general/actions', 'Select') + '...'}
@@ -329,49 +363,63 @@ export default function SupportIssueScreen(): JSX.Element {
             {selectedType === SupportIssueType.TRANSACTION_ISSUE &&
               selectedReason &&
               (selectedReason !== SupportIssueReason.TRANSACTION_MISSING ? (
-                <StyledVerticalStack gap={3.5} full center>
-                  <p className="w-full text-left text-dfxBlue-800 text-base font-semibold pl-3.5 -mb-1">
-                    {translate('screens/payment', 'Transaction')}
-                  </p>
-                  <StyledDropdown<SelectTransactionFormData>
-                    rootRef={rootRef}
-                    name="transaction"
-                    items={[{ id: selectTxButtonLabel, description: 'Select a transaction to proceed with' }]}
-                    labelFunc={(item) => translate('general/actions', item.id)}
-                    descriptionFunc={(item) => translate('screens/support', item.description)}
-                    full
-                    forceEnable
-                  />
-                </StyledVerticalStack>
-              ) : bankAccounts && banks ? (
+                !orderParam && (
+                  <StyledVerticalStack gap={3.5} full center>
+                    <p className="w-full text-left text-dfxBlue-800 text-base font-semibold pl-3.5 -mb-1">
+                      {translate('screens/payment', 'Transaction')}
+                    </p>
+                    <StyledDropdown<SelectTransactionFormData>
+                      rootRef={rootRef}
+                      name="transaction"
+                      items={[{ id: selectTxButtonLabel, description: 'Select a transaction to proceed with' }]}
+                      labelFunc={(item) => translate('general/actions', item.id)}
+                      descriptionFunc={(item) => translate('screens/support', item.description)}
+                      full
+                      forceEnable
+                    />
+                  </StyledVerticalStack>
+                )
+              ) : (
                 <>
-                  <StyledDropdown<string>
-                    rootRef={rootRef}
-                    label={translate('screens/support', 'Sender IBAN')}
-                    items={[...bankAccounts.map((a) => a.iban), NoIban, AddAccount]}
-                    labelFunc={(item) =>
-                      blankedAddress(
-                        [NoIban, AddAccount].includes(item)
-                          ? translate('screens/iban', item)
-                          : Utils.formatIban(item) ?? '',
-                        { displayLength: 30 },
-                      )
-                    }
-                    descriptionFunc={(item) => bankAccounts.find((a) => a.iban === item)?.label ?? ''}
-                    name="senderIban"
-                    placeholder={translate('general/actions', 'Select') + '...'}
-                    full
-                  />
+                  {bankAccounts && isLoggedIn ? (
+                    <StyledDropdown<string>
+                      rootRef={rootRef}
+                      label={translate('screens/support', 'Sender IBAN')}
+                      items={[...bankAccounts.map((a) => a.iban), NoIban, AddAccount]}
+                      labelFunc={(item) =>
+                        blankedAddress(
+                          [NoIban, AddAccount].includes(item)
+                            ? translate('screens/iban', item)
+                            : Utils.formatIban(item) ?? '',
+                          { displayLength: 30 },
+                        )
+                      }
+                      descriptionFunc={(item) => bankAccounts.find((a) => a.iban === item)?.label ?? ''}
+                      name="senderIban"
+                      placeholder={translate('general/actions', 'Select') + '...'}
+                      full
+                    />
+                  ) : (
+                    <StyledInput
+                      name="senderIban"
+                      autocomplete="iban"
+                      label={translate('screens/support', 'Sender IBAN')}
+                      placeholder="XX XXXX XXXX XXXX XXXX X"
+                      full
+                    />
+                  )}
 
-                  <StyledDropdown<string>
-                    rootRef={rootRef}
-                    label={translate('screens/support', 'Receiver IBAN')}
-                    items={banks.map((b) => b.iban)}
-                    labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
-                    name="receiverIban"
-                    placeholder={translate('general/actions', 'Select') + '...'}
-                    full
-                  />
+                  {banks && (
+                    <StyledDropdown<string>
+                      rootRef={rootRef}
+                      label={translate('screens/support', 'Receiver IBAN')}
+                      items={banks.map((b) => b.iban)}
+                      labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
+                      name="receiverIban"
+                      placeholder={translate('general/actions', 'Select') + '...'}
+                      full
+                    />
+                  )}
 
                   <StyledInput
                     name="date"
@@ -380,8 +428,6 @@ export default function SupportIssueScreen(): JSX.Element {
                     full
                   />
                 </>
-              ) : (
-                <></>
               ))}
 
             <StyledInput

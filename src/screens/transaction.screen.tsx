@@ -40,6 +40,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { PdfDocument } from '@dfx.swiss/react/dist/definitions/buy';
 import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
@@ -55,7 +56,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { blankedAddress } from '../util/utils';
+import { blankedAddress, openPdfFromString } from '../util/utils';
 
 export enum ExportType {
   COMPACT = 'Compact',
@@ -476,6 +477,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const { id } = useParams();
   const { toString } = useBlockchain();
   const { pathname } = useLocation();
+  const { getTransactionInvoice, getTransactionReceipt } = useTransaction();
 
   const { width } = useWindowContext();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -486,6 +488,8 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const [isTargetsLoading, setIsTargetsLoading] = useState(false);
   const [isTransactionLoading, setIsTransactionLoading] = useState(false);
   const [editTransaction, setEditTransaction] = useState<number>();
+  const [isInvoiceLoading, setIsInvoiceLoading] = useState<number>();
+  const [isReceiptLoading, setIsReceiptLoading] = useState<number>();
 
   useEffect(() => {
     if (id) setTimeout(() => txRefs.current[id]?.scrollIntoView());
@@ -671,6 +675,34 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               hidden={!tx.outputTxUrl}
                             />
                             <StyledButton
+                              label={translate('general/actions', 'Open invoice')}
+                              onClick={() => {
+                                setIsInvoiceLoading(tx.id);
+                                getTransactionInvoice(tx.id)
+                                  .then((response: PdfDocument) => {
+                                    openPdfFromString(response.pdfData);
+                                  })
+                                  .finally(() => setIsInvoiceLoading(undefined));
+                              }}
+                              hidden={tx.state !== TransactionState.COMPLETED}
+                              isLoading={isInvoiceLoading === tx.id}
+                              color={StyledButtonColor.STURDY_WHITE}
+                            />
+                            <StyledButton
+                              label={translate('general/actions', 'Open receipt')}
+                              onClick={() => {
+                                setIsReceiptLoading(tx.id);
+                                getTransactionReceipt(tx.id)
+                                  .then((response: PdfDocument) => {
+                                    openPdfFromString(response.pdfData);
+                                  })
+                                  .finally(() => setIsReceiptLoading(undefined));
+                              }}
+                              hidden={tx.state !== TransactionState.COMPLETED}
+                              isLoading={isReceiptLoading === tx.id}
+                              color={StyledButtonColor.STURDY_WHITE}
+                            />
+                            <StyledButton
                               label={translate(
                                 'general/actions',
                                 tx.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
@@ -685,6 +717,12 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   TransactionState.LIMIT_EXCEEDED,
                                 ].includes(tx.state) || !!tx.chargebackAmount
                               }
+                            />
+                            <StyledButton
+                              label={translate('screens/kyc', 'Increase limit')}
+                              color={StyledButtonColor.STURDY_WHITE}
+                              onClick={() => navigate(`/support/issue?issue-type=LimitRequest`)}
+                              hidden={tx.state !== TransactionState.LIMIT_EXCEEDED || isSupport}
                             />
                             {tx.state === TransactionState.KYC_REQUIRED && (
                               <StyledButton
@@ -824,7 +862,7 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
           )}
         </StyledDataTableRow>
       )}
-      {tx.outputAsset && (
+      {tx.outputAsset && ![TransactionState.RETURN_PENDING, TransactionState.RETURNED].includes(tx.state) && (
         <StyledDataTableRow label={translate('screens/payment', 'Output')}>
           <p>
             {tx.outputAmount ?? ''} {tx.outputAsset}
@@ -861,7 +899,7 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
       {tx.chargebackAmount && (
         <StyledDataTableRow label={translate('screens/payment', 'Chargeback amount')}>
           <p>
-            {tx.chargebackAmount} {tx.inputAsset}
+            {tx.chargebackAmount} {tx.chargebackAsset}
           </p>
         </StyledDataTableRow>
       )}

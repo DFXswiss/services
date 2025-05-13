@@ -30,11 +30,11 @@ and supports two different login modes,
 
 #### Standalone
 
-DFX services can be integrated using a browser redirect to [services.dfx.swiss](https://services.dfx.swiss/) with the desired parameters (see [below](#query-parameters)). For standalone usage, the `redirect-uri` parameter should be provided. On cancel or completion, the user will be redirected to this URI (see [redirect](#redirect)).
+DFX services can be integrated using a browser redirect to [app.dfx.swiss](https://app.dfx.swiss/) with the desired parameters (see [below](#query-parameters)). For standalone usage, the `redirect-uri` parameter should be provided. On cancel or completion, the user will be redirected to this URI (see [redirect](#redirect)).
 
 #### Iframe
 
-DFX services can be integrated by opening [services.dfx.swiss](https://services.dfx.swiss/) with the desired parameters (see [below](#query-parameters)) in an Iframe. See the [code example](#iframe-example) below.
+DFX services can be integrated by opening [app.dfx.swiss](https://app.dfx.swiss/) with the desired parameters (see [below](#query-parameters)) in an Iframe. See the [code example](#iframe-example) below.
 
 On cancel or completion, a message will be sent on the window object of the browser. See [below](#close-message) for details on the message format. If a redirect URI is specified, the user will be redirected to this URI (see [redirect](#redirect)).
 
@@ -58,7 +58,7 @@ Credentials can be provided directly when opening DFX services. This is recommen
 
 - `session`: access token for the DFX API
 
-When using direct login, the type of service (`buy`, `sell` or `swap`) should be preselected. For standalone or Iframe integration, the service type needs to be added as URL path (e.g. `services.dfx.swiss/buy`). For web/react component integration the `service` attribute can be used.
+When using direct login, the type of service (`buy`, `sell` or `swap`) should be preselected. For standalone or Iframe integration, the service type needs to be added as URL path (e.g. `app.dfx.swiss/buy`). For web/react component integration the `service` attribute can be used.
 
 For selling or swapping, the integrator should provide the available asset balances (see `balances` [parameter](#query-parameters)). Additionally, the integrator finally has to initiate the corresponding blockchain transaction, as the widget does not have the right to do so (see [closing](#closing) and [integration](#integration-types) chapters for more details).
 
@@ -194,13 +194,13 @@ Documentation on `BuyPaymentInfoDto`, `SellPaymentInfoDto` and `SwapPaymentInfoD
   }
 </script>
 
-<iframe src="https://services.dfx.swiss" height="600" width="450" frameborder="0" />
+<iframe src="https://app.dfx.swiss" height="600" width="450" frameborder="0" />
 ```
 
 #### Web Component Example
 
 ```html
-<script defer="defer" src="https://services.dfx.swiss/widget/v1.0"></script>
+<script defer="defer" src="https://app.dfx.swiss/widget/v1.0"></script>
 <script>
   function handleClose(data: CloseMessage) {
     /* ADD YOUR CODE HERE */

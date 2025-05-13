@@ -26,6 +26,7 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { addressLabel } from 'src/config/labels';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
@@ -211,30 +212,37 @@ export default function AccountScreen(): JSX.Element {
                   <p>{limitToString(user.tradingLimit)}</p>
                   <StyledIconButton
                     icon={IconVariant.ARROW_UP}
-                    onClick={() => navigate(user.kyc.level < 50 ? '/kyc' : '/support/issue?issue-type=LimitRequest')}
+                    onClick={() =>
+                      user.kyc.level < 50
+                        ? navigate('/kyc')
+                        : navigate({ pathname: '/support/issue', search: '?issue-type=LimitRequest' })
+                    }
                   />
                 </div>
               </StyledDataTableRow>
             </StyledDataTable>
           )}
-          <div className="border-b my-2.5 border-dfxGray-400 w-full"></div>
           {/* Wallet Selector */}
           {user?.addresses.length ? (
-            <div className="bg-white w-full rounded-md mb-2">
-              <h2 className="text-center text-dfxBlue-800 text-sm font-semibold ml-3.5 mb-1.5">
-                {translate('screens/home', 'Active address')}
-              </h2>
-              <Form control={control} errors={errors}>
-                <StyledDropdown
-                  name="address"
-                  placeholder={translate('general/actions', 'Select') + '...'}
-                  items={user.addresses.sort(sortAddressesByBlockchain)}
-                  labelFunc={(item) => blankedAddress(item.address, { width })}
-                  descriptionFunc={(item) => item.label ?? item.wallet}
-                  forceEnable={user?.activeAddress === undefined}
-                />
-              </Form>
-            </div>
+            <>
+              <div className="border-b my-2.5 border-dfxGray-400 w-full"></div>
+
+              <div className="bg-white w-full rounded-md mb-2">
+                <h2 className="text-center text-dfxBlue-800 text-sm font-semibold ml-3.5 mb-1.5">
+                  {translate('screens/home', 'Active address')}
+                </h2>
+                <Form control={control} errors={errors}>
+                  <StyledDropdown
+                    name="address"
+                    placeholder={translate('general/actions', 'Select') + '...'}
+                    items={user.addresses.sort(sortAddressesByBlockchain)}
+                    labelFunc={(item) => blankedAddress(addressLabel(item), { width })}
+                    descriptionFunc={(item) => item.label ?? item.wallet}
+                    forceEnable={user?.activeAddress === undefined}
+                  />
+                </Form>
+              </div>
+            </>
           ) : (
             <></>
           )}

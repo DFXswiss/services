@@ -42,6 +42,7 @@ import ActionableList from 'src/components/actionable-list';
 import { AddressSwitch } from 'src/components/payment/address-switch';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
+import { addressLabel } from 'src/config/labels';
 import { useWindowContext } from 'src/contexts/window.context';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
@@ -142,10 +143,6 @@ export default function SellScreen(): JSX.Element {
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
   const [validatedData, setValidatedData] = useState<ValidatedData>();
 
-  useEffect(() => {
-    availableAssets && getBalances(availableAssets).then(setBalances);
-  }, [getBalances, availableAssets]);
-
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
 
@@ -157,6 +154,10 @@ export default function SellScreen(): JSX.Element {
   const selectedAddress = useWatch({ control, name: 'address' });
 
   const availableBalance = selectedAsset && findBalance(selectedAsset);
+
+  useEffect(() => {
+    availableAssets && getBalances(availableAssets, selectedAddress?.address, selectedAddress?.chain).then(setBalances);
+  }, [getBalances, availableAssets]);
 
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
@@ -170,7 +171,7 @@ export default function SellScreen(): JSX.Element {
     session?.address && blockchains?.length
       ? [
           ...blockchains.map((b) => ({
-            address: session.address ?? '',
+            address: addressLabel(session),
             label: toString(b),
             chain: b,
           })),
@@ -187,8 +188,8 @@ export default function SellScreen(): JSX.Element {
     const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false }).filter(
       (a) => a.category === AssetCategory.PUBLIC || a.name === assetIn,
     );
-    const activeAssets = filterAssets(blockchainAssets, assetFilter);
 
+    const activeAssets = filterAssets(blockchainAssets, assetFilter);
     setAvailableAssets(activeAssets);
 
     const asset = getAsset(activeAssets, assetIn) ?? (activeAssets.length === 1 && activeAssets[0]);
@@ -390,6 +391,7 @@ export default function SellScreen(): JSX.Element {
       case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
+      case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
         setKycError(sell.error);
         return;
@@ -566,7 +568,11 @@ export default function SellScreen(): JSX.Element {
                       rootRef={rootRef}
                       name="asset"
                       placeholder={translate('general/actions', 'Select') + '...'}
-                      items={availableAssets}
+                      items={availableAssets.sort((a, b) => {
+                        const balanceA = findBalance(a) || 0;
+                        const balanceB = findBalance(b) || 0;
+                        return balanceB - balanceA;
+                      })}
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
                       assetIconFunc={(item) => item.name as AssetIconVariant}

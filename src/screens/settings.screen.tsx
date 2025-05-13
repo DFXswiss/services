@@ -20,6 +20,7 @@ import { Trans } from 'react-i18next';
 import ActionableList from 'src/components/actionable-list';
 import { Layout } from 'src/components/layout';
 import { ConfirmationOverlay, EditOverlay } from 'src/components/overlays';
+import { addressLabel } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -249,7 +250,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
 
   switch (type) {
     case OverlayType.DELETE_ADDRESS:
-      const formattedAddress = blankedAddress(address?.address ?? '', { width });
+      const formattedAddress = blankedAddress(address ? addressLabel(address) : '', { width });
 
       return (
         <ConfirmationOverlay
@@ -294,6 +295,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
       return (
         <EditOverlay
           label={translate('screens/settings', 'Address name')}
+          autocomplete="address-label"
           prefill={address?.label ?? address?.wallet}
           placeholder={translate('screens/settings', 'Address name')}
           onCancel={onClose}
@@ -307,6 +309,7 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
       return (
         <EditOverlay
           label={translate('screens/kyc', 'Phone number')}
+          autocomplete="phone"
           prefill={user?.phone}
           placeholder={translate('screens/kyc', 'Phone number')}
           validation={Validations.Phone}

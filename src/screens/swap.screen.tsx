@@ -2,10 +2,12 @@ import {
   ApiError,
   Asset,
   Blockchain,
+  Session,
   Swap,
   SwapPaymentInfo,
   TransactionError,
   TransactionType,
+  UserAddress,
   Utils,
   Validations,
   useAsset,
@@ -35,6 +37,7 @@ import { useEffect, useRef, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
+import { addressLabel } from 'src/config/labels';
 import { useWindowContext } from 'src/contexts/window.context';
 import useDebounce from 'src/hooks/debounce.hook';
 import { blankedAddress } from 'src/util/utils';
@@ -61,7 +64,8 @@ enum Side {
 }
 
 interface Address {
-  address: string;
+  address?: string;
+  addressLabel: string;
   label: string;
   chain?: Blockchain;
 }
@@ -128,10 +132,6 @@ export default function SwapScreen(): JSX.Element {
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
   const [validatedData, setValidatedData] = useState<ValidatedData>();
 
-  useEffect(() => {
-    sourceAssets && getBalances(sourceAssets).then(setBalances);
-  }, [getBalances, sourceAssets]);
-
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
 
@@ -140,6 +140,12 @@ export default function SwapScreen(): JSX.Element {
   const selectedTargetAmount = useWatch({ control, name: 'targetAmount' });
   const selectedTargetAsset = useWatch({ control, name: 'targetAsset' });
   const selectedAddress = useWatch({ control, name: 'address' });
+
+  useEffect(() => {
+    if (sourceAssets && selectedAddress?.address) {
+      getBalances(sourceAssets, selectedAddress.address, selectedAddress?.chain).then(setBalances);
+    }
+  }, [getBalances, sourceAssets]);
 
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
@@ -164,12 +170,15 @@ export default function SwapScreen(): JSX.Element {
     (b) => SwapInputBlockchains.includes(b) && filteredAssets?.some((a) => a.blockchain === b),
   );
 
-  const userAddresses = (
-    [
-      session?.address && { address: session.address, blockchains: session.blockchains },
-      ...(user?.addresses.map((a) => ({ address: a.address, blockchains: a.blockchains })) ?? []),
-    ] as { address: string; blockchains: Blockchain[] }[]
-  ).filter((a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i);
+  const userSessions = [session, ...(user?.addresses ?? [])].filter(
+    (a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i,
+  ) as (Session | UserAddress)[];
+
+  const userAddresses = userSessions.map((a) => ({
+    address: a.address,
+    addressLabel: addressLabel(a),
+    blockchains: a.blockchains,
+  }));
 
   const targetBlockchains = userAddresses
     .flatMap((a) => a.blockchains)
@@ -181,10 +190,15 @@ export default function SwapScreen(): JSX.Element {
       ? [
           ...targetBlockchains.flatMap((b) => {
             const addresses = userAddresses.filter((a) => a.blockchains.includes(b));
-            return addresses.map((a) => ({ address: a.address, label: toString(b), chain: b }));
+            return addresses.map((a) => ({
+              address: a.address,
+              addressLabel: a.addressLabel,
+              label: toString(b),
+              chain: b,
+            }));
           }),
           {
-            address: translate('screens/buy', 'Switch address'),
+            addressLabel: translate('screens/buy', 'Switch address'),
             label: translate('screens/buy', 'Login with a different address'),
           },
         ]
@@ -369,6 +383,7 @@ export default function SwapScreen(): JSX.Element {
       case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
+      case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
         setKycError(swap.error);
         return;
@@ -530,7 +545,11 @@ export default function SwapScreen(): JSX.Element {
                       rootRef={rootRef}
                       name="sourceAsset"
                       placeholder={translate('general/actions', 'Select') + '...'}
-                      items={sourceAssets}
+                      items={sourceAssets.sort((a, b) => {
+                        const balanceA = findBalance(a) || 0;
+                        const balanceB = findBalance(b) || 0;
+                        return balanceB - balanceA;
+                      })}
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
                       assetIconFunc={(item) => item.name as AssetIconVariant}
@@ -586,7 +605,7 @@ export default function SwapScreen(): JSX.Element {
                     rootRef={rootRef}
                     name="address"
                     items={addressItems}
-                    labelFunc={(item) => blankedAddress(item.address, { width })}
+                    labelFunc={(item) => blankedAddress(item.addressLabel, { width })}
                     descriptionFunc={(item) => item.label}
                     full
                     forceEnable

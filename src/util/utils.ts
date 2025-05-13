@@ -4,6 +4,15 @@ export function isDefined<T>(item: T | undefined): item is T {
   return item != null;
 }
 
+export function isEmpty(val: any): boolean {
+  return val === undefined || val === '' || val === null || (Array.isArray(val) && val.length === 0);
+}
+
+export function removeNullFields<T extends Record<any, any>>(entity?: T): Partial<T> | undefined {
+  if (!entity) return entity;
+  return Object.fromEntries(Object.entries(entity).filter(([_, v]) => v != null)) as Partial<T>;
+}
+
 export function delay(s: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, s * 1000));
 }
@@ -59,13 +68,21 @@ export function readFileAsText(file: File): Promise<string> {
 
 export function openPdfFromString(pdf: string, newTab = true) {
   const byteArray = Uint8Array.from(atob(pdf), (c) => c.charCodeAt(0));
-  const file = new Blob([byteArray], { type: 'application/pdf;base64' });
+  const file = new Blob([byteArray], { type: 'application/pdf' });
   const fileURL = URL.createObjectURL(file);
 
   if (newTab) {
     window.open(fileURL);
   } else {
-    window.location.href = fileURL;
+    const viewerContainer = createFullScreenContainer();
+    const embed = document.createElement('embed');
+    embed.style.flex = '1';
+    embed.style.border = 'none';
+    embed.style.backgroundColor = 'white';
+    embed.type = 'application/pdf';
+    embed.src = fileURL + '#toolbar=1&navpanes=1&scrollbar=1';
+    viewerContainer.appendChild(embed);
+    document.body.appendChild(viewerContainer);
   }
 }
 
@@ -76,7 +93,15 @@ export function openImageFromString(image: string, contentType: string, newTab =
   if (newTab) {
     window.open(imageUrl);
   } else {
-    window.location.href = imageUrl;
+    const viewerContainer = createFullScreenContainer();
+    const imageElement = document.createElement('img');
+    imageElement.style.maxWidth = '100%';
+    imageElement.style.maxHeight = '100%';
+    imageElement.style.objectFit = 'contain';
+    imageElement.style.transition = 'transform 0.2s';
+    imageElement.src = imageUrl;
+    viewerContainer.appendChild(imageElement);
+    document.body.appendChild(viewerContainer);
   }
 }
 
@@ -86,6 +111,7 @@ export function handleOpenFile(file: KycFile, setErrorMessage: (message: string)
 
   if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
     setErrorMessage('Invalid file type');
+    return;
   }
 
   const base64Data = Buffer.from(content.data).toString('base64');
@@ -95,6 +121,18 @@ export function handleOpenFile(file: KycFile, setErrorMessage: (message: string)
   } else if (fileType === 'image') {
     openImageFromString(base64Data, contentType, newTab);
   }
+}
+
+function createFullScreenContainer(): HTMLDivElement {
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.width = '100%';
+  container.style.height = '100%';
+  container.style.backgroundColor = 'rgba(0,0,0,0.9)';
+  container.style.zIndex = '9999';
+  return container;
 }
 
 export function sortAddressesByBlockchain(a: UserAddress, b: UserAddress): number {
@@ -133,7 +171,7 @@ export function formatBytes(bytes: number, decimals = 2): string {
   return `${parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
 }
 
-export async function fetchJson(url: string): Promise<any> {
+export async function fetchJson(url: string | URL): Promise<any> {
   const response = await fetch(url);
   return response.json();
 }
@@ -157,3 +195,41 @@ export function generateExportFileName(): string {
   const [date, time] = new Date().toISOString().replace(/[-:]/g, '').split(/[T\.]/);
   return `DFX_export_${date}_${time}.zip`;
 }
+
+export enum FormatType {
+  'us',
+  'tiny',
+}
+
+export const formatCurrency = (
+  value: string | number,
+  minimumFractionDigits = 0,
+  maximumFractionDigits = 2,
+  format = FormatType.us,
+) => {
+  const amount = typeof value === 'string' ? parseFloat(value) : value;
+
+  // exceptions
+  if (amount === null || !!isNaN(amount)) return null;
+  if (amount < 0.01 && amount > 0 && maximumFractionDigits) {
+    return '< 0.01';
+  }
+
+  // us
+  if (format === FormatType.us) {
+    const formatter = new Intl.NumberFormat('en-US', {
+      maximumFractionDigits,
+      minimumFractionDigits,
+    });
+    return formatter.format(amount);
+  }
+
+  // tiny
+  if (format === FormatType.tiny) {
+    const formatter = new Intl.NumberFormat('en-US', {
+      maximumFractionDigits: amount < 1000 && amount > -1000 ? 2 : 0,
+      minimumFractionDigits: amount < 1000 && amount > -1000 ? 2 : 0,
+    });
+    return formatter.format(amount).split(',').join(' ');
+  }
+};

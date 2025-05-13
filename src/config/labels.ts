@@ -4,11 +4,14 @@ import {
   FundOrigin,
   InvestmentDate,
   Limit,
+  Session,
   SupportIssueReason,
   SupportIssueType,
   TransactionFailureReason,
   TransactionState,
+  UserAddress,
 } from '@dfx.swiss/react';
+import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
 
 import { PaymentQuoteStatus } from '@dfx.swiss/react/dist/definitions/route';
 
@@ -37,6 +40,9 @@ export const PaymentStateLabels = {
   [TransactionState.RETURNED]: 'Refunded',
   [TransactionState.RETURN_PENDING]: 'Refund pending',
   [TransactionState.LIMIT_EXCEEDED]: 'Limit exceeded',
+  [TransactionState.LIQUIDITY_PENDING]: 'Liquidity pending',
+  [TransactionState.PAYOUT_IN_PROGRESS]: 'Payout in progress',
+  [TransactionState.PRICE_UNDETERMINABLE]: 'Price undeterminable',
 };
 
 export function toPaymentStateLabel(state: TransactionState): string {
@@ -46,11 +52,12 @@ export function toPaymentStateLabel(state: TransactionState): string {
 export const PaymentFailureReasons = {
   [TransactionFailureReason.UNKNOWN]: 'Unknown',
   [TransactionFailureReason.DAILY_LIMIT_EXCEEDED]: 'Daily limit exceeded',
+  [TransactionFailureReason.MONTHLY_LIMIT_EXCEEDED]: 'Monthly limit exceeded',
   [TransactionFailureReason.ANNUAL_LIMIT_EXCEEDED]: 'Annual limit exceeded',
   [TransactionFailureReason.ACCOUNT_HOLDER_MISMATCH]: 'Account holder mismatch',
   [TransactionFailureReason.KYC_REJECTED]: 'KYC rejected',
-  [TransactionFailureReason.FRAUD_SUSPICION]: 'Fraud suspicion',
-  [TransactionFailureReason.SANCTION_SUSPICION]: 'Sanction suspicion',
+  [TransactionFailureReason.FRAUD_SUSPICION]: 'Regulatory requirements',
+  [TransactionFailureReason.SANCTION_SUSPICION]: 'Name corresponds to a PEP or sanctioned person',
   [TransactionFailureReason.MIN_DEPOSIT_NOT_REACHED]: 'Minimum deposit not reached',
   [TransactionFailureReason.ASSET_NOT_AVAILABLE]: 'Asset not available',
   [TransactionFailureReason.ASSET_NOT_AVAILABLE_WITH_CHOSEN_BANK]: 'Asset not available with chosen bank',
@@ -67,6 +74,7 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.USER_DELETED]: 'Address deleted',
   [TransactionFailureReason.VIDEO_IDENT_NEEDED]: 'Video identification required',
   [TransactionFailureReason.MISSING_LIQUIDITY]: 'Missing liquidity',
+  [TransactionFailureReason.KYC_DATA_NEEDED]: 'KYC data needed',
 };
 
 export const PaymentQuoteStatusLabels = {
@@ -126,6 +134,7 @@ export const IssueTypeLabels = {
 
 export const IssueReasonLabels = {
   [SupportIssueReason.OTHER]: 'Other',
+  [SupportIssueReason.DATA_REQUEST]: 'Data request',
   [SupportIssueReason.FUNDS_NOT_RECEIVED]: 'Funds not received',
   [SupportIssueReason.TRANSACTION_MISSING]: 'Transaction missing',
 };
@@ -142,3 +151,11 @@ export const FileTypeLabels = {
   [FileType.ADDITIONAL_DOCUMENTS]: 'Additional documents',
   [FileType.AUTHORITY]: 'Power of Attorney',
 };
+
+// --- ADDRESSES --- //
+export function addressLabel(wallet: UserAddress | Session): string {
+  const custodyLabel = 'DFX Safe';
+  return ('role' in wallet && wallet.role === UserRole.CUSTODY) || ('isCustody' in wallet && wallet.isCustody)
+    ? custodyLabel
+    : wallet.address ?? '';
+}

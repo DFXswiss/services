@@ -132,7 +132,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
           />
           <StyledInput
             name="contractAddress"
-            autocomplete="contractAddress"
+            autocomplete="contract-address"
             label={translate('screens/blockchain', 'Contract address')}
             placeholder={translate('screens/kyc', 'John Doe')}
             full

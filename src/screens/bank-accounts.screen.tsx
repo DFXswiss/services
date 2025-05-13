@@ -32,7 +32,7 @@ export default function BankAccountsScreen(): JSX.Element {
   const { goBack } = useNavigation();
   const { width } = useWindowContext();
   const { translate } = useSettingsContext();
-  const { bankAccounts, updateAccount, isLoading } = useBankAccountContext();
+  const { bankAccounts, updateAccount, isAccountLoading } = useBankAccountContext();
 
   const isMissingTxIssue = useRef<boolean>(state?.isMissingTxIssue);
   const [editAccount, setEditAccount] = useState<BankAccount>();
@@ -47,7 +47,7 @@ export default function BankAccountsScreen(): JSX.Element {
         <EditBankAccount bankAccount={editAccount} onClose={() => setEditAccount(undefined)} />
       ) : (
         <StyledVerticalStack full gap={6} center>
-          {isLoading ? (
+          {isAccountLoading ? (
             <div className="mt-4">
               <StyledLoadingSpinner size={SpinnerSize.LG} />
             </div>

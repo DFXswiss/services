@@ -1,6 +1,7 @@
 import { Blockchain, Buy, Sell, Swap, useSessionContext } from '@dfx.swiss/react';
 import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useChange } from 'src/hooks/change.hook';
 import { Service } from '../App';
 import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
@@ -55,6 +56,7 @@ const urlParamsToRemove = [
   'bank-account',
   'external-transaction-id',
   'lightning',
+  'trezor-connect-src',
 ];
 
 export interface AppParams {
@@ -199,12 +201,12 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const search = (window as Window).location.search;
   const query = new URLSearchParams(search);
 
-  useEffect(() => {
-    if (isSessionInitialized && !isLoggedIn) {
+  useChange((newVal, oldVal) => {
+    if (!newVal && oldVal) {
       storeQueryParams.remove();
       setParams({});
     }
-  }, [isSessionInitialized, isLoggedIn]);
+  }, isLoggedIn);
 
   useEffect(() => {
     isSessionInitialized && init();
@@ -246,13 +248,14 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   }
 
   function loadQueryParams(): AppParams {
-    let queryParams = extractUrlParams(props.params);
+    const queryParams = extractUrlParams(props.params);
+    const storeParams = removeSession(queryParams);
 
     const storedParams = storeQueryParams.get();
-    if ((paramsIsNotEmpty(queryParams) && !paramsHasSession(storedParams)) || paramsHasSession(queryParams)) {
-      storeQueryParams.set(removeSession(queryParams));
+    if (paramsIsNotEmpty(storeParams)) {
+      storeQueryParams.set(storeParams);
     } else {
-      queryParams = storedParams ?? {};
+      Object.assign(queryParams, storedParams ?? {});
     }
 
     setParams(queryParams);

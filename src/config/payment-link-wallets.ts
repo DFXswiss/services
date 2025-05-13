@@ -7,12 +7,6 @@ export const PaymentStandards = {
     description: 'Pay with OpenCryptoPay, Bitcoin Lightning LNURL',
     paymentIdentifierLabel: 'URL',
   },
-  [PaymentStandardType.FRANKENCOIN_PAY]: {
-    id: PaymentStandardType.FRANKENCOIN_PAY,
-    label: 'FrankencoinPay.com',
-    description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
-    paymentIdentifierLabel: 'URL',
-  },
   [PaymentStandardType.LIGHTNING_BOLT11]: {
     id: PaymentStandardType.LIGHTNING_BOLT11,
     label: 'Bitcoin Lightning',
@@ -28,7 +22,7 @@ export const PaymentStandards = {
   },
 };
 
-export const RecommendedWallets = ['Frankencoin', 'Phoenix', 'Wallet of Satoshi', 'BtcTaro'];
+export const RecommendedWallets = ['Cake Wallet', 'Frankencoin', 'Phoenix', 'Wallet of Satoshi', 'BtcTaro'];
 
 export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: string; recommended?: boolean } } = {
   BitBanana: {
@@ -42,6 +36,10 @@ export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
   Blink: {
     websiteUrl: 'https://de.blink.sv/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blink.webp',
+  },
+  'Blitz Wallet': {
+    websiteUrl: 'https://blitz-wallet.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BlitzWalletApp.webp',
   },
   Blixt: {
     websiteUrl: 'https://blixtwallet.com/',
@@ -58,6 +56,10 @@ export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
   BtcTaro: {
     websiteUrl: 'https://dfx.swiss/bitcoin.html',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCTaroDFX.webp',
+  },
+  'Cake Wallet': {
+    websiteUrl: 'https://cakewallet.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CakeWallet.webp',
   },
   CoinCorner: {
     websiteUrl: 'https://www.coincorner.com/',

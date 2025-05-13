@@ -95,11 +95,13 @@ export function AddBankAccount({ onSubmit, confirmationText }: AddBankAccountPro
       <StyledVerticalStack gap={4}>
         <StyledInput
           name="iban"
+          autocomplete="iban"
           label={translate('screens/payment', 'IBAN')}
-          placeholder={translate('screens/payment', 'CH46 8914 4632 3427 5387 5')}
+          placeholder="XX XXXX XXXX XXXX XXXX X"
         />
         <StyledInput
           name="label"
+          autocomplete="iban-label"
           label={translate('screens/sell', 'Optional - Account Designation')}
           placeholder={translate('screens/sell', 'e.g. Deutsche Bank')}
         />

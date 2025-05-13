@@ -1,5 +1,11 @@
 import { KycLevel, KycStepName, KycStepType, LimitPeriod, TradingLimit, Utils, useUserContext } from '@dfx.swiss/react';
-import { DocumentType, GenderType, LegalEntity, SignatoryPower } from '@dfx.swiss/react/dist/definitions/kyc';
+import {
+  AccountType,
+  DocumentType,
+  GenderType,
+  LegalEntity,
+  SignatoryPower,
+} from '@dfx.swiss/react/dist/definitions/kyc';
 import { useMemo } from 'react';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from './navigation.hook';
@@ -13,9 +19,11 @@ interface KycHelperInterface {
 
   levelToString: (level: number) => string;
   limitToString: (limit: TradingLimit) => string;
+  accountTypeToString: (accountType: AccountType) => string;
   nameToString: (stepName: KycStepName) => string;
   typeToString: (stepType: KycStepType) => string;
   legalEntityToString: (entity: LegalEntity) => string;
+  legalEntityToDescription: (entity: LegalEntity) => string | undefined;
   genderTypeToString: (genderType: GenderType) => string;
   documentTypeToString: (documentType: DocumentType) => string;
   signatoryPowerToString: (power: SignatoryPower) => string;
@@ -28,18 +36,27 @@ export function useKycHelper(): KycHelperInterface {
 
   const periodMap: Record<LimitPeriod, string> = {
     [LimitPeriod.DAY]: 'per 24h',
+    [LimitPeriod.MONTH]: 'per 30 days',
     [LimitPeriod.YEAR]: 'per year',
+  };
+
+  const accountTypeMap: Record<AccountType, string> = {
+    [AccountType.PERSONAL]: 'Personal',
+    [AccountType.ORGANIZATION]: 'Organization / company',
+    [AccountType.SOLE_PROPRIETORSHIP]: 'Sole proprietorship',
   };
 
   const stepMap: Record<KycStepName, string> = {
     [KycStepName.CONTACT_DATA]: 'Contact data',
     [KycStepName.PERSONAL_DATA]: 'Personal data',
     [KycStepName.LEGAL_ENTITY]: 'Legal entity',
-    [KycStepName.STOCK_REGISTER]: 'Shareholder register',
+    [KycStepName.OWNER_DIRECTORY]: 'Owner directory',
     [KycStepName.NATIONALITY_DATA]: 'Nationality',
     [KycStepName.COMMERCIAL_REGISTER]: 'Commercial register',
     [KycStepName.SIGNATORY_POWER]: 'Signatory power',
     [KycStepName.AUTHORITY]: 'Power of Attorney',
+    [KycStepName.BENEFICIAL_OWNER]: 'Beneficial owners',
+    [KycStepName.OPERATIONAL_ACTIVITY]: 'Operational activity',
     [KycStepName.IDENT]: 'Identification',
     [KycStepName.FINANCIAL_DATA]: 'Additional data',
     [KycStepName.ADDITIONAL_DOCUMENTS]: 'Additional documents',
@@ -56,13 +73,23 @@ export function useKycHelper(): KycHelperInterface {
   };
 
   const legalEntityMap: Record<LegalEntity, string> = {
-    [LegalEntity.PUBLIC_LIMITED_COMPANY]: 'Public Limited Company',
-    [LegalEntity.LIMITED_LIABILITY_COMPANY]: 'Limited Liability Company',
+    [LegalEntity.AG]: 'Public Limited Company (PLC)',
+    [LegalEntity.GMBH]: 'Limited Liability Company (LLC)',
+    [LegalEntity.UG]: 'Entrepreneurial Company (UG)',
+    [LegalEntity.GBR]: 'Company under civil law (GbR)',
     [LegalEntity.LIFE_INSURANCE]: 'Life Insurance',
     [LegalEntity.ASSOCIATION]: 'Association',
     [LegalEntity.FOUNDATION]: 'Foundation',
     [LegalEntity.TRUST]: 'Trust',
     [LegalEntity.OTHER]: 'Other',
+  };
+
+  const legalEntityDescriptionMap: { [e in LegalEntity]?: string } = {
+    [LegalEntity.AG]: 'Publicly traded shares',
+    [LegalEntity.GMBH]: 'Privately held ownership stakes (no shareholders)',
+    [LegalEntity.UG]: 'Privately held with limited liability, low capital requirement',
+    [LegalEntity.GBR]:
+      'Simple and flexible form of cooperation between two or more people who join forces for a common purpose',
   };
 
   const genderTypeMap: Record<GenderType, string> = {
@@ -106,6 +133,10 @@ export function useKycHelper(): KycHelperInterface {
     return `${Utils.formatAmount(limit, 0)} CHF ${translate('screens/kyc', periodMap[period])}`;
   }
 
+  function accountTypeToString(accountType: AccountType): string {
+    return translate('screens/kyc', accountTypeMap[accountType]);
+  }
+
   function nameToString(stepName: KycStepName): string {
     return translate('screens/kyc', stepMap[stepName]);
   }
@@ -116,6 +147,11 @@ export function useKycHelper(): KycHelperInterface {
 
   const legalEntityToString = (entity: LegalEntity): string => {
     return translate('screens/kyc', legalEntityMap[entity]);
+  };
+
+  const legalEntityToDescription = (entity: LegalEntity): string | undefined => {
+    const description = legalEntityDescriptionMap[entity];
+    return description ? translate('screens/kyc', description) : undefined;
   };
 
   const genderTypeToString = (genderType: GenderType): string => {
@@ -142,13 +178,15 @@ export function useKycHelper(): KycHelperInterface {
       start,
       startStep,
       isComplete,
-      defaultLimit: { limit: 1000, period: LimitPeriod.DAY },
+      defaultLimit: { limit: 1000, period: LimitPeriod.MONTH },
       limit,
       levelToString,
       limitToString,
+      accountTypeToString,
       nameToString,
       typeToString,
       legalEntityToString,
+      legalEntityToDescription,
       genderTypeToString,
       documentTypeToString,
       signatoryPowerToString,

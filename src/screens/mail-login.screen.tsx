@@ -29,7 +29,7 @@ export default function MailLoginScreen() {
           window.location.href = redirectUrl;
         })
         .catch((error: ApiError) => {
-          navigate(`/error?msg=${error.message}`);
+          navigate({ pathname: `/error`, search: `?msg=${error.message}` });
         });
     } else {
       navigate('/login');

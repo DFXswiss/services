@@ -2,7 +2,9 @@ import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
 import { useMemo } from 'react';
+import { isMobile } from 'react-device-detect';
 import Web3 from 'web3';
+import { TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
 import { AssetBalance } from '../../contexts/balance.context';
 import ERC20_ABI from '../../static/erc20.abi.json';
@@ -12,8 +14,9 @@ import { timeout } from '../../util/utils';
 import { useWeb3 } from '../web3.hook';
 
 export enum WalletType {
-  META_MASK = 'MetaMask',
   RABBY = 'Rabby',
+  META_MASK = 'MetaMask',
+  IN_APP_BROWSER = 'InAppBrowser',
 }
 
 export interface MetaMaskInterface {
@@ -30,8 +33,14 @@ export interface MetaMaskInterface {
   requestBalance: (account: string) => Promise<string | undefined>;
   sign: (address: string, message: string) => Promise<string>;
   addContract: (asset: Asset, svgData: string, currentBlockchain?: Blockchain) => Promise<boolean>;
-  readBalance: (asset: Asset, address?: string) => Promise<AssetBalance>;
-  createTransaction: (amount: BigNumber, asset: Asset, from: string, to: string) => Promise<string>;
+  readBalance: (asset: Asset, address?: string, passOnException?: boolean) => Promise<AssetBalance>;
+  createTransaction: (
+    amount: BigNumber,
+    asset: Asset,
+    from: string,
+    to: string,
+    config?: { isWeiAmount?: boolean; gasPrice?: number },
+  ) => Promise<string>;
 }
 
 interface MetaMaskError {
@@ -49,12 +58,17 @@ export function useMetaMask(): MetaMaskInterface {
 
   function isInstalled(): boolean {
     const eth = ethereum();
-    return Boolean(eth && eth.isMetaMask);
+    return Boolean(eth && (eth.isMetaMask || eth.isRabby || eth.isCoinbaseWallet || eth.isTrust));
   }
 
   function getWalletType(): WalletType | undefined {
     const eth = ethereum();
     if (eth) {
+      const hasInAppWalletAgent = /MetaMask|CoinbaseWallet|Trust|Rainbow|Zerion/i.test(window.navigator.userAgent);
+      const isInApp = (eth.isTrust || eth.isCoinbaseWallet) && isMobile;
+
+      if (hasInAppWalletAgent || isInApp) return WalletType.IN_APP_BROWSER;
+
       if (eth.isRabby) return WalletType.RABBY;
       if (eth.isMetaMask) return WalletType.META_MASK;
     }
@@ -171,8 +185,12 @@ export function useMetaMask(): MetaMaskInterface {
     return new BigNumber(balance).dividedBy(Math.pow(10, decimals));
   }
 
-  async function readBalance(asset: Asset, address?: string): Promise<AssetBalance> {
-    if (!address || !asset) return { asset, amount: 0 };
+  async function readBalance(asset: Asset, address?: string, throwExceptions?: boolean): Promise<AssetBalance> {
+    if (!address || !asset) {
+      if (throwExceptions) throw new Error('No address or asset provided');
+
+      return { asset, amount: 0 };
+    }
 
     try {
       if (asset.type === AssetType.COIN) {
@@ -184,30 +202,44 @@ export function useMetaMask(): MetaMaskInterface {
       return await tokenContract.methods
         .balanceOf(address)
         .call()
-        .then((balance: any) => ({ asset, amount: toUsableNumber(balance, decimals) }));
-    } catch {
+        .then((balance: any) => ({ asset, amount: toUsableNumber(balance, decimals).toNumber() }));
+    } catch (e) {
+      if (throwExceptions) throw e;
+
       return { asset, amount: 0 };
     }
   }
 
-  async function createTransaction(amount: BigNumber, asset: Asset, from: string, to: string): Promise<string> {
+  async function createTransaction(
+    amount: BigNumber,
+    asset: Asset,
+    from: string,
+    to: string,
+    config?: { isWeiAmount?: boolean; gasPrice?: number },
+  ): Promise<string> {
     if (asset.type === AssetType.COIN) {
-      const transactionData = {
+      const transactionData: TransactionConfig = {
         from,
         to,
-        value: web3.utils.toWei(amount.toString(), 'ether'),
+        value: config?.isWeiAmount ? amount.toString() : web3.utils.toWei(amount.toString(), 'ether'),
         maxPriorityFeePerGas: null as any,
         maxFeePerGas: null as any,
+        gasPrice: config?.gasPrice,
       };
+
       return web3.eth.sendTransaction(transactionData).then((value) => value.transactionHash);
     } else {
       const tokenContract = createContract(asset.chainId);
-      const decimals = await tokenContract.methods.decimals().call();
-      const adjustedAmount = amount.multipliedBy(Math.pow(10, decimals)).toFixed();
+
+      let adjustedAmount = amount.toString();
+      if (!config?.isWeiAmount) {
+        const decimals = await tokenContract.methods.decimals().call();
+        adjustedAmount = amount.multipliedBy(Math.pow(10, decimals)).toFixed();
+      }
 
       return tokenContract.methods
         .transfer(to, adjustedAmount)
-        .send({ from, maxPriorityFeePerGas: null, maxFeePerGas: null })
+        .send({ from, maxPriorityFeePerGas: null, maxFeePerGas: null, gasPrice: config?.gasPrice })
         .then((value: any) => value.transactionHash);
     }
   }

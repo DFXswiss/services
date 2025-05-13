@@ -1,9 +1,11 @@
 import {
   AccountType,
   ApiError,
+  ContactPersonData,
   Country,
   DocumentType,
   GenderType,
+  KycBeneficialData,
   KycContactData,
   KycFileData,
   KycFinancialOption,
@@ -14,6 +16,7 @@ import {
   KycLevel,
   KycManualIdentData,
   KycNationalityData,
+  KycOperationalData,
   KycPersonalData,
   KycSession,
   KycSignatoryPowerData,
@@ -69,6 +72,7 @@ import { RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
+import { DefaultFileTypes } from 'src/config/file-types';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { SumsubReviewAnswer } from 'src/dto/sumsub.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
@@ -237,6 +241,7 @@ export default function KycScreen(): JSX.Element {
         navigate({ search: `?code=${e.switchToCode}` });
         logout();
       } else if (e.statusCode === 403 && e.message?.includes('2FA')) {
+        setParams({ autoStart: 'true' });
         navigate('/2fa', { setRedirect: true });
       } else if (e.statusCode === 409 && e.message?.includes('exists')) {
         if (e.message.includes('merge')) {
@@ -261,7 +266,9 @@ export default function KycScreen(): JSX.Element {
   }
 
   function onContinue() {
-    return allStepsCompleted ? navigate('/support/issue?issue-type=LimitRequest') : onLoad(true);
+    return allStepsCompleted
+      ? navigate({ pathname: '/support/issue', search: '?issue-type=LimitRequest' })
+      : onLoad(true);
   }
 
   function onConsent(client: string) {
@@ -296,6 +303,9 @@ export default function KycScreen(): JSX.Element {
 
       case KycStepStatus.OUTDATED:
         return { icon: IconVariant.REPEAT, label: translate('screens/kyc', 'Outdated'), size: IconSize.MD };
+
+      case KycStepStatus.DATA_REQUESTED:
+        return { icon: IconVariant.HELP, label: translate('screens/kyc', 'Data requested'), size: IconSize.MD };
     }
   }
 
@@ -443,6 +453,8 @@ interface EditProps {
 }
 
 function KycEdit(props: EditProps): JSX.Element {
+  const { translate } = useSettingsContext();
+
   switch (props.step.name) {
     case KycStepName.CONTACT_DATA:
       return <ContactData {...props} />;
@@ -453,20 +465,48 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.LEGAL_ENTITY:
       return <LegalEntityData {...props} />;
 
-    case KycStepName.STOCK_REGISTER:
-      return <FileUpload {...props} />;
+    case KycStepName.OWNER_DIRECTORY: {
+      const urls = {
+        EN: 'https://docs.google.com/document/d/1ICxt-RZihMyiz486NMS4gEJZdgrZG_LVTuDiLMbzyC0/edit',
+        DE: 'https://docs.google.com/document/d/11m3MkP0RALZFYRoxZNdY0SwVv8oN3Vl_gzXaIO_YIxY/edit',
+        FR: 'https://docs.google.com/document/d/1uRV6Z1D6FYmF6VQZLfXK8GniR7hf5a9phBRqGNYlqW4/edit',
+      };
+
+      return <FileUpload {...props} templateUrls={urls} />;
+    }
 
     case KycStepName.NATIONALITY_DATA:
       return <NationalityData {...props} />;
 
     case KycStepName.COMMERCIAL_REGISTER:
-      return <FileUpload {...props} />;
+      return (
+        <FileUpload
+          {...props}
+          hint={translate(
+            'screens/kyc',
+            'An internet excerpt is sufficient. No notarization is required. The extract must not be older than 2 months.',
+          )}
+        />
+      );
 
     case KycStepName.SIGNATORY_POWER:
       return <SignatoryPowerData {...props} />;
 
-    case KycStepName.AUTHORITY:
-      return <FileUpload {...props} />;
+    case KycStepName.AUTHORITY: {
+      const urls = {
+        EN: 'https://docs.google.com/document/d/1PKk0XvX6v7wdcO-bjCVJXj56uuIlDToca6Zpzff_t6g/edit',
+        DE: 'https://docs.google.com/document/d/1Sqob5OAM93Uwni7U099XOXxztytXfN6i6upO9ymDgGw/edit',
+        FR: 'https://docs.google.com/document/d/17H2f0gAlNpp8e_1aEE6jTbEHbQnoLgr821yWfaSElms/edit',
+      };
+
+      return <FileUpload {...props} templateUrls={urls} />;
+    }
+
+    case KycStepName.BENEFICIAL_OWNER:
+      return <BeneficialOwner {...props} />;
+
+    case KycStepName.OPERATIONAL_ACTIVITY:
+      return <OperationalActivity {...props} />;
 
     case KycStepName.IDENT:
       if (props.step.type === KycStepType.MANUAL) {
@@ -573,6 +613,8 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack, showLinkHint
 function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
   const { allowedCountries, allowedOrganizationCountries, translate, translateError } = useSettingsContext();
   const { setPersonalData } = useKyc();
+  const { accountTypeToString } = useKycHelper();
+
   const { countryCode } = useGeoLocation();
 
   const [countries, setCountries] = useState<Country[]>([]);
@@ -658,7 +700,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
             label=""
             placeholder={translate('general/actions', 'Select') + '...'}
             items={Object.values(AccountType)}
-            labelFunc={(item) => translate('screens/kyc', item)}
+            labelFunc={(item) => translate('screens/kyc', accountTypeToString(item))}
           />
         </StyledVerticalStack>
         {selectedAccountType && (
@@ -767,7 +809,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
                   />
                   <StyledInput
                     name="organizationAddress.houseNumber"
-                    autocomplete="houseNumber"
+                    autocomplete="house-number"
                     label={translate('screens/kyc', 'House nr.')}
                     placeholder="xx"
                     small
@@ -832,7 +874,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
 function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setLegalEntityData } = useKyc();
-  const { legalEntityToString } = useKycHelper();
+  const { legalEntityToString, legalEntityToDescription } = useKycHelper();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
@@ -873,6 +915,7 @@ function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps):
             placeholder={translate('general/actions', 'Select') + '...'}
             items={Object.values(LegalEntity)}
             labelFunc={(item) => legalEntityToString(item)}
+            descriptionFunc={(item) => legalEntityToDescription(item) ?? ''}
           />
         </StyledVerticalStack>
 
@@ -969,13 +1012,20 @@ interface FormDataFile {
   file: File;
 }
 
-function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
-  const { translate, translateError } = useSettingsContext();
+interface FileUploadProps extends EditProps {
+  templateUrls?: { [lang: string]: string };
+  hint?: string;
+}
+
+function FileUpload({ code, isLoading, step, onDone, templateUrls, hint }: FileUploadProps): JSX.Element {
+  const { translate, translateError, language } = useSettingsContext();
   const { nameToString } = useKycHelper();
   const { setFileData } = useKyc();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
+
+  const templateUrl = language && templateUrls && (templateUrls[language.symbol] ?? templateUrls.EN);
 
   const {
     control,
@@ -1007,14 +1057,7 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
   const rules = Utils.createRules({
     file: [
       Validations.Required,
-      Validations.Custom((file) =>
-        file?.type === 'application/pdf' ||
-        file?.type === 'image/png' ||
-        file?.type === 'image/jpg' ||
-        file?.type === 'image/jpeg'
-          ? true
-          : 'file_type',
-      ),
+      Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
     ],
   });
 
@@ -1033,6 +1076,18 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
             full
           />
         </StyledVerticalStack>
+
+        {templateUrl && (
+          <StyledButton
+            type="button"
+            label={translate('screens/kyc', 'Document template')}
+            onClick={() => window.open(templateUrl, '_blank')}
+            width={StyledButtonWidth.FULL}
+            color={StyledButtonColor.GRAY_OUTLINE}
+          />
+        )}
+
+        {hint && <div className="text-dfxGray-700 text-sm">{hint}</div>}
 
         {error && (
           <div>
@@ -1119,6 +1174,401 @@ function SignatoryPowerData({ rootRef, code, isLoading, step, onDone }: EditProp
   );
 }
 
+enum BeneficialDataStep {
+  OWNER_COUNT = 'OwnerCount',
+  ACCOUNT_HOLDER_INVOLVED = 'AccountHolderInvolved',
+  CONTACT_DATA = 'ContactData',
+}
+
+interface BeneficialOwnerFormData {
+  ownerCount: number;
+  isAccountHolderInvolved: boolean;
+  owners?: ContactPersonData[];
+  director?: ContactPersonData;
+}
+
+function BeneficialOwner({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError, allowedCountries } = useSettingsContext();
+  const { setBeneficialData } = useKyc();
+
+  const [currentStep, setCurrentStep] = useState(BeneficialDataStep.OWNER_COUNT);
+  const [ownerIndex, setOwnerIndex] = useState(0);
+
+  const [reload, setReload] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+    setValue,
+  } = useForm<BeneficialOwnerFormData>({ mode: 'onTouched' });
+
+  const maxOwnerCount = 4;
+  const ownerCount = useWatch({ control, name: 'ownerCount' });
+  const isAccountHolderInvolved = useWatch({ control, name: 'isAccountHolderInvolved' });
+  const currentOwner = ownerIndex + 1 + (isAccountHolderInvolved ? 1 : 0);
+
+  function onSubmit(formData: BeneficialOwnerFormData) {
+    if (!step.session) return;
+
+    setError(undefined);
+
+    const requiredOwnerCount = ownerCount - (formData.isAccountHolderInvolved ? 1 : 0);
+
+    switch (currentStep) {
+      case BeneficialDataStep.OWNER_COUNT:
+        if (ownerCount === 0) {
+          setValue('owners', undefined);
+        } else {
+          setValue('director', undefined);
+        }
+        setCurrentStep(BeneficialDataStep.ACCOUNT_HOLDER_INVOLVED);
+        clearInputs();
+        return;
+
+      case BeneficialDataStep.ACCOUNT_HOLDER_INVOLVED:
+        if ((ownerCount === 0 && !formData.isAccountHolderInvolved) || requiredOwnerCount > 0) {
+          setCurrentStep(BeneficialDataStep.CONTACT_DATA);
+          clearInputs();
+          return;
+        }
+        break;
+
+      case BeneficialDataStep.CONTACT_DATA:
+        if (ownerIndex + 1 < requiredOwnerCount) {
+          setOwnerIndex((i) => (i ?? -1) + 1);
+          clearInputs();
+          return;
+        }
+        break;
+    }
+
+    const data: KycBeneficialData = {
+      hasBeneficialOwners: ownerCount > 0,
+      isAccountHolderInvolved: formData.isAccountHolderInvolved,
+      beneficialOwners: formData.owners,
+      managingDirector: formData.director,
+    };
+
+    setIsUpdating(true);
+    setBeneficialData(code, step.session.url, data)
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  function clearInputs() {
+    // reload input fields to trigger UI refresh
+    setReload(true);
+    setTimeout(() => setReload(false));
+  }
+
+  function back() {
+    switch (currentStep) {
+      case BeneficialDataStep.ACCOUNT_HOLDER_INVOLVED:
+        setCurrentStep(BeneficialDataStep.OWNER_COUNT);
+        break;
+
+      case BeneficialDataStep.CONTACT_DATA:
+        if (ownerIndex) {
+          setOwnerIndex((i) => i - 1);
+        } else {
+          setCurrentStep(BeneficialDataStep.ACCOUNT_HOLDER_INVOLVED);
+        }
+        break;
+    }
+
+    clearInputs();
+  }
+
+  const rules = Utils.createRules({
+    ownerCount: Validations.Required,
+    isAccountHolderInvolved: Validations.Custom((v) => (v == null ? 'required' : true)),
+
+    ...Array.from({ length: maxOwnerCount })
+      .map((_, i) => i)
+      .map((c) => ({
+        [`owners.${c}.firstName`]: Validations.Required,
+        [`owners.${c}.lastName`]: Validations.Required,
+        [`owners.${c}.street`]: Validations.Required,
+        [`owners.${c}.zip`]: Validations.Required,
+        [`owners.${c}.city`]: Validations.Required,
+        [`owners.${c}.country`]: Validations.Required,
+      }))
+      .reduce((prev, curr) => ({ ...prev, ...curr })),
+
+    [`director.firstName`]: Validations.Required,
+    [`director.lastName`]: Validations.Required,
+    [`director.street`]: Validations.Required,
+    [`director.zip`]: Validations.Required,
+    [`director.city`]: Validations.Required,
+    [`director.country`]: Validations.Required,
+  });
+
+  const contactPersonLabel =
+    ownerCount === 0
+      ? translate('screens/kyc', 'Managing director')
+      : translate('screens/kyc', 'Beneficial owner') +
+        (currentOwner === 1 && ownerCount === 1 ? '' : ` ${currentOwner}/${ownerCount}`);
+  const contactPersonPrefix = ownerCount === 0 ? 'director' : `owners.${ownerIndex}`;
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      {!reload && (
+        <StyledVerticalStack gap={6} full center>
+          {currentStep === BeneficialDataStep.OWNER_COUNT ? (
+            <StyledVerticalStack gap={2} full center>
+              <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+                {translate(
+                  'screens/kyc',
+                  'How many natural persons are there who directly or indirectly hold 25% or more of company shares?',
+                )}
+              </p>
+              <StyledDropdown
+                rootRef={rootRef}
+                name="ownerCount"
+                full
+                label=""
+                placeholder={translate('general/actions', 'Select') + '...'}
+                items={Array.from({ length: maxOwnerCount + 1 }).map((_, i) => i)}
+                labelFunc={(item) => (item ? `${item}` : translate('screens/kyc', 'None'))}
+              />
+            </StyledVerticalStack>
+          ) : currentStep === BeneficialDataStep.ACCOUNT_HOLDER_INVOLVED ? (
+            <StyledVerticalStack gap={2} full center>
+              <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+                {translate('screens/kyc', 'Is the account holder {{name}}{{role}}?', {
+                  name: step.session?.additionalInfo?.accountHolder
+                    ? `(${step.session?.additionalInfo?.accountHolder}) `
+                    : '',
+                  role:
+                    ownerCount === 0
+                      ? translate('screens/kyc', 'the managing director')
+                      : translate('screens/kyc', 'a beneficial owner'),
+                })}
+              </p>
+              <StyledDropdown
+                rootRef={rootRef}
+                name="isAccountHolderInvolved"
+                full
+                label=""
+                placeholder={translate('general/actions', 'Select') + '...'}
+                items={[true, false]}
+                labelFunc={(item) => translate('general/actions', item ? 'Yes' : 'No')}
+              />
+            </StyledVerticalStack>
+          ) : (
+            <StyledVerticalStack gap={2} full>
+              <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">{contactPersonLabel}</p>
+              <StyledHorizontalStack gap={2}>
+                <StyledInput
+                  name={`${contactPersonPrefix}.firstName`}
+                  autocomplete="firstname"
+                  label={translate('screens/kyc', 'First name')}
+                  placeholder={translate('screens/kyc', 'John')}
+                  full
+                  smallLabel
+                />
+                <StyledInput
+                  name={`${contactPersonPrefix}.lastName`}
+                  autocomplete="lastname"
+                  label={translate('screens/kyc', 'Last name')}
+                  placeholder={translate('screens/kyc', 'Doe')}
+                  full
+                  smallLabel
+                />
+              </StyledHorizontalStack>
+              <StyledHorizontalStack gap={2}>
+                <StyledInput
+                  name={`${contactPersonPrefix}.street`}
+                  autocomplete="street"
+                  label={translate('screens/kyc', 'Street')}
+                  placeholder={translate('screens/kyc', 'Street')}
+                  full
+                  smallLabel
+                />
+                <StyledInput
+                  name={`${contactPersonPrefix}.houseNumber`}
+                  autocomplete="house-number"
+                  label={translate('screens/kyc', 'House nr.')}
+                  placeholder="xx"
+                  small
+                  smallLabel
+                />
+              </StyledHorizontalStack>
+              <StyledHorizontalStack gap={2}>
+                <StyledInput
+                  name={`${contactPersonPrefix}.zip`}
+                  autocomplete="zip"
+                  label={translate('screens/kyc', 'ZIP code')}
+                  placeholder="12345"
+                  small
+                  smallLabel
+                />
+                <StyledInput
+                  name={`${contactPersonPrefix}.city`}
+                  autocomplete="city"
+                  label={translate('screens/kyc', 'City')}
+                  placeholder="Berlin"
+                  full
+                  smallLabel
+                />
+              </StyledHorizontalStack>
+              <StyledSearchDropdown<Country>
+                rootRef={rootRef}
+                name={`${contactPersonPrefix}.country`}
+                autocomplete="country"
+                label={translate('screens/kyc', 'Country')}
+                placeholder={translate('general/actions', 'Select') + '...'}
+                items={allowedCountries}
+                labelFunc={(item) => item.name}
+                filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+                matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+                smallLabel
+              />
+            </StyledVerticalStack>
+          )}
+
+          {error && (
+            <div>
+              <ErrorHint message={error} />
+            </div>
+          )}
+
+          <div className="w-full flex flex-col gap-2">
+            <StyledButton
+              type="submit"
+              label={translate('general/actions', 'Next')}
+              onClick={handleSubmit(onSubmit)}
+              width={StyledButtonWidth.FULL}
+              disabled={!isValid}
+              isLoading={isUpdating || isLoading}
+            />
+            {currentStep !== BeneficialDataStep.OWNER_COUNT && !(isUpdating || isLoading) && (
+              <StyledButton
+                type="button"
+                label={translate('general/actions', 'Back')}
+                onClick={back}
+                width={StyledButtonWidth.FULL}
+                color={StyledButtonColor.STURDY_WHITE}
+              />
+            )}
+          </div>
+        </StyledVerticalStack>
+      )}
+    </Form>
+  );
+}
+
+interface OperationalActivityFormData {
+  isOperational: boolean;
+  website?: string;
+}
+
+function OperationalActivity({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { setOperationalData } = useKyc();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<OperationalActivityFormData>({ mode: 'onTouched' });
+
+  const isOperational = useWatch({ control, name: 'isOperational' });
+
+  function onSubmit(formData: OperationalActivityFormData) {
+    if (!step.session) return;
+
+    setError(undefined);
+
+    const data: KycOperationalData = {
+      isOperational: formData.isOperational,
+      websiteUrl: formData.website,
+    };
+
+    setIsUpdating(true);
+    setOperationalData(code, step.session.url, data)
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    isOperational: Validations.Custom((v) => (v == null ? 'required' : true)),
+    website: Validations.Custom((v) =>
+      !v || /^https:\/\/[a-zA-Z0-9.-]+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?$/.test(v) ? true : 'pattern',
+    ),
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      {
+        <StyledVerticalStack gap={6} full center>
+          <StyledVerticalStack gap={2} full center>
+            <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+              {translate('screens/kyc', 'Is the organization operationally active?')}
+            </p>
+            <p className="w-full text-dfxGray-700 text-xs text-start">
+              {translate(
+                'screens/kyc',
+                'Organizations that primarily manage their own money, such as investment companies, are considered non-operating. Operationally active organizations are those that offer and sell goods or services, conduct regular business activities that generate revenue, employ staff and have operational structures.',
+              )}
+            </p>
+            <StyledDropdown
+              rootRef={rootRef}
+              name="isOperational"
+              full
+              label=""
+              placeholder={translate('general/actions', 'Select') + '...'}
+              items={[true, false]}
+              labelFunc={(item) => translate('general/actions', item ? 'Yes' : 'No')}
+            />
+          </StyledVerticalStack>
+
+          {isOperational && (
+            <StyledVerticalStack gap={2} full>
+              <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+                {translate('screens/kyc', 'Organization website (optional)')}
+              </p>
+              <StyledInput
+                name="website"
+                autocomplete="website"
+                type="url"
+                placeholder={translate('screens/kyc', 'https://my-organization.org')}
+                full
+                smallLabel
+              />
+            </StyledVerticalStack>
+          )}
+
+          {error && (
+            <div>
+              <ErrorHint message={error} />
+            </div>
+          )}
+
+          <div className="w-full flex flex-col gap-2">
+            <StyledButton
+              type="submit"
+              label={translate('general/actions', 'Next')}
+              onClick={handleSubmit(onSubmit)}
+              width={StyledButtonWidth.FULL}
+              disabled={!isValid}
+              isLoading={isUpdating || isLoading}
+            />
+          </div>
+        </StyledVerticalStack>
+      }
+    </Form>
+  );
+}
+
 function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element {
   const { translate } = useSettingsContext();
 
@@ -1159,6 +1609,10 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
         lang: lang.symbol.toLowerCase(),
       })
       .withOptions({ addViewportTag: false, adaptIframeHeight: true })
+      .on(
+        'idCheck.applicantStatus',
+        (payload: any) => payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.GREEN && setIsDone(true),
+      )
       .on('idCheck.stepCompleted', (_payload) => setIsDone(true))
       .on('idCheck.onError', ({ error }) => onError(error))
       .build();
@@ -1184,7 +1638,7 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
     ) : isDone ? (
       <StyledLoadingSpinner size={SpinnerSize.LG} />
     ) : step.type === KycStepType.SUMSUB_VIDEO ? (
-      <div id="sumsub-websdk-container"></div>
+      <div id="sumsub-websdk-container" className="w-full"></div>
     ) : (
       <>
         {step.session.type === UrlType.TOKEN ? (
@@ -1239,10 +1693,11 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const [responses, setResponses] = useState<KycFinancialResponse[]>([]);
   const [index, setIndex] = useState<number>();
 
-  const currentQuestion = index != null ? questions[index - 1] : undefined;
+  const visibleQuestions = filterQuestions(questions);
+  const currentQuestion = index != null ? visibleQuestions[index - 1] : undefined;
   const currentOptions = currentQuestion?.options ?? [];
   const currentResponse = responses.find((r) => currentQuestion?.key === r.key);
-  const nocLinkText = 'services.dfx.swiss/support/issue';
+  const nocLinkText = 'app.dfx.swiss/support/issue';
   const nocSupportLink = `${process.env.PUBLIC_URL}/support/issue?issue-type=${SupportIssueType.NOTIFICATION_OF_CHANGES}`;
 
   useEffect(() => {
@@ -1254,8 +1709,10 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
         setQuestions(questions);
         setResponses(responses);
 
-        const currentQuestion = questions.find((q) => !responses.find((r) => q.key === r.key));
-        currentQuestion && setIndex(questions.indexOf(currentQuestion) + 1);
+        const visibleQuestions = filterQuestions(questions);
+        const currentQuestion = visibleQuestions.find((q) => !responses.find((r) => q.key === r.key));
+
+        currentQuestion && setIndex(visibleQuestions.indexOf(currentQuestion) + 1);
       })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
@@ -1312,6 +1769,14 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
     );
   }
 
+  function filterQuestions(questions: KycFinancialQuestion[]): KycFinancialQuestion[] {
+    return questions.filter(
+      (q) =>
+        !q.conditions?.length ||
+        q.conditions.some((c) => responses.some((r) => r.key === c.question && r.value === c.response)),
+    );
+  }
+
   return error ? (
     <StyledVerticalStack gap={6} full center>
       <ErrorHint message={error} onBack={onBack} />
@@ -1323,7 +1788,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
           {index > 1 ? <StyledIconButton icon={IconVariant.CHEV_LEFT} size={IconSize.XL} onClick={goBack} /> : <div />}
           <h2 className="text-dfxGray-700">{currentQuestion.title}</h2>
           <p className="text-dfxGray-700">
-            {index}/{questions.length}
+            {index}/{visibleQuestions.length}
           </p>
         </div>
 
@@ -1458,14 +1923,7 @@ function ManualIdent({ rootRef, code, step, onDone }: EditProps): JSX.Element {
     documentNumber: Validations.Required,
     file: [
       Validations.Required,
-      Validations.Custom((file) =>
-        file?.type === 'application/pdf' ||
-        file?.type === 'image/png' ||
-        file?.type === 'image/jpg' ||
-        file?.type === 'image/jpeg'
-          ? true
-          : 'file_type',
-      ),
+      Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
     ],
   });
 
@@ -1504,7 +1962,7 @@ function ManualIdent({ rootRef, code, step, onDone }: EditProps): JSX.Element {
 
             <StyledInput
               name="birthName"
-              autocomplete="birthName"
+              autocomplete="lastname"
               label={translate('screens/kyc', 'Birth name')}
               placeholder={translate('screens/kyc', 'John Doe')}
               full
@@ -1560,6 +2018,7 @@ function ManualIdent({ rootRef, code, step, onDone }: EditProps): JSX.Element {
             />
             <StyledInput
               name="documentNumber"
+              autocomplete="ident-document"
               label={translate('screens/kyc', 'Document number')}
               placeholder="12345"
               full

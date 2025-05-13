@@ -28,6 +28,7 @@
     "Browse": "Parcourir",
     "Rename address": "Renommer l'adresse",
     "Delete address": "Supprimer l'adresse",
+    "Add new address": "Ajouter une adresse",
     "Delete account": "Supprimer le compte",
     "Edit email": "Modifier l'e-mail",
     "Edit phone number": "Modifier le numéro de téléphone",
@@ -35,10 +36,12 @@
     "Open Explorer": "Ouvrir l'explorateur",
     "Select transaction": "Sélectionner la transaction",
     "Download": "Télécharger",
+    "Download QR code": "Télécharger le code QR",
     "Confirm refund": "Confirmer le remboursement",
     "Request refund": "Demander un remboursement",
     "Copy Link": "Copier le lien",
     "Open invoice": "Ouvrir la facture",
+    "Open receipt": "Ouvrir le reçu",
     "Create ticket": "Créer un ticket",
     "Create support ticket": "Créer un ticket de support",
     "View file": "Voir le fichier",
@@ -55,6 +58,7 @@
     "Only JSON files are allowed": "Seuls les fichiers JSON sont autorisés",
     "Allowed formats: PDF, JPG, JPEG, PNG": "Formats autorisés : PDF, JPG, JPEG, PNG",
     "Invalid date format": "Format de date invalide",
+    "Maximum allowed characters: 4000": "Nombre maximum de caractères autorisés : 4000",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer. Si le problème persiste, veuillez contacter notre service d'assistance.",
     "invoice": "DFX ne reconnaît pas un destinataire nommé <strong>{{recipient}}</strong>. Ce service ne peut être utilisé que pour des destinataires ayant un compte actif chez DFX et activés pour le service de facturation. Si vous souhaitez vous inscrire en tant que destinataire chez DFX, veuillez contacter le support à <link>{{supportLink}}</link>."
@@ -68,6 +72,7 @@
     "This step has already been finished.": "Cette étape est déjà terminée.",
 
     "per 24h": "par 24h",
+    "per 30 days": "par 30 jours",
     "per year": "par an",
 
     "Terminated": "Terminé",
@@ -82,21 +87,32 @@
     "Legal entity": "Personne juridique",
     "Nationality": "Nationalité",
     "Nationality (according to identification document)": "Nationalité (selon le document d'identification)",
-    "Shareholder register": "Registre des actionnaires",
+    "Owner directory": "Annuaire des propriétaires",
     "Commercial register": "Registre du commerce",
     "Signatory power": "Pouvoir de signature",
     "Power of Attorney": "Procuration",
+    "Beneficial owner": "Bénéficiaire effectif",
+    "Beneficial owners": "Bénéficiaires effectifs",
+    "Operational activity": "Activité opérationnelle",
     "Additional documents": "Documents supplémentaires",
     "Residence permit": "Permis de séjour",
     "DFX approval": "Approbation DFX",
 
-    "Public Limited Company": "Société anonyme",
-    "Limited Liability Company": "Société à responsabilité limitée",
+    "Public Limited Company (PLC)": "Société anonyme (SA)",
+    "Limited Liability Company (LLC)": "Société à responsabilité limitée (SARL)",
+    "Entrepreneurial Company (UG)": "Société entrepreneuriale (UG)",
+    "Company under civil law (GbR)": "Société civile (GbR)",
     "Life Insurance": "Assurance-vie",
     "Association": "Association",
     "Foundation": "Fondation",
     "Trust": "Fiducie",
     "Other": "Autre",
+    "Publicly traded shares": "Actions cotées en bourse",
+    "Privately held ownership stakes (no shareholders)": "Participations privées (pas d'actionnaires)",
+    "Privately held with limited liability, low capital requirement": "Propriété privée à responsabilité limitée, faible exigence de capital",
+    "Simple and flexible form of cooperation between two or more people who join forces for a common purpose": "Forme simple et flexible de coopération entre deux ou plusieurs personnes qui s'associent dans un but commun",
+    "An internet excerpt is sufficient. No notarization is required. The extract must not be older than 2 months.": "Un extrait d'internet suffit. Aucune authentification n'est requise. L'extrait ne doit pas dater de plus de 2 mois.",
+    "Document template": "Modèle de document",
 
     "Female": "Femme",
     "Male": "Homme",
@@ -121,13 +137,14 @@
     "Completed": "Terminé",
     "Failed": "Échoué",
     "Outdated": "Obsolète",
+    "Data requested": "Données demandées",
 
     "Optional": "Facultatif",
 
     "Account Type": "Type de compte",
     "Personal": "Personnel",
-    "Organization": "Organisation",
-    "SoleProprietorship": "Entreprise individuelle",
+    "Organization / company": "Organisation / entreprise",
+    "Sole proprietorship": "Entreprise individuelle",
     "Personal Information": "Informations personnelles",
     "Gender": "Sexe",
     "First name": "Prénom",
@@ -159,21 +176,29 @@
     "Please fill in personal information to continue": "Veuillez compléter vos informations personnelles pour continuer",
     "Please enter your contact information so that we can find your account": "Veuillez saisir vos coordonnées afin que nous puissions retrouver votre compte",
 
+    "How many natural persons are there who directly or indirectly hold 25% or more of company shares?": "Combien de personnes physiques détiennent directement ou indirectement 25 % ou plus des parts de l'entreprise ?",
+    "None": "Aucune",
+    "Is the account holder {{name}}{{role}}?": "Le titulaire du compte {{name}}est-il {{role}} ?",
+    "the managing director": "le directeur général",
+    "a beneficial owner": "un bénéficiaire effectif",
+    "Managing director": "Directeur général",
+
     "It looks like you already have an account with DFX.": "Il semble que vous ayez déjà un compte chez DFX.",
     "We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.": "Nous venons de vous envoyer un e-mail. Pour continuer avec votre compte existant, veuillez confirmer votre adresse e-mail en cliquant sur le lien envoyé.",
     "We have sent a 6-digit code to your new email address. Please enter it here.": "Nous avons envoyé un code à 6 chiffres à votre nouvelle adresse e-mail. Veuillez le saisir ici.",
     "Start the KYC process with the same email to merge your accounts.": "Commencez le processus KYC avec le même e-mail pour fusionner vos comptes.",
     "No matching account was found.": "Aucun compte correspondant n'a été trouvé.",
-    "Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.": "Votre compte doit être vérifié dès que votre volume de transactions quotidiennes dépasse {{limit}}. Si vous souhaitez augmenter votre limite quotidienne de transactions, veuillez compléter notre processus KYC (Know-Your-Customer).",
+    "Your account needs to get verified once your transaction volume exceeds {{limit}}. If you want to increase your trading limit, please complete our KYC (Know-Your-Customer) process.": "Votre compte doit être vérifié dès que votre volume de transactions dépasse {{limit}}. Si vous souhaitez augmenter votre limite de transactions, veuillez compléter notre processus KYC (Know-Your-Customer).",
     "This transaction exceeds your trading limit of {{limit}}. If you would like to increase your limit, please submit a request using the button below.": "Cette transaction dépasse votre limite de transactions de {{limit}}. Si vous souhaitez augmenter votre limite, veuillez soumettre une demande en utilisant le bouton ci-dessous.",
     "This transaction is only possible with a verified account. Please complete our KYC (Know-Your-Customer) process.": "Cette transaction n'est possible qu'avec un compte vérifié. Veuillez compléter notre processus KYC (Know-Your-Customer).",
     "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Les transactions bancaires instantanées ne sont possibles qu'avec un compte vérifié. Si vous souhaitez utiliser SEPA Instant, veuillez compléter notre processus KYC (Know-Your-Customer).",
     "We are unable to process this transaction due to restrictions based on your nationality.": "Nous ne pouvons pas traiter cette transaction en raison de restrictions basées sur votre nationalité.",
     "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Note : Votre compte n'est pas vérifié. Votre transaction ne sera traitée que si vous n'avez pas le même nom qu'une personne sanctionnée ou politiquement exposée.",
     "A buy bank transaction or identification by video is required once {{volume}} exceeds {{limit}}.": "Une opération d'achat en banque ou une identification par vidéo est requise dès que {{volume}} dépasse {{limit}}.",
-    "your daily sell transaction volume": "votre volume quotidien de transactions de vente",
-    "your daily swap transaction volume": "votre volume quotidien d'opérations de swap",
-    "your daily credit card transaction volume": "votre volume quotidien de transactions par carte de crédit",
+    "Identification by video is required once your transaction volume exceeds {{limit}}.": "Une identification par vidéo est requise dès que votre volume de transactions dépasse {{limit}}.",
+    "your sell transaction volume": "votre volume de transactions de vente",
+    "your swap transaction volume": "votre volume d'opérations de swap",
+    "your credit card transaction volume": "votre volume de transactions par carte de crédit",
     "Complete KYC": "Compléter le KYC",
     "Enter user data": "Saisir les données",
     "Increase limit": "Augmenter la limite",
@@ -198,7 +223,16 @@
     "Stock register": "Registre des actions",
 
     "File download": "Téléchargement de fichier",
-    "UserData IDs": "UserData IDs"
+    "Data upload": "Téléchargement des données",
+    "UserData ID": "UserData ID",
+    "UserData IDs": "UserData IDs",
+    "Event date": "Date de l'événement",
+    "Comment": "Commentaire",
+
+    "Is the organization operationally active?": "L'organisation est-elle opérationnellement active ?",
+    "Organizations that primarily manage their own money, such as investment companies, are considered non-operating. Operationally active organizations are those that offer and sell goods or services, conduct regular business activities that generate revenue, employ staff and have operational structures.": "Les organisations qui gèrent principalement leur propre argent, comme les sociétés d'investissement, sont considérées comme non opérationnelles. Les organisations opérationnelles sont celles qui offrent et vendent des biens ou des services, exercent des activités commerciales régulières générant des revenus, emploient du personnel et disposent de structures opérationnelles.",
+    "Organization website (optional)": "Site web de l'organisation (optionnel)",
+    "https://my-organization.org": "https://mon-entreprise.org"
   },
   "screens/2fa": {
     "2FA": "2FA",
@@ -262,6 +296,7 @@
     "Please confirm the connection in your wallet.": "Veuillez confirmer la connexion dans votre portefeuille.",
     "Please confirm the connection with your Ledger.": "Veuillez confirmer la connexion avec votre Ledger.",
     "Connection failed!": "Échec de la connexion !",
+    "Please make sure that all other applications and browser extensions that are connected to the ledger are completely closed when you try to connect.\nThis includes third-party wallets (Ledger Live, Metamask, Daedalus, MyEtherWallet) or other applications that could interfere with the connection between DFX.swiss and your ledger device.": "Veuillez vous assurer que toutes les autres applications et extensions de navigateur connectées au Ledger sont complètement fermées lorsque vous essayez de vous connecter.\nCela inclut les portefeuilles tiers (Ledger Live, Metamask, Daedalus, MyEtherWallet) ou d'autres applications qui pourraient interférer avec la connexion entre DFX.swiss et votre appareil Ledger.",
 
     "Connect your {{device}} with your computer": "Connectez votre {{device}} à votre ordinateur",
     "Click on \"Connect\"": "Cliquez sur \"Connecter\"",
@@ -332,7 +367,7 @@
     "User count": "Nombre d'utilisateurs",
     "Active user count": "Nombre d'utilisateurs actifs",
 
-    "Address selection": "Sélection d'adresse"
+    "Please select an address or add a new one to continue.": "Veuillez sélectionner une adresse ou en ajouter une nouvelle pour continuer."
   },
   "screens/buy": {
     "You spend": "Vous dépensez",
@@ -461,23 +496,30 @@
     "Completed": "Terminé",
     "Pending": "En attente",
     "Cancelled": "Annulé",
+    "Canceled": "Annulé",
     "Expired": "Expiré",
     "Failed": "Échec",
+    "No payment active": "Aucun paiement actif",
     "Refund pending": "Remboursement en attente",
     "Limit exceeded": "Limite dépassée",
     "Refunded": "Remboursé",
     "Unassigned": "Non attribué",
+    "Liquidity pending": "Liquidité en attente",
+    "Payout in progress": "Paiement en cours",
+    "Price undeterminable": "Prix indéterminable",
+
     "LNURL decoded": "LNURL décodé",
 
     "Failure reason": "Cause de l'erreur",
     "Unknown": "Inconnu",
     "Annual volume": "Volume annuel",
     "Daily limit exceeded": "Limite journalière dépassée",
+    "Monthly limit exceeded": "Limite mensuelle dépassée",
     "Annual limit exceeded": "Limite annuelle dépassée",
     "Account holder mismatch": "Le titulaire du compte ne correspond pas",
     "KYC rejected": "KYC refusé",
-    "Fraud suspicion": "Soupçon de fraude",
-    "Sanction suspicion": "Soupçon de sanction",
+    "Regulatory requirements": "Exigences réglementaires",
+    "Name corresponds to a PEP or sanctioned person": "Le nom correspond à une personne politiquement exposée ou sanctionnée",
     "Minimum deposit not reached": "Dépôt minimum non atteint",
     "Asset not available": "Actif non disponible",
     "Asset not available with chosen bank": "Actif non disponible avec la banque sélectionnée",
@@ -494,6 +536,7 @@
     "Address deleted": "Adresse supprimée",
     "Video identification required": "Identification par vidéo nécessaire",
     "Missing liquidity": "Liquidité manquante",
+    "KYC data needed": "Données KYC nécessaires",
 
     "Loading countries...": "Chargement des pays...",
 
@@ -522,6 +565,7 @@
     "Please send the specified amount to the address below.": "Veuillez envoyer le montant spécifié à l'adresse ci-dessous.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales.",
     "By using this service, the outstanding claim of the above-mentioned company against DFX is assigned, and the General Terms and Conditions of DFX AG apply.": "En utilisant ce service, la créance en souffrance de l’entreprise susmentionnée envers DFX est cédée, et les Conditions Générales de DFX AG s’appliquent.",
+    "Find out more about the OpenCryptoPay payment standard": "En savoir plus sur la norme de paiement OpenCryptoPay",
 
     "Payment routes": "Itinéraires de paiement",
     "Payment route": "Itinéraire de paiement",
@@ -577,11 +621,11 @@
     "Payment details": "Détails du paiement",
     "Your payment details at a glance": "Vos détails de paiement en un coup d'œil",
     "{{blockchain}} address": "Adresse {{blockchain}}",
-    "Pay with FrankencoinPay, Bitcoin Lightning LNURL": "Payer avec FrankencoinPay, Bitcoin Lightning LNURL",
     "Pay with a Bolt 11 Invoice": "Payer avec une facture Bolt 11",
     "Pay to a {{blockchain}} Blockchain address": "Payer à une adresse blockchain {{blockchain}}",
     "You have no payment routes yet": "Vous n'avez pas encore d'itinéraires de paiement",
     "Scan the QR-Code with a compatible wallet to complete the payment.": "Scannez le code QR avec un portefeuille compatible pour finaliser le paiement.",
+    "Tell the cashier that you want to pay with crypto and then scan the QR-Code with a compatible wallet to complete the payment.": "Dites au caissier que vous souhaitez payer avec de la crypto et scannez ensuite le code QR avec un portefeuille compatible pour finaliser le paiement.",
     "Recommended wallets": "Portefeuilles recommandés",
     "Compatible wallets": "Portefeuilles compatibles",
     "Invalid Payment Link": "Payment Link invalide",
@@ -638,6 +682,7 @@
 
     "Reason": "Motif",
     "Other": "Autres",
+    "Data request": "Demande de données",
     "Funds not received": "Fonds non reçus",
     "Transaction missing": "Transaction manquante",
 
@@ -654,16 +699,11 @@
     "Receiver IBAN": "IBAN du destinataire",
     "Date of the transaction": "Date de transaction",
 
-    "Telegram support": "Support Telegram",
     "FAQ": "FAQ",
     "We have summarized the most common questions for you in our FAQ.": "Nous avons résumé les questions les plus courantes pour vous dans notre FAQ.",
     "Search now": "Rechercher maintenant",
-    "Telegram Community": "Communauté Telegram",
     "Submit Ticket": "Soumettre un ticket",
-    "Join the DFX Community. Our moderators are happy to assist you in the group.": "Rejoignez la communauté DFX. Nos modérateurs sont ravis de vous aider dans le groupe.",
     "If you have a specific question or problem, you can submit a ticket here.": "Si vous avez une question ou un problème spécifique, vous pouvez soumettre un ticket ici.",
-    "Join now": "Rejoignez maintenant",
-    "Please be cautious. We will never contact you first. Beware of scams.": "Soyez prudent. Nous ne vous contacterons jamais en premier. Méfiez-vous des arnaques.",
 
     "Write a message...": "Écrire un message...",
     "Downloading...": "Téléchargement...",
@@ -689,6 +729,12 @@
 
     "delete": "Êtes-vous sûr de vouloir supprimer l'adresse <1>{{address}}</1> de votre compte DFX ? Cette action est irréversible.",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support."
+  },
+  "screens/safe": {
+    "My DFX Safe": "Mon DFX Safe",
+    "Portfolio": "Portefeuille",
+    "Total portfolio value": "Valeur totale du portefeuille",
+    "No assets found": "Aucun actif trouvé"
   },
   "screens/blockchain": {
     "Transaction signing": "Signature de la transaction",

@@ -29,7 +29,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
             )
           : translate(
               'screens/kyc',
-              'Your account needs to get verified once your daily transaction volume exceeds {{limit}}. If you want to increase your daily trading limit, please complete our KYC (Know-Your-Customer) process.',
+              'Your account needs to get verified once your transaction volume exceeds {{limit}}. If you want to increase your trading limit, please complete our KYC (Know-Your-Customer) process.',
               { limit: limit ?? '' },
             );
 
@@ -56,11 +56,20 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
             volume: translate(
               'screens/kyc',
               type === TransactionType.SELL
-                ? 'your daily sell transaction volume'
+                ? 'your sell transaction volume'
                 : type === TransactionType.SWAP
-                ? 'your daily swap transaction volume'
-                : 'your daily credit card transaction volume',
+                ? 'your swap transaction volume'
+                : 'your credit card transaction volume',
             ),
+            limit: limitToString(defaultLimit),
+          },
+        );
+
+      case TransactionError.VIDEO_IDENT_REQUIRED:
+        return translate(
+          'screens/kyc',
+          'Identification by video is required once your transaction volume exceeds {{limit}}.',
+          {
             limit: limitToString(defaultLimit),
           },
         );
@@ -79,7 +88,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
     <StyledVerticalStack gap={4} full center>
       {hint && <StyledInfoText invertedIcon>{hint}</StyledInfoText>}
 
-      {error === TransactionError.BANK_TRANSACTION_MISSING ? (
+      {[TransactionError.BANK_TRANSACTION_MISSING, TransactionError.VIDEO_IDENT_REQUIRED].includes(error) ? (
         <StyledButton
           width={StyledButtonWidth.FULL}
           label={translate('screens/kyc', 'Start video identification')}
@@ -107,7 +116,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
               error === TransactionError.KYC_DATA_REQUIRED
                 ? () => navigate('/profile', { setRedirect: true })
                 : isComplete
-                ? () => navigate('/support/issue?issue-type=LimitRequest')
+                ? () => navigate({ pathname: '/support/issue', search: '?issue-type=LimitRequest' })
                 : start
             }
           />

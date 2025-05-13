@@ -70,6 +70,7 @@ export function MailEdit({
           label={translate('screens/kyc', 'Contact information')}
           placeholder={translate('screens/kyc', 'Email address')}
           name="email"
+          autocomplete="email"
           hideLabel={hideLabels}
         />
         {infoText && infoTextPlacement === MailEditInfoTextPlacement.BELOW_INPUT && (
