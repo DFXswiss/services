@@ -13,7 +13,7 @@ interface MergeRedirect {
 
 export default function AccountMerge() {
   const { translate } = useSettingsContext();
-  const { setAuthenticationToken } = useAuthContext();
+  const { setAuthToken } = useAuthContext();
   const { navigate } = useNavigation();
   const { call } = useApi();
 
@@ -32,7 +32,7 @@ export default function AccountMerge() {
         method: 'GET',
       })
         .then(({ kycHash, accessToken }: MergeRedirect) => {
-          setAuthenticationToken(accessToken);
+          setAuthToken(accessToken);
           setKycHash(kycHash);
         })
         .catch((error: ApiError) => {
