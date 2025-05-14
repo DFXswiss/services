@@ -46,7 +46,7 @@ type Page = { page: string; allowedTiles: string[] | undefined };
 export default function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isLoggedIn } = useSessionContext();
-  const { session, authenticationToken } = useAuthContext();
+  const { session, getAuthToken } = useAuthContext();
   const { user, isUserLoading } = useUserContext();
   const { hasSession, canClose, service, isEmbedded, redirectPath, closeServices } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
@@ -129,8 +129,8 @@ export default function HomeScreen(): JSX.Element {
   function start() {
     switch (specialMode) {
       case SpecialMode.MY_DFX:
-        const url = `${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`;
-        authenticationToken && session?.address && window.open(url, '_self');
+        const url = `${process.env.REACT_APP_PAY_URL}login?token=${getAuthToken()}`;
+        getAuthToken() && session?.address && window.open(url, '_self');
         break;
 
       // @ts-expect-error fall through to default option

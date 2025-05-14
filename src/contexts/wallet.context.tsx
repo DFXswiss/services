@@ -139,7 +139,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
         }
         setIsInitialized(true);
       });
-  }, [isParamsInitialized]);
+  }, [isParamsInitialized, appParams]);
 
   async function handleParamSession(): Promise<boolean> {
     try {
