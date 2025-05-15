@@ -10,7 +10,7 @@ import {
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { addYears } from 'date-fns';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
@@ -55,10 +55,7 @@ export default function InvoiceScreen(): JSX.Element {
     mode: 'onTouched',
   });
 
-  const data = useDebounce(watch(), 1000);
-  const selectedRecipient = watch('recipient');
-
-  const formattedDate = useMemo(() => addYears(new Date(), 1).toISOString(), []);
+  const data = useDebounce(watch(), 500);
 
   useEffect(() => {
     const recipient = urlParams.get('recipient');
@@ -73,28 +70,31 @@ export default function InvoiceScreen(): JSX.Element {
     setCurrency(undefined);
     resetField('invoiceId');
     resetField('amount');
-  }, [selectedRecipient]);
+  }, [data?.recipient, 1000]);
 
   useEffect(() => {
-    if (data?.recipient) {
-      setIsLoadingRoute(true);
-      call<Sell>({
-        url: `paymentLink/recipient?id=${data.recipient}`,
-        method: 'GET',
-      })
-        .then(({ currency }) => setCurrency(currency.name))
-        .catch((error: ApiError) => setError(error.message ?? 'Unknown Error'))
-        .finally(() => setIsLoadingRoute(false));
-    }
+    if (data?.recipient) validateRecipient(data.recipient);
   }, [data?.recipient]);
 
   useEffect(() => {
-    if (data?.recipient && data.invoiceId && data.amount) {
-      validateParams(data);
-    }
-  }, [data?.recipient, data?.invoiceId, data?.amount]);
+    if (data?.recipient && data.invoiceId && data.amount) validatePayment(data);
+  }, [data?.recipient, data?.invoiceId, data?.amount, 1000]);
 
-  async function validateParams(data: FormData) {
+  async function validateRecipient(recipient: string) {
+    setError(undefined);
+    setCurrency(undefined);
+    setIsLoadingRoute(true);
+
+    call<Sell>({
+      url: `paymentLink/recipient?id=${recipient}`,
+      method: 'GET',
+    })
+      .then(({ currency }) => setCurrency(currency.name))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown Error'))
+      .finally(() => setIsLoadingRoute(false));
+  }
+
+  async function validatePayment(data: FormData) {
     setIsLoading(true);
     setError(undefined);
     setCallback(undefined);
@@ -103,7 +103,7 @@ export default function InvoiceScreen(): JSX.Element {
       [!isNaN(Number(data.recipient)) ? 'routeId' : 'route']: data.recipient,
       amount: data.amount?.toString(),
       message: data.invoiceId,
-      expiryDate: formattedDate,
+      expiryDate: addYears(new Date(), 1).toISOString(),
     });
 
     fetchJson(url(baseUrl, searchParams))
@@ -183,7 +183,7 @@ export default function InvoiceScreen(): JSX.Element {
                     <Trans
                       i18nKey="general/errors.invoice"
                       defaults="DFX does not recognize a recipient with the name <strong>{{recipient}}</strong>. This service can only be used for recipients who have an active account with DFX and are activated for the invoicing service. If you wish to register as a recipient with DFX, please contact support at <link>{{supportLink}}</link>."
-                      values={{ recipient: selectedRecipient, supportLink: '' }}
+                      values={{ recipient: data?.recipient, supportLink: '' }}
                       components={{
                         strong: <strong />,
                         link: (
