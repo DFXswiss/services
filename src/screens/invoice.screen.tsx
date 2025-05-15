@@ -1,6 +1,10 @@
 import { ApiError, Sell, useApi, Utils, Validations } from '@dfx.swiss/react';
 import {
+  DfxIcon,
   Form,
+  IconColor,
+  IconSize,
+  IconVariant,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
@@ -36,14 +40,16 @@ export default function InvoiceScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { call } = useApi();
 
-  const recipientInputRef = useRef<HTMLInputElement>(null);
+  const recipientFieldRef = useRef<HTMLInputElement>(null);
 
   const [urlParams, setUrlParams] = useSearchParams();
   const [currency, setCurrency] = useState<string>();
-  const [isLoading, setIsLoading] = useState(false);
   const [callback, setCallback] = useState<string>();
-  const [error, setError] = useState<string>();
-  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [errorPayment, setErrorPayment] = useState<string>();
+  const [errorRecipient, setErrorRecipient] = useState<string>();
+  const [isLoadingPayment, setIsLoadingPayment] = useState(false);
+  const [isLoadingRecipient, setIsLoadingRecipient] = useState(false);
+  const [validatedRecipient, setValidatedRecipient] = useState<string>();
 
   const {
     watch,
@@ -61,43 +67,52 @@ export default function InvoiceScreen(): JSX.Element {
     const recipient = urlParams.get('recipient');
     if (recipient) setValue('recipient', recipient);
     setUrlParams(new URLSearchParams());
-    setTimeout(() => recipientInputRef.current?.focus(), 200);
+    setTimeout(() => recipientFieldRef.current?.focus(), 200);
   }, []);
 
   useEffect(() => {
-    setError(undefined);
+    setValidatedRecipient(undefined);
+    setErrorRecipient(undefined);
+    setErrorPayment(undefined);
     setCallback(undefined);
     setCurrency(undefined);
     resetField('invoiceId');
     resetField('amount');
-  }, [data?.recipient, 1000]);
+  }, [data?.recipient]);
 
   useEffect(() => {
     if (data?.recipient) validateRecipient(data.recipient);
   }, [data?.recipient]);
 
   useEffect(() => {
-    if (data?.recipient && data.invoiceId && data.amount) validatePayment(data);
-  }, [data?.recipient, data?.invoiceId, data?.amount, 1000]);
+    if (validatedRecipient && validatedRecipient === data?.recipient && data.invoiceId && data.amount)
+      validatePayment(data);
+  }, [data?.recipient, data?.invoiceId, data?.amount, validatedRecipient]);
 
   async function validateRecipient(recipient: string) {
-    setError(undefined);
+    setValidatedRecipient(undefined);
+    setErrorRecipient(undefined);
+    setErrorPayment(undefined);
     setCurrency(undefined);
-    setIsLoadingRoute(true);
+    setIsLoadingRecipient(true);
 
     call<Sell>({
       url: `paymentLink/recipient?id=${recipient}`,
       method: 'GET',
     })
-      .then(({ currency }) => setCurrency(currency.name))
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown Error'))
-      .finally(() => setIsLoadingRoute(false));
+      .then(({ currency }) => {
+        setCurrency(currency.name);
+        setValidatedRecipient(recipient);
+      })
+      .catch((error: ApiError) => setErrorRecipient(error.message ?? 'Unknown Error'))
+      .finally(() => setIsLoadingRecipient(false));
   }
 
   async function validatePayment(data: FormData) {
-    setIsLoading(true);
-    setError(undefined);
+    setErrorPayment(undefined);
+    setErrorRecipient(undefined);
     setCallback(undefined);
+    setIsLoadingPayment(true);
 
     const searchParams = new URLSearchParams({
       [!isNaN(Number(data.recipient)) ? 'routeId' : 'route']: data.recipient,
@@ -109,13 +124,13 @@ export default function InvoiceScreen(): JSX.Element {
     fetchJson(url(baseUrl, searchParams))
       .then((response) => {
         if (response.error) {
-          setError(response.message ?? 'Unknown Error');
+          setErrorPayment(response.message ?? 'Unknown Error');
         } else {
           setCallback(url(relativeBaseUrl, searchParams));
         }
       })
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown Error'))
-      .finally(() => setIsLoading(false));
+      .catch((error: ApiError) => setErrorPayment(error.message ?? 'Unknown Error'))
+      .finally(() => setIsLoadingPayment(false));
   }
 
   const rules = Utils.createRules({
@@ -139,17 +154,24 @@ export default function InvoiceScreen(): JSX.Element {
         </div>
         <Form control={control} rules={rules} errors={errors} translate={translateError}>
           <StyledVerticalStack gap={6} full center>
-            <StyledInput
-              name="recipient"
-              autocomplete="name"
-              label={translate('screens/payment', 'Recipient')}
-              placeholder={translate('screens/kyc', 'John Doe')}
-              full
-              smallLabel
-              forceError={!!error}
-              loading={isLoadingRoute}
-              ref={recipientInputRef}
-            />
+            <div className="relative w-full">
+              <StyledInput
+                name="recipient"
+                autocomplete="name"
+                label={translate('screens/payment', 'Recipient')}
+                placeholder={translate('screens/kyc', 'John Doe')}
+                full
+                smallLabel
+                forceError={!!errorRecipient}
+                loading={isLoadingRecipient}
+                ref={recipientFieldRef}
+              />
+              {validatedRecipient && (
+                <div className="absolute bottom-[19px] right-5">
+                  <DfxIcon icon={IconVariant.CHECK} size={IconSize.MD} color={IconColor.BLUE} />
+                </div>
+              )}
+            </div>
             <StyledInput
               name="invoiceId"
               autocomplete="invoice-id"
@@ -157,7 +179,7 @@ export default function InvoiceScreen(): JSX.Element {
               placeholder={translate('screens/payment', 'Invoice ID')}
               full
               smallLabel
-              disabled={!currency}
+              disabled={!validatedRecipient}
             />
             <StyledInput
               type="number"
@@ -167,36 +189,29 @@ export default function InvoiceScreen(): JSX.Element {
               full
               smallLabel
               prefix={currency}
-              disabled={!currency}
+              disabled={!validatedRecipient}
             />
             <StyledButton
               label={translate('general/actions', 'Open invoice')}
               onClick={() => callback && navigate(callback)}
               width={StyledButtonWidth.FULL}
               disabled={!isValid || !callback}
-              isLoading={isLoading}
+              isLoading={isLoadingPayment}
             />
-            {error && (
-              <div>
-                {error.toLowerCase().includes('route not found') ? (
-                  <p className="text-dfxGray-800 text-sm">
-                    <Trans
-                      i18nKey="general/errors.invoice"
-                      defaults="DFX does not recognize a recipient with the name <strong>{{recipient}}</strong>. This service can only be used for recipients who have an active account with DFX and are activated for the invoicing service. If you wish to register as a recipient with DFX, please contact support at <link>{{supportLink}}</link>."
-                      values={{ recipient: data?.recipient, supportLink: '' }}
-                      components={{
-                        strong: <strong />,
-                        link: (
-                          <StyledLink label={`app.dfx.swiss/support`} url={`${process.env.PUBLIC_URL}/support`} dark />
-                        ),
-                      }}
-                    />
-                  </p>
-                ) : (
-                  <ErrorHint message={error} />
-                )}
-              </div>
+            {errorRecipient && (
+              <p className="text-dfxGray-800 text-sm">
+                <Trans
+                  i18nKey="general/errors.invoice"
+                  defaults="DFX does not recognize a recipient with the name <strong>{{recipient}}</strong>. This service can only be used for recipients who have an active account with DFX and are activated for the invoicing service. If you wish to register as a recipient with DFX, please contact support at <link>{{supportLink}}</link>."
+                  values={{ recipient: data?.recipient, supportLink: '' }}
+                  components={{
+                    strong: <strong />,
+                    link: <StyledLink label={`app.dfx.swiss/support`} url={`${process.env.PUBLIC_URL}/support`} dark />,
+                  }}
+                />
+              </p>
             )}
+            {errorPayment && <ErrorHint message={errorPayment} />}
           </StyledVerticalStack>
         </Form>
       </StyledVerticalStack>
