@@ -79,7 +79,7 @@ export default function InvoiceScreen(): JSX.Element {
     if (data?.recipient) {
       setIsLoadingRoute(true);
       call<Sell>({
-        url: `route/payment/${data.recipient}`,
+        url: `paymentLink/recipient?id=${data.recipient}`,
         method: 'GET',
       })
         .then(({ currency }) => setCurrency(currency.name))
