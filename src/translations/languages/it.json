@@ -44,7 +44,9 @@
     "Open receipt": "Apri la ricevuta",
     "Create ticket": "Crea un ticket",
     "Create support ticket": "Crea un ticket di supporto",
-    "View file": "Visualizza il file"
+    "View file": "Visualizza il file",
+    "Edit": "Modifica",
+    "Set default": "Imposta predefinito"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -721,6 +723,7 @@
     "Currency": "Valuta",
     "Label": "Etichetta",
     "Address name": "Nome dell'indirizzo",
+    "Default": "Predefinito",
 
     "Show deleted addresses": "Mostra indirizzi eliminati",
     "Hide deleted addresses": "Nascondi indirizzi eliminati",
