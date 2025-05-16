@@ -39,7 +39,7 @@ export default function SafeScreen(): JSX.Element {
           <div className="shadow-card rounded-xl">
             <div id="chart-timeline" className="relative">
               <div className="p-2 gap-2 flex flex-col items-start">
-                <div className="relative w-full" style={{ height: showChart ? '300px' : '85px' }}>
+                <div className="relative w-full" style={{ height: showChart ? '350px' : '85px' }}>
                   <div className="w-full flex flex-col gap-3 text-left leading-none z-10">
                     <h2 className="text-dfxBlue-800">{translate('screens/safe', 'Portfolio')}</h2>
                     <p className="text-dfxGray-700">{translate('screens/safe', 'Total portfolio value')}</p>
@@ -69,9 +69,6 @@ export default function SafeScreen(): JSX.Element {
                 </div>
               </div>
             </div>
-          </div>
-          <div className="px-2 text-dfxBlue-500 text-left text-lg font-semibold">
-            {translate('screens/safe', 'Assets')}
           </div>
           <Portfolio portfolio={portfolio} currency={currency} isLoading={isLoadingPortfolio} />
         </div>

@@ -14,6 +14,8 @@ enum Timeframe {
   ALL = 'All',
 }
 
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 const getFromDateByTimeframe = (timeframe: Timeframe) => {
   switch (timeframe) {
     case Timeframe.ALL:
@@ -38,7 +40,7 @@ interface PriceChartProps {
 }
 
 export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) => {
-  const { translate } = useSettingsContext();
+  const { translate, locale } = useSettingsContext();
 
   const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.ALL);
 
@@ -54,8 +56,11 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
     [timeframedHistory, currency],
   );
 
-  const chartOptions = useMemo(
-    (): ApexOptions => ({
+  const chartOptions = useMemo((): ApexOptions => {
+    const localeLanguage = locale?.split('-')[0] || 'en';
+    const translatedMonths = months.map((month) => translate('screens/safe', month));
+
+    return {
       theme: {
         monochrome: {
           color: '#092f62',
@@ -64,37 +69,33 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
       },
       chart: {
         type: 'area' as const,
-        dropShadow: {
-          enabled: false,
-        },
-        toolbar: {
-          show: false,
-        },
-        zoom: {
-          enabled: false,
-        },
+        dropShadow: { enabled: false },
+        toolbar: { show: false },
+        zoom: { enabled: false },
         background: '0',
+        locales: [
+          {
+            name: localeLanguage,
+            options: {
+              months: translatedMonths,
+              shortMonths: translatedMonths,
+            },
+          },
+        ],
+        defaultLocale: localeLanguage,
       },
-      stroke: {
-        width: 3,
-      },
-      dataLabels: {
-        enabled: false,
-      },
-      grid: {
-        show: false,
-      },
+      stroke: { width: 3 },
+      dataLabels: { enabled: false },
+      grid: { show: false },
       xaxis: {
         type: 'datetime',
         labels: {
           show: false,
+          datetimeUTC: false,
+          format: 'dd MMM',
         },
-        axisBorder: {
-          show: false,
-        },
-        axisTicks: {
-          show: false,
-        },
+        axisBorder: { show: false },
+        axisTicks: { show: false },
       },
       yaxis: {
         show: false,
@@ -110,9 +111,11 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
           opacityTo: 0.0,
         },
       },
-    }),
-    [maxPrice],
-  );
+      tooltip: {
+        x: { format: 'dd MMM yyyy' },
+      },
+    };
+  }, [maxPrice, locale]);
 
   const chartSeries = useMemo(() => {
     return [
@@ -130,9 +133,9 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
       <StyledLoadingSpinner size={SpinnerSize.LG} />
     </div>
   ) : (
-    <div id="chart-timeline" className="relative text-dfxBlue-500">
+    <div id="chart-timeline" className="text-dfxBlue-500">
       <Chart type="area" height={300} options={chartOptions} series={chartSeries} />
-      <div className="absolute bottom-1 w-full flex justify-center py-2">
+      <div className="mt-1 w-full flex justify-center py-2">
         <ButtonGroup<Timeframe>
           items={Object.values(Timeframe)}
           selected={timeframe}

@@ -28,6 +28,7 @@ export const Portfolio = ({ portfolio, currency, isLoading }: PortfolioProps) =>
     </div>
   ) : portfolio?.length ? (
     <StyledVerticalStack full gap={2}>
+      <div className="px-2 text-dfxBlue-500 text-left text-lg font-semibold">{translate('screens/safe', 'Assets')}</div>
       <StyledDataTable alignContent={AlignContent.BETWEEN}>
         {portfolio.map((custodyAsset: CustodyAssetBalance) => (
           <StyledDataTableRow key={custodyAsset.asset.name}>
