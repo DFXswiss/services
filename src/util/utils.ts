@@ -240,8 +240,3 @@ export const formatCurrency = (
     return formatter.format(amount).split(',').join(' ');
   }
 };
-
-export function isoToday(): string {
-  const today = new Date();
-  return new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())).toISOString();
-}
