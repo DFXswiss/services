@@ -293,7 +293,7 @@ export default function KycScreen(): JSX.Element {
         return { icon: IconVariant.EDIT, label: translate('screens/kyc', 'In progress'), size: IconSize.MD };
 
       case KycStepStatus.IN_REVIEW:
-        return { icon: IconVariant.LOADING, label: translate('screens/kyc', 'In review'), size: IconSize.XS };
+        return { icon: IconVariant.REVIEW, label: translate('screens/kyc', 'In review'), size: IconSize.XS };
 
       case KycStepStatus.COMPLETED:
         return { icon: IconVariant.CHECKBOX_CHECKED, label: translate('screens/kyc', 'Completed'), size: IconSize.MD };
@@ -306,6 +306,9 @@ export default function KycScreen(): JSX.Element {
 
       case KycStepStatus.DATA_REQUESTED:
         return { icon: IconVariant.HELP, label: translate('screens/kyc', 'Data requested'), size: IconSize.MD };
+
+      case KycStepStatus.ON_HOLD:
+        return { icon: IconVariant.LOADING, label: translate('screens/kyc', 'On hold'), size: IconSize.MD };
     }
   }
 

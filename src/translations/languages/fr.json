@@ -138,6 +138,7 @@
     "Failed": "Échoué",
     "Outdated": "Obsolète",
     "Data requested": "Données demandées",
+    "On hold": "En attente",
 
     "Optional": "Facultatif",
 
@@ -733,6 +734,8 @@
   "screens/safe": {
     "My DFX Safe": "Mon DFX Safe",
     "Portfolio": "Portefeuille",
+    "Portfolio value": "Valeur du portefeuille",
+    "Assets": "Actifs",
     "Total portfolio value": "Valeur totale du portefeuille",
     "No assets found": "Aucun actif trouvé"
   },
