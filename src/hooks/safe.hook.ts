@@ -1,11 +1,11 @@
-import { ApiError, Fiat, useApi, User, useSessionContext, useUserContext } from '@dfx.swiss/react';
+import { ApiError, useApi, User, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { useEffect, useState } from 'react';
 import { useWalletContext } from 'src/contexts/wallet.context';
 
 export enum FiatCurrency {
-  CHF = 'CHF',
-  EUR = 'EUR',
-  USD = 'USD',
+  CHF = 'chf',
+  EUR = 'eur',
+  USD = 'usd',
 }
 
 export interface CustodyAsset {
@@ -16,22 +16,37 @@ export interface CustodyAsset {
 export interface CustodyAssetBalance {
   asset: CustodyAsset;
   balance: number;
-  value: number;
+  value: CustodyFiatValue;
 }
 
 export interface CustodyBalance {
-  totalValue: number;
-  currency: Fiat;
+  totalValue: CustodyFiatValue;
   balances: CustodyAssetBalance[];
 }
 
 export interface UseSafeResult {
-  error: string | undefined;
   isInitialized: boolean;
-  isLoading: boolean;
-  currency: FiatCurrency;
+  totalValue: CustodyFiatValue;
   portfolio: CustodyAssetBalance[];
-  totalValue: number;
+  history: CustodyHistoryEntry[];
+  isLoadingPortfolio: boolean;
+  isLoadingHistory: boolean;
+  error?: string;
+}
+
+export interface CustodyFiatValue {
+  chf: number;
+  eur: number;
+  usd: number;
+}
+
+export interface CustodyHistoryEntry {
+  date: string;
+  value: CustodyFiatValue;
+}
+
+export interface CustodyHistory {
+  totalValue: CustodyHistoryEntry[];
 }
 
 export function useSafe(): UseSafeResult {
@@ -42,10 +57,11 @@ export function useSafe(): UseSafeResult {
 
   const [error, setError] = useState<string>();
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
+  const [totalValue, setTotalValue] = useState<CustodyFiatValue>({ chf: 0, eur: 0, usd: 0 });
   const [portfolio, setPortfolio] = useState<CustodyAssetBalance[]>([]);
-  const [totalValue, setTotalValue] = useState<number>(0);
+  const [history, setHistory] = useState<CustodyHistoryEntry[]>([]);
+  const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
   useEffect(() => {
     if (!isUserLoading && user && isLoggedIn) {
@@ -58,17 +74,30 @@ export function useSafe(): UseSafeResult {
   useEffect(() => {
     if (!user || !isLoggedIn) return;
 
-    setIsLoading(true);
+    setIsLoadingPortfolio(true);
     getBalances()
-      .then(({ balances, currency, totalValue }) => {
+      .then(({ balances, totalValue }) => {
         setPortfolio(balances);
-        setCurrency(currency.name as FiatCurrency);
         setTotalValue(totalValue);
       })
       .catch((error: ApiError) => {
         setError(error.message ?? 'Unknown error');
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => setIsLoadingPortfolio(false));
+  }, [user, isLoggedIn]);
+
+  useEffect(() => {
+    if (!user || !isLoggedIn) return;
+
+    setIsLoadingHistory(true);
+    getHistory()
+      .then(({ totalValue }) => {
+        setHistory(totalValue);
+      })
+      .catch((error: ApiError) => {
+        setError(error.message ?? 'Unknown error');
+      })
+      .finally(() => setIsLoadingHistory(false));
   }, [user, isLoggedIn]);
 
   async function createAccountIfRequired(user: User): Promise<void> {
@@ -90,12 +119,20 @@ export function useSafe(): UseSafeResult {
     });
   }
 
+  async function getHistory(): Promise<CustodyHistory> {
+    return call<CustodyHistory>({
+      url: `custody/history`,
+      method: 'GET',
+    });
+  }
+
   return {
-    error,
     isInitialized,
-    isLoading,
-    currency,
     portfolio,
+    history,
     totalValue,
+    isLoadingPortfolio,
+    isLoadingHistory,
+    error,
   };
 }
