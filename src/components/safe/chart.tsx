@@ -133,9 +133,9 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
       <StyledLoadingSpinner size={SpinnerSize.LG} />
     </div>
   ) : (
-    <div id="chart-timeline" className="relative text-dfxBlue-500">
+    <div id="chart-timeline" className="text-dfxBlue-500">
       <Chart type="area" height={300} options={chartOptions} series={chartSeries} />
-      <div className="absolute bottom-1 w-full flex justify-center py-2">
+      <div className="mt-1 w-full flex justify-center py-2">
         <ButtonGroup<Timeframe>
           items={Object.values(Timeframe)}
           selected={timeframe}
