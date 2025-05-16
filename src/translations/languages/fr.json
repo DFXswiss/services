@@ -734,7 +734,19 @@
     "Portfolio value": "Valeur du portefeuille",
     "Assets": "Actifs",
     "Total portfolio value": "Valeur totale du portefeuille",
-    "No assets found": "Aucun actif trouvé"
+    "No assets found": "Aucun actif trouvé",
+    "Jan": "Jan",
+    "Feb": "Fév",
+    "Mar": "Mar",
+    "Apr": "Avr",
+    "May": "Mai",
+    "Jun": "Juin",
+    "Jul": "Juil",
+    "Aug": "Août",
+    "Sep": "Sep",
+    "Oct": "Oct",
+    "Nov": "Nov",
+    "Dec": "Déc"
   },
   "screens/blockchain": {
     "Transaction signing": "Signature de la transaction",
