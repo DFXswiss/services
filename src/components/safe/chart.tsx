@@ -42,10 +42,13 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
 
   const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.ALL);
 
-  const filteredHistory = useMemo(
-    () => history.filter((entry) => new Date(entry.date).getTime() > getFromDateByTimeframe(timeframe)),
-    [history, timeframe],
-  );
+  const filteredHistory = useMemo(() => {
+    const timeFrameFiltered = history.filter(
+      (entry) => new Date(entry.date).getTime() > getFromDateByTimeframe(timeframe),
+    );
+    if (timeFrameFiltered.length === 1) timeFrameFiltered.push(history[history.length - 2]);
+    return timeFrameFiltered;
+  }, [history, timeframe]);
 
   const maxPrice = useMemo(
     () => filteredHistory.reduce((max, entry) => Math.max(max, entry.value[currency]), 0),

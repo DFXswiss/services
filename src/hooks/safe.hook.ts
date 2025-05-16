@@ -1,6 +1,7 @@
 import { ApiError, useApi, User, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { useEffect, useState } from 'react';
 import { useWalletContext } from 'src/contexts/wallet.context';
+import { isoToday } from 'src/util/utils';
 
 export enum FiatCurrency {
   CHF = 'chf',
@@ -41,36 +42,13 @@ export interface CustodyFiatValue {
 }
 
 export interface CustodyHistoryEntry {
-  date: Date;
+  date: string;
   value: CustodyFiatValue;
 }
 
 export interface CustodyHistory {
   totalValue: CustodyHistoryEntry[];
 }
-
-// TODO: Remove placeholder data
-const PLACEHOLDER_BALANCES = {
-  balances: [
-    {
-      asset: {
-        name: 'ETH',
-        description: 'Ether',
-      },
-      balance: 1.364,
-      value: { chf: 2999.66, eur: 3099.66, usd: 3194.66 },
-    },
-    {
-      asset: {
-        name: 'USDT',
-        description: 'USD Tether',
-      },
-      balance: 2345.4,
-      value: { chf: 2339.66, eur: 2432.23, usd: 2545.4 },
-    },
-  ],
-  totalValue: { chf: 5474.32, eur: 5531.89, usd: 5739.06 },
-};
 
 export function useSafe(): UseSafeResult {
   const { call } = useApi();
@@ -100,8 +78,8 @@ export function useSafe(): UseSafeResult {
     setIsLoadingPortfolio(true);
     getBalances()
       .then(({ balances, totalValue }) => {
-        setPortfolio(PLACEHOLDER_BALANCES.balances);
-        setTotalValue(PLACEHOLDER_BALANCES.totalValue);
+        setPortfolio(balances);
+        setTotalValue(totalValue);
       })
       .catch((error: ApiError) => {
         setError(error.message ?? 'Unknown error');
@@ -111,10 +89,19 @@ export function useSafe(): UseSafeResult {
 
   useEffect(() => {
     if (!user || !isLoggedIn) return;
+    console.log('getHistory');
 
     setIsLoadingHistory(true);
     getHistory()
       .then(({ totalValue }) => {
+        const latestValue = totalValue[totalValue.length - 1];
+        const today = isoToday();
+        if (latestValue.date !== today) {
+          totalValue.push({
+            date: today,
+            value: latestValue.value,
+          });
+        }
         setHistory(totalValue);
       })
       .catch((error: ApiError) => {
