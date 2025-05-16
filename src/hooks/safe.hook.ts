@@ -1,7 +1,6 @@
 import { ApiError, useApi, User, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { useEffect, useState } from 'react';
 import { useWalletContext } from 'src/contexts/wallet.context';
-import { isoToday } from 'src/util/utils';
 
 export enum FiatCurrency {
   CHF = 'chf',
@@ -89,19 +88,10 @@ export function useSafe(): UseSafeResult {
 
   useEffect(() => {
     if (!user || !isLoggedIn) return;
-    console.log('getHistory');
 
     setIsLoadingHistory(true);
     getHistory()
       .then(({ totalValue }) => {
-        const latestValue = totalValue[totalValue.length - 1];
-        const today = isoToday();
-        if (latestValue.date !== today) {
-          totalValue.push({
-            date: today,
-            value: latestValue.value,
-          });
-        }
         setHistory(totalValue);
       })
       .catch((error: ApiError) => {

@@ -42,17 +42,16 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
 
   const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.ALL);
 
-  const filteredHistory = useMemo(() => {
-    const timeFrameFiltered = history.filter(
-      (entry) => new Date(entry.date).getTime() > getFromDateByTimeframe(timeframe),
-    );
-    if (timeFrameFiltered.length === 1) timeFrameFiltered.push(history[history.length - 2]);
-    return timeFrameFiltered;
+  const timeframedHistory = useMemo(() => {
+    const fromDate = getFromDateByTimeframe(timeframe);
+    const filtered = history.filter((entry) => new Date(entry.date).getTime() > fromDate);
+    if (filtered.length === 1 && history.length > 1) filtered.unshift(history[history.length - 2]);
+    return filtered;
   }, [history, timeframe]);
 
   const maxPrice = useMemo(
-    () => filteredHistory.reduce((max, entry) => Math.max(max, entry.value[currency]), 0),
-    [filteredHistory, currency],
+    () => Math.max(...timeframedHistory.map((e) => e.value[currency]), 0),
+    [timeframedHistory, currency],
   );
 
   const chartOptions = useMemo(
@@ -119,12 +118,12 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
     return [
       {
         name: translate('screens/safe', 'Portfolio value'),
-        data: filteredHistory.map((entry: CustodyHistoryEntry) => {
+        data: timeframedHistory.map((entry: CustodyHistoryEntry) => {
           return [new Date(entry.date).getTime(), entry.value[currency]];
         }),
       },
     ];
-  }, [filteredHistory, currency, translate]);
+  }, [timeframedHistory, currency, translate]);
 
   return isLoading ? (
     <div className="flex justify-center items-center w-full h-full">

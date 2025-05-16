@@ -241,7 +241,7 @@ export const formatCurrency = (
   }
 };
 
-export const isoToday = () => {
+export function isoToday(): string {
   const today = new Date();
   return new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())).toISOString();
-};
+}

@@ -1,5 +1,5 @@
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import { ButtonGroup } from 'src/components/safe/button-group';
 import { PriceChart } from 'src/components/safe/chart';
@@ -14,11 +14,16 @@ export default function SafeScreen(): JSX.Element {
   useUserGuard('/login');
 
   const { isInitialized, totalValue, portfolio, history, isLoadingPortfolio, isLoadingHistory, error } = useSafe();
+  const { currency: userCurrency } = useSettingsContext();
   const { translate } = useSettingsContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
+
+  useEffect(() => {
+    userCurrency && setCurrency(userCurrency?.name.toLowerCase() as FiatCurrency);
+  }, [userCurrency]);
 
   const showChart = history.length > 1;
 
