@@ -9,7 +9,6 @@ import {
   PaymentLinkStatus,
   PaymentRouteType,
   SellRoute,
-  useFiatContext,
   usePaymentRoutesContext,
   useUserContext,
   Utils,
@@ -74,7 +73,6 @@ interface FormData {
   paymentMode: PaymentLinkPaymentMode;
   paymentAmount: string;
   paymentExternalId: string;
-  paymentCurrency: Fiat;
   paymentExpiryDate: Date;
 }
 
@@ -775,9 +773,9 @@ function PaymentLinkForm({
   const { allowedCountries, translate, translateError } = useSettingsContext();
   const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink, userPaymentLinksConfig } =
     usePaymentRoutesContext();
-  const { currencies } = useFiatContext();
   const { paymentRoutes, paymentLinks } = usePaymentRoutesContext();
 
+  const [paymentCurrency, setPaymentCurrency] = useState<Fiat>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -865,6 +863,12 @@ function PaymentLinkForm({
   }, [paymentRoutes]);
 
   useEffect(() => {
+    const routeId = data.routeId?.id ?? paymentLinks?.find((link) => link.id === paymentLinkId)?.routeId;
+    const currency = paymentRoutes?.sell.find((route) => route.id.toString() === routeId?.toString())?.currency;
+    if (currency) setPaymentCurrency(currency);
+  }, [data.routeId, paymentLinkId, paymentLinks, paymentRoutes]);
+
+  useEffect(() => {
     setError(undefined);
   }, [step]);
 
@@ -901,7 +905,7 @@ function PaymentLinkForm({
           mode: data.paymentMode,
           amount: +data.paymentAmount,
           externalId: data.paymentExternalId,
-          currency: data.paymentCurrency.name,
+          currency: paymentCurrency?.name,
           expiryDate: data.paymentExpiryDate,
         };
       }
@@ -959,7 +963,6 @@ function PaymentLinkForm({
     paymentMode: Validations.Required,
     paymentAmount: Validations.Required,
     paymentExternalId: Validations.Required,
-    paymentCurrency: Validations.Required,
     paymentExpiryDate: Validations.Required,
     configStandards: Validations.Required,
     configBlockchains: Validations.Required,
@@ -986,7 +989,6 @@ function PaymentLinkForm({
     data.paymentMode &&
       data.paymentAmount !== undefined &&
       data.paymentExternalId !== undefined &&
-      data.paymentCurrency &&
       data.paymentExpiryDate,
   );
 
@@ -1130,6 +1132,7 @@ function PaymentLinkForm({
                 label={translate('screens/payment', 'Amount')}
                 smallLabel
                 placeholder={'0.00'}
+                prefix={paymentCurrency?.name}
                 full
               />
 
@@ -1140,16 +1143,6 @@ function PaymentLinkForm({
                 placeholder={translate('screens/payment', 'Payment ID')}
                 full
                 smallLabel
-              />
-
-              <StyledDropdown
-                name="paymentCurrency"
-                label={translate('screens/settings', 'Currency')}
-                full
-                smallLabel={true}
-                placeholder={translate('general/actions', 'Select') + '...'}
-                items={currencies ?? []}
-                labelFunc={(item) => item.name}
               />
 
               <StyledDateAndTimePicker
@@ -1286,7 +1279,10 @@ function PaymentLinkForm({
                     { label: translate('screens/payment', 'External ID'), text: data.paymentExternalId ?? naString },
                     {
                       label: translate('screens/payment', 'Amount'),
-                      text: data.paymentAmount ? `${data.paymentAmount} ${data.paymentCurrency?.name}` : naString,
+                      text:
+                        data.paymentAmount && paymentCurrency?.name
+                          ? `${data.paymentAmount} ${paymentCurrency.name}`
+                          : naString,
                     },
                     {
                       label: translate('screens/payment', 'Expiry date'),
@@ -1333,7 +1329,6 @@ function PaymentLinkForm({
                         paymentMode: undefined,
                         paymentAmount: undefined,
                         paymentExternalId: undefined,
-                        paymentCurrency: undefined,
                         paymentExpiryDate: undefined,
                       }),
                       ...(!hasRecipientData && {
