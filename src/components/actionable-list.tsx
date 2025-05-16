@@ -1,5 +1,3 @@
-// Types for clarity
-
 import {
   AlignContent,
   DfxIcon,
@@ -11,7 +9,6 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
-import { useSettingsContext } from 'src/contexts/settings.context';
 
 interface Item {
   key: string | number;
@@ -28,13 +25,20 @@ type ActionableListProps = {
   items?: Item[];
   buttonLabel?: string;
   buttonAction?: () => void;
+  hideItemsText?: string;
+  showItemsText?: string;
 };
 
-export default function ActionableList({ label, items, buttonLabel, buttonAction }: ActionableListProps) {
-  const { translate } = useSettingsContext();
-
-  const [menuAddress, setMenuAddress] = useState<Item>();
-  const [showDisabledWallets, setShowDisabledWallets] = useState(false);
+export default function ActionableList({
+  label,
+  items,
+  buttonLabel,
+  buttonAction,
+  hideItemsText = '',
+  showItemsText = '',
+}: ActionableListProps) {
+  const [activeMenuItem, setActiveMenuItem] = useState<Item>();
+  const [showDisabledItems, setShowDisabledItems] = useState(false);
 
   return (
     <>
@@ -57,11 +61,11 @@ export default function ActionableList({ label, items, buttonLabel, buttonAction
                   </div>
                   {item.menuItems && (
                     <div className="relative flex items-center">
-                      <button onClick={() => setMenuAddress(item)}>
+                      <button onClick={() => setActiveMenuItem(item)}>
                         <DfxIcon icon={IconVariant.THREE_DOTS_VERT} color={IconColor.BLUE} />
                       </button>
-                      {menuAddress?.key === item.key && (
-                        <OverflowMenu menuItems={item.menuItems} onClose={() => setMenuAddress(undefined)} />
+                      {activeMenuItem?.key === item.key && (
+                        <OverflowMenu menuItems={item.menuItems} onClose={() => setActiveMenuItem(undefined)} />
                       )}
                     </div>
                   )}
@@ -73,15 +77,11 @@ export default function ActionableList({ label, items, buttonLabel, buttonAction
               <StyledDataTableRow>
                 <div
                   className="flex flex-row w-full justify-between items-start gap-1 text-xs cursor-pointer select-none text-dfxGray-700 hover:text-dfxGray-800"
-                  onClick={() => setShowDisabledWallets((prev) => !prev)}
+                  onClick={() => setShowDisabledItems((prev) => !prev)}
                 >
-                  <div>
-                    {showDisabledWallets
-                      ? translate('screens/settings', 'Hide deleted addresses')
-                      : translate('screens/settings', 'Show deleted addresses')}
-                  </div>
+                  <div>{showDisabledItems ? hideItemsText : showItemsText}</div>
                   <DfxIcon
-                    icon={showDisabledWallets ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
+                    icon={showDisabledItems ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
                     color={IconColor.DARK_GRAY}
                   />
                 </div>
