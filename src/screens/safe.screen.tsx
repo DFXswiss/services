@@ -14,8 +14,7 @@ export default function SafeScreen(): JSX.Element {
   useUserGuard('/login');
 
   const { isInitialized, totalValue, portfolio, history, isLoadingPortfolio, isLoadingHistory, error } = useSafe();
-  const { currency: userCurrency } = useSettingsContext();
-  const { translate } = useSettingsContext();
+  const { currency: userCurrency, translate } = useSettingsContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
 
