@@ -20,6 +20,8 @@ export default function SafeScreen(): JSX.Element {
 
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
 
+  const showChart = history.length > 1;
+
   return (
     <Layout rootRef={rootRef} title={translate('screens/safe', 'My DFX Safe')}>
       {error ? (
@@ -33,7 +35,7 @@ export default function SafeScreen(): JSX.Element {
           <div className="shadow-card rounded-xl">
             <div id="chart-timeline" className="relative">
               <div className="p-2 gap-2 flex flex-col items-start">
-                <div className="relative w-full h-[300px]">
+                <div className="relative w-full" style={{ height: showChart ? '300px' : '85px' }}>
                   <div className="w-full flex flex-col gap-3 text-left leading-none z-10">
                     <h2 className="text-dfxBlue-800">{translate('screens/safe', 'Portfolio')}</h2>
                     <p className="text-dfxGray-700">{translate('screens/safe', 'Total portfolio value')}</p>
@@ -58,7 +60,7 @@ export default function SafeScreen(): JSX.Element {
                     </div>
                   </div>
                   <div className="absolute inset-0">
-                    <PriceChart history={history} currency={currency} isLoading={isLoadingHistory} />
+                    {showChart && <PriceChart history={history} currency={currency} isLoading={isLoadingHistory} />}
                   </div>
                 </div>
               </div>
