@@ -732,6 +732,8 @@
   "screens/safe": {
     "My DFX Safe": "Mein DFX Safe",
     "Portfolio": "Portfolio",
+    "Portfolio value": "Portfoliowert",
+    "Assets": "Assets",
     "Total portfolio value": "Gesamtwert des Portfolios",
     "No assets found": "Keine Assets gefunden"
   },
