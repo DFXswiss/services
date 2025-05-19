@@ -74,7 +74,11 @@ interface Amount {
   amount: number;
 }
 
-export type TransferMethod = Blockchain;
+export enum C2BPaymentProviders {
+  BINANCE_PAY = 'BinancePay',
+}
+
+export type TransferMethod = Blockchain | C2BPaymentProviders;
 export interface TransferInfo {
   method: TransferMethod;
   minFee: number;
@@ -547,6 +551,39 @@ export default function PaymentLinkScreen(): JSX.Element {
     }
   }
 
+  async function payWithBinancePay() {
+    if (!payRequest?.id) return;
+    try {
+      const { uri: deeplink } = await fetchJson(
+        `${process.env.REACT_APP_API_URL}/v1/lnurlp/${payRequest.id}?method=BinancePay&asset=USDT`,
+      );
+      window.location.href = deeplink;
+    } catch (_) {}
+  }
+
+  const wallets = Object.entries(CompatibleWallets).map(([name, walletMeta]) => ({
+    name,
+    ...walletMeta,
+  }));
+
+  const recommendedWallets = wallets.filter((wallet) => RecommendedWallets.includes(wallet.name));
+  const compatibleWallets = wallets.filter((wallet) => !RecommendedWallets.includes(wallet.name));
+
+  const isBinancePayAvailable =
+    hasQuote(payRequest) && payRequest.transferAmounts.find((item) => item.method === C2BPaymentProviders.BINANCE_PAY);
+
+  const semiCompatibleWallets = [
+    ...(isBinancePayAvailable
+      ? [
+          {
+            name: C2BPaymentProviders.BINANCE_PAY,
+            iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BinanceApp.webp',
+            onClick: payWithBinancePay,
+          },
+        ]
+      : []),
+  ];
+
   return (
     <Layout backButton={false} smallMenu>
       {error ? (
@@ -845,10 +882,19 @@ export default function PaymentLinkScreen(): JSX.Element {
                       </p>
                     )}
                     <WalletGrid
-                      wallets={RecommendedWallets}
-                      header={translate('screens/payment', 'Recommended wallets')}
+                      header={translate('screens/payment', 'Recommended Apps')}
+                      wallets={recommendedWallets}
                     />
-                    <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
+                    <WalletGrid
+                      header={translate('screens/payment', 'Other compatible wallets')}
+                      wallets={compatibleWallets}
+                    />
+                    {semiCompatibleWallets.length > 0 && (
+                      <WalletGrid
+                        header={translate('screens/payment', 'Semi compatible wallets')}
+                        wallets={semiCompatibleWallets}
+                      />
+                    )}
                   </StyledVerticalStack>
                 )
               )}
@@ -937,14 +983,24 @@ function PaymentStatusTile({ status }: PaymentStatusTileProps): JSX.Element {
   );
 }
 
-interface WalletGridProps {
-  wallets?: string[];
+type WalletWithWebsite = {
+  name: string;
+  iconUrl: string;
+  websiteUrl: string;
+};
+
+type WalletWithCallback = {
+  name: string;
+  iconUrl: string;
+  onClick: () => void;
+};
+
+type WalletGridProps = {
+  wallets: WalletWithWebsite[] | WalletWithCallback[];
   header?: string;
-}
+};
 
 function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
-  const walletNames = wallets ?? Object.keys(CompatibleWallets);
-
   return (
     <div className="flex flex-col w-full gap-4 px-4">
       {header && (
@@ -955,21 +1011,20 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
         </div>
       )}
       <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))' }}>
-        {walletNames.map((walletName) => {
-          const wallet = CompatibleWallets[walletName];
-
+        {wallets?.map((wallet) => {
+          const handleClick = 'onClick' in wallet ? wallet.onClick : () => window.open(wallet.websiteUrl);
           return (
             <div
-              key={walletName}
+              key={wallet.name}
               className="flex flex-col items-center gap-2 cursor-pointer max-w-[120px] min-w-0"
-              onClick={() => window.open(wallet.websiteUrl)}
+              onClick={handleClick}
             >
               <img
                 className="border border-dfxGray-400 shadow-md bg-white rounded-md"
                 src={wallet.iconUrl}
-                alt={walletName}
+                alt={wallet.name}
               />
-              <p className="text-center font-semibold text-dfxGray-600 w-full text-xs truncate">{walletName}</p>
+              <p className="text-center font-semibold text-dfxGray-600 w-full text-xs truncate">{wallet.name}</p>
             </div>
           );
         })}
