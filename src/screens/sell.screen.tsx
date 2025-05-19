@@ -644,7 +644,7 @@ export default function SellScreen(): JSX.Element {
                               return {
                                 key: account.id,
                                 label: account.label ?? `${account.iban.slice(0, 2)} ${account.iban.slice(-4)}`,
-                                subLabel: blankedAddress(Utils.formatIban(account.iban)!, { width }),
+                                subLabel: blankedAddress(Utils.formatIban(account.iban) ?? account.iban, { width }),
                                 tag: (account as any).default // TODO: Remove any cast
                                   ? translate('screens/settings', 'Default').toUpperCase()
                                   : undefined,

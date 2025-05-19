@@ -61,7 +61,6 @@ export default function SettingsScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [menuAddress, setMenuAddress] = useState<UserAddress>();
-  const [showDisabledWallets, setShowDisabledWallets] = useState(false);
   const [overlayType, setOverlayType] = useState<OverlayType>(OverlayType.NONE);
 
   useUserGuard('/login');
@@ -108,7 +107,7 @@ export default function SettingsScreen(): JSX.Element {
     : translate('screens/settings', 'Settings');
 
   const userAddresses = user?.addresses.sort(sortAddressesByBlockchain);
-  const disabledAddresses = showDisabledWallets ? user?.disabledAddresses.sort(sortAddressesByBlockchain) : [];
+  const disabledAddresses = user?.disabledAddresses.sort(sortAddressesByBlockchain);
   const addressesList = (userAddresses ?? []).concat(disabledAddresses ?? []);
 
   return (
@@ -216,12 +215,18 @@ export default function SettingsScreen(): JSX.Element {
                     },
                     {
                       label: translate('general/actions', 'Rename'),
-                      onClick: () => setOverlayType(OverlayType.RENAME_ADDRESS),
+                      onClick: () => {
+                        setMenuAddress(address);
+                        setOverlayType(OverlayType.RENAME_ADDRESS);
+                      },
                       hidden: isDisabled,
                     },
                     {
                       label: translate('general/actions', 'Delete'),
-                      onClick: () => setOverlayType(OverlayType.DELETE_ADDRESS),
+                      onClick: () => {
+                        setMenuAddress(address);
+                        setOverlayType(OverlayType.DELETE_ADDRESS);
+                      },
                       hidden: isDisabled,
                     },
                   ],

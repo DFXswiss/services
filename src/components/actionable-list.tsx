@@ -45,33 +45,35 @@ export default function ActionableList({
       {items?.length ? (
         <StyledVerticalStack full gap={2}>
           <StyledDataTable label={label} alignContent={AlignContent.BETWEEN}>
-            {items.map((item) => {
-              return (
-                <StyledDataTableRow key={item.key} onClick={item.onClick}>
-                  <div className="flex flex-col items-start gap-1">
-                    <div className={`flex flex-row gap-2 font-semibold ${item.isDisabled ? 'text-dfxGray-700' : ''}`}>
-                      {item.label}
-                      {item.tag && (
-                        <div className="flex bg-dfxGray-400 font-bold rounded-sm px-1.5 text-2xs items-center justify-center">
-                          {item.tag}
-                        </div>
-                      )}
+            {items
+              .filter((item) => showDisabledItems || !item.isDisabled)
+              .map((item) => {
+                return (
+                  <StyledDataTableRow key={item.key} onClick={item.onClick}>
+                    <div className="flex flex-col items-start gap-1">
+                      <div className={`flex flex-row gap-2 font-semibold ${item.isDisabled ? 'text-dfxGray-700' : ''}`}>
+                        {item.label}
+                        {item.tag && (
+                          <div className="flex bg-dfxGray-400 font-bold rounded-sm px-1.5 text-2xs items-center justify-center">
+                            {item.tag}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-xs text-dfxGray-700">{item.subLabel}</div>
                     </div>
-                    <div className="text-xs text-dfxGray-700">{item.subLabel}</div>
-                  </div>
-                  {item.menuItems && (
-                    <div className="relative flex items-center">
-                      <button onClick={() => setActiveMenuItem(item)}>
-                        <DfxIcon icon={IconVariant.THREE_DOTS_VERT} color={IconColor.BLUE} />
-                      </button>
-                      {activeMenuItem?.key === item.key && (
-                        <OverflowMenu menuItems={item.menuItems} onClose={() => setActiveMenuItem(undefined)} />
-                      )}
-                    </div>
-                  )}
-                </StyledDataTableRow>
-              );
-            })}
+                    {item.menuItems && (
+                      <div className="relative flex items-center">
+                        <button onClick={() => setActiveMenuItem(item)}>
+                          <DfxIcon icon={IconVariant.THREE_DOTS_VERT} color={IconColor.BLUE} />
+                        </button>
+                        {activeMenuItem?.key === item.key && (
+                          <OverflowMenu menuItems={item.menuItems} onClose={() => setActiveMenuItem(undefined)} />
+                        )}
+                      </div>
+                    )}
+                  </StyledDataTableRow>
+                );
+              })}
 
             {items.some((item) => item.isDisabled) && (
               <StyledDataTableRow>

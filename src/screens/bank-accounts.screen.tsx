@@ -1,4 +1,4 @@
-import { BankAccount, Fiat, useBankAccountContext, useFiatContext, Utils, Validations } from '@dfx.swiss/react';
+import { BankAccount, Fiat, useBankAccountContext, useFiatContext, Utils } from '@dfx.swiss/react';
 import {
   Form,
   SpinnerSize,
@@ -58,7 +58,7 @@ export default function BankAccountsScreen(): JSX.Element {
                   return {
                     key: account.id,
                     label: account.label ?? `${account.iban.slice(0, 2)} ${account.iban.slice(-4)}`,
-                    subLabel: blankedAddress(Utils.formatIban(account.iban)!, { width }),
+                    subLabel: blankedAddress(Utils.formatIban(account.iban) ?? account.iban, { width }),
                     tag: account.default ? translate('screens/settings', 'Default').toUpperCase() : undefined,
                     menuItems: [
                       {
@@ -151,10 +151,6 @@ export function EditBankAccount({ bankAccount, onClose }: EditBankAccountProps):
       .catch((e) => setError(e.message))
       .finally(() => setIsUpdating(false));
   }
-
-  const rules = Utils.createRules({
-    label: [Validations.Custom((value) => bankAccount.label || value.length > 0 || 'Label is required')],
-  });
 
   return (
     <StyledVerticalStack gap={6} full>
