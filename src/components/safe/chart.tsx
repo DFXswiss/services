@@ -14,8 +14,6 @@ enum Timeframe {
   ALL = 'All',
 }
 
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
 const getFromDateByTimeframe = (timeframe: Timeframe) => {
   switch (timeframe) {
     case Timeframe.ALL:
@@ -57,8 +55,9 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
   );
 
   const chartOptions = useMemo((): ApexOptions => {
-    const localeLanguage = locale?.split('-')[0] || 'en';
-    const translatedMonths = months.map((month) => translate('screens/safe', month));
+    const translatedMonths = Array.from({ length: 12 }, (_, i) =>
+      new Date(2000, i, 1).toLocaleString(locale, { month: 'short' }),
+    );
 
     return {
       theme: {
@@ -75,14 +74,14 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
         background: '0',
         locales: [
           {
-            name: localeLanguage,
+            name: locale,
             options: {
               months: translatedMonths,
               shortMonths: translatedMonths,
             },
           },
         ],
-        defaultLocale: localeLanguage,
+        defaultLocale: locale,
       },
       stroke: { width: 3 },
       dataLabels: { enabled: false },
