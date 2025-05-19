@@ -62,7 +62,7 @@
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer. Si le problème persiste, veuillez contacter notre service d'assistance.",
     "invoice": "DFX ne reconnaît pas un destinataire nommé <strong>{{recipient}}</strong>. Ce service ne peut être utilisé que pour des destinataires ayant un compte actif chez DFX et activés pour le service de facturation. Si vous souhaitez vous inscrire en tant que destinataire chez DFX, veuillez contacter le support à <link>{{supportLink}}</link>.",
-    "iban": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez ouvrir un ticket de support sur <link>{{supportLink}}</link> et joindre la confirmation de la transaction bancaire au format PDF."
+    "iban": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez ouvrir un ticket de support sur <1></1> et joindre la confirmation de la transaction bancaire au format PDF."
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -663,8 +663,7 @@
     "The bank account has been added, all transactions from this IBAN will now be associated with your account.": "Le compte bancaire a été ajouté, toutes les transactions de cet IBAN seront désormais associées à votre compte.",
     "Add bank account": "Ajouter un compte bancaire",
     "No IBAN, only account number": "Pas d'IBAN, seulement numéro de compte",
-    "This IBAN already exists in another DFX customer account.": "Cet IBAN existe déjà sur un autre compte client de DFX.",
-    "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez envoyer la confirmation de la transaction bancaire au format PDF à support@dfx.swiss."
+    "This IBAN already exists in another DFX customer account.": "Cet IBAN existe déjà sur un autre compte client de DFX."
   },
   "screens/support": {
     "Support": "Support",

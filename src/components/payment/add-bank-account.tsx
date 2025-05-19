@@ -70,20 +70,15 @@ export function AddBankAccount({ onSubmit, confirmationText }: AddBankAccountPro
           setCustomError(error);
         } else if (e.statusCode === 400 && e.message?.includes('Multi-account IBAN')) {
           setCustomError(
-            <Trans
-              i18nKey="screens/errors.iban"
-              defaults="This is a multi-account IBAN and cannot be added as a personal account. Please open a support ticket at <link>{{supportLink}}</link> and attach the bank transaction confirmation as a PDF."
-              values={{ supportLink: '' }}
-              components={{
-                link: (
-                  <StyledLink
-                    label={`${process.env.REACT_APP_PUBLIC_URL ?? process.env.PUBLIC_URL}/support`}
-                    onClick={() => navigate(`/support/issue?issue-type=${SupportIssueType.GENERIC_ISSUE}`)}
-                    dark
-                  />
-                ),
-              }}
-            />,
+            <Trans i18nKey="general/errors.iban">
+              {`This is a multi-account IBAN and cannot be added as a personal account. Please open a support ticket at `}
+              <StyledLink
+                label={new URL('support', process.env.REACT_APP_PUBLIC_URL).href}
+                onClick={() => navigate(`/support/issue?issue-type=${SupportIssueType.GENERIC_ISSUE}`)}
+                dark
+              />
+              {` and attach the bank transaction confirmation as a PDF.`}
+            </Trans>,
           );
         } else {
           setError(e.message ?? 'Unknown error');

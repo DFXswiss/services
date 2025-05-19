@@ -62,7 +62,7 @@
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.",
     "invoice": "DFX kennt keinen Empfänger mit dem Namen <strong>{{recipient}}</strong>. Dieser Service kann nur für Empfänger verwendet werden, die ein aktives Konto bei DFX haben und für den Rechnungsservice aktiviert sind. Solltest Du dich als Empfänger bei DFX registrieren wollen, dann melde Dich beim Support unter <link>{{supportLink}}</link>.",
-    "iban": "Dies ist eine Multi-Account-IBAN und kann nicht als persönliches Konto hinzugefügt werden. Bitte öffne ein Support-Ticket auf <link>{{supportLink}}</link> und füge die Bestätigung der Banktransaktion als PDF bei."
+    "iban": "Dies ist eine Multi-Account-IBAN und kann nicht als persönliches Konto hinzugefügt werden. Bitte öffne ein Support-Ticket auf <1></1> und füge die Bestätigung der Banktransaktion als PDF bei."
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -663,8 +663,7 @@
     "The bank account has been added, all transactions from this IBAN will now be associated with your account.": "Das Bankkonto wurde hinzugefügt, alle Transaktionen von dieser IBAN werden nun mit Deinem Konto verknüpft.",
     "Add bank account": "Bankverbindung hinzufügen",
     "No IBAN, only account number": "Keine IBAN, nur Kontonummer",
-    "This IBAN already exists in another DFX customer account.": "Diese IBAN existiert bereits in einem anderen DFX-Kundenkonto.",
-    "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Dies ist eine Mehrkonten-IBAN und kann nicht als persönliches Konto hinzugefügt werden. Bitte sende die Bestätigung der Banktransaktion als PDF an support@dfx.swiss."
+    "This IBAN already exists in another DFX customer account.": "Diese IBAN existiert bereits in einem anderen DFX-Kundenkonto."
   },
   "screens/support": {
     "Support": "Support",
