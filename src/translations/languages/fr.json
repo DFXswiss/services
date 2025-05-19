@@ -61,7 +61,8 @@
     "Maximum allowed characters: 4000": "Nombre maximum de caractères autorisés : 4000",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer. Si le problème persiste, veuillez contacter notre service d'assistance.",
-    "invoice": "DFX ne reconnaît pas un destinataire nommé <strong>{{recipient}}</strong>. Ce service ne peut être utilisé que pour des destinataires ayant un compte actif chez DFX et activés pour le service de facturation. Si vous souhaitez vous inscrire en tant que destinataire chez DFX, veuillez contacter le support à <link>{{supportLink}}</link>."
+    "invoice": "DFX ne reconnaît pas un destinataire nommé <strong>{{recipient}}</strong>. Ce service ne peut être utilisé que pour des destinataires ayant un compte actif chez DFX et activés pour le service de facturation. Si vous souhaitez vous inscrire en tant que destinataire chez DFX, veuillez contacter le support à <link>{{supportLink}}</link>.",
+    "iban": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez ouvrir un ticket de support sur <link>{{supportLink}}</link> et joindre la confirmation de la transaction bancaire au format PDF."
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",

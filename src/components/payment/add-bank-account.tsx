@@ -1,4 +1,12 @@
-import { ApiError, BankAccount, CreateBankAccount, Utils, Validations, useBankAccountContext } from '@dfx.swiss/react';
+import {
+  ApiError,
+  BankAccount,
+  CreateBankAccount,
+  SupportIssueType,
+  Utils,
+  Validations,
+  useBankAccountContext,
+} from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
@@ -6,12 +14,15 @@ import {
   StyledButtonWidth,
   StyledInfoText,
   StyledInput,
+  StyledLink,
   StyledSpacer,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Trans } from 'react-i18next';
 import { useSettingsContext } from '../../contexts/settings.context';
+import { useNavigation } from '../../hooks/navigation.hook';
 import { ErrorHint } from '../error-hint';
 
 interface AddBankAccountProps {
@@ -21,9 +32,10 @@ interface AddBankAccountProps {
 
 export function AddBankAccount({ onSubmit, confirmationText }: AddBankAccountProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
+  const { navigate } = useNavigation();
 
   const [error, setError] = useState<string>();
-  const [customError, setCustomError] = useState<string>();
+  const [customError, setCustomError] = useState<React.ReactNode>();
   const [confirmBankAccount, setConfirmBankAccount] = useState<BankAccount>();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -58,10 +70,20 @@ export function AddBankAccount({ onSubmit, confirmationText }: AddBankAccountPro
           setCustomError(error);
         } else if (e.statusCode === 400 && e.message?.includes('Multi-account IBAN')) {
           setCustomError(
-            translate(
-              'screens/iban',
-              'This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.',
-            ),
+            <Trans
+              i18nKey="screens/errors.iban"
+              defaults="This is a multi-account IBAN and cannot be added as a personal account. Please open a support ticket at <link>{{supportLink}}</link> and attach the bank transaction confirmation as a PDF."
+              values={{ supportLink: '' }}
+              components={{
+                link: (
+                  <StyledLink
+                    label={`${process.env.REACT_APP_PUBLIC_URL ?? process.env.PUBLIC_URL}/support`}
+                    onClick={() => navigate(`/support/issue?issue-type=${SupportIssueType.GENERIC_ISSUE}`)}
+                    dark
+                  />
+                ),
+              }}
+            />,
           );
         } else {
           setError(e.message ?? 'Unknown error');
