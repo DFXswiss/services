@@ -231,11 +231,15 @@ export default function SellScreen(): JSX.Element {
   }, [selectedAddress]);
 
   useEffect(() => {
-    if (bankAccount && bankAccounts) {
-      const account = getAccount(bankAccounts, bankAccount);
+    if (bankAccounts) {
+      const account = getAccount(bankAccounts, bankAccount) ?? bankAccounts.find((a) => a.default);
       if (account) {
         setVal('bankAccount', account);
-      } else if (!isCreatingAccount && Validations.Iban(allowedCountries).validate(bankAccount) === true) {
+      } else if (
+        bankAccount &&
+        !isCreatingAccount &&
+        Validations.Iban(allowedCountries).validate(bankAccount) === true
+      ) {
         setIsCreatingAccount(true);
         createAccount({ iban: bankAccount })
           .then((b) => setVal('bankAccount', b))
