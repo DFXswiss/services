@@ -207,7 +207,7 @@ export default function PaymentLinkScreen(): JSX.Element {
       apiUrl = Lnurl.decode(lightningParam);
       setParams({ lightning: undefined });
     } else if (urlParams.size) {
-      apiUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment?${urlParams.toString()}`;
+      apiUrl = url({ base: process.env.REACT_APP_API_URL, path: '/v1/paymentLink/payment', params: urlParams });
       setUrlParams(new URLSearchParams());
     }
 
@@ -367,22 +367,22 @@ export default function PaymentLinkScreen(): JSX.Element {
         break;
       case PaymentStandardType.LIGHTNING_BOLT11:
         invokeCallback(
-          url(
-            payRequest.callback,
-            new URLSearchParams({ quote: payRequest.quote.id, amount: payRequest.minSendable.toString() }),
-          ),
+          url({
+            base: payRequest.callback,
+            params: new URLSearchParams({ quote: payRequest.quote.id, amount: payRequest.minSendable.toString() }),
+          }),
         );
         break;
       case PaymentStandardType.PAY_TO_ADDRESS:
         invokeCallback(
-          url(
-            payRequest.callback,
-            new URLSearchParams({
+          url({
+            base: payRequest.callback,
+            params: new URLSearchParams({
               quote: payRequest.quote.id,
               method: selectedPaymentMethod ?? '',
               asset: selectedAsset ?? '',
             }),
-          ),
+          }),
         );
         break;
     }
@@ -512,14 +512,14 @@ export default function PaymentLinkScreen(): JSX.Element {
       const asset = metaMaskInfo.transferAsset;
 
       const paymentUri = await invokeCallback(
-        url(
-          payRequest.callback,
-          new URLSearchParams({
+        url({
+          base: payRequest.callback,
+          params: new URLSearchParams({
             quote: payRequest.quote.id,
             method: asset.blockchain,
             asset: asset.name,
           }),
-        ),
+        }),
       );
       if (!paymentUri) throw new Error('Failed to get payment information');
 
@@ -534,10 +534,10 @@ export default function PaymentLinkScreen(): JSX.Element {
         gasPrice: metaMaskInfo.minFee,
       });
       await fetchJson(
-        url(
-          payRequest.callback.replace('/cb', '/tx'),
-          new URLSearchParams({ quote: payRequest.quote.id, method: asset.blockchain, tx }),
-        ),
+        url({
+          base: payRequest.callback.replace('/cb', '/tx'),
+          params: new URLSearchParams({ quote: payRequest.quote.id, method: asset.blockchain, tx }),
+        }),
       );
     } catch (e) {
       const error = e as Error;

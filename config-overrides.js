@@ -23,9 +23,9 @@ module.exports = function override(config, env) {
   ];
   config.output = {
     ...config.output,
-    ...(process.env.PUBLIC_URL && process.env.CUSTOM_CHUNK_PATH
+    ...(process.env.REACT_APP_PUBLIC_URL && process.env.CUSTOM_CHUNK_PATH
       ? {
-          publicPath: process.env.PUBLIC_URL + process.env.CUSTOM_CHUNK_PATH,
+          publicPath: new URL(process.env.CUSTOM_CHUNK_PATH, process.env.REACT_APP_PUBLIC_URL),
           chunkFilename: config.output.chunkFilename.replace('static/js', `v${widgetVersion}-chunks`),
           webassemblyModuleFilename: `v${widgetVersion}-chunks/[hash].module.wasm`,
         }

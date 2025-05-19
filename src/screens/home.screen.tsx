@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { CustodyAssets } from 'src/components/home/wallet/connect-address';
+import { url } from 'src/util/utils';
 import { Service } from '../App';
 import { ConnectWrapper } from '../components/home/connect-wrapper';
 import { Layout } from '../components/layout';
@@ -129,8 +130,11 @@ export default function HomeScreen(): JSX.Element {
   function start() {
     switch (specialMode) {
       case SpecialMode.MY_DFX:
-        const url = `${process.env.REACT_APP_PAY_URL}login?token=${getAuthToken()}`;
-        getAuthToken() && session?.address && window.open(url, '_self');
+        if (getAuthToken() && session?.address) {
+          const params = new URLSearchParams({ token: getAuthToken() || '' });
+          const urlPath = url({ base: process.env.REACT_APP_PAY_URL, path: 'login', params });
+          window.open(urlPath, '_self');
+        }
         break;
 
       // @ts-expect-error fall through to default option

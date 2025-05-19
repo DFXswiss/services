@@ -23,9 +23,17 @@ export async function timeout<T>(promise: Promise<T>, timeout: number): Promise<
   return Promise.race([promise, timeoutPromise]);
 }
 
-export function url(url: string, params: URLSearchParams): string {
-  const search = Array.from(params.entries()).length > 0 ? `?${params}` : '';
-  return `${url}${search}`;
+export function url({ base, path, params }: { base?: string; path?: string; params?: URLSearchParams }): string {
+  if (!path && !base) return '';
+
+  if (!base && path && !isAbsoluteUrl(path)) {
+    const searchStr = params && Array.from(params.entries()).length > 0 ? `?${params}` : '';
+    return `${path}${searchStr}`;
+  }
+
+  const url = new URL(path || '', base);
+  if (params) url.search = params.toString();
+  return url.href;
 }
 
 export function isAbsoluteUrl(url: string): boolean {

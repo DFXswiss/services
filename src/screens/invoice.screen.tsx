@@ -1,4 +1,4 @@
-import { ApiError, Fiat, useFiatContext, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, Fiat, SupportIssueType, useFiatContext, Utils, Validations } from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
@@ -31,7 +31,7 @@ interface FormData {
   currency: Fiat;
 }
 
-const baseUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment`;
+const baseUrl = url({ base: process.env.REACT_APP_API_URL, path: '/v1/paymentLink/payment' });
 const relativeBaseUrl = '/pl';
 
 export default function InvoiceScreen(): JSX.Element {
@@ -70,7 +70,7 @@ export default function InvoiceScreen(): JSX.Element {
   }, [data?.recipient, data?.invoiceId, data?.amount, data?.currency]);
 
   useEffect(() => {
-    validatedParams && setCallback(url(relativeBaseUrl, validatedParams));
+    validatedParams && setCallback(url({ path: relativeBaseUrl, params: validatedParams }));
   }, [validatedParams]);
 
   async function validateParams(data: FormData) {
@@ -92,7 +92,7 @@ export default function InvoiceScreen(): JSX.Element {
       expiryDate: formattedDate,
     });
 
-    fetchJson(url(baseUrl, searchParams))
+    fetchJson(url({ base: baseUrl, params: searchParams }))
       .then(({ error, message }) => {
         if (error) {
           setError(message ?? 'Unknown Error');
@@ -115,10 +115,10 @@ export default function InvoiceScreen(): JSX.Element {
     <Layout title={translate('screens/payment', 'Create Invoice')}>
       <StyledVerticalStack gap={6} full center>
         <div className="flex flex-col gap-2 w-48 my-3">
-          <QrBasic data={`${process.env.PUBLIC_URL}${callback}`} isLoading={!callback} />
+          <QrBasic data={url({ base: process.env.REACT_APP_PUBLIC_URL, path: callback })} isLoading={!callback} />
           <StyledButton
             label={translate('general/actions', 'Copy Link')}
-            onClick={() => callback && copy(`${process.env.PUBLIC_URL}${callback}`)}
+            onClick={() => copy(url({ base: process.env.REACT_APP_PUBLIC_URL, path: callback }))}
             color={StyledButtonColor.STURDY_WHITE}
             width={StyledButtonWidth.FULL}
             disabled={!callback}
@@ -191,7 +191,11 @@ export default function InvoiceScreen(): JSX.Element {
                       components={{
                         strong: <strong />,
                         link: (
-                          <StyledLink label={`app.dfx.swiss/support`} url={`${process.env.PUBLIC_URL}/support`} dark />
+                          <StyledLink
+                            label={url({ base: process.env.REACT_APP_PUBLIC_URL, path: '/support' })}
+                            onClick={() => navigate(`/support/issue?issue-type=${SupportIssueType.GENERIC_ISSUE}`)}
+                            dark
+                          />
                         ),
                       }}
                     />

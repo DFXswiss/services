@@ -41,7 +41,11 @@ export default function ConnectAlby(props: ConnectProps): JSX.Element {
       appParams.wallet && params.set('wallet', appParams.wallet);
       appParams.refcode && params.set('usedRef', appParams.refcode);
 
-      win.location = url(`${process.env.REACT_APP_API_URL}/${process.env.REACT_APP_API_VERSION}/auth/alby`, params);
+      win.location = url({
+        base: process.env.REACT_APP_API_URL,
+        path: `${process.env.REACT_APP_API_VERSION}/auth/alby`,
+        params,
+      });
 
       await delay(5);
       throw new AbortError('Forwarded to Alby page');
