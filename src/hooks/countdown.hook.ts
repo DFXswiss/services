@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-interface Timer {
+export interface Timer {
   minutes: number;
   seconds: number;
 }
