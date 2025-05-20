@@ -1,4 +1,4 @@
-import { Asset, Blockchain, PaymentLinkPaymentStatus, useAssetContext, Utils } from '@dfx.swiss/react';
+import { Asset, PaymentLinkPaymentStatus, useAssetContext, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -32,101 +32,24 @@ import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
 import { useSearchParams } from 'react-router-dom';
 import { QrBasic } from 'src/components/payment/qr-code';
-import { WalletInfo } from 'src/config/payment-link-wallets';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import {
+  ExtendedPaymentLinkStatus,
+  NoPaymentLinkPaymentStatus,
+  PaymentStandard,
+  WalletInfo,
+} from 'src/dto/payment-link.dto';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { EvmUri } from 'src/util/evm-uri';
 import { blankedAddress, formatLocationAddress, formatUnits } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
-export interface PaymentStandard {
-  id: PaymentStandardType;
-  label: string;
-  description: string;
-  paymentIdentifierLabel?: string;
-  blockchain?: Blockchain;
-}
-
-interface Quote {
-  id: string;
-  expiration: Date;
-  payment: string;
-}
-
-interface Amount {
-  asset: string;
-  amount: number;
-}
-
-export type TransferMethod = Blockchain;
-export interface TransferInfo {
-  method: TransferMethod;
-  minFee: number;
-  assets: Amount[];
-  available?: boolean;
-}
-
-export interface PaymentLinkPayTerminal {
-  id: string;
-  externalId?: string;
-  tag: string;
-  displayName: string;
-  standard: PaymentStandardType;
-  possibleStandards: PaymentStandardType[];
-  displayQr: boolean;
-  recipient: {
-    address?: {
-      city: string;
-      country: string;
-      houseNumber: string;
-      street: string;
-      zip: string;
-    };
-    name?: string;
-    mail?: string;
-    phone?: string;
-    website?: string;
-  };
-
-  // error fields
-  statusCode?: number;
-  message?: string;
-  error?: string;
-}
-
-export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
-  quote: Quote;
-  callback: string;
-  metadata: string;
-  minSendable: number;
-  maxSendable: number;
-  requestedAmount: Amount;
-  transferAmounts: TransferInfo[];
-}
-
-interface PaymentStatus {
-  status: PaymentLinkPaymentStatus;
-}
-
-enum NoPaymentLinkPaymentStatus {
-  NO_PAYMENT = 'NoPayment',
-}
-
-type ExtendedPaymentLinkStatus = PaymentLinkPaymentStatus | NoPaymentLinkPaymentStatus;
-
 interface FormData {
   paymentStandard: PaymentStandard;
   asset?: string;
-}
-
-interface MetaMaskInfo {
-  accountAddress: string;
-  transferAsset: Asset;
-  transferAmount: number;
-  minFee: number;
 }
 
 export default function PaymentLinkScreen(): JSX.Element {

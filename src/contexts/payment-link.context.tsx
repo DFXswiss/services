@@ -1,5 +1,4 @@
 import {
-  Asset,
   AssetType,
   Blockchain,
   PaymentLinkPaymentStatus,
@@ -21,10 +20,20 @@ import {
   useState,
 } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { paymentLinkWallets, PaymentStandards, WalletInfo } from 'src/config/payment-link-wallets';
+import { PaymentLinkWallets, PaymentStandards } from 'src/config/payment-link-wallets';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { AssetBalance } from 'src/contexts/balance.context';
-import { PaymentLinkPayRequest, PaymentLinkPayTerminal, PaymentStandard } from 'src/screens/payment-link.screen';
+import {
+  Amount,
+  ExtendedPaymentLinkStatus,
+  MetaMaskInfo,
+  NoPaymentLinkPaymentStatus,
+  PaymentLinkPayRequest,
+  PaymentLinkPayTerminal,
+  PaymentStandard,
+  PaymentStatus,
+  WalletInfo,
+} from 'src/dto/payment-link.dto';
 import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
 import { fetchJson, url } from 'src/util/utils';
@@ -33,28 +42,6 @@ import { Timer, useCountdown } from '../hooks/countdown.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useSessionStore } from '../hooks/session-store.hook';
 import { useMetaMask, WalletType } from '../hooks/wallets/metamask.hook';
-
-interface PaymentStatus {
-  status: PaymentLinkPaymentStatus;
-}
-
-enum NoPaymentLinkPaymentStatus {
-  NO_PAYMENT = 'NoPayment',
-}
-
-type ExtendedPaymentLinkStatus = PaymentLinkPaymentStatus | NoPaymentLinkPaymentStatus;
-
-interface MetaMaskInfo {
-  accountAddress: string;
-  transferAsset: Asset;
-  transferAmount: number;
-  minFee: number;
-}
-
-interface Amount {
-  asset: string;
-  amount: number;
-}
 
 interface PaymentLinkInterface {
   error: string | undefined;
@@ -93,7 +80,6 @@ export function usePaymentLinkContext(): PaymentLinkInterface {
 }
 
 export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
-  // hooks
   const { call } = useApi();
   const { navigate } = useNavigation();
   const { assets } = useAssetContext();
@@ -102,11 +88,9 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   const { paymentLinkApiUrlStore } = useSessionStore();
   const { lightning, redirectUri, setParams } = useAppParams();
 
-  // MetaMask hook
   const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction, readBalance } =
     useMetaMask();
 
-  // state
   const [error, setError] = useState<string>();
   const [merchant, setMerchant] = useState<string>();
   const [urlParams, setUrlParams] = useSearchParams();
@@ -114,24 +98,19 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
   const [paymentStatus, setPaymentStatus] = useState<ExtendedPaymentLinkStatus>(PaymentLinkPaymentStatus.PENDING);
 
-  // callback states
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
   const [isLoadingPaymentIdentifier, setIsLoadingPaymentIdentifier] = useState(false);
 
-  // --- MetaMask states --- //
   const [isLoadingMetaMask, setIsLoadingMetaMask] = useState(false);
   const [metaMaskInfo, setMetaMaskInfo] = useState<MetaMaskInfo>();
   const [isMetaMaskPaying, setIsMetaMaskPaying] = useState(false);
   const [metaMaskError, setMetaMaskError] = useState<string>();
 
-  // refs
   const refetchTimeout = useRef<NodeJS.Timeout>();
-  const sessionApiUrl = useRef<string>(paymentLinkApiUrlStore.get() ?? ''); // paymentLinkApiUrl getter
+  const sessionApiUrl = useRef<string>(paymentLinkApiUrlStore.get() ?? '');
 
-  // callback ref
   const callbackUrl = useRef<string>();
 
-  // paymentLinkApiUrl setter
   const setSessionApiUrl = (newUrl: string) => {
     sessionApiUrl.current = newUrl;
     paymentLinkApiUrlStore.set(newUrl);
@@ -374,7 +353,6 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     }
   }
 
-  // --- PAYMENT LINK CALLBACKS --- //
   async function fetchPaymentIdentifier(
     payRequest: PaymentLinkPayTerminal | PaymentLinkPayRequest,
     selectedPaymentMethod?: Blockchain,
@@ -437,11 +415,11 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   }
 
   const recommendedWallets = useMemo(() => {
-    return paymentLinkWallets.filter((wallet) => wallet.recommended === true);
+    return PaymentLinkWallets.filter((wallet) => wallet.recommended === true);
   }, []);
 
   const otherWallets = useMemo(() => {
-    return paymentLinkWallets.filter((wallet) => wallet.recommended !== true);
+    return PaymentLinkWallets.filter((wallet) => wallet.recommended !== true);
   }, []);
 
   const getWalletByName = useCallback(

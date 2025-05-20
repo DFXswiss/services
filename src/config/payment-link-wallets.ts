@@ -1,4 +1,5 @@
 import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
+import { WalletInfo } from 'src/dto/payment-link.dto';
 
 export const PaymentStandards = {
   [PaymentStandardType.OPEN_CRYPTO_PAY]: {
@@ -22,18 +23,7 @@ export const PaymentStandards = {
   },
 };
 
-export interface WalletInfo {
-  id: string;
-  name: string;
-  websiteUrl: string;
-  iconUrl: string;
-  deepLink: string;
-  appStoreUrl?: string;
-  playStoreUrl?: string;
-  recommended?: boolean;
-}
-
-export const paymentLinkWallets: WalletInfo[] = [
+export const PaymentLinkWallets: WalletInfo[] = [
   // ----------------------- RECOMMENDED WALLETS -----------------------
   {
     id: 'cakewallet',
