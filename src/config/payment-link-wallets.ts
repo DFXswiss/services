@@ -24,7 +24,16 @@ export const PaymentStandards = {
 
 export const RecommendedWallets = ['Cake Wallet', 'Frankencoin', 'Phoenix', 'Wallet of Satoshi', 'BtcTaro'];
 
-export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: string; recommended?: boolean } } = {
+export const CompatibleWallets: { 
+  [key: string]: { 
+    websiteUrl: string; 
+    iconUrl: string; 
+    deepLink?: string;
+    appStoreUrl?: string;
+    playStoreUrl?: string;
+    recommended?: boolean 
+  } 
+} = {
   BitBanana: {
     websiteUrl: 'https://bitbanana.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BitBanana.webp',
@@ -56,10 +65,16 @@ export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: 
   BtcTaro: {
     websiteUrl: 'https://dfx.swiss/bitcoin.html',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCTaroDFX.webp',
+    deepLink: 'btctaro://',
+    appStoreUrl: 'https://apps.apple.com/app/btc-taro/id1234567890',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=swiss.dfx.btctaro',
   },
   'Cake Wallet': {
     websiteUrl: 'https://cakewallet.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CakeWallet.webp',
+    deepLink: 'cakewallet://',
+    appStoreUrl: 'https://apps.apple.com/us/app/cake-wallet-for-xmr-monero/id1334702542',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet',
   },
   CoinCorner: {
     websiteUrl: 'https://www.coincorner.com/',

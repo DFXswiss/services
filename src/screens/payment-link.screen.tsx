@@ -10,6 +10,7 @@ import {
   SpinnerVariant,
   StyledButton,
   StyledButtonColor,
+  StyledButtonWidth,
   StyledCollapsible,
   StyledDataTable,
   StyledDataTableExpandableRow,
@@ -28,11 +29,13 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
+import { useParams } from 'react-router-dom';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { CompatibleWallets, RecommendedWallets } from 'src/config/payment-link-wallets';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useNavigation } from 'src/hooks/navigation.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { EvmUri } from 'src/util/evm-uri';
 import { blankedAddress, formatLocationAddress, formatUnits } from 'src/util/utils';
@@ -126,7 +129,9 @@ interface MetaMaskInfo {
 }
 
 export default function PaymentLinkScreen(): JSX.Element {
+  const { id } = useParams<{ id: string }>();
   const { translate } = useSettingsContext();
+  const { navigate } = useNavigation();
   const { toBlockchain } = useWeb3();
   const { width } = useWindowContext();
   const { assets } = useAssetContext();
@@ -227,6 +232,9 @@ export default function PaymentLinkScreen(): JSX.Element {
     selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS && paymentIdentifier
       ? EvmUri.decode(paymentIdentifier)
       : undefined;
+
+  const walletName = id && decodeURIComponent(id);
+  const walletData = walletName && CompatibleWallets[walletName];
 
   return (
     <Layout backButton={false} smallMenu>
@@ -534,11 +542,66 @@ export default function PaymentLinkScreen(): JSX.Element {
                         )}
                       </p>
                     )}
-                    <WalletGrid
-                      wallets={RecommendedWallets}
-                      header={translate('screens/payment', 'Recommended wallets')}
-                    />
-                    <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
+                    {walletName ? (
+                      walletData ? (
+                        <StyledVerticalStack full gap={4} center className="pt-8">
+                          <div className="flex flex-col items-center w-full gap-6 pt-4">
+                            <img
+                              className="w-32 h-32 border border-dfxGray-400 shadow-md bg-white rounded-md"
+                              src={walletData.iconUrl}
+                              alt={walletName}
+                            />
+                            <p className="text-lg font-semibold">{walletName}</p>
+
+                            <StyledVerticalStack full gap={3} center className="pt-4 px-4">
+                              <StyledButton
+                                label={translate('general/actions', 'Open app')}
+                                onClick={() => window.open(walletData.deepLink || walletData.websiteUrl, '_blank')}
+                                color={StyledButtonColor.BLUE}
+                                width={StyledButtonWidth.FULL}
+                              />
+                              <StyledButton
+                                label={translate('general/actions', 'Open website')}
+                                onClick={() => window.open(walletData.websiteUrl, '_blank')}
+                                color={StyledButtonColor.BLUE}
+                                width={StyledButtonWidth.FULL}
+                              />
+                              <StyledButton
+                                label="Apple App Store"
+                                onClick={() => window.open(walletData.appStoreUrl || walletData.websiteUrl, '_blank')}
+                                color={StyledButtonColor.BLUE}
+                                width={StyledButtonWidth.FULL}
+                              />
+                              <StyledButton
+                                label="Android Play Store"
+                                onClick={() => window.open(walletData.playStoreUrl || walletData.websiteUrl, '_blank')}
+                                color={StyledButtonColor.BLUE}
+                                width={StyledButtonWidth.FULL}
+                              />
+                            </StyledVerticalStack>
+                          </div>
+                        </StyledVerticalStack>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full p-4">
+                          <p className="text-dfxRed-100 text-lg font-bold mb-4">
+                            {translate('screens/payment', 'Wallet not found')}
+                          </p>
+                          <StyledButton
+                            label={translate('general/actions', 'Back')}
+                            onClick={() => navigate('/pl')}
+                            color={StyledButtonColor.BLUE}
+                          />
+                        </div>
+                      )
+                    ) : (
+                      <>
+                        <WalletGrid
+                          wallets={RecommendedWallets}
+                          header={translate('screens/payment', 'Recommended wallets')}
+                        />
+                        <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
+                      </>
+                    )}
                   </StyledVerticalStack>
                 )
               )}
@@ -633,6 +696,7 @@ interface WalletGridProps {
 }
 
 function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
+  const { navigate } = useNavigation();
   const walletNames = wallets ?? Object.keys(CompatibleWallets);
 
   return (
@@ -652,7 +716,7 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
             <div
               key={walletName}
               className="flex flex-col items-center gap-2 cursor-pointer max-w-[120px] min-w-0"
-              onClick={() => window.open(wallet.websiteUrl)}
+              onClick={() => navigate(`/pl/${encodeURIComponent(walletName)}`)}
             >
               <img
                 className="border border-dfxGray-400 shadow-md bg-white rounded-md"
