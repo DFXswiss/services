@@ -544,24 +544,24 @@ export default function PaymentLinkScreen(): JSX.Element {
                     )}
                     {walletName ? (
                       walletData ? (
-                        <StyledVerticalStack full gap={4} center className="pt-8">
-                          <div className="flex flex-col items-center w-full gap-6 pt-4">
+                        <StyledVerticalStack full gap={4} center>
+                          <div className="flex flex-col items-center w-full gap-6">
+                            <DividerWithHeader header={walletName} />
                             <img
                               className="w-32 h-32 border border-dfxGray-400 shadow-md bg-white rounded-md"
                               src={walletData.iconUrl}
                               alt={walletName}
                             />
-                            <p className="text-lg font-semibold">{walletName}</p>
 
-                            <StyledVerticalStack full gap={3} center className="pt-4 px-4">
+                            <StyledVerticalStack full gap={3} center className="pt-2 px-4">
                               <StyledButton
-                                label={translate('general/actions', 'Open app')}
+                                label={translate('screens/home', 'Open app')}
                                 onClick={() => window.open(walletData.deepLink || walletData.websiteUrl, '_blank')}
                                 color={StyledButtonColor.BLUE}
                                 width={StyledButtonWidth.FULL}
                               />
                               <StyledButton
-                                label={translate('general/actions', 'Open website')}
+                                label={translate('screens/home', 'Open website')}
                                 onClick={() => window.open(walletData.websiteUrl, '_blank')}
                                 color={StyledButtonColor.BLUE}
                                 width={StyledButtonWidth.FULL}
@@ -608,7 +608,7 @@ export default function PaymentLinkScreen(): JSX.Element {
             </>
           )}
 
-          <div>
+          <div className="pt-4 pb-2 w-full leading-none">
             <StyledLink
               label={translate('screens/payment', 'Find out more about the OpenCryptoPay payment standard')}
               url="https://opencryptopay.io"
@@ -701,13 +701,7 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
 
   return (
     <div className="flex flex-col w-full gap-4 px-4">
-      {header && (
-        <div className="flex flex-row items-center gap-2">
-          <div className="flex-grow bg-gradient-to-r from-white to-dfxGray-600 h-[1px]" />
-          <p className="text-xs font-medium text-dfxGray-600 whitespace-nowrap">{header.toUpperCase()}</p>
-          <div className="flex-grow bg-gradient-to-r from-dfxGray-600 to-white h-[1px]" />
-        </div>
-      )}
+      {header && <DividerWithHeader header={header.toUpperCase()} />}
       <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))' }}>
         {walletNames.map((walletName) => {
           const wallet = CompatibleWallets[walletName];
@@ -728,6 +722,16 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function DividerWithHeader({ header }: { header: string }): JSX.Element {
+  return (
+    <div className="flex flex-row items-center gap-2 w-full">
+      <div className="flex-grow bg-gradient-to-r from-white to-dfxGray-600 h-[1px]" />
+      <p className="text-xs font-medium text-dfxGray-600 whitespace-nowrap">{header}</p>
+      <div className="flex-grow bg-gradient-to-r from-dfxGray-600 to-white h-[1px]" />
     </div>
   );
 }
