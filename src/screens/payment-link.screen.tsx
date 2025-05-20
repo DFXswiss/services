@@ -30,9 +30,9 @@ import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { CompatibleWallets, RecommendedWallets } from 'src/config/payment-link-wallets';
+import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
-import { usePaymentLink } from 'src/hooks/payment-link.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { EvmUri } from 'src/util/evm-uri';
 import { blankedAddress, formatLocationAddress, formatUnits } from 'src/util/utils';
@@ -145,13 +145,13 @@ export default function PaymentLinkScreen(): JSX.Element {
     metaMaskInfo,
     metaMaskError,
     isMetaMaskPaying,
-    fetchPayRequest,
     paymentHasQuote,
     setSessionApiUrl,
     setPaymentIdentifier,
+    fetchPayRequest,
     fetchPaymentIdentifier,
     payWithMetaMask,
-  } = usePaymentLink();
+  } = usePaymentLinkContext();
 
   const [assetObject, setAssetObject] = useState<Asset>();
   const [showContract, setShowContract] = useState(false);

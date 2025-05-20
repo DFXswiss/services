@@ -9,7 +9,16 @@ import {
 } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { addMinutes } from 'date-fns';
-import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  createContext,
+  MutableRefObject,
+  PropsWithChildren,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PaymentStandards } from 'src/config/payment-link-wallets';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
@@ -18,13 +27,35 @@ import { PaymentLinkPayRequest, PaymentLinkPayTerminal, PaymentStandard } from '
 import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
 import { fetchJson, url } from 'src/util/utils';
-import { useAppParams } from './app-params.hook';
-import { Timer, useCountdown } from './countdown.hook';
-import { useNavigation } from './navigation.hook';
-import { useSessionStore } from './session-store.hook';
-import { useMetaMask, WalletType } from './wallets/metamask.hook';
+import { useAppParams } from '../hooks/app-params.hook';
+import { Timer, useCountdown } from '../hooks/countdown.hook';
+import { useNavigation } from '../hooks/navigation.hook';
+import { useSessionStore } from '../hooks/session-store.hook';
+import { useMetaMask, WalletType } from '../hooks/wallets/metamask.hook';
 
-interface UsePaymentLinkResult {
+interface PaymentStatus {
+  status: PaymentLinkPaymentStatus;
+}
+
+enum NoPaymentLinkPaymentStatus {
+  NO_PAYMENT = 'NoPayment',
+}
+
+type ExtendedPaymentLinkStatus = PaymentLinkPaymentStatus | NoPaymentLinkPaymentStatus;
+
+interface MetaMaskInfo {
+  accountAddress: string;
+  transferAsset: Asset;
+  transferAmount: number;
+  minFee: number;
+}
+
+interface Amount {
+  asset: string;
+  amount: number;
+}
+
+interface PaymentLinkInterface {
   error: string | undefined;
   merchant: string | undefined;
   payRequest: PaymentLinkPayRequest | PaymentLinkPayTerminal | undefined;
@@ -51,29 +82,13 @@ interface UsePaymentLinkResult {
   payWithMetaMask: () => Promise<void>;
 }
 
-interface PaymentStatus {
-  status: PaymentLinkPaymentStatus;
+const PaymentLinkContext = createContext<PaymentLinkInterface>(undefined as any);
+
+export function usePaymentLinkContext(): PaymentLinkInterface {
+  return useContext(PaymentLinkContext);
 }
 
-enum NoPaymentLinkPaymentStatus {
-  NO_PAYMENT = 'NoPayment',
-}
-
-type ExtendedPaymentLinkStatus = PaymentLinkPaymentStatus | NoPaymentLinkPaymentStatus;
-
-interface MetaMaskInfo {
-  accountAddress: string;
-  transferAsset: Asset;
-  transferAmount: number;
-  minFee: number;
-}
-
-interface Amount {
-  asset: string;
-  amount: number;
-}
-
-export function usePaymentLink(): UsePaymentLinkResult {
+export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   // hooks
   const { call } = useApi();
   const { navigate } = useNavigation();
@@ -417,7 +432,7 @@ export function usePaymentLink(): UsePaymentLinkResult {
     return `${urlObj.origin}${newPath}?${newParams.toString()}`;
   }
 
-  return useMemo(
+  const context = useMemo(
     () => ({
       error,
       merchant,
@@ -455,4 +470,6 @@ export function usePaymentLink(): UsePaymentLinkResult {
       isMetaMaskPaying,
     ],
   );
+
+  return <PaymentLinkContext.Provider value={context}>{props.children}</PaymentLinkContext.Provider>;
 }
