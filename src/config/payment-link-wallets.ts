@@ -23,6 +23,7 @@ export const PaymentStandards = {
 };
 
 export interface WalletInfo {
+  id: string;
   name: string;
   websiteUrl: string;
   iconUrl: string;
@@ -35,6 +36,7 @@ export interface WalletInfo {
 export const paymentLinkWallets: WalletInfo[] = [
   // ----------------------- RECOMMENDED WALLETS -----------------------
   {
+    id: 'cakewallet',
     name: 'Cake Wallet',
     websiteUrl: 'https://cakewallet.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CakeWallet.webp',
@@ -44,6 +46,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     recommended: true,
   },
   {
+    id: 'frankencoin',
     name: 'Frankencoin',
     websiteUrl: 'https://frankencoin.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Frankencoin.webp',
@@ -53,6 +56,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     recommended: true,
   },
   {
+    id: 'phoenix',
     name: 'Phoenix',
     websiteUrl: 'https://phoenix.acinq.co/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Phoenix.webp',
@@ -62,6 +66,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     recommended: true,
   },
   {
+    id: 'walletofsatoshi',
     name: 'Wallet of Satoshi',
     websiteUrl: 'https://www.walletofsatoshi.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/WalletofSatoshi.webp',
@@ -71,6 +76,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     recommended: true,
   },
   {
+    id: 'btctaro',
     name: 'BtcTaro',
     websiteUrl: 'https://dfx.swiss/bitcoin.html',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCTaroDFX.webp',
@@ -81,6 +87,7 @@ export const paymentLinkWallets: WalletInfo[] = [
   },
   // ----------------------- OTHER COMPATIBLE WALLETS -----------------------
   {
+    id: 'bitbanana',
     name: 'BitBanana',
     websiteUrl: 'https://bitbanana.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BitBanana.webp',
@@ -88,6 +95,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=app.michaelwuensch.bitbanana',
   },
   {
+    id: 'bitkit',
     name: 'Bitkit',
     websiteUrl: 'https://bitkit.to/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bitkit.webp',
@@ -96,6 +104,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=to.bitkit',
   },
   {
+    id: 'blink',
     name: 'Blink',
     websiteUrl: 'https://de.blink.sv/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blink.webp',
@@ -104,6 +113,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.galoyapp',
   },
   {
+    id: 'blitzwallet',
     name: 'Blitz Wallet',
     websiteUrl: 'https://blitz-wallet.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BlitzWalletApp.webp',
@@ -111,6 +121,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.blitzwallet',
   },
   {
+    id: 'blixt',
     name: 'Blixt',
     websiteUrl: 'https://blixtwallet.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blixt.webp',
@@ -118,6 +129,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.blixtwallet',
   },
   {
+    id: 'bluewallet',
     name: 'BlueWallet',
     websiteUrl: 'https://bluewallet.io/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BlueWallet.webp',
@@ -126,6 +138,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=io.bluewallet.bluewallet',
   },
   {
+    id: 'breez',
     name: 'Breez',
     websiteUrl: 'https://breez.technology/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Breez.webp',
@@ -134,6 +147,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.breez.client',
   },
   {
+    id: 'coincorner',
     name: 'CoinCorner',
     websiteUrl: 'https://www.coincorner.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CoinCorner.webp',
@@ -142,6 +156,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.coincorner.app.crypt',
   },
   {
+    id: 'electrum',
     name: 'Electrum',
     websiteUrl: 'https://electrum.org/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Electrum.webp',
@@ -149,6 +164,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=org.electrum.electrum',
   },
   {
+    id: 'lifpay',
     name: 'LifPay',
     websiteUrl: 'https://lifpay.me/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LifPay.webp',
@@ -157,6 +173,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=flutter.android.LifePay',
   },
   {
+    id: 'lipawallet',
     name: 'LipaWallet',
     websiteUrl: 'https://lipa.swiss/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/lipawallet.webp',
@@ -165,6 +182,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.getlipa.wallet',
   },
   {
+    id: 'lnbits',
     name: 'LNbits',
     websiteUrl: 'https://lnbits.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LNbits.webp',
@@ -172,6 +190,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.lnbits.app',
   },
   {
+    id: 'aqua',
     name: 'AQUA',
     websiteUrl: 'https://aquawallet.io/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/aqua.webp',
@@ -180,6 +199,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=io.aquawallet.android',
   },
   {
+    id: 'onekey',
     name: 'OneKey',
     websiteUrl: 'https://onekey.so/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/OneKey.webp',
@@ -188,6 +208,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=so.onekey.app.wallet',
   },
   {
+    id: 'pouchph',
     name: 'PouchPH',
     websiteUrl: 'https://pouch.ph/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Pouchph.webp',
@@ -196,6 +217,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=pouch.ph',
   },
   {
+    id: 'zebedee',
     name: 'ZEBEDEE',
     websiteUrl: 'https://zbd.gg/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/ZEBEDEE.webp',
@@ -204,6 +226,7 @@ export const paymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=io.zebedee.wallet',
   },
   {
+    id: 'zeus',
     name: 'Zeus',
     websiteUrl: 'https://zeusln.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Zeus.webp',

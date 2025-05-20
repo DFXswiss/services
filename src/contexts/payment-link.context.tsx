@@ -73,7 +73,7 @@ interface PaymentLinkInterface {
   isMetaMaskPaying: boolean;
   recommendedWallets: WalletInfo[];
   otherWallets: WalletInfo[];
-  getWalletByName: (name: string) => WalletInfo | undefined;
+  getWalletByName: (id: string) => WalletInfo | undefined;
   paymentHasQuote: (request?: PaymentLinkPayTerminal | PaymentLinkPayRequest) => request is PaymentLinkPayRequest;
   setPaymentIdentifier: (id: string | undefined) => void;
   setSessionApiUrl: (url: string) => void;
@@ -445,8 +445,8 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   }, []);
 
   const getWalletByName = useCallback(
-    (name: string): WalletInfo | undefined => {
-      return [...recommendedWallets, ...otherWallets].find((wallet) => wallet.name === name);
+    (id: string): WalletInfo | undefined => {
+      return [...recommendedWallets, ...otherWallets].find((wallet) => wallet.id === id);
     },
     [recommendedWallets, otherWallets],
   );

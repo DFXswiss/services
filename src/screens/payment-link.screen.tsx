@@ -2,6 +2,7 @@ import { Asset, Blockchain, PaymentLinkPaymentStatus, useAssetContext, Utils } f
 import {
   AlignContent,
   CopyButton,
+  DfxIcon,
   Form,
   IconColor,
   IconSize,
@@ -29,7 +30,7 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { WalletInfo } from 'src/config/payment-link-wallets';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
@@ -129,9 +130,8 @@ interface MetaMaskInfo {
 }
 
 export default function PaymentLinkScreen(): JSX.Element {
-  const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { translate } = useSettingsContext();
-  const { navigate } = useNavigation();
   const { toBlockchain } = useWeb3();
   const { width } = useWindowContext();
   const { assets } = useAssetContext();
@@ -163,6 +163,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   const [assetObject, setAssetObject] = useState<Asset>();
   const [showContract, setShowContract] = useState(false);
+  const [walletData, setWalletData] = useState<WalletInfo>();
 
   const {
     control,
@@ -174,6 +175,17 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   const selectedPaymentStandard = useWatch({ control, name: 'paymentStandard' });
   const selectedAsset = useWatch({ control, name: 'asset' });
+
+  useEffect(() => {
+    const walletId = searchParams.get('wallet-id');
+
+    if (walletId) {
+      setWalletData(getWalletByName(walletId));
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('wallet-id');
+      setSearchParams(newParams);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!paymentHasQuote(payRequest)) return;
@@ -235,9 +247,6 @@ export default function PaymentLinkScreen(): JSX.Element {
     selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS && paymentIdentifier
       ? EvmUri.decode(paymentIdentifier)
       : undefined;
-
-  const walletName = id && decodeURIComponent(id);
-  const walletData = walletName && getWalletByName(walletName);
 
   return (
     <Layout backButton={false} smallMenu>
@@ -545,62 +554,55 @@ export default function PaymentLinkScreen(): JSX.Element {
                         )}
                       </p>
                     )}
-                    {walletName ? (
-                      walletData ? (
-                        <StyledVerticalStack full gap={4} center>
-                          <div className="flex flex-col items-center w-full gap-6">
-                            <DividerWithHeader header={walletName} />
-                            <img
-                              className="w-32 h-32 border border-dfxGray-400 shadow-md bg-white rounded-md"
-                              src={walletData.iconUrl}
-                              alt={walletName}
-                            />
-
-                            <StyledVerticalStack full gap={3} center className="pt-2 px-4">
-                              <StyledButton
-                                label={translate('screens/home', 'Open app')}
-                                onClick={() => window.open(walletData.deepLink, '_blank')}
-                                color={StyledButtonColor.BLUE}
-                                width={StyledButtonWidth.FULL}
-                                hidden={!walletData.deepLink}
-                              />
-                              <StyledButton
-                                label={translate('screens/home', 'Open website')}
-                                onClick={() => window.open(walletData.websiteUrl, '_blank')}
-                                color={StyledButtonColor.STURDY_WHITE}
-                                width={StyledButtonWidth.FULL}
-                              />
-                              <StyledButton
-                                label="Apple App Store"
-                                icon={IconVariant.APPLE}
-                                onClick={() => window.open(walletData.appStoreUrl, '_blank')}
-                                color={StyledButtonColor.STURDY_WHITE}
-                                width={StyledButtonWidth.FULL}
-                                hidden={!walletData.appStoreUrl}
-                              />
-                              <StyledButton
-                                label="Android Play Store"
-                                icon={IconVariant.GOOGLE_PLAY}
-                                onClick={() => window.open(walletData.playStoreUrl, '_blank')}
-                                color={StyledButtonColor.STURDY_WHITE}
-                                width={StyledButtonWidth.FULL}
-                                hidden={!walletData.playStoreUrl}
-                              />
-                            </StyledVerticalStack>
-                          </div>
-                        </StyledVerticalStack>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center h-full p-4">
-                          <p className="text-dfxRed-100 text-lg font-bold mb-4">
-                            {translate('screens/payment', 'Wallet not found')}
-                          </p>
-                          <StyledButton
-                            label={translate('general/actions', 'Back')}
-                            onClick={() => navigate('/pl')}
-                            color={StyledButtonColor.BLUE}
+                    {walletData ? (
+                      <StyledVerticalStack full gap={4} center>
+                        <div className="relative flex flex-col items-center w-full gap-6">
+                          <DividerWithHeader header={walletData.name} />
+                          <button
+                            className="absolute top-8 right-8 bg-dfxGray-400 p-2 rounded-lg flex items-center justify-center"
+                            onClick={() => setWalletData(undefined)}
+                          >
+                            <DfxIcon icon={IconVariant.CLOSE} size={IconSize.SM} color={IconColor.BLUE} />
+                          </button>
+                          <img
+                            className="w-32 h-32 border border-dfxGray-400 shadow-md bg-white rounded-md"
+                            src={walletData.iconUrl}
+                            alt={walletData.name}
                           />
+
+                          <StyledVerticalStack full gap={3} center className="pt-2 px-4">
+                            <StyledButton
+                              label={translate('screens/home', 'Open app')}
+                              onClick={() => window.open(walletData.deepLink, '_blank')}
+                              color={StyledButtonColor.BLUE}
+                              width={StyledButtonWidth.FULL}
+                              hidden={!walletData.deepLink}
+                            />
+                            <StyledButton
+                              label={translate('screens/home', 'Open website')}
+                              onClick={() => window.open(walletData.websiteUrl, '_blank')}
+                              color={StyledButtonColor.STURDY_WHITE}
+                              width={StyledButtonWidth.FULL}
+                            />
+                            <StyledButton
+                              label="Apple App Store"
+                              icon={IconVariant.APPLE}
+                              onClick={() => window.open(walletData.appStoreUrl, '_blank')}
+                              color={StyledButtonColor.STURDY_WHITE}
+                              width={StyledButtonWidth.FULL}
+                              hidden={!walletData.appStoreUrl}
+                            />
+                            <StyledButton
+                              label="Android Play Store"
+                              icon={IconVariant.GOOGLE_PLAY}
+                              onClick={() => window.open(walletData.playStoreUrl, '_blank')}
+                              color={StyledButtonColor.STURDY_WHITE}
+                              width={StyledButtonWidth.FULL}
+                              hidden={!walletData.playStoreUrl}
+                            />
+                          </StyledVerticalStack>
                         </div>
-                      )
+                      </StyledVerticalStack>
                     ) : (
                       <>
                         <WalletGrid
@@ -718,7 +720,7 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
             <div
               key={wallet.name}
               className="flex flex-col items-center gap-2 cursor-pointer max-w-[120px] min-w-0"
-              onClick={() => navigate(`/pl/${encodeURIComponent(wallet.name)}`)}
+              onClick={() => navigate({ pathname: '/pl', search: `?wallet-id=${wallet.id}` })}
             >
               <img
                 className="border border-dfxGray-400 shadow-md bg-white rounded-md"
