@@ -30,6 +30,8 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/opacity.css';
 import { useSearchParams } from 'react-router-dom';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
@@ -487,11 +489,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           >
                             <DfxIcon icon={IconVariant.BACK} size={IconSize.SM} color={IconColor.BLUE} />
                           </button>
-                          <img
-                            className="w-32 h-32 border border-dfxGray-400 shadow-md bg-white rounded-md"
-                            src={walletData.iconUrl}
-                            alt={walletData.name}
-                          />
+                          <WalletLogo wallet={walletData} size={128} />
 
                           <StyledVerticalStack full gap={3} center className="pt-2 px-4">
                             <StyledButton
@@ -645,11 +643,7 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
               className="flex flex-col items-center gap-2 cursor-pointer max-w-[120px] min-w-0"
               onClick={() => navigate({ pathname: '/pl', search: `?wallet-id=${wallet.id}` })}
             >
-              <img
-                className="border border-dfxGray-400 shadow-md bg-white rounded-md"
-                src={wallet.iconUrl}
-                alt={wallet.name}
-              />
+              <WalletLogo wallet={wallet} size={60} />
               <p className="text-center font-semibold text-dfxGray-600 w-full text-xs truncate">{wallet.name}</p>
             </div>
           );
@@ -666,5 +660,19 @@ function DividerWithHeader({ header }: { header: string }): JSX.Element {
       <p className="text-xs font-medium text-dfxGray-600 whitespace-nowrap">{header}</p>
       <div className="flex-grow bg-gradient-to-r from-dfxGray-600 to-white h-[1px]" />
     </div>
+  );
+}
+
+function WalletLogo({ wallet, size }: { wallet: WalletInfo; size: number }): JSX.Element {
+  return (
+    <LazyLoadImage
+      className="border border-dfxGray-400 shadow-md bg-white rounded-md"
+      src={wallet.iconUrl}
+      alt={wallet.name}
+      effect="opacity"
+      width={size}
+      height={size}
+      placeholderSrc={`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${size} ${size}'%3E%3Crect width='${size}' height='${size}' fill='%23f4f5f6'/%3E%3C/svg%3E`}
+    />
   );
 }
