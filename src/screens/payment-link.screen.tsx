@@ -34,6 +34,7 @@ import {
 import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import BigNumber from 'bignumber.js';
 import copy from 'copy-to-clipboard';
+import { addMinutes } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
@@ -462,8 +463,11 @@ export default function PaymentLinkScreen(): JSX.Element {
       const blockchain = await requestBlockchain();
       if (!address || !blockchain) throw new Error('Failed to get account');
 
+      const hasShortExpiration = new Date(payRequest.quote.expiration) < addMinutes(new Date(), 1);
+
       const matchingTransferAmount = payRequest.transferAmounts.find((item) => item.method === blockchain);
-      if (!matchingTransferAmount) throw new Error('Selected blockchain is not supported');
+      if (!matchingTransferAmount || (hasShortExpiration && blockchain === Blockchain.ETHEREUM))
+        throw new Error('Selected blockchain is not supported');
 
       const transferAsset = await findAssetWithBalance(
         address,
