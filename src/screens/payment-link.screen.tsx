@@ -559,27 +559,32 @@ export default function PaymentLinkScreen(): JSX.Element {
                             <StyledVerticalStack full gap={3} center className="pt-2 px-4">
                               <StyledButton
                                 label={translate('screens/home', 'Open app')}
-                                onClick={() => window.open(walletData.deepLink || walletData.websiteUrl, '_blank')}
+                                onClick={() => window.open(walletData.deepLink, '_blank')}
                                 color={StyledButtonColor.BLUE}
                                 width={StyledButtonWidth.FULL}
+                                hidden={!walletData.deepLink}
                               />
                               <StyledButton
                                 label={translate('screens/home', 'Open website')}
                                 onClick={() => window.open(walletData.websiteUrl, '_blank')}
-                                color={StyledButtonColor.BLUE}
+                                color={StyledButtonColor.STURDY_WHITE}
                                 width={StyledButtonWidth.FULL}
                               />
                               <StyledButton
                                 label="Apple App Store"
-                                onClick={() => window.open(walletData.appStoreUrl || walletData.websiteUrl, '_blank')}
-                                color={StyledButtonColor.BLUE}
+                                icon={IconVariant.APPLE}
+                                onClick={() => window.open(walletData.appStoreUrl, '_blank')}
+                                color={StyledButtonColor.STURDY_WHITE}
                                 width={StyledButtonWidth.FULL}
+                                hidden={!walletData.appStoreUrl}
                               />
                               <StyledButton
                                 label="Android Play Store"
-                                onClick={() => window.open(walletData.playStoreUrl || walletData.websiteUrl, '_blank')}
-                                color={StyledButtonColor.BLUE}
+                                icon={IconVariant.GOOGLE_PLAY}
+                                onClick={() => window.open(walletData.playStoreUrl, '_blank')}
+                                color={StyledButtonColor.STURDY_WHITE}
                                 width={StyledButtonWidth.FULL}
+                                hidden={!walletData.playStoreUrl}
                               />
                             </StyledVerticalStack>
                           </div>
