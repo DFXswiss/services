@@ -31,7 +31,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
 import { useParams } from 'react-router-dom';
 import { QrBasic } from 'src/components/payment/qr-code';
-import { CompatibleWallets, RecommendedWallets } from 'src/config/payment-link-wallets';
+import { WalletInfo } from 'src/config/payment-link-wallets';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -150,6 +150,9 @@ export default function PaymentLinkScreen(): JSX.Element {
     metaMaskInfo,
     metaMaskError,
     isMetaMaskPaying,
+    recommendedWallets,
+    otherWallets,
+    getWalletByName,
     paymentHasQuote,
     setSessionApiUrl,
     setPaymentIdentifier,
@@ -234,7 +237,7 @@ export default function PaymentLinkScreen(): JSX.Element {
       : undefined;
 
   const walletName = id && decodeURIComponent(id);
-  const walletData = walletName && CompatibleWallets[walletName];
+  const walletData = walletName && getWalletByName(walletName);
 
   return (
     <Layout backButton={false} smallMenu>
@@ -596,10 +599,13 @@ export default function PaymentLinkScreen(): JSX.Element {
                     ) : (
                       <>
                         <WalletGrid
-                          wallets={RecommendedWallets}
+                          wallets={recommendedWallets}
                           header={translate('screens/payment', 'Recommended wallets')}
                         />
-                        <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
+                        <WalletGrid
+                          wallets={otherWallets}
+                          header={translate('screens/payment', 'Other compatible wallets')}
+                        />
                       </>
                     )}
                   </StyledVerticalStack>
@@ -691,33 +697,30 @@ function PaymentStatusTile({ status }: PaymentStatusTileProps): JSX.Element {
 }
 
 interface WalletGridProps {
-  wallets?: string[];
+  wallets: WalletInfo[];
   header?: string;
 }
 
 function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
   const { navigate } = useNavigation();
-  const walletNames = wallets ?? Object.keys(CompatibleWallets);
 
   return (
     <div className="flex flex-col w-full gap-4 px-4">
       {header && <DividerWithHeader header={header.toUpperCase()} />}
       <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))' }}>
-        {walletNames.map((walletName) => {
-          const wallet = CompatibleWallets[walletName];
-
+        {wallets.map((wallet) => {
           return (
             <div
-              key={walletName}
+              key={wallet.name}
               className="flex flex-col items-center gap-2 cursor-pointer max-w-[120px] min-w-0"
-              onClick={() => navigate(`/pl/${encodeURIComponent(walletName)}`)}
+              onClick={() => navigate(`/pl/${encodeURIComponent(wallet.name)}`)}
             >
               <img
                 className="border border-dfxGray-400 shadow-md bg-white rounded-md"
                 src={wallet.iconUrl}
-                alt={walletName}
+                alt={wallet.name}
               />
-              <p className="text-center font-semibold text-dfxGray-600 w-full text-xs truncate">{walletName}</p>
+              <p className="text-center font-semibold text-dfxGray-600 w-full text-xs truncate">{wallet.name}</p>
             </div>
           );
         })}

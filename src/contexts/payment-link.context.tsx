@@ -13,6 +13,7 @@ import {
   createContext,
   MutableRefObject,
   PropsWithChildren,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -20,7 +21,7 @@ import {
   useState,
 } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { PaymentStandards } from 'src/config/payment-link-wallets';
+import { paymentLinkWallets, PaymentStandards, WalletInfo } from 'src/config/payment-link-wallets';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { AssetBalance } from 'src/contexts/balance.context';
 import { PaymentLinkPayRequest, PaymentLinkPayTerminal, PaymentStandard } from 'src/screens/payment-link.screen';
@@ -70,6 +71,9 @@ interface PaymentLinkInterface {
   metaMaskInfo: MetaMaskInfo | undefined;
   metaMaskError: string | undefined;
   isMetaMaskPaying: boolean;
+  recommendedWallets: WalletInfo[];
+  otherWallets: WalletInfo[];
+  getWalletByName: (name: string) => WalletInfo | undefined;
   paymentHasQuote: (request?: PaymentLinkPayTerminal | PaymentLinkPayRequest) => request is PaymentLinkPayRequest;
   setPaymentIdentifier: (id: string | undefined) => void;
   setSessionApiUrl: (url: string) => void;
@@ -385,7 +389,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     switch (payRequest.standard) {
       case PaymentStandardType.OPEN_CRYPTO_PAY:
         callbackUrl.current = payRequest.callback;
-        setPaymentIdentifier(Lnurl.prependLnurl(Lnurl.encode(simplifyUrl(sessionApiUrl.current))));
+        setPaymentIdentifier(Lnurl.prependLnurl(Lnurl.encode(simplifyPaymentLinkUrl(sessionApiUrl.current))));
         break;
       case PaymentStandardType.LIGHTNING_BOLT11:
         invokeCallback(
@@ -410,7 +414,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     }
   }
 
-  function simplifyUrl(url: string): string {
+  function simplifyPaymentLinkUrl(url: string): string {
     const replacementMap: { [key: string]: string } = {
       '/v1/paymentLink/payment': '/v1/plp',
       routeId: 'r',
@@ -432,6 +436,21 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     return `${urlObj.origin}${newPath}?${newParams.toString()}`;
   }
 
+  const recommendedWallets = useMemo(() => {
+    return paymentLinkWallets.filter((wallet) => wallet.recommended === true);
+  }, []);
+
+  const otherWallets = useMemo(() => {
+    return paymentLinkWallets.filter((wallet) => wallet.recommended !== true);
+  }, []);
+
+  const getWalletByName = useCallback(
+    (name: string): WalletInfo | undefined => {
+      return [...recommendedWallets, ...otherWallets].find((wallet) => wallet.name === name);
+    },
+    [recommendedWallets, otherWallets],
+  );
+
   const context = useMemo(
     () => ({
       error,
@@ -448,6 +467,9 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       metaMaskInfo,
       metaMaskError,
       isMetaMaskPaying,
+      recommendedWallets,
+      otherWallets,
+      getWalletByName,
       paymentHasQuote: hasQuote,
       setPaymentIdentifier,
       setSessionApiUrl,
@@ -468,6 +490,9 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       metaMaskInfo,
       metaMaskError,
       isMetaMaskPaying,
+      recommendedWallets,
+      otherWallets,
+      getWalletByName,
     ],
   );
 
