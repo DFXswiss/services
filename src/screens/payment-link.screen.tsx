@@ -559,10 +559,10 @@ export default function PaymentLinkScreen(): JSX.Element {
                         <div className="relative flex flex-col items-center w-full gap-6">
                           <DividerWithHeader header={walletData.name} />
                           <button
-                            className="absolute top-8 right-8 bg-dfxGray-400 p-2 rounded-lg flex items-center justify-center"
+                            className="absolute top-[88px] left-14 bg-dfxGray-400 w-9 h-9 pl-1.5 rounded-full flex items-center justify-center"
                             onClick={() => setWalletData(undefined)}
                           >
-                            <DfxIcon icon={IconVariant.CLOSE} size={IconSize.SM} color={IconColor.BLUE} />
+                            <DfxIcon icon={IconVariant.BACK} size={IconSize.SM} color={IconColor.BLUE} />
                           </button>
                           <img
                             className="w-32 h-32 border border-dfxGray-400 shadow-md bg-white rounded-md"
