@@ -6,7 +6,7 @@ export interface SessionStoreItem<T> {
 
 export interface SessionStoreInterface {
   supportIssueUid: SessionStoreItem<string>;
-  paymentLinkApiUrl: SessionStoreItem<string>;
+  paymentLinkApiUrlStore: SessionStoreItem<string>;
 }
 
 enum SessionStoreKey {
@@ -33,7 +33,7 @@ export function useSessionStore(): SessionStoreInterface {
       set: (value: string) => set(SessionStoreKey.SUPPORT_ISSUE_UID, value),
       remove: () => remove(SessionStoreKey.SUPPORT_ISSUE_UID),
     },
-    paymentLinkApiUrl: {
+    paymentLinkApiUrlStore: {
       get: () => get(SessionStoreKey.PAYMENT_LINK_API_URL),
       set: (value: string) => set(SessionStoreKey.PAYMENT_LINK_API_URL, value),
       remove: () => remove(SessionStoreKey.PAYMENT_LINK_API_URL),
