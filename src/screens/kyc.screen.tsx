@@ -1702,7 +1702,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const currentResponse = responses.find((r) => currentQuestion?.key === r.key);
   const nocLinkText = 'app.dfx.swiss/support/issue';
   const params = new URLSearchParams({ 'issue-type': SupportIssueType.NOTIFICATION_OF_CHANGES });
-  const nocSupportLink = url({ base: process.env.REACT_APP_PUBLIC_URL, path: '/support/issue', params });
+  const nocSupportLink = url({ path: '/support/issue', params });
 
   useEffect(() => {
     if (!step.session) return;

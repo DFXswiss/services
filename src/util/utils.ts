@@ -23,17 +23,27 @@ export async function timeout<T>(promise: Promise<T>, timeout: number): Promise<
   return Promise.race([promise, timeoutPromise]);
 }
 
-export function url({ base, path, params }: { base?: string; path?: string; params?: URLSearchParams }): string {
-  if (!path && !base) return '';
+export function url({
+  base = process.env.REACT_APP_PUBLIC_URL,
+  path = '',
+  params,
+}: {
+  base?: string;
+  path?: string;
+  params?: URLSearchParams;
+}): string {
+  if (isAbsoluteUrl(path)) return url({ base: path, params });
 
-  if (!base && path && !isAbsoluteUrl(path)) {
-    const searchStr = params && Array.from(params.entries()).length > 0 ? `?${params}` : '';
-    return `${path}${searchStr}`;
-  }
+  const absoluteUrl = new URL(path, base);
+  if (params) absoluteUrl.search = params.toString();
+  return absoluteUrl.href;
+}
 
-  const url = new URL(path || '', base);
-  if (params) url.search = params.toString();
-  return url.href;
+export function relativeUrl({ path, params }: { path: string; params?: URLSearchParams }): string {
+  if (isAbsoluteUrl(path)) return url({ base: path, params });
+
+  const urlParams = params && Array.from(params.entries()).length > 0 ? `?${params}` : '';
+  return `${path}${urlParams}`;
 }
 
 export function isAbsoluteUrl(url: string): boolean {

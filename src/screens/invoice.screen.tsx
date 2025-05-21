@@ -22,7 +22,7 @@ import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import useDebounce from 'src/hooks/debounce.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { fetchJson, url } from 'src/util/utils';
+import { fetchJson, relativeUrl, url } from 'src/util/utils';
 
 interface FormData {
   recipient: string;
@@ -115,10 +115,10 @@ export default function InvoiceScreen(): JSX.Element {
     <Layout title={translate('screens/payment', 'Create Invoice')}>
       <StyledVerticalStack gap={6} full center>
         <div className="flex flex-col gap-2 w-48 my-3">
-          <QrBasic data={url({ base: process.env.REACT_APP_PUBLIC_URL, path: callback })} isLoading={!callback} />
+          <QrBasic data={url({ path: callback })} isLoading={!callback} />
           <StyledButton
             label={translate('general/actions', 'Copy Link')}
-            onClick={() => copy(url({ base: process.env.REACT_APP_PUBLIC_URL, path: callback }))}
+            onClick={() => copy(url({ path: callback }))}
             color={StyledButtonColor.STURDY_WHITE}
             width={StyledButtonWidth.FULL}
             disabled={!callback}
@@ -192,8 +192,15 @@ export default function InvoiceScreen(): JSX.Element {
                         strong: <strong />,
                         link: (
                           <StyledLink
-                            label={url({ base: process.env.REACT_APP_PUBLIC_URL, path: '/support' })}
-                            onClick={() => navigate(`/support/issue?issue-type=${SupportIssueType.GENERIC_ISSUE}`)}
+                            label={url({ path: '/support' })}
+                            onClick={() =>
+                              navigate(
+                                relativeUrl({
+                                  path: `/support/issue`,
+                                  params: new URLSearchParams({ 'issue-type': SupportIssueType.GENERIC_ISSUE }),
+                                }),
+                              )
+                            }
                             dark
                           />
                         ),

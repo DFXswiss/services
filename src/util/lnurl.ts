@@ -19,7 +19,7 @@ export class Lnurl {
 
   static prependLnurl(lnurl: string): string {
     const params = new URLSearchParams({ lightning: lnurl });
-    return url({ base: process.env.REACT_APP_PUBLIC_URL, path: 'pl', params });
+    return url({ path: 'pl', params });
   }
 
   static addressToLnurl(address: string): string {

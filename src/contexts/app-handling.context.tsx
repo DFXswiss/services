@@ -5,7 +5,7 @@ import { useChange } from 'src/hooks/change.hook';
 import { Service } from '../App';
 import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
-import { url } from '../util/utils';
+import { relativeUrl, url } from '../util/utils';
 import { useBalanceContext } from './balance.context';
 
 // --- INTERFACES --- //
@@ -350,10 +350,9 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     urlParamsToRemove.forEach((param) => query.delete(param));
 
     const path = props.router.state.location.pathname;
-    props.router.navigate(url({ path, params: query }), { replace: true });
+    props.router.navigate(relativeUrl({ path, params: query }), { replace: true });
 
     const { location, history } = window;
-    // TODO: Should we split location.origin and location.pathname into url()'s base and path params?
     history.replaceState(undefined, '', url({ base: location.origin, path: location.pathname, params: query }));
   }
 
