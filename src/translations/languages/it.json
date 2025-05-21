@@ -44,7 +44,9 @@
     "Open receipt": "Apri la ricevuta",
     "Create ticket": "Crea un ticket",
     "Create support ticket": "Crea un ticket di supporto",
-    "View file": "Visualizza il file"
+    "View file": "Visualizza il file",
+    "Edit": "Modifica",
+    "Set default": "Imposta predefinito"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -59,7 +61,8 @@
     "Maximum allowed characters: 4000": "Caratteri massimi consentiti: 4000",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto.",
-    "invoice": "DFX non riconosce un destinatario con il nome <strong>{{recipient}}</strong>. Questo servizio può essere utilizzato solo per i destinatari che hanno un account attivo con DFX e sono attivati per il servizio di fatturazione. Se desideri registrarti come destinatario presso DFX, contatta l’assistenza all’indirizzo <link>{{supportLink}}</link>."
+    "invoice": "DFX non riconosce un destinatario con il nome <strong>{{recipient}}</strong>. Questo servizio può essere utilizzato solo per i destinatari che hanno un account attivo con DFX e sono attivati per il servizio di fatturazione. Se desideri registrarti come destinatario presso DFX, contatta l’assistenza all’indirizzo <link>{{supportLink}}</link>.",
+    "iban": "Questo è un IBAN multi-account e non può essere aggiunto come conto personale. Aprire un ticket di supporto a <1></1> e allegare la conferma della transazione bancaria come PDF."
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -660,8 +663,7 @@
     "The bank account has been added, all transactions from this IBAN will now be associated with your account.": "Il conto bancario è stato aggiunto, tutte le transazioni da questo IBAN saranno ora associate al vostro conto.",
     "Add bank account": "Aggiungi conto bancario",
     "No IBAN, only account number": "Nessun IBAN, solo numero di conto",
-    "This IBAN already exists in another DFX customer account.": "Questo IBAN esiste già in un altro conto cliente DFX.",
-    "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Questo è un IBAN multi-account e non può essere aggiunto come conto personale. Si prega di inviare la conferma della transazione bancaria in formato PDF a support@dfx.swiss."
+    "This IBAN already exists in another DFX customer account.": "Questo IBAN esiste già in un altro conto cliente DFX."
   },
   "screens/support": {
     "Support": "Supporto",
@@ -721,6 +723,7 @@
     "Currency": "Valuta",
     "Label": "Etichetta",
     "Address name": "Nome dell'indirizzo",
+    "Default": "Predefinito",
 
     "Show deleted addresses": "Mostra indirizzi eliminati",
     "Hide deleted addresses": "Nascondi indirizzi eliminati",
