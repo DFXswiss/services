@@ -34,7 +34,9 @@ export function url({
 }): string {
   if (isAbsoluteUrl(path)) return url({ base: path, params });
 
-  const absoluteUrl = new URL(path, base);
+  const normalizedBase = base?.replace(/\/+$/, '') + '/'; // end with a single slash
+  const normalizedPath = path.replace(/^\/+/, ''); // remove leading slashes
+  const absoluteUrl = new URL(normalizedPath, normalizedBase);
   if (params) absoluteUrl.search = params.toString();
   return absoluteUrl.href;
 }
@@ -42,8 +44,8 @@ export function url({
 export function relativeUrl({ path, params }: { path: string; params?: URLSearchParams }): string {
   if (isAbsoluteUrl(path)) return url({ base: path, params });
 
-  const urlParams = params && Array.from(params.entries()).length > 0 ? `?${params}` : '';
-  return `${path}${urlParams}`;
+  const normalizedPath = '/' + path.replace(/^\/+/, ''); // start with a single slash
+  return params && params.toString() ? `${normalizedPath}?${params}` : normalizedPath;
 }
 
 export function isAbsoluteUrl(url: string): boolean {
