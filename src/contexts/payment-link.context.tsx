@@ -318,14 +318,14 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       const asset = metaMaskInfo.transferAsset;
 
       const paymentUri = await invokeCallback(
-        url(
-          payRequest.callback,
-          new URLSearchParams({
+        url({
+          base: payRequest.callback,
+          params: new URLSearchParams({
             quote: payRequest.quote.id,
             method: asset.blockchain,
             asset: asset.name,
           }),
-        ),
+        }),
       );
       if (!paymentUri) throw new Error('Failed to get payment information');
 
@@ -340,10 +340,10 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
         gasPrice: metaMaskInfo.minFee,
       });
       await fetchJson(
-        url(
-          payRequest.callback.replace('/cb', '/tx'),
-          new URLSearchParams({ quote: payRequest.quote.id, method: asset.blockchain, tx }),
-        ),
+        url({
+          base: payRequest.callback.replace('/cb', '/tx'),
+          params: new URLSearchParams({ quote: payRequest.quote.id, method: asset.blockchain, tx }),
+        }),
       );
     } catch (e) {
       const error = e as Error;
@@ -371,22 +371,22 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
         break;
       case PaymentStandardType.LIGHTNING_BOLT11:
         invokeCallback(
-          url(
-            payRequest.callback,
-            new URLSearchParams({ quote: payRequest.quote.id, amount: payRequest.minSendable.toString() }),
-          ),
+          url({
+            base: payRequest.callback,
+            params: new URLSearchParams({ quote: payRequest.quote.id, amount: payRequest.minSendable.toString() }),
+          }),
         );
         break;
       case PaymentStandardType.PAY_TO_ADDRESS:
         invokeCallback(
-          url(
-            payRequest.callback,
-            new URLSearchParams({
+          url({
+            base: payRequest.callback,
+            params: new URLSearchParams({
               quote: payRequest.quote.id,
               method: selectedPaymentMethod ?? '',
               asset: selectedAsset ?? '',
             }),
-          ),
+          }),
         );
         break;
     }
