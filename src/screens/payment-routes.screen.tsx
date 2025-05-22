@@ -17,7 +17,9 @@ import {
 import {
   AlignContent,
   CopyButton,
+  DfxIcon,
   Form,
+  IconSize,
   IconVariant,
   SpinnerSize,
   StyledButton,
@@ -42,7 +44,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { Layout } from 'src/components/layout';
-import { ConfirmationOverlay } from 'src/components/overlays';
+import { ConfirmationOverlay, EditOverlay } from 'src/components/overlays';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { PaymentQuoteStatusLabels } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -56,6 +58,7 @@ import { ErrorHint } from '../components/error-hint';
 interface FormData {
   routeId: RouteIdSelectData;
   externalId: string;
+  label: string;
   recipientName: string;
   recipientStreet: string;
   recipientHouseNumber: string;
@@ -115,6 +118,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const [expandedPaymentLinkId, setExpandedPaymentLinkId] = useState<string>();
   const [showPaymentLinkForm, setShowPaymentLinkForm] = useState<PaymentLinkFormState>();
   const [updateGlobalConfig, setUpdateGlobalConfig] = useState<boolean>(false);
+  const [updatePaymentLinkLabel, setUpdatePaymentLinkLabel] = useState<string>();
 
   useAddressGuard('/login');
 
@@ -148,13 +152,27 @@ export default function PaymentRoutesScreen(): JSX.Element {
     await updateUserPaymentLinksConfig(data.config).catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
   }
 
+  async function renamePaymentLink(id: string, label: string) {
+    await updatePaymentLink({ label }, id);
+    setUpdatePaymentLinkLabel(undefined);
+    scrollIntoView(id);
+  }
+
   function onCloseForm(id?: string) {
     setShowPaymentLinkForm(undefined);
+    scrollIntoView(id);
+  }
 
-    if (id) {
-      setTimeout(() => paymentLinkRefs.current[id]?.scrollIntoView());
-      setExpandedPaymentLinkId(id);
-    }
+  function scrollIntoView(id?: string) {
+    const scrollToId = id ?? (paymentLinks?.length ? paymentLinks[paymentLinks.length - 1]?.id : undefined);
+    if (!scrollToId) return;
+
+    setTimeout(() => {
+      const element = paymentLinkRefs.current[scrollToId];
+      if (element) element.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+
+    setExpandedPaymentLinkId(scrollToId);
   }
 
   function routeKey(id: number, type: PaymentRouteType): string {
@@ -235,6 +253,18 @@ export default function PaymentRoutesScreen(): JSX.Element {
           state={showPaymentLinkForm}
           setStep={(step) => setShowPaymentLinkForm((prev) => ({ ...prev, step }))}
           onClose={onCloseForm}
+        />
+      ) : updatePaymentLinkLabel ? (
+        <EditOverlay
+          label={translate('screens/settings', 'Payment link label')}
+          autocomplete="label"
+          prefill={paymentLinks?.find((link) => link.id === updatePaymentLinkLabel)?.label}
+          placeholder={translate('screens/settings', 'Payment link label')}
+          onCancel={() => {
+            setUpdatePaymentLinkLabel(undefined);
+            scrollIntoView(updatePaymentLinkLabel);
+          }}
+          onEdit={async (result) => await renamePaymentLink(updatePaymentLinkLabel, result)}
         />
       ) : deleteRoute ? (
         <ConfirmationOverlay
@@ -414,7 +444,9 @@ export default function PaymentRoutesScreen(): JSX.Element {
                         <div className="flex flex-row justify-between gap-2 items-center">
                           <div className="flex flex-col items-start text-left">
                             <div className="font-bold leading-none">
-                              {link.externalId ?? `${translate('screens/payment', 'Payment Link')} ${link.id}`}
+                              {link.label ??
+                                link.externalId ??
+                                `${translate('screens/payment', 'Payment Link')} ${link.id}`}
                             </div>
                             <div className="leading-none mt-1 text-dfxGray-700">
                               {`${translate('screens/payment', 'Payment route')} ${link.routeId}`}
@@ -432,6 +464,17 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           {link.externalId && (
                             <StyledDataTableRow label={translate('screens/payment', 'External ID')}>
                               <p>{link.externalId}</p>
+                            </StyledDataTableRow>
+                          )}
+                          {link.label && (
+                            <StyledDataTableRow label={translate('screens/settings', 'Label')}>
+                              <button
+                                className="flex flex-row gap-2.5"
+                                onClick={() => setUpdatePaymentLinkLabel(link.id)}
+                              >
+                                <p>{link.label}</p>
+                                <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} />
+                              </button>
                             </StyledDataTableRow>
                           )}
                           <StyledDataTableRow label={translate('screens/payment', 'Payment route')}>
@@ -877,9 +920,10 @@ function PaymentLinkForm({
     try {
       const request: any = {};
 
-      if (data.routeId || data.externalId) {
+      if (data.routeId || data.externalId || data.label) {
         request.routeId = data.routeId ? +data.routeId.id : undefined;
         request.externalId = data.externalId ? data.externalId : undefined;
+        request.label = data.label ? data.label : undefined;
       }
 
       if (hasRecipientData) {
@@ -1022,6 +1066,15 @@ function PaymentLinkForm({
                 autocomplete="route-id"
                 label={translate('screens/payment', 'External ID')}
                 placeholder={translate('screens/payment', 'External ID')}
+                full
+                smallLabel
+              />
+
+              <StyledInput
+                name="label"
+                autocomplete="label"
+                label={translate('screens/settings', 'Label')}
+                placeholder={translate('screens/settings', 'Label')}
                 full
                 smallLabel
               />
@@ -1214,6 +1267,9 @@ function PaymentLinkForm({
                 </StyledDataTableRow>
                 <StyledDataTableRow label={translate('screens/payment', 'External ID')}>
                   <p className="text-dfxBlue-600">{data.externalId ?? naString}</p>
+                </StyledDataTableRow>
+                <StyledDataTableRow label={translate('screens/settings', 'Label')}>
+                  <p className="text-dfxBlue-600">{data.label ?? naString}</p>
                 </StyledDataTableRow>
                 <StyledDataTableExpandableRow
                   label={translate('screens/payment', 'Recipient')}
