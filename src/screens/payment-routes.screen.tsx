@@ -256,10 +256,10 @@ export default function PaymentRoutesScreen(): JSX.Element {
         />
       ) : updatePaymentLinkLabel ? (
         <EditOverlay
-          label={translate('screens/settings', 'Payment link label')}
+          label={translate('screens/settings', 'Label')}
           autocomplete="label"
           prefill={paymentLinks?.find((link) => link.id === updatePaymentLinkLabel)?.label}
-          placeholder={translate('screens/settings', 'Payment link label')}
+          placeholder={translate('screens/settings', 'Label')}
           onCancel={() => {
             setUpdatePaymentLinkLabel(undefined);
             scrollIntoView(updatePaymentLinkLabel);
@@ -466,17 +466,15 @@ export default function PaymentRoutesScreen(): JSX.Element {
                               <p>{link.externalId}</p>
                             </StyledDataTableRow>
                           )}
-                          {link.label && (
-                            <StyledDataTableRow label={translate('screens/settings', 'Label')}>
-                              <button
-                                className="flex flex-row gap-2.5"
-                                onClick={() => setUpdatePaymentLinkLabel(link.id)}
-                              >
-                                <p>{link.label}</p>
-                                <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} />
-                              </button>
-                            </StyledDataTableRow>
-                          )}
+                          <StyledDataTableRow label={translate('screens/settings', 'Label')}>
+                            <button
+                              className="flex flex-row gap-2.5"
+                              onClick={() => setUpdatePaymentLinkLabel(link.id)}
+                            >
+                              <p>{link.label ?? translate('screens/payment', 'N/A')}</p>
+                              <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} />
+                            </button>
+                          </StyledDataTableRow>
                           <StyledDataTableRow label={translate('screens/payment', 'Payment route')}>
                             <p>{link.routeId}</p>
                           </StyledDataTableRow>
