@@ -29,9 +29,11 @@ export default function MailLoginScreen() {
           window.location.href = redirectUrl;
         })
         .catch((error: ApiError) => {
+          navigate({ pathname: `/error`, search: `?msg=${error.message}` });
+        })
+        .finally(() => {
           urlParams.delete('otp');
           setUrlParams(urlParams);
-          navigate({ pathname: `/error`, search: `?msg=${error.message}` });
         });
     } else {
       navigate('/login');
