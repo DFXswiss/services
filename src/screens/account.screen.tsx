@@ -70,11 +70,11 @@ export default function AccountScreen(): JSX.Element {
   const selectedAddress = useWatch({ control, name: 'address' });
 
   useEffect(() => {
-    if (user?.activeAddress && !isUserLoading) {
+    if (user?.activeAddress && !isUserLoading && isLoggedIn) {
       loadRefferal();
       setValue('address', user.activeAddress);
     }
-  }, [user?.activeAddress, isUserLoading, session?.role]);
+  }, [user?.activeAddress, isUserLoading, session?.role, isLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn) loadTransactions();
