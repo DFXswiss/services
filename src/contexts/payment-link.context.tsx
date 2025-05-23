@@ -189,6 +189,9 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
           });
         refetchDelay = new Date(payRequest.quote.expiration).getTime() - Date.now();
         startTimer(new Date(payRequest.quote.expiration));
+      } else if (payRequest.message.toLowerCase().includes('payment complete')) {
+        setPaymentStatus(PaymentLinkPaymentStatus.COMPLETED);
+        return;
       } else {
         setPaymentStatus(NoPaymentLinkPaymentStatus.NO_PAYMENT);
         refetchDelay = 100;
@@ -252,6 +255,68 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
         setPaymentIdentifier(undefined);
       })
       .finally(() => setIsLoadingPaymentIdentifier(false));
+  }
+
+  async function fetchPaymentIdentifier(
+    payRequest: PaymentLinkPayTerminal | PaymentLinkPayRequest,
+    selectedPaymentMethod?: Blockchain,
+    selectedAsset?: string,
+  ): Promise<void> {
+    if (
+      !hasQuote(payRequest) ||
+      (payRequest.standard === PaymentStandardType.PAY_TO_ADDRESS && !(selectedPaymentMethod && selectedAsset))
+    ) {
+      return;
+    }
+
+    switch (payRequest.standard) {
+      case PaymentStandardType.OPEN_CRYPTO_PAY:
+        callbackUrl.current = payRequest.callback;
+        setPaymentIdentifier(Lnurl.prependLnurl(Lnurl.encode(simplifyPaymentLinkUrl(sessionApiUrl.current))));
+        break;
+      case PaymentStandardType.LIGHTNING_BOLT11:
+        invokeCallback(
+          url(
+            payRequest.callback,
+            new URLSearchParams({ quote: payRequest.quote.id, amount: payRequest.minSendable.toString() }),
+          ),
+        );
+        break;
+      case PaymentStandardType.PAY_TO_ADDRESS:
+        invokeCallback(
+          url(
+            payRequest.callback,
+            new URLSearchParams({
+              quote: payRequest.quote.id,
+              method: selectedPaymentMethod ?? '',
+              asset: selectedAsset ?? '',
+            }),
+          ),
+        );
+        break;
+    }
+  }
+
+  function simplifyPaymentLinkUrl(url: string): string {
+    const replacementMap: { [key: string]: string } = {
+      '/v1/paymentLink/payment': '/v1/plp',
+      routeId: 'r',
+      externalId: 'e',
+      message: 'm',
+      amount: 'a',
+      currency: 'c',
+      expiryDate: 'd',
+    };
+
+    const urlObj = new URL(url);
+    const newPath = replacementMap[urlObj.pathname] || urlObj.pathname;
+    const newParams = new URLSearchParams();
+    urlObj.searchParams.forEach((value, key) => {
+      const shortKey = replacementMap[key] || key;
+      newParams.append(shortKey, value);
+    });
+
+    return `${urlObj.origin}${newPath}?${newParams.toString()}`;
   }
 
   // --- META MASK IN-APP BROWSER --- //
@@ -351,67 +416,6 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     } finally {
       setIsMetaMaskPaying(false);
     }
-  }
-
-  async function fetchPaymentIdentifier(
-    payRequest: PaymentLinkPayTerminal | PaymentLinkPayRequest,
-    selectedPaymentMethod?: Blockchain,
-    selectedAsset?: string,
-  ): Promise<void> {
-    if (
-      !hasQuote(payRequest) ||
-      (payRequest.standard === PaymentStandardType.PAY_TO_ADDRESS && !(selectedPaymentMethod && selectedAsset))
-    )
-      return;
-
-    switch (payRequest.standard) {
-      case PaymentStandardType.OPEN_CRYPTO_PAY:
-        callbackUrl.current = payRequest.callback;
-        setPaymentIdentifier(Lnurl.prependLnurl(Lnurl.encode(simplifyPaymentLinkUrl(sessionApiUrl.current))));
-        break;
-      case PaymentStandardType.LIGHTNING_BOLT11:
-        invokeCallback(
-          url(
-            payRequest.callback,
-            new URLSearchParams({ quote: payRequest.quote.id, amount: payRequest.minSendable.toString() }),
-          ),
-        );
-        break;
-      case PaymentStandardType.PAY_TO_ADDRESS:
-        invokeCallback(
-          url(
-            payRequest.callback,
-            new URLSearchParams({
-              quote: payRequest.quote.id,
-              method: selectedPaymentMethod ?? '',
-              asset: selectedAsset ?? '',
-            }),
-          ),
-        );
-        break;
-    }
-  }
-
-  function simplifyPaymentLinkUrl(url: string): string {
-    const replacementMap: { [key: string]: string } = {
-      '/v1/paymentLink/payment': '/v1/plp',
-      routeId: 'r',
-      externalId: 'e',
-      message: 'm',
-      amount: 'a',
-      currency: 'c',
-      expiryDate: 'd',
-    };
-
-    const urlObj = new URL(url);
-    const newPath = replacementMap[urlObj.pathname] || urlObj.pathname;
-    const newParams = new URLSearchParams();
-    urlObj.searchParams.forEach((value, key) => {
-      const shortKey = replacementMap[key] || key;
-      newParams.append(shortKey, value);
-    });
-
-    return `${urlObj.origin}${newPath}?${newParams.toString()}`;
   }
 
   const recommendedWallets = useMemo(() => {

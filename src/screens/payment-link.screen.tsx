@@ -185,18 +185,20 @@ export default function PaymentLinkScreen(): JSX.Element {
             <p className="text-dfxBlue-800 font-bold text-xl">{payRequest?.displayName ?? merchant}</p>
             <div className="w-full h-[1px] bg-gradient-to-r bg-dfxGray-500 from-white via-dfxGray-500 to-white" />
             {!merchant && (
-              <div className="mb-8">
+              <>
                 {paymentHasQuote(payRequest) ? (
-                  <p className="text-xl font-bold text-dfxBlue-800">
+                  <p className="text-xl font-bold text-dfxBlue-800 mb-8">
                     <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
                     {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
                   </p>
-                ) : (
-                  <div className="flex w-full justify-center">
+                ) : [PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(
+                    paymentStatus,
+                  ) ? (
+                  <div className="flex w-full justify-center mb-8" hidden={!isLoadingPaymentIdentifier}>
                     <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
                   </div>
-                )}
-              </div>
+                ) : null}
+              </>
             )}
           </div>
           <PaymentStatusTile status={paymentStatus} />
