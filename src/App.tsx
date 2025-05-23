@@ -6,6 +6,7 @@ import { Navigate, Outlet, RouteObject, RouterProvider } from 'react-router-dom'
 import { Layout } from './components/layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
+import { PaymentLinkProvider } from './contexts/payment-link.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { WindowContextProvider } from './contexts/window.context';
@@ -119,7 +120,11 @@ export const Routes = [
   },
   {
     path: '/pl',
-    element: withSuspense(<PaymentLinkScreen />),
+    element: withSuspense(
+      <PaymentLinkProvider>
+        <PaymentLinkScreen />
+      </PaymentLinkProvider>,
+    ),
   },
   {
     path: '/payment-link',

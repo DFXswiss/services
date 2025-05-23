@@ -1,162 +1,201 @@
-import { ApiError, Utils, Validations, useBankAccountContext } from '@dfx.swiss/react';
+import { BankAccount, Fiat, useBankAccountContext, useFiatContext, Utils } from '@dfx.swiss/react';
 import {
   Form,
+  SpinnerSize,
   StyledButton,
   StyledButtonColor,
-  StyledInfoText,
+  StyledButtonWidth,
+  StyledDropdown,
+  StyledHorizontalStack,
   StyledInput,
+  StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
-import { ErrorHint } from '../components/error-hint';
+import ActionableList from 'src/components/actionable-list';
+import { ErrorHint } from 'src/components/error-hint';
+import { AddBankAccount } from 'src/components/payment/add-bank-account';
+import { useWindowContext } from 'src/contexts/window.context';
+import { blankedAddress } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-
-interface FormData {
-  label: string;
-  iban: string;
-}
 
 export default function BankAccountsScreen(): JSX.Element {
   useUserGuard('/login');
 
   const { state } = useLocation();
   const { goBack } = useNavigation();
-  const { allowedCountries, translate, translateError } = useSettingsContext();
-  const { createAccount } = useBankAccountContext();
+  const { width } = useWindowContext();
+  const { translate } = useSettingsContext();
+  const { bankAccounts, updateAccount, isLoading } = useBankAccountContext();
 
   const isMissingTxIssue = useRef<boolean>(state?.isMissingTxIssue);
-  const newIban = useRef<string>();
-
-  const [isAdded, setIsAdded] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string>();
-  const [customError, setCustomError] = useState<string>();
+  const [editAccount, setEditAccount] = useState<BankAccount>();
 
   useEffect(() => {
     isMissingTxIssue.current = state?.isMissingTxIssue;
   }, []);
 
-  // form
+  return (
+    <Layout title={translate('screens/iban', 'Bank Accounts')}>
+      {editAccount ? (
+        <EditBankAccount bankAccount={editAccount} onClose={() => setEditAccount(undefined)} />
+      ) : (
+        <StyledVerticalStack full gap={6} center>
+          {isLoading ? (
+            <div className="mt-4">
+              <StyledLoadingSpinner size={SpinnerSize.LG} />
+            </div>
+          ) : (
+            bankAccounts && (
+              <ActionableList
+                items={bankAccounts.map((account) => {
+                  return {
+                    key: account.id,
+                    label: account.label ?? `${account.iban.slice(0, 2)} ${account.iban.slice(-4)}`,
+                    subLabel: blankedAddress(Utils.formatIban(account.iban) ?? account.iban, { width }),
+                    tag: account.default ? translate('screens/settings', 'Default').toUpperCase() : undefined,
+                    menuItems: [
+                      {
+                        label: translate('general/actions', 'Copy'),
+                        onClick: () => copy(account.iban),
+                        closeOnClick: true,
+                      },
+                      {
+                        label: translate('general/actions', 'Edit'),
+                        onClick: () => setEditAccount(account),
+                      },
+                      {
+                        label: translate('general/actions', 'Delete'),
+                        onClick: () => updateAccount(account.id, { active: false }),
+                        closeOnClick: true,
+                      },
+                    ].concat(
+                      !account.default
+                        ? {
+                            label: translate('general/actions', 'Set default'),
+                            onClick: () => updateAccount(account.id, { default: true }),
+                            closeOnClick: true,
+                          }
+                        : [],
+                    ),
+                  };
+                })}
+              />
+            )
+          )}
+          <AddBankAccount
+            onSubmit={(bankAccount) => goBack({ state: { newIban: bankAccount.iban } })}
+            confirmationText={translate(
+              'screens/iban',
+              isMissingTxIssue.current
+                ? 'The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.'
+                : 'The bank account has been added, all transactions from this IBAN will now be associated with your account.',
+            )}
+          />
+        </StyledVerticalStack>
+      )}
+    </Layout>
+  );
+}
+
+interface FormData {
+  label: string;
+  preferredCurrency: Fiat;
+}
+
+interface EditBankAccountProps {
+  bankAccount: BankAccount;
+  onClose: () => void;
+}
+
+export function EditBankAccount({ bankAccount, onClose }: EditBankAccountProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { updateAccount } = useBankAccountContext();
+  const { currencies } = useFiatContext();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
   const {
+    watch,
     control,
     handleSubmit,
-    formState: { isValid, errors },
-  } = useForm<FormData>();
-
-  const rules = Utils.createRules({
-    iban: [Validations.Required, Validations.Iban(allowedCountries)],
+    formState: { errors },
+  } = useForm<FormData>({
+    mode: 'onChange',
+    defaultValues: {
+      label: bankAccount.label,
+      preferredCurrency: bankAccount.preferredCurrency,
+    },
   });
 
-  function onSubmit({ iban, label }: FormData) {
-    setIsSubmitting(true);
+  const data = watch();
+
+  function onSubmit() {
+    setIsUpdating(true);
     setError(undefined);
-    setCustomError(undefined);
 
-    createAccount({ iban, label })
-      .then(() => {
-        newIban.current = iban;
-        setIsAdded(true);
-      })
-      .catch((e: ApiError) => {
-        if (e.statusCode === 403) {
-          setCustomError(translate('screens/iban', 'This IBAN already exists in another DFX customer account.'));
-        } else if (e.statusCode === 409) {
-          let error = translate('screens/iban', 'This IBAN already exists in another DFX customer account.') + ' ';
-          error += e.message?.includes('account merge')
-            ? translate(
-                'screens/kyc',
-                'We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.',
-              )
-            : translate('screens/kyc', 'Start the KYC process with the same email to merge your accounts.');
+    const changedAccount = {
+      label: data.label,
+      preferredCurrency: data.preferredCurrency,
+    };
 
-          setCustomError(error);
-        } else if (e.statusCode === 400 && e.message?.includes('Multi-account IBAN')) {
-          setCustomError(
-            translate(
-              'screens/iban',
-              'This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.',
-            ),
-          );
-        } else {
-          setError(e.message ?? 'Unknown error');
-        }
-      })
-      .finally(() => setIsSubmitting(false));
-  }
-
-  function onClose() {
-    goBack({ state: { newIban: newIban.current } });
+    updateAccount(bankAccount.id, changedAccount)
+      .then(() => onClose())
+      .catch((e) => setError(e.message))
+      .finally(() => setIsUpdating(false));
   }
 
   return (
-    <Layout title={translate('screens/iban', 'Bank Accounts')}>
-      <StyledVerticalStack gap={6} full center>
-        {isAdded ? (
-          <>
-            <p className="text-dfxGray-700">
-              {translate(
-                'screens/iban',
-                isMissingTxIssue.current
-                  ? 'The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.'
-                  : 'The bank account has been added, all transactions from this IBAN will now be associated with your account.',
-              )}
-            </p>
+    <StyledVerticalStack gap={6} full>
+      <Form control={control} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+        <StyledVerticalStack gap={6} full>
+          <StyledInput
+            name="label"
+            autocomplete="label"
+            label={translate('screens/settings', 'Label')}
+            placeholder={translate('screens/settings', 'Label')}
+            full
+            smallLabel
+          />
+          <StyledDropdown<Fiat>
+            name="preferredCurrency"
+            label={translate('screens/settings', 'Currency')}
+            smallLabel={true}
+            placeholder={translate('general/actions', 'Select') + '...'}
+            items={currencies ?? []}
+            labelFunc={(item) => item?.name}
+          />
+          <StyledHorizontalStack gap={6} spanAcross>
+            <StyledButton
+              color={StyledButtonColor.STURDY_WHITE}
+              width={StyledButtonWidth.FULL}
+              label={translate('general/actions', 'Cancel')}
+              onClick={onClose}
+            />
+            <StyledButton
+              type="submit"
+              label={translate('general/actions', 'Save')}
+              onClick={handleSubmit(onSubmit)}
+              width={StyledButtonWidth.FULL}
+              disabled={data.label === bankAccount.label && data.preferredCurrency === bankAccount.preferredCurrency}
+              isLoading={isUpdating}
+            />
+          </StyledHorizontalStack>
+        </StyledVerticalStack>
+      </Form>
 
-            <StyledButton color={StyledButtonColor.RED} label={translate('general/actions', 'OK')} onClick={onClose} />
-          </>
-        ) : (
-          <Form
-            control={control}
-            errors={errors}
-            rules={rules}
-            onSubmit={handleSubmit(onSubmit)}
-            translate={translateError}
-          >
-            <StyledVerticalStack gap={3} full>
-              <StyledInput
-                name="iban"
-                autocomplete="iban"
-                label={translate('screens/payment', 'IBAN')}
-                placeholder={translate('screens/payment', 'CH46 8914 4632 3427 5387 5')}
-                full
-                smallLabel
-              />
-
-              <StyledInput
-                name="label"
-                autocomplete="iban-label"
-                label={translate('screens/sell', 'Optional - Account Designation')}
-                placeholder={translate('screens/sell', 'e.g. Deutsche Bank')}
-              />
-
-              {error && (
-                <div>
-                  <ErrorHint message={error} />
-                </div>
-              )}
-
-              {customError && (
-                <div className="text-left">
-                  <StyledInfoText invertedIcon>{customError}</StyledInfoText>
-                </div>
-              )}
-
-              <StyledButton
-                type="submit"
-                isLoading={isSubmitting}
-                disabled={!isValid}
-                label={translate('general/actions', 'Next')}
-                onClick={handleSubmit(onSubmit)}
-              />
-            </StyledVerticalStack>
-          </Form>
-        )}
-      </StyledVerticalStack>
-    </Layout>
+      {error && (
+        <div>
+          <ErrorHint message={error} />
+        </div>
+      )}
+    </StyledVerticalStack>
   );
 }

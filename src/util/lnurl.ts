@@ -1,5 +1,6 @@
 import { bech32 } from 'bech32';
 import { Buffer } from 'buffer';
+import { url } from './utils';
 
 export class Lnurl {
   static encode(string: string): string {
@@ -17,7 +18,8 @@ export class Lnurl {
   }
 
   static prependLnurl(lnurl: string): string {
-    return `${process.env.PUBLIC_URL}/pl/?lightning=${lnurl}`;
+    const params = new URLSearchParams({ lightning: lnurl });
+    return url({ path: 'pl', params });
   }
 
   static addressToLnurl(address: string): string {

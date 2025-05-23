@@ -30,14 +30,13 @@ export default function MailLoginScreen() {
         })
         .catch((error: ApiError) => {
           navigate({ pathname: `/error`, search: `?msg=${error.message}` });
+        })
+        .finally(() => {
+          urlParams.delete('otp');
+          setUrlParams(urlParams);
         });
     } else {
       navigate('/login');
-    }
-
-    if (urlParams.has('otp')) {
-      urlParams.delete('otp');
-      setUrlParams(urlParams);
     }
   }, []);
 

@@ -23,7 +23,6 @@ import {
   AssetIconVariant,
   Form,
   SpinnerSize,
-  StyledBankAccountListItem,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
@@ -39,6 +38,7 @@ import {
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+import ActionableList from 'src/components/actionable-list';
 import { AddressSwitch } from 'src/components/payment/address-switch';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
@@ -231,11 +231,15 @@ export default function SellScreen(): JSX.Element {
   }, [selectedAddress]);
 
   useEffect(() => {
-    if (bankAccount && bankAccounts) {
-      const account = getAccount(bankAccounts, bankAccount);
+    if (bankAccounts) {
+      const account = getAccount(bankAccounts, bankAccount) ?? bankAccounts.find((a) => a.default);
       if (account) {
         setVal('bankAccount', account);
-      } else if (!isCreatingAccount && Validations.Iban(allowedCountries).validate(bankAccount) === true) {
+      } else if (
+        bankAccount &&
+        !isCreatingAccount &&
+        Validations.Iban(allowedCountries).validate(bankAccount) === true
+      ) {
         setIsCreatingAccount(true);
         createAccount({ iban: bankAccount })
           .then((b) => setVal('bankAccount', b))
@@ -638,37 +642,31 @@ export default function SellScreen(): JSX.Element {
                       />
 
                       {bankAccountSelection && (
-                        <>
-                          <div className="absolute h-full w-full z-1 top-0 bg-white">
-                            {bankAccounts.length && (
-                              <>
-                                <StyledVerticalStack gap={4}>
-                                  {bankAccounts.map((account, i) => (
-                                    <button
-                                      key={i}
-                                      className="text-start"
-                                      onClick={() => {
-                                        onChange(account);
-                                        setBankAccountSelection(false);
-                                      }}
-                                    >
-                                      <StyledBankAccountListItem bankAccount={account} />
-                                    </button>
-                                  ))}
-                                </StyledVerticalStack>
+                        <StyledVerticalStack gap={6} center className="absolute h-screen w-full z-1 top-0 bg-white">
+                          <ActionableList
+                            items={bankAccounts.map((account) => {
+                              return {
+                                key: account.id,
+                                label: account.label ?? `${account.iban.slice(0, 2)} ${account.iban.slice(-4)}`,
+                                subLabel: blankedAddress(Utils.formatIban(account.iban) ?? account.iban, { width }),
+                                tag: account.default
+                                  ? translate('screens/settings', 'Default').toUpperCase()
+                                  : undefined,
+                                onClick: () => {
+                                  onChange(account);
+                                  setBankAccountSelection(false);
+                                },
+                              };
+                            })}
+                          />
 
-                                <div className={`h-[1px] bg-dfxGray-400 w-full my-6`} />
-                              </>
-                            )}
-
-                            <AddBankAccount
-                              onSubmit={(account) => {
-                                onChange(account);
-                                setBankAccountSelection(false);
-                              }}
-                            />
-                          </div>
-                        </>
+                          <AddBankAccount
+                            onSubmit={(account) => {
+                              onChange(account);
+                              setBankAccountSelection(false);
+                            }}
+                          />
+                        </StyledVerticalStack>
                       )}
                     </>
                   )}
