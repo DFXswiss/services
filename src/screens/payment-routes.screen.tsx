@@ -164,7 +164,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
   }
 
   function scrollIntoView(id?: string) {
-    const scrollToId = id ?? (paymentLinks?.length ? paymentLinks[paymentLinks.length - 1]?.id : undefined);
+    const scrollToId = id ?? paymentLinks?.at(-1)?.id;
     if (!scrollToId) return;
 
     setTimeout(() => {
