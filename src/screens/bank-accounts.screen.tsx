@@ -89,15 +89,17 @@ export default function BankAccountsScreen(): JSX.Element {
               />
             )
           )}
-          <AddBankAccount
-            onSubmit={(bankAccount) => goBack({ state: { newIban: bankAccount.iban } })}
-            confirmationText={translate(
-              'screens/iban',
-              isMissingTxIssue.current
-                ? 'The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.'
-                : 'The bank account has been added, all transactions from this IBAN will now be associated with your account.',
-            )}
-          />
+          {!isLoading && (
+            <AddBankAccount
+              onSubmit={(bankAccount) => goBack({ state: { newIban: bankAccount.iban } })}
+              confirmationText={translate(
+                'screens/iban',
+                isMissingTxIssue.current
+                  ? 'The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.'
+                  : 'The bank account has been added, all transactions from this IBAN will now be associated with your account.',
+              )}
+            />
+          )}
         </StyledVerticalStack>
       )}
     </Layout>
