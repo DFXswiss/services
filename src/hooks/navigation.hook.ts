@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { NavigateOptions, To, useLocation, useNavigate } from 'react-router-dom';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
-import { url } from '../util/utils';
+import { relativeUrl } from '../util/utils';
 
 interface NavigationOptions extends NavigateOptions {
   clearParams?: string[];
@@ -29,7 +29,7 @@ export function useNavigation(): NavigationInterface {
         return navigateTo(to);
 
       case 'string':
-        return navigateTo(url(to, new URLSearchParams(search)), options);
+        return navigateTo(relativeUrl({ path: to, params: new URLSearchParams(search) }), options);
 
       default:
         const params = addParams(new URLSearchParams(to.search), options?.clearParams);
@@ -47,7 +47,7 @@ export function useNavigation(): NavigationInterface {
   function setParams(newParams: URLSearchParams) {
     const params = addParams(newParams);
 
-    return navigateTo(url(pathname, params));
+    return navigateTo(relativeUrl({ path: pathname, params }));
   }
 
   function addParams(newParams: URLSearchParams, clearParams?: string[]): URLSearchParams {

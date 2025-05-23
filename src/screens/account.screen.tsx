@@ -31,7 +31,7 @@ import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
+import { blankedAddress, sortAddressesByBlockchain, url } from 'src/util/utils';
 import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -255,7 +255,16 @@ export default function AccountScreen(): JSX.Element {
             >
               <StyledDataTableRow label={translate('screens/home', 'Referral link')}>
                 {referral.code}
-                <CopyButton onCopy={() => copy(`${process.env.REACT_APP_REF_URL}${referral.code}`)} />
+                <CopyButton
+                  onCopy={() =>
+                    copy(
+                      url({
+                        base: process.env.REACT_APP_REF_URL,
+                        params: new URLSearchParams({ code: referral.code ?? '' }),
+                      }),
+                    )
+                  }
+                />
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
                 {(referral.commission * 100).toFixed(2)}%

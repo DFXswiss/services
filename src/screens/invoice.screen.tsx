@@ -24,7 +24,7 @@ import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import useDebounce from 'src/hooks/debounce.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { fetchJson, url } from 'src/util/utils';
+import { fetchJson, relativeUrl, url } from 'src/util/utils';
 
 interface FormData {
   recipient: string;
@@ -32,7 +32,7 @@ interface FormData {
   amount: number;
 }
 
-const baseUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment`;
+const baseUrl = url({ base: process.env.REACT_APP_API_URL, path: '/v1/paymentLink/payment' });
 const relativeBaseUrl = '/pl';
 
 export default function InvoiceScreen(): JSX.Element {
@@ -121,12 +121,12 @@ export default function InvoiceScreen(): JSX.Element {
       expiryDate: addYears(new Date(), 1).toISOString(),
     });
 
-    fetchJson(url(baseUrl, searchParams))
+    fetchJson(url({ base: baseUrl, params: searchParams }))
       .then((response) => {
         if (response.error) {
           setErrorPayment(response.message ?? 'Unknown Error');
         } else {
-          setCallback(url(relativeBaseUrl, searchParams));
+          setCallback(relativeUrl({ path: relativeBaseUrl, params: searchParams }));
         }
       })
       .catch((error: ApiError) => setErrorPayment(error.message ?? 'Unknown Error'))
@@ -143,10 +143,10 @@ export default function InvoiceScreen(): JSX.Element {
     <Layout title={translate('screens/payment', 'Create Invoice')}>
       <StyledVerticalStack gap={6} full center>
         <div className="flex flex-col gap-2 w-48 my-3">
-          <QrBasic data={`${process.env.PUBLIC_URL}${callback}`} isLoading={!callback} />
+          <QrBasic data={url({ path: callback })} isLoading={!callback} />
           <StyledButton
             label={translate('general/actions', 'Copy Link')}
-            onClick={() => callback && copy(`${process.env.PUBLIC_URL}${callback}`)}
+            onClick={() => copy(url({ path: callback }))}
             color={StyledButtonColor.STURDY_WHITE}
             width={StyledButtonWidth.FULL}
             disabled={!callback}
@@ -206,7 +206,7 @@ export default function InvoiceScreen(): JSX.Element {
                   values={{ recipient: data?.recipient, supportLink: '' }}
                   components={{
                     strong: <strong />,
-                    link: <StyledLink label={`app.dfx.swiss/support`} url={`${process.env.PUBLIC_URL}/support`} dark />,
+                    link: <StyledLink label={`app.dfx.swiss/support`} url={url({ path: '/support' })} dark />,
                   }}
                 />
               </p>
