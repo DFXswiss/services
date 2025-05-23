@@ -4,6 +4,7 @@ import {
   IconColor,
   IconVariant,
   StyledButton,
+  StyledButtonWidth,
   StyledDataTable,
   StyledDataTableRow,
   StyledVerticalStack,
@@ -95,7 +96,9 @@ export default function ActionableList({
         <></>
       )}
 
-      {buttonLabel && buttonAction && <StyledButton label={buttonLabel} onClick={buttonAction} />}
+      {buttonLabel && buttonAction && (
+        <StyledButton width={StyledButtonWidth.FULL} label={buttonLabel} onClick={buttonAction} />
+      )}
     </>
   );
 }
