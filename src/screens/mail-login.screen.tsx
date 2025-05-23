@@ -29,15 +29,12 @@ export default function MailLoginScreen() {
           window.location.href = redirectUrl;
         })
         .catch((error: ApiError) => {
+          urlParams.delete('otp');
+          setUrlParams(urlParams);
           navigate({ pathname: `/error`, search: `?msg=${error.message}` });
         });
     } else {
       navigate('/login');
-    }
-
-    if (urlParams.has('otp')) {
-      urlParams.delete('otp');
-      setUrlParams(urlParams);
     }
   }, []);
 
