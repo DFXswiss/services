@@ -2,21 +2,14 @@ import { useBuy, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, SpinnerVariant, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { RiExternalLinkFill } from 'react-icons/ri';
-import QRCode from 'react-qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { openPdfFromString } from 'src/util/utils';
+import { QrBasic } from './qr-code';
 
 interface GiroCodeProps {
   value: string;
   txId: number;
-}
-
-function stringIsSVG(value: string): boolean {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(value, 'image/svg+xml');
-  const svgElement = doc.getElementsByTagName('svg')[0];
-  return svgElement !== undefined && svgElement.nodeName === 'svg';
 }
 
 export function PaymentQrCode({ value, txId }: GiroCodeProps): JSX.Element {
@@ -44,20 +37,12 @@ export function PaymentQrCode({ value, txId }: GiroCodeProps): JSX.Element {
 
   return (
     <>
-      {stringIsSVG(value) ? (
-        <div className="flex flex-col items-center py-4 gap-1.5">
-          <img
-            className="mx-auto h-auto w-full max-w-[15rem]"
-            src={`data:image/svg+xml;utf8,${encodeURIComponent(value)}`}
-          />
-          <p className="text-dfxBlue-800 font-semibold text-base">{translate('screens/buy', 'QR-bill')}</p>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center py-4 gap-1">
-          <QRCode className="mx-auto h-auto w-full max-w-[15rem]" value={value} fgColor={'#072440'} />
-          <p className="text-dfxBlue-800 font-semibold text-base">GiroCode</p>
-        </div>
-      )}
+      <div className="flex flex-col items-center py-4 gap-1.5">
+        <QrBasic data={value} />
+        <p className="text-dfxBlue-800 font-semibold text-base">
+          {value.includes('<svg') ? translate('screens/buy', 'QR-bill') : 'GiroCode'}
+        </p>
+      </div>
       <div className="flex flex-col items-center gap-1.5">
         <button
           type="button"
