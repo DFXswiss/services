@@ -308,7 +308,7 @@ export default function KycScreen(): JSX.Element {
         return { icon: IconVariant.HELP, label: translate('screens/kyc', 'Data requested'), size: IconSize.MD };
 
       case KycStepStatus.ON_HOLD:
-        return { icon: IconVariant.LOADING, label: translate('screens/kyc', 'On hold'), size: IconSize.MD };
+        return { icon: IconVariant.CHECKBOX_EMPTY, label: '', size: IconSize.MD };
     }
   }
 
