@@ -30,6 +30,8 @@
     "Delete address": "Supprimer l'adresse",
     "Add new address": "Ajouter une adresse",
     "Delete account": "Supprimer le compte",
+    "Add bank account": "Ajouter un compte bancaire",
+    "Delete bank account": "Supprimer le compte bancaire",
     "Edit email": "Modifier l'e-mail",
     "Edit phone number": "Modifier le numéro de téléphone",
     "Edit bank account": "Modifier le compte bancaire",
@@ -661,7 +663,6 @@
     "To find your missing transaction, please add the bank account from which you sent the money.": "Pour retrouver votre transaction manquante, veuillez ajouter le compte bancaire à partir duquel vous avez envoyé l'argent.",
     "The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.": "Le compte bancaire a été ajouté, toutes les transactions de cet IBAN seront désormais associées à votre compte. Veuillez vérifier l'aperçu des transactions pour voir si la transaction manquante est maintenant visible.",
     "The bank account has been added, all transactions from this IBAN will now be associated with your account.": "Le compte bancaire a été ajouté, toutes les transactions de cet IBAN seront désormais associées à votre compte.",
-    "Add bank account": "Ajouter un compte bancaire",
     "No IBAN, only account number": "Pas d'IBAN, seulement numéro de compte",
     "This IBAN already exists in another DFX customer account.": "Cet IBAN existe déjà sur un autre compte client de DFX."
   },
@@ -729,6 +730,7 @@
     "Hide deleted addresses": "Masquer les adresses supprimées",
 
     "delete": "Êtes-vous sûr de vouloir supprimer l'adresse <1>{{address}}</1> de votre compte DFX ? Cette action est irréversible.",
+    "delete_iban": "Êtes-vous sûr de vouloir supprimer le compte bancaire <1>{{address}}</1> de votre compte DFX ?",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support."
   },
   "screens/safe": {

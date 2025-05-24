@@ -30,6 +30,8 @@
     "Delete address": "Elimina l'indirizzo",
     "Add new address": "Aggiungere indirizzo",
     "Delete account": "Elimina l'account",
+    "Add bank account": "Aggiungi conto bancario",
+    "Delete bank account": "Elimina il conto bancario",
     "Edit email": "Modifica e-mail",
     "Edit phone number": "Modifica il numero di telefono",
     "Edit bank account": "Modifica il conto bancario",
@@ -661,7 +663,6 @@
     "To find your missing transaction, please add the bank account from which you sent the money.": "Per trovare la transazione mancante, aggiungete il conto bancario da cui avete inviato il denaro.",
     "The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.": "Il conto bancario è stato aggiunto, tutte le transazioni da questo IBAN saranno ora associate al vostro conto. Controllare la panoramica delle transazioni per verificare se la transazione mancante è ora visibile.",
     "The bank account has been added, all transactions from this IBAN will now be associated with your account.": "Il conto bancario è stato aggiunto, tutte le transazioni da questo IBAN saranno ora associate al vostro conto.",
-    "Add bank account": "Aggiungi conto bancario",
     "No IBAN, only account number": "Nessun IBAN, solo numero di conto",
     "This IBAN already exists in another DFX customer account.": "Questo IBAN esiste già in un altro conto cliente DFX."
   },
@@ -729,6 +730,7 @@
     "Hide deleted addresses": "Nascondi indirizzi eliminati",
 
     "delete": "Siete sicuri di voler eliminare l'indirizzo <1>{{address}}</1> dal vostro account DFX? Questa azione è irreversibile.",
+    "delete_iban": "Siete sicuri di voler eliminare il conto bancario <1>{{address}}</1> dal vostro account DFX?",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "I tuoi dati rimarranno sui nostri server temporaneamente prima della cancellazione definitiva. Se hai domande, contatta il nostro team di supporto."
   },
   "screens/safe": {
