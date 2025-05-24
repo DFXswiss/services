@@ -140,7 +140,7 @@ export function AddBankAccount({ onSubmit, confirmationText }: AddBankAccountPro
           type="submit"
           disabled={!isValid}
           color={StyledButtonColor.RED}
-          label={translate('screens/iban', 'Add bank account')}
+          label={translate('general/actions', 'Add bank account')}
           onClick={handleSubmit(createBankAccount)}
           isLoading={isLoading}
           caps
