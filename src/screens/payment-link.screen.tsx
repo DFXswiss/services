@@ -77,6 +77,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     isMetaMaskPaying,
     recommendedWallets,
     otherWallets,
+    semiCompatibleWallets,
     getWalletByName,
     paymentHasQuote,
     setSessionApiUrl,
@@ -84,11 +85,14 @@ export default function PaymentLinkScreen(): JSX.Element {
     fetchPayRequest,
     fetchPaymentIdentifier,
     payWithMetaMask,
+    getDeeplinkByWalletId,
   } = usePaymentLinkContext();
 
   const [assetObject, setAssetObject] = useState<Asset>();
   const [showContract, setShowContract] = useState(false);
   const [walletData, setWalletData] = useState<WalletInfo>();
+  const [isOpenWallet, setIsOpenWallet] = useState(false);
+  const [isTempUnavailable, setIsTempUnavailable] = useState(false);
 
   const {
     control,
@@ -164,6 +168,24 @@ export default function PaymentLinkScreen(): JSX.Element {
     }
   }, [selectedAsset, selectedPaymentStandard]);
 
+  const handleBackButton = () => {
+    setWalletData(undefined);
+    setIsTempUnavailable(false);
+  };
+
+  const openWallet = async (walletId: string) => {
+    try {
+      setIsOpenWallet(true);
+      const deeplink = await getDeeplinkByWalletId(walletId);
+      if (deeplink) {
+        window.open(deeplink, '_blank');
+      }
+    } catch (error) {
+      setIsTempUnavailable(true);
+    } finally {
+      setIsOpenWallet(false);
+    }
+  };
   const assetsList =
     paymentHasQuote(payRequest) &&
     payRequest.transferAmounts.find((item) => item.method === selectedPaymentStandard?.blockchain)?.assets;
@@ -487,7 +509,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           <DividerWithHeader header={walletData.name} />
                           <button
                             className="absolute top-[88px] left-14 bg-dfxGray-400 w-9 h-9 pl-1.5 rounded-full flex items-center justify-center"
-                            onClick={() => setWalletData(undefined)}
+                            onClick={handleBackButton}
                           >
                             <DfxIcon icon={IconVariant.BACK} size={IconSize.SM} color={IconColor.BLUE} />
                           </button>
@@ -495,11 +517,17 @@ export default function PaymentLinkScreen(): JSX.Element {
 
                           <StyledVerticalStack full gap={3} center className="pt-2 px-4">
                             <StyledButton
-                              label={translate('screens/home', 'Open app')}
-                              onClick={() => window.open(walletData.deepLink, '_blank')}
+                              label={
+                                isTempUnavailable
+                                  ? translate('screens/home', 'App temporarily unavailable')
+                                  : translate('screens/home', 'Pay in app')
+                              }
+                              onClick={() => openWallet(walletData.id)}
                               color={StyledButtonColor.BLUE}
                               width={StyledButtonWidth.FULL}
                               hidden={!walletData.deepLink}
+                              isLoading={isOpenWallet}
+                              disabled={isTempUnavailable}
                             />
                             <StyledButton
                               label={translate('screens/home', 'Open website')}
@@ -535,6 +563,10 @@ export default function PaymentLinkScreen(): JSX.Element {
                         <WalletGrid
                           wallets={otherWallets}
                           header={translate('screens/payment', 'Other compatible wallets')}
+                        />
+                        <WalletGrid
+                          wallets={semiCompatibleWallets}
+                          header={translate('screens/payment', 'Semi compatible wallets')}
                         />
                       </>
                     )}
@@ -642,8 +674,10 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
           return (
             <div
               key={wallet.name}
-              className="flex flex-col items-center gap-2 cursor-pointer max-w-[120px] min-w-0"
-              onClick={() => navigate({ pathname: '/pl', search: `?wallet-id=${wallet.id}` })}
+              className={`flex flex-col items-center gap-2 max-w-[120px] min-w-0 ${!wallet.disabled ? 'cursor-pointer' : 'opacity-50'}`}
+              onClick={
+                wallet.disabled ? undefined : () => navigate({ pathname: '/pl', search: `?wallet-id=${wallet.id}` })
+              }
             >
               <WalletLogo wallet={wallet} size={60} />
               <p className="text-center font-semibold text-dfxGray-600 w-full text-xs truncate">{wallet.name}</p>

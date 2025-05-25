@@ -20,7 +20,11 @@ export interface Amount {
   amount: number;
 }
 
-export type TransferMethod = Blockchain;
+export enum C2BPaymentMethod {
+  BINANCE_PAY = 'BinancePay',
+}
+
+export type TransferMethod = Blockchain | C2BPaymentMethod;
 
 export interface TransferInfo {
   method: TransferMethod;
@@ -82,10 +86,13 @@ export interface WalletInfo {
   name: string;
   websiteUrl: string;
   iconUrl: string;
-  deepLink: string;
+  deepLink?: string;
   appStoreUrl?: string;
   playStoreUrl?: string;
   recommended?: boolean;
+  transferMethod?: TransferMethod;
+  semiCompatible?: boolean;
+  disabled?: boolean;
 }
 
 export interface MetaMaskInfo {
