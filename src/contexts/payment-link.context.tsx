@@ -3,6 +3,7 @@ import {
   Blockchain,
   PaymentLinkPaymentStatus,
   PaymentStandardType,
+  TransferMethod,
   useApi,
   useAssetContext,
 } from '@dfx.swiss/react';
@@ -25,6 +26,7 @@ import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.cont
 import { AssetBalance } from 'src/contexts/balance.context';
 import {
   Amount,
+  C2BPaymentMethod,
   ExtendedPaymentLinkStatus,
   MetaMaskInfo,
   NoPaymentLinkPaymentStatus,
@@ -60,6 +62,7 @@ interface PaymentLinkInterface {
   isMetaMaskPaying: boolean;
   recommendedWallets: WalletInfo[];
   otherWallets: WalletInfo[];
+  semiCompatibleWallets: WalletInfo[];
   getWalletByName: (id: string) => WalletInfo | undefined;
   paymentHasQuote: (request?: PaymentLinkPayTerminal | PaymentLinkPayRequest) => request is PaymentLinkPayRequest;
   setPaymentIdentifier: (id: string | undefined) => void;
@@ -71,6 +74,7 @@ interface PaymentLinkInterface {
     selectedAsset?: string,
   ) => Promise<void>;
   payWithMetaMask: () => Promise<void>;
+  getDeeplinkByWalletId: (id: string) => Promise<string | undefined>;
 }
 
 const PaymentLinkContext = createContext<PaymentLinkInterface>(undefined as any);
@@ -423,15 +427,56 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   }, []);
 
   const otherWallets = useMemo(() => {
-    return PaymentLinkWallets.filter((wallet) => wallet.recommended !== true);
+    return PaymentLinkWallets.filter((wallet) => !wallet.recommended && !wallet.semiCompatible);
   }, []);
+
+  const semiCompatibleWallets = useMemo(() => {
+    const allSemiCompatibles = PaymentLinkWallets.filter((wallet) => wallet.semiCompatible);
+    const transferMethods = hasQuote(payRequest)
+      ? payRequest.transferAmounts.filter((ta) => ta.available).map((ta) => ta.method)
+      : [];
+
+    return allSemiCompatibles.map((wallet) => ({
+      ...wallet,
+      disabled: !transferMethods.includes(wallet.transferMethod as TransferMethod),
+    }));
+  }, [payRequest]);
 
   const getWalletByName = useCallback(
     (id: string): WalletInfo | undefined => {
-      return [...recommendedWallets, ...otherWallets].find((wallet) => wallet.id === id);
+      return [...recommendedWallets, ...otherWallets, ...semiCompatibleWallets].find((wallet) => wallet.id === id);
     },
-    [recommendedWallets, otherWallets],
+    [recommendedWallets, otherWallets, semiCompatibleWallets],
   );
+
+  const fetchCallbackUrlForWallet = async (method: Blockchain | C2BPaymentMethod) => {
+    if (!hasQuote(payRequest)) return undefined;
+    const transferAmount = payRequest.transferAmounts.find((ta) => ta.method === method);
+    const asset = transferAmount?.assets[0].asset;
+    const url = `${payRequest.callback}?quote=${payRequest.quote.id}&method=${method}&asset=${asset}`;
+    return await fetchJson<{ uri: string }>(url);
+  };
+
+  const getDeeplinkByWalletId = async (id: string) => {
+    if (!paymentIdentifier) return undefined;
+    const wallet = getWalletByName(id);
+    if (!wallet) return undefined;
+
+    switch (wallet.transferMethod) {
+      case C2BPaymentMethod.BINANCE_PAY:
+        const { uri } = (await fetchCallbackUrlForWallet(C2BPaymentMethod.BINANCE_PAY)) ?? {};
+        return uri;
+
+      case Blockchain.LIGHTNING:
+        const lightning = new URL(paymentIdentifier).searchParams.get('lightning');
+        const suffix = 'lightning:';
+        const prefix = wallet.deepLink !== suffix ? `${wallet.deepLink}` : '';
+        return `${prefix}${suffix}${lightning}`;
+
+      default:
+        return wallet.deepLink;
+    }
+  };
 
   const context = useMemo(
     () => ({
@@ -451,6 +496,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       isMetaMaskPaying,
       recommendedWallets,
       otherWallets,
+      semiCompatibleWallets,
       getWalletByName,
       paymentHasQuote: hasQuote,
       setPaymentIdentifier,
@@ -458,6 +504,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       fetchPayRequest,
       fetchPaymentIdentifier,
       payWithMetaMask,
+      getDeeplinkByWalletId,
     }),
     [
       error,
@@ -474,6 +521,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       isMetaMaskPaying,
       recommendedWallets,
       otherWallets,
+      semiCompatibleWallets,
       getWalletByName,
     ],
   );
