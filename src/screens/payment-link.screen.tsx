@@ -27,7 +27,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -88,6 +88,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     getDeeplinkByWalletId,
   } = usePaymentLinkContext();
 
+  const rootRef = useRef<HTMLDivElement>(null);
   const [assetObject, setAssetObject] = useState<Asset>();
   const [showContract, setShowContract] = useState(false);
   const [walletData, setWalletData] = useState<WalletInfo>();
@@ -196,7 +197,7 @@ export default function PaymentLinkScreen(): JSX.Element {
       : undefined;
 
   return (
-    <Layout backButton={false} smallMenu>
+    <Layout backButton={false} smallMenu rootRef={rootRef}>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
       ) : (!payRequest && !merchant) || isLoadingMetaMask ? (
@@ -231,6 +232,7 @@ export default function PaymentLinkScreen(): JSX.Element {
               <Form control={control} errors={errors}>
                 <StyledVerticalStack full gap={4} center>
                   <StyledDropdown<PaymentStandard>
+                    rootRef={rootRef}
                     name="paymentStandard"
                     items={paymentStandards}
                     labelFunc={(item) =>
@@ -245,6 +247,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 
                   {assetsList && (
                     <StyledDropdown<string>
+                      rootRef={rootRef}
                       name="asset"
                       items={assetsList?.map((item) => item.asset) ?? []}
                       labelFunc={(item) => item}

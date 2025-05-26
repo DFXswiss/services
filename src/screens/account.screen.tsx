@@ -233,6 +233,7 @@ export default function AccountScreen(): JSX.Element {
                 </h2>
                 <Form control={control} errors={errors}>
                   <StyledDropdown
+                    rootRef={rootRef}
                     name="address"
                     placeholder={translate('general/actions', 'Select') + '...'}
                     items={user.addresses.sort(sortAddressesByBlockchain)}

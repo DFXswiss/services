@@ -1050,6 +1050,7 @@ function PaymentLinkForm({
           {step === PaymentLinkFormStep.ROUTE && (
             <StyledVerticalStack gap={6} full center>
               <StyledDropdown<RouteIdSelectData>
+                rootRef={rootRef}
                 name="routeId"
                 label={translate('screens/payment', 'Route ID')}
                 placeholder={translate('screens/payment', 'Route ID')}

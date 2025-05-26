@@ -141,6 +141,7 @@ export default function SettingsScreen(): JSX.Element {
           <StyledVerticalStack full gap={4}>
             <Form control={control} errors={errors}>
               <StyledDropdown
+                rootRef={rootRef}
                 name="language"
                 label={translate('screens/settings', 'Language')}
                 smallLabel={true}
@@ -153,6 +154,7 @@ export default function SettingsScreen(): JSX.Element {
 
             <Form control={control} errors={errors}>
               <StyledDropdown
+                rootRef={rootRef}
                 name="currency"
                 label={translate('screens/settings', 'Currency')}
                 smallLabel={true}

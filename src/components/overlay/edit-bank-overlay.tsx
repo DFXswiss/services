@@ -9,7 +9,7 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -31,6 +31,8 @@ export function EditBankAccount({ bankAccount, onClose }: EditBankAccountProps):
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
+
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const {
     watch,
@@ -75,6 +77,7 @@ export function EditBankAccount({ bankAccount, onClose }: EditBankAccountProps):
             smallLabel
           />
           <StyledDropdown<Fiat>
+            rootRef={rootRef}
             name="preferredCurrency"
             label={translate('screens/settings', 'Currency')}
             smallLabel={true}
