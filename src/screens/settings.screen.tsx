@@ -333,7 +333,7 @@ function SettingsOverlay({ type, data, onClose }: SettingsOverlayProps): JSX.Ele
   const { translate } = useSettingsContext();
   const { setWallet } = useWalletContext();
   const { deleteAddress, deleteAccount, renameAddress, updatePhone } = useUserContext();
-  const { bankAccounts, updateAccount, isLoading: isLoadingBankAccounts } = useBankAccountContext();
+  const { updateAccount } = useBankAccountContext();
 
   switch (type) {
     case OverlayType.DELETE_ADDRESS:

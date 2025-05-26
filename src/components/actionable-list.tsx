@@ -2,13 +2,13 @@ import {
   AlignContent,
   DfxIcon,
   IconColor,
+  IconSize,
   IconVariant,
   StyledDataTable,
   StyledDataTableRow,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
-import { GoPlus } from 'react-icons/go'; // TODO: Add to DFX icon library
 
 interface Item {
   key: string | number;
@@ -37,6 +37,7 @@ export default function ActionableList({
 }: ActionableListProps) {
   const [activeMenuItem, setActiveMenuItem] = useState<Item>();
   const [showDisabledItems, setShowDisabledItems] = useState(false);
+  const [isHoveringButton, setIsHoveringButton] = useState(false);
 
   return (
     <>
@@ -45,11 +46,17 @@ export default function ActionableList({
           <h1 className="relative text-dfxGray-800 font-semibold text-base flex justify-center items-center">
             {label}
             <button
-              className="absolute right-[14px] font-extrabold text-lg border rounded-[10px] bg-white border-dfxGray-700 text-dfxGray-700 hover:bg-dfxRed-100 hover:border-dfxRed-100 hover:text-white"
+              className="absolute right-[14px] border rounded-[10px] bg-white border-dfxGray-700 hover:bg-dfxRed-100 hover:border-dfxRed-100"
               onClick={addButtonOnClick}
+              onMouseEnter={() => setIsHoveringButton(true)}
+              onMouseLeave={() => setIsHoveringButton(false)}
               hidden={!addButtonOnClick}
             >
-              <GoPlus />
+              <DfxIcon
+                icon={IconVariant.PLUS}
+                color={isHoveringButton ? IconColor.WHITE : IconColor.DARK_GRAY}
+                size={IconSize.MD}
+              />
             </button>
           </h1>
           <StyledDataTable alignContent={AlignContent.BETWEEN}>
