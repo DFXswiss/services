@@ -166,7 +166,7 @@ export default function SettingsScreen(): JSX.Element {
           {!!(user?.mail || user?.phone) && (
             <StyledVerticalStack full gap={2}>
               <h1 className="text-dfxGray-800 font-semibold text-base flex justify-center">
-                {translate('screens/kyc', 'Contact Information')}
+                {translate('screens/kyc', 'Personal Information')}
               </h1>
               <StyledDataTable alignContent={AlignContent.BETWEEN}>
                 {user?.mail && (
@@ -257,7 +257,7 @@ export default function SettingsScreen(): JSX.Element {
             )
           )}
 
-          {isUserLoading ? (
+          {isUserLoading && !isLoadingBankAccounts ? (
             <div className="flex mt-4 w-full justify-center items-center">
               <StyledLoadingSpinner size={SpinnerSize.LG} />
             </div>
@@ -266,7 +266,6 @@ export default function SettingsScreen(): JSX.Element {
               label={translate('screens/settings', 'Your Addresses')}
               hideItemsText={translate('screens/settings', 'Hide deleted addresses')}
               showItemsText={translate('screens/settings', 'Show deleted addresses')}
-              addButtonOnClick={() => navigate('/connect')}
               items={addressesList.map((address) => {
                 const isDisabled = user?.disabledAddresses.some((d) => d.address === address.address) ?? false;
 
