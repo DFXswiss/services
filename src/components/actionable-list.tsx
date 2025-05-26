@@ -2,8 +2,8 @@ import {
   AlignContent,
   DfxIcon,
   IconColor,
+  IconSize,
   IconVariant,
-  StyledButton,
   StyledDataTable,
   StyledDataTableRow,
   StyledVerticalStack,
@@ -23,28 +23,43 @@ interface Item {
 type ActionableListProps = {
   label?: string;
   items?: Item[];
-  buttonLabel?: string;
-  buttonAction?: () => void;
   hideItemsText?: string;
   showItemsText?: string;
+  addButtonOnClick?: () => void;
 };
 
 export default function ActionableList({
   label,
   items,
-  buttonLabel,
-  buttonAction,
   hideItemsText = '',
   showItemsText = '',
+  addButtonOnClick,
 }: ActionableListProps) {
   const [activeMenuItem, setActiveMenuItem] = useState<Item>();
   const [showDisabledItems, setShowDisabledItems] = useState(false);
+  const [isHoveringButton, setIsHoveringButton] = useState(false);
 
   return (
     <>
       {items?.length ? (
         <StyledVerticalStack full gap={2}>
-          <StyledDataTable label={label} alignContent={AlignContent.BETWEEN}>
+          <h1 className="relative text-dfxGray-800 font-semibold text-base flex justify-center items-center">
+            {label}
+            <button
+              className="absolute right-[14px] border rounded-[10px] bg-white border-dfxGray-700 hover:bg-dfxRed-100 hover:border-dfxRed-100"
+              onClick={addButtonOnClick}
+              onMouseEnter={() => setIsHoveringButton(true)}
+              onMouseLeave={() => setIsHoveringButton(false)}
+              hidden={!addButtonOnClick}
+            >
+              <DfxIcon
+                icon={IconVariant.PLUS}
+                color={isHoveringButton ? IconColor.WHITE : IconColor.DARK_GRAY}
+                size={IconSize.MD}
+              />
+            </button>
+          </h1>
+          <StyledDataTable alignContent={AlignContent.BETWEEN}>
             {items
               .filter((item) => showDisabledItems || !item.isDisabled)
               .map((item) => {
@@ -94,8 +109,6 @@ export default function ActionableList({
       ) : (
         <></>
       )}
-
-      {buttonLabel && buttonAction && <StyledButton label={buttonLabel} onClick={buttonAction} />}
     </>
   );
 }
