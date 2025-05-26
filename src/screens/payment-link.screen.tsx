@@ -45,8 +45,10 @@ import {
 } from 'src/dto/payment-link.dto';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
+import { BadgeType } from 'src/util/app-store-badges';
 import { EvmUri } from 'src/util/evm-uri';
 import { blankedAddress, formatLocationAddress, formatUnits } from 'src/util/utils';
+import { AppStoreBadge } from '../components/app-store-badge';
 import { Layout } from '../components/layout';
 
 interface FormData {
@@ -535,22 +537,13 @@ export default function PaymentLinkScreen(): JSX.Element {
                               color={StyledButtonColor.STURDY_WHITE}
                               width={StyledButtonWidth.FULL}
                             />
-                            <StyledButton
-                              label="Apple App Store"
-                              icon={IconVariant.APPLE}
-                              onClick={() => window.open(walletData.appStoreUrl, '_blank')}
-                              color={StyledButtonColor.STURDY_WHITE}
-                              width={StyledButtonWidth.FULL}
-                              hidden={!walletData.appStoreUrl}
-                            />
-                            <StyledButton
-                              label="Android Play Store"
-                              icon={IconVariant.GOOGLE_PLAY}
-                              onClick={() => window.open(walletData.playStoreUrl, '_blank')}
-                              color={StyledButtonColor.STURDY_WHITE}
-                              width={StyledButtonWidth.FULL}
-                              hidden={!walletData.playStoreUrl}
-                            />
+                            <div
+                              className="flex flex-row gap-3 w-full justify-center pt-5 pb-2"
+                              hidden={!walletData.playStoreUrl && !walletData.appStoreUrl}
+                            >
+                              <AppStoreBadge type={BadgeType.PLAY_STORE} url={walletData.playStoreUrl} />
+                              <AppStoreBadge type={BadgeType.APP_STORE} url={walletData.appStoreUrl} />
+                            </div>
                           </StyledVerticalStack>
                         </div>
                       </StyledVerticalStack>
