@@ -83,7 +83,7 @@ import { useGeoLocation } from '../hooks/geo-location.hook';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { delay, toBase64 } from '../util/utils';
+import { delay, toBase64, url } from '../util/utils';
 import { IframeMessageType } from './kyc-redirect.screen';
 
 enum Mode {
@@ -308,7 +308,7 @@ export default function KycScreen(): JSX.Element {
         return { icon: IconVariant.HELP, label: translate('screens/kyc', 'Data requested'), size: IconSize.MD };
 
       case KycStepStatus.ON_HOLD:
-        return { icon: IconVariant.LOADING, label: translate('screens/kyc', 'On hold'), size: IconSize.MD };
+        return { icon: IconVariant.CHECKBOX_EMPTY, label: '', size: IconSize.MD };
     }
   }
 
@@ -1701,7 +1701,8 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const currentOptions = currentQuestion?.options ?? [];
   const currentResponse = responses.find((r) => currentQuestion?.key === r.key);
   const nocLinkText = 'app.dfx.swiss/support/issue';
-  const nocSupportLink = `${process.env.PUBLIC_URL}/support/issue?issue-type=${SupportIssueType.NOTIFICATION_OF_CHANGES}`;
+  const params = new URLSearchParams({ 'issue-type': SupportIssueType.NOTIFICATION_OF_CHANGES });
+  const nocSupportLink = url({ path: '/support/issue', params });
 
   useEffect(() => {
     if (!step.session) return;

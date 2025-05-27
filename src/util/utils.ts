@@ -23,9 +23,29 @@ export async function timeout<T>(promise: Promise<T>, timeout: number): Promise<
   return Promise.race([promise, timeoutPromise]);
 }
 
-export function url(url: string, params: URLSearchParams): string {
-  const search = Array.from(params.entries()).length > 0 ? `?${params}` : '';
-  return `${url}${search}`;
+export function url({
+  base = process.env.REACT_APP_PUBLIC_URL,
+  path = '',
+  params,
+}: {
+  base?: string;
+  path?: string;
+  params?: URLSearchParams;
+}): string {
+  if (isAbsoluteUrl(path)) return url({ base: path, params });
+
+  const normalizedBase = base?.replace(/\/+$/, '') + '/'; // end with a single slash
+  const normalizedPath = path.replace(/^\/+/, ''); // remove leading slashes
+  const absoluteUrl = new URL(normalizedPath, normalizedBase);
+  if (params) absoluteUrl.search = params.toString();
+  return absoluteUrl.href;
+}
+
+export function relativeUrl({ path, params }: { path: string; params?: URLSearchParams }): string {
+  if (isAbsoluteUrl(path)) return url({ base: path, params });
+
+  const normalizedPath = '/' + path.replace(/^\/+/, ''); // start with a single slash
+  return params && params.toString() ? `${normalizedPath}?${params}` : normalizedPath;
 }
 
 export function isAbsoluteUrl(url: string): boolean {
@@ -171,7 +191,7 @@ export function formatBytes(bytes: number, decimals = 2): string {
   return `${parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
 }
 
-export async function fetchJson(url: string | URL): Promise<any> {
+export async function fetchJson<T = any>(url: string | URL): Promise<T> {
   const response = await fetch(url);
   return response.json();
 }

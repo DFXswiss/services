@@ -8,7 +8,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { ConnectProps } from 'src/components/home/connect-shared';
@@ -36,6 +36,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const isCustodySignup = !user?.addresses.length && CustodyAssets.includes(assetOut ?? '');
 
@@ -99,6 +100,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
 
           <Form control={control} errors={errors}>
             <StyledDropdown
+              rootRef={rootRef}
               name="address"
               placeholder={translate('general/actions', 'Select') + '...'}
               items={user.addresses.sort(sortAddressesByBlockchain)}

@@ -30,8 +30,11 @@
     "Delete address": "Supprimer l'adresse",
     "Add new address": "Ajouter une adresse",
     "Delete account": "Supprimer le compte",
+    "Add bank account": "Ajouter un compte bancaire",
+    "Delete bank account": "Supprimer le compte bancaire",
     "Edit email": "Modifier l'e-mail",
     "Edit phone number": "Modifier le numéro de téléphone",
+    "Edit bank account": "Modifier le compte bancaire",
     "Copy Address": "Copier l'adresse",
     "Open Explorer": "Ouvrir l'explorateur",
     "Select transaction": "Sélectionner la transaction",
@@ -44,7 +47,9 @@
     "Open receipt": "Ouvrir le reçu",
     "Create ticket": "Créer un ticket",
     "Create support ticket": "Créer un ticket de support",
-    "View file": "Voir le fichier"
+    "View file": "Voir le fichier",
+    "Edit": "Modifier",
+    "Set default": "Définir par défaut"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -59,7 +64,8 @@
     "Maximum allowed characters: 4000": "Nombre maximum de caractères autorisés : 4000",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer. Si le problème persiste, veuillez contacter notre service d'assistance.",
-    "invoice": "DFX ne reconnaît pas un destinataire nommé <strong>{{recipient}}</strong>. Ce service ne peut être utilisé que pour des destinataires ayant un compte actif chez DFX et activés pour le service de facturation. Si vous souhaitez vous inscrire en tant que destinataire chez DFX, veuillez contacter le support à <link>{{supportLink}}</link>."
+    "invoice": "DFX ne reconnaît pas un destinataire nommé <strong>{{recipient}}</strong>. Ce service ne peut être utilisé que pour des destinataires ayant un compte actif chez DFX et activés pour le service de facturation. Si vous souhaitez vous inscrire en tant que destinataire chez DFX, veuillez contacter le support à <link>{{supportLink}}</link>.",
+    "iban": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez ouvrir un ticket de support sur <1></1> et joindre la confirmation de la transaction bancaire au format PDF."
   },
   "screens/kyc": {
     "DFX KYC": "DFX KYC",
@@ -136,7 +142,6 @@
     "Failed": "Échoué",
     "Outdated": "Obsolète",
     "Data requested": "Données demandées",
-    "On hold": "En attente",
 
     "Optional": "Facultatif",
 
@@ -320,7 +325,8 @@
 
     "Login with your BTC Taro Wallet": "Login avec votre wallet BTC Taro",
     "Install BTC Taro": "Installer BTC Taro",
-    "Open app": "Ouvrir l'app",
+    "Pay in app": "Payer dans l'app",
+    "App temporarily unavailable": "App temporairement indisponible",
 
     "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Connectez-vous à votre compte DFX en vérifiant par votre signature que vous êtes l'unique propriétaire de l'adresse blockchain fournie.",
     "Don't show this again.": "Ne le montrez plus.",
@@ -622,11 +628,13 @@
     "{{blockchain}} address": "Adresse {{blockchain}}",
     "Pay with a Bolt 11 Invoice": "Payer avec une facture Bolt 11",
     "Pay to a {{blockchain}} Blockchain address": "Payer à une adresse blockchain {{blockchain}}",
+    "Pay with OpenCryptoPay, Bitcoin Lightning LNURL": "Payer avec OpenCryptoPay, Bitcoin Lightning LNURL",
     "You have no payment routes yet": "Vous n'avez pas encore d'itinéraires de paiement",
     "Scan the QR-Code with a compatible wallet to complete the payment.": "Scannez le code QR avec un portefeuille compatible pour finaliser le paiement.",
     "Tell the cashier that you want to pay with crypto and then scan the QR-Code with a compatible wallet to complete the payment.": "Dites au caissier que vous souhaitez payer avec de la crypto et scannez ensuite le code QR avec un portefeuille compatible pour finaliser le paiement.",
     "Recommended wallets": "Portefeuilles recommandés",
     "Compatible wallets": "Portefeuilles compatibles",
+    "Semi compatible wallets": "Portefeuilles semi compatibles",
     "Invalid Payment Link": "Payment Link invalide",
 
     "Cointracking": "Cointracking",
@@ -653,15 +661,13 @@
     "Edit configuration": "Modifier la configuration"
   },
   "screens/iban": {
-    "Bank Accounts": "Comptes bancaires",
+    "Your Bank Accounts": "Vos comptes bancaires",
     "Accounts already used with DFX": "Comptes déjà utilisés avec DFX",
     "To find your missing transaction, please add the bank account from which you sent the money.": "Pour retrouver votre transaction manquante, veuillez ajouter le compte bancaire à partir duquel vous avez envoyé l'argent.",
     "The bank account has been added, all transactions from this IBAN will now be associated with your account. Please check the transaction overview to see if your missing transaction is now visible.": "Le compte bancaire a été ajouté, toutes les transactions de cet IBAN seront désormais associées à votre compte. Veuillez vérifier l'aperçu des transactions pour voir si la transaction manquante est maintenant visible.",
     "The bank account has been added, all transactions from this IBAN will now be associated with your account.": "Le compte bancaire a été ajouté, toutes les transactions de cet IBAN seront désormais associées à votre compte.",
-    "Add bank account": "Ajouter un compte bancaire",
     "No IBAN, only account number": "Pas d'IBAN, seulement numéro de compte",
-    "This IBAN already exists in another DFX customer account.": "Cet IBAN existe déjà sur un autre compte client de DFX.",
-    "This is a multi-account IBAN and cannot be added as a personal account. Please send the confirmation of the bank transaction as a PDF to support@dfx.swiss.": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez envoyer la confirmation de la transaction bancaire au format PDF à support@dfx.swiss."
+    "This IBAN already exists in another DFX customer account.": "Cet IBAN existe déjà sur un autre compte client de DFX."
   },
   "screens/support": {
     "Support": "Support",
@@ -721,11 +727,13 @@
     "Currency": "Devise",
     "Label": "Étiquette",
     "Address name": "Nom de l'adresse",
+    "Default": "Défaut",
 
     "Show deleted addresses": "Afficher les adresses supprimées",
     "Hide deleted addresses": "Masquer les adresses supprimées",
 
     "delete": "Êtes-vous sûr de vouloir supprimer l'adresse <1>{{address}}</1> de votre compte DFX ? Cette action est irréversible.",
+    "delete_iban": "Êtes-vous sûr de vouloir supprimer le compte bancaire <1>{{address}}</1> de votre compte DFX ?",
     "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support."
   },
   "screens/safe": {

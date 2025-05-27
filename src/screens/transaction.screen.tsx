@@ -47,6 +47,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
 import CoinTracking from 'src/components/cointracking';
+import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { useWindowContext } from 'src/contexts/window.context';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
@@ -344,11 +345,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   }, [transaction]);
 
   useEffect(() => {
-    if (selectedIban === AddAccount)
-      navigate('/bank-accounts', { setRedirect: true, redirectPath: `/tx/${id}/refund` });
-  }, [selectedIban]);
-
-  useEffect(() => {
     if (transaction && user) {
       const allowedAddresses = user.addresses.filter(
         (a) => transaction?.inputBlockchain && a.blockchains.includes(transaction?.inputBlockchain),
@@ -379,7 +375,15 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     iban: Validations.Required,
   });
 
-  return refundDetails && transaction ? (
+  return selectedIban === AddAccount ? (
+    <AddBankAccount
+      onSubmit={(account) => setValue('iban', account.iban)}
+      confirmationText={translate(
+        'screens/iban',
+        'The bank account has been added, all transactions from this IBAN will now be associated with your account.',
+      )}
+    />
+  ) : refundDetails && transaction ? (
     <StyledVerticalStack gap={6} full>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'Transaction amount')}>

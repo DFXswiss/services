@@ -83,7 +83,7 @@ interface ContentProps extends ConnectContentProps {
   form: UseFormReturn<FormData, any>;
 }
 
-function Content({ wallet, isConnecting, connect, error, form, onSwitch }: ContentProps): JSX.Element {
+function Content({ wallet, isConnecting, connect, error, form, onSwitch, rootRef }: ContentProps): JSX.Element {
   const { translate, translateError, language } = useSettingsContext();
   const { copy } = useClipboard();
   const { getSignMessage } = useAuth();
@@ -155,6 +155,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch }: Conte
     <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(submit)} translate={translateError}>
       <StyledVerticalStack gap={6} full>
         <StyledDropdown
+          rootRef={rootRef}
           name="blockchain"
           label={translate('screens/home', 'Blockchain')}
           disabled={isConnecting}

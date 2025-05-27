@@ -5,7 +5,7 @@ import { useChange } from 'src/hooks/change.hook';
 import { Service } from '../App';
 import { useIframe } from '../hooks/iframe.hook';
 import { useStore } from '../hooks/store.hook';
-import { url } from '../util/utils';
+import { relativeUrl, url } from '../util/utils';
 import { useBalanceContext } from './balance.context';
 
 // --- INTERFACES --- //
@@ -350,10 +350,10 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
     urlParamsToRemove.forEach((param) => query.delete(param));
 
     const path = props.router.state.location.pathname;
-    props.router.navigate(url(path, query), { replace: true });
+    props.router.navigate(relativeUrl({ path, params: query }), { replace: true });
 
     const { location, history } = window;
-    history.replaceState(undefined, '', url(`${location.origin}${location.pathname}`, query));
+    history.replaceState(undefined, '', url({ base: location.origin, path: location.pathname, params: query }));
   }
 
   // closing
@@ -417,7 +417,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       // custom solution for deep link URIs
       const pathname = uri.pathname ? uri.pathname : '//';
       const newUrl = adaptPath(uri.protocol + pathname, path);
-      return new URL(url(newUrl, uri.searchParams));
+      return new URL(url({ base: newUrl, params: uri.searchParams }));
     } else {
       uri.pathname = adaptPath(uri.pathname, path);
 

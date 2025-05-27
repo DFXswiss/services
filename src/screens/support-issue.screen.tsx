@@ -30,6 +30,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
+import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { DefaultFileTypes } from 'src/config/file-types';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
@@ -212,11 +213,6 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [isIssueLoading, existingIssue]);
 
   useEffect(() => {
-    if (selectedSender === AddAccount)
-      navigate('/bank-accounts', { setRedirect: true, redirectPath: '/tx', state: { isMissingTxIssue: true } });
-  }, [selectedSender]);
-
-  useEffect(() => {
     if (selectedTransaction?.id === selectTxButtonLabel) setSelectTransaction(true);
   }, [selectedTransaction]);
 
@@ -328,6 +324,17 @@ export default function SupportIssueScreen(): JSX.Element {
           </p>
           <TransactionList isSupport={true} onSelectTransaction={onSelectTransaction} setError={setError} />
         </>
+      ) : selectedSender === AddAccount ? (
+        <AddBankAccount
+          onSubmit={(account) => {
+            setValue('senderIban', account.iban);
+            setSupportIssue((prev) => ({ ...prev, senderIban: account.iban }));
+          }}
+          confirmationText={translate(
+            'screens/iban',
+            'The bank account has been added, all transactions from this IBAN will now be associated with your account.',
+          )}
+        />
       ) : (
         <Form
           control={control}

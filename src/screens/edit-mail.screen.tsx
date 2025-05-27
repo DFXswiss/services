@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
-import { EditOverlay } from 'src/components/overlays';
+import { EditOverlay } from 'src/components/overlay/edit-overlay';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 
