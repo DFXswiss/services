@@ -41,6 +41,7 @@ const TransactionScreen = lazy(() => import('./screens/transaction.screen'));
 const AccountMerge = lazy(() => import('./screens/account-merge.screen'));
 const MailLoginScreen = lazy(() => import('./screens/mail-login.screen'));
 const SepaScreen = lazy(() => import('./screens/sepa.screen'));
+const StickersScreen = lazy(() => import('./screens/stickers.screen'));
 const BlockchainTransactionScreen = lazy(() => import('./screens/blockchain-tx.screen'));
 const EditMailScreen = lazy(() => import('./screens/edit-mail.screen'));
 const SafeScreen = lazy(() => import('./screens/safe.screen'));
@@ -228,6 +229,10 @@ export const Routes = [
   {
     path: '/sepa',
     element: withSuspense(<SepaScreen />),
+  },
+  {
+    path: '/stickers',
+    element: withSuspense(<StickersScreen />),
   },
   {
     path: '/blockchain/tx',

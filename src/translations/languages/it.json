@@ -49,7 +49,8 @@
     "Create support ticket": "Crea un ticket di supporto",
     "View file": "Visualizza il file",
     "Edit": "Modifica",
-    "Set default": "Imposta predefinito"
+    "Set default": "Imposta predefinito",
+    "Generate PDF": "Genera PDF"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -620,6 +621,8 @@
     "Recipient not found": "Destinatario non trovato",
 
     "Route": "Modalità",
+    "Open CryptoPay Stickers": "Adesivi Open CryptoPay",
+    "External IDs (comma separated)": "ID esterni (separati da virgole)",
     "Summary": "Riepilogo",
     "N/A": "N/A",
     "delete": "Sei sicuro di voler eliminare il tuo <1>percorso di pagamento {{type}}</1> con <1>ID {{id}}</1>?",

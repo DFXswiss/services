@@ -49,7 +49,8 @@
     "Create support ticket": "Créer un ticket de support",
     "View file": "Voir le fichier",
     "Edit": "Modifier",
-    "Set default": "Définir par défaut"
+    "Set default": "Définir par défaut",
+    "Generate PDF": "Générer PDF"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -620,6 +621,8 @@
     "Recipient not found": "Bénéficiaire non trouvé",
 
     "Route": "Route",
+    "Open CryptoPay Stickers": "Autocollants Open CryptoPay",
+    "External IDs (comma separated)": "IDs externes (séparés par des virgules)",
     "Summary": "Résumé",
     "N/A": "N/A",
     "delete": "Êtes-vous sûr de vouloir supprimer votre <1>itinéraire de paiement {{type}}</1> avec l’<1>ID {{id}}</1>?",
