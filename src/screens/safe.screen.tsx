@@ -1,8 +1,9 @@
-import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import { ButtonGroup } from 'src/components/safe/button-group';
 import { PriceChart } from 'src/components/safe/chart';
+import { DepositWithdraw } from 'src/components/safe/deposit-withdraw';
 import { Portfolio } from 'src/components/safe/portfolio';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
@@ -35,7 +36,7 @@ export default function SafeScreen(): JSX.Element {
       ) : !isInitialized ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
-        <div className="flex flex-col w-full gap-4">
+        <StyledVerticalStack full gap={10} className="p-4">
           <div className="shadow-card rounded-xl">
             <div id="chart-timeline" className="relative">
               <div className="p-2 gap-2 flex flex-col items-start">
@@ -71,7 +72,8 @@ export default function SafeScreen(): JSX.Element {
             </div>
           </div>
           <Portfolio portfolio={portfolio} currency={currency} isLoading={isLoadingPortfolio} />
-        </div>
+          <DepositWithdraw />
+        </StyledVerticalStack>
       )}
     </Layout>
   );
