@@ -274,7 +274,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
       get,
       put,
     }),
-    [availableLanguages, language, languageToLocale, store],
+    [availableLanguages, countries, language, languageToLocale, currency, store, processingKycData, infoBanner],
   );
 
   return <SettingsContext.Provider value={context}>{props.children}</SettingsContext.Provider>;
