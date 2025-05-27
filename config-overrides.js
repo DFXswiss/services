@@ -32,6 +32,16 @@ module.exports = function override(config, env) {
       : undefined),
   };
 
+  if (process.env.REACT_APP_PUBLIC_URL && process.env.CUSTOM_CHUNK_PATH) {
+    const cssPlugin = config.plugins.find((plugin) => plugin.constructor.name === 'MiniCssExtractPlugin');
+    if (cssPlugin && cssPlugin.options) {
+      cssPlugin.options.chunkFilename = cssPlugin.options.chunkFilename.replace(
+        'static/css',
+        `v${widgetVersion}-chunks`,
+      );
+    }
+  }
+
   // add support for WASM
   const wasmExtensionRegExp = /\.wasm$/;
   config.resolve.extensions.push('.wasm');
