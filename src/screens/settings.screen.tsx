@@ -213,7 +213,7 @@ export default function SettingsScreen(): JSX.Element {
             bankAccounts && (
               <StyledVerticalStack full gap={2}>
                 <ActionableList
-                  label={translate('screens/iban', 'Bank Accounts')}
+                  label={translate('screens/iban', 'Your Bank Accounts')}
                   addButtonOnClick={() => setOverlayType(OverlayType.ADD_BANK_ACCOUNT)}
                   items={bankAccounts.map((account) => {
                     return {
