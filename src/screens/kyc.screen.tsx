@@ -66,7 +66,6 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import snsWebSdk from '@sumsub/websdk';
 import SumsubWebSdk from '@sumsub/websdk-react';
 import { RefObject, useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
@@ -74,7 +73,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { DefaultFileTypes } from 'src/config/file-types';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
-import { SumsubReviewAnswer } from 'src/dto/sumsub.dto';
+import { SumsubReviewAnswer, SumsubReviewRejectType } from 'src/dto/sumsub.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
@@ -1596,33 +1595,6 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
     if (message.type === IframeMessageType) isStepDone(message as KycStepBase) ? onDone() : onBack();
   }
 
-  useEffect(() => {
-    if (step.type === KycStepType.SUMSUB_VIDEO && step.session?.url) {
-      launchWebSdk(step.session.url);
-    }
-  }, [step]);
-
-  function launchWebSdk(accessToken: string) {
-    const snsWebSdkInstance = snsWebSdk
-      .init(accessToken, () => {
-        onError('Token expired');
-        return Promise.resolve('');
-      })
-      .withConf({
-        lang: lang.symbol.toLowerCase(),
-      })
-      .withOptions({ addViewportTag: false, adaptIframeHeight: true })
-      .on(
-        'idCheck.applicantStatus',
-        (payload: any) => payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.GREEN && setIsDone(true),
-      )
-      .on('idCheck.stepCompleted', (_payload) => setIsDone(true))
-      .on('idCheck.onError', ({ error }) => onError(error))
-      .build();
-
-    snsWebSdkInstance.launch('#sumsub-websdk-container');
-  }
-
   return step.session ? (
     error ? (
       <div>
@@ -1640,8 +1612,6 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
       </div>
     ) : isDone ? (
       <StyledLoadingSpinner size={SpinnerSize.LG} />
-    ) : step.type === KycStepType.SUMSUB_VIDEO ? (
-      <div id="sumsub-websdk-container" className="w-full"></div>
     ) : (
       <>
         {step.session.type === UrlType.TOKEN ? (
@@ -1654,15 +1624,24 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
             }}
             config={{ lang: lang.symbol.toLowerCase() }}
             onMessage={(type: string, payload: any) => {
-              if (type === 'idCheck.onApplicantStatusChanged') {
-                if (payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.RED) {
-                  setError(payload.reviewResult.moderationComment ?? 'Unknown error');
-                } else if (payload?.reviewStatus === 'completed') {
-                  setIsDone(true);
-                }
+              switch (type) {
+                case 'idCheck.onApplicantStatusChanged':
+                  if (
+                    payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.RED &&
+                    payload?.reviewResult?.reviewRejectType === SumsubReviewRejectType.FINAL
+                  ) {
+                    setError(payload.reviewResult.moderationComment ?? 'Unknown error');
+                  } else {
+                    payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.GREEN && setIsDone(true);
+                  }
+                  break;
+
+                case 'idCheck.onStepCompleted':
+                  step.type === KycStepType.SUMSUB_VIDEO && setIsDone(true);
+                  break;
               }
             }}
-            onError={({ error }) => setError(error)}
+            onError={({ error }: { error: string }) => setError(error)}
           />
         ) : (
           <iframe
