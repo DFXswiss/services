@@ -41,9 +41,10 @@ export default function StickersScreen(): JSX.Element {
     watch,
     control,
     setValue,
+    trigger,
     formState: { errors, isValid },
   } = useForm<FormData>({
-    mode: 'onTouched',
+    mode: 'all',
   });
 
   const data = useDebounce(watch(), 500);
@@ -51,10 +52,12 @@ export default function StickersScreen(): JSX.Element {
   useEffect(() => {
     const route = urlParams.get('route');
     const externalIds = urlParams.get('externalIds');
+    if (!route && !externalIds) return;
 
     if (route) setValue('route', route);
     if (externalIds) setValue('externalIds', externalIds);
 
+    trigger();
     setUrlParams(new URLSearchParams());
   }, []);
 
@@ -138,6 +141,7 @@ export default function StickersScreen(): JSX.Element {
               disabled={!validatedRecipient}
             />
             <StyledButton
+              type="submit"
               label={translate('general/actions', 'Download')}
               onClick={() => onSubmit(data)}
               width={StyledButtonWidth.FULL}

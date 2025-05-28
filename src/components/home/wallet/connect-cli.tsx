@@ -35,6 +35,7 @@ const Wallets = [
   WalletType.CLI_XMR,
   WalletType.CLI_ADA,
   WalletType.CLI_AR,
+  WalletType.CLI_SOL,
 ];
 
 const SupportedBlockchains = Wallets.map((w) => WalletBlockchains[w])
@@ -96,6 +97,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch, rootRef
     [WalletType.CLI_ETH]: /^0x\w{40}$/,
     [WalletType.CLI_ADA]: /^stake[a-z0-9]{54}$/,
     [WalletType.CLI_AR]: /^[\w-]{43}$/,
+    [WalletType.CLI_SOL]: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
   };
 
   function validateAddress(address: string): true | string {

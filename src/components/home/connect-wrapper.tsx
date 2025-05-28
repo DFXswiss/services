@@ -40,6 +40,7 @@ export function ConnectWrapper(props: ConnectProps): JSX.Element {
     case WalletType.CLI_ETH:
     case WalletType.CLI_ADA:
     case WalletType.CLI_AR:
+    case WalletType.CLI_SOL:
       return <ConnectCli {...props} />;
 
     case WalletType.DFX_TARO:
