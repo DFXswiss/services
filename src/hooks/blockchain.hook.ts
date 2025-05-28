@@ -56,6 +56,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.OPTIMISM]: 'Optimism',
       [Blockchain.POLYGON]: 'Polygon',
       [Blockchain.BASE]: 'Base',
+      [Blockchain.GNOSIS]: 'Gnosis',
       [Blockchain.HAQQ]: 'Haqq',
       [Blockchain.BITCOIN]: 'Bitcoin',
       [Blockchain.LIGHTNING]: 'Lightning',
@@ -63,6 +64,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.ARWEAVE]: 'Arweave',
       [Blockchain.CARDANO]: 'Cardano',
       [Blockchain.MONERO]: 'Monero',
+      [Blockchain.SOLANA]: 'Solana',
     },
   };
 

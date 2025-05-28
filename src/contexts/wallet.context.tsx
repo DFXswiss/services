@@ -20,6 +20,7 @@ export enum WalletType {
   CLI_ADA = 'CliAda',
   CLI_AR = 'CliAr',
   CLI_LN = 'CliLn',
+  CLI_SOL = 'CliSol',
   DFX_TARO = 'DfxTaro',
   WALLET_CONNECT = 'WalletConnect',
   CAKE = 'Cake',
@@ -59,6 +60,7 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
   ],
   [WalletType.CLI_ADA]: [Blockchain.CARDANO],
   [WalletType.CLI_AR]: [Blockchain.ARWEAVE],
+  [WalletType.CLI_SOL]: [Blockchain.SOLANA],
   [WalletType.DFX_TARO]: [Blockchain.LIGHTNING],
   [WalletType.WALLET_CONNECT]: [
     Blockchain.ETHEREUM,
