@@ -212,7 +212,7 @@ export function formatUnits(value: string, decimals = 18): string {
 }
 
 export function filenameDateFormat(): string {
-  return new Date().toISOString().split('.')[0].replace(/:/g, '-').replace(/T/g, '_').split('-').join('');
+  return new Date().toISOString().split('.')[0].replace(/:/g, '-').replace(/T/g, '_').replace(/-/g, '');
 }
 
 export function extractFilename(contentDisposition?: string): string | undefined {
