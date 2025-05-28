@@ -49,8 +49,7 @@
     "Create support ticket": "Crea un ticket di supporto",
     "View file": "Visualizza il file",
     "Edit": "Modifica",
-    "Set default": "Imposta predefinito",
-    "Generate PDF": "Genera PDF"
+    "Set default": "Imposta predefinito"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",

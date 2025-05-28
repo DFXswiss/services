@@ -211,9 +211,33 @@ export function formatUnits(value: string, decimals = 18): string {
   return `${integerPart.toString()}.${fractionalStr}`;
 }
 
-export function generateExportFileName(): string {
-  const [date, time] = new Date().toISOString().replace(/[-:]/g, '').split(/[T\.]/);
-  return `DFX_export_${date}_${time}.zip`;
+export function filenameDateFormat(): string {
+  return new Date().toISOString().split('.')[0].replace(/:/g, '-').replace(/T/g, '_').split('-').join('');
+}
+
+export function extractFilename(contentDisposition?: string): string | undefined {
+  if (!contentDisposition) return undefined;
+
+  const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+  if (filenameMatch && filenameMatch[1]) {
+    return filenameMatch[1].replace(/['"]/g, '').trim();
+  }
+
+  return undefined;
+}
+
+export function downloadFile(blob: Blob, headers: Record<string, string>, fallbackFilename: string): void {
+  const extractedFilename = extractFilename(headers['content-disposition']);
+  const filename = extractedFilename || fallbackFilename;
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 export enum FormatType {

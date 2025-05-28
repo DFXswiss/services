@@ -19,7 +19,7 @@ import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import useDebounce from 'src/hooks/debounce.hook';
-import { url } from 'src/util/utils';
+import { downloadFile, filenameDateFormat, url } from 'src/util/utils';
 
 interface FormData {
   route: string;
@@ -89,15 +89,13 @@ export default function StickersScreen(): JSX.Element {
 
     setIsGeneratingPdf(true);
     setErrorGeneratingPdf(undefined);
-    call<Blob>({
+    call<{ data: Blob; headers: Record<string, string> }>({
       url: `paymentLink/stickers?${queryString}`,
       method: 'GET',
       responseType: ResponseType.BLOB,
     })
-      .then((response: Blob) => {
-        const url = URL.createObjectURL(response);
-        window.open(url, '_blank');
-        URL.revokeObjectURL(url);
+      .then(({ data, headers }) => {
+        downloadFile(data, headers, `DFX_OCP_stickers_${filenameDateFormat()}.pdf`);
       })
       .catch((error: ApiError) => setErrorGeneratingPdf(error.message ?? 'Unknown Error'))
       .finally(() => setIsGeneratingPdf(false));
@@ -140,7 +138,7 @@ export default function StickersScreen(): JSX.Element {
               disabled={!validatedRecipient}
             />
             <StyledButton
-              label={translate('general/actions', 'Generate PDF')}
+              label={translate('general/actions', 'Download')}
               onClick={() => onSubmit(data)}
               width={StyledButtonWidth.FULL}
               disabled={!isValid}

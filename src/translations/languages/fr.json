@@ -49,8 +49,7 @@
     "Create support ticket": "Créer un ticket de support",
     "View file": "Voir le fichier",
     "Edit": "Modifier",
-    "Set default": "Définir par défaut",
-    "Generate PDF": "Générer PDF"
+    "Set default": "Définir par défaut"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",

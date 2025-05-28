@@ -49,8 +49,7 @@
     "Create support ticket": "Support-Ticket erstellen",
     "View file": "Datei anzeigen",
     "Edit": "Bearbeiten",
-    "Set default": "Standard setzen",
-    "Generate PDF": "PDF generieren"
+    "Set default": "Standard setzen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
