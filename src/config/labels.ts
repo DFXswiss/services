@@ -75,6 +75,7 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.VIDEO_IDENT_NEEDED]: 'Video identification required',
   [TransactionFailureReason.MISSING_LIQUIDITY]: 'Missing liquidity',
   [TransactionFailureReason.KYC_DATA_NEEDED]: 'KYC data needed',
+  [TransactionFailureReason.BANK_TX_NEEDED]: 'Bank transaction needed',
 };
 
 export const PaymentQuoteStatusLabels = {
