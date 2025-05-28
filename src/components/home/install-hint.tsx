@@ -28,6 +28,7 @@ export function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: 
     case WalletType.CLI_ETH:
     case WalletType.CLI_ADA:
     case WalletType.CLI_AR:
+    case WalletType.CLI_SOL:
     case WalletType.DFX_TARO:
     case WalletType.WALLET_CONNECT:
     case WalletType.CAKE:
