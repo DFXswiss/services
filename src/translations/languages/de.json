@@ -620,6 +620,8 @@
     "Recipient not found": "Empfänger nicht gefunden",
 
     "Route": "Route",
+    "Open CryptoPay Stickers": "Open CryptoPay Aufkleber",
+    "External IDs (comma separated)": "Externe IDs (kommagetrennt)",
     "Summary": "Zusammenfassung",
     "N/A": "N/A",
     "delete": "Bist Du sicher, dass Du Deine <1>{{type}}-Zahlungsroute</1> mit der <1>ID {{id}}</1> löschen möchtest?",

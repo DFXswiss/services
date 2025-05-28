@@ -6,7 +6,7 @@ import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
-import { generateExportFileName } from 'src/util/utils';
+import { downloadFile, filenameDateFormat } from 'src/util/utils';
 
 interface FormData {
   userDataIds: string;
@@ -31,19 +31,14 @@ export default function DownloadScreen(): JSX.Element {
     setIsLoading(true);
     setError(undefined);
 
-    call<Blob>({
+    call<{ data: Blob; headers: Record<string, string> }>({
       url: 'userData/download',
       method: 'POST',
       data: { userDataIds: data.userDataIds.split(',').map((id) => Number(id)) },
       responseType: ResponseType.BLOB,
     })
-      .then((blob) => {
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.href = url;
-        link.download = generateExportFileName();
-        link.click();
-        URL.revokeObjectURL(url);
+      .then(({ data, headers }) => {
+        downloadFile(data, headers, `DFX_export_${filenameDateFormat()}.zip`);
       })
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));

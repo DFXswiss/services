@@ -101,10 +101,11 @@ export default function InvoiceScreen(): JSX.Element {
       method: 'GET',
     })
       .then(({ currency }) => {
+        setErrorRecipient(undefined);
         setCurrency(currency.name);
         setValidatedRecipient(recipient);
       })
-      .catch((error: ApiError) => setErrorRecipient(error.message ?? 'Unknown Error'))
+      .catch((_) => setErrorRecipient(recipient))
       .finally(() => setIsLoadingRecipient(false));
   }
 
@@ -203,7 +204,7 @@ export default function InvoiceScreen(): JSX.Element {
                 <Trans
                   i18nKey="general/errors.invoice"
                   defaults="DFX does not recognize a recipient with the name <strong>{{recipient}}</strong>. This service can only be used for recipients who have an active account with DFX and are activated for the invoicing service. If you wish to register as a recipient with DFX, please contact support at <link>{{supportLink}}</link>."
-                  values={{ recipient: data?.recipient, supportLink: '' }}
+                  values={{ recipient: errorRecipient, supportLink: '' }}
                   components={{
                     strong: <strong />,
                     link: <StyledLink label={`app.dfx.swiss/support`} url={url({ path: '/support' })} dark />,
