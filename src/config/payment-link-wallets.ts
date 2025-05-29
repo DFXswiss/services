@@ -248,5 +248,6 @@ export const PaymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=io.muun.apollo',
     deepLink: 'muun:',
     semiCompatible: true,
+    transferMethod: Blockchain.LIGHTNING,
   },
 ];

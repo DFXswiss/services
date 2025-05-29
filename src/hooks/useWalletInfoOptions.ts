@@ -28,16 +28,12 @@ export const useWalletInfoOptions = (): WalletInfoOptions => {
     ? payRequest.transferAmounts.filter((ta) => ta.available).map((ta) => ta.method)
     : [];
 
-  const isC2BPaymentMethod = (method: Blockchain | C2BPaymentMethod | undefined): method is C2BPaymentMethod => {
-    if (!method) return false;
-    return Object.values(C2BPaymentMethod).includes(method as C2BPaymentMethod);
-  };
-
-  const isDisabled = (wallet: WalletInfo) => {
-    return isC2BPaymentMethod(wallet.transferMethod)
-      ? !transferMethods.includes(wallet.transferMethod)
-      : wallet.disabled;
-  };
+  const isDisabled = useCallback(
+    (wallet: WalletInfo) => {
+      return wallet.transferMethod ? !transferMethods.includes(wallet.transferMethod) : wallet.disabled;
+    },
+    [transferMethods],
+  );
 
   const semiCompatibleWallets = useMemo(() => {
     return PaymentLinkWallets.filter((wallet) => wallet.semiCompatible)
@@ -46,7 +42,7 @@ export const useWalletInfoOptions = (): WalletInfoOptions => {
   }, [isDisabled]);
 
   const getWalletByName = useCallback(
-    (id: string): WalletInfo | undefined => {
+    (id: WalletAppId): WalletInfo | undefined => {
       return [...recommendedWallets, ...otherWallets, ...semiCompatibleWallets].find((wallet) => wallet.id === id);
     },
     [recommendedWallets, otherWallets, semiCompatibleWallets],
