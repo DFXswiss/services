@@ -41,9 +41,11 @@ import {
   ExtendedPaymentLinkStatus,
   NoPaymentLinkPaymentStatus,
   PaymentStandard,
+  WalletAppId,
   WalletInfo,
 } from 'src/dto/payment-link.dto';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { useWalletInfoOptions } from 'src/hooks/useWalletInfoOptions';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { BadgeType } from 'src/util/app-store-badges';
 import { EvmUri } from 'src/util/evm-uri';
@@ -77,18 +79,16 @@ export default function PaymentLinkScreen(): JSX.Element {
     metaMaskInfo,
     metaMaskError,
     isMetaMaskPaying,
-    recommendedWallets,
-    otherWallets,
-    semiCompatibleWallets,
-    getWalletByName,
     paymentHasQuote,
     setSessionApiUrl,
     setPaymentIdentifier,
     fetchPayRequest,
     fetchPaymentIdentifier,
     payWithMetaMask,
-    getDeeplinkByWalletId,
   } = usePaymentLinkContext();
+
+  const { recommendedWallets, otherWallets, semiCompatibleWallets, getWalletByName, getDeeplinkByWalletId } =
+    useWalletInfoOptions();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [assetObject, setAssetObject] = useState<Asset>();
@@ -109,7 +109,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const selectedAsset = useWatch({ control, name: 'asset' });
 
   useEffect(() => {
-    const walletId = searchParams.get('wallet-id');
+    const walletId = searchParams.get('wallet-id') as WalletAppId;
 
     if (walletId) {
       setWalletData(getWalletByName(walletId));
@@ -176,7 +176,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     setIsTempUnavailable(false);
   };
 
-  const openWallet = async (walletId: string) => {
+  const openWallet = async (walletId: WalletAppId) => {
     try {
       setIsOpenWallet(true);
       const deeplink = await getDeeplinkByWalletId(walletId);
