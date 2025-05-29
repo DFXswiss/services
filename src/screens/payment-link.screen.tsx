@@ -530,7 +530,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                               onClick={() => openWallet(walletData.id)}
                               color={StyledButtonColor.BLUE}
                               width={StyledButtonWidth.FULL}
-                              hidden={!walletData.deepLink}
+                              hidden={!walletData.deepLink || !paymentIdentifier}
                               isLoading={isOpenWallet}
                               disabled={isTempUnavailable}
                             />
