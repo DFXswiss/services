@@ -45,7 +45,7 @@ import {
   WalletInfo,
 } from 'src/dto/payment-link.dto';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { useWalletInfoOptions } from 'src/hooks/useWalletInfoOptions';
+import { usePaymentLinkWallets } from 'src/hooks/payment-link-wallets.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { BadgeType } from 'src/util/app-store-badges';
 import { EvmUri } from 'src/util/evm-uri';
@@ -88,7 +88,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   } = usePaymentLinkContext();
 
   const { recommendedWallets, otherWallets, semiCompatibleWallets, getWalletByName, getDeeplinkByWalletId } =
-    useWalletInfoOptions();
+    usePaymentLinkWallets();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [assetObject, setAssetObject] = useState<Asset>();
