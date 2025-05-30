@@ -81,8 +81,35 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
   transferAmounts: TransferInfo[];
 }
 
+export enum WalletAppId {
+  CAKEWALLET = 'cakewallet',
+  FRANKENCOIN = 'frankencoin',
+  PHOENIX = 'phoenix',
+  WALLETOFSATOSHI = 'walletofsatoshi',
+  BTC_TARO = 'btctaro',
+  BITBANANA = 'bitbanana',
+  BITKIT = 'bitkit',
+  BLINK = 'blink',
+  BLITZWALLET = 'blitzwallet',
+  BLIXT = 'blixt',
+  BLUEWALLET = 'bluewallet',
+  BREEZ = 'breez',
+  COINCORNER = 'coincorner',
+  ELECTRUM = 'electrum',
+  LIFPAY = 'lifpay',
+  LIPAWALLET = 'lipawallet',
+  LNBITS = 'lnbits',
+  AQUA = 'aqua',
+  ONEKEY = 'onekey',
+  POUCHPH = 'pouchph',
+  ZEBEDEE = 'zebedee',
+  ZEUS = 'zeus',
+  BINANCEPAY = 'binancepay',
+  MUUN = 'muun',
+}
+
 export interface WalletInfo {
-  id: string;
+  id: WalletAppId;
   name: string;
   websiteUrl: string;
   iconUrl: string;

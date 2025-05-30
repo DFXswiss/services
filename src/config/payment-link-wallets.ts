@@ -1,6 +1,6 @@
 import { Blockchain } from '@dfx.swiss/react/dist/definitions/blockchain';
 import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
-import { C2BPaymentMethod, WalletInfo } from 'src/dto/payment-link.dto';
+import { C2BPaymentMethod, WalletAppId, WalletInfo } from 'src/dto/payment-link.dto';
 
 export const PaymentStandards = {
   [PaymentStandardType.OPEN_CRYPTO_PAY]: {
@@ -27,7 +27,7 @@ export const PaymentStandards = {
 export const PaymentLinkWallets: WalletInfo[] = [
   // ----------------------- RECOMMENDED WALLETS -----------------------
   {
-    id: 'cakewallet',
+    id: WalletAppId.CAKEWALLET,
     name: 'Cake Wallet',
     websiteUrl: 'https://cakewallet.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CakeWallet.webp',
@@ -37,7 +37,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     recommended: true,
   },
   {
-    id: 'frankencoin',
+    id: WalletAppId.FRANKENCOIN,
     name: 'Frankencoin',
     websiteUrl: 'https://frankencoin.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Frankencoin.webp',
@@ -46,7 +46,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     recommended: true,
   },
   {
-    id: 'phoenix',
+    id: WalletAppId.PHOENIX,
     name: 'Phoenix',
     websiteUrl: 'https://phoenix.acinq.co/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Phoenix.webp',
@@ -57,7 +57,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     transferMethod: Blockchain.LIGHTNING,
   },
   {
-    id: 'walletofsatoshi',
+    id: WalletAppId.WALLETOFSATOSHI,
     name: 'Wallet of Satoshi',
     websiteUrl: 'https://www.walletofsatoshi.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/WalletofSatoshi.webp',
@@ -68,7 +68,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     transferMethod: Blockchain.LIGHTNING,
   },
   {
-    id: 'btctaro',
+    id: WalletAppId.BTC_TARO,
     name: 'BtcTaro',
     websiteUrl: 'https://dfx.swiss/bitcoin.html',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCTaroDFX.webp',
@@ -80,7 +80,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
   },
   // ----------------------- OTHER COMPATIBLE WALLETS -----------------------
   {
-    id: 'bitbanana',
+    id: WalletAppId.BITBANANA,
     name: 'BitBanana',
     websiteUrl: 'https://bitbanana.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BitBanana.webp',
@@ -89,7 +89,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     transferMethod: Blockchain.LIGHTNING,
   },
   {
-    id: 'bitkit',
+    id: WalletAppId.BITKIT,
     name: 'Bitkit',
     websiteUrl: 'https://bitkit.to/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bitkit.webp',
@@ -98,7 +98,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=to.bitkit',
   },
   {
-    id: 'blink',
+    id: WalletAppId.BLINK,
     name: 'Blink',
     websiteUrl: 'https://de.blink.sv/',
     deepLink: 'lightning:',
@@ -108,7 +108,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     transferMethod: Blockchain.LIGHTNING,
   },
   {
-    id: 'blitzwallet',
+    id: WalletAppId.BLITZWALLET,
     name: 'Blitz Wallet',
     websiteUrl: 'https://blitz-wallet.com/',
     deepLink: 'lightning:',
@@ -117,14 +117,14 @@ export const PaymentLinkWallets: WalletInfo[] = [
     transferMethod: Blockchain.LIGHTNING,
   },
   {
-    id: 'blixt',
+    id: WalletAppId.BLIXT,
     name: 'Blixt',
     websiteUrl: 'https://blixtwallet.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blixt.webp',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.blixtwallet',
   },
   {
-    id: 'bluewallet',
+    id: WalletAppId.BLUEWALLET,
     name: 'BlueWallet',
     websiteUrl: 'https://bluewallet.io/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BlueWallet.webp',
@@ -134,7 +134,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     transferMethod: Blockchain.LIGHTNING,
   },
   {
-    id: 'breez',
+    id: WalletAppId.BREEZ,
     name: 'Breez',
     websiteUrl: 'https://breez.technology/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Breez.webp',
@@ -144,7 +144,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     transferMethod: Blockchain.LIGHTNING,
   },
   {
-    id: 'coincorner',
+    id: WalletAppId.COINCORNER,
     name: 'CoinCorner',
     websiteUrl: 'https://www.coincorner.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CoinCorner.webp',
@@ -154,14 +154,14 @@ export const PaymentLinkWallets: WalletInfo[] = [
     transferMethod: Blockchain.LIGHTNING,
   },
   {
-    id: 'electrum',
+    id: WalletAppId.ELECTRUM,
     name: 'Electrum',
     websiteUrl: 'https://electrum.org/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Electrum.webp',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=org.electrum.electrum',
   },
   {
-    id: 'lifpay',
+    id: WalletAppId.LIFPAY,
     name: 'LifPay',
     websiteUrl: 'https://lifpay.me/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LifPay.webp',
@@ -171,7 +171,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     transferMethod: Blockchain.LIGHTNING,
   },
   {
-    id: 'lipawallet',
+    id: WalletAppId.LIPAWALLET,
     name: 'LipaWallet',
     websiteUrl: 'https://lipa.swiss/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/lipawallet.webp',
@@ -179,14 +179,14 @@ export const PaymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.getlipa.wallet',
   },
   {
-    id: 'lnbits',
+    id: WalletAppId.LNBITS,
     name: 'LNbits',
     websiteUrl: 'https://lnbits.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LNbits.webp',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.lnbits.app',
   },
   {
-    id: 'aqua',
+    id: WalletAppId.AQUA,
     name: 'AQUA',
     websiteUrl: 'https://aquawallet.io/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/aqua.webp',
@@ -194,7 +194,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=io.aquawallet.android',
   },
   {
-    id: 'onekey',
+    id: WalletAppId.ONEKEY,
     name: 'OneKey',
     websiteUrl: 'https://onekey.so/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/OneKey.webp',
@@ -202,7 +202,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=so.onekey.app.wallet',
   },
   {
-    id: 'pouchph',
+    id: WalletAppId.POUCHPH,
     name: 'PouchPH',
     websiteUrl: 'https://pouch.ph/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Pouchph.webp',
@@ -211,7 +211,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=pouch.ph',
   },
   {
-    id: 'zebedee',
+    id: WalletAppId.ZEBEDEE,
     name: 'ZEBEDEE',
     websiteUrl: 'https://zbd.gg/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/ZEBEDEE.webp',
@@ -221,7 +221,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     transferMethod: Blockchain.LIGHTNING,
   },
   {
-    id: 'zeus',
+    id: WalletAppId.ZEUS,
     name: 'Zeus',
     websiteUrl: 'https://zeusln.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Zeus.webp',
@@ -231,13 +231,23 @@ export const PaymentLinkWallets: WalletInfo[] = [
     transferMethod: Blockchain.LIGHTNING,
   },
   {
-    id: 'BinancePay',
+    id: WalletAppId.BINANCEPAY,
     name: 'Binance Pay',
     websiteUrl: 'https://www.binance.com/en/pay',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BinanceApp.webp',
     deepLink: 'bnc:',
     transferMethod: C2BPaymentMethod.BINANCE_PAY,
     semiCompatible: true,
-    disabled: true,
+  },
+  {
+    id: WalletAppId.MUUN,
+    name: 'Muun',
+    websiteUrl: 'https://muun.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Muun.webp',
+    appStoreUrl: 'https://apps.apple.com/us/app/muun-wallet/id1482037683',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=io.muun.apollo',
+    deepLink: 'muun:',
+    semiCompatible: true,
+    transferMethod: Blockchain.LIGHTNING,
   },
 ];

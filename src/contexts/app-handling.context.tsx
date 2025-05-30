@@ -369,7 +369,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       if (redirectUri) {
         const uri = getRedirectUri(redirectUri, params);
         storeRedirectUri.remove();
-        (window as Window).location = uri;
+        setTimeout(() => ((window as Window).location = uri), 2000);
       }
     }
 
