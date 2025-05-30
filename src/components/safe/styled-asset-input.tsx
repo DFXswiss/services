@@ -1,4 +1,12 @@
-import { AssetIconVariant, DfxAssetIcon, DfxIcon, IconSize, IconVariant } from '@dfx.swiss/react-components';
+import {
+  AssetIconSize,
+  AssetIconVariant,
+  DfxAssetIcon,
+  DfxIcon,
+  IconColor,
+  IconSize,
+  IconVariant,
+} from '@dfx.swiss/react-components';
 import { ControlProps } from '@dfx.swiss/react-components/dist/stories/form/Form';
 import { forwardRef, HTMLInputTypeAttribute, RefObject, useEffect, useRef, useState } from 'react';
 import { Controller } from 'react-hook-form';
@@ -7,7 +15,7 @@ import { formatCurrency } from 'src/util/utils';
 export interface StyledAssetInputProps extends ControlProps {
   type?: HTMLInputTypeAttribute;
   placeholder?: string;
-  maxButtonClick?: () => void;
+  maxValue?: string;
   forceError?: boolean;
   forceErrorMessage?: string;
   autocomplete?: string;
@@ -15,6 +23,8 @@ export interface StyledAssetInputProps extends ControlProps {
   fiatCurrency?: string;
   coloredBackground?: boolean;
   assetSelector?: React.ReactNode;
+  onMaxButtonClick?: () => void;
+  onAmountChange?: () => void;
 }
 
 export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputProps>(
@@ -29,7 +39,9 @@ export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputPro
       error,
       type = 'text',
       placeholder,
-      maxButtonClick,
+      maxValue,
+      onMaxButtonClick,
+      onAmountChange,
       forceError = false,
       forceErrorMessage,
       fiatRate,
@@ -50,20 +62,20 @@ export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputPro
                 coloredBackground ? 'bg-dfxGray-300/75' : 'border-0.5 border-dfxGray-500'
               }`}
             >
-              <label
-                hidden={!label}
-                className="text-start leading-none text-base w-full font-semibold text-dfxBlue-800"
-              >
+              <label hidden={!label} className="text-start leading-none text-sm w-full font-semibold text-dfxBlue-800">
                 {label}
               </label>
               <div className="w-full flex flex-row items-center gap-4">
-                <div className="flex flex-col w-full">
+                <div className="flex-[3_1_9rem]">
                   <input
                     style={{ backgroundColor: 'transparent' }}
                     className="text-lg text-dfxBlue-800 font-normal rounded-md border-none w-full focus:outline-none pl-1"
                     type="number"
                     inputMode="decimal"
-                    onChange={(value: any) => onChange(value.target.value)}
+                    onChange={(value: any) => {
+                      onChange(value.target.value);
+                      onAmountChange?.();
+                    }}
                     placeholder={placeholder}
                     value={value ?? ''}
                     disabled={disabled}
@@ -74,15 +86,19 @@ export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputPro
                   />
                 </div>
 
-                {maxButtonClick && (
-                  <div className="text-dfxBlue-800 text-xs font-medium hover:bg-dfxGray-500 border border-dfxGray-500 shadow-sm h-min rounded-[0.5rem] p-1 flex justify-center items-center">
-                    <button type="button" onClick={maxButtonClick} className="px-1 hover:text-dfxRed-200">
-                      MAX
-                    </button>
+                <div className="flex-[1_0_9rem] flex flex-col gap-2">
+                  {assetSelector}{' '}
+                  <div className="flex flex-row items-center justify-end gap-2">
+                    <p className="text-xs text-dfxBlue-800 font-medium">{maxValue}</p>
+                    {maxValue && (
+                      <div className="text-dfxBlue-800 text-xs font-medium hover:bg-dfxGray-500 border border-dfxGray-500 shadow-sm py-1 w-12 h-min rounded-[0.5rem] flex justify-center items-center">
+                        <button type="button" onClick={onMaxButtonClick} className="px-1 hover:text-dfxRed-200">
+                          MAX
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-
-                {assetSelector}
+                </div>
               </div>
               {fiatRate && (
                 <div className="text-sm text-dfxGray-700 leading-none">
@@ -102,7 +118,11 @@ export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputPro
   },
 );
 
-export interface AssetDropdownProps<T> extends ControlProps {
+export interface StyledDropdownProps<T> extends ControlProps {
+  labelIcon?: IconVariant;
+  placeholder?: string;
+  full?: boolean;
+  smallLabel?: boolean;
   items: T[];
   labelFunc: (item: T) => string;
   balanceFunc?: (item: T) => string;
@@ -111,19 +131,20 @@ export interface AssetDropdownProps<T> extends ControlProps {
   assetIconFunc?: (item: T) => AssetIconVariant;
   rootRef?: RefObject<HTMLElement>;
   forceEnable?: boolean;
-  showSelectedValue?: boolean;
-  placeholder?: string;
-  placeholderDescription?: string;
+  hideBalanceWhenClosed?: boolean;
 }
 
-export function AssetDropdown<T>({
+export default function StyledDropdown<T>({
+  label,
+  labelIcon,
   control,
   name,
   rules,
   disabled,
   items,
   placeholder,
-  placeholderDescription,
+  full,
+  smallLabel,
   labelFunc,
   balanceFunc,
   descriptionFunc,
@@ -131,13 +152,19 @@ export function AssetDropdown<T>({
   assetIconFunc,
   rootRef,
   forceEnable,
-  showSelectedValue = false,
+  hideBalanceWhenClosed,
   error,
   ...props
-}: AssetDropdownProps<T>) {
+}: StyledDropdownProps<T>) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
   const [isOpen, setIsOpen] = useState(false);
+
+  let buttonClasses = 'flex justify-between border border-dfxGray-500 px-4 py-2 shadow-sm w-full h-[58px]';
+
+  isOpen ? (buttonClasses += ' rounded-x rounded-t bg-dfxGray-400/50') : (buttonClasses += ' rounded');
+
   const isDisabled = disabled || (items.length <= 1 && !forceEnable);
 
   useEffect(() => {
@@ -168,52 +195,74 @@ export function AssetDropdown<T>({
   return (
     <Controller
       control={control}
-      name={name}
-      rules={rules}
       render={({ field: { onChange, onBlur, value } }) => (
-        <div className="relative">
+        <div className={`relative ${full ? 'w-full' : ''}`}>
+          {label && (
+            <div className="flex items-center ml-3.5 mb-2.5">
+              {labelIcon !== undefined && <DfxIcon icon={labelIcon} size={IconSize.SM} color={IconColor.BLUE} />}
+
+              <label
+                className={`text-dfxBlue-800 ${smallLabel ? 'text-sm' : 'text-base'} font-semibold ${
+                  labelIcon ? 'pl-3.5' : ''
+                }`}
+              >
+                {label}
+              </label>
+            </div>
+          )}
           <button
             ref={buttonRef}
+            id="dropDownButton"
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className={`flex justify-between items-center border border-dfxGray-500 rounded ${
-              showSelectedValue ? 'px-3.5 py-2.5 w-[180px]' : 'px-2 py-1'
-            } shadow-sm hover:bg-dfxGray-400/30 ${isOpen ? 'bg-dfxGray-400/50' : ''}`}
+            className={buttonClasses}
             onBlur={onBlur}
             disabled={isDisabled}
             {...props}
           >
-            {showSelectedValue ? (
-              <>
-                <div className="flex flex-row gap-2.5 items-center">
-                  {value != null && assetIconFunc && <DfxAssetIcon asset={assetIconFunc(value)} />}
-                  <div className="flex flex-col gap-1.5 justify-between text-left">
-                    <span className="text-dfxBlue-800 leading-none font-semibold flex justify-between">
-                      <p className="line-clamp-1">{value !== undefined ? labelFunc(value) : placeholder || 'Select'}</p>
+            <div className="flex flex-row gap-3 items-center w-full h-full">
+              {value != null && assetIconFunc && <DfxAssetIcon asset={assetIconFunc(value)} size={AssetIconSize.LG} />}
+              <div className="flex flex-col gap-1 justify-between text-left w-full pt-0.5">
+                {value === undefined ? (
+                  <p className="text-dfxGray-600 drop-shadow-none py-[0.25rem]">{placeholder}</p>
+                ) : (
+                  <>
+                    <span
+                      className={`${
+                        error ? 'text-dfxRed-100' : 'text-dfxBlue-800'
+                      } leading-none font-semibold flex justify-between ${
+                        !descriptionFunc && !assetIconFunc ? 'py-[0.25rem]' : ''
+                      }`}
+                    >
+                      <p className="line-clamp-1 pb-0.5">{labelFunc(value)}</p>
+                      {balanceFunc && !hideBalanceWhenClosed && <p>{balanceFunc(value)}</p>}
                     </span>
                     {descriptionFunc && (
-                      <span className="text-dfxGray-800 text-xs h-min leading-none flex justify-between">
-                        <p className="line-clamp-1">
-                          {value ? descriptionFunc(value) : placeholderDescription || 'Select a token'}
-                        </p>
+                      <span className="text-dfxGray-800 text-xs h-min leading-tight flex justify-between">
+                        <p className="pb-0.5 line-clamp-1 leading-tight">{descriptionFunc(value)}</p>
+                        {priceFunc && <p>{priceFunc(value)}</p>}
                       </span>
                     )}
-                  </div>
-                </div>
-                <DfxIcon icon={isOpen ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE} size={IconSize.SM} />
-              </>
-            ) : (
-              <DfxIcon icon={isOpen ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE} size={IconSize.LG} />
+                  </>
+                )}
+              </div>
+            </div>
+
+            {!isDisabled && (
+              <div className="place-self-center">
+                <DfxIcon icon={isOpen ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE} size={IconSize.LG} />
+              </div>
             )}
           </button>
 
           {isOpen && (
             <div
               ref={dropdownRef}
-              className="absolute bg-white rounded-b border-x border-b border-dfxGray-500 right-0 w-[180px] z-10 overflow-y-auto max-h-[15rem] mt-1"
+              className="absolute bg-white rounded-b border-x border-b border-dfxGray-500 w-full z-10 overflow-y-auto max-h-[15rem]"
             >
               {items.map((item, index) => {
                 const isSelected = value !== undefined && JSON.stringify(value) === JSON.stringify(item);
+
                 return (
                   <button
                     key={index}
@@ -222,20 +271,24 @@ export function AssetDropdown<T>({
                       onChange(item);
                       setIsOpen(false);
                     }}
-                    className={`flex flex-col gap-2 justify-between text-left w-full hover:bg-dfxGray-400 px-3.5 py-3 ${
+                    className={`flex flex-col gap-2 justify-between text-left w-full hover:bg-dfxGray-400 px-3.5 py-2.5 ${
                       isSelected ? 'bg-dfxGray-400/50' : ''
                     }`}
                   >
-                    <div className="flex flex-row gap-2.5 items-center w-full">
-                      {assetIconFunc && <DfxAssetIcon asset={assetIconFunc(item)} />}
-                      <div className="flex flex-col gap-1.5 justify-between text-left w-full">
-                        <span className="text-dfxBlue-800 leading-none font-semibold flex justify-between">
-                          <p className="line-clamp-1">{labelFunc(item)}</p>
+                    <div className="flex flex-row gap-3 items-center w-full">
+                      {assetIconFunc && <DfxAssetIcon asset={assetIconFunc(item)} size={AssetIconSize.LG} />}
+                      <div className="flex flex-col gap-1 justify-between text-left w-full">
+                        <span
+                          className={`text-dfxBlue-800 leading-none font-semibold flex justify-between ${
+                            !descriptionFunc && !assetIconFunc ? 'py-[0.25rem]' : ''
+                          }`}
+                        >
+                          {labelFunc(item)}
                           {balanceFunc && <p>{balanceFunc(item)}</p>}
                         </span>
                         {descriptionFunc && (
                           <span className="text-dfxGray-800 text-xs h-min leading-none flex justify-between">
-                            <p className="line-clamp-1">{descriptionFunc(item)}</p>
+                            {descriptionFunc(item)}
                             {priceFunc && <p>{priceFunc(item)}</p>}
                           </span>
                         )}
@@ -246,8 +299,12 @@ export function AssetDropdown<T>({
               })}
             </div>
           )}
+
+          {error && <p className="text-start text-sm text-dfxRed-100 pl-3">{error?.message}</p>}
         </div>
       )}
+      name={name}
+      rules={rules}
     />
   );
 }

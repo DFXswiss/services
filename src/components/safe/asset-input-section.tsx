@@ -1,18 +1,23 @@
 import { Asset, Fiat } from '@dfx.swiss/react';
 import { AssetIconVariant } from '@dfx.swiss/react-components';
-import React from 'react';
-import { useFormContext } from 'react-hook-form';
-import { AssetDropdown, StyledAssetInput } from './styled-asset-input';
+import React, { useCallback, useMemo } from 'react';
+import { RegisterOptions, useFormContext } from 'react-hook-form';
+import StyledDropdown, { StyledAssetInput } from './styled-asset-input';
 
 interface AssetInputSectionProps {
   name: string;
-  label: string;
+  label?: string;
   placeholder: string;
   isColoredBackground?: boolean;
   availableItems: Asset[] | Fiat[];
-  handleMaxButtonClick?: () => void;
-  selectedCurrency?: Fiat;
-  fiatRate?: number;
+  selectedItem?: Asset | Fiat;
+  exchangeRate?: number;
+  amountRules?: RegisterOptions;
+  assetRules?: RegisterOptions;
+  hidden?: boolean;
+  balanceFunc?: (asset: Asset) => string;
+  onMaxButtonClick?: (value: number) => void;
+  onAmountChange?: () => void;
 }
 
 export const AssetInputSection: React.FC<AssetInputSectionProps> = ({
@@ -21,11 +26,32 @@ export const AssetInputSection: React.FC<AssetInputSectionProps> = ({
   placeholder,
   isColoredBackground = false,
   availableItems,
-  handleMaxButtonClick,
-  selectedCurrency,
-  fiatRate,
+  selectedItem,
+  exchangeRate,
+  amountRules,
+  assetRules,
+  hidden = false,
+  balanceFunc,
+  onMaxButtonClick,
+  onAmountChange,
 }) => {
   const { control } = useFormContext();
+
+  if (hidden) return null;
+
+  const isAsset = (item: Asset | Fiat): item is Asset => 'chainId' in item;
+
+  const maxValue = useMemo(() => {
+    if (!selectedItem || !balanceFunc) return undefined;
+    return isAsset(selectedItem) ? balanceFunc(selectedItem) : undefined;
+  }, [selectedItem, balanceFunc]);
+
+  const handleMaxButtonClick = useCallback(() => {
+    if (maxValue && onMaxButtonClick) {
+      const value = parseFloat(maxValue);
+      if (!isNaN(value)) onMaxButtonClick(value);
+    }
+  }, [maxValue, onMaxButtonClick]);
 
   return (
     <StyledAssetInput
@@ -34,20 +60,21 @@ export const AssetInputSection: React.FC<AssetInputSectionProps> = ({
       label={label}
       placeholder={placeholder}
       coloredBackground={isColoredBackground}
-      maxButtonClick={handleMaxButtonClick}
-      fiatRate={fiatRate}
-      fiatCurrency={selectedCurrency?.name}
+      rules={amountRules}
+      maxValue={maxValue ? `${maxValue} ${selectedItem?.name}` : undefined}
+      onMaxButtonClick={handleMaxButtonClick}
+      onAmountChange={onAmountChange}
+      // fiatRate={exchangeRate} // TODO: Handle fiat rate display
+      // fiatCurrency={selectedItem?.name} // TODO: Handle fiat currency display
       assetSelector={
-        <AssetDropdown<any>
+        <StyledDropdown<Asset | Fiat>
           control={control}
           name={name}
           items={availableItems}
           labelFunc={(item) => item.name}
-          descriptionFunc={(item) => item.description ?? item.name}
-          balanceFunc={(_item) => (1.2).toFixed(2)} // TODO: Replace with actual balance
-          priceFunc={(_item) => (1.3).toFixed(2)} // TODO: Replace with actual price
+          descriptionFunc={(item: any) => item.description ?? item.name}
           assetIconFunc={(item) => item.name as AssetIconVariant}
-          showSelectedValue={true}
+          rules={assetRules}
         />
       }
     />
