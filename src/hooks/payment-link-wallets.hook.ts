@@ -3,9 +3,9 @@ import { useCallback, useMemo } from 'react';
 import { PaymentLinkWallets } from 'src/config/payment-link-wallets';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import { C2BPaymentMethod, WalletAppId, WalletInfo } from 'src/dto/payment-link.dto';
-import { fetchJson } from 'src/util/utils';
+import { fetchJson, url } from 'src/util/utils';
 
-interface WalletInfoOptions {
+interface PaymentLinkWalletsProps {
   recommendedWallets: WalletInfo[];
   otherWallets: WalletInfo[];
   semiCompatibleWallets: WalletInfo[];
@@ -13,7 +13,7 @@ interface WalletInfoOptions {
   getDeeplinkByWalletId: (id: WalletAppId) => Promise<string | undefined>;
 }
 
-export const useWalletInfoOptions = (): WalletInfoOptions => {
+export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   const { paymentIdentifier, payRequest, paymentHasQuote } = usePaymentLinkContext();
 
   const recommendedWallets = useMemo(() => {
@@ -53,9 +53,12 @@ export const useWalletInfoOptions = (): WalletInfoOptions => {
   ): Promise<T | undefined> => {
     if (!paymentHasQuote(payRequest)) return undefined;
     const transferAmount = payRequest.transferAmounts.find((ta) => ta.method === method);
-    const asset = transferAmount?.assets[0].asset;
-    const url = `${payRequest.callback}?quote=${payRequest.quote.id}&method=${method}&asset=${asset}`;
-    return await fetchJson<T>(url);
+    const asset = transferAmount?.assets[0].asset ?? '';
+    const callbackUrl = url({
+      base: payRequest.callback,
+      params: new URLSearchParams({ quote: payRequest.quote.id, method: method.toString(), asset }),
+    });
+    return await fetchJson<T>(callbackUrl);
   };
 
   const getDeeplinkByTransferMethod = async (wallet: WalletInfo) => {
