@@ -1,9 +1,20 @@
-import { Asset, Blockchain, Fiat, FiatPaymentMethod, useAuthContext, useBuy, useUserContext } from '@dfx.swiss/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Asset,
+  BankAccount,
+  Blockchain,
+  Fiat,
+  FiatPaymentMethod,
+  useAuthContext,
+  useBuy,
+  useUserContext,
+} from '@dfx.swiss/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { UseFormSetValue } from 'react-hook-form';
 import { addressLabel } from 'src/config/labels';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { AssetBalance } from 'src/contexts/balance.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { deepEqual } from 'src/util/utils';
 import { useAppParams } from './app-params.hook';
 import { useBlockchain } from './blockchain.hook';
 import { useTxHelper } from './tx-helper.hook';
@@ -14,6 +25,28 @@ export enum OrderType {
   BUY = 'buy',
   SELL = 'sell',
   SWAP = 'swap',
+}
+
+export enum Side {
+  TO = 'To',
+  FROM = 'From',
+}
+
+export interface OrderFormData {
+  fromAsset: Fiat | Asset;
+  toAsset: Fiat | Asset;
+  fromAssetAmount?: string;
+  toAssetAmount?: string;
+  paymentMethod?: FiatPaymentMethod;
+  bankAccount?: BankAccount;
+  address?: Address;
+}
+
+interface OrderPaymentInfo {
+  type: string;
+  orderId: number;
+  status: string;
+  paymentInfo: any;
 }
 
 // TODO: Add Address to packages?
@@ -29,9 +62,17 @@ export interface UseOrderResult {
   isSwap?: boolean;
   addressItems: Address[];
   cryptoBalances: AssetBalance[];
+  paymentInfo?: OrderPaymentInfo;
+  isFetchingPaymentInfo: boolean;
+  lastEditedFieldRef: React.MutableRefObject<Side>;
   setSelectedAddress: (address?: Address) => void;
   getAvailableCurrencies: (paymentMethod?: FiatPaymentMethod) => Fiat[];
   getAvailablePaymentMethods: (targetAsset?: Asset) => FiatPaymentMethod[];
+  handlePaymentInfoFetch: (
+    debouncedData: OrderFormData,
+    onFetchPaymentInfo: <T>(data: OrderFormData) => Promise<T>,
+    setValue: UseFormSetValue<OrderFormData>,
+  ) => void;
 }
 
 export interface UseOrderOptions {
@@ -52,6 +93,11 @@ export function useOrder({ orderType, fromAssets, toAssets }: UseOrderOptions): 
 
   const [selectedAddress, setSelectedAddress] = useState<Address>();
   const [cryptoBalances, setCryptoBalances] = useState<AssetBalance[]>([]);
+  const [paymentInfo, setPaymentInfo] = useState<OrderPaymentInfo>();
+  const [isFetchingPaymentInfo, setIsFetchingPaymentInfo] = useState(false);
+
+  const lastEditedFieldRef = useRef<Side>(Side.FROM);
+  const lastFetchedDataRef = useRef<OrderFormData | null>(null);
 
   const isBuy = useMemo(() => orderType === OrderType.BUY, [orderType]);
   const isSell = useMemo(() => orderType === OrderType.SELL, [orderType]);
@@ -114,6 +160,59 @@ export function useOrder({ orderType, fromAssets, toAssets }: UseOrderOptions): 
       : [];
   }, [session, toAssets, fromAssets, orderType, availableBlockchains, translate]);
 
+  const handlePaymentInfoFetch = useCallback(
+    (
+      debouncedData: OrderFormData,
+      onFetchPaymentInfo: <T>(data: OrderFormData) => Promise<T>,
+      setValue: UseFormSetValue<OrderFormData>,
+    ) => {
+      let isRunning = true;
+
+      const orderIsValid =
+        debouncedData &&
+        (debouncedData.fromAssetAmount || debouncedData.toAssetAmount) &&
+        debouncedData.fromAsset &&
+        debouncedData.toAsset;
+
+      const editedFrom = lastEditedFieldRef.current === Side.FROM;
+      const validatedOrderForm = orderIsValid && {
+        ...debouncedData,
+        fromAssetAmount: editedFrom ? debouncedData.fromAssetAmount : undefined,
+        toAssetAmount: !editedFrom ? debouncedData.toAssetAmount : undefined,
+      };
+
+      if (deepEqual(validatedOrderForm, lastFetchedDataRef.current)) return;
+
+      setPaymentInfo(undefined);
+      if (!validatedOrderForm) return;
+
+      setIsFetchingPaymentInfo(true);
+      lastFetchedDataRef.current = validatedOrderForm;
+      onFetchPaymentInfo<OrderPaymentInfo>(validatedOrderForm)
+        .then((paymentInfo) => {
+          if (isRunning && paymentInfo) {
+            setPaymentInfo(paymentInfo);
+            !editedFrom && setValue('fromAssetAmount', paymentInfo.paymentInfo.amount);
+            editedFrom && setValue('toAssetAmount', paymentInfo.paymentInfo.estimatedAmount);
+          }
+        })
+        .catch((error) => {
+          if (isRunning) {
+            console.error('Failed to fetch payment info:', error);
+            !editedFrom && setValue('fromAssetAmount', undefined);
+            editedFrom && setValue('toAssetAmount', undefined);
+            lastFetchedDataRef.current = null;
+          }
+        })
+        .finally(() => isRunning && setIsFetchingPaymentInfo(false));
+
+      return () => {
+        isRunning = false;
+      };
+    },
+    [],
+  );
+
   return useMemo(
     () => ({
       isBuy, // TODO: Refactor - do we really need isBuy, isSell, isSwap, can we simplify this?
@@ -121,10 +220,24 @@ export function useOrder({ orderType, fromAssets, toAssets }: UseOrderOptions): 
       isSwap,
       addressItems,
       cryptoBalances,
+      paymentInfo,
+      isFetchingPaymentInfo,
+      lastEditedFieldRef,
       setSelectedAddress,
       getAvailableCurrencies,
       getAvailablePaymentMethods,
+      handlePaymentInfoFetch,
     }),
-    [orderType, addressItems, cryptoBalances, setSelectedAddress, getAvailableCurrencies, getAvailablePaymentMethods],
+    [
+      orderType,
+      addressItems,
+      cryptoBalances,
+      paymentInfo,
+      isFetchingPaymentInfo,
+      setSelectedAddress,
+      getAvailableCurrencies,
+      getAvailablePaymentMethods,
+      handlePaymentInfoFetch,
+    ],
   );
 }

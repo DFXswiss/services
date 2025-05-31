@@ -2,6 +2,7 @@ import { Asset, Fiat } from '@dfx.swiss/react';
 import { AssetIconVariant } from '@dfx.swiss/react-components';
 import React, { useCallback, useMemo } from 'react';
 import { RegisterOptions, useFormContext } from 'react-hook-form';
+import { useSettingsContext } from 'src/contexts/settings.context';
 import StyledDropdown, { StyledAssetInput } from './styled-asset-input';
 
 interface AssetInputSectionProps {
@@ -36,6 +37,9 @@ export const AssetInputSection: React.FC<AssetInputSectionProps> = ({
   onAmountChange,
 }) => {
   const { control } = useFormContext();
+  const { translate } = useSettingsContext();
+
+  const rootRef = React.useRef<HTMLDivElement>(null);
 
   if (hidden) return null;
 
@@ -68,12 +72,14 @@ export const AssetInputSection: React.FC<AssetInputSectionProps> = ({
       // fiatCurrency={selectedItem?.name} // TODO: Handle fiat currency display
       assetSelector={
         <StyledDropdown<Asset | Fiat>
+          rootRef={rootRef}
           control={control}
           name={name}
           items={availableItems}
           labelFunc={(item) => item.name}
           descriptionFunc={(item: any) => item.description ?? item.name}
           assetIconFunc={(item) => item.name as AssetIconVariant}
+          placeholder={translate('general/actions', 'Select') + '...'}
           rules={assetRules}
         />
       }

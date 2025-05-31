@@ -58,7 +58,7 @@ export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputPro
         render={({ field: { onChange, value } }) => {
           return (
             <div
-              className={`flex flex-col gap-1 justify-center w-full rounded-md p-4 ${
+              className={`flex flex-col gap-2 justify-center w-full rounded-md p-4 ${
                 coloredBackground ? 'bg-dfxGray-300/75' : 'border-0.5 border-dfxGray-500'
               }`}
             >
@@ -86,25 +86,25 @@ export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputPro
                   />
                 </div>
 
-                <div className="flex-[1_0_9rem] flex flex-col gap-2">
-                  {assetSelector}{' '}
-                  <div className="flex flex-row items-center justify-end gap-2">
-                    <p className="text-xs text-dfxBlue-800 font-medium">{maxValue}</p>
-                    {maxValue && (
-                      <div className="text-dfxBlue-800 text-xs font-medium hover:bg-dfxGray-500 border border-dfxGray-500 shadow-sm py-1 w-12 h-min rounded-[0.5rem] flex justify-center items-center">
-                        <button type="button" onClick={onMaxButtonClick} className="px-1 hover:text-dfxRed-200">
-                          MAX
-                        </button>
-                      </div>
-                    )}
+                <div className="flex-[1_0_9rem]">{assetSelector}</div>
+              </div>
+              <div className="flex flex-row items-center justify-between">
+                {fiatRate && (
+                  <div className="text-sm text-dfxGray-700 leading-none">
+                    {`~ ${formatCurrency((value ?? 0) * fiatRate, 2, 2)} ${fiatCurrency}`}
                   </div>
+                )}
+                <div className="flex flex-row items-center justify-end gap-2 w-full">
+                  <p className="text-xs text-dfxBlue-800 font-medium">{maxValue}</p>
+                  {maxValue && (
+                    <div className="text-dfxBlue-800 text-xs font-medium hover:bg-dfxGray-500 border border-dfxGray-500 shadow-sm py-1 w-12 h-min rounded-[0.5rem] flex justify-center items-center">
+                      <button type="button" onClick={onMaxButtonClick} className="px-1 hover:text-dfxRed-200">
+                        MAX
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-              {fiatRate && (
-                <div className="text-sm text-dfxGray-700 leading-none">
-                  {`~ ${formatCurrency((value ?? 0) * fiatRate, 2, 2)} ${fiatCurrency}`}
-                </div>
-              )}
               {(forceErrorMessage || error) && (
                 <p className="text-start text-sm text-dfxRed-100 pl-3">{forceErrorMessage ?? error?.message}</p>
               )}
