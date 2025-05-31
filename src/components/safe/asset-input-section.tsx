@@ -60,7 +60,7 @@ export const AssetInputSection: React.FC<AssetInputSectionProps> = ({
   return (
     <StyledAssetInput
       type="number"
-      name={`${name}Amount`}
+      name={name.replace('Asset', 'Amount')}
       label={label}
       placeholder={placeholder}
       coloredBackground={isColoredBackground}

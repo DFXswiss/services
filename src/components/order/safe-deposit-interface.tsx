@@ -42,10 +42,10 @@ export const SafeDepositInterface = () => {
       method: 'POST',
       data: {
         type: CustodyOrderType.DEPOSIT,
-        sourceAsset: data.fromAsset.name,
-        targetAsset: data.toAsset.name,
-        sourceAmount: data.fromAssetAmount ? Number(data.fromAssetAmount) : undefined,
-        targetAmount: data.toAssetAmount ? Number(data.toAssetAmount) : undefined,
+        sourceAsset: data.sourceAsset.name,
+        targetAsset: data.targetAsset.name,
+        sourceAmount: data.sourceAmount ? Number(data.sourceAmount) : undefined,
+        targetAmount: data.targetAmount ? Number(data.targetAmount) : undefined,
         paymentMethod: data.paymentMethod,
       },
     });
@@ -59,8 +59,8 @@ export const SafeDepositInterface = () => {
     <OrderInterface
       orderType={OrderType.BUY}
       header={translate('screens/safe', 'Deposit')}
-      fromAssets={availableCurrencies}
-      toAssets={availableAssets}
+      sourceAssets={availableCurrencies}
+      targetAssets={availableAssets}
       fromInputLabel={translate('screens/safe', 'Deposit Amount')}
       toInputLabel={translate('screens/safe', 'Receive Amount')}
       onConfirm={onConfirm}

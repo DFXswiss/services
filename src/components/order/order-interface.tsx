@@ -38,8 +38,8 @@ interface Address {
 interface OrderInterfaceProps {
   orderType: OrderType;
   header?: string;
-  fromAssets?: Asset[] | Fiat[];
-  toAssets?: Asset[] | Fiat[];
+  sourceAssets?: Asset[] | Fiat[];
+  targetAssets?: Asset[] | Fiat[];
   fromInputLabel?: string;
   toInputLabel?: string;
   defaultValues?: Partial<OrderFormData>;
@@ -53,8 +53,8 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
     header,
     fromInputLabel,
     toInputLabel,
-    fromAssets,
-    toAssets,
+    sourceAssets,
+    targetAssets,
     defaultValues,
     onFetchPaymentInfo,
     onConfirm,
@@ -79,8 +79,8 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
     handlePaymentInfoFetch,
   } = useOrder({
     orderType,
-    fromAssets,
-    toAssets,
+    sourceAssets,
+    targetAssets,
   });
 
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -98,8 +98,8 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
   const debouncedData = useDebounce(data, 500);
 
   const availablePaymentMethods: FiatPaymentMethod[] = useMemo(
-    () => getAvailablePaymentMethods(data.toAsset as Asset),
-    [getAvailablePaymentMethods, data.toAsset],
+    () => getAvailablePaymentMethods(data.targetAsset as Asset),
+    [getAvailablePaymentMethods, data.targetAsset],
   );
 
   const availableCurrencies: Fiat[] = useMemo(
@@ -122,12 +122,12 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
 
   useEffect(() => {
     const defaultCurrency = getDefaultCurrency(availableCurrencies) ?? (availableCurrencies && availableCurrencies[0]);
-    if (isBuy && fromAssets?.length) {
-      setValue('fromAsset', fromAssets.find((c) => c.name === defaultCurrency?.name) ?? fromAssets[0]);
-    } else if (isSell && toAssets?.length) {
-      setValue('toAsset', toAssets.find((c) => c.name === defaultCurrency?.name) ?? toAssets[0]);
+    if (isBuy && sourceAssets?.length) {
+      setValue('sourceAsset', sourceAssets.find((c) => c.name === defaultCurrency?.name) ?? sourceAssets[0]);
+    } else if (isSell && targetAssets?.length) {
+      setValue('targetAsset', targetAssets.find((c) => c.name === defaultCurrency?.name) ?? targetAssets[0]);
     }
-  }, [fromAssets, toAssets, availableCurrencies, orderType, setValue, getDefaultCurrency]);
+  }, [sourceAssets, targetAssets, availableCurrencies, orderType, setValue, getDefaultCurrency]);
 
   useEffect(() => {
     if (debouncedData) handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue);
@@ -142,8 +142,8 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
   );
 
   const rules = Utils.createRules({
-    fromAssetAmount: Validations.Required,
-    fromAsset: Validations.Required,
+    sourceAmount: Validations.Required,
+    sourceAsset: Validations.Required,
     // TODO (later): Complete rules
   });
 
@@ -153,16 +153,16 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
         <StyledVerticalStack gap={2} full>
           <div className="px-2 text-dfxBlue-500 text-left text-lg font-semibold">{header}</div>
           <AssetInputSection
-            name="fromAsset"
+            name="sourceAsset"
             label={fromInputLabel}
             placeholder="0.00"
-            availableItems={fromAssets ?? []}
-            selectedItem={data.fromAsset}
-            assetRules={rules.fromAsset}
-            amountRules={rules.fromAssetAmount}
+            availableItems={sourceAssets ?? []}
+            selectedItem={data.sourceAsset}
+            assetRules={rules.sourceAsset}
+            amountRules={rules.sourceAmount}
             balanceFunc={findCryptoBalanceString}
             onMaxButtonClick={(value) => {
-              setValue('fromAssetAmount', value.toString(), { shouldTouch: true });
+              setValue('sourceAmount', value.toString(), { shouldTouch: true });
               lastEditedFieldRef.current = Side.FROM;
             }}
             onAmountChange={() => (lastEditedFieldRef.current = Side.FROM)}
@@ -181,17 +181,17 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
           )}
           <div className={`flex ${isSell ? 'flex-col-reverse' : 'flex-col'} w-full gap-2`}>
             <AssetInputSection
-              name="toAsset"
+              name="targetAsset"
               label={toInputLabel}
               placeholder="0.00"
               isColoredBackground
-              availableItems={toAssets ?? []}
-              selectedItem={data.toAsset}
-              assetRules={rules.toAsset}
-              amountRules={rules.toAssetAmount}
+              availableItems={targetAssets ?? []}
+              selectedItem={data.targetAsset}
+              assetRules={rules.targetAsset}
+              amountRules={rules.targetAmount}
               balanceFunc={findCryptoBalanceString}
               onMaxButtonClick={(value) => {
-                setValue('toAssetAmount', value.toString(), { shouldTouch: true });
+                setValue('targetAmount', value.toString(), { shouldTouch: true });
                 lastEditedFieldRef.current = Side.TO;
               }}
               onAmountChange={() => (lastEditedFieldRef.current = Side.TO)}

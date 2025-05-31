@@ -33,10 +33,10 @@ export enum Side {
 }
 
 export interface OrderFormData {
-  fromAsset: Fiat | Asset;
-  toAsset: Fiat | Asset;
-  fromAssetAmount?: string;
-  toAssetAmount?: string;
+  sourceAsset: Fiat | Asset;
+  targetAsset: Fiat | Asset;
+  sourceAmount?: string;
+  targetAmount?: string;
   paymentMethod?: FiatPaymentMethod;
   bankAccount?: BankAccount;
   address?: Address;
@@ -77,11 +77,11 @@ export interface UseOrderResult {
 
 export interface UseOrderOptions {
   orderType: OrderType;
-  fromAssets?: Asset[] | Fiat[];
-  toAssets?: Asset[] | Fiat[];
+  sourceAssets?: Asset[] | Fiat[];
+  targetAssets?: Asset[] | Fiat[];
 }
 
-export function useOrder({ orderType, fromAssets, toAssets }: UseOrderOptions): UseOrderResult {
+export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOptions): UseOrderResult {
   const { currencies } = useBuy();
   const { user } = useUserContext();
   const { session } = useAuthContext();
@@ -104,15 +104,15 @@ export function useOrder({ orderType, fromAssets, toAssets }: UseOrderOptions): 
   const isSwap = useMemo(() => orderType === OrderType.SWAP, [orderType]);
 
   useEffect(() => {
-    let cryptoAssets = isBuy ? toAssets ?? [] : isSell ? fromAssets ?? [] : [];
-    cryptoAssets ??= isSwap ? (fromAssets ?? []).concat(toAssets ?? []) : [];
+    let cryptoAssets = isBuy ? targetAssets ?? [] : isSell ? sourceAssets ?? [] : [];
+    cryptoAssets ??= isSwap ? (sourceAssets ?? []).concat(targetAssets ?? []) : [];
 
     if (cryptoAssets && selectedAddress?.address) {
       getBalances(cryptoAssets as Asset[], selectedAddress.address, selectedAddress.chain).then((balances) =>
         setCryptoBalances(balances ?? []),
       );
     }
-  }, [isBuy, isSell, isSwap, toAssets, fromAssets, getBalances, selectedAddress]);
+  }, [isBuy, isSell, isSwap, targetAssets, sourceAssets, getBalances, selectedAddress]);
 
   const getAvailablePaymentMethods = useCallback(
     (targetAsset?: Asset): FiatPaymentMethod[] => {
@@ -142,7 +142,7 @@ export function useOrder({ orderType, fromAssets, toAssets }: UseOrderOptions): 
   );
 
   const addressItems: Address[] = useMemo(() => {
-    const cryptoAssets = (isBuy ? toAssets ?? [] : fromAssets ?? []) as Asset[];
+    const cryptoAssets = (isBuy ? targetAssets ?? [] : sourceAssets ?? []) as Asset[];
     const blockchains = availableBlockchains?.filter((b) => cryptoAssets?.some((a) => a.blockchain === b));
 
     return session?.address && blockchains?.length
@@ -158,7 +158,7 @@ export function useOrder({ orderType, fromAssets, toAssets }: UseOrderOptions): 
           },
         ]
       : [];
-  }, [session, toAssets, fromAssets, orderType, availableBlockchains, translate]);
+  }, [session, targetAssets, sourceAssets, orderType, availableBlockchains, translate]);
 
   const handlePaymentInfoFetch = useCallback(
     (
@@ -170,15 +170,15 @@ export function useOrder({ orderType, fromAssets, toAssets }: UseOrderOptions): 
 
       const orderIsValid =
         debouncedData &&
-        (debouncedData.fromAssetAmount || debouncedData.toAssetAmount) &&
-        debouncedData.fromAsset &&
-        debouncedData.toAsset;
+        (Number(debouncedData.sourceAmount) > 0 || Number(debouncedData.targetAmount) > 0) &&
+        debouncedData.sourceAsset &&
+        debouncedData.targetAsset;
 
       const editedFrom = lastEditedFieldRef.current === Side.FROM;
       const validatedOrderForm = orderIsValid && {
         ...debouncedData,
-        fromAssetAmount: editedFrom ? debouncedData.fromAssetAmount : undefined,
-        toAssetAmount: !editedFrom ? debouncedData.toAssetAmount : undefined,
+        sourceAmount: editedFrom ? debouncedData.sourceAmount : undefined,
+        targetAmount: !editedFrom ? debouncedData.targetAmount : undefined,
       };
 
       if (deepEqual(validatedOrderForm, lastFetchedDataRef.current)) return;
@@ -192,15 +192,15 @@ export function useOrder({ orderType, fromAssets, toAssets }: UseOrderOptions): 
         .then((paymentInfo) => {
           if (isRunning && paymentInfo) {
             setPaymentInfo(paymentInfo);
-            !editedFrom && setValue('fromAssetAmount', paymentInfo.paymentInfo.amount);
-            editedFrom && setValue('toAssetAmount', paymentInfo.paymentInfo.estimatedAmount);
+            !editedFrom && setValue('sourceAmount', paymentInfo.paymentInfo.amount);
+            editedFrom && setValue('targetAmount', paymentInfo.paymentInfo.estimatedAmount);
           }
         })
         .catch((error) => {
           if (isRunning) {
             console.error('Failed to fetch payment info:', error);
-            !editedFrom && setValue('fromAssetAmount', undefined);
-            editedFrom && setValue('toAssetAmount', undefined);
+            !editedFrom && setValue('sourceAmount', undefined);
+            editedFrom && setValue('targetAmount', undefined);
             lastFetchedDataRef.current = null;
           }
         })
