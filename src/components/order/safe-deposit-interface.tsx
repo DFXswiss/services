@@ -1,7 +1,8 @@
 import { Blockchain, useApi, useAssetContext, useBuy } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { OrderFormData, OrderInterface, OrderType } from './order-interface';
+import { OrderType } from 'src/hooks/order.hook';
+import { OrderFormData, OrderInterface } from './order-interface';
 
 const AVAILABLE_CURRENCIES = ['EUR', 'CHF'];
 const AVAILABLE_ASSETS = ['dEURO', 'ZCHF', 'ETH'];

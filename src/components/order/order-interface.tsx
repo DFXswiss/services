@@ -5,9 +5,7 @@ import {
   Fiat,
   FiatPaymentMethod,
   useAuthContext,
-  useBuy,
   useFiat,
-  useUserContext,
   Utils,
   Validations,
 } from '@dfx.swiss/react';
@@ -18,46 +16,23 @@ import {
   StyledDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { addressLabel, PaymentMethodDescriptions, PaymentMethodLabels } from 'src/config/labels';
+import { PaymentMethodDescriptions, PaymentMethodLabels } from 'src/config/labels';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import useDebounce from 'src/hooks/debounce.hook';
 
-import { AssetBalance } from 'src/contexts/balance.context';
 import { useWindowContext } from 'src/contexts/window.context';
-import { useBlockchain } from 'src/hooks/blockchain.hook';
-import { useTxHelper } from 'src/hooks/tx-helper.hook';
+import { OrderType, useOrder } from 'src/hooks/order.hook';
 import { blankedAddress, deepEqual } from 'src/util/utils';
 import { AssetInputSection } from '../safe/asset-input-section';
 import { BankAccountSelector } from '../safe/bank-account-selector';
 
-const EMBEDDED_WALLET = 'CakeWallet';
-
 enum Side {
   TO = 'To',
   FROM = 'From',
-}
-
-interface OrderPaymentInfo {
-  type: string;
-  orderId: number;
-  status: string;
-  paymentInfo: any;
-}
-
-export enum OrderType {
-  BUY = 'buy',
-  SELL = 'sell',
-  SWAP = 'swap',
-}
-
-interface Address {
-  address: string;
-  label: string;
-  chain?: Blockchain;
 }
 
 export interface OrderFormData {
@@ -68,6 +43,19 @@ export interface OrderFormData {
   paymentMethod?: FiatPaymentMethod;
   bankAccount?: BankAccount;
   address?: Address;
+}
+
+interface OrderPaymentInfo {
+  type: string;
+  orderId: number;
+  status: string;
+  paymentInfo: any;
+}
+
+interface Address {
+  address: string;
+  label: string;
+  chain?: Blockchain;
 }
 
 interface OrderInterfaceProps {
@@ -94,28 +82,32 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
     onFetchPaymentInfo,
     onConfirm,
   } = props;
-  const { currencies } = useBuy();
-  const { user } = useUserContext();
   const { width } = useWindowContext();
   const { session } = useAuthContext();
-  const { getBalances } = useTxHelper();
   const { getDefaultCurrency } = useFiat();
   const { translate } = useSettingsContext();
-  const { toString: blockchainToString } = useBlockchain();
-  const { isEmbedded, isDfxHosted, isInitialized } = useAppHandlingContext();
-  const { wallet, blockchain, hideTargetSelection, availableBlockchains } = useAppParams();
+  const { isInitialized } = useAppHandlingContext();
+  const { blockchain, hideTargetSelection } = useAppParams();
+  const {
+    isBuy,
+    isSell,
+    addressItems,
+    cryptoBalances,
+    setSelectedAddress,
+    getAvailableCurrencies,
+    getAvailablePaymentMethods,
+  } = useOrder({
+    orderType,
+    fromAssets,
+    toAssets,
+  });
 
-  const [paymentInfo, setPaymentInfo] = useState<any>();
-  const [cryptoBalances, setCryptoBalances] = useState<AssetBalance[]>();
+  const [paymentInfo, setPaymentInfo] = useState<OrderPaymentInfo>();
   const [isFetchingPaymentInfo, setIsFetchingPaymentInfo] = useState(false);
 
   const rootRef = React.useRef<HTMLDivElement>(null);
   const lastEditedFieldRef = useRef<Side>(Side.FROM);
   const lastFetchedDataRef = useRef<OrderFormData | null>(null);
-
-  const isBuy = useMemo(() => orderType === OrderType.BUY, [orderType]);
-  const isSell = useMemo(() => orderType === OrderType.SELL, [orderType]);
-  const isSwap = useMemo(() => orderType === OrderType.SWAP, [orderType]);
 
   const methods = useForm<OrderFormData>({ mode: 'onChange', defaultValues });
 
@@ -123,59 +115,23 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
     watch,
     control,
     setValue,
-    formState: { errors, isValid },
+    formState: { errors },
   } = methods;
 
   const data = watch();
   const debouncedData = useDebounce(data, 500);
 
-  const availablePaymentMethods: FiatPaymentMethod[] = useMemo(() => {
-    if (!isBuy) return [];
-
-    const pushCardPayment =
-      (isDfxHosted || !isEmbedded) &&
-      wallet !== EMBEDDED_WALLET &&
-      user?.activeAddress?.wallet !== EMBEDDED_WALLET &&
-      (!data.toAsset || (data.toAsset as Asset)?.cardBuyable);
-
-    return [FiatPaymentMethod.BANK, ...(pushCardPayment ? [FiatPaymentMethod.CARD] : [])];
-  }, [data.fromAsset, data.toAsset, isDfxHosted, isEmbedded, wallet, user, isBuy, orderType]);
-
-  const availableCurrencies: Fiat[] = useMemo(
-    () =>
-      currencies?.filter((c) =>
-        data.paymentMethod === FiatPaymentMethod.CARD
-          ? c.cardSellable
-          : data.paymentMethod === FiatPaymentMethod.INSTANT
-          ? c.instantSellable
-          : c.sellable,
-      ) ?? [],
-    [currencies, data.paymentMethod],
+  const availablePaymentMethods: FiatPaymentMethod[] = useMemo(
+    () => getAvailablePaymentMethods(data.toAsset as Asset),
+    [getAvailablePaymentMethods, data.toAsset],
   );
 
-  const cryptoAssets = useMemo(() => {
-    let assets = isBuy ? toAssets ?? [] : isSell ? fromAssets ?? [] : [];
-    assets ??= isSwap ? (fromAssets ?? []).concat(toAssets ?? []) : [];
-    return assets as Asset[];
-  }, [isBuy, isSell, isSwap, fromAssets, toAssets]);
+  const availableCurrencies: Fiat[] = useMemo(
+    () => getAvailableCurrencies(data.paymentMethod),
+    [getAvailableCurrencies, data.paymentMethod],
+  );
 
-  const addressItems: Address[] = useMemo(() => {
-    const blockchains = availableBlockchains?.filter((b) => cryptoAssets?.some((a) => a.blockchain === b));
-
-    return session?.address && blockchains?.length
-      ? [
-          ...blockchains.map((b) => ({
-            address: addressLabel(session),
-            label: blockchainToString(b),
-            chain: b,
-          })),
-          {
-            address: translate('screens/buy', 'Switch address'),
-            label: translate('screens/buy', 'Login with a different address'),
-          },
-        ]
-      : [];
-  }, [session, cryptoAssets, availableBlockchains, translate]);
+  useEffect(() => setSelectedAddress(data.address), [data.address]);
 
   useEffect(() => {
     availablePaymentMethods?.length && setValue('paymentMethod', availablePaymentMethods[0]);
@@ -188,6 +144,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
     }
   }, [isInitialized, session, addressItems, blockchain, setValue]);
 
+  // TODO: Simplify to only set fiat currencies
   useEffect(() => {
     const defaultCurrency = getDefaultCurrency(availableCurrencies) ?? (availableCurrencies && availableCurrencies[0]);
 
@@ -214,15 +171,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
     }
   }, [fromAssets, toAssets, availableCurrencies, orderType, setValue, getDefaultCurrency]);
 
-  useEffect(() => {
-    let cryptoAssets = isBuy ? toAssets ?? [] : isSell ? fromAssets ?? [] : [];
-    cryptoAssets ??= isSwap ? (fromAssets ?? []).concat(toAssets ?? []) : [];
-
-    cryptoAssets &&
-      data.address?.address &&
-      getBalances(cryptoAssets as Asset[], data.address.address, data.address.chain).then(setCryptoBalances);
-  }, [isBuy, isSell, isSwap, toAssets, fromAssets, data.address, getBalances]);
-
+  // TODO: Refactor into order.hook.ts
   useEffect(() => {
     let isRunning = true;
 
@@ -269,14 +218,13 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
     };
   }, [debouncedData, onFetchPaymentInfo]);
 
-  function findCryptoBalance(asset: Asset): number | undefined {
-    return cryptoBalances?.find((b) => b.asset.id === asset.id)?.amount;
-  }
-
-  function findCryptoBalanceString(asset: Asset): string {
-    const balance = findCryptoBalance(asset);
-    return balance != null ? Utils.formatAmountCrypto(balance) : '';
-  }
+  const findCryptoBalanceString: (asset: Asset) => string = useCallback(
+    (asset: Asset): string => {
+      const balance = cryptoBalances.find((b) => b.asset.id === asset.id)?.amount;
+      return balance != null ? Utils.formatAmountCrypto(balance) : '';
+    },
+    [cryptoBalances],
+  );
 
   const rules = Utils.createRules({
     fromAssetAmount: Validations.Required,
@@ -299,7 +247,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
               assetRules={rules.fromAsset}
               amountRules={rules.fromAssetAmount}
               balanceFunc={findCryptoBalanceString}
-              onMaxButtonClick={(value) => setValue('fromAssetAmount', value.toString())}
+              onMaxButtonClick={(value) => setValue('fromAssetAmount', value.toString(), { shouldTouch: true })}
               onAmountChange={() => (lastEditedFieldRef.current = Side.FROM)}
               // exchangeRate={} // TODO: Implement
             />
@@ -324,7 +272,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
               assetRules={rules.toAsset}
               amountRules={rules.toAssetAmount}
               balanceFunc={findCryptoBalanceString}
-              onMaxButtonClick={(value) => setValue('toAssetAmount', value.toString())}
+              onMaxButtonClick={(value) => setValue('toAssetAmount', value.toString(), { shouldTouch: true })}
               onAmountChange={() => (lastEditedFieldRef.current = Side.TO)}
               // exchangeRate={} // TODO: Implement
             />
