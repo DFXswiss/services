@@ -1,6 +1,7 @@
-import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
+import { SafeDepositInterface } from 'src/components/order/safe-deposit-interface';
 import { ButtonGroup } from 'src/components/safe/button-group';
 import { PriceChart } from 'src/components/safe/chart';
 import { Portfolio } from 'src/components/safe/portfolio';
@@ -27,7 +28,8 @@ export default function SafeScreen(): JSX.Element {
   const showChart = history.length > 1;
 
   return (
-    <Layout rootRef={rootRef} title={translate('screens/safe', 'My DFX Safe')}>
+    <Layout rootRef={rootRef} title={translate('screens/safe', 'My Safe')}>
+      {/* TODO: Add "DFX": My DFX Safe */}
       {error ? (
         <div>
           <ErrorHint message={error} />
@@ -35,7 +37,7 @@ export default function SafeScreen(): JSX.Element {
       ) : !isInitialized ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
-        <div className="flex flex-col w-full gap-4">
+        <StyledVerticalStack full gap={10} className="p-4">
           <div className="shadow-card rounded-xl">
             <div id="chart-timeline" className="relative">
               <div className="p-2 gap-2 flex flex-col items-start">
@@ -71,7 +73,8 @@ export default function SafeScreen(): JSX.Element {
             </div>
           </div>
           <Portfolio portfolio={portfolio} currency={currency} isLoading={isLoadingPortfolio} />
-        </div>
+          <SafeDepositInterface />
+        </StyledVerticalStack>
       )}
     </Layout>
   );
