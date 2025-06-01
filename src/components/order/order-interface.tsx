@@ -15,7 +15,7 @@ import {
   StyledDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { PaymentMethodDescriptions, PaymentMethodLabels } from 'src/config/labels';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
@@ -26,8 +26,8 @@ import useDebounce from 'src/hooks/debounce.hook';
 import { useWindowContext } from 'src/contexts/window.context';
 import { OrderFormData, OrderType, Side, useOrder } from 'src/hooks/order.hook';
 import { blankedAddress } from 'src/util/utils';
-import { AssetInputSection } from '../safe/asset-input-section';
-import { BankAccountSelector } from '../safe/bank-account-selector';
+import { AssetInput } from './asset-input';
+import { BankAccountSelector } from './bank-account-selector';
 
 interface Address {
   address: string;
@@ -84,6 +84,8 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
   });
 
   const rootRef = React.useRef<HTMLDivElement>(null);
+
+  const [bankAccountSelection, setBankAccountSelection] = useState(false);
 
   const methods = useForm<OrderFormData>({ mode: 'onChange', defaultValues });
 
@@ -152,7 +154,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
       <Form control={control} rules={rules} errors={errors} hasFormElement={false}>
         <StyledVerticalStack gap={2} full>
           <div className="px-2 text-dfxBlue-500 text-left text-lg font-semibold">{header}</div>
-          <AssetInputSection
+          <AssetInput
             name="sourceAsset"
             label={fromInputLabel}
             placeholder="0.00"
@@ -180,7 +182,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
             />
           )}
           <div className={`flex ${isSell ? 'flex-col-reverse' : 'flex-col'} w-full gap-2`}>
-            <AssetInputSection
+            <AssetInput
               name="targetAsset"
               label={toInputLabel}
               placeholder="0.00"
@@ -209,7 +211,17 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
               />
             )}
           </div>
-          <div className="flex-1 w-full">{isSell && <BankAccountSelector name="bankAccount" />}</div>
+          {isSell && (
+            <BankAccountSelector
+              value={data.bankAccount}
+              onChange={(account) => setValue('bankAccount', account)}
+              placeholder={translate('screens/sell', 'Add or select your IBAN')}
+              // TODO (later): connect bankAccountSelection back button
+              isModalOpen={bankAccountSelection}
+              onModalToggle={setBankAccountSelection}
+              className="left-0 right-0 px-4 top-4"
+            />
+          )}
           <div className="w-full">
             <StyledButton
               type="button"

@@ -3,9 +3,9 @@ import { AssetIconVariant } from '@dfx.swiss/react-components';
 import React, { useCallback, useMemo } from 'react';
 import { RegisterOptions, useFormContext } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import StyledDropdown, { StyledAssetInput } from './styled-asset-input';
+import StyledDropdown, { AssetInputControl } from './asset-input-control';
 
-interface AssetInputSectionProps {
+interface AssetInputProps {
   name: string;
   label?: string;
   placeholder: string;
@@ -21,7 +21,7 @@ interface AssetInputSectionProps {
   onAmountChange?: () => void;
 }
 
-export const AssetInputSection: React.FC<AssetInputSectionProps> = ({
+export const AssetInput: React.FC<AssetInputProps> = ({
   name,
   label,
   placeholder,
@@ -58,14 +58,14 @@ export const AssetInputSection: React.FC<AssetInputSectionProps> = ({
   }, [maxValue, onMaxButtonClick]);
 
   return (
-    <StyledAssetInput
+    <AssetInputControl
       type="number"
       name={name.replace('Asset', 'Amount')}
       label={label}
       placeholder={placeholder}
       coloredBackground={isColoredBackground}
       rules={amountRules}
-      maxValue={maxValue ? `${maxValue} ${selectedItem?.name}` : undefined}
+      maxValue={maxValue && Number(maxValue) > 0 ? `${maxValue} ${selectedItem?.name}` : undefined}
       onMaxButtonClick={handleMaxButtonClick}
       onAmountChange={onAmountChange}
       // fiatRate={exchangeRate} // TODO: Handle fiat rate display

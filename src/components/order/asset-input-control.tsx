@@ -12,7 +12,7 @@ import { forwardRef, HTMLInputTypeAttribute, RefObject, useEffect, useRef, useSt
 import { Controller } from 'react-hook-form';
 import { formatCurrency } from 'src/util/utils';
 
-export interface StyledAssetInputProps extends ControlProps {
+export interface AssetInputControlProps extends ControlProps {
   type?: HTMLInputTypeAttribute;
   placeholder?: string;
   maxValue?: string;
@@ -27,7 +27,7 @@ export interface StyledAssetInputProps extends ControlProps {
   onAmountChange?: () => void;
 }
 
-export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputProps>(
+export const AssetInputControl = forwardRef<HTMLInputElement, AssetInputControlProps>(
   (
     {
       control,
@@ -49,7 +49,7 @@ export const StyledAssetInput = forwardRef<HTMLInputElement, StyledAssetInputPro
       coloredBackground = false,
       assetSelector,
       ...props
-    }: StyledAssetInputProps,
+    }: AssetInputControlProps,
     ref,
   ) => {
     return (
