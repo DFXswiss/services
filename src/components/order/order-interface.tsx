@@ -16,7 +16,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { PaymentMethodDescriptions, PaymentMethodLabels } from 'src/config/labels';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -150,90 +150,92 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
   });
 
   return (
-    <FormProvider {...methods}>
-      <Form control={control} rules={rules} errors={errors} hasFormElement={false}>
-        <StyledVerticalStack gap={2} full>
-          <div className="px-2 text-dfxBlue-500 text-left text-lg font-semibold">{header}</div>
+    <Form control={control} rules={rules} errors={errors} hasFormElement={false}>
+      <StyledVerticalStack gap={2} full>
+        <div className="px-2 text-dfxBlue-500 text-left text-lg font-semibold">{header}</div>
+        <AssetInput
+          control={control}
+          name="sourceAsset"
+          label={fromInputLabel}
+          placeholder="0.00"
+          availableItems={sourceAssets ?? []}
+          selectedItem={data.sourceAsset}
+          assetRules={rules.sourceAsset}
+          amountRules={rules.sourceAmount}
+          balanceFunc={findCryptoBalanceString}
+          onMaxButtonClick={(value) => {
+            setValue('sourceAmount', value.toString(), { shouldTouch: true });
+            lastEditedFieldRef.current = Side.FROM;
+          }}
+          onAmountChange={() => (lastEditedFieldRef.current = Side.FROM)}
+          // exchangeRate={} // TODO: Implement
+        />
+        {isBuy && (
+          <StyledDropdown<FiatPaymentMethod>
+            control={control}
+            rootRef={rootRef}
+            name="paymentMethod"
+            placeholder={translate('general/actions', 'Select') + '...'}
+            items={availablePaymentMethods ?? []}
+            labelFunc={(item) => translate('screens/payment', PaymentMethodLabels[item])}
+            descriptionFunc={(item) => translate('screens/payment', PaymentMethodDescriptions[item])}
+            full
+          />
+        )}
+        <div className={`flex ${isSell ? 'flex-col-reverse' : 'flex-col'} w-full gap-2`}>
           <AssetInput
-            name="sourceAsset"
-            label={fromInputLabel}
+            control={control}
+            name="targetAsset"
+            label={toInputLabel}
             placeholder="0.00"
-            availableItems={sourceAssets ?? []}
-            selectedItem={data.sourceAsset}
-            assetRules={rules.sourceAsset}
-            amountRules={rules.sourceAmount}
+            isColoredBackground
+            availableItems={targetAssets ?? []}
+            selectedItem={data.targetAsset}
+            assetRules={rules.targetAsset}
+            amountRules={rules.targetAmount}
             balanceFunc={findCryptoBalanceString}
             onMaxButtonClick={(value) => {
-              setValue('sourceAmount', value.toString(), { shouldTouch: true });
-              lastEditedFieldRef.current = Side.FROM;
+              setValue('targetAmount', value.toString(), { shouldTouch: true });
+              lastEditedFieldRef.current = Side.TO;
             }}
-            onAmountChange={() => (lastEditedFieldRef.current = Side.FROM)}
+            onAmountChange={() => (lastEditedFieldRef.current = Side.TO)}
             // exchangeRate={} // TODO: Implement
           />
-          {isBuy && (
-            <StyledDropdown<FiatPaymentMethod>
+          {!hideTargetSelection && (
+            <StyledDropdown<Address>
+              control={control}
               rootRef={rootRef}
-              name="paymentMethod"
-              placeholder={translate('general/actions', 'Select') + '...'}
-              items={availablePaymentMethods ?? []}
-              labelFunc={(item) => translate('screens/payment', PaymentMethodLabels[item])}
-              descriptionFunc={(item) => translate('screens/payment', PaymentMethodDescriptions[item])}
+              name="address"
+              items={addressItems}
+              labelFunc={(item) => blankedAddress(item.address, { width })}
+              descriptionFunc={(item) => item.label}
               full
+              forceEnable
             />
           )}
-          <div className={`flex ${isSell ? 'flex-col-reverse' : 'flex-col'} w-full gap-2`}>
-            <AssetInput
-              name="targetAsset"
-              label={toInputLabel}
-              placeholder="0.00"
-              isColoredBackground
-              availableItems={targetAssets ?? []}
-              selectedItem={data.targetAsset}
-              assetRules={rules.targetAsset}
-              amountRules={rules.targetAmount}
-              balanceFunc={findCryptoBalanceString}
-              onMaxButtonClick={(value) => {
-                setValue('targetAmount', value.toString(), { shouldTouch: true });
-                lastEditedFieldRef.current = Side.TO;
-              }}
-              onAmountChange={() => (lastEditedFieldRef.current = Side.TO)}
-              // exchangeRate={} // TODO: Implement
-            />
-            {!hideTargetSelection && (
-              <StyledDropdown<Address>
-                rootRef={rootRef}
-                name="address"
-                items={addressItems}
-                labelFunc={(item) => blankedAddress(item.address, { width })}
-                descriptionFunc={(item) => item.label}
-                full
-                forceEnable
-              />
-            )}
-          </div>
-          {isSell && (
-            <BankAccountSelector
-              value={data.bankAccount}
-              onChange={(account) => setValue('bankAccount', account)}
-              placeholder={translate('screens/sell', 'Add or select your IBAN')}
-              // TODO (later): connect bankAccountSelection back button
-              isModalOpen={bankAccountSelection}
-              onModalToggle={setBankAccountSelection}
-              className="left-0 right-0 px-4 top-4"
-            />
-          )}
-          <div className="w-full">
-            <StyledButton
-              type="button"
-              isLoading={isFetchingPaymentInfo}
-              label={header ?? translate('general/actions', 'Next')}
-              width={StyledButtonWidth.FULL}
-              disabled={!paymentInfo}
-              onClick={() => onConfirm(paymentInfo)}
-            />
-          </div>
-        </StyledVerticalStack>
-      </Form>
-    </FormProvider>
+        </div>
+        {isSell && (
+          <BankAccountSelector
+            value={data.bankAccount}
+            onChange={(account) => setValue('bankAccount', account)}
+            placeholder={translate('screens/sell', 'Add or select your IBAN')}
+            // TODO (later): connect bankAccountSelection back button
+            isModalOpen={bankAccountSelection}
+            onModalToggle={setBankAccountSelection}
+            className="left-0 right-0 px-4 top-4"
+          />
+        )}
+        <div className="w-full">
+          <StyledButton
+            type="button"
+            isLoading={isFetchingPaymentInfo}
+            label={header ?? translate('general/actions', 'Next')}
+            width={StyledButtonWidth.FULL}
+            disabled={!paymentInfo}
+            onClick={() => onConfirm(paymentInfo)}
+          />
+        </div>
+      </StyledVerticalStack>
+    </Form>
   );
 };

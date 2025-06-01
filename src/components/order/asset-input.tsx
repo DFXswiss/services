@@ -1,11 +1,12 @@
 import { Asset, Fiat } from '@dfx.swiss/react';
 import { AssetIconVariant } from '@dfx.swiss/react-components';
 import React, { useCallback, useMemo } from 'react';
-import { RegisterOptions, useFormContext } from 'react-hook-form';
+import { Control, RegisterOptions } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import StyledDropdown, { AssetInputControl } from './asset-input-control';
 
 interface AssetInputProps {
+  control: Control<any>;
   name: string;
   label?: string;
   placeholder: string;
@@ -22,13 +23,13 @@ interface AssetInputProps {
 }
 
 export const AssetInput: React.FC<AssetInputProps> = ({
+  control,
   name,
   label,
   placeholder,
   isColoredBackground = false,
   availableItems,
   selectedItem,
-  exchangeRate,
   amountRules,
   assetRules,
   hidden = false,
@@ -36,7 +37,6 @@ export const AssetInput: React.FC<AssetInputProps> = ({
   onMaxButtonClick,
   onAmountChange,
 }) => {
-  const { control } = useFormContext();
   const { translate } = useSettingsContext();
 
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -59,6 +59,7 @@ export const AssetInput: React.FC<AssetInputProps> = ({
 
   return (
     <AssetInputControl
+      control={control}
       type="number"
       name={name.replace('Asset', 'Amount')}
       label={label}
@@ -68,8 +69,8 @@ export const AssetInput: React.FC<AssetInputProps> = ({
       maxValue={maxValue && Number(maxValue) > 0 ? `${maxValue} ${selectedItem?.name}` : undefined}
       onMaxButtonClick={handleMaxButtonClick}
       onAmountChange={onAmountChange}
-      // fiatRate={exchangeRate} // TODO: Handle fiat rate display
-      // fiatCurrency={selectedItem?.name} // TODO: Handle fiat currency display
+      // fiatRate={exchangeRate} // TODO (later): Handle fiat rate display
+      // fiatCurrency={selectedItem?.name} // TODO (later): Handle fiat currency display
       assetSelector={
         <StyledDropdown<Asset | Fiat>
           rootRef={rootRef}

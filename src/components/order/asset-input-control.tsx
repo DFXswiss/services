@@ -90,7 +90,7 @@ export const AssetInputControl = forwardRef<HTMLInputElement, AssetInputControlP
               </div>
               <div className="flex flex-row items-center justify-between">
                 {fiatRate && (
-                  <div className="text-sm text-dfxGray-700 leading-none">
+                  <div className="flex justify-start text-sm text-dfxGray-700 leading-none w-full">
                     {`~ ${formatCurrency((value ?? 0) * fiatRate, 2, 2)} ${fiatCurrency}`}
                   </div>
                 )}
