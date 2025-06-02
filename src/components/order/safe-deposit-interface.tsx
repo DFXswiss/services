@@ -64,6 +64,10 @@ export const SafeDepositInterface = () => {
       fromInputLabel={translate('screens/safe', 'Deposit Amount')}
       toInputLabel={translate('screens/safe', 'Receive Amount')}
       onConfirm={onConfirm}
+      onHandleNext={(paymentData) => {
+        // TODO: Call /confirm endpoint
+        console.log('Handling next with payment data:', paymentData);
+      }}
       onFetchPaymentInfo={onFetchPaymentInfo}
     />
   );

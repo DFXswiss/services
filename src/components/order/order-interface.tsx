@@ -18,6 +18,7 @@ import { useAppParams } from 'src/hooks/app-params.hook';
 import useDebounce from 'src/hooks/debounce.hook';
 
 import { useWindowContext } from 'src/contexts/window.context';
+import { OrderPaymentData } from 'src/dto/order.dto';
 import { OrderFormData, OrderType, Side, useOrder } from 'src/hooks/order.hook';
 import { blankedAddress } from 'src/util/utils';
 import { AssetInput } from './asset-input';
@@ -40,7 +41,7 @@ interface OrderInterfaceProps {
   defaultValues?: Partial<OrderFormData>;
   isHandlingNext?: boolean;
   onFetchPaymentInfo: <T>(data: OrderFormData) => Promise<T>;
-  onHandleNext?: () => void;
+  onHandleNext: (data: OrderPaymentData) => void;
   onConfirm: <T>(data: T) => Promise<void>;
 }
 
@@ -244,6 +245,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
         </div> */}
         <PaymentInfo
           className="pt-4"
+          orderType={orderType}
           paymentInfo={paymentInfo?.paymentInfo}
           paymentMethod={data?.paymentMethod}
           sourceAsset={data?.sourceAsset}
