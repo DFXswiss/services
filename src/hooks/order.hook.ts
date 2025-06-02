@@ -1,12 +1,15 @@
 import {
+  ApiError,
   Asset,
   BankAccount,
   Blockchain,
   Fiat,
   FiatPaymentMethod,
+  TransactionError,
   useAuthContext,
   useBuy,
   useUserContext,
+  Utils,
 } from '@dfx.swiss/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { UseFormSetValue } from 'react-hook-form';
@@ -17,6 +20,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { deepEqual } from 'src/util/utils';
 import { useAppParams } from './app-params.hook';
 import { useBlockchain } from './blockchain.hook';
+import { useNavigation } from './navigation.hook';
 import { useTxHelper } from './tx-helper.hook';
 
 const EMBEDDED_WALLET = 'CakeWallet';
@@ -40,6 +44,7 @@ export interface OrderFormData {
   paymentMethod?: FiatPaymentMethod;
   bankAccount?: BankAccount;
   address?: Address;
+  exactPrice?: boolean;
 }
 
 interface OrderPaymentInfo {
@@ -56,6 +61,13 @@ interface Address {
   chain?: Blockchain;
 }
 
+export interface AmountError {
+  key: string;
+  defaultValue: string;
+  interpolation?: Record<string, string | number> | undefined;
+  hideInfos: boolean;
+}
+
 export interface UseOrderResult {
   isBuy: boolean;
   isSell?: boolean;
@@ -65,6 +77,9 @@ export interface UseOrderResult {
   paymentInfo?: OrderPaymentInfo;
   isFetchingPaymentInfo: boolean;
   lastEditedFieldRef: React.MutableRefObject<Side>;
+  paymentInfoError?: string;
+  amountError?: AmountError;
+  kycError?: TransactionError;
   setSelectedAddress: (address?: Address) => void;
   getAvailableCurrencies: (paymentMethod?: FiatPaymentMethod) => Fiat[];
   getAvailablePaymentMethods: (targetAsset?: Asset) => FiatPaymentMethod[];
@@ -86,6 +101,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOpti
   const { user } = useUserContext();
   const { session } = useAuthContext();
   const { getBalances } = useTxHelper();
+  const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { toString: blockchainToString } = useBlockchain();
   const { isEmbedded, isDfxHosted } = useAppHandlingContext();
@@ -95,6 +111,9 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOpti
   const [cryptoBalances, setCryptoBalances] = useState<AssetBalance[]>([]);
   const [paymentInfo, setPaymentInfo] = useState<OrderPaymentInfo>();
   const [isFetchingPaymentInfo, setIsFetchingPaymentInfo] = useState(false);
+  const [paymentInfoError, setPaymentInfoError] = useState<string>();
+  const [amountError, setAmountError] = useState<AmountError>();
+  const [kycError, setKycError] = useState<TransactionError>();
 
   const lastEditedFieldRef = useRef<Side>(Side.FROM);
   const lastFetchedDataRef = useRef<OrderFormData | null>(null);
@@ -191,17 +210,29 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOpti
       onFetchPaymentInfo<OrderPaymentInfo>(validatedOrderForm)
         .then((paymentInfo) => {
           if (isRunning && paymentInfo) {
+            validateOrder(paymentInfo.paymentInfo); // TODO: validateOrder(paymentInfo)?
             setPaymentInfo(paymentInfo);
             !editedFrom && setValue('sourceAmount', paymentInfo.paymentInfo.amount);
             editedFrom && setValue('targetAmount', paymentInfo.paymentInfo.estimatedAmount);
+
+            // TODO (later): Load exact price buy, sell & swap
+            // if (paymentInfo) {
+            //   return onFetchPaymentInfo({ ...validatedOrderForm, exactPrice: true });
+            // }
           }
         })
-        .catch((error) => {
+        .catch((error: ApiError) => {
           if (isRunning) {
             console.error('Failed to fetch payment info:', error);
             !editedFrom && setValue('sourceAmount', undefined);
             editedFrom && setValue('targetAmount', undefined);
             lastFetchedDataRef.current = null;
+            if (error.statusCode === 400 && error.message === 'Ident data incomplete') {
+              navigate('/profile');
+            } else {
+              setPaymentInfo(undefined);
+              setPaymentInfoError(error.message ?? 'Unknown error');
+            }
           }
         })
         .finally(() => isRunning && setIsFetchingPaymentInfo(false));
@@ -213,6 +244,48 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOpti
     [],
   );
 
+  // TODO: Define uniform for buy, sell, swap & deposit order type
+  function validateOrder(order: any): void {
+    setAmountError(undefined);
+    setKycError(undefined);
+
+    switch (order.error) {
+      case TransactionError.AMOUNT_TOO_LOW:
+        setAmountError({
+          key: 'screens/payment',
+          defaultValue: 'Entered amount is below minimum deposit of {{amount}} {{currency}}',
+          interpolation: {
+            amount: Utils.formatAmount(order.minVolume), // TODO:formatAmountCrypto?
+            currency: order.currency.name, // TODO: order.asset, order.sourceAsset?
+          },
+          hideInfos: true,
+        });
+        return;
+
+      case TransactionError.AMOUNT_TOO_HIGH:
+        setAmountError({
+          key: 'screens/payment',
+          defaultValue: 'Entered amount is above maximum deposit of {{amount}} {{currency}}',
+          interpolation: {
+            amount: Utils.formatAmount(order.maxVolume), // TODO:formatAmountCrypto?
+            currency: order.currency.name, // TODO: order.asset, order.sourceAsset?
+          },
+          hideInfos: true,
+        });
+        return;
+
+      case TransactionError.LIMIT_EXCEEDED:
+      case TransactionError.KYC_REQUIRED:
+      case TransactionError.KYC_DATA_REQUIRED:
+      case TransactionError.KYC_REQUIRED_INSTANT:
+      case TransactionError.BANK_TRANSACTION_MISSING:
+      case TransactionError.VIDEO_IDENT_REQUIRED:
+      case TransactionError.NATIONALITY_NOT_ALLOWED:
+        setKycError(order.error);
+        return;
+    }
+  }
+
   return useMemo(
     () => ({
       isBuy, // TODO: Refactor - do we really need isBuy, isSell, isSwap, can we simplify this?
@@ -223,6 +296,9 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOpti
       paymentInfo,
       isFetchingPaymentInfo,
       lastEditedFieldRef,
+      paymentInfoError,
+      amountError,
+      kycError,
       setSelectedAddress,
       getAvailableCurrencies,
       getAvailablePaymentMethods,

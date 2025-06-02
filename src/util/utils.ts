@@ -1,4 +1,4 @@
-import { KycFile, UserAddress } from '@dfx.swiss/react';
+import { Asset, Fiat, KycFile, UserAddress } from '@dfx.swiss/react';
 
 export function isDefined<T>(item: T | undefined): item is T {
   return item != null;
@@ -302,3 +302,5 @@ export function deepEqual(a: any, b: any): boolean {
 
   return true;
 }
+
+export const isAsset = (item: Asset | Fiat): item is Asset => 'chainId' in item;

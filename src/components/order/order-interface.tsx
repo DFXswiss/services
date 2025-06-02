@@ -8,13 +8,7 @@ import {
   Utils,
   Validations,
 } from '@dfx.swiss/react';
-import {
-  Form,
-  StyledButton,
-  StyledButtonWidth,
-  StyledDropdown,
-  StyledVerticalStack,
-} from '@dfx.swiss/react-components';
+import { Form, StyledDropdown, StyledVerticalStack } from '@dfx.swiss/react-components';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { PaymentMethodDescriptions, PaymentMethodLabels } from 'src/config/labels';
@@ -28,6 +22,7 @@ import { OrderFormData, OrderType, Side, useOrder } from 'src/hooks/order.hook';
 import { blankedAddress } from 'src/util/utils';
 import { AssetInput } from './asset-input';
 import { BankAccountSelector } from './bank-account-selector';
+import { PaymentInfo } from './payment-info';
 
 interface Address {
   address: string;
@@ -43,7 +38,9 @@ interface OrderInterfaceProps {
   fromInputLabel?: string;
   toInputLabel?: string;
   defaultValues?: Partial<OrderFormData>;
+  isHandlingNext?: boolean;
   onFetchPaymentInfo: <T>(data: OrderFormData) => Promise<T>;
+  onHandleNext?: () => void;
   onConfirm: <T>(data: T) => Promise<void>;
 }
 
@@ -56,7 +53,9 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
     sourceAssets,
     targetAssets,
     defaultValues,
+    isHandlingNext,
     onFetchPaymentInfo,
+    onHandleNext,
     onConfirm,
   } = props;
   const { width } = useWindowContext();
@@ -73,6 +72,9 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
     paymentInfo,
     isFetchingPaymentInfo,
     lastEditedFieldRef,
+    paymentInfoError,
+    amountError,
+    kycError,
     setSelectedAddress,
     getAvailableCurrencies,
     getAvailablePaymentMethods,
@@ -85,6 +87,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
 
   const rootRef = React.useRef<HTMLDivElement>(null);
 
+  const [showNameForm, setShowNameForm] = useState(false);
   const [bankAccountSelection, setBankAccountSelection] = useState(false);
 
   const methods = useForm<OrderFormData>({ mode: 'onChange', defaultValues });
@@ -168,6 +171,8 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
             lastEditedFieldRef.current = Side.FROM;
           }}
           onAmountChange={() => (lastEditedFieldRef.current = Side.FROM)}
+          // forceError={customAmountError != null} // TODO: Implement
+          // forceErrorMessage={customAmountError} // TODO: Implement
           // exchangeRate={} // TODO: Implement
         />
         {isBuy && (
@@ -199,6 +204,8 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
               lastEditedFieldRef.current = Side.TO;
             }}
             onAmountChange={() => (lastEditedFieldRef.current = Side.TO)}
+            // forceError={customAmountError != null} // TODO: Implement
+            // forceErrorMessage={customAmountError} // TODO: Implement
             // exchangeRate={} // TODO: Implement
           />
           {!hideTargetSelection && (
@@ -225,7 +232,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
             className="left-0 right-0 px-4 top-4"
           />
         )}
-        <div className="w-full">
+        {/* <div className="w-full">
           <StyledButton
             type="button"
             isLoading={isFetchingPaymentInfo}
@@ -234,7 +241,21 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
             disabled={!paymentInfo}
             onClick={() => onConfirm(paymentInfo)}
           />
-        </div>
+        </div> */}
+        <PaymentInfo
+          className="pt-4"
+          paymentInfo={paymentInfo?.paymentInfo}
+          paymentMethod={data?.paymentMethod}
+          sourceAsset={data?.sourceAsset}
+          targetAsset={data?.targetAsset}
+          amountError={amountError}
+          kycError={kycError}
+          errorMessage={paymentInfoError}
+          isLoading={isFetchingPaymentInfo}
+          onHandleNext={onHandleNext}
+          isHandlingNext={isHandlingNext}
+          retry={() => debouncedData && handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue)}
+        />
       </StyledVerticalStack>
     </Form>
   );

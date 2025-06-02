@@ -3,6 +3,7 @@ import { AssetIconVariant } from '@dfx.swiss/react-components';
 import React, { useCallback, useMemo } from 'react';
 import { Control, RegisterOptions } from 'react-hook-form';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { isAsset } from 'src/util/utils';
 import StyledDropdown, { AssetInputControl } from './asset-input-control';
 
 interface AssetInputProps {
@@ -42,8 +43,6 @@ export const AssetInput: React.FC<AssetInputProps> = ({
   const rootRef = React.useRef<HTMLDivElement>(null);
 
   if (hidden) return null;
-
-  const isAsset = (item: Asset | Fiat): item is Asset => 'chainId' in item;
 
   const maxValue = useMemo(() => {
     if (!selectedItem || !balanceFunc) return undefined;
