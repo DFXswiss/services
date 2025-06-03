@@ -38,24 +38,25 @@ interface OrderInterfaceProps {
   fromInputLabel?: string;
   toInputLabel?: string;
   defaultValues?: Partial<OrderFormData>;
+  pairMap?: (asset: string) => Asset | Fiat | undefined;
   onFetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   showPaymentNameForm: () => void;
   confirmPayment: () => Promise<void>;
 }
 
-export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
-  const {
-    orderType,
-    header,
-    sourceAssets,
-    targetAssets,
-    fromInputLabel,
-    toInputLabel,
-    defaultValues,
-    onFetchPaymentInfo,
-    confirmPayment,
-    showPaymentNameForm,
-  } = props;
+export const OrderInterface: React.FC<OrderInterfaceProps> = ({
+  orderType,
+  header,
+  sourceAssets,
+  targetAssets,
+  fromInputLabel,
+  toInputLabel,
+  defaultValues,
+  pairMap,
+  onFetchPaymentInfo,
+  confirmPayment,
+  showPaymentNameForm,
+}: OrderInterfaceProps) => {
   const { width } = useWindowContext();
   const { session } = useAuthContext();
   const { getDefaultCurrency } = useFiat();
@@ -121,9 +122,9 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
   useEffect(() => {
     const defaultCurrency = getDefaultCurrency(availableCurrencies) ?? (availableCurrencies && availableCurrencies[0]);
     if (isBuy && sourceAssets?.length) {
-      setValue('sourceAsset', sourceAssets.find((c) => c.name === defaultCurrency?.name) ?? sourceAssets[0]);
+      setValue('sourceAsset', sourceAssets?.find((c) => c.name === defaultCurrency?.name) ?? sourceAssets[0]);
     } else if (isSell && targetAssets?.length) {
-      setValue('targetAsset', targetAssets.find((c) => c.name === defaultCurrency?.name) ?? targetAssets[0]);
+      setValue('targetAsset', targetAssets?.find((c) => c.name === defaultCurrency?.name) ?? targetAssets[0]);
     }
   }, [sourceAssets, targetAssets, availableCurrencies, orderType, setValue, getDefaultCurrency]);
 
@@ -181,27 +182,29 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
           />
         )}
         <div className={`flex ${isSell ? 'flex-col-reverse' : 'flex-col'} w-full gap-2`}>
-          <AssetInput
-            control={control}
-            name="targetAsset"
-            label={toInputLabel}
-            placeholder="0.00"
-            isColoredBackground
-            availableItems={targetAssets ?? []}
-            selectedItem={data.targetAsset}
-            assetRules={rules.targetAsset}
-            amountRules={rules.targetAmount}
-            balanceFunc={findCryptoBalanceString}
-            onMaxButtonClick={(value) => {
-              setValue('targetAmount', value.toString(), { shouldTouch: true });
-              lastEditedFieldRef.current = Side.TO;
-            }}
-            onAmountChange={() => (lastEditedFieldRef.current = Side.TO)}
-            // forceError={customAmountError != null} // TODO: Implement
-            // forceErrorMessage={customAmountError} // TODO: Implement
-            // exchangeRate={} // TODO: Implement
-          />
-          {!hideTargetSelection && (
+          {targetAssets && (
+            <AssetInput
+              control={control}
+              name="targetAsset"
+              label={toInputLabel}
+              placeholder="0.00"
+              isColoredBackground
+              availableItems={targetAssets ?? []}
+              selectedItem={data.targetAsset}
+              assetRules={rules.targetAsset}
+              amountRules={rules.targetAmount}
+              balanceFunc={findCryptoBalanceString}
+              onMaxButtonClick={(value) => {
+                setValue('targetAmount', value.toString(), { shouldTouch: true });
+                lastEditedFieldRef.current = Side.TO;
+              }}
+              onAmountChange={() => (lastEditedFieldRef.current = Side.TO)}
+              // forceError={customAmountError != null} // TODO: Implement
+              // forceErrorMessage={customAmountError} // TODO: Implement
+              // exchangeRate={} // TODO: Implement
+            />
+          )}
+          {!hideTargetSelection && addressItems?.length && (
             <StyledDropdown<Address>
               control={control}
               rootRef={rootRef}
@@ -240,8 +243,8 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
           orderType={orderType}
           paymentInfo={paymentInfo?.paymentInfo}
           paymentMethod={data?.paymentMethod}
-          sourceAsset={data?.sourceAsset}
-          targetAsset={data?.targetAsset}
+          sourceAsset={data?.sourceAsset ?? pairMap?.(data?.targetAsset?.name)}
+          targetAsset={data?.targetAsset ?? pairMap?.(data?.sourceAsset?.name)}
           amountError={amountError}
           kycError={kycError}
           errorMessage={paymentInfoError}

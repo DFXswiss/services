@@ -1,12 +1,14 @@
 import { Blockchain, useApi, useAssetContext, useBuy } from '@dfx.swiss/react';
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
 import { OrderFormData, OrderType } from 'src/hooks/order.hook';
 import { OrderInterface } from './order-interface';
 
-const AVAILABLE_CURRENCIES = ['EUR', 'CHF'];
-const AVAILABLE_ASSETS = ['dEURO', 'ZCHF', 'ETH'];
+const PAIRS: Record<string, string> = {
+  EUR: 'dEURO',
+  CHF: 'ZCHF',
+};
 
 interface SafeDepositInterfaceProps {
   showPaymentNameForm: () => void;
@@ -21,12 +23,12 @@ export const SafeDepositInterface = ({ showPaymentNameForm }: SafeDepositInterfa
   const currentOrderId = useRef<number>();
 
   const availableCurrencies = useMemo(() => {
-    return currencies?.filter((c) => AVAILABLE_CURRENCIES.includes(c.name)) || [];
+    return currencies?.filter((c) => Object.keys(PAIRS).includes(c.name)) || [];
   }, [currencies]);
 
   const availableAssets = useMemo(() => {
     return getAssets([Blockchain.ETHEREUM], { buyable: true, comingSoon: false }).filter((a) =>
-      AVAILABLE_ASSETS.includes(a.name),
+      Object.values(PAIRS).includes(a.name),
     );
   }, [getAssets]);
 
@@ -37,9 +39,8 @@ export const SafeDepositInterface = ({ showPaymentNameForm }: SafeDepositInterfa
       data: {
         type: CustodyOrderType.DEPOSIT,
         sourceAsset: data.sourceAsset.name,
-        targetAsset: data.targetAsset.name,
-        sourceAmount: data.sourceAmount ? Number(data.sourceAmount) : undefined,
-        targetAmount: data.targetAmount ? Number(data.targetAmount) : undefined,
+        targetAsset: PAIRS[data.sourceAsset.name],
+        sourceAmount: Number(data.sourceAmount),
         paymentMethod: data.paymentMethod,
       },
     });
@@ -59,14 +60,21 @@ export const SafeDepositInterface = ({ showPaymentNameForm }: SafeDepositInterfa
     // scrollRef.current?.scrollTo(0, 0);
   }
 
+  const pairMap = useCallback(
+    (asset: string) => {
+      return availableAssets.find((a) => a.name === PAIRS[asset]);
+    },
+    [availableAssets],
+  );
+
   return (
     <OrderInterface
       orderType={OrderType.BUY}
       header={translate('screens/safe', 'Deposit')}
       sourceAssets={availableCurrencies}
-      targetAssets={availableAssets}
       fromInputLabel={translate('screens/safe', 'Deposit Amount')}
       toInputLabel={translate('screens/safe', 'Receive Amount')}
+      pairMap={pairMap}
       onFetchPaymentInfo={onFetchPaymentInfo}
       showPaymentNameForm={showPaymentNameForm}
       confirmPayment={confirmPayment}

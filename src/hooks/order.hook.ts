@@ -30,6 +30,7 @@ export enum OrderType {
   BUY = 'buy',
   SELL = 'sell',
   SWAP = 'swap',
+  DEPOSIT = 'deposit',
 }
 
 export enum Side {
@@ -114,7 +115,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
   const lastEditedFieldRef = useRef<Side>(Side.FROM);
   const lastFetchedDataRef = useRef<OrderFormData | null>(null);
 
-  const isBuy = useMemo(() => orderType === OrderType.BUY, [orderType]);
+  const isBuy = useMemo(() => [OrderType.BUY, OrderType.DEPOSIT].includes(orderType), [orderType]);
   const isSell = useMemo(() => orderType === OrderType.SELL, [orderType]);
   const isSwap = useMemo(() => orderType === OrderType.SWAP, [orderType]);
 
@@ -186,8 +187,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
       const orderIsValid =
         debouncedData &&
         (Number(debouncedData.sourceAmount) > 0 || Number(debouncedData.targetAmount) > 0) &&
-        debouncedData.sourceAsset &&
-        debouncedData.targetAsset;
+        (!sourceAssets || debouncedData.sourceAsset) &&
+        (!targetAssets || debouncedData.targetAsset);
 
       const editedFrom = lastEditedFieldRef.current === Side.FROM;
       const validatedOrderForm = orderIsValid && {
@@ -199,6 +200,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
       if (deepEqual(validatedOrderForm, lastFetchedDataRef.current)) return;
 
       setPaymentInfo(undefined);
+      setPaymentInfoError(undefined);
       if (!validatedOrderForm) return;
 
       setIsFetchingPaymentInfo(true);
