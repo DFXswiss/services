@@ -1,4 +1,12 @@
-import { Fiat, FiatPaymentMethod, Sell, Swap, TransactionError, TransactionType } from '@dfx.swiss/react';
+import {
+  Fiat,
+  FiatPaymentMethod,
+  Sell,
+  Swap,
+  TransactionError,
+  TransactionType,
+  useBankAccountContext,
+} from '@dfx.swiss/react';
 import {
   SpinnerSize,
   StyledButton,
@@ -36,9 +44,9 @@ export interface PaymentInfoProps {
   errorMessage?: string;
   amountError?: AmountError;
   kycError?: TransactionError;
-  isHandlingNext?: boolean;
   retry: () => void;
-  onHandleNext: (paymentInfo: OrderPaymentData) => void;
+  confirmPayment: () => Promise<void>;
+  showPaymentNameForm: () => void;
 }
 
 export function PaymentInfo({
@@ -52,18 +60,20 @@ export function PaymentInfo({
   kycError,
   sourceAsset,
   targetAsset,
-  isHandlingNext,
   retry,
-  onHandleNext,
+  confirmPayment,
+  showPaymentNameForm,
 }: PaymentInfoProps): JSX.Element {
   const { closeServices } = useAppHandlingContext();
-  const { sendTransaction, canSendTransaction } = useTxHelper();
+  const { bankAccounts } = useBankAccountContext();
+  const { canSendTransaction } = useTxHelper();
+  const { updateAccount } = useBankAccountContext();
   const { activeWallet } = useWalletContext();
   const { translate } = useSettingsContext();
-
   const { flags } = useAppParams();
 
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessingTransaction, setIsProcessingTransaction] = useState(false);
+  const [isProcessingCardPayment, setIsProcessingCardPayment] = useState(false);
 
   const isBankWire = paymentMethod !== FiatPaymentMethod.CARD;
   const isCardPayment = paymentMethod === FiatPaymentMethod.CARD;
@@ -75,18 +85,20 @@ export function PaymentInfo({
 
   function onCardBuy(info: OrderPaymentData) {
     if (info.error === TransactionError.NAME_REQUIRED) {
-      // setShowsNameForm(true); // TODO: Use Order Context
+      showPaymentNameForm();
     } else if (info?.buyInfos?.paymentLink) {
-      // setIsContinue(true);
+      setIsProcessingCardPayment(true);
       window.location.href = info.buyInfos.paymentLink;
     }
   }
 
   async function processTransaction(paymentInfo: Sell | Swap): Promise<void> {
-    setIsProcessing(true);
+    setIsProcessingTransaction(true);
 
-    // TODO: Is this necessary?
-    // await updateAccount(selectedBankAccount.id, { preferredCurrency: selectedCurrency as Fiat });
+    if (orderType === OrderType.SELL) {
+      const bankAccountId = bankAccounts?.find((b) => b.iban === (paymentInfo as Sell).beneficiary.iban)?.id;
+      bankAccountId && (await updateAccount(bankAccountId, { preferredCurrency: (paymentInfo as Sell).currency }));
+    }
 
     if (canSendTransaction() && !activeWallet) {
       // TODO: Refactor CloseServicesParams
@@ -96,13 +108,12 @@ export function PaymentInfo({
     }
 
     try {
-      // TODO: Call setSellTxId / setSwapTxId in order context
+      // TODO (later): Implement for sell and swap transactions
       // if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSellTxId);
       // if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSwapTxId);
-      // TODO: Also set in context, can make isTxDone of type txId (string)?
       // setTxDone(true);
     } finally {
-      setIsProcessing(false);
+      setIsProcessingTransaction(false);
     }
   }
 
@@ -165,8 +176,7 @@ export function PaymentInfo({
                       <StyledButton
                         width={StyledButtonWidth.FULL}
                         label={translate('screens/buy', 'Click here once you have issued the transfer')}
-                        onClick={() => onHandleNext(paymentInfo)}
-                        isLoading={isHandlingNext}
+                        onClick={confirmPayment}
                         className="mt-4"
                         caps={false}
                       />
@@ -175,7 +185,7 @@ export function PaymentInfo({
                         width={StyledButtonWidth.FULL}
                         label={translate('general/actions', 'Next')}
                         onClick={() => onCardBuy(paymentInfo)}
-                        isLoading={isHandlingNext}
+                        isLoading={isProcessingCardPayment}
                         className="mt-4"
                         caps={false}
                       />
@@ -189,7 +199,7 @@ export function PaymentInfo({
                             : 'Click here once you have issued the transaction',
                         )}
                         onClick={() => processTransaction(paymentInfo as any)} // TODO: Fix type
-                        isLoading={isProcessing}
+                        isLoading={isProcessingTransaction}
                         className="mt-4"
                         caps={false}
                       />

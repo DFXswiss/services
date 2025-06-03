@@ -17,6 +17,7 @@ import { addressLabel } from 'src/config/labels';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { AssetBalance } from 'src/contexts/balance.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { OrderPaymentData, OrderPaymentInfo } from 'src/dto/order.dto';
 import { deepEqual } from 'src/util/utils';
 import { useAppParams } from './app-params.hook';
 import { useBlockchain } from './blockchain.hook';
@@ -47,13 +48,6 @@ export interface OrderFormData {
   exactPrice?: boolean;
 }
 
-interface OrderPaymentInfo {
-  type: string;
-  orderId: number;
-  status: string;
-  paymentInfo: any;
-}
-
 // TODO: Add Address to packages?
 interface Address {
   address: string;
@@ -68,10 +62,18 @@ export interface AmountError {
   hideInfos: boolean;
 }
 
+interface UseOrderParams {
+  orderType: OrderType;
+  sourceAssets?: Asset[] | Fiat[];
+  targetAssets?: Asset[] | Fiat[];
+}
+
 export interface UseOrderResult {
   isBuy: boolean;
   isSell?: boolean;
   isSwap?: boolean;
+  sourceAssets?: Asset[] | Fiat[];
+  targetAssets?: Asset[] | Fiat[];
   addressItems: Address[];
   cryptoBalances: AssetBalance[];
   paymentInfo?: OrderPaymentInfo;
@@ -85,18 +87,12 @@ export interface UseOrderResult {
   getAvailablePaymentMethods: (targetAsset?: Asset) => FiatPaymentMethod[];
   handlePaymentInfoFetch: (
     debouncedData: OrderFormData,
-    onFetchPaymentInfo: <T>(data: OrderFormData) => Promise<T>,
+    onFetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>,
     setValue: UseFormSetValue<OrderFormData>,
   ) => void;
 }
 
-export interface UseOrderOptions {
-  orderType: OrderType;
-  sourceAssets?: Asset[] | Fiat[];
-  targetAssets?: Asset[] | Fiat[];
-}
-
-export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOptions): UseOrderResult {
+export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderParams): UseOrderResult {
   const { currencies } = useBuy();
   const { user } = useUserContext();
   const { session } = useAuthContext();
@@ -182,7 +178,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOpti
   const handlePaymentInfoFetch = useCallback(
     (
       debouncedData: OrderFormData,
-      onFetchPaymentInfo: <T>(data: OrderFormData) => Promise<T>,
+      onFetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>,
       setValue: UseFormSetValue<OrderFormData>,
     ) => {
       let isRunning = true;
@@ -207,13 +203,13 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOpti
 
       setIsFetchingPaymentInfo(true);
       lastFetchedDataRef.current = validatedOrderForm;
-      onFetchPaymentInfo<OrderPaymentInfo>(validatedOrderForm)
+      onFetchPaymentInfo(validatedOrderForm)
         .then((paymentInfo) => {
           if (isRunning && paymentInfo) {
-            validateOrder(paymentInfo.paymentInfo); // TODO: validateOrder(paymentInfo)?
+            validateOrder(paymentInfo.paymentInfo);
             setPaymentInfo(paymentInfo);
-            !editedFrom && setValue('sourceAmount', paymentInfo.paymentInfo.amount);
-            editedFrom && setValue('targetAmount', paymentInfo.paymentInfo.estimatedAmount);
+            !editedFrom && setValue('sourceAmount', paymentInfo.paymentInfo.amount.toString());
+            editedFrom && setValue('targetAmount', paymentInfo.paymentInfo.estimatedAmount.toString());
 
             // TODO (later): Load exact price buy, sell & swap
             // if (paymentInfo) {
@@ -244,8 +240,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOpti
     [],
   );
 
-  // TODO: Define uniform for buy, sell, swap & deposit order type
-  function validateOrder(order: any): void {
+  function validateOrder(order: OrderPaymentData): void {
     setAmountError(undefined);
     setKycError(undefined);
 
@@ -255,8 +250,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOpti
           key: 'screens/payment',
           defaultValue: 'Entered amount is below minimum deposit of {{amount}} {{currency}}',
           interpolation: {
-            amount: Utils.formatAmount(order.minVolume), // TODO:formatAmountCrypto?
-            currency: order.currency.name, // TODO: order.asset, order.sourceAsset?
+            amount: Utils.formatAmount(order.minVolume),
+            currency: order.sourceAsset,
           },
           hideInfos: true,
         });
@@ -267,8 +262,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOpti
           key: 'screens/payment',
           defaultValue: 'Entered amount is above maximum deposit of {{amount}} {{currency}}',
           interpolation: {
-            amount: Utils.formatAmount(order.maxVolume), // TODO:formatAmountCrypto?
-            currency: order.currency.name, // TODO: order.asset, order.sourceAsset?
+            amount: Utils.formatAmount(order.maxVolume),
+            currency: order.sourceAsset,
           },
           hideInfos: true,
         });
@@ -288,9 +283,11 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOpti
 
   return useMemo(
     () => ({
-      isBuy, // TODO: Refactor - do we really need isBuy, isSell, isSwap, can we simplify this?
+      isBuy,
       isSell,
       isSwap,
+      sourceAssets,
+      targetAssets,
       addressItems,
       cryptoBalances,
       paymentInfo,
@@ -305,12 +302,18 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderOpti
       handlePaymentInfoFetch,
     }),
     [
-      orderType,
+      isBuy,
+      isSell,
+      isSwap,
+      sourceAssets,
+      targetAssets,
       addressItems,
       cryptoBalances,
       paymentInfo,
       isFetchingPaymentInfo,
-      setSelectedAddress,
+      paymentInfoError,
+      amountError,
+      kycError,
       getAvailableCurrencies,
       getAvailablePaymentMethods,
       handlePaymentInfoFetch,

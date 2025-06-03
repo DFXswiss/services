@@ -24,6 +24,19 @@ export enum CustodyOrderStatus {
   COMPLETED = 'Completed',
 }
 
+export enum CustodyOrderType {
+  DEPOSIT = 'Deposit',
+  WITHDRAWAL = 'Withdrawal',
+
+  RECEIVE = 'Receive',
+  SEND = 'Send',
+
+  SWAP = 'Swap',
+
+  SAVING_DEPOSIT = 'SavingDeposit',
+  SAVING_WITHDRAWAL = 'SavingWithdrawal',
+}
+
 export interface OrderPaymentData {
   id: number;
   uid?: string;
@@ -48,8 +61,8 @@ export interface OrderPaymentData {
   buyInfos?: CustodyOrderBuyResponseDto;
 }
 
-export interface Order {
-  type: string;
+export interface OrderPaymentInfo {
+  type: CustodyOrderType;
   orderId: number;
   status: CustodyOrderStatus;
   paymentInfo: OrderPaymentData;

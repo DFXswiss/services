@@ -1,5 +1,6 @@
 import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
+import { NameEdit } from 'src/components/edit/name.edit';
 import { ErrorHint } from 'src/components/error-hint';
 import { SafeDepositInterface } from 'src/components/order/safe-deposit-interface';
 import { ButtonGroup } from 'src/components/safe/button-group';
@@ -20,6 +21,7 @@ export default function SafeScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
+  const [showPaymentNameForm, setShowPaymentNameForm] = useState(false);
 
   useEffect(() => {
     userCurrency && setCurrency(userCurrency?.name.toLowerCase() as FiatCurrency);
@@ -28,14 +30,20 @@ export default function SafeScreen(): JSX.Element {
   const showChart = history.length > 1;
 
   return (
-    <Layout rootRef={rootRef} title={translate('screens/safe', 'My Safe')}>
-      {/* TODO: Add "DFX": My DFX Safe */}
+    <Layout
+      rootRef={rootRef}
+      title={translate('screens/safe', 'My DFX Safe')}
+      onBack={showPaymentNameForm ? () => setShowPaymentNameForm(false) : undefined}
+    >
       {error ? (
         <div>
           <ErrorHint message={error} />
         </div>
       ) : !isInitialized ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
+      ) : showPaymentNameForm ? (
+        // Retrigger payment execution after name edit
+        <NameEdit onSuccess={() => setShowPaymentNameForm(false)} />
       ) : (
         <StyledVerticalStack full gap={10} className="p-4">
           <div className="shadow-card rounded-xl">
@@ -73,7 +81,7 @@ export default function SafeScreen(): JSX.Element {
             </div>
           </div>
           <Portfolio portfolio={portfolio} currency={currency} isLoading={isLoadingPortfolio} />
-          <SafeDepositInterface />
+          <SafeDepositInterface showPaymentNameForm={() => setShowPaymentNameForm(true)} />
         </StyledVerticalStack>
       )}
     </Layout>

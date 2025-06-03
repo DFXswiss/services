@@ -1,30 +1,24 @@
 import { Blockchain, useApi, useAssetContext, useBuy } from '@dfx.swiss/react';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
 import { OrderFormData, OrderType } from 'src/hooks/order.hook';
 import { OrderInterface } from './order-interface';
 
 const AVAILABLE_CURRENCIES = ['EUR', 'CHF'];
 const AVAILABLE_ASSETS = ['dEURO', 'ZCHF', 'ETH'];
 
-export enum CustodyOrderType {
-  DEPOSIT = 'Deposit',
-  WITHDRAWAL = 'Withdrawal',
-
-  RECEIVE = 'Receive',
-  SEND = 'Send',
-
-  SWAP = 'Swap',
-
-  SAVING_DEPOSIT = 'SavingDeposit',
-  SAVING_WITHDRAWAL = 'SavingWithdrawal',
+interface SafeDepositInterfaceProps {
+  showPaymentNameForm: () => void;
 }
 
-export const SafeDepositInterface = () => {
+export const SafeDepositInterface = ({ showPaymentNameForm }: SafeDepositInterfaceProps) => {
   const { call } = useApi();
   const { currencies } = useBuy();
   const { getAssets } = useAssetContext();
   const { translate } = useSettingsContext();
+
+  const currentOrderId = useRef<number>();
 
   const availableCurrencies = useMemo(() => {
     return currencies?.filter((c) => AVAILABLE_CURRENCIES.includes(c.name)) || [];
@@ -36,8 +30,8 @@ export const SafeDepositInterface = () => {
     );
   }, [getAssets]);
 
-  async function onFetchPaymentInfo<T>(data: OrderFormData): Promise<T> {
-    return call<T>({
+  async function onFetchPaymentInfo(data: OrderFormData): Promise<OrderPaymentInfo> {
+    const order = await call<OrderPaymentInfo>({
       url: 'custody/order',
       method: 'POST',
       data: {
@@ -49,10 +43,20 @@ export const SafeDepositInterface = () => {
         paymentMethod: data.paymentMethod,
       },
     });
+
+    currentOrderId.current = order.orderId;
+    return order;
   }
 
-  async function onConfirm<CustodyOrderPaymentInfo>(data: CustodyOrderPaymentInfo): Promise<void> {
-    console.log('Confirming deposit with data:', data);
+  async function confirmPayment(): Promise<void> {
+    return call({
+      url: `custody/order/${currentOrderId.current}/confirm`,
+      method: 'POST',
+    });
+
+    // TODO: Implement
+    // setShowsCompletion(true);
+    // scrollRef.current?.scrollTo(0, 0);
   }
 
   return (
@@ -63,12 +67,9 @@ export const SafeDepositInterface = () => {
       targetAssets={availableAssets}
       fromInputLabel={translate('screens/safe', 'Deposit Amount')}
       toInputLabel={translate('screens/safe', 'Receive Amount')}
-      onConfirm={onConfirm}
-      onHandleNext={(paymentData) => {
-        // TODO: Call /confirm endpoint
-        console.log('Handling next with payment data:', paymentData);
-      }}
       onFetchPaymentInfo={onFetchPaymentInfo}
+      showPaymentNameForm={showPaymentNameForm}
+      confirmPayment={confirmPayment}
     />
   );
 };

@@ -14,11 +14,10 @@ import { useForm } from 'react-hook-form';
 import { PaymentMethodDescriptions, PaymentMethodLabels } from 'src/config/labels';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useWindowContext } from 'src/contexts/window.context';
+import { OrderPaymentInfo } from 'src/dto/order.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import useDebounce from 'src/hooks/debounce.hook';
-
-import { useWindowContext } from 'src/contexts/window.context';
-import { OrderPaymentData } from 'src/dto/order.dto';
 import { OrderFormData, OrderType, Side, useOrder } from 'src/hooks/order.hook';
 import { blankedAddress } from 'src/util/utils';
 import { AssetInput } from './asset-input';
@@ -39,25 +38,23 @@ interface OrderInterfaceProps {
   fromInputLabel?: string;
   toInputLabel?: string;
   defaultValues?: Partial<OrderFormData>;
-  isHandlingNext?: boolean;
-  onFetchPaymentInfo: <T>(data: OrderFormData) => Promise<T>;
-  onHandleNext: (data: OrderPaymentData) => void;
-  onConfirm: <T>(data: T) => Promise<void>;
+  onFetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
+  showPaymentNameForm: () => void;
+  confirmPayment: () => Promise<void>;
 }
 
 export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
   const {
     orderType,
     header,
-    fromInputLabel,
-    toInputLabel,
     sourceAssets,
     targetAssets,
+    fromInputLabel,
+    toInputLabel,
     defaultValues,
-    isHandlingNext,
     onFetchPaymentInfo,
-    onHandleNext,
-    onConfirm,
+    confirmPayment,
+    showPaymentNameForm,
   } = props;
   const { width } = useWindowContext();
   const { session } = useAuthContext();
@@ -80,15 +77,10 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
     getAvailableCurrencies,
     getAvailablePaymentMethods,
     handlePaymentInfoFetch,
-  } = useOrder({
-    orderType,
-    sourceAssets,
-    targetAssets,
-  });
+  } = useOrder({ orderType, sourceAssets, targetAssets });
 
   const rootRef = React.useRef<HTMLDivElement>(null);
 
-  const [showNameForm, setShowNameForm] = useState(false);
   const [bankAccountSelection, setBankAccountSelection] = useState(false);
 
   const methods = useForm<OrderFormData>({ mode: 'onChange', defaultValues });
@@ -254,9 +246,9 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = (props) => {
           kycError={kycError}
           errorMessage={paymentInfoError}
           isLoading={isFetchingPaymentInfo}
-          onHandleNext={onHandleNext}
-          isHandlingNext={isHandlingNext}
           retry={() => debouncedData && handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue)}
+          showPaymentNameForm={showPaymentNameForm}
+          confirmPayment={confirmPayment}
         />
       </StyledVerticalStack>
     </Form>
