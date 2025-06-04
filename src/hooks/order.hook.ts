@@ -119,6 +119,10 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
   const isSell = useMemo(() => orderType === OrderType.SELL, [orderType]);
   const isSwap = useMemo(() => orderType === OrderType.SWAP, [orderType]);
 
+  // TODO (later): Set available source / target assets based on blockchain, availableBlockchains,
+  // assets, assetIn, assetOut (from useAppParams) and blockchain from useWalletContext.
+  // See buy.screen.tsx#L186, sell.screen.tsx#L179 and swap.screen.tsx#L207.
+
   useEffect(() => {
     let cryptoAssets = isBuy ? targetAssets ?? [] : isSell ? sourceAssets ?? [] : [];
     cryptoAssets ??= isSwap ? (sourceAssets ?? []).concat(targetAssets ?? []) : [];
@@ -129,23 +133,6 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
       );
     }
   }, [isBuy, isSell, isSwap, targetAssets, sourceAssets, getBalances, selectedAddress]);
-
-  // TODO (later): Implement
-  // useEffect(() => {
-  //   if (selectedAddress) {
-  //     if (selectedAddress.chain) {
-  //       if (blockchain !== selectedAddress.chain) {
-  //         setParams({ blockchain: selectedAddress.chain });
-  //         switchBlockchain(selectedAddress.chain);
-  //         resetField('targetAsset');
-  //         setTargetAssets(undefined);
-  //       }
-  //     } else {
-  //       setShowsSwitchScreen(true);
-  //       setAddress();
-  //     }
-  //   }
-  // }, [selectedAddress]);
 
   const getAvailablePaymentMethods = useCallback(
     (targetAsset?: Asset): FiatPaymentMethod[] => {
