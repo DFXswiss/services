@@ -94,7 +94,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
   function onCardBuy(info: OrderPaymentData) {
     if (info.error === TransactionError.NAME_REQUIRED) {
       showPaymentNameForm();
-    } else if (info?.buyInfos?.paymentLink) {
+    } else if (info?.buyInfos?.paymentLink && info.isValid) {
       setIsProcessingCardPayment(true);
       window.location.href = info.buyInfos.paymentLink;
     }
@@ -109,7 +109,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
     }
 
     if (canSendTransaction() && !activeWallet) {
-      // TODO: Refactor CloseServicesParams
+      // TODO (later): Refactor CloseServicesParams
       return orderType === OrderType.SELL
         ? closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo as Sell }, false)
         : closeServices({ type: CloseType.SWAP, isComplete: false, swap: paymentInfo as Swap }, false);

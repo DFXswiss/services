@@ -14,12 +14,14 @@ interface SafeDepositInterfaceProps {
   showPaymentNameForm: () => void;
   bankAccountSelection: boolean;
   setBankAccountSelection: (isOpen: boolean) => void;
+  showCompletion: () => void;
 }
 
 export const SafeDepositInterface = ({
   showPaymentNameForm,
   bankAccountSelection,
   setBankAccountSelection,
+  showCompletion,
 }: SafeDepositInterfaceProps) => {
   const { call } = useApi();
   const { currencies } = useBuy();
@@ -56,14 +58,12 @@ export const SafeDepositInterface = ({
   }
 
   async function confirmPayment(): Promise<void> {
-    return call({
+    await call({
       url: `custody/order/${currentOrderId.current}/confirm`,
       method: 'POST',
     });
 
-    // TODO: Implement
-    // setShowsCompletion(true);
-    // scrollRef.current?.scrollTo(0, 0);
+    showCompletion();
   }
 
   const pairMap = useCallback(

@@ -48,8 +48,8 @@ interface OrderInterfaceProps {
   pairMap?: (asset: string) => Asset | Fiat | undefined;
   onFetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   showPaymentNameForm: () => void;
-  confirmPayment: () => Promise<void>;
   setBankAccountSelection: (isOpen: boolean) => void;
+  confirmPayment: () => Promise<void>;
 }
 
 export const OrderInterface: React.FC<OrderInterfaceProps> = ({
@@ -151,7 +151,6 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   const rules = Utils.createRules({
     sourceAmount: Validations.Required,
     sourceAsset: Validations.Required,
-    // TODO (later): Complete rules
   });
 
   return (
