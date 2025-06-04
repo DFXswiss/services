@@ -17,7 +17,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { Asset, AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
-import React, { useLayoutEffect as useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
@@ -207,7 +207,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
                               ? 'Complete transaction in your wallet'
                               : 'Click here once you have issued the transaction',
                           )}
-                          onClick={() => processTransaction(paymentInfo as any)} // TODO: Fix type
+                          onClick={() => processTransaction(paymentInfo as any)} // TODO (later): Fix type casting
                           isLoading={isProcessingTransaction}
                           className="mt-4"
                           caps={false}

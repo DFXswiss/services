@@ -11,6 +11,9 @@ import {
 import { useState } from 'react';
 import { useSettingsContext } from '../../contexts/settings.context';
 
+// TODO (later): Refactor completion components into a common component
+// See buy-completion.tsx, sell-completion.tsx & swap-completion.tsx
+
 interface SafeCompletionProps {
   onClose: () => void;
 }

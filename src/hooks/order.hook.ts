@@ -123,6 +123,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
   // assets, assetIn, assetOut (from useAppParams) and blockchain from useWalletContext.
   // See buy.screen.tsx#L186, sell.screen.tsx#L179 and swap.screen.tsx#L207.
 
+  // ---- Fetch crypto balances (across source and target assets) ----
+
   useEffect(() => {
     let cryptoAssets = isBuy ? targetAssets ?? [] : isSell ? sourceAssets ?? [] : [];
     cryptoAssets ??= isSwap ? (sourceAssets ?? []).concat(targetAssets ?? []) : [];
@@ -134,9 +136,12 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
     }
   }, [isBuy, isSell, isSwap, targetAssets, sourceAssets, getBalances, selectedAddress]);
 
+  // ---- Fetch available payment methods based on target asset ----
+
   const getAvailablePaymentMethods = useCallback(
     (targetAsset?: Asset): FiatPaymentMethod[] => {
       if (!isBuy) return [];
+      if (orderType === OrderType.DEPOSIT) return [FiatPaymentMethod.BANK]; // TODO: Add card deposit later
 
       const pushCardPayment =
         (isDfxHosted || !isEmbedded) &&
@@ -149,6 +154,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
     [isBuy, isDfxHosted, isEmbedded, wallet, user],
   );
 
+  // ---- Get available currencies based on payment method ----
+
   const getAvailableCurrencies = useCallback(
     (paymentMethod?: FiatPaymentMethod): Fiat[] =>
       currencies?.filter((c) =>
@@ -160,6 +167,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
       ) ?? [],
     [currencies],
   );
+
+  // ---- Fetch available blockchain addresses based on session and available crypto assets ----
 
   const addressItems: Address[] = useMemo(() => {
     const cryptoAssets = (isBuy ? targetAssets ?? [] : sourceAssets ?? []) as Asset[];
@@ -179,6 +188,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
         ]
       : [];
   }, [session, targetAssets, sourceAssets, orderType, availableBlockchains, translate]);
+
+  // ---- Handle validation of form data and fetching payment info ----
 
   const handlePaymentInfoFetch = useCallback(
     (
@@ -228,7 +239,6 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
         })
         .catch((error: ApiError) => {
           if (isRunning) {
-            console.error('Failed to fetch payment info:', error);
             !editedSource && setValue('sourceAmount', undefined);
             editedSource && setValue('targetAmount', undefined);
             lastFetchedDataRef.current = null;
@@ -248,6 +258,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
     },
     [],
   );
+
+  // ---- Validate fetched order ----
 
   function validateOrder(order: OrderPaymentData): void {
     setAmountError(undefined);

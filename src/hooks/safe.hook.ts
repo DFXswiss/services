@@ -66,22 +66,22 @@ export function useSafe(): UseSafeResult {
   }, [isUserLoading, user, isLoggedIn, session]);
 
   useEffect(() => {
-    if (isInitialized) return;
+    if (!user || !isLoggedIn) return;
     setIsLoadingPortfolio(true);
     getBalances()
       .then((portfolio) => setPortfolio(portfolio))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoadingPortfolio(false));
-  }, [isInitialized]);
+  }, [user, isLoggedIn]);
 
   useEffect(() => {
-    if (isInitialized) return;
+    if (!user || !isLoggedIn) return;
     setIsLoadingHistory(true);
     getHistory()
       .then(({ totalValue }) => setHistory(totalValue))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoadingHistory(false));
-  }, [isInitialized]);
+  }, [user, isLoggedIn]);
 
   // ---- Available Deposit Pairs ----
 
