@@ -130,6 +130,23 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
     }
   }, [isBuy, isSell, isSwap, targetAssets, sourceAssets, getBalances, selectedAddress]);
 
+  // TODO (later): Implement
+  // useEffect(() => {
+  //   if (selectedAddress) {
+  //     if (selectedAddress.chain) {
+  //       if (blockchain !== selectedAddress.chain) {
+  //         setParams({ blockchain: selectedAddress.chain });
+  //         switchBlockchain(selectedAddress.chain);
+  //         resetField('targetAsset');
+  //         setTargetAssets(undefined);
+  //       }
+  //     } else {
+  //       setShowsSwitchScreen(true);
+  //       setAddress();
+  //     }
+  //   }
+  // }, [selectedAddress]);
+
   const getAvailablePaymentMethods = useCallback(
     (targetAsset?: Asset): FiatPaymentMethod[] => {
       if (!isBuy) return [];

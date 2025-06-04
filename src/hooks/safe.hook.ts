@@ -1,4 +1,4 @@
-import { ApiError, useApi, User, useSessionContext, useUserContext } from '@dfx.swiss/react';
+import { ApiError, useApi, useAuthContext, User, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { useEffect, useState } from 'react';
 import { useWalletContext } from 'src/contexts/wallet.context';
 
@@ -26,11 +26,10 @@ export interface CustodyBalance {
 
 export interface UseSafeResult {
   isInitialized: boolean;
-  totalValue: CustodyFiatValue;
-  portfolio: CustodyAssetBalance[];
-  history: CustodyHistoryEntry[];
   isLoadingPortfolio: boolean;
   isLoadingHistory: boolean;
+  portfolio: CustodyBalance;
+  history: CustodyHistoryEntry[];
   error?: string;
 }
 
@@ -51,64 +50,57 @@ export interface CustodyHistory {
 
 export function useSafe(): UseSafeResult {
   const { call } = useApi();
-  const { user, isUserLoading } = useUserContext();
   const { isLoggedIn } = useSessionContext();
   const { setSession } = useWalletContext();
+  const { setWallet } = useWalletContext();
+  const { session } = useAuthContext();
+  const { user, isUserLoading, changeAddress } = useUserContext();
 
   const [error, setError] = useState<string>();
   const [isInitialized, setIsInitialized] = useState(false);
-  const [totalValue, setTotalValue] = useState<CustodyFiatValue>({ chf: 0, eur: 0, usd: 0 });
-  const [portfolio, setPortfolio] = useState<CustodyAssetBalance[]>([]);
+  const [portfolio, setPortfolio] = useState<CustodyBalance>({ totalValue: { chf: 0, eur: 0, usd: 0 }, balances: [] });
   const [history, setHistory] = useState<CustodyHistoryEntry[]>([]);
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
   useEffect(() => {
-    if (!isUserLoading && user && isLoggedIn) {
-      createAccountIfRequired(user)
+    if (!isUserLoading && session && user && isLoggedIn) {
+      createCustodyAccountOrSwitch(user)
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
         .finally(() => setIsInitialized(true));
     }
-  }, [isUserLoading, user, isLoggedIn]);
+  }, [isUserLoading, user, isLoggedIn, session]);
 
   useEffect(() => {
-    if (!user || !isLoggedIn) return;
+    if (isInitialized) return;
 
     setIsLoadingPortfolio(true);
     getBalances()
-      .then(({ balances, totalValue }) => {
-        setPortfolio(balances);
-        setTotalValue(totalValue);
-      })
-      .catch((error: ApiError) => {
-        setError(error.message ?? 'Unknown error');
-      })
+      .then((portfolio) => setPortfolio(portfolio))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoadingPortfolio(false));
-  }, [user, isLoggedIn]);
+  }, [isInitialized]);
 
   useEffect(() => {
-    if (!user || !isLoggedIn) return;
+    if (isInitialized) return;
 
     setIsLoadingHistory(true);
     getHistory()
-      .then(({ totalValue }) => {
-        setHistory(totalValue);
-      })
-      .catch((error: ApiError) => {
-        setError(error.message ?? 'Unknown error');
-      })
+      .then(({ totalValue }) => setHistory(totalValue))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoadingHistory(false));
-  }, [user, isLoggedIn]);
+  }, [isInitialized]);
 
-  async function createAccountIfRequired(user: User): Promise<void> {
-    if (!user.addresses.some((a) => a.isCustody)) {
+  async function createCustodyAccountOrSwitch(user: User): Promise<void> {
+    const custodyAddress = user.addresses.find((a) => a.isCustody);
+    if (!custodyAddress) {
       return call<{ accessToken: string }>({
         url: 'custody',
         method: 'POST',
-        data: {
-          addressType: 'EVM',
-        },
+        data: { addressType: 'EVM' },
       }).then(({ accessToken }) => setSession(accessToken));
+    } else if (session?.address !== custodyAddress.address) {
+      return changeAddress(custodyAddress.address).then(() => setWallet());
     }
   }
 
@@ -128,11 +120,10 @@ export function useSafe(): UseSafeResult {
 
   return {
     isInitialized,
-    portfolio,
-    history,
-    totalValue,
     isLoadingPortfolio,
     isLoadingHistory,
+    portfolio,
+    history,
     error,
   };
 }

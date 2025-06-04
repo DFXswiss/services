@@ -16,7 +16,7 @@ import { Layout } from '../components/layout';
 export default function SafeScreen(): JSX.Element {
   useUserGuard('/login');
 
-  const { isInitialized, totalValue, portfolio, history, isLoadingPortfolio, isLoadingHistory, error } = useSafe();
+  const { isInitialized, portfolio, history, isLoadingPortfolio, isLoadingHistory, error } = useSafe();
   const { currency: userCurrency, translate } = useSettingsContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -86,7 +86,9 @@ export default function SafeScreen(): JSX.Element {
                         </div>
                       ) : (
                         <div className="text-dfxBlue-800">
-                          <span className="text-lg font-bold">{formatCurrency(totalValue[currency], 2, 2)}</span>{' '}
+                          <span className="text-lg font-bold">
+                            {formatCurrency(portfolio.totalValue[currency], 2, 2)}
+                          </span>{' '}
                           <span className="text-base">{currency.toUpperCase()}</span>
                         </div>
                       )}
@@ -99,7 +101,7 @@ export default function SafeScreen(): JSX.Element {
               </div>
             </div>
           </div>
-          <Portfolio portfolio={portfolio} currency={currency} isLoading={isLoadingPortfolio} />
+          <Portfolio portfolio={portfolio.balances} currency={currency} isLoading={isLoadingPortfolio} />
           <SafeDepositInterface
             showPaymentNameForm={() => setShowPaymentNameForm(true)}
             bankAccountSelection={bankAccountSelection}
