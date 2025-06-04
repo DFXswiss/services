@@ -36,9 +36,7 @@ export default function SafeScreen(): JSX.Element {
       title={
         bankAccountSelection
           ? translate('screens/sell', 'Select payment account')
-          : showPaymentNameForm
-          ? translate('screens/safe', 'My DFX Safe')
-          : translate('screens/safe', 'My DFX Safe')
+          : translate('screens/safe', 'My Safe')
       }
       onBack={
         bankAccountSelection
@@ -94,7 +92,7 @@ export default function SafeScreen(): JSX.Element {
             </div>
           </div>
           <Portfolio portfolio={portfolio} currency={currency} isLoading={isLoadingPortfolio} />
-          <SafeDepositInterface 
+          <SafeDepositInterface
             showPaymentNameForm={() => setShowPaymentNameForm(true)}
             bankAccountSelection={bankAccountSelection}
             setBankAccountSelection={setBankAccountSelection}

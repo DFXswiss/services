@@ -41,8 +41,8 @@ interface OrderInterfaceProps {
   header?: string;
   sourceAssets?: Asset[] | Fiat[];
   targetAssets?: Asset[] | Fiat[];
-  fromInputLabel?: string;
-  toInputLabel?: string;
+  sourceInputLabel?: string;
+  targetInputLabel?: string;
   defaultValues?: Partial<OrderFormData>;
   bankAccountSelection: boolean;
   pairMap?: (asset: string) => Asset | Fiat | undefined;
@@ -57,8 +57,8 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   header,
   sourceAssets,
   targetAssets,
-  fromInputLabel,
-  toInputLabel,
+  sourceInputLabel,
+  targetInputLabel,
   defaultValues,
   bankAccountSelection,
   pairMap,
@@ -161,7 +161,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
         <AssetInput
           control={control}
           name="sourceAsset"
-          label={fromInputLabel}
+          label={sourceInputLabel}
           placeholder="0.00"
           availableItems={sourceAssets ?? []}
           selectedItem={data.sourceAsset}
@@ -170,9 +170,9 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
           balanceFunc={findCryptoBalanceString}
           onMaxButtonClick={(value) => {
             setValue('sourceAmount', value.toString(), { shouldTouch: true });
-            lastEditedFieldRef.current = Side.FROM;
+            lastEditedFieldRef.current = Side.SOURCE;
           }}
-          onAmountChange={() => (lastEditedFieldRef.current = Side.FROM)}
+          onAmountChange={() => (lastEditedFieldRef.current = Side.SOURCE)}
           forceErrorMessage={
             amountError && translate(amountError.key, amountError.defaultValue, amountError.interpolation)
           }
@@ -194,7 +194,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
             <AssetInput
               control={control}
               name="targetAsset"
-              label={toInputLabel}
+              label={targetInputLabel}
               placeholder="0.00"
               isColoredBackground
               availableItems={targetAssets ?? []}
@@ -204,9 +204,9 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
               balanceFunc={findCryptoBalanceString}
               onMaxButtonClick={(value) => {
                 setValue('targetAmount', value.toString(), { shouldTouch: true });
-                lastEditedFieldRef.current = Side.TO;
+                lastEditedFieldRef.current = Side.TARGET;
               }}
-              onAmountChange={() => (lastEditedFieldRef.current = Side.TO)}
+              onAmountChange={() => (lastEditedFieldRef.current = Side.TARGET)}
             />
           ) : null}
           {!hideTargetSelection && addressItems?.length ? (
@@ -238,8 +238,8 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
             isLoading={isFetchingPaymentInfo}
             label={header ?? translate('general/actions', 'Next')}
             width={StyledButtonWidth.FULL}
-            disabled={!paymentInfo}
-            hidden={!!paymentInfo}
+            disabled={!paymentInfo || amountError?.hideInfos}
+            hidden={!!paymentInfo && !amountError?.hideInfos}
             onClick={() => debouncedData && handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue)}
           />
         </div>

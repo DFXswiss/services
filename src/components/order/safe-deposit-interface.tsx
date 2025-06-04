@@ -77,9 +77,8 @@ export const SafeDepositInterface = ({
     <OrderInterface
       orderType={OrderType.BUY}
       header={translate('screens/safe', 'Deposit')}
+      sourceInputLabel={translate('screens/payment', 'Amount')}
       sourceAssets={availableCurrencies}
-      fromInputLabel={translate('screens/payment', 'Amount')}
-      toInputLabel={translate('screens/safe', 'Receive Amount')}
       pairMap={pairMap}
       onFetchPaymentInfo={onFetchPaymentInfo}
       showPaymentNameForm={showPaymentNameForm}

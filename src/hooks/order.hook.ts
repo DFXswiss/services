@@ -34,8 +34,8 @@ export enum OrderType {
 }
 
 export enum Side {
-  TO = 'To',
-  FROM = 'From',
+  SOURCE = 'source',
+  TARGET = 'target',
 }
 
 export interface OrderFormData {
@@ -112,7 +112,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
   const [amountError, setAmountError] = useState<AmountError>();
   const [kycError, setKycError] = useState<TransactionError>();
 
-  const lastEditedFieldRef = useRef<Side>(Side.FROM);
+  const lastEditedFieldRef = useRef<Side>(Side.SOURCE);
   const lastFetchedDataRef = useRef<OrderFormData | null>(null);
 
   const isBuy = useMemo(() => [OrderType.BUY, OrderType.DEPOSIT].includes(orderType), [orderType]);
@@ -184,17 +184,18 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
     ) => {
       let isRunning = true;
 
+      const editedSource = lastEditedFieldRef.current === Side.SOURCE;
       const orderIsValid =
         debouncedData &&
-        (Number(debouncedData.sourceAmount) > 0 || Number(debouncedData.targetAmount) > 0) &&
+        (!editedSource || Number(debouncedData.sourceAmount) > 0) &&
+        (editedSource || Number(debouncedData.targetAmount) > 0) &&
         (!sourceAssets || debouncedData.sourceAsset) &&
         (!targetAssets || debouncedData.targetAsset);
 
-      const editedFrom = lastEditedFieldRef.current === Side.FROM;
       const validatedOrderForm = orderIsValid && {
         ...debouncedData,
-        sourceAmount: editedFrom ? debouncedData.sourceAmount : undefined,
-        targetAmount: !editedFrom ? debouncedData.targetAmount : undefined,
+        sourceAmount: editedSource ? debouncedData.sourceAmount : undefined,
+        targetAmount: !editedSource ? debouncedData.targetAmount : undefined,
       };
 
       if (deepEqual(validatedOrderForm, lastFetchedDataRef.current)) return;
@@ -212,8 +213,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
           if (isRunning && paymentInfo) {
             validateOrder(paymentInfo.paymentInfo);
             setPaymentInfo(paymentInfo);
-            !editedFrom && setValue('sourceAmount', paymentInfo.paymentInfo.amount.toString());
-            editedFrom && setValue('targetAmount', paymentInfo.paymentInfo.estimatedAmount.toString());
+            !editedSource && setValue('sourceAmount', paymentInfo.paymentInfo.amount.toString());
+            editedSource && setValue('targetAmount', paymentInfo.paymentInfo.estimatedAmount.toString());
 
             // TODO (later): Load exact price buy, sell & swap
             // if (paymentInfo) {
@@ -224,8 +225,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
         .catch((error: ApiError) => {
           if (isRunning) {
             console.error('Failed to fetch payment info:', error);
-            !editedFrom && setValue('sourceAmount', undefined);
-            editedFrom && setValue('targetAmount', undefined);
+            !editedSource && setValue('sourceAmount', undefined);
+            editedSource && setValue('targetAmount', undefined);
             lastFetchedDataRef.current = null;
             if (error.statusCode === 400 && error.message === 'Ident data incomplete') {
               navigate('/profile');
