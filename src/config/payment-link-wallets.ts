@@ -233,9 +233,11 @@ export const PaymentLinkWallets: WalletInfo[] = [
   {
     id: WalletAppId.BINANCEPAY,
     name: 'Binance Pay',
-    websiteUrl: 'https://www.binance.com/en/pay',
+    websiteUrl: 'https://www.binance.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BinanceApp.webp',
     deepLink: 'bnc:',
+    appStoreUrl: 'https://apps.apple.com/app/binance-buy-bitcoin-crypto/id1436799971',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.binance.dev',
     transferMethod: C2BPaymentMethod.BINANCE_PAY,
     semiCompatible: true,
   },
