@@ -17,7 +17,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { Asset, AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
@@ -49,7 +49,7 @@ export interface PaymentInfoProps {
   showPaymentNameForm: () => void;
 }
 
-export function PaymentInfo({
+export const PaymentInfo = React.memo(function PaymentInfoComponent({
   className,
   orderType,
   isLoading,
@@ -72,11 +72,19 @@ export function PaymentInfo({
   const { translate } = useSettingsContext();
   const { flags } = useAppParams();
 
+  const localRef = React.useRef<HTMLDivElement>(null);
+
   const [isProcessingTransaction, setIsProcessingTransaction] = useState(false);
   const [isProcessingCardPayment, setIsProcessingCardPayment] = useState(false);
 
   const isBankWire = paymentMethod !== FiatPaymentMethod.CARD;
   const isCardPayment = paymentMethod === FiatPaymentMethod.CARD;
+
+  React.useLayoutEffect(() => {
+    if (paymentInfo && localRef.current) {
+      localRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [paymentInfo]);
 
   const privateAssets = useMemo(
     () => [sourceAsset, targetAsset].filter((a) => a && isAsset(a) && a.category === AssetCategory.PRIVATE),
@@ -118,98 +126,100 @@ export function PaymentInfo({
   }
 
   return (
-    <StyledVerticalStack center className={className}>
-      {isLoading && !paymentInfo ? (
-        <StyledLoadingSpinner size={SpinnerSize.LG} />
-      ) : (
-        <>
-          {kycError && <KycHint type={TransactionType.BUY} error={kycError} />}
+    <div ref={localRef}>
+      <StyledVerticalStack center className={className}>
+        {isLoading && !paymentInfo ? (
+          <StyledLoadingSpinner size={SpinnerSize.LG} />
+        ) : (
+          <>
+            {kycError && <KycHint type={TransactionType.BUY} error={kycError} />}
 
-          {errorMessage && (
-            <StyledVerticalStack center className="text-center">
-              <ErrorHint message={errorMessage} />
-              <StyledButton
-                width={StyledButtonWidth.MIN}
-                label={translate('general/actions', 'Retry')}
-                onClick={retry}
-                className="mt-4"
-                color={StyledButtonColor.STURDY_WHITE}
-              />
-            </StyledVerticalStack>
-          )}
-
-          {paymentInfo &&
-            !kycError &&
-            !errorMessage &&
-            !amountError?.hideInfos &&
-            (privateAssets?.length && !flags?.includes('private') ? (
-              <PrivateAssetHint asset={privateAssets[0] as Asset} />
-            ) : (
-              <StyledVerticalStack className="text-left" gap={4}>
-                <ExchangeRate
-                  exchangeRate={paymentInfo.exchangeRate}
-                  rate={paymentInfo.rate}
-                  fees={paymentInfo.fees}
-                  feeCurrency={sourceAsset}
-                  from={sourceAsset}
-                  to={targetAsset}
-                  steps={paymentInfo.priceSteps}
-                  amountIn={paymentInfo.amount}
-                  amountOut={paymentInfo.estimatedAmount}
-                  type={TransactionType.BUY}
+            {errorMessage && (
+              <StyledVerticalStack center className="text-center">
+                <ErrorHint message={errorMessage} />
+                <StyledButton
+                  width={StyledButtonWidth.MIN}
+                  label={translate('general/actions', 'Retry')}
+                  onClick={retry}
+                  className="mt-4"
+                  color={StyledButtonColor.STURDY_WHITE}
                 />
-
-                <>
-                  {isBankWire && <PaymentInfoContent info={paymentInfo} />}
-                  <SanctionHint />
-                  <div className="w-full text-center leading-none">
-                    <StyledLink
-                      label={translate(
-                        'screens/payment',
-                        'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
-                      )}
-                      url={process.env.REACT_APP_TNC_URL}
-                      small
-                      dark
-                    />
-                    {isBankWire ? (
-                      <StyledButton
-                        width={StyledButtonWidth.FULL}
-                        label={translate('screens/buy', 'Click here once you have issued the transfer')}
-                        onClick={confirmPayment}
-                        className="mt-4"
-                        caps={false}
-                      />
-                    ) : isCardPayment ? (
-                      <StyledButton
-                        width={StyledButtonWidth.FULL}
-                        label={translate('general/actions', 'Next')}
-                        onClick={() => onCardBuy(paymentInfo)}
-                        isLoading={isProcessingCardPayment}
-                        className="mt-4"
-                        caps={false}
-                      />
-                    ) : (
-                      <StyledButton
-                        width={StyledButtonWidth.FULL}
-                        label={translate(
-                          'screens/sell',
-                          canSendTransaction()
-                            ? 'Complete transaction in your wallet'
-                            : 'Click here once you have issued the transaction',
-                        )}
-                        onClick={() => processTransaction(paymentInfo as any)} // TODO: Fix type
-                        isLoading={isProcessingTransaction}
-                        className="mt-4"
-                        caps={false}
-                      />
-                    )}
-                  </div>
-                </>
               </StyledVerticalStack>
-            ))}
-        </>
-      )}
-    </StyledVerticalStack>
+            )}
+
+            {paymentInfo &&
+              !kycError &&
+              !errorMessage &&
+              !amountError?.hideInfos &&
+              (privateAssets?.length && !flags?.includes('private') ? (
+                <PrivateAssetHint asset={privateAssets[0] as Asset} />
+              ) : (
+                <StyledVerticalStack className="text-left" gap={4}>
+                  <ExchangeRate
+                    exchangeRate={paymentInfo.exchangeRate}
+                    rate={paymentInfo.rate}
+                    fees={paymentInfo.fees}
+                    feeCurrency={sourceAsset}
+                    from={sourceAsset}
+                    to={targetAsset}
+                    steps={paymentInfo.priceSteps}
+                    amountIn={paymentInfo.amount}
+                    amountOut={paymentInfo.estimatedAmount}
+                    type={TransactionType.BUY}
+                  />
+
+                  <>
+                    {isBankWire && <PaymentInfoContent info={paymentInfo} />}
+                    <SanctionHint />
+                    <div className="w-full text-center leading-none">
+                      <StyledLink
+                        label={translate(
+                          'screens/payment',
+                          'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
+                        )}
+                        url={process.env.REACT_APP_TNC_URL}
+                        small
+                        dark
+                      />
+                      {isBankWire ? (
+                        <StyledButton
+                          width={StyledButtonWidth.FULL}
+                          label={translate('screens/buy', 'Click here once you have issued the transfer')}
+                          onClick={confirmPayment}
+                          className="mt-4"
+                          caps={false}
+                        />
+                      ) : isCardPayment ? (
+                        <StyledButton
+                          width={StyledButtonWidth.FULL}
+                          label={translate('general/actions', 'Next')}
+                          onClick={() => onCardBuy(paymentInfo)}
+                          isLoading={isProcessingCardPayment}
+                          className="mt-4"
+                          caps={false}
+                        />
+                      ) : (
+                        <StyledButton
+                          width={StyledButtonWidth.FULL}
+                          label={translate(
+                            'screens/sell',
+                            canSendTransaction()
+                              ? 'Complete transaction in your wallet'
+                              : 'Click here once you have issued the transaction',
+                          )}
+                          onClick={() => processTransaction(paymentInfo as any)} // TODO: Fix type
+                          isLoading={isProcessingTransaction}
+                          className="mt-4"
+                          caps={false}
+                        />
+                      )}
+                    </div>
+                  </>
+                </StyledVerticalStack>
+              ))}
+          </>
+        )}
+      </StyledVerticalStack>
+    </div>
   );
-}
+});

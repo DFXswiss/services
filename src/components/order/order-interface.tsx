@@ -8,7 +8,13 @@ import {
   Utils,
   Validations,
 } from '@dfx.swiss/react';
-import { Form, StyledDropdown, StyledVerticalStack } from '@dfx.swiss/react-components';
+import {
+  Form,
+  StyledButton,
+  StyledButtonWidth,
+  StyledDropdown,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { PaymentMethodDescriptions, PaymentMethodLabels } from 'src/config/labels';
@@ -165,9 +171,9 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
             lastEditedFieldRef.current = Side.FROM;
           }}
           onAmountChange={() => (lastEditedFieldRef.current = Side.FROM)}
-          // forceError={customAmountError != null} // TODO: Implement
-          // forceErrorMessage={customAmountError} // TODO: Implement
-          // exchangeRate={} // TODO: Implement
+          forceErrorMessage={
+            amountError && translate(amountError.key, amountError.defaultValue, amountError.interpolation)
+          }
         />
         {isBuy && (
           <StyledDropdown<FiatPaymentMethod>
@@ -182,7 +188,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
           />
         )}
         <div className={`flex ${isSell ? 'flex-col-reverse' : 'flex-col'} w-full gap-2`}>
-          {targetAssets && (
+          {targetAssets ? (
             <AssetInput
               control={control}
               name="targetAsset"
@@ -199,12 +205,9 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
                 lastEditedFieldRef.current = Side.TO;
               }}
               onAmountChange={() => (lastEditedFieldRef.current = Side.TO)}
-              // forceError={customAmountError != null} // TODO: Implement
-              // forceErrorMessage={customAmountError} // TODO: Implement
-              // exchangeRate={} // TODO: Implement
             />
-          )}
-          {!hideTargetSelection && addressItems?.length && (
+          ) : null}
+          {!hideTargetSelection && addressItems?.length ? (
             <StyledDropdown<Address>
               control={control}
               rootRef={rootRef}
@@ -215,7 +218,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
               full
               forceEnable
             />
-          )}
+          ) : null}
         </div>
         {isSell && (
           <BankAccountSelector
@@ -228,18 +231,20 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
             className="left-0 right-0 px-4 top-4"
           />
         )}
-        {/* <div className="w-full">
+        <div className="w-full">
           <StyledButton
             type="button"
             isLoading={isFetchingPaymentInfo}
             label={header ?? translate('general/actions', 'Next')}
             width={StyledButtonWidth.FULL}
             disabled={!paymentInfo}
-            onClick={() => onConfirm(paymentInfo)}
+            hidden={!!paymentInfo}
+            onClick={() => debouncedData && handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue)}
           />
-        </div> */}
+        </div>
         <PaymentInfo
           className="pt-4"
+          isLoading={false}
           orderType={orderType}
           paymentInfo={paymentInfo?.paymentInfo}
           paymentMethod={data?.paymentMethod}
@@ -248,7 +253,6 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
           amountError={amountError}
           kycError={kycError}
           errorMessage={paymentInfoError}
-          isLoading={isFetchingPaymentInfo}
           retry={() => debouncedData && handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue)}
           showPaymentNameForm={showPaymentNameForm}
           confirmPayment={confirmPayment}

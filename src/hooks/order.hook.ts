@@ -199,6 +199,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
 
       if (deepEqual(validatedOrderForm, lastFetchedDataRef.current)) return;
 
+      setKycError(undefined);
+      setAmountError(undefined);
       setPaymentInfo(undefined);
       setPaymentInfoError(undefined);
       if (!validatedOrderForm) return;

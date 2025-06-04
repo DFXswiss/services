@@ -67,3 +67,8 @@ export interface OrderPaymentInfo {
   status: CustodyOrderStatus;
   paymentInfo: OrderPaymentData;
 }
+
+export interface ExchangeRate {
+  rate: number;
+  currency: string;
+}
