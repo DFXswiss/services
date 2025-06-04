@@ -7,6 +7,7 @@ import { useWindowContext } from 'src/contexts/window.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { blankedAddress } from 'src/util/utils';
 import ActionableList from '../actionable-list';
+import { Modal } from '../modal';
 
 interface BankAccountSelectorProps {
   value?: BankAccount;
@@ -55,17 +56,15 @@ export const BankAccountSelector: React.FC<BankAccountSelectorProps> = ({
   return (
     <>
       <StyledModalButton
-        onClick={() => {
-          onModalToggle(true);
-        }}
+        onClick={() => onModalToggle(true)}
         onBlur={() => undefined}
         placeholder={translate('screens/sell', placeholder)}
         value={Utils.formatIban(value?.iban) ?? undefined}
         description={value?.label}
       />
 
-      {isModalOpen && (
-        <StyledVerticalStack gap={6} center className={`absolute h-full w-full z-10 top-0 bg-white ${className}`}>
+      <Modal isOpen={isModalOpen} onClose={() => onModalToggle(false)} className={className}>
+        <StyledVerticalStack gap={6} center className="h-full">
           <ActionableList
             items={bankAccounts?.map((account) => {
               return {
@@ -88,7 +87,7 @@ export const BankAccountSelector: React.FC<BankAccountSelectorProps> = ({
             }}
           />
         </StyledVerticalStack>
-      )}
+      </Modal>
     </>
   );
 };

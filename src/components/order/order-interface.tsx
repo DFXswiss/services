@@ -15,7 +15,7 @@ import {
   StyledDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { PaymentMethodDescriptions, PaymentMethodLabels } from 'src/config/labels';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
@@ -44,10 +44,12 @@ interface OrderInterfaceProps {
   fromInputLabel?: string;
   toInputLabel?: string;
   defaultValues?: Partial<OrderFormData>;
+  bankAccountSelection: boolean;
   pairMap?: (asset: string) => Asset | Fiat | undefined;
   onFetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   showPaymentNameForm: () => void;
   confirmPayment: () => Promise<void>;
+  setBankAccountSelection: (isOpen: boolean) => void;
 }
 
 export const OrderInterface: React.FC<OrderInterfaceProps> = ({
@@ -58,10 +60,12 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   fromInputLabel,
   toInputLabel,
   defaultValues,
+  bankAccountSelection,
   pairMap,
   onFetchPaymentInfo,
   confirmPayment,
   showPaymentNameForm,
+  setBankAccountSelection,
 }: OrderInterfaceProps) => {
   const { width } = useWindowContext();
   const { session } = useAuthContext();
@@ -87,8 +91,6 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   } = useOrder({ orderType, sourceAssets, targetAssets });
 
   const rootRef = React.useRef<HTMLDivElement>(null);
-
-  const [bankAccountSelection, setBankAccountSelection] = useState(false);
 
   const methods = useForm<OrderFormData>({ mode: 'onChange', defaultValues });
 
@@ -225,7 +227,6 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
             value={data.bankAccount}
             onChange={(account) => setValue('bankAccount', account)}
             placeholder={translate('screens/sell', 'Add or select your IBAN')}
-            // TODO (later): connect bankAccountSelection back button
             isModalOpen={bankAccountSelection}
             onModalToggle={setBankAccountSelection}
             className="left-0 right-0 px-4 top-4"

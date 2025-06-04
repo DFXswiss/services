@@ -22,6 +22,7 @@ export default function SafeScreen(): JSX.Element {
 
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
   const [showPaymentNameForm, setShowPaymentNameForm] = useState(false);
+  const [bankAccountSelection, setBankAccountSelection] = useState(false);
 
   useEffect(() => {
     userCurrency && setCurrency(userCurrency?.name.toLowerCase() as FiatCurrency);
@@ -32,8 +33,20 @@ export default function SafeScreen(): JSX.Element {
   return (
     <Layout
       rootRef={rootRef}
-      title={translate('screens/safe', 'My DFX Safe')}
-      onBack={showPaymentNameForm ? () => setShowPaymentNameForm(false) : undefined}
+      title={
+        bankAccountSelection
+          ? translate('screens/sell', 'Select payment account')
+          : showPaymentNameForm
+          ? translate('screens/safe', 'My DFX Safe')
+          : translate('screens/safe', 'My DFX Safe')
+      }
+      onBack={
+        bankAccountSelection
+          ? () => setBankAccountSelection(false)
+          : showPaymentNameForm
+          ? () => setShowPaymentNameForm(false)
+          : undefined
+      }
     >
       {error ? (
         <div>
@@ -81,7 +94,11 @@ export default function SafeScreen(): JSX.Element {
             </div>
           </div>
           <Portfolio portfolio={portfolio} currency={currency} isLoading={isLoadingPortfolio} />
-          <SafeDepositInterface showPaymentNameForm={() => setShowPaymentNameForm(true)} />
+          <SafeDepositInterface 
+            showPaymentNameForm={() => setShowPaymentNameForm(true)}
+            bankAccountSelection={bankAccountSelection}
+            setBankAccountSelection={setBankAccountSelection}
+          />
         </StyledVerticalStack>
       )}
     </Layout>

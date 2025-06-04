@@ -12,9 +12,15 @@ const PAIRS: Record<string, string> = {
 
 interface SafeDepositInterfaceProps {
   showPaymentNameForm: () => void;
+  bankAccountSelection: boolean;
+  setBankAccountSelection: (isOpen: boolean) => void;
 }
 
-export const SafeDepositInterface = ({ showPaymentNameForm }: SafeDepositInterfaceProps) => {
+export const SafeDepositInterface = ({
+  showPaymentNameForm,
+  bankAccountSelection,
+  setBankAccountSelection,
+}: SafeDepositInterfaceProps) => {
   const { call } = useApi();
   const { currencies } = useBuy();
   const { getAssets } = useAssetContext();
@@ -72,12 +78,14 @@ export const SafeDepositInterface = ({ showPaymentNameForm }: SafeDepositInterfa
       orderType={OrderType.BUY}
       header={translate('screens/safe', 'Deposit')}
       sourceAssets={availableCurrencies}
-      fromInputLabel={translate('screens/safe', 'Deposit Amount')}
+      fromInputLabel={translate('screens/payment', 'Amount')}
       toInputLabel={translate('screens/safe', 'Receive Amount')}
       pairMap={pairMap}
       onFetchPaymentInfo={onFetchPaymentInfo}
       showPaymentNameForm={showPaymentNameForm}
       confirmPayment={confirmPayment}
+      bankAccountSelection={bankAccountSelection}
+      setBankAccountSelection={setBankAccountSelection}
     />
   );
 };
