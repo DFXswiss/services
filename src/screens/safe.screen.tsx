@@ -2,14 +2,15 @@ import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swi
 import { useEffect, useRef, useState } from 'react';
 import { NameEdit } from 'src/components/edit/name.edit';
 import { ErrorHint } from 'src/components/error-hint';
-import { SafeDepositInterface } from 'src/components/order/safe-deposit-interface';
 import { SafeCompletion } from 'src/components/payment/safe-completion';
-import { ButtonGroup } from 'src/components/safe/button-group';
+import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
 import { PriceChart } from 'src/components/safe/chart';
+import { DepositInterface } from 'src/components/safe/deposit-interface';
 import { Portfolio } from 'src/components/safe/portfolio';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { FiatCurrency } from 'src/dto/safe.dto';
 import { useUserGuard } from 'src/hooks/guard.hook';
-import { FiatCurrency, useSafe } from 'src/hooks/safe.hook';
+import { useSafe } from 'src/hooks/safe.hook';
 import { formatCurrency } from 'src/util/utils';
 import { Layout } from '../components/layout';
 
@@ -22,9 +23,9 @@ export default function SafeScreen(): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
+  const [showsCompletion, setShowsCompletion] = useState(false);
   const [showPaymentNameForm, setShowPaymentNameForm] = useState(false);
   const [bankAccountSelection, setBankAccountSelection] = useState(false);
-  const [showsCompletion, setShowsCompletion] = useState(false);
 
   useEffect(() => {
     userCurrency && setCurrency(userCurrency?.name.toLowerCase() as FiatCurrency);
@@ -61,7 +62,7 @@ export default function SafeScreen(): JSX.Element {
       ) : showsCompletion ? (
         <SafeCompletion onClose={() => setShowsCompletion(false)} />
       ) : showPaymentNameForm ? (
-        // TODO (later): Retrigger payment execution after name edit
+        // TODO (later?): Retrigger payment execution after name edit
         <NameEdit onSuccess={() => setShowPaymentNameForm(false)} />
       ) : (
         <StyledVerticalStack full gap={10} className="p-4">
@@ -76,12 +77,12 @@ export default function SafeScreen(): JSX.Element {
                       <ButtonGroup<FiatCurrency>
                         items={Object.values(FiatCurrency)}
                         selected={currency}
-                        onClick={(_currency) => setCurrency(_currency)}
-                        buttonLabel={(_currency) => _currency.toUpperCase()}
-                        size={'sm'}
+                        onClick={setCurrency}
+                        buttonLabel={(currency) => currency.toUpperCase()}
+                        size={ButtonGroupSize.SM}
                       />
                       {isLoadingPortfolio ? (
-                        <div className="">
+                        <div>
                           <StyledLoadingSpinner size={SpinnerSize.MD} />
                         </div>
                       ) : (
@@ -102,11 +103,11 @@ export default function SafeScreen(): JSX.Element {
             </div>
           </div>
           <Portfolio portfolio={portfolio.balances} currency={currency} isLoading={isLoadingPortfolio} />
-          <SafeDepositInterface
-            showPaymentNameForm={() => setShowPaymentNameForm(true)}
+          <DepositInterface
             bankAccountSelection={bankAccountSelection}
-            setBankAccountSelection={setBankAccountSelection}
             showCompletion={() => setShowsCompletion(true)}
+            setBankAccountSelection={setBankAccountSelection}
+            showPaymentNameForm={() => setShowPaymentNameForm(true)}
           />
         </StyledVerticalStack>
       )}

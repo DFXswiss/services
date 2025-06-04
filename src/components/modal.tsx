@@ -19,9 +19,7 @@ export function Modal({ isOpen, onClose, children, className = '' }: ModalProps)
     if (!isOpen) return;
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && onClose) {
-        onClose();
-      }
+      if (event.key === 'Escape' && onClose) onClose();
     };
 
     document.addEventListener('keydown', handleEscape);
@@ -31,19 +29,18 @@ export function Modal({ isOpen, onClose, children, className = '' }: ModalProps)
   if (!mounted || !isOpen) return null;
 
   const appRoot = document.getElementById('app-root');
+
   if (!appRoot) {
-    console.warn('Modal: app-root element not found, falling back to document.body');
+    console.warn('Modal: app-root element not found');
     return null;
   }
 
   return createPortal(
     <div className={`absolute inset-0 z-50 bg-white ${className}`}>
       <div className="flex flex-grow justify-center h-full">
-        <div className="w-full max-w-screen-md flex flex-grow flex-col">
-          {children}
-        </div>
+        <div className="w-full max-w-screen-md flex flex-grow flex-col">{children}</div>
       </div>
     </div>,
-    appRoot
+    appRoot,
   );
 }

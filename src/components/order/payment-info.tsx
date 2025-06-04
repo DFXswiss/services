@@ -17,7 +17,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { Asset, AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
-import React, { useMemo, useState } from 'react';
+import React, { useLayoutEffect as useEffect, useMemo, useState } from 'react';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
@@ -77,10 +77,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
   const [isProcessingTransaction, setIsProcessingTransaction] = useState(false);
   const [isProcessingCardPayment, setIsProcessingCardPayment] = useState(false);
 
-  const isBankWire = paymentMethod !== FiatPaymentMethod.CARD;
-  const isCardPayment = paymentMethod === FiatPaymentMethod.CARD;
-
-  React.useLayoutEffect(() => {
+  useEffect(() => {
     if (paymentInfo && localRef.current) {
       localRef.current.scrollIntoView({ behavior: 'smooth' });
     }
@@ -124,6 +121,9 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
       setIsProcessingTransaction(false);
     }
   }
+
+  const isBankWire = paymentMethod !== FiatPaymentMethod.CARD;
+  const isCardPayment = paymentMethod === FiatPaymentMethod.CARD;
 
   return (
     <div ref={localRef}>

@@ -1,25 +1,25 @@
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { OrderType } from 'src/hooks/order.hook';
 import { useSafe } from 'src/hooks/safe.hook';
-import { OrderInterface } from './order-interface';
+import { OrderInterface } from '../order/order-interface';
 
-interface SafeDepositInterfaceProps {
-  showPaymentNameForm: () => void;
+interface DepositInterfaceProps {
   bankAccountSelection: boolean;
-  setBankAccountSelection: (isOpen: boolean) => void;
   showCompletion: () => void;
+  showPaymentNameForm: () => void;
+  setBankAccountSelection: (isOpen: boolean) => void;
 }
 
-export const SafeDepositInterface = ({
-  showPaymentNameForm,
+export const DepositInterface = ({
   bankAccountSelection,
-  setBankAccountSelection,
   showCompletion,
-}: SafeDepositInterfaceProps) => {
+  showPaymentNameForm,
+  setBankAccountSelection,
+}: DepositInterfaceProps) => {
   const { translate } = useSettingsContext();
-  const { availableCurrencies, onFetchPaymentInfo, confirmPayment, pairMap } = useSafe();
+  const { availableCurrencies, fetchPaymentInfo, confirmPayment, pairMap } = useSafe();
 
-  async function obConfirmPayment(): Promise<void> {
+  async function onConfirmPayment(): Promise<void> {
     await confirmPayment();
     showCompletion();
   }
@@ -31,10 +31,10 @@ export const SafeDepositInterface = ({
       sourceInputLabel={translate('screens/payment', 'Amount')}
       sourceAssets={availableCurrencies}
       pairMap={pairMap}
-      onFetchPaymentInfo={onFetchPaymentInfo}
-      showPaymentNameForm={showPaymentNameForm}
-      confirmPayment={obConfirmPayment}
       bankAccountSelection={bankAccountSelection}
+      confirmPayment={onConfirmPayment}
+      onFetchPaymentInfo={fetchPaymentInfo}
+      showPaymentNameForm={showPaymentNameForm}
       setBankAccountSelection={setBankAccountSelection}
     />
   );

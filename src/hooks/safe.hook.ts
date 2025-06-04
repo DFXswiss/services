@@ -12,51 +12,16 @@ import {
   useUser,
   useUserContext,
 } from '@dfx.swiss/react';
+import { SignIn } from '@dfx.swiss/react/dist/definitions/auth';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
+import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
 import { OrderFormData } from './order.hook';
 
-export enum FiatCurrency {
-  CHF = 'chf',
-  EUR = 'eur',
-  USD = 'usd',
-}
-
-const PAIRS: Record<string, string> = {
+const DEPOSIT_PAIRS: Record<string, string> = {
   EUR: 'dEURO',
   CHF: 'ZCHF',
 };
-
-export interface CustodyAsset {
-  name: string;
-  description: string;
-}
-
-export interface CustodyAssetBalance {
-  asset: CustodyAsset;
-  balance: number;
-  value: CustodyFiatValue;
-}
-
-export interface CustodyBalance {
-  totalValue: CustodyFiatValue;
-  balances: CustodyAssetBalance[];
-}
-
-export interface CustodyFiatValue {
-  chf: number;
-  eur: number;
-  usd: number;
-}
-
-export interface CustodyHistoryEntry {
-  date: string;
-  value: CustodyFiatValue;
-}
-
-export interface CustodyHistory {
-  totalValue: CustodyHistoryEntry[];
-}
 
 export interface UseSafeResult {
   isInitialized: boolean;
@@ -67,7 +32,7 @@ export interface UseSafeResult {
   error?: string;
   availableCurrencies?: Fiat[];
   availableAssets?: CustodyAsset[];
-  onFetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
+  fetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   confirmPayment: () => Promise<void>;
   pairMap: (asset: string) => Asset | undefined;
 }
@@ -75,13 +40,11 @@ export interface UseSafeResult {
 export function useSafe(): UseSafeResult {
   const { call } = useApi();
   const { currencies } = useBuy();
+  const { session } = useAuthContext();
   const { changeUserAddress } = useUser();
   const { getAssets } = useAssetContext();
-  const { isLoggedIn } = useSessionContext();
-  const { session } = useAuthContext();
-  const { tokenStore } = useSessionContext();
-
   const { user, isUserLoading } = useUserContext();
+  const { isLoggedIn, tokenStore } = useSessionContext();
 
   const currentOrderId = useRef<number>();
 
@@ -92,9 +55,11 @@ export function useSafe(): UseSafeResult {
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
+  // ---- Safe Screen Initialization ----
+
   useEffect(() => {
     if (!isUserLoading && session && user && isLoggedIn) {
-      createCustodyAccountOrSwitch(user)
+      createCustodyOrSwitch(user)
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
         .finally(() => setIsInitialized(true));
     }
@@ -102,7 +67,6 @@ export function useSafe(): UseSafeResult {
 
   useEffect(() => {
     if (isInitialized) return;
-
     setIsLoadingPortfolio(true);
     getBalances()
       .then((portfolio) => setPortfolio(portfolio))
@@ -112,7 +76,6 @@ export function useSafe(): UseSafeResult {
 
   useEffect(() => {
     if (isInitialized) return;
-
     setIsLoadingHistory(true);
     getHistory()
       .then(({ totalValue }) => setHistory(totalValue))
@@ -120,18 +83,43 @@ export function useSafe(): UseSafeResult {
       .finally(() => setIsLoadingHistory(false));
   }, [isInitialized]);
 
-  async function createCustodyAccountOrSwitch(user: User): Promise<void> {
+  // ---- Available Deposit Pairs ----
+
+  const availableCurrencies = useMemo(() => {
+    return currencies?.filter((c) => Object.keys(DEPOSIT_PAIRS).includes(c.name));
+  }, [currencies]);
+
+  const availableAssets = useMemo(() => {
+    return getAssets([Blockchain.ETHEREUM], { buyable: true, comingSoon: false }).filter((a) =>
+      Object.values(DEPOSIT_PAIRS).includes(a.name),
+    );
+  }, [getAssets]);
+
+  const pairMap = useCallback(
+    (asset: string) => availableAssets?.find((a) => a.name === DEPOSIT_PAIRS[asset]),
+    [availableAssets],
+  );
+
+  // ---- Custody Token Management ----
+
+  async function createCustodyOrSwitch(user: User): Promise<void> {
     const custodyAddress = user.addresses.find((a) => a.isCustody);
     if (!custodyAddress) {
-      return call<{ accessToken: string }>({
-        url: 'custody',
-        method: 'POST',
-        data: { addressType: 'EVM' },
-      }).then(({ accessToken }) => tokenStore.set('custody', accessToken));
-    } else if (session?.address !== custodyAddress.address && !tokenStore.get('custody')) {
+      return createCustodyUser().then(({ accessToken }) => tokenStore.set('custody', accessToken));
+    } else if (!tokenStore.get('custody') && session?.address !== custodyAddress.address) {
       const custodyToken = (await changeUserAddress(custodyAddress.address)).accessToken;
       tokenStore.set('custody', custodyToken);
     }
+  }
+
+  // ---- API Calls ----
+
+  async function createCustodyUser(): Promise<SignIn> {
+    return call<SignIn>({
+      url: 'custody',
+      method: 'POST',
+      data: { addressType: 'EVM' },
+    });
   }
 
   async function getBalances(): Promise<CustodyBalance> {
@@ -148,24 +136,14 @@ export function useSafe(): UseSafeResult {
     });
   }
 
-  const availableCurrencies = useMemo(() => {
-    return currencies?.filter((c) => Object.keys(PAIRS).includes(c.name)) || [];
-  }, [currencies]);
-
-  const availableAssets = useMemo(() => {
-    return getAssets([Blockchain.ETHEREUM], { buyable: true, comingSoon: false }).filter((a) =>
-      Object.values(PAIRS).includes(a.name),
-    );
-  }, [getAssets]);
-
-  async function onFetchPaymentInfo(data: OrderFormData): Promise<OrderPaymentInfo> {
+  async function fetchPaymentInfo(data: OrderFormData): Promise<OrderPaymentInfo> {
     const order = await call<OrderPaymentInfo>({
       url: 'custody/order',
       method: 'POST',
       data: {
         type: CustodyOrderType.DEPOSIT,
         sourceAsset: data.sourceAsset.name,
-        targetAsset: PAIRS[data.sourceAsset.name],
+        targetAsset: DEPOSIT_PAIRS[data.sourceAsset.name],
         sourceAmount: Number(data.sourceAmount),
         paymentMethod: data.paymentMethod,
       },
@@ -177,19 +155,14 @@ export function useSafe(): UseSafeResult {
   }
 
   async function confirmPayment(): Promise<void> {
+    if (!currentOrderId.current) return;
+
     await call({
       url: `custody/order/${currentOrderId.current}/confirm`,
       method: 'POST',
       token: tokenStore.get('custody'),
-    });
+    }).then(() => (currentOrderId.current = undefined));
   }
-
-  const pairMap = useCallback(
-    (asset: string) => {
-      return availableAssets?.find((a) => a.name === PAIRS[asset]);
-    },
-    [availableAssets],
-  );
 
   return useMemo<UseSafeResult>(
     () => ({
@@ -201,7 +174,7 @@ export function useSafe(): UseSafeResult {
       error,
       availableCurrencies,
       availableAssets,
-      onFetchPaymentInfo,
+      fetchPaymentInfo,
       confirmPayment,
       pairMap,
     }),
@@ -214,7 +187,7 @@ export function useSafe(): UseSafeResult {
       error,
       availableCurrencies,
       availableAssets,
-      onFetchPaymentInfo,
+      fetchPaymentInfo,
       confirmPayment,
     ],
   );

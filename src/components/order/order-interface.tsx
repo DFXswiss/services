@@ -52,6 +52,7 @@ interface OrderInterfaceProps {
   confirmPayment: () => Promise<void>;
 }
 
+// TODO (later): Simplify and clean up logic
 export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   orderType,
   header,
@@ -92,14 +93,12 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
 
   const rootRef = React.useRef<HTMLDivElement>(null);
 
-  const methods = useForm<OrderFormData>({ mode: 'onChange', defaultValues });
-
   const {
     watch,
     control,
     setValue,
     formState: { errors },
-  } = methods;
+  } = useForm<OrderFormData>({ mode: 'onChange', defaultValues });
 
   const data = watch();
   const debouncedData = useDebounce(data, 500);
@@ -128,7 +127,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   }, [isInitialized, session, addressItems, blockchain, setValue]);
 
   useEffect(() => {
-    const defaultCurrency = getDefaultCurrency(availableCurrencies) ?? (availableCurrencies && availableCurrencies[0]);
+    const defaultCurrency = getDefaultCurrency(availableCurrencies) ?? availableCurrencies?.[0];
     if (isBuy && sourceAssets?.length) {
       setValue('sourceAsset', sourceAssets?.find((c) => c.name === defaultCurrency?.name) ?? sourceAssets[0]);
     } else if (isSell && targetAssets?.length) {
@@ -253,9 +252,9 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
           amountError={amountError}
           kycError={kycError}
           errorMessage={paymentInfoError}
-          retry={() => debouncedData && handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue)}
-          showPaymentNameForm={showPaymentNameForm}
           confirmPayment={confirmPayment}
+          showPaymentNameForm={showPaymentNameForm}
+          retry={() => debouncedData && handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue)}
         />
       </StyledVerticalStack>
     </Form>

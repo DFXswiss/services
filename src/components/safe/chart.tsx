@@ -3,7 +3,7 @@ import { ApexOptions } from 'apexcharts';
 import { useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { CustodyHistoryEntry, FiatCurrency } from 'src/hooks/safe.hook';
+import { CustodyHistoryEntry, FiatCurrency } from 'src/dto/safe.dto';
 import { ButtonGroup } from './button-group';
 
 enum Timeframe {
