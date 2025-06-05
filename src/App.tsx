@@ -6,6 +6,7 @@ import { Navigate, Outlet, RouteObject, RouterProvider } from 'react-router-dom'
 import { Layout } from './components/layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
+import { OrderUIContextProvider } from './contexts/order-ui.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
@@ -272,19 +273,21 @@ function App({ routerFactory, params }: AppProps) {
     <WindowContextProvider>
       <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
         <BalanceContextProvider>
-          <AppHandlingContextProvider
-            isWidget={params != null}
-            service={params?.service}
-            closeCallback={params?.onClose}
-            params={params}
-            router={router}
-          >
-            <SettingsContextProvider>
-              <WalletContextProvider router={router}>
-                <RouterProvider router={router} />
-              </WalletContextProvider>
-            </SettingsContextProvider>
-          </AppHandlingContextProvider>
+          <OrderUIContextProvider>
+            <AppHandlingContextProvider
+              isWidget={params != null}
+              service={params?.service}
+              closeCallback={params?.onClose}
+              params={params}
+              router={router}
+            >
+              <SettingsContextProvider>
+                <WalletContextProvider router={router}>
+                  <RouterProvider router={router} />
+                </WalletContextProvider>
+              </SettingsContextProvider>
+            </AppHandlingContextProvider>
+          </OrderUIContextProvider>
         </BalanceContextProvider>
       </DfxContextProvider>
     </WindowContextProvider>

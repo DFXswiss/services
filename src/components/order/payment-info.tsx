@@ -19,6 +19,7 @@ import {
 import { Asset, AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import React, { useEffect, useMemo, useState } from 'react';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { OrderPaymentData } from 'src/dto/order.dto';
@@ -46,7 +47,6 @@ export interface PaymentInfoProps {
   kycError?: TransactionError;
   retry: () => void;
   confirmPayment: () => Promise<void>;
-  showPaymentNameForm: () => void;
 }
 
 export const PaymentInfo = React.memo(function PaymentInfoComponent({
@@ -62,7 +62,6 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
   targetAsset,
   retry,
   confirmPayment,
-  showPaymentNameForm,
 }: PaymentInfoProps): JSX.Element {
   const { closeServices } = useAppHandlingContext();
   const { bankAccounts } = useBankAccountContext();
@@ -71,6 +70,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
   const { activeWallet } = useWalletContext();
   const { translate } = useSettingsContext();
   const { flags } = useAppParams();
+  const { setPaymentNameForm } = useOrderUIContext();
 
   const localRef = React.useRef<HTMLDivElement>(null);
 
@@ -90,7 +90,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
 
   function onCardBuy(info: OrderPaymentData) {
     if (info.error === TransactionError.NAME_REQUIRED) {
-      showPaymentNameForm();
+      setPaymentNameForm(true);
     } else if (info?.buyInfos?.paymentLink && info.isValid) {
       setIsProcessingCardPayment(true);
       window.location.href = info.buyInfos.paymentLink;

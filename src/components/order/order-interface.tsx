@@ -19,6 +19,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { PaymentMethodDescriptions, PaymentMethodLabels } from 'src/config/labels';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { OrderPaymentInfo } from 'src/dto/order.dto';
@@ -44,11 +45,8 @@ interface OrderInterfaceProps {
   sourceInputLabel?: string;
   targetInputLabel?: string;
   defaultValues?: Partial<OrderFormData>;
-  bankAccountSelection: boolean;
   pairMap?: (asset: string) => Asset | Fiat | undefined;
   onFetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
-  showPaymentNameForm: () => void;
-  setBankAccountSelection: (isOpen: boolean) => void;
   confirmPayment: () => Promise<void>;
 }
 
@@ -61,12 +59,9 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   sourceInputLabel,
   targetInputLabel,
   defaultValues,
-  bankAccountSelection,
   pairMap,
   onFetchPaymentInfo,
   confirmPayment,
-  showPaymentNameForm,
-  setBankAccountSelection,
 }: OrderInterfaceProps) => {
   const { width } = useWindowContext();
   const { session } = useAuthContext();
@@ -74,6 +69,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   const { translate } = useSettingsContext();
   const { isInitialized } = useAppHandlingContext();
   const { blockchain, hideTargetSelection } = useAppParams();
+  const { bankAccountSelection, setBankAccountSelection } = useOrderUIContext();
   const {
     isBuy,
     isSell,
@@ -253,7 +249,6 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
           kycError={kycError}
           errorMessage={paymentInfoError}
           confirmPayment={confirmPayment}
-          showPaymentNameForm={showPaymentNameForm}
           retry={() => debouncedData && handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue)}
         />
       </StyledVerticalStack>

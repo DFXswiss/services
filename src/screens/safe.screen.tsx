@@ -7,6 +7,7 @@ import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
 import { PriceChart } from 'src/components/safe/chart';
 import { DepositInterface } from 'src/components/safe/deposit-interface';
 import { Portfolio } from 'src/components/safe/portfolio';
+import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { FiatCurrency } from 'src/dto/safe.dto';
 import { useUserGuard } from 'src/hooks/guard.hook';
@@ -19,13 +20,17 @@ export default function SafeScreen(): JSX.Element {
 
   const { isInitialized, portfolio, history, isLoadingPortfolio, isLoadingHistory, error } = useSafe();
   const { currency: userCurrency, translate } = useSettingsContext();
+  const {
+    showsCompletion,
+    showPaymentNameForm,
+    bankAccountSelection,
+    setCompletion,
+    setPaymentNameForm,
+    setBankAccountSelection,
+  } = useOrderUIContext();
 
   const rootRef = useRef<HTMLDivElement>(null);
-
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
-  const [showsCompletion, setShowsCompletion] = useState(false);
-  const [showPaymentNameForm, setShowPaymentNameForm] = useState(false);
-  const [bankAccountSelection, setBankAccountSelection] = useState(false);
 
   useEffect(() => {
     userCurrency && setCurrency(userCurrency?.name.toLowerCase() as FiatCurrency);
@@ -33,26 +38,21 @@ export default function SafeScreen(): JSX.Element {
 
   const showChart = history.length > 1;
 
+  const getTitle = () => {
+    if (showsCompletion) return translate('screens/safe', 'Deposit Complete');
+    if (bankAccountSelection) return translate('screens/sell', 'Select payment account');
+    return translate('screens/safe', 'My DFX Safe');
+  };
+
+  const getBackHandler = () => {
+    if (showsCompletion) return () => setCompletion(false);
+    if (bankAccountSelection) return () => setBankAccountSelection(false);
+    if (showPaymentNameForm) return () => setPaymentNameForm(false);
+    return undefined;
+  };
+
   return (
-    <Layout
-      rootRef={rootRef}
-      title={
-        showsCompletion
-          ? translate('screens/safe', 'Deposit Complete')
-          : bankAccountSelection
-          ? translate('screens/sell', 'Select payment account')
-          : translate('screens/safe', 'My DFX Safe')
-      }
-      onBack={
-        showsCompletion
-          ? () => setShowsCompletion(false)
-          : bankAccountSelection
-          ? () => setBankAccountSelection(false)
-          : showPaymentNameForm
-          ? () => setShowPaymentNameForm(false)
-          : undefined
-      }
-    >
+    <Layout rootRef={rootRef} title={getTitle()} onBack={getBackHandler()}>
       {error ? (
         <div>
           <ErrorHint message={error} />
@@ -60,10 +60,10 @@ export default function SafeScreen(): JSX.Element {
       ) : !isInitialized ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : showsCompletion ? (
-        <SafeCompletion onClose={() => setShowsCompletion(false)} />
+        <SafeCompletion onClose={() => setCompletion(false)} />
       ) : showPaymentNameForm ? (
         // TODO (later?): Retrigger payment execution after name edit
-        <NameEdit onSuccess={() => setShowPaymentNameForm(false)} />
+        <NameEdit onSuccess={() => setPaymentNameForm(false)} />
       ) : (
         <StyledVerticalStack full gap={10} className="p-4">
           <div className="shadow-card rounded-xl">
@@ -103,12 +103,7 @@ export default function SafeScreen(): JSX.Element {
             </div>
           </div>
           <Portfolio portfolio={portfolio.balances} currency={currency} isLoading={isLoadingPortfolio} />
-          <DepositInterface
-            bankAccountSelection={bankAccountSelection}
-            showCompletion={() => setShowsCompletion(true)}
-            setBankAccountSelection={setBankAccountSelection}
-            showPaymentNameForm={() => setShowPaymentNameForm(true)}
-          />
+          <DepositInterface />
         </StyledVerticalStack>
       )}
     </Layout>
