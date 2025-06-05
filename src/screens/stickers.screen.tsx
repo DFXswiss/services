@@ -47,7 +47,7 @@ export default function StickersScreen(): JSX.Element {
     mode: 'all',
   });
 
-  const data = useDebounce(watch(), 500);
+  const debouncedData = useDebounce(watch(), 500);
 
   useEffect(() => {
     const route = urlParams.get('route');
@@ -62,14 +62,17 @@ export default function StickersScreen(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (data?.route) validateRecipient(data.route);
-  }, [data?.route]);
-
-  async function validateRecipient(route: string) {
     setValidatedRecipient(undefined);
     setErrorRecipient(undefined);
-    setIsLoadingRecipient(true);
 
+    if (debouncedData?.route) validateRecipient(debouncedData.route);
+  }, [debouncedData?.route]);
+
+  useEffect(() => {
+    setErrorGeneratingPdf(undefined);
+  }, [debouncedData?.route, debouncedData?.externalIds]);
+
+  async function validateRecipient(route: string) {
     getPaymentRecipient(route)
       .then((_) => {
         setErrorRecipient(undefined);
@@ -114,7 +117,7 @@ export default function StickersScreen(): JSX.Element {
                 loading={isLoadingRecipient}
               />
               {validatedRecipient && (
-                <div className="absolute bottom-[19px] right-5">
+                <div className="absolute top-[44px] right-5">
                   <DfxIcon icon={IconVariant.CHECK} size={IconSize.MD} color={IconColor.BLUE} />
                 </div>
               )}
@@ -126,14 +129,13 @@ export default function StickersScreen(): JSX.Element {
               placeholder={'123, 456, 789'}
               full
               smallLabel
-              disabled={!validatedRecipient}
             />
             <StyledButton
               type="submit"
               label={translate('general/actions', 'Download')}
-              onClick={() => onSubmit(data)}
+              onClick={() => onSubmit(debouncedData)}
               width={StyledButtonWidth.FULL}
-              disabled={!isValid}
+              disabled={!isValid || !validatedRecipient || isGeneratingPdf || !!errorGeneratingPdf}
               isLoading={isGeneratingPdf}
             />
             {errorRecipient && (
