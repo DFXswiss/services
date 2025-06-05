@@ -128,3 +128,11 @@ export interface MetaMaskInfo {
   transferAmount: number;
   minFee: number;
 }
+
+export enum StickerLanguage {
+  EN = 'en',
+  DE = 'de',
+  FR = 'fr',
+  IT = 'it',
+  SQ = 'sq',
+}

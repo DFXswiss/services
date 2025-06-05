@@ -14,6 +14,7 @@ import {
 import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
 
 import { PaymentQuoteStatus } from '@dfx.swiss/react/dist/definitions/route';
+import { StickerLanguage } from 'src/dto/payment-link.dto';
 
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
@@ -151,6 +152,14 @@ export const FileTypeLabels = {
   [FileType.RESIDENCE_PERMIT]: 'Residence permit',
   [FileType.ADDITIONAL_DOCUMENTS]: 'Additional documents',
   [FileType.AUTHORITY]: 'Power of Attorney',
+};
+
+export const LanguageLabels = {
+  [StickerLanguage.EN]: { local: 'English', translated: 'English' },
+  [StickerLanguage.DE]: { local: 'Deutsch', translated: 'German' },
+  [StickerLanguage.FR]: { local: 'Français', translated: 'French' },
+  [StickerLanguage.IT]: { local: 'Italiano', translated: 'Italian' },
+  [StickerLanguage.SQ]: { local: 'Shqip', translated: 'Albanian' },
 };
 
 // --- ADDRESSES --- //

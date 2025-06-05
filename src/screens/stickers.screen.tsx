@@ -7,28 +7,34 @@ import {
   IconVariant,
   StyledButton,
   StyledButtonWidth,
+  StyledDropdown,
   StyledInput,
   StyledLink,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
+import { LanguageLabels } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { StickerLanguage } from 'src/dto/payment-link.dto';
 import useDebounce from 'src/hooks/debounce.hook';
 import { downloadFile, filenameDateFormat, url } from 'src/util/utils';
 
 interface FormData {
   route: string;
   externalIds: string;
+  language: StickerLanguage;
 }
 
 export default function StickersScreen(): JSX.Element {
-  const { translate, translateError } = useSettingsContext();
+  const { translate, translateError, language } = useSettingsContext();
   const { getPaymentRecipient, getPaymentStickers } = usePaymentRoutes();
+
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const [urlParams, setUrlParams] = useSearchParams();
   const [errorRecipient, setErrorRecipient] = useState<string>();
@@ -47,15 +53,24 @@ export default function StickersScreen(): JSX.Element {
     mode: 'all',
   });
 
+  const selectedLanguage = watch('language');
   const debouncedData = useDebounce(watch(), 500);
+
+  useEffect(() => {
+    if (language && !selectedLanguage) {
+      setValue('language', language.symbol.toLowerCase() as StickerLanguage);
+    }
+  }, [language]);
 
   useEffect(() => {
     const route = urlParams.get('route');
     const externalIds = urlParams.get('externalIds');
-    if (!route && !externalIds) return;
+    const language = urlParams.get('language') as StickerLanguage;
+    if (!route && !externalIds && !language) return;
 
     if (route) setValue('route', route);
     if (externalIds) setValue('externalIds', externalIds);
+    if (language) setValue('language', language);
 
     trigger();
     setUrlParams(new URLSearchParams());
@@ -87,7 +102,7 @@ export default function StickersScreen(): JSX.Element {
 
     setIsGeneratingPdf(true);
     setErrorGeneratingPdf(undefined);
-    getPaymentStickers(data.route, data.externalIds)
+    getPaymentStickers(data.route, data.externalIds, undefined, data.language)
       .then(({ data, headers }) => {
         downloadFile(data, headers, `DFX_OCP_stickers_${filenameDateFormat()}.pdf`);
       })
@@ -130,12 +145,23 @@ export default function StickersScreen(): JSX.Element {
               full
               smallLabel
             />
+            <StyledDropdown<StickerLanguage>
+              full
+              rootRef={rootRef}
+              name="language"
+              label={translate('screens/settings', 'Language')}
+              smallLabel={true}
+              placeholder={translate('general/actions', 'Select') + '...'}
+              items={Object.values(StickerLanguage)}
+              labelFunc={(item) => LanguageLabels[item].translated}
+              descriptionFunc={(item) => LanguageLabels[item].local}
+            />
             <StyledButton
               type="submit"
               label={translate('general/actions', 'Download')}
               onClick={() => onSubmit(debouncedData)}
               width={StyledButtonWidth.FULL}
-              disabled={!isValid || !validatedRecipient || isGeneratingPdf || !!errorGeneratingPdf}
+              disabled={!isValid || !validatedRecipient || isGeneratingPdf}
               isLoading={isGeneratingPdf}
             />
             {errorRecipient && (
