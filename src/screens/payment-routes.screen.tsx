@@ -723,7 +723,9 @@ export default function PaymentRoutesScreen(): JSX.Element {
                             isLoading={isUpdatingPaymentLink.includes(link.id)}
                           />
                         )}
-                        {errorGeneratingSticker && <ErrorHint message={errorGeneratingSticker} />}
+                        <div className="text-center">
+                          {errorGeneratingSticker && <ErrorHint message={errorGeneratingSticker} />}
+                        </div>
                       </StyledVerticalStack>
                     </StyledCollapsible>
                   </div>
