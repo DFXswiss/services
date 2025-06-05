@@ -4,6 +4,8 @@ import { Controller } from 'react-hook-form';
 import { ExchangeRate } from 'src/dto/order.dto';
 import { formatCurrency } from 'src/util/utils';
 
+const FIAT_REGEX = /^\d*\.?\d{0,2}$/;
+
 export interface AssetInputControlProps extends ControlProps {
   type?: HTMLInputTypeAttribute;
   placeholder?: string;
@@ -13,6 +15,7 @@ export interface AssetInputControlProps extends ControlProps {
   exchangeRate?: ExchangeRate;
   coloredBackground?: boolean;
   assetSelector?: React.ReactNode;
+  isFiat?: boolean;
   onMaxButtonClick?: () => void;
   onAmountChange?: () => void;
 }
@@ -36,6 +39,7 @@ export const AssetInputControl = forwardRef<HTMLInputElement, AssetInputControlP
       exchangeRate,
       coloredBackground = false,
       assetSelector,
+      isFiat = false,
       ...props
     }: AssetInputControlProps,
     ref,
@@ -64,9 +68,12 @@ export const AssetInputControl = forwardRef<HTMLInputElement, AssetInputControlP
                       className="text-lg text-dfxBlue-800 font-normal rounded-md border-none w-full focus:outline-none pl-1"
                       type="number"
                       inputMode="decimal"
-                      onChange={(value: any) => {
-                        onChange(value.target.value);
-                        onAmountChange?.();
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        if (raw === '' || !isFiat || FIAT_REGEX.test(raw)) {
+                          onChange(raw);
+                          onAmountChange?.();
+                        }
                       }}
                       placeholder={placeholder}
                       value={value ?? ''}

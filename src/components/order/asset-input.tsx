@@ -74,6 +74,7 @@ export const AssetInput: React.FC<AssetInputProps> = ({
       onAmountChange={onAmountChange}
       forceErrorMessage={forceErrorMessage}
       exchangeRate={exchangeRate}
+      isFiat={selectedItem && !isAsset(selectedItem)}
       assetSelector={
         <StyledDropdown<Asset | Fiat>
           rootRef={rootRef}
