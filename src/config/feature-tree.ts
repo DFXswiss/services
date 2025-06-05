@@ -5929,7 +5929,7 @@ export const FeatureTree: Page[] = [
           tiles: ['phantom', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.SOLANA, assetOut: 'SOL' },
+            query: { blockchain: Blockchain.SOLANA, assetIn: 'SOL' },
           },
         },
       },
@@ -5941,7 +5941,7 @@ export const FeatureTree: Page[] = [
           tiles: ['phantom', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.SOLANA, assetOut: 'USDT' },
+            query: { blockchain: Blockchain.SOLANA, assetIn: 'USDT' },
           },
         },
       },
@@ -5953,7 +5953,7 @@ export const FeatureTree: Page[] = [
           tiles: ['phantom', 'cli'],
           options: {
             service: 'sell',
-            query: { blockchain: Blockchain.SOLANA, assetOut: 'USDC' },
+            query: { blockchain: Blockchain.SOLANA, assetIn: 'USDC' },
           },
         },
       },
