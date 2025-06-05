@@ -73,7 +73,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'solana',
         img: 'solanachain',
-        disabled: true,
+        next: {
+          page: 'buy-solana',
+        },
       },
     ],
   },
@@ -736,7 +738,9 @@ export const FeatureTree: Page[] = [
       {
         id: 'solana',
         img: 'solanachain',
-        disabled: true,
+        next: {
+          page: 'sell-solana',
+        },
       },
     ],
   },
@@ -1369,6 +1373,11 @@ export const FeatureTree: Page[] = [
         wallet: { type: WalletType.ALBY, blockchain: Blockchain.LIGHTNING },
       },
       {
+        id: 'phantom',
+        img: 'solanachain',
+        wallet: { type: WalletType.PHANTOM, blockchain: Blockchain.SOLANA },
+      },
+      {
         id: 'walletconnect',
         img: 'walletconnect',
         wallet: { type: WalletType.WALLET_CONNECT },
@@ -1382,6 +1391,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_BTC };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
+            case Blockchain.SOLANA:
+              return { type: WalletType.CLI_SOL };
             default:
               return { type: WalletType.CLI_ETH };
           }
@@ -1485,6 +1496,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_BTC };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
+            case Blockchain.SOLANA:
+              return { type: WalletType.CLI_SOL };
             default:
               return { type: WalletType.CLI_ETH };
           }
@@ -2298,6 +2311,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_BTC };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
+            case Blockchain.SOLANA:
+              return { type: WalletType.CLI_SOL };
             default:
               return { type: WalletType.CLI_ETH };
           }
@@ -2961,6 +2976,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_BTC };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
+            case Blockchain.SOLANA:
+              return { type: WalletType.CLI_SOL };
             default:
               return { type: WalletType.CLI_ETH };
           }
@@ -4579,6 +4596,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_BTC };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
+            case Blockchain.SOLANA:
+              return { type: WalletType.CLI_SOL };
             default:
               return { type: WalletType.CLI_ETH };
           }
@@ -5851,6 +5870,92 @@ export const FeatureTree: Page[] = [
         id: 'walletconnect',
         img: 'walletconnect',
         wallet: { type: WalletType.WALLET_CONNECT },
+      },
+    ],
+  },
+
+  // --- SOLANA --- //
+  {
+    id: 'buy-solana',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'solana',
+        img: 'solanachain',
+        next: {
+          page: 'wallets',
+          tiles: ['phantom', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.SOLANA, assetOut: 'SOL' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['phantom', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.SOLANA, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['phantom', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.SOLANA, assetOut: 'USDC' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-solana',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'solana',
+        img: 'solanachain',
+        next: {
+          page: 'wallets',
+          tiles: ['phantom', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.SOLANA, assetOut: 'SOL' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['phantom', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.SOLANA, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['phantom', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.SOLANA, assetOut: 'USDC' },
+          },
+        },
       },
     ],
   },
