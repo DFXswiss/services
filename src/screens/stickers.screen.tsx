@@ -1,4 +1,4 @@
-import { ApiError, ResponseType, Sell, useApi, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, usePaymentRoutes, Utils, Validations } from '@dfx.swiss/react';
 import {
   DfxIcon,
   Form,
@@ -28,7 +28,7 @@ interface FormData {
 
 export default function StickersScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
-  const { call } = useApi();
+  const { getPaymentRecipient, getPaymentStickers } = usePaymentRoutes();
 
   const [urlParams, setUrlParams] = useSearchParams();
   const [errorRecipient, setErrorRecipient] = useState<string>();
@@ -70,10 +70,7 @@ export default function StickersScreen(): JSX.Element {
     setErrorRecipient(undefined);
     setIsLoadingRecipient(true);
 
-    call<Sell>({
-      url: `paymentLink/recipient?id=${route}`,
-      method: 'GET',
-    })
+    getPaymentRecipient(route)
       .then((_) => {
         setErrorRecipient(undefined);
         setValidatedRecipient(route);
@@ -85,18 +82,9 @@ export default function StickersScreen(): JSX.Element {
   function onSubmit(data?: FormData) {
     if (!data) return;
 
-    const queryString = new URLSearchParams({
-      route: data.route,
-      externalIds: data.externalIds,
-    }).toString();
-
     setIsGeneratingPdf(true);
     setErrorGeneratingPdf(undefined);
-    call<{ data: Blob; headers: Record<string, string> }>({
-      url: `paymentLink/stickers?${queryString}`,
-      method: 'GET',
-      responseType: ResponseType.BLOB,
-    })
+    getPaymentStickers(data.route, data.externalIds)
       .then(({ data, headers }) => {
         downloadFile(data, headers, `DFX_OCP_stickers_${filenameDateFormat()}.pdf`);
       })
