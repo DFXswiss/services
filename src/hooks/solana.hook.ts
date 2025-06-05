@@ -1,4 +1,4 @@
-import { Asset } from '@dfx.swiss/react';
+import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
 import * as SolanaToken from '@solana/spl-token';
 import * as Solana from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
@@ -21,7 +21,6 @@ export function useSolana(): SolanaInterface {
   async function getAddressBalances(assets: Asset[], address: string): Promise<AssetBalance[]> {
     const balances: AssetBalance[] = [];
 
-    /*
     const url = `${process.env.REACT_APP_TATUM_URL}/${process.env.REACT_APP_TATUM_KEY ?? ''}`;
     const connection = new Solana.Connection(url);
 
@@ -37,7 +36,6 @@ export function useSolana(): SolanaInterface {
     if (tokenAssets.length > 0) {
       balances.push(...(await getTokenBalances(connection, address, tokenAssets)));
     }
-      */
 
     return balances;
   }
