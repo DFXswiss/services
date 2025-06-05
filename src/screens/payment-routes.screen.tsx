@@ -684,6 +684,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           label={translate('general/actions', 'Download sticker')}
                           onClick={() => downloadSticker(link)}
                           color={StyledButtonColor.STURDY_WHITE}
+                          isLoading={isGeneratingSticker === link.id}
                         />
                         {link.status === PaymentLinkStatus.ACTIVE &&
                           (!link.payment || link.payment.status !== PaymentLinkPaymentStatus.PENDING) && (
