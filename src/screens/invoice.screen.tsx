@@ -1,4 +1,4 @@
-import { ApiError, Sell, useApi, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, usePaymentRoutes, Utils, Validations } from '@dfx.swiss/react';
 import {
   DfxIcon,
   Form,
@@ -37,8 +37,8 @@ const relativeBaseUrl = '/pl';
 
 export default function InvoiceScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
+  const { getPaymentRecipient } = usePaymentRoutes();
   const { navigate } = useNavigation();
-  const { call } = useApi();
 
   const recipientFieldRef = useRef<HTMLInputElement>(null);
 
@@ -96,10 +96,7 @@ export default function InvoiceScreen(): JSX.Element {
     setCurrency(undefined);
     setIsLoadingRecipient(true);
 
-    call<Sell>({
-      url: `paymentLink/recipient?id=${recipient}`,
-      method: 'GET',
-    })
+    getPaymentRecipient(recipient)
       .then(({ currency }) => {
         setErrorRecipient(undefined);
         setCurrency(currency.name);
