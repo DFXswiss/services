@@ -52,6 +52,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
+import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
 import { blankedAddress, formatLocationAddress, isEmpty, removeNullFields } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
@@ -91,6 +92,7 @@ interface DeletePaymentRoute {
 }
 
 export default function PaymentRoutesScreen(): JSX.Element {
+  const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
@@ -704,15 +706,20 @@ export default function PaymentRoutesScreen(): JSX.Element {
           ) : (
             <></>
           )}
-          {paymentRoutes?.sell.length && user?.paymentLink.active ? (
+          <StyledVerticalStack gap={2.5} full>
             <StyledButton
               label={translate('screens/payment', 'Create Payment Link')}
               width={StyledButtonWidth.FULL}
               onClick={() => setShowPaymentLinkForm({ step: PaymentLinkFormStep.ROUTE })}
+              hidden={!paymentRoutes?.sell.length || !user?.paymentLink.active}
             />
-          ) : (
-            <></>
-          )}
+            <StyledButton
+              label={translate('screens/payment', 'Create Invoice')}
+              width={StyledButtonWidth.FULL}
+              color={StyledButtonColor.STURDY_WHITE}
+              onClick={() => navigate('/invoice')}
+            />
+          </StyledVerticalStack>
         </StyledVerticalStack>
       )}
     </Layout>
