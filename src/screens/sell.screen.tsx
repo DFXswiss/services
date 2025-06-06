@@ -13,7 +13,6 @@ import {
   useAsset,
   useAssetContext,
   useAuthContext,
-  useBankAccount,
   useBankAccountContext,
   useFiat,
   useSell,
@@ -31,14 +30,13 @@ import {
   StyledInput,
   StyledLink,
   StyledLoadingSpinner,
-  StyledModalButton,
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useRef, useState } from 'react';
-import { Controller, FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
-import ActionableList from 'src/components/actionable-list';
+import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+import { BankAccountSelector } from 'src/components/order/bank-account-selector';
 import { AddressSwitch } from 'src/components/payment/address-switch';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
@@ -48,7 +46,6 @@ import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
-import { AddBankAccount } from '../components/payment/add-bank-account';
 import { SellCompletion } from '../components/payment/sell-completion';
 import { SanctionHint } from '../components/sanction-hint';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
@@ -97,13 +94,12 @@ interface ValidatedData extends SellPaymentInfo {
 export default function SellScreen(): JSX.Element {
   useAddressGuard('/login');
 
-  const { allowedCountries, translate, translateError, currency: prefCurrency } = useSettingsContext();
+  const { translate, translateError, currency: prefCurrency } = useSettingsContext();
   const { isInitialized, closeServices } = useAppHandlingContext();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
   const { width } = useWindowContext();
-  const { bankAccounts, createAccount, updateAccount } = useBankAccountContext();
-  const { getAccount } = useBankAccount();
+  const { bankAccounts, updateAccount } = useBankAccountContext();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
   const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
   const { assets, getAssets } = useAssetContext();
@@ -115,7 +111,6 @@ export default function SellScreen(): JSX.Element {
     assetOut,
     amountIn,
     amountOut,
-    bankAccount,
     blockchain,
     externalTransactionId,
     flags,
@@ -134,7 +129,6 @@ export default function SellScreen(): JSX.Element {
   const [kycError, setKycError] = useState<TransactionError>();
   const [isLoading, setIsLoading] = useState<Side>();
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
-  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [balances, setBalances] = useState<AssetBalance[]>();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isTxDone, setTxDone] = useState<boolean>(false);
@@ -229,24 +223,6 @@ export default function SellScreen(): JSX.Element {
       }
     }
   }, [selectedAddress]);
-
-  useEffect(() => {
-    if (bankAccounts) {
-      const account = getAccount(bankAccounts, bankAccount) ?? bankAccounts.find((a) => a.default);
-      if (account) {
-        setVal('bankAccount', account);
-      } else if (
-        bankAccount &&
-        !isCreatingAccount &&
-        Validations.Iban(allowedCountries).validate(bankAccount) === true
-      ) {
-        setIsCreatingAccount(true);
-        createAccount({ iban: bankAccount })
-          .then((b) => setVal('bankAccount', b))
-          .finally(() => setIsCreatingAccount(false));
-      }
-    }
-  }, [bankAccount, getAccount, bankAccounts, allowedCountries]);
 
   useEffect(() => {
     if (selectedBankAccount && selectedBankAccount.preferredCurrency)
@@ -628,48 +604,12 @@ export default function SellScreen(): JSX.Element {
                     />
                   </div>
                 </StyledHorizontalStack>
-
-                <Controller
-                  name="bankAccount"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <>
-                      <StyledModalButton
-                        onClick={() => setBankAccountSelection(true)}
-                        onBlur={onBlur}
-                        placeholder={translate('screens/sell', 'Add or select your IBAN')}
-                        value={Utils.formatIban(value?.iban) ?? undefined}
-                        description={value?.label}
-                      />
-
-                      {bankAccountSelection && (
-                        <StyledVerticalStack gap={6} center className="absolute h-screen w-full z-1 top-0 bg-white">
-                          <ActionableList
-                            items={bankAccounts.map((account) => {
-                              return {
-                                key: account.id,
-                                label: account.label ?? `${account.iban.slice(0, 2)} ${account.iban.slice(-4)}`,
-                                subLabel: blankedAddress(Utils.formatIban(account.iban) ?? account.iban, { width }),
-                                tag: account.default
-                                  ? translate('screens/settings', 'Default').toUpperCase()
-                                  : undefined,
-                                onClick: () => {
-                                  onChange(account);
-                                  setBankAccountSelection(false);
-                                },
-                              };
-                            })}
-                          />
-
-                          <AddBankAccount
-                            onSubmit={(account) => {
-                              onChange(account);
-                              setBankAccountSelection(false);
-                            }}
-                          />
-                        </StyledVerticalStack>
-                      )}
-                    </>
-                  )}
+                <BankAccountSelector
+                  value={selectedBankAccount}
+                  onChange={(account) => setVal('bankAccount', account)}
+                  placeholder={translate('screens/sell', 'Add or select your IBAN')}
+                  isModalOpen={bankAccountSelection}
+                  onModalToggle={setBankAccountSelection}
                 />
               </StyledVerticalStack>
 

@@ -10,7 +10,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { CustodyAssetBalance, FiatCurrency } from 'src/hooks/safe.hook';
+import { CustodyAssetBalance, FiatCurrency } from 'src/dto/safe.dto';
 import { formatCurrency } from 'src/util/utils';
 
 interface PortfolioProps {
