@@ -1375,7 +1375,12 @@ export const FeatureTree: Page[] = [
       {
         id: 'phantom',
         img: 'solanachain',
-        wallet: { type: WalletType.PHANTOM, blockchain: Blockchain.SOLANA },
+        wallet: { type: WalletType.PHANTOM_SOL, blockchain: Blockchain.SOLANA },
+      },
+      {
+        id: 'trust',
+        img: 'solanachain',
+        wallet: { type: WalletType.TRUST_SOL, blockchain: Blockchain.SOLANA },
       },
       {
         id: 'walletconnect',
@@ -5884,7 +5889,7 @@ export const FeatureTree: Page[] = [
         img: 'solanachain',
         next: {
           page: 'wallets',
-          tiles: ['phantom', 'cli'],
+          tiles: ['phantom', 'trust', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.SOLANA, assetOut: 'SOL' },
@@ -5896,7 +5901,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['phantom', 'cli'],
+          tiles: ['phantom', 'trust', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.SOLANA, assetOut: 'USDT' },
@@ -5908,7 +5913,7 @@ export const FeatureTree: Page[] = [
         img: 'usdc',
         next: {
           page: 'wallets',
-          tiles: ['phantom', 'cli'],
+          tiles: ['phantom', 'trust', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.SOLANA, assetOut: 'USDC' },
@@ -5926,7 +5931,7 @@ export const FeatureTree: Page[] = [
         img: 'solanachain',
         next: {
           page: 'wallets',
-          tiles: ['phantom', 'cli'],
+          tiles: ['phantom', 'trust', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.SOLANA, assetIn: 'SOL' },
@@ -5938,7 +5943,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['phantom', 'cli'],
+          tiles: ['phantom', 'trust', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.SOLANA, assetIn: 'USDT' },
@@ -5950,7 +5955,7 @@ export const FeatureTree: Page[] = [
         img: 'usdc',
         next: {
           page: 'wallets',
-          tiles: ['phantom', 'cli'],
+          tiles: ['phantom', 'trust', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.SOLANA, assetIn: 'USDC' },

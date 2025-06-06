@@ -18,11 +18,11 @@ export interface SolanaInterface {
 }
 
 export function useSolana(): SolanaInterface {
+  const url = `${process.env.REACT_APP_TATUM_URL}/${process.env.REACT_APP_TATUM_KEY ?? ''}`;
+  const connection = useMemo(() => new Solana.Connection(url), []);
+
   async function getAddressBalances(assets: Asset[], address: string): Promise<AssetBalance[]> {
     const balances: AssetBalance[] = [];
-
-    const url = `${process.env.REACT_APP_TATUM_URL}/${process.env.REACT_APP_TATUM_KEY ?? ''}`;
-    const connection = new Solana.Connection(url);
 
     const solanaAssets = assets.filter((a) => Blockchain.SOLANA === a.blockchain);
 
@@ -30,27 +30,23 @@ export function useSolana(): SolanaInterface {
     const tokenAssets = solanaAssets.filter((a) => a.type === AssetType.TOKEN);
 
     if (nativeAsset) {
-      balances.push(await getCoinBalance(connection, address, nativeAsset));
+      balances.push(await getCoinBalance(address, nativeAsset));
     }
 
     if (tokenAssets.length > 0) {
-      balances.push(...(await getTokenBalances(connection, address, tokenAssets)));
+      balances.push(...(await getTokenBalances(address, tokenAssets)));
     }
 
     return balances;
   }
 
-  async function getCoinBalance(connection: Solana.Connection, address: string, asset: Asset): Promise<AssetBalance> {
+  async function getCoinBalance(address: string, asset: Asset): Promise<AssetBalance> {
     const rawBalance = await connection.getBalance(new Solana.PublicKey(address), 'confirmed');
     const amount = fromLamportAmount(rawBalance);
     return { asset, amount };
   }
 
-  async function getTokenBalances(
-    connection: Solana.Connection,
-    address: string,
-    assets: Asset[],
-  ): Promise<AssetBalance[]> {
+  async function getTokenBalances(address: string, assets: Asset[]): Promise<AssetBalance[]> {
     const tokenBalances: AssetBalance[] = [];
 
     for (const asset of assets) {
@@ -84,9 +80,6 @@ export function useSolana(): SolanaInterface {
     toAddress: string,
     amount: BigNumber,
   ): Promise<Solana.Transaction> {
-    const url = `${process.env.REACT_APP_TATUM_URL}/${process.env.REACT_APP_TATUM_KEY ?? ''}`;
-    const connection = new Solana.Connection(url);
-
     const fromPublicKey = new Solana.PublicKey(fromAddress);
     const toPublicKey = new Solana.PublicKey(toAddress);
     const lamports = toLamportAmount(amount);
@@ -109,9 +102,6 @@ export function useSolana(): SolanaInterface {
     token: Asset,
     amount: BigNumber,
   ): Promise<Solana.Transaction> {
-    const url = `${process.env.REACT_APP_TATUM_URL}/${process.env.REACT_APP_TATUM_KEY ?? ''}`;
-    const connection = new Solana.Connection(url);
-
     const mintAddress = token.chainId;
     if (!mintAddress) throw new Error(`No mint address for token ${token.uniqueName} found`);
     const decimals = token.decimals;

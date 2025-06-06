@@ -9,6 +9,7 @@ import { useSolana } from './solana.hook';
 import { useAlby } from './wallets/alby.hook';
 import { useMetaMask } from './wallets/metamask.hook';
 import { usePhantom } from './wallets/phantom.hook';
+import { useTrust } from './wallets/trust.hook';
 import { useWalletConnect } from './wallets/wallet-connect.hook';
 export interface TxHelperInterface {
   getBalances: (assets: Asset[], address: string, blockchain?: Blockchain) => Promise<AssetBalance[] | undefined>;
@@ -26,6 +27,7 @@ export function useTxHelper(): TxHelperInterface {
   } = useWalletConnect();
   const { sendPayment } = useAlby();
   const { createTransaction: createTransactionPhantom } = usePhantom();
+  const { createTransaction: createTransactionTrust } = useTrust();
   const { getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet } = useWalletContext();
   const { session } = useAuthContext();
@@ -47,7 +49,8 @@ export function useTxHelper(): TxHelperInterface {
       case WalletType.BITBOX_ETH:
       case WalletType.CLI_ETH:
         return evmBalances(assets, address, blockchain);
-      case WalletType.PHANTOM:
+      case WalletType.PHANTOM_SOL:
+      case WalletType.TRUST_SOL:
       case WalletType.CLI_SOL:
         return solanaBalances(assets, address);
       default:
@@ -78,9 +81,13 @@ export function useTxHelper(): TxHelperInterface {
         await requestChangeToBlockchainWalletConnect(asset.blockchain);
         return createTransactionWalletConnect(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
-      case WalletType.PHANTOM:
+      case WalletType.PHANTOM_SOL:
         if (!session?.address) throw new Error('Address is not defined');
         return createTransactionPhantom(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
+
+      case WalletType.TRUST_SOL:
+        if (!session?.address) throw new Error('Address is not defined');
+        return createTransactionTrust(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
       default:
         throw new Error('Not supported yet');
@@ -94,7 +101,8 @@ export function useTxHelper(): TxHelperInterface {
       case WalletType.META_MASK:
       case WalletType.ALBY:
       case WalletType.WALLET_CONNECT:
-      case WalletType.PHANTOM:
+      case WalletType.PHANTOM_SOL:
+      case WalletType.TRUST_SOL:
         return true;
 
       default:
@@ -107,6 +115,7 @@ export function useTxHelper(): TxHelperInterface {
       createTransactionMetaMask,
       createTransactionWalletConnect,
       createTransactionPhantom,
+      createTransactionTrust,
       sendPayment,
       activeWallet,
       session,

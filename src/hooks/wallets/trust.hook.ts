@@ -1,22 +1,22 @@
 import { Asset, AssetType } from '@dfx.swiss/react';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
+import { TrustWalletAdapter } from '@solana/wallet-adapter-trust';
 import { clusterApiUrl, Connection } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { encodeBase58 } from 'ethers';
 import { useMemo } from 'react';
 import { useSolana } from '../solana.hook';
 
-export interface PhantomInterface {
+export interface TrustInterface {
   isInstalled: () => boolean;
   connect: () => Promise<string>;
   signMessage: (address: string, message: string) => Promise<string>;
   createTransaction: (amount: BigNumber, asset: Asset, from: string, to: string) => Promise<string>;
 }
 
-export function usePhantom(): PhantomInterface {
+export function useTrust(): TrustInterface {
   const { createCoinTransaction, createTokenTransaction } = useSolana();
 
-  const wallet = useMemo(() => new PhantomWalletAdapter(), []);
+  const wallet = useMemo(() => new TrustWalletAdapter(), []);
   const connection = useMemo(() => new Connection(clusterApiUrl('mainnet-beta')), []);
 
   function getProvider() {
@@ -24,7 +24,7 @@ export function usePhantom(): PhantomInterface {
   }
 
   function isInstalled(): boolean {
-    return (window as any).phantom?.solana.isPhantom;
+    return (window as any).ethereum?.isTrustWallet;
   }
 
   async function connect(): Promise<string> {

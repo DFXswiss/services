@@ -25,7 +25,8 @@ export enum WalletType {
   WALLET_CONNECT = 'WalletConnect',
   CAKE = 'Cake',
   MONERO = 'Monero',
-  PHANTOM = 'Phantom',
+  PHANTOM_SOL = 'PhantomSol',
+  TRUST_SOL = 'TrustSol',
   MAIL = 'Mail',
   ADDRESS = 'Address',
 }
@@ -74,7 +75,8 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
   ],
   [WalletType.CAKE]: [Blockchain.MONERO],
   [WalletType.MONERO]: [Blockchain.MONERO],
-  [WalletType.PHANTOM]: [Blockchain.SOLANA],
+  [WalletType.PHANTOM_SOL]: [Blockchain.SOLANA],
+  [WalletType.TRUST_SOL]: [Blockchain.SOLANA],
 };
 
 export function supportsBlockchain(wallet: WalletType, blockchain: Blockchain): boolean {
