@@ -1,5 +1,6 @@
 import {
   ApiError,
+  Blockchain,
   Country,
   Fiat,
   MinCompletionStatus,
@@ -711,7 +712,11 @@ export default function PaymentRoutesScreen(): JSX.Element {
               label={translate('screens/payment', 'Create Payment Link')}
               width={StyledButtonWidth.FULL}
               onClick={() => setShowPaymentLinkForm({ step: PaymentLinkFormStep.ROUTE })}
-              hidden={!paymentRoutes?.sell.length || !user?.paymentLink.active}
+              hidden={
+                !paymentRoutes?.sell.length ||
+                !user?.paymentLink.active ||
+                !user?.activeAddress?.blockchains.includes(Blockchain.LIGHTNING)
+              }
             />
             <StyledButton
               label={translate('screens/payment', 'Create Invoice')}
@@ -817,11 +822,12 @@ function PaymentLinkForm({
   onClose,
   onSubmit: onSubmitForm,
 }: PaymentLinkFormProps): JSX.Element {
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { paymentRoutes, paymentLinks } = usePaymentRoutesContext();
   const { allowedCountries, translate, translateError } = useSettingsContext();
   const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink, userPaymentLinksConfig } =
     usePaymentRoutesContext();
-  const { paymentRoutes, paymentLinks } = usePaymentRoutesContext();
+
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const [paymentCurrency, setPaymentCurrency] = useState<Fiat>();
   const [isLoading, setIsLoading] = useState(false);
