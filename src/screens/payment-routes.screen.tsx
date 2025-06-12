@@ -713,7 +713,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
               width={StyledButtonWidth.FULL}
               color={StyledButtonColor.STURDY_WHITE}
               onClick={() => navigate('/invoice')}
-              hidden={!hasRoutes}
+              hidden={paymentRoutesLoading}
             />
           </StyledVerticalStack>
         </StyledVerticalStack>
