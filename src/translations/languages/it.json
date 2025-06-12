@@ -49,7 +49,8 @@
     "Create support ticket": "Crea un ticket di supporto",
     "View file": "Visualizza il file",
     "Edit": "Modifica",
-    "Set default": "Imposta predefinito"
+    "Set default": "Imposta predefinito",
+    "Download sticker": "Scarica l'adesivo"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",

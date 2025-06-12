@@ -9,6 +9,7 @@ import {
   PaymentLinkStatus,
   PaymentRouteType,
   SellRoute,
+  usePaymentRoutes,
   usePaymentRoutesContext,
   useUserContext,
   Utils,
@@ -54,7 +55,14 @@ import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress, formatLocationAddress, isEmpty, removeNullFields } from 'src/util/utils';
+import {
+  blankedAddress,
+  downloadFile,
+  filenameDateFormat,
+  formatLocationAddress,
+  isEmpty,
+  removeNullFields,
+} from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
 interface FormData {
@@ -109,6 +117,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
     deletePaymentRoute,
     error: apiError,
   } = usePaymentRoutesContext();
+  const { getPaymentStickers } = usePaymentRoutes();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -121,6 +130,8 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const [showPaymentLinkForm, setShowPaymentLinkForm] = useState<PaymentLinkFormState>();
   const [updateGlobalConfig, setUpdateGlobalConfig] = useState<boolean>(false);
   const [updatePaymentLinkLabel, setUpdatePaymentLinkLabel] = useState<string>();
+  const [isGeneratingSticker, setIsGeneratingSticker] = useState<string>();
+  const [errorGeneratingSticker, setErrorGeneratingSticker] = useState<string>();
 
   useAddressGuard('/login');
 
@@ -208,6 +219,17 @@ export default function PaymentRoutesScreen(): JSX.Element {
     let svgData = new XMLSerializer().serializeToString(qrCodeSvg);
     svgData = svgData.replace(/#072440/g, '#000000');
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+  }
+
+  function downloadSticker({ routeId, externalId, id }: PaymentLink) {
+    setIsGeneratingSticker(id);
+    setErrorGeneratingSticker(undefined);
+    getPaymentStickers(routeId, externalId, externalId ? undefined : id)
+      .then(({ data, headers }) => {
+        downloadFile(data, headers, `DFX_OCP_stickers_${filenameDateFormat()}.pdf`);
+      })
+      .catch((error: ApiError) => setErrorGeneratingSticker(error.message ?? 'Unknown Error'))
+      .finally(() => setIsGeneratingSticker(undefined));
   }
 
   const hasRoutes =
@@ -651,6 +673,12 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           onClick={() => downloadQrCode(link)}
                           color={StyledButtonColor.STURDY_WHITE}
                         />
+                        <StyledButton
+                          label={translate('general/actions', 'Download sticker')}
+                          onClick={() => downloadSticker(link)}
+                          color={StyledButtonColor.STURDY_WHITE}
+                          isLoading={isGeneratingSticker === link.id}
+                        />
                         {link.status === PaymentLinkStatus.ACTIVE &&
                           (!link.payment || link.payment.status !== PaymentLinkPaymentStatus.PENDING) && (
                             <StyledButton
@@ -688,6 +716,9 @@ export default function PaymentRoutesScreen(): JSX.Element {
                             isLoading={isUpdatingPaymentLink.includes(link.id)}
                           />
                         )}
+                        <div className="text-center">
+                          {errorGeneratingSticker && <ErrorHint message={errorGeneratingSticker} />}
+                        </div>
                       </StyledVerticalStack>
                     </StyledCollapsible>
                   </div>
