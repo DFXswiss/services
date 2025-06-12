@@ -40,8 +40,12 @@ const languageToLocale: { [language: string]: string } = {
   it: 'it-IT',
 };
 
+const appLanguages = ['DE', 'EN', 'FR', 'IT'];
+const stickerLanguages = ['DE', 'EN', 'FR', 'IT', 'SQ'];
+
 interface SettingsInterface {
   availableLanguages: Language[];
+  availableStickerLanguages: Language[];
   allowedCountries: Country[];
   nationalityCountries: Country[];
   allowedOrganizationCountries: Country[];
@@ -113,8 +117,14 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const [processingKycData, setProcessingKycData] = useState(true);
   const [infoBanner, setInfoBanner] = useState<InfoBanner>();
 
-  const appLanguages = ['DE', 'EN', 'FR', 'IT'];
-  const availableLanguages = languages?.filter((l) => appLanguages.includes(l.symbol)) ?? [];
+  const availableLanguages = useMemo(
+    () => languages?.filter((l) => appLanguages.includes(l.symbol)) ?? [],
+    [languages],
+  );
+  const availableStickerLanguages = useMemo(
+    () => languages?.filter((l) => stickerLanguages.includes(l.symbol)) ?? [],
+    [languages],
+  );
 
   useEffect(() => {
     getInfoBanner().then((infoBanner) => {
@@ -138,7 +148,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
 
     newAppLanguage && newAppLanguage.id !== language?.id && changeAppLanguage(newAppLanguage);
     customCurrency && customCurrency.id !== currency?.id && setCurrency(customCurrency);
-  }, [user, lang, languages, currencies]);
+  }, [user, lang, language, currencies, availableLanguages]);
 
   useEffect(() => {
     if (user && mail && user.mail !== mail) updateUserMail(mail);
@@ -256,6 +266,7 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
   const context = useMemo(
     () => ({
       availableLanguages,
+      availableStickerLanguages,
       allowedCountries: countries.filter((c) => c.kycAllowed),
       allowedOrganizationCountries: countries.filter((c) => c.kycOrganizationAllowed),
       nationalityCountries: countries.filter((c) => c.nationalityAllowed),
@@ -274,7 +285,18 @@ export function SettingsContextProvider(props: PropsWithChildren): JSX.Element {
       get,
       put,
     }),
-    [availableLanguages, countries, language, languageToLocale, currency, store, processingKycData, infoBanner],
+    [
+      availableLanguages,
+      availableStickerLanguages,
+      countries,
+      language,
+      languageToLocale,
+      currency,
+      store,
+      processingKycData,
+      infoBanner,
+      languages,
+    ],
   );
 
   return <SettingsContext.Provider value={context}>{props.children}</SettingsContext.Provider>;
