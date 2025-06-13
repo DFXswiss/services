@@ -4,7 +4,6 @@ import {
   Country,
   Fiat,
   MinCompletionStatus,
-  PaymentLinkBlockchain,
   PaymentLinkPaymentMode,
   PaymentLinkPaymentStatus,
   PaymentLinkStatus,
@@ -80,7 +79,6 @@ interface FormData {
   recipientEmail: string;
   recipientWebsite: string;
   configStandards: PaymentStandardType[];
-  configBlockchains: PaymentLinkBlockchain[];
   configMinCompletionStatus: MinCompletionStatus;
   configDisplayQr: boolean;
   configPaymentTimeout: number;
@@ -421,10 +419,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
                         text: userPaymentLinksConfig?.standards?.join(', '),
                       },
                       {
-                        label: translate('screens/payment', 'Payment blockchains'),
-                        text: Array.from(new Set(userPaymentLinksConfig?.blockchains)).join(', '),
-                      },
-                      {
                         label: translate('screens/payment', 'Min. completion status'),
                         text:
                           userPaymentLinksConfig?.minCompletionStatus &&
@@ -631,10 +625,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                     text: linkConfig.standards?.join(', '),
                                   },
                                   {
-                                    label: translate('screens/payment', 'Payment blockchains'),
-                                    text: linkConfig.blockchains?.join(', '),
-                                  },
-                                  {
                                     label: translate('screens/payment', 'Min. completion status'),
                                     text:
                                       linkConfig.minCompletionStatus &&
@@ -754,6 +744,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
               width={StyledButtonWidth.FULL}
               color={StyledButtonColor.STURDY_WHITE}
               onClick={() => navigate('/invoice')}
+              hidden={paymentRoutesLoading}
             />
           </StyledVerticalStack>
         </StyledVerticalStack>
@@ -869,7 +860,6 @@ function PaymentLinkForm({
       userPaymentLinksConfig
         ? {
             configStandards: userPaymentLinksConfig.standards,
-            configBlockchains: userPaymentLinksConfig.blockchains,
             configMinCompletionStatus: userPaymentLinksConfig.minCompletionStatus,
             configDisplayQr: userPaymentLinksConfig.displayQr,
             configPaymentTimeout: userPaymentLinksConfig.paymentTimeout,
@@ -923,7 +913,6 @@ function PaymentLinkForm({
         reset({
           ...getValues(),
           configStandards: prefilledPaymentConfig.standards,
-          configBlockchains: prefilledPaymentConfig.blockchains,
           configMinCompletionStatus: prefilledPaymentConfig.minCompletionStatus,
           configDisplayQr: prefilledPaymentConfig.displayQr,
           configPaymentTimeout: prefilledPaymentConfig.paymentTimeout,
@@ -999,7 +988,6 @@ function PaymentLinkForm({
       request.config = {
         ...request.config,
         standards: data.configStandards,
-        blockchains: data.configBlockchains,
         minCompletionStatus: data.configMinCompletionStatus,
         displayQr: data.configDisplayQr,
         paymentTimeout: Number(data.configPaymentTimeout),
@@ -1051,7 +1039,6 @@ function PaymentLinkForm({
     paymentExternalId: Validations.Required,
     paymentExpiryDate: Validations.Required,
     configStandards: Validations.Required,
-    configBlockchains: Validations.Required,
     configMinCompletionStatus: Validations.Required,
     configPaymentTimeout: Validations.Required,
     configDisplayQr: Validations.Custom((value) => [true, false].includes(value) || 'invalid configDisplayQr'),
@@ -1260,16 +1247,6 @@ function PaymentLinkForm({
                 items={Object.values(PaymentStandardType)}
                 labelFunc={(item) => item}
               />
-              <StyledDropdownMultiChoice<PaymentLinkBlockchain>
-                rootRef={rootRef}
-                name="configBlockchains"
-                label={translate('screens/payment', 'Payment blockchains')}
-                smallLabel
-                full
-                placeholder={translate('general/actions', 'Select...')}
-                items={Object.values(PaymentLinkBlockchain).filter((item) => item !== PaymentLinkBlockchain.LIGHTNING)}
-                labelFunc={(item) => item}
-              />
 
               <StyledDropdown
                 rootRef={rootRef}
@@ -1345,10 +1322,6 @@ function PaymentLinkForm({
                     {
                       label: translate('screens/payment', 'Payment standards'),
                       text: data.configStandards?.toString() ?? naString,
-                    },
-                    {
-                      label: translate('screens/payment', 'Payment blockchains'),
-                      text: data.configBlockchains?.toString() ?? naString,
                     },
                     {
                       label: translate('screens/payment', 'Min. completion status'),
