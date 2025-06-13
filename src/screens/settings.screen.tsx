@@ -140,7 +140,7 @@ export default function SettingsScreen(): JSX.Element {
         <StyledVerticalStack full gap={8}>
           <StyledVerticalStack full gap={4}>
             <Form control={control} errors={errors}>
-              <StyledDropdown
+              <StyledDropdown<Language>
                 rootRef={rootRef}
                 name="language"
                 label={translate('screens/settings', 'Language')}

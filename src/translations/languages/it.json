@@ -49,7 +49,8 @@
     "Create support ticket": "Crea un ticket di supporto",
     "View file": "Visualizza il file",
     "Edit": "Modifica",
-    "Set default": "Imposta predefinito"
+    "Set default": "Imposta predefinito",
+    "Download sticker": "Scarica l'adesivo"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -601,7 +602,6 @@
     "Configuration": "Configurazione",
     "Default configuration": "Configurazione predefinita",
     "Payment standards": "Standard di pagamento",
-    "Payment blockchains": "Blockchain di pagamento",
     "Min. completion status": "Stato min. di completamento",
     "Display QR code": "Mostra codice QR",
     "Payment timeout (seconds)": "Timeout di pagamento (secondi)",
