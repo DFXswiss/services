@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoXCircleFill } from 'react-icons/go';
+import { CircularCountdown } from 'src/components/circular-countdown';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -79,13 +80,13 @@ export default function PaymentLinkPosScreen(): JSX.Element {
 }
 
 function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: PaymentFormProps): JSX.Element {
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
   const { route, key } = useAppParams();
   const { call } = useApi();
   const [isLoading, setIsLoading] = useState(false);
 
   const rules = Utils.createRules({
-    paymentAmount: [Validations.Required, Validations.Custom((value) => !isNaN(Number(value)) || 'invalid amount')],
+    paymentAmount: [Validations.Required, Validations.Custom((value) => !isNaN(Number(value)) || 'pattern')],
   });
 
   const createPayment = useCallback(
@@ -123,7 +124,13 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
   });
 
   return (
-    <Form control={control} rules={rules} onSubmit={handleSubmit(createPayment)} errors={errors}>
+    <Form
+      control={control}
+      rules={rules}
+      onSubmit={handleSubmit(createPayment)}
+      errors={errors}
+      translate={translateError}
+    >
       <StyledVerticalStack gap={6} full>
         <StyledInput
           name="amount"
@@ -272,75 +279,5 @@ function TransactionHistory({
         </StyledDataTableRow>
       ))}
     </StyledDataTable>
-  );
-}
-
-function CircularCountdown({
-  duration = 10,
-  size = 80,
-  strokeWidth = 6,
-  color = '#64748b',
-  textColor = '#1e293b',
-  onComplete,
-}: {
-  duration?: number;
-  size?: number;
-  strokeWidth?: number;
-  color?: string;
-  textColor?: string;
-  onComplete?: () => void;
-}) {
-  const [timeLeft, setTimeLeft] = useState(duration);
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const progress = timeLeft / duration;
-
-  useEffect(() => {
-    if (timeLeft <= 0) {
-      if (onComplete) onComplete();
-      return;
-    }
-    const interval = setInterval(() => {
-      setTimeLeft((t) => (t > 0 ? t - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timeLeft, onComplete]);
-
-  return (
-    <div
-      style={{
-        width: size,
-        height: size,
-      }}
-      className="relative flex justify-center items-center"
-    >
-      <svg width={size} height={size}>
-        <circle cx={size / 2} cy={size / 2} r={radius} stroke="#e5e7eb" strokeWidth={strokeWidth} fill="none" />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={color}
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference * (progress - 1)}
-          strokeLinecap="round"
-          style={{ transition: 'stroke-dashoffset 1s linear' }}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </svg>
-      <span
-        style={{
-          position: 'absolute',
-          color: textColor,
-          fontWeight: 600,
-          fontSize: size * 0.3,
-          userSelect: 'none',
-        }}
-      >
-        {timeLeft}
-      </span>
-    </div>
   );
 }
