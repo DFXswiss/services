@@ -20,6 +20,7 @@ import { QrBasic } from 'src/components/payment/qr-code';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import {
+  ExtendedPaymentLinkStatus,
   PaymentLinkHistoryPayment,
   PaymentLinkHistoryResponse,
   PaymentLinkPayRequest,
@@ -71,7 +72,7 @@ export default function PaymentLinkPosScreen(): JSX.Element {
             )}
           </div>
           <div className="flex flex-col w-full mt-4">
-            <TransactionHistory payRequest={payRequest} />
+            <TransactionHistory payRequest={payRequest} paymentStatus={paymentStatus} />
           </div>
         </StyledVerticalStack>
       )}
@@ -215,16 +216,22 @@ const PendingPaymentForm = ({ payRequest, paymentLinkApiUrl, fetchPayRequest }: 
   );
 };
 
-function TransactionHistory({ payRequest }: { payRequest: PaymentLinkPayTerminal }): JSX.Element {
+function TransactionHistory({
+  payRequest,
+  paymentStatus,
+}: {
+  payRequest: PaymentLinkPayTerminal;
+  paymentStatus: ExtendedPaymentLinkStatus;
+}): JSX.Element {
   const { route, key } = useAppParams();
   const { translate } = useSettingsContext();
   const { call } = useApi();
 
   const [transactionHistory, setTransactionHistory] = useState<PaymentLinkHistoryPayment[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
 
-  const fetchTransactionHistory = () => {
+  const fetchTransactionHistory = useCallback(() => {
     if (!route || !key || !payRequest) return;
 
     const params = new URLSearchParams({
@@ -239,7 +246,6 @@ function TransactionHistory({ payRequest }: { payRequest: PaymentLinkPayTerminal
       key: key,
     });
 
-    setIsLoading(true);
     setError(undefined);
     call<PaymentLinkHistoryResponse[]>({
       url: `paymentLink/history?${params.toString()}`,
@@ -253,11 +259,11 @@ function TransactionHistory({ payRequest }: { payRequest: PaymentLinkPayTerminal
       })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
-  };
+  }, [route, key, payRequest, call]);
 
   useEffect(() => {
     fetchTransactionHistory();
-  }, [route, key, payRequest, call]);
+  }, [fetchTransactionHistory, paymentStatus]);
 
   const statusIcon = {
     [PaymentLinkPaymentStatus.COMPLETED]: <GoCheckCircleFill className="text-[#4BB543]" />,
