@@ -81,7 +81,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   const { timer, startTimer } = useCountdown();
   const { closeServices } = useAppHandlingContext();
   const { paymentLinkApiUrlStore } = useSessionStore();
-  const { lightning, redirectUri, setParams } = useAppParams();
+  const { lightning, redirectUri, setParams, isInitialized: isParamsInitialized } = useAppParams();
 
   const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction, readBalance } =
     useMetaMask();
@@ -111,8 +111,18 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     paymentLinkApiUrlStore.set(newUrl);
   };
 
+  const isPaymentInvoiceRequest = (params: URLSearchParams) => {
+    const routeId = params.get('routeId') || params.get('route') || params.get('r');
+    const externalId = params.get('externalId') || params.get('e') || params.get('message') || params.get('m');
+    const amount = params.get('amount') || params.get('a');
+
+    return routeId && externalId && amount;
+  };
+
   // Handle URL parameters
   useEffect(() => {
+    if (!isParamsInitialized) return;
+
     const lightningUrlParam = lightning;
     const merchantUrlParam = urlParams.get('merchant');
 
@@ -125,7 +135,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     if (lightningUrlParam) {
       apiUrl = Lnurl.decode(lightningUrlParam);
       setParams({ lightning: undefined });
-    } else if (urlParams.size) {
+    } else if (isPaymentInvoiceRequest(urlParams)) {
       apiUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment?${urlParams.toString()}`;
       setUrlParams(new URLSearchParams());
     }
@@ -141,7 +151,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     return () => {
       if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
     };
-  }, []);
+  }, [isParamsInitialized]);
 
   // MetaMask in-app browser
   useEffect(() => {

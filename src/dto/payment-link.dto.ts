@@ -128,3 +128,15 @@ export interface MetaMaskInfo {
   transferAmount: number;
   minFee: number;
 }
+
+export interface PaymentLinkHistoryResponse extends PaymentLinkPayRequest {
+  payments: PaymentLinkHistoryPayment[];
+}
+
+export interface PaymentLinkHistoryPayment {
+  id: string;
+  status: PaymentLinkPaymentStatus;
+  amount: number;
+  currency: string;
+  updatedAt: Date;
+}
