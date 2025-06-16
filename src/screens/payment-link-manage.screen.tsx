@@ -256,7 +256,6 @@ function TransactionHistory({
       {transactionHistory.map((payment) => (
         <StyledDataTableRow
           key={payment.id}
-          // @ts-ignore  TODO: Consider using a more robust type for this in the package library
           label={
             <span className="flex items-center gap-2">
               {statusIcon[payment.status as keyof typeof statusIcon]}
