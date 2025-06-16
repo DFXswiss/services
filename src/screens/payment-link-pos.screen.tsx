@@ -34,7 +34,7 @@ interface PaymentFormProps {
   fetchPayRequest: (url: string) => void;
 }
 
-export default function PaymentLinkManageScreen(): JSX.Element {
+export default function PaymentLinkPosScreen(): JSX.Element {
   const { error, payRequest, paymentLinkApiUrl, paymentStatus, paymentHasQuote, fetchPayRequest } =
     usePaymentLinkContext();
   const { isInitialized } = useAppParams();
