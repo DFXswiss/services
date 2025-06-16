@@ -138,5 +138,5 @@ export interface PaymentLinkHistoryPayment {
   status: PaymentLinkPaymentStatus;
   amount: number;
   currency: string;
-  updatedAt: Date;
+  date: Date;
 }

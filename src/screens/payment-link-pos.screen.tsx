@@ -247,9 +247,8 @@ function TransactionHistory({ payRequest }: { payRequest: PaymentLinkPayTerminal
     })
       .then((response) => {
         setTransactionHistory(
-          response[0].payments
-            ?.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-            .slice(0, 10) ?? [],
+          response[0].payments?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10) ??
+            [],
         );
       })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
@@ -285,9 +284,9 @@ function TransactionHistory({ payRequest }: { payRequest: PaymentLinkPayTerminal
             <div className="flex flex-col items-end justify-start">
               {payment.amount} {payment.currency.toUpperCase()}
               <span className="text-dfxGray-800 text-xs">
-                {new Date(payment.updatedAt).toDateString() === new Date().toDateString()
-                  ? new Date(payment.updatedAt).toLocaleTimeString()
-                  : new Date(payment.updatedAt).toLocaleDateString()}
+                {new Date(payment.date).toDateString() === new Date().toDateString()
+                  ? new Date(payment.date).toLocaleTimeString()
+                  : new Date(payment.date).toLocaleDateString()}
               </span>
             </div>
           </div>
