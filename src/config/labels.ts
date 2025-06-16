@@ -32,7 +32,7 @@ export const PaymentStateLabels = {
   [TransactionState.UNASSIGNED]: 'Unassigned',
   [TransactionState.CREATED]: 'Created',
   [TransactionState.PROCESSING]: 'Processing',
-  [TransactionState.AML_PENDING]: 'AML pending',
+  [TransactionState.CHECK_PENDING]: 'DFX check pending',
   [TransactionState.KYC_REQUIRED]: 'KYC required',
   [TransactionState.FEE_TOO_HIGH]: 'Fee to high',
   [TransactionState.COMPLETED]: 'Completed',
