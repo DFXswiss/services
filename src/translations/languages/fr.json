@@ -496,7 +496,7 @@
     "State": "Statut",
     "Created": "Créé",
     "Processing": "En cours",
-    "AML pending": "En attente d'AML",
+    "DFX check pending": "Vérification DFX en attente",
     "KYC required": "KYC nécessaire",
     "Fee to high": "Frais élevés",
     "Completed": "Terminé",
