@@ -1,4 +1,4 @@
-import { PaymentLinkPaymentStatus, useApi, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, PaymentLinkPaymentStatus, useApi, Utils, Validations } from '@dfx.swiss/react';
 import {
   AlignContent,
   Form,
@@ -15,11 +15,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoXCircleFill } from 'react-icons/go';
 import { CircularCountdown } from 'src/components/circular-countdown';
+import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import {
-  ExtendedPaymentLinkStatus,
   PaymentLinkHistoryPayment,
   PaymentLinkHistoryResponse,
   PaymentLinkPayRequest,
@@ -71,7 +71,7 @@ export default function PaymentLinkPosScreen(): JSX.Element {
             )}
           </div>
           <div className="flex flex-col w-full mt-4">
-            <TransactionHistory payRequest={payRequest} paymentStatus={paymentStatus} />
+            <TransactionHistory payRequest={payRequest} />
           </div>
         </StyledVerticalStack>
       )}
@@ -83,16 +83,17 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
   const { translate, translateError } = useSettingsContext();
   const { route, key } = useAppParams();
   const { call } = useApi();
+
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>();
 
   const rules = Utils.createRules({
-    paymentAmount: [Validations.Required, Validations.Custom((value) => !isNaN(Number(value)) || 'pattern')],
+    amount: [Validations.Required, Validations.Custom((value) => !isNaN(Number(value)) || 'pattern')],
   });
 
   const createPayment = useCallback(
     async (data: { amount: number }) => {
       if (!route || !key || !payRequest) return;
-      setIsLoading(true);
 
       const params = new URLSearchParams({
         route: route,
@@ -100,17 +101,19 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
         key: key,
       });
 
-      await call({
+      setIsLoading(true);
+      setError(undefined);
+      call({
         url: `paymentLink/payment?${params.toString()}`,
         method: 'POST',
         data: {
           amount: +data.amount,
           externalId: Math.random().toString(36).substring(2, 15),
         },
-      });
-
-      await fetchPayRequest(paymentLinkApiUrl);
-      setIsLoading(false);
+      })
+        .then(() => fetchPayRequest(paymentLinkApiUrl))
+        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+        .finally(() => setIsLoading(false));
     },
     [route, key, payRequest, call, fetchPayRequest, paymentLinkApiUrl],
   );
@@ -118,7 +121,7 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<{ amount: number }>({
     mode: 'onTouched',
   });
@@ -133,21 +136,22 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
     >
       <StyledVerticalStack gap={6} full>
         <StyledInput
+          type="number"
           name="amount"
           label={translate('screens/payment', 'Amount')}
           smallLabel
           placeholder={'0.00'}
           full
         />
-        <div className="flex flex-col w-full mt-4">
-          <StyledButton
-            type="submit"
-            label={translate('screens/payment', 'Create Payment')}
-            onClick={handleSubmit(createPayment)}
-            width={StyledButtonWidth.FULL}
-            isLoading={isLoading}
-          />
-        </div>
+        <StyledButton
+          type="submit"
+          label={translate('screens/payment', 'Create Payment')}
+          onClick={handleSubmit(createPayment)}
+          width={StyledButtonWidth.FULL}
+          isLoading={isLoading}
+          disabled={!isValid}
+        />
+        {error && <ErrorHint message={error} />}
       </StyledVerticalStack>
     </Form>
   );
@@ -157,7 +161,9 @@ const PendingPaymentForm = ({ payRequest, paymentLinkApiUrl, fetchPayRequest }: 
   const { route, key } = useAppParams();
   const { translate } = useSettingsContext();
   const { call } = useApi();
+
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>();
 
   const remainingTime = useMemo(() => {
     const now = new Date();
@@ -168,7 +174,6 @@ const PendingPaymentForm = ({ payRequest, paymentLinkApiUrl, fetchPayRequest }: 
 
   const cancelPayment = async () => {
     if (!route || !key || !payRequest) return;
-    setIsLoading(true);
 
     const params = new URLSearchParams({
       route: route,
@@ -176,14 +181,15 @@ const PendingPaymentForm = ({ payRequest, paymentLinkApiUrl, fetchPayRequest }: 
       key: key,
     });
 
-    await call({
+    setIsLoading(true);
+    setError(undefined);
+    call({
       url: `paymentLink/payment?${params.toString()}`,
       method: 'DELETE',
-    });
-
-    await fetchPayRequest(paymentLinkApiUrl);
-
-    setIsLoading(false);
+    })
+      .then(() => fetchPayRequest(paymentLinkApiUrl))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsLoading(false));
   };
 
   return (
@@ -204,23 +210,21 @@ const PendingPaymentForm = ({ payRequest, paymentLinkApiUrl, fetchPayRequest }: 
         width={StyledButtonWidth.FULL}
         isLoading={isLoading}
       />
+      {error && <ErrorHint message={error} />}
     </>
   );
 };
 
-function TransactionHistory({
-  payRequest,
-  paymentStatus,
-}: {
-  payRequest: PaymentLinkPayTerminal;
-  paymentStatus: ExtendedPaymentLinkStatus;
-}): JSX.Element {
+function TransactionHistory({ payRequest }: { payRequest: PaymentLinkPayTerminal }): JSX.Element {
   const { route, key } = useAppParams();
   const { translate } = useSettingsContext();
   const { call } = useApi();
-  const [transactionHistory, setTransactionHistory] = useState<PaymentLinkHistoryPayment[]>([]);
 
-  const fetchTransactionHistory = async () => {
+  const [transactionHistory, setTransactionHistory] = useState<PaymentLinkHistoryPayment[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const fetchTransactionHistory = () => {
     if (!route || !key || !payRequest) return;
 
     const params = new URLSearchParams({
@@ -235,21 +239,26 @@ function TransactionHistory({
       key: key,
     });
 
-    const response: PaymentLinkHistoryResponse[] = await call({
+    setIsLoading(true);
+    setError(undefined);
+    call<PaymentLinkHistoryResponse[]>({
       url: `paymentLink/history?${params.toString()}`,
       method: 'GET',
-    });
-
-    setTransactionHistory(
-      response[0].payments
-        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-        .slice(0, 10),
-    );
+    })
+      .then((response) => {
+        setTransactionHistory(
+          response[0].payments
+            ?.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+            .slice(0, 10) ?? [],
+        );
+      })
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsLoading(false));
   };
 
   useEffect(() => {
     fetchTransactionHistory();
-  }, [paymentStatus]);
+  }, [route, key, payRequest, call]);
 
   const statusIcon = {
     [PaymentLinkPaymentStatus.COMPLETED]: <GoCheckCircleFill className="text-[#4BB543]" />,
@@ -258,7 +267,13 @@ function TransactionHistory({
     [PaymentLinkPaymentStatus.PENDING]: <GoClockFill className="text-[#65728A]" />,
   };
 
-  return (
+  return isLoading ? (
+    <div className="flex justify-center items-center w-full h-32">
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
+    </div>
+  ) : error ? (
+    <ErrorHint message={error} />
+  ) : (
     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
       {transactionHistory.map((payment) => (
         <StyledDataTableRow key={payment.id}>
