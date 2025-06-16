@@ -58,7 +58,7 @@ interface PaymentLinkInterface {
   isMetaMaskPaying: boolean;
   paymentHasQuote: (request?: PaymentLinkPayTerminal | PaymentLinkPayRequest) => request is PaymentLinkPayRequest;
   setPaymentIdentifier: (id: string | undefined) => void;
-  setSessionApiUrl: (url: string) => void;
+  setSessionApiUrl: (url?: string) => void;
   fetchPayRequest: (url: string, isRefetch?: boolean) => Promise<number | undefined>;
   fetchPaymentIdentifier: (
     payRequest: PaymentLinkPayTerminal | PaymentLinkPayRequest,
@@ -106,9 +106,9 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
 
   const callbackUrl = useRef<string>();
 
-  const setSessionApiUrl = (newUrl: string) => {
-    sessionApiUrl.current = newUrl;
-    paymentLinkApiUrlStore.set(newUrl);
+  const setSessionApiUrl = (newUrl?: string) => {
+    sessionApiUrl.current = newUrl || '';
+    newUrl ? paymentLinkApiUrlStore.set(newUrl) : paymentLinkApiUrlStore.remove();
   };
 
   const isPaymentInvoiceRequest = (params: URLSearchParams) => {
@@ -131,7 +131,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       return;
     }
 
-    let apiUrl: string | undefined;
+    let apiUrl: string | undefined = sessionApiUrl.current;
     if (lightningUrlParam) {
       apiUrl = Lnurl.decode(lightningUrlParam);
       setParams({ lightning: undefined });
@@ -140,16 +140,17 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       setUrlParams(new URLSearchParams());
     }
 
-    if (apiUrl) {
-      setSessionApiUrl(apiUrl);
-    } else if (!sessionApiUrl.current) {
+    setSessionApiUrl(apiUrl);
+
+    if (sessionApiUrl.current) {
+      fetchPayRequest(sessionApiUrl.current);
+    } else {
       navigate('/', { replace: true });
     }
 
-    fetchPayRequest(sessionApiUrl.current);
-
     return () => {
       if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
+      setSessionApiUrl(undefined);
     };
   }, [isParamsInitialized]);
 
@@ -194,7 +195,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
           });
         refetchDelay = new Date(payRequest.quote.expiration).getTime() - Date.now();
         startTimer(new Date(payRequest.quote.expiration));
-      } else if (payRequest.message.toLowerCase().includes('payment complete')) {
+      } else if (payRequest.message?.toLowerCase().includes('payment complete')) {
         setPaymentStatus(PaymentLinkPaymentStatus.COMPLETED);
         return;
       } else {
