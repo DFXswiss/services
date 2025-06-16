@@ -19,6 +19,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useAppParams } from 'src/hooks/app-params.hook';
 import useDebounce from 'src/hooks/debounce.hook';
 import { downloadFile, filenameDateFormat, url } from 'src/util/utils';
 
@@ -31,6 +32,7 @@ interface FormData {
 export default function StickersScreen(): JSX.Element {
   const { translate, translateError, language: appLanguage, availableStickerLanguages } = useSettingsContext();
   const { getPaymentRecipient, getPaymentStickers } = usePaymentRoutes();
+  const { route } = useAppParams();
 
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +63,6 @@ export default function StickersScreen(): JSX.Element {
   }, [availableStickerLanguages, languageParam, appLanguage, selectedLanguage]);
 
   useEffect(() => {
-    const route = urlParams.get('route');
     const externalIds = urlParams.get('externalIds');
     const language = urlParams.get('language');
     if (!route && !externalIds && !language) return;
