@@ -254,24 +254,20 @@ function TransactionHistory({
   return (
     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
       {transactionHistory.map((payment) => (
-        <StyledDataTableRow
-          key={payment.id}
-          label={
-            <span className="flex items-center gap-2">
+        <StyledDataTableRow key={payment.id}>
+          <div className="flex flex-1 justify-between items-start">
+            <div className="flex items-center justify-center gap-2 text-dfxGray-800">
               {statusIcon[payment.status as keyof typeof statusIcon]}
               {translate('screens/payment', `${payment.status}`)}
-            </span>
-          }
-        >
-          <div className="flex flex-col items-end">
-            <p>
+            </div>
+            <div className="flex flex-col items-end justify-start">
               {payment.amount} {payment.currency.toUpperCase()}
-            </p>
-            <span className="text-dfxGray-800 text-xs">
-              {new Date(payment.updatedAt).toDateString() === new Date().toDateString()
-                ? new Date(payment.updatedAt).toLocaleTimeString()
-                : new Date(payment.updatedAt).toLocaleDateString()}
-            </span>
+              <span className="text-dfxGray-800 text-xs">
+                {new Date(payment.updatedAt).toDateString() === new Date().toDateString()
+                  ? new Date(payment.updatedAt).toLocaleTimeString()
+                  : new Date(payment.updatedAt).toLocaleDateString()}
+              </span>
+            </div>
           </div>
         </StyledDataTableRow>
       ))}
