@@ -237,7 +237,13 @@
     "Is the organization operationally active?": "L'organizzazione è operativamente attiva?",
     "Organizations that primarily manage their own money, such as investment companies, are considered non-operating. Operationally active organizations are those that offer and sell goods or services, conduct regular business activities that generate revenue, employ staff and have operational structures.": "Le organizzazioni che gestiscono principalmente il proprio denaro, come le società di investimento, sono considerate non operative. Le organizzazioni operative sono quelle che offrono e vendono beni o servizi, svolgono attività commerciali regolari che generano entrate, impiegano personale e dispongono di strutture operative.",
     "Organization website (optional)": "Sito web dell'organizzazione (opzionale)",
-    "https://my-organization.org": "https://mia-azienda.org"
+    "https://my-organization.org": "https://mia-azienda.org",
+
+    "Purpose of the payments": "Finalità dei pagamenti",
+    "Purpose": "Finalità",
+    "Assignment agreement": "Contratto di cessione",
+    "agreement": "DFX offre ai propri clienti la possibilità di cedere a DFX i crediti insoluti derivanti dalla vendita di beni e servizi per consentire il pagamento con criptovalute. Il cliente ha la possibilità di trasferire un credito insoluto tramite la nostra API (api.dfx.swiss) o tramite il front-end (app.dfx.swiss).<1/><2/>L'importo dovuto viene versato al cliente dopo aver dedotto una commissione di elaborazione dello 0,2%. A seconda della configurazione specifica del cliente, il pagamento può essere effettuato in criptovalute o in valuta fiat tramite transazione bancaria.<4/><5/>Le CG di DFX si applicano a tutte le transazioni. La cessione termina automaticamente con la chiusura del conto DFX o può essere interrotta immediatamente da DFX o dal cliente in caso di violazione del contratto o di insolvenza.<7/><8/>Non è richiesta la firma. Il contratto di cessione dei crediti sarà inviato al cliente via e-mail per la conferma.<10/><11/>Per tutti gli altri punti giuridici valgono il Codice delle obbligazioni svizzero (CO) e il diritto contrattuale.",
+    "I accept the agreement": "Accetto l'accordo"
   },
   "screens/2fa": {
     "2FA": "2FA",
