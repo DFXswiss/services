@@ -244,7 +244,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
 
       {[
         TransactionState.FAILED,
-        TransactionState.AML_PENDING,
+        TransactionState.CHECK_PENDING,
         TransactionState.KYC_REQUIRED,
         TransactionState.LIMIT_EXCEEDED,
       ].includes(transaction.state) &&
@@ -716,7 +716,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               hidden={
                                 ![
                                   TransactionState.FAILED,
-                                  TransactionState.AML_PENDING,
+                                  TransactionState.CHECK_PENDING,
                                   TransactionState.KYC_REQUIRED,
                                   TransactionState.LIMIT_EXCEEDED,
                                 ].includes(tx.state) || !!tx.chargebackAmount

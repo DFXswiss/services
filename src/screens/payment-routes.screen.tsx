@@ -1,14 +1,15 @@
 import {
   ApiError,
+  Blockchain,
   Country,
   Fiat,
   MinCompletionStatus,
-  PaymentLinkBlockchain,
   PaymentLinkPaymentMode,
   PaymentLinkPaymentStatus,
   PaymentLinkStatus,
   PaymentRouteType,
   SellRoute,
+  usePaymentRoutes,
   usePaymentRoutesContext,
   useUserContext,
   Utils,
@@ -52,8 +53,16 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
+import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress, formatLocationAddress, isEmpty, removeNullFields } from 'src/util/utils';
+import {
+  blankedAddress,
+  downloadFile,
+  filenameDateFormat,
+  formatLocationAddress,
+  isEmpty,
+  removeNullFields,
+} from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
 interface FormData {
@@ -70,7 +79,6 @@ interface FormData {
   recipientEmail: string;
   recipientWebsite: string;
   configStandards: PaymentStandardType[];
-  configBlockchains: PaymentLinkBlockchain[];
   configMinCompletionStatus: MinCompletionStatus;
   configDisplayQr: boolean;
   configPaymentTimeout: number;
@@ -91,6 +99,7 @@ interface DeletePaymentRoute {
 }
 
 export default function PaymentRoutesScreen(): JSX.Element {
+  const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
@@ -108,6 +117,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
     deletePaymentRoute,
     error: apiError,
   } = usePaymentRoutesContext();
+  const { getPaymentStickers } = usePaymentRoutes();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -120,6 +130,8 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const [showPaymentLinkForm, setShowPaymentLinkForm] = useState<PaymentLinkFormState>();
   const [updateGlobalConfig, setUpdateGlobalConfig] = useState<boolean>(false);
   const [updatePaymentLinkLabel, setUpdatePaymentLinkLabel] = useState<string>();
+  const [isGeneratingSticker, setIsGeneratingSticker] = useState<string>();
+  const [errorGeneratingSticker, setErrorGeneratingSticker] = useState<string>();
 
   useAddressGuard('/login');
 
@@ -207,6 +219,17 @@ export default function PaymentRoutesScreen(): JSX.Element {
     let svgData = new XMLSerializer().serializeToString(qrCodeSvg);
     svgData = svgData.replace(/#072440/g, '#000000');
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+  }
+
+  function downloadSticker({ routeId, externalId, id }: PaymentLink) {
+    setIsGeneratingSticker(id);
+    setErrorGeneratingSticker(undefined);
+    getPaymentStickers(routeId, externalId, externalId ? undefined : id)
+      .then(({ data, headers }) => {
+        downloadFile(data, headers, `DFX_OCP_stickers_${filenameDateFormat()}.pdf`);
+      })
+      .catch((error: ApiError) => setErrorGeneratingSticker(error.message ?? 'Unknown Error'))
+      .finally(() => setIsGeneratingSticker(undefined));
   }
 
   const hasRoutes =
@@ -394,10 +417,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
                       {
                         label: translate('screens/payment', 'Payment standards'),
                         text: userPaymentLinksConfig?.standards?.join(', '),
-                      },
-                      {
-                        label: translate('screens/payment', 'Payment blockchains'),
-                        text: Array.from(new Set(userPaymentLinksConfig?.blockchains)).join(', '),
                       },
                       {
                         label: translate('screens/payment', 'Min. completion status'),
@@ -606,10 +625,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                     text: linkConfig.standards?.join(', '),
                                   },
                                   {
-                                    label: translate('screens/payment', 'Payment blockchains'),
-                                    text: linkConfig.blockchains?.join(', '),
-                                  },
-                                  {
                                     label: translate('screens/payment', 'Min. completion status'),
                                     text:
                                       linkConfig.minCompletionStatus &&
@@ -658,6 +673,12 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           onClick={() => downloadQrCode(link)}
                           color={StyledButtonColor.STURDY_WHITE}
                         />
+                        <StyledButton
+                          label={translate('general/actions', 'Download sticker')}
+                          onClick={() => downloadSticker(link)}
+                          color={StyledButtonColor.STURDY_WHITE}
+                          isLoading={isGeneratingSticker === link.id}
+                        />
                         {link.status === PaymentLinkStatus.ACTIVE &&
                           (!link.payment || link.payment.status !== PaymentLinkPaymentStatus.PENDING) && (
                             <StyledButton
@@ -695,6 +716,9 @@ export default function PaymentRoutesScreen(): JSX.Element {
                             isLoading={isUpdatingPaymentLink.includes(link.id)}
                           />
                         )}
+                        <div className="text-center">
+                          {errorGeneratingSticker && <ErrorHint message={errorGeneratingSticker} />}
+                        </div>
                       </StyledVerticalStack>
                     </StyledCollapsible>
                   </div>
@@ -704,15 +728,25 @@ export default function PaymentRoutesScreen(): JSX.Element {
           ) : (
             <></>
           )}
-          {paymentRoutes?.sell.length && user?.paymentLink.active ? (
+          <StyledVerticalStack gap={2.5} full>
             <StyledButton
               label={translate('screens/payment', 'Create Payment Link')}
               width={StyledButtonWidth.FULL}
               onClick={() => setShowPaymentLinkForm({ step: PaymentLinkFormStep.ROUTE })}
+              hidden={
+                !paymentRoutes?.sell.length ||
+                !user?.paymentLink.active ||
+                !user?.activeAddress?.blockchains.includes(Blockchain.LIGHTNING)
+              }
             />
-          ) : (
-            <></>
-          )}
+            <StyledButton
+              label={translate('screens/payment', 'Create Invoice')}
+              width={StyledButtonWidth.FULL}
+              color={StyledButtonColor.STURDY_WHITE}
+              onClick={() => navigate('/invoice')}
+              hidden={paymentRoutesLoading}
+            />
+          </StyledVerticalStack>
         </StyledVerticalStack>
       )}
     </Layout>
@@ -810,11 +844,12 @@ function PaymentLinkForm({
   onClose,
   onSubmit: onSubmitForm,
 }: PaymentLinkFormProps): JSX.Element {
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { paymentRoutes, paymentLinks } = usePaymentRoutesContext();
   const { allowedCountries, translate, translateError } = useSettingsContext();
   const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink, userPaymentLinksConfig } =
     usePaymentRoutesContext();
-  const { paymentRoutes, paymentLinks } = usePaymentRoutesContext();
+
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const [paymentCurrency, setPaymentCurrency] = useState<Fiat>();
   const [isLoading, setIsLoading] = useState(false);
@@ -825,7 +860,6 @@ function PaymentLinkForm({
       userPaymentLinksConfig
         ? {
             configStandards: userPaymentLinksConfig.standards,
-            configBlockchains: userPaymentLinksConfig.blockchains,
             configMinCompletionStatus: userPaymentLinksConfig.minCompletionStatus,
             configDisplayQr: userPaymentLinksConfig.displayQr,
             configPaymentTimeout: userPaymentLinksConfig.paymentTimeout,
@@ -879,7 +913,6 @@ function PaymentLinkForm({
         reset({
           ...getValues(),
           configStandards: prefilledPaymentConfig.standards,
-          configBlockchains: prefilledPaymentConfig.blockchains,
           configMinCompletionStatus: prefilledPaymentConfig.minCompletionStatus,
           configDisplayQr: prefilledPaymentConfig.displayQr,
           configPaymentTimeout: prefilledPaymentConfig.paymentTimeout,
@@ -955,7 +988,6 @@ function PaymentLinkForm({
       request.config = {
         ...request.config,
         standards: data.configStandards,
-        blockchains: data.configBlockchains,
         minCompletionStatus: data.configMinCompletionStatus,
         displayQr: data.configDisplayQr,
         paymentTimeout: Number(data.configPaymentTimeout),
@@ -1007,7 +1039,6 @@ function PaymentLinkForm({
     paymentExternalId: Validations.Required,
     paymentExpiryDate: Validations.Required,
     configStandards: Validations.Required,
-    configBlockchains: Validations.Required,
     configMinCompletionStatus: Validations.Required,
     configPaymentTimeout: Validations.Required,
     configDisplayQr: Validations.Custom((value) => [true, false].includes(value) || 'invalid configDisplayQr'),
@@ -1216,16 +1247,6 @@ function PaymentLinkForm({
                 items={Object.values(PaymentStandardType)}
                 labelFunc={(item) => item}
               />
-              <StyledDropdownMultiChoice<PaymentLinkBlockchain>
-                rootRef={rootRef}
-                name="configBlockchains"
-                label={translate('screens/payment', 'Payment blockchains')}
-                smallLabel
-                full
-                placeholder={translate('general/actions', 'Select...')}
-                items={Object.values(PaymentLinkBlockchain).filter((item) => item !== PaymentLinkBlockchain.LIGHTNING)}
-                labelFunc={(item) => item}
-              />
 
               <StyledDropdown
                 rootRef={rootRef}
@@ -1301,10 +1322,6 @@ function PaymentLinkForm({
                     {
                       label: translate('screens/payment', 'Payment standards'),
                       text: data.configStandards?.toString() ?? naString,
-                    },
-                    {
-                      label: translate('screens/payment', 'Payment blockchains'),
-                      text: data.configBlockchains?.toString() ?? naString,
                     },
                     {
                       label: translate('screens/payment', 'Min. completion status'),
