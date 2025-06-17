@@ -49,7 +49,7 @@ interface MetaMaskError {
 }
 
 export function useMetaMask(): MetaMaskInterface {
-  const web3 = new Web3(Web3.givenProvider);
+  const web3 = useMemo(() => new Web3(Web3.givenProvider), []);
   const { toBlockchain, toChainHex, toChainObject } = useWeb3();
 
   function ethereum() {
@@ -275,6 +275,6 @@ export function useMetaMask(): MetaMaskInterface {
       readBalance,
       createTransaction,
     }),
-    [],
+    [web3, toBlockchain, toChainHex, toChainObject],
   );
 }

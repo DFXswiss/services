@@ -751,7 +751,10 @@
     "Portfolio value": "Valore del portafoglio",
     "Assets": "Asset",
     "Total portfolio value": "Valore totale del portafoglio",
-    "No assets found": "Nessun asset trovato"
+    "No assets found": "Nessun asset trovato",
+    "Deposit": "Deposito",
+    "Deposit Complete": "Deposito completato",
+    "Your deposit will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Il tuo deposito verrà elaborato e aggiunto al tuo portafoglio Safe. Ti informeremo via e-mail sui progressi delle tue transazioni."
   },
   "screens/blockchain": {
     "Transaction signing": "Firma della transazione",

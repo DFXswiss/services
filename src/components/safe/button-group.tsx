@@ -1,9 +1,15 @@
+export enum ButtonGroupSize {
+  SM = 'sm',
+  MD = 'md',
+  LG = 'lg',
+}
+
 interface ButtonGroupProps<T> {
   items: T[];
   selected: T;
   onClick: (item: T) => void;
   buttonLabel: (item: T) => string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: ButtonGroupSize;
 }
 
 export const ButtonGroup = <T extends React.ReactNode>({
@@ -11,10 +17,11 @@ export const ButtonGroup = <T extends React.ReactNode>({
   selected,
   onClick,
   buttonLabel,
-  size = 'md',
+  size = ButtonGroupSize.MD,
 }: ButtonGroupProps<T>) => {
   const getButtonStyles = (item: T): string => {
-    const padding = size === 'lg' ? 'px-4 py-3' : size === 'sm' ? 'px-2.5 py-2' : 'px-3 py-2.5';
+    const padding =
+      size === ButtonGroupSize.LG ? 'px-4 py-3' : size === ButtonGroupSize.SM ? 'px-2.5 py-2' : 'px-3 py-2.5';
     const baseStyles = `btn ${padding} leading-none text-sm font-medium transition-all duration-300`;
     return item === selected
       ? `${baseStyles} bg-dfxBlue-800/15 text-dfxBlue-800`
