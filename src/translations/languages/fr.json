@@ -237,7 +237,13 @@
     "Is the organization operationally active?": "L'organisation est-elle opérationnellement active ?",
     "Organizations that primarily manage their own money, such as investment companies, are considered non-operating. Operationally active organizations are those that offer and sell goods or services, conduct regular business activities that generate revenue, employ staff and have operational structures.": "Les organisations qui gèrent principalement leur propre argent, comme les sociétés d'investissement, sont considérées comme non opérationnelles. Les organisations opérationnelles sont celles qui offrent et vendent des biens ou des services, exercent des activités commerciales régulières générant des revenus, emploient du personnel et disposent de structures opérationnelles.",
     "Organization website (optional)": "Site web de l'organisation (optionnel)",
-    "https://my-organization.org": "https://mon-entreprise.org"
+    "https://my-organization.org": "https://mon-entreprise.org",
+
+    "Purpose of the payments": "Objet des paiements",
+    "Purpose": "Objet",
+    "Assignment agreement": "Contrat de cession",
+    "agreement": "DFX offre à ses clients la possibilité de lui céder des créances ouvertes résultant de la vente de biens et de services, afin de permettre un paiement au moyen de crypto-monnaies. Le client a la possibilité de transmettre une créance ouverte via notre API (api.dfx.swiss) ou via le frontend (app.dfx.swiss).<1/><2/>Le montant dû est versé au client après déduction de frais de traitement de 0,2%. Le paiement peut être effectué, selon la configuration spécifique du client, soit en crypto-monnaies, soit en monnaie fiduciaire par transaction bancaire.<4/><5/>Les conditions générales de DFX s'appliquent à toutes les transactions. La cession prend fin automatiquement à la clôture du compte DFX ou peut être immédiatement résiliée par DFX ou le client en cas de non-respect du contrat ou d'insolvabilité.<7/><8/>Une signature n'est pas nécessaire. Le contrat de cession de créance est envoyé au client par e-mail pour confirmation.<10/><11/>Pour tous les autres points juridiques, le Code suisse des obligations (CO) et le droit des contrats s'appliquent.",
+    "I accept the agreement": "J'accepte l'accord"
   },
   "screens/2fa": {
     "2FA": "2FA",
