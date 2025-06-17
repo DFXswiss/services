@@ -52,7 +52,7 @@ export default function SafeScreen(): JSX.Element {
   };
 
   return (
-    <Layout rootRef={rootRef} title={getTitle()} onBack={getBackHandler()}>
+    <Layout rootRef={rootRef} title={getTitle()} onBack={getBackHandler}>
       {error ? (
         <div>
           <ErrorHint message={error} />
