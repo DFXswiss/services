@@ -5,8 +5,11 @@ import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance, useBalanceContext } from '../contexts/balance.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
 import { useAlchemy } from './alchemy.hook';
+import { useSolana } from './solana.hook';
 import { useAlby } from './wallets/alby.hook';
 import { useMetaMask } from './wallets/metamask.hook';
+import { usePhantom } from './wallets/phantom.hook';
+import { useTrust } from './wallets/trust.hook';
 import { useWalletConnect } from './wallets/wallet-connect.hook';
 export interface TxHelperInterface {
   getBalances: (assets: Asset[], address: string, blockchain?: Blockchain) => Promise<AssetBalance[] | undefined>;
@@ -23,11 +26,14 @@ export function useTxHelper(): TxHelperInterface {
     requestChangeToBlockchain: requestChangeToBlockchainWalletConnect,
   } = useWalletConnect();
   const { sendPayment } = useAlby();
+  const { createTransaction: createTransactionPhantom } = usePhantom();
+  const { createTransaction: createTransactionTrust } = useTrust();
   const { getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet } = useWalletContext();
   const { session } = useAuthContext();
   const { canClose } = useAppHandlingContext();
-  const { getAddressBalances } = useAlchemy();
+  const { getAddressBalances: getEvmBalances } = useAlchemy();
+  const { getAddressBalances: getSolanaBalances } = useSolana();
 
   async function getBalances(
     assets: Asset[],
@@ -42,7 +48,11 @@ export function useTxHelper(): TxHelperInterface {
       case WalletType.TREZOR_ETH:
       case WalletType.BITBOX_ETH:
       case WalletType.CLI_ETH:
-        return getAddressBalances(assets, address, blockchain);
+        return getEvmBalances(assets, address, blockchain);
+      case WalletType.PHANTOM_SOL:
+      case WalletType.TRUST_SOL:
+      case WalletType.CLI_SOL:
+        return getSolanaBalances(assets, address);
       default:
         // no balance available
         return undefined;
@@ -71,6 +81,14 @@ export function useTxHelper(): TxHelperInterface {
         await requestChangeToBlockchainWalletConnect(asset.blockchain);
         return createTransactionWalletConnect(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
+      case WalletType.PHANTOM_SOL:
+        if (!session?.address) throw new Error('Address is not defined');
+        return createTransactionPhantom(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
+
+      case WalletType.TRUST_SOL:
+        if (!session?.address) throw new Error('Address is not defined');
+        return createTransactionTrust(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
+
       default:
         throw new Error('Not supported yet');
     }
@@ -83,6 +101,8 @@ export function useTxHelper(): TxHelperInterface {
       case WalletType.META_MASK:
       case WalletType.ALBY:
       case WalletType.WALLET_CONNECT:
+      case WalletType.PHANTOM_SOL:
+      case WalletType.TRUST_SOL:
         return true;
 
       default:
@@ -91,6 +111,18 @@ export function useTxHelper(): TxHelperInterface {
   }
   return useMemo(
     () => ({ getBalances, sendTransaction, canSendTransaction }),
-    [createTransactionMetaMask, createTransactionWalletConnect, sendPayment, activeWallet, session, getParamBalances, getAddressBalances, requestChangeToBlockchainMetaMask, requestChangeToBlockchainWalletConnect, canClose],
+    [
+      createTransactionMetaMask,
+      createTransactionWalletConnect,
+      sendPayment,
+      activeWallet,
+      session,
+      getParamBalances,
+      getEvmBalances,
+      getSolanaBalances,
+      requestChangeToBlockchainMetaMask,
+      requestChangeToBlockchainWalletConnect,
+      canClose,
+    ],
   );
 }
