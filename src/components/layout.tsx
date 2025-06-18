@@ -73,7 +73,7 @@ export function Layout({
         small={smallMenu}
       />
 
-      <div className="flex flex-col flex-grow overflow-auto" ref={scrollRef}>
+      <div id="modal-root" className="relative flex flex-col flex-grow overflow-auto" ref={scrollRef}>
         <div className="flex flex-grow justify-center">
           <div
             className={`relative w-full max-w-screen-md flex flex-grow flex-col items-center ${
