@@ -9,7 +9,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MdKeyboardArrowRight } from 'react-icons/md';
 import { ErrorHint } from 'src/components/error-hint';
 import { IssueReasonLabels, IssueTypeLabels } from 'src/config/labels';
@@ -25,8 +25,6 @@ export default function SupportTicketsScreen(): JSX.Element {
   const { locale } = useSettingsContext();
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
-
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [showCompletedTickets, setShowCompletedTickets] = useState(false);
@@ -50,10 +48,7 @@ export default function SupportTicketsScreen(): JSX.Element {
   const sortedTickets = tickets ? [...tickets].sort(sortCompletedLast) : [];
 
   return (
-    <Layout
-      title={translate('screens/support', !sortedTickets.length ? 'Support' : 'Support tickets')}
-      rootRef={rootRef}
-    >
+    <Layout title={translate('screens/support', !sortedTickets.length ? 'Support' : 'Support tickets')}>
       <StyledVerticalStack center gap={4} full className="text-dfxBlue-800">
         {error ? (
           <div>

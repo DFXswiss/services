@@ -23,13 +23,14 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
 import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
 import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
+import { useLayoutContext } from '../contexts/layout.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
@@ -45,7 +46,7 @@ export default function BuyInfoScreen(): JSX.Element {
   const { getCurrency } = useFiat();
   const { currencies, receiveFor } = useBuy();
   const { closeServices } = useAppHandlingContext();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { scrollToTop } = useLayoutContext();
 
   const [isLoading, setIsLoading] = useState(true);
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
@@ -135,7 +136,7 @@ export default function BuyInfoScreen(): JSX.Element {
   }
 
   return (
-    <Layout textStart backButton={false} scrollRef={scrollRef}>
+    <Layout textStart backButton={false}>
       {showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose={false} />
       ) : errorMessage ? (
@@ -187,7 +188,7 @@ export default function BuyInfoScreen(): JSX.Element {
               label={translate('screens/buy', 'Click here once you have issued the transfer')}
               onClick={() => {
                 setShowsCompletion(true);
-                scrollRef.current?.scrollTo(0, 0);
+                scrollToTop();
               }}
               caps={false}
               className="mt-4"

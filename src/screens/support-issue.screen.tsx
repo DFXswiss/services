@@ -27,11 +27,12 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { DefaultFileTypes } from 'src/config/file-types';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { ErrorHint } from '../components/error-hint';
 import { Layout } from '../components/layout';
 import {
@@ -103,7 +104,7 @@ const formDefaultValues = {
 
 export default function SupportIssueScreen(): JSX.Element {
   const { navigate, clearParams } = useNavigation();
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { rootRef } = useLayoutContext();
   const { translate, translateError, allowedCountries } = useSettingsContext();
   const { user } = useUserContext();
   const { isLoggedIn, logout } = useSessionContext();
@@ -305,7 +306,6 @@ export default function SupportIssueScreen(): JSX.Element {
   return (
     <Layout
       title={translate('screens/support', 'Support issue')}
-      rootRef={rootRef}
       onBack={
         selectTransaction
           ? () => {

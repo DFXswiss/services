@@ -1,5 +1,5 @@
 import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NameEdit } from 'src/components/edit/name.edit';
 import { ErrorHint } from 'src/components/error-hint';
 import { SafeCompletion } from 'src/components/payment/safe-completion';
@@ -29,7 +29,6 @@ export default function SafeScreen(): JSX.Element {
     setBankAccountSelection,
   } = useOrderUIContext();
 
-  const rootRef = useRef<HTMLDivElement>(null);
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
 
   useEffect(() => {
@@ -52,7 +51,7 @@ export default function SafeScreen(): JSX.Element {
   };
 
   return (
-    <Layout rootRef={rootRef} title={getTitle()} onBack={getBackHandler}>
+    <Layout title={getTitle()} onBack={getBackHandler}>
       {error ? (
         <div>
           <ErrorHint message={error} />

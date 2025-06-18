@@ -15,8 +15,9 @@ import {
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { JsonRpcProvider, TransactionResponse } from 'ethers';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useAdminGuard } from 'src/hooks/guard.hook';
@@ -45,8 +46,8 @@ export default function BlockchainTransactionScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { toChainObject, toChainId } = useWeb3();
   const { width } = useWindowContext();
+  const { rootRef } = useLayoutContext();
   const { call } = useApi();
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
@@ -111,7 +112,7 @@ export default function BlockchainTransactionScreen(): JSX.Element {
   });
 
   return (
-    <Layout title={translate('screens/blockchain', 'Transaction signing')} rootRef={rootRef}>
+    <Layout title={translate('screens/blockchain', 'Transaction signing')}>
       <Form
         control={control}
         rules={rules}

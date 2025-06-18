@@ -1,5 +1,4 @@
 import { DfxIcon, IconColor, IconVariant, StyledVerticalStack } from '@dfx.swiss/react-components';
-import { useRef } from 'react';
 import { IoMdHelpCircle } from 'react-icons/io';
 import { MdEditSquare } from 'react-icons/md';
 import { Layout } from 'src/components/layout';
@@ -9,17 +8,13 @@ import { useNavigation } from '../hooks/navigation.hook';
 export default function SupportScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { translate, language } = useSettingsContext();
-  const rootRef = useRef<HTMLDivElement>(null);
 
   return (
-    <Layout title={translate('navigation/links', 'Support')} rootRef={rootRef} onBack={undefined}>
+    <Layout title={translate('navigation/links', 'Support')} onBack={undefined}>
       <StyledVerticalStack gap={3} full className="text-left">
         <StyledButtonTile
           title={translate('screens/support', 'FAQ')}
-          description={translate(
-            'screens/support',
-            'We have summarized the most common questions for you in our FAQ.',
-          )}
+          description={translate('screens/support', 'We have summarized the most common questions for you in our FAQ.')}
           onClick={() =>
             window.open(`https://docs.dfx.swiss/${language?.symbol.toLowerCase() ?? 'en'}/faq.html`, '_blank')
           }

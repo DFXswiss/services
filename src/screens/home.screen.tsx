@@ -1,9 +1,10 @@
 import { Blockchain, useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { CustodyAssets } from 'src/components/home/wallet/connect-address';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { url } from 'src/util/utils';
 import { Service } from '../App';
 import { ConnectWrapper } from '../components/home/connect-wrapper';
@@ -55,7 +56,7 @@ export default function HomeScreen(): JSX.Element {
   const { pathname } = useLocation();
   const { getPage, getWallet, setOptions } = useFeatureTree();
   const appParams = useAppParams();
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { rootRef } = useLayoutContext();
 
   const [connectTo, setConnectTo] = useState<Wallet>();
   const [loginSuccessful, setLoginSuccessful] = useState(false);
@@ -168,7 +169,6 @@ export default function HomeScreen(): JSX.Element {
       onBack={
         connectTo || (specialMode === SpecialMode.CONNECT && isLoggedIn) || currentPageId ? handleBack : undefined
       }
-      rootRef={rootRef}
     >
       {!isInitialized || isUserLoading || !currentPage ? (
         <div className="mt-4">

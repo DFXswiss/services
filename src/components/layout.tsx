@@ -1,6 +1,6 @@
-import { PropsWithChildren, Ref, useEffect, useRef, useState } from 'react';
+import { PropsWithChildren, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ModalRootContextProvider } from 'src/contexts/modal.context';
+import { LayoutContextProvider } from 'src/contexts/layout.context';
 import { useServiceWorker } from 'src/hooks/service-worker.hook';
 import { Routes } from '../App';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -15,8 +15,6 @@ interface LayoutProps extends PropsWithChildren {
   backButton?: boolean;
   onBack?: () => void;
   textStart?: boolean;
-  rootRef?: Ref<HTMLDivElement>;
-  scrollRef?: Ref<HTMLDivElement>;
   noPadding?: boolean;
   smallMenu?: boolean;
 }
@@ -27,8 +25,6 @@ export function Layout({
   onBack,
   textStart,
   children,
-  rootRef,
-  scrollRef,
   noPadding,
   smallMenu,
 }: LayoutProps): JSX.Element {
@@ -36,6 +32,8 @@ export function Layout({
 
   const navRef = useRef<HTMLDivElement>(null);
   const modalRootRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const { pathname } = useLocation();
@@ -76,17 +74,13 @@ export function Layout({
         small={smallMenu}
       />
 
-      <ModalRootContextProvider modalRootRef={modalRootRef}>
+      <LayoutContextProvider modalRootRef={modalRootRef} scrollRef={scrollRef} rootRef={rootRef}>
         <div
           className="relative flex flex-col flex-grow overflow-auto"
           ref={(el) => {
-            if (el) modalRootRef.current = el;
-            if (scrollRef) {
-              if (typeof scrollRef === 'function') {
-                scrollRef(el);
-              } else {
-                (scrollRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-              }
+            if (el) {
+              modalRootRef.current = el;
+              scrollRef.current = el;
             }
           }}
         >
@@ -100,7 +94,7 @@ export function Layout({
             </div>
           </div>
         </div>
-      </ModalRootContextProvider>
+      </LayoutContextProvider>
     </div>
   );
 }

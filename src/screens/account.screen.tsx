@@ -24,7 +24,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { addressLabel } from 'src/config/labels';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -54,8 +54,6 @@ export default function AccountScreen(): JSX.Element {
   const { isInitialized, setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
   const { session } = useAuthContext();
-
-  const rootRef = useRef<HTMLDivElement>(null);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setRefferal] = useState<Referral | undefined>();
 
@@ -159,7 +157,7 @@ export default function AccountScreen(): JSX.Element {
   const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + item.value, 0);
 
   return (
-    <Layout title={title} backButton={hasBackButton} rootRef={rootRef}>
+    <Layout title={title} backButton={hasBackButton}>
       {!isInitialized || !isLoggedIn || isUserLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -233,7 +231,6 @@ export default function AccountScreen(): JSX.Element {
                 </h2>
                 <Form control={control} errors={errors}>
                   <StyledDropdown
-                    rootRef={rootRef}
                     name="address"
                     placeholder={translate('general/actions', 'Select') + '...'}
                     items={user.addresses.sort(sortAddressesByBlockchain)}

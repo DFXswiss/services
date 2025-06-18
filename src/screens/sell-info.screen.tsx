@@ -33,7 +33,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useCountdown } from 'src/hooks/countdown.hook';
@@ -69,7 +69,6 @@ export default function SellInfoScreen(): JSX.Element {
   const { closeServices } = useAppHandlingContext();
   const { sendTransaction, canSendTransaction } = useTxHelper();
   const { activeWallet } = useWalletContext();
-  const scrollRef = useRef<HTMLDivElement>(null);
   const { getTransactionByRequestId } = useTransaction();
   const { timer, remainingSeconds, startTimer } = useCountdown();
 
@@ -241,7 +240,7 @@ export default function SellInfoScreen(): JSX.Element {
   }
 
   return (
-    <Layout textStart backButton={false} scrollRef={scrollRef}>
+    <Layout textStart backButton={false}>
       {showsCompletion && paymentInfo ? (
         <SellCompletion paymentInfo={paymentInfo} navigateOnClose={false} txId={sellTxId} />
       ) : errorMessage ? (

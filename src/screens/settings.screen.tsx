@@ -26,7 +26,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import ActionableList from 'src/components/actionable-list';
@@ -36,6 +36,7 @@ import { EditBankAccount } from 'src/components/overlay/edit-bank-overlay';
 import { EditOverlay } from 'src/components/overlay/edit-overlay';
 import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { addressLabel } from 'src/config/labels';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -78,9 +79,8 @@ export default function SettingsScreen(): JSX.Element {
   const { user, isUserLoading } = useUserContext();
   const { width } = useWindowContext();
   const { navigate } = useNavigation();
+  const { rootRef } = useLayoutContext();
   const { bankAccounts, updateAccount, isLoading: isLoadingBankAccounts } = useBankAccountContext();
-
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const [overlayData, setOverlayData] = useState<UserAddress | BankAccount>();
   const [overlayType, setOverlayType] = useState<OverlayType>(OverlayType.NONE);
@@ -133,7 +133,7 @@ export default function SettingsScreen(): JSX.Element {
   const addressesList = (userAddresses ?? []).concat(disabledAddresses ?? []);
 
   return (
-    <Layout title={title} rootRef={rootRef} onBack={overlayType ? () => onCloseOverlay() : undefined}>
+    <Layout title={title} onBack={overlayType ? () => onCloseOverlay() : undefined}>
       {overlayType ? (
         <SettingsOverlay type={overlayType} data={overlayData} onClose={onCloseOverlay} />
       ) : (

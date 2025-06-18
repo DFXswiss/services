@@ -49,6 +49,7 @@ import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay
 import { EditOverlay } from 'src/components/overlay/edit-overlay';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { PaymentQuoteStatusLabels } from 'src/config/labels';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
@@ -118,8 +119,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
     error: apiError,
   } = usePaymentRoutesContext();
   const { getPaymentStickers } = usePaymentRoutes();
-
-  const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [error, setError] = useState<string>();
@@ -255,7 +254,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
     : undefined;
 
   return (
-    <Layout title={translate('screens/payment', title)} onBack={onBack} textStart rootRef={rootRef}>
+    <Layout title={translate('screens/payment', title)} onBack={onBack} textStart>
       {(apiError && apiError !== 'permission denied') || error ? (
         <ErrorHint message={apiError ?? error ?? ''} />
       ) : userPaymentLinksConfigLoading ? (
@@ -844,12 +843,11 @@ function PaymentLinkForm({
   onClose,
   onSubmit: onSubmitForm,
 }: PaymentLinkFormProps): JSX.Element {
+  const { rootRef } = useLayoutContext();
   const { paymentRoutes, paymentLinks } = usePaymentRoutesContext();
   const { allowedCountries, translate, translateError } = useSettingsContext();
   const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink, userPaymentLinksConfig } =
     usePaymentRoutesContext();
-
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const [paymentCurrency, setPaymentCurrency] = useState<Fiat>();
   const [isLoading, setIsLoading] = useState(false);

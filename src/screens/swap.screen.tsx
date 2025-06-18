@@ -33,11 +33,12 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
 import { addressLabel } from 'src/config/labels';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import useDebounce from 'src/hooks/debounce.hook';
 import { blankedAddress } from 'src/util/utils';
@@ -116,7 +117,7 @@ export default function SwapScreen(): JSX.Element {
   } = useAppParams();
   const { receiveFor } = useSwap();
   const { toString } = useBlockchain();
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { rootRef } = useLayoutContext();
 
   const [sourceAssets, setSourceAssets] = useState<Asset[]>();
   const [targetAssets, setTargetAssets] = useState<Asset[]>();
@@ -497,7 +498,7 @@ export default function SwapScreen(): JSX.Element {
   });
 
   return (
-    <Layout title={translate('navigation/links', 'Swap')} textStart rootRef={rootRef}>
+    <Layout title={translate('navigation/links', 'Swap')} textStart>
       {paymentInfo && isTxDone ? (
         <SwapCompletion paymentInfo={paymentInfo} navigateOnClose={true} txId={swapTxId} />
       ) : showsSwitchScreen ? (

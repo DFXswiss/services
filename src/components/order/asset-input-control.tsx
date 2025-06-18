@@ -7,7 +7,7 @@ import { formatCurrency } from 'src/util/utils';
 const FIAT_REGEX = /^\d*\.?\d{0,2}$/;
 
 export interface AssetInputControlProps extends ControlProps {
-  type?: HTMLInputTypeAttribute;
+  type: HTMLInputTypeAttribute;
   placeholder?: string;
   maxValue?: string;
   forceErrorMessage?: string;
@@ -30,7 +30,7 @@ export const AssetInputControl = forwardRef<HTMLInputElement, AssetInputControlP
       rules,
       disabled = false,
       error,
-      type = 'text',
+      type,
       placeholder,
       maxValue,
       onMaxButtonClick,
@@ -66,7 +66,7 @@ export const AssetInputControl = forwardRef<HTMLInputElement, AssetInputControlP
                     <input
                       style={{ backgroundColor: 'transparent' }}
                       className="text-lg text-dfxBlue-800 font-normal rounded-md border-none w-full focus:outline-none pl-1"
-                      type="number"
+                      type={type}
                       inputMode="decimal"
                       onChange={(e) => {
                         const raw = e.target.value;

@@ -34,7 +34,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -50,6 +50,7 @@ import { PrivateAssetHint } from '../components/private-asset-hint';
 import { SanctionHint } from '../components/sanction-hint';
 import { addressLabel, PaymentMethodDescriptions, PaymentMethodLabels } from '../config/labels';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
+import { useLayoutContext } from '../contexts/layout.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -113,10 +114,10 @@ export default function BuyScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { user } = useUserContext();
   const { blockchain: walletBlockchain, switchBlockchain } = useWalletContext();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { scrollToTop } = useLayoutContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
+  const { rootRef } = useLayoutContext();
   const { isEmbedded, isDfxHosted, isInitialized } = useAppHandlingContext();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
@@ -457,8 +458,6 @@ export default function BuyScreen(): JSX.Element {
       backButton={!showsCompletion}
       onBack={showsNameForm ? () => setShowsNameForm(false) : undefined}
       textStart
-      rootRef={rootRef}
-      scrollRef={scrollRef}
     >
       {showsSwitchScreen ? (
         <AddressSwitch onClose={(r) => (r ? onAddressSwitch() : setShowsSwitchScreen(false))} />
@@ -618,7 +617,7 @@ export default function BuyScreen(): JSX.Element {
                                   label={translate('screens/buy', 'Click here once you have issued the transfer')}
                                   onClick={() => {
                                     setShowsCompletion(true);
-                                    scrollRef.current?.scrollTo(0, 0);
+                                    scrollToTop();
                                   }}
                                   caps={false}
                                   className="mt-4"
