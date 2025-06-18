@@ -50,12 +50,12 @@ import CoinTracking from 'src/components/cointracking';
 import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { useWindowContext } from 'src/contexts/window.context';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, toPaymentStateLabel } from '../config/labels';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import { useUserGuard } from '../hooks/guard.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress, openPdfFromString } from '../util/utils';
 
@@ -129,8 +129,10 @@ export default function TransactionScreen(): JSX.Element {
       ? () => setShowCoinTracking(false)
       : undefined;
 
+  useLayoutOptions({ title, onBack });
+
   return (
-    <Layout rootRef={rootRef} title={title} onBack={onBack}>
+    <>
       {error ? (
         <ErrorHint message={error} />
       ) : isRefund ? (
@@ -186,7 +188,7 @@ export default function TransactionScreen(): JSX.Element {
           <TransactionList isSupport={false} setError={setError} />
         </>
       )}
-    </Layout>
+    </>
   );
 }
 
@@ -297,8 +299,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { bankAccounts } = useBankAccountContext();
   const { isLoggedIn } = useSessionContext();
   const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
-
-  const rootRef = useRef<HTMLDivElement>(null);
   const refetchTimeout = useRef<NodeJS.Timeout | undefined>();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -419,7 +419,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
         <StyledVerticalStack gap={6} full>
           {!refundDetails.refundTarget && addresses && !isBuy && (
             <StyledDropdown<UserAddress>
-              rootRef={rootRef}
               name="address"
               label={translate('screens/payment', 'Chargeback address')}
               items={addresses}
@@ -433,7 +432,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
             bankAccounts &&
             isBuy && (
               <StyledDropdown<string>
-                rootRef={rootRef}
                 name="iban"
                 label={translate('screens/payment', 'Chargeback IBAN')}
                 items={[...bankAccounts.map((b) => b.iban), AddAccount]}
@@ -484,7 +482,6 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const { getTransactionInvoice, getTransactionReceipt } = useTransaction();
 
   const { width } = useWindowContext();
-  const rootRef = useRef<HTMLDivElement>(null);
   const txRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [transactions, setTransactions] = useState<Record<string, DetailTransaction[]>>();
@@ -644,7 +641,6 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   <StyledVerticalStack gap={3} full>
                                     <p className="text-dfxGray-700 mt-4">{translate('screens/payment', 'Reference')}</p>
                                     <StyledDropdown<TransactionTarget>
-                                      rootRef={rootRef}
                                       items={transactionTargets ?? []}
                                       labelFunc={(item) => `${item.bankUsage}`}
                                       placeholder={translate('general/actions', 'Select') + '...'}

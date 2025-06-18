@@ -1,6 +1,6 @@
 import { PropsWithChildren, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useModalRootContext } from 'src/contexts/modal.context';
+import { useLayoutContext } from 'src/contexts/layout.context';
 
 interface ModalProps extends PropsWithChildren {
   isOpen: boolean;
@@ -10,7 +10,7 @@ interface ModalProps extends PropsWithChildren {
 
 export function Modal({ isOpen, onClose, children, className = '' }: ModalProps): JSX.Element | null {
   const [mounted, setMounted] = useState(false);
-  const { modalRootRef } = useModalRootContext();
+  const { modalRootRef } = useLayoutContext();
 
   useEffect(() => {
     setMounted(true);

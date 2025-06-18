@@ -134,42 +134,49 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
                 label={translate('navigation/links', 'Buy')}
                 url="/buy"
                 target="_self"
+                onClose={() => setIsNavigationOpen(false)}
               />
               <NavigationLink
                 icon={IconVariant.SELL}
                 label={translate('navigation/links', 'Sell')}
                 url="/sell"
                 target="_self"
+                onClose={() => setIsNavigationOpen(false)}
               />
               <NavigationLink
                 icon={IconVariant.SWAP}
                 label={translate('navigation/links', 'Swap')}
                 url="/swap"
                 target="_self"
+                onClose={() => setIsNavigationOpen(false)}
               />
               <NavigationLink
                 icon={IconVariant.ACCOUNT}
                 label={translate('screens/home', 'Account')}
                 url="/account"
                 target="_self"
+                onClose={() => setIsNavigationOpen(false)}
               />
               <NavigationLink
                 icon={IconVariant.TRANSACTIONS}
                 label={translate('screens/payment', 'Transactions')}
                 url="/tx"
                 target="_self"
+                onClose={() => setIsNavigationOpen(false)}
               />
               <NavigationLink
                 icon={IconVariant.KYC}
                 label={translate('navigation/links', 'KYC')}
                 url="/kyc"
                 target="_self"
+                onClose={() => setIsNavigationOpen(false)}
               />
               <NavigationLink
                 icon={IconVariant.SETTINGS}
                 label={translate('screens/settings', 'Settings')}
                 url="/settings"
                 target="_self"
+                onClose={() => setIsNavigationOpen(false)}
               />
             </>
           )}
@@ -178,27 +185,32 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
             icon={IconVariant.HOME}
             label={translate('navigation/links', 'DFX.swiss')}
             url={process.env.REACT_APP_DFX_URL}
+            onClose={() => setIsNavigationOpen(false)}
           />
           <NavigationLink
             icon={IconVariant.SUPPORT}
             label={translate('navigation/links', 'Support')}
             url="/support"
             target="_self"
+            onClose={() => setIsNavigationOpen(false)}
           />
           <NavigationLink
             icon={IconVariant.FILE}
             label={translate('navigation/links', 'Terms and conditions')}
             url={process.env.REACT_APP_TNC_URL}
+            onClose={() => setIsNavigationOpen(false)}
           />
           <NavigationLink
             icon={IconVariant.OPEN_IN_NEW}
             label={translate('navigation/links', 'Privacy policy')}
             url={process.env.REACT_APP_PPO_URL}
+            onClose={() => setIsNavigationOpen(false)}
           />
           <NavigationLink
             icon={IconVariant.OPEN_IN_NEW}
             label={translate('navigation/links', 'Imprint')}
             url={process.env.REACT_APP_IMP_URL}
+            onClose={() => setIsNavigationOpen(false)}
           />
 
           <StyledButton

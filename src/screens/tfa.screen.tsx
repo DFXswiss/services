@@ -17,10 +17,10 @@ import { useLocation } from 'react-router-dom';
 import { BadgeType } from 'src/util/app-store-badges';
 import { AppStoreBadge } from '../components/app-store-badge';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useClipboard } from '../hooks/clipboard.hook';
 import { useUserGuard } from '../hooks/guard.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
 const IOS_AUTHENTICATOR_URL = 'https://apps.apple.com/de/app/google-authenticator/id388497605';
@@ -88,8 +88,10 @@ export default function TfaScreen(): JSX.Element {
       .finally(() => setIsSubmitting(false));
   }
 
+  useLayoutOptions({ title: translate('screens/2fa', '2FA') });
+
   return (
-    <Layout title={translate('screens/2fa', '2FA')}>
+    <>
       {isLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
@@ -208,6 +210,6 @@ export default function TfaScreen(): JSX.Element {
           </div>
         </Form>
       )}
-    </Layout>
+    </>
   );
 }

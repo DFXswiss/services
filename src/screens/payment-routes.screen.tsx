@@ -44,15 +44,16 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
-import { Layout } from 'src/components/layout';
 import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay';
 import { EditOverlay } from 'src/components/overlay/edit-overlay';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { PaymentQuoteStatusLabels } from 'src/config/labels';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
 import {
@@ -118,8 +119,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
     error: apiError,
   } = usePaymentRoutesContext();
   const { getPaymentStickers } = usePaymentRoutes();
-
-  const rootRef = useRef<HTMLDivElement>(null);
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [error, setError] = useState<string>();
@@ -254,8 +253,10 @@ export default function PaymentRoutesScreen(): JSX.Element {
     ? () => setDeleteRoute(undefined)
     : undefined;
 
+  useLayoutOptions({ title: translate('screens/payment', title), onBack, textStart: true });
+
   return (
-    <Layout title={translate('screens/payment', title)} onBack={onBack} textStart rootRef={rootRef}>
+    <>
       {(apiError && apiError !== 'permission denied') || error ? (
         <ErrorHint message={apiError ?? error ?? ''} />
       ) : userPaymentLinksConfigLoading ? (
@@ -749,7 +750,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
           </StyledVerticalStack>
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 
@@ -844,12 +845,11 @@ function PaymentLinkForm({
   onClose,
   onSubmit: onSubmitForm,
 }: PaymentLinkFormProps): JSX.Element {
+  const { rootRef } = useLayoutContext();
   const { paymentRoutes, paymentLinks } = usePaymentRoutesContext();
   const { allowedCountries, translate, translateError } = useSettingsContext();
   const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink, userPaymentLinksConfig } =
     usePaymentRoutesContext();
-
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const [paymentCurrency, setPaymentCurrency] = useState<Fiat>();
   const [isLoading, setIsLoading] = useState(false);
