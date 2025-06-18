@@ -5,6 +5,7 @@ import BigNumber from 'bignumber.js';
 import { BigNumberish, formatUnits, parseUnits } from 'ethers';
 import { useMemo } from 'react';
 import { AssetBalance } from 'src/contexts/balance.context';
+import { equalsIgnoreCase } from 'src/util/utils';
 
 export interface SolanaInterface {
   getAddressBalances: (assets: Asset[], address: string) => Promise<AssetBalance[]>;
@@ -49,27 +50,21 @@ export function useSolana(): SolanaInterface {
   async function getTokenBalances(address: string, assets: Asset[]): Promise<AssetBalance[]> {
     const tokenBalances: AssetBalance[] = [];
 
-    for (const asset of assets) {
-      if (!asset.chainId) continue;
+    const allTokenAccounts = await connection.getParsedTokenAccountsByOwner(
+      new Solana.PublicKey(address),
+      { programId: SolanaToken.TOKEN_PROGRAM_ID },
+      'confirmed',
+    );
 
-      const mint = new Solana.PublicKey(asset.chainId);
+    for (const tokenAccount of allTokenAccounts.value) {
+      const asset = assets.find((a) => equalsIgnoreCase(a.chainId, tokenAccount.account.data.parsed.info.mint));
 
-      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
-        new Solana.PublicKey(address),
-        { mint },
-        'confirmed',
-      );
-
-      let amount = 0;
-
-      for (const tokenAccount of tokenAccounts.value) {
+      if (asset) {
         const info = tokenAccount.account.data.parsed.info;
         const tokenAmount = info.tokenAmount;
-
-        amount += fromLamportAmount(tokenAmount.amount, tokenAmount.decimals);
+        const amount = fromLamportAmount(tokenAmount.amount, tokenAmount.decimals);
+        tokenBalances.push({ asset, amount });
       }
-
-      tokenBalances.push({ asset: asset, amount });
     }
 
     return tokenBalances;
