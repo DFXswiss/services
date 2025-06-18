@@ -237,21 +237,21 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const title = updateGlobalConfig
     ? 'Default configuration'
     : showPaymentLinkForm
-    ? `Payment Link: ${translate('screens/payment', PaymentLinkFormStepToTitle[showPaymentLinkForm.step])}`
-    : deleteRoute
-    ? 'Delete payment route?'
-    : 'Payment routes';
+      ? `Payment Link: ${translate('screens/payment', PaymentLinkFormStepToTitle[showPaymentLinkForm.step])}`
+      : deleteRoute
+        ? 'Delete payment route?'
+        : 'Payment routes';
 
   const onBack = updateGlobalConfig
     ? () => setUpdateGlobalConfig(false)
     : showPaymentLinkForm
-    ? () =>
-        setShowPaymentLinkForm((prev) =>
-          prev && prev.step > 0 && !prev.paymentLinkId ? { ...prev, step: prev.step - 1 } : undefined,
-        )
-    : deleteRoute
-    ? () => setDeleteRoute(undefined)
-    : undefined;
+      ? () =>
+          setShowPaymentLinkForm((prev) =>
+            prev && prev.step > 0 && !prev.paymentLinkId ? { ...prev, step: prev.step - 1 } : undefined,
+          )
+      : deleteRoute
+        ? () => setDeleteRoute(undefined)
+        : undefined;
 
   useLayoutOptions({ title: translate('screens/payment', title), onBack, textStart: true });
 

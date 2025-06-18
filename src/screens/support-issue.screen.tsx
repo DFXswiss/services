@@ -397,7 +397,7 @@ export default function SupportIssueScreen(): JSX.Element {
                         blankedAddress(
                           [NoIban, AddAccount].includes(item)
                             ? translate('screens/iban', item)
-                            : Utils.formatIban(item) ?? '',
+                            : (Utils.formatIban(item) ?? ''),
                           { displayLength: 30 },
                         )
                       }

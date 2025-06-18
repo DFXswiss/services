@@ -551,8 +551,8 @@ function ChatBubbleFileEmbed({ messageId, fileName, file }: ChatBubbleFileEmbedP
   const description = isLoadingFile
     ? translate('screens/support', 'Downloading...')
     : !isLoaded
-    ? translate('general/actions', 'Download')
-    : `${translate('screens/support', fileType)} · ${formatBytes(file.size)}`;
+      ? translate('general/actions', 'Download')
+      : `${translate('screens/support', fileType)} · ${formatBytes(file.size)}`;
 
   return (
     <>

@@ -114,10 +114,10 @@ export default function TransactionScreen(): JSX.Element {
   const title = isRefund
     ? translate('screens/payment', 'Transaction refund')
     : isTransaction
-    ? translate('screens/payment', 'Transaction status')
-    : showCoinTracking
-    ? translate('screens/payment', 'Cointracking Link (read rights)')
-    : translate('screens/payment', 'Transactions');
+      ? translate('screens/payment', 'Transaction status')
+      : showCoinTracking
+        ? translate('screens/payment', 'Cointracking Link (read rights)')
+        : translate('screens/payment', 'Transactions');
 
   const onBack =
     isTransaction || isRefund || error
@@ -126,8 +126,8 @@ export default function TransactionScreen(): JSX.Element {
           navigate('/tx');
         }
       : showCoinTracking
-      ? () => setShowCoinTracking(false)
-      : undefined;
+        ? () => setShowCoinTracking(false)
+        : undefined;
 
   useLayoutOptions({ title, onBack });
 
@@ -436,7 +436,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
                 label={translate('screens/payment', 'Chargeback IBAN')}
                 items={[...bankAccounts.map((b) => b.iban), AddAccount]}
                 labelFunc={(item) =>
-                  item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
+                  item === AddAccount ? translate('screens/iban', item) : (Utils.formatIban(item) ?? '')
                 }
                 descriptionFunc={(item) => bankAccounts.find((b) => b.iban === item)?.label ?? ''}
                 placeholder={translate('general/actions', 'Select') + '...'}
@@ -509,12 +509,15 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
     return Promise.all([getDetailTransactions(), getUnassignedTransactions()])
       .then((tx) => {
         const list = tx.flat().sort((a, b) => (new Date(b.date) > new Date(a.date) ? 1 : -1)) as DetailTransaction[];
-        const map = list.reduce((map, tx) => {
-          const date = new Date(tx.date);
-          const key = `${date.getFullYear()} - ${date.getMonth() + 1}`;
-          map[key] = (map[key] ?? []).concat(tx);
-          return map;
-        }, {} as Record<string, DetailTransaction[]>);
+        const map = list.reduce(
+          (map, tx) => {
+            const date = new Date(tx.date);
+            const key = `${date.getFullYear()} - ${date.getMonth() + 1}`;
+            map[key] = (map[key] ?? []).concat(tx);
+            return map;
+          },
+          {} as Record<string, DetailTransaction[]>,
+        );
         setTransactions(map);
       })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));

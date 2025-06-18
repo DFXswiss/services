@@ -40,8 +40,8 @@ export default function AccountMerge() {
             error.statusCode === 400
               ? translate('screens/error', 'Invalid link')
               : error.statusCode === 409
-              ? translate('screens/error', 'Merge is already completed')
-              : error.message;
+                ? translate('screens/error', 'Merge is already completed')
+                : error.message;
 
           navigate({ pathname: '/error', search: `msg=${errorMessage}` });
         });

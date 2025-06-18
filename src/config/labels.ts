@@ -158,5 +158,5 @@ export function addressLabel(wallet: UserAddress | Session): string {
   const custodyLabel = 'DFX Safe';
   return ('role' in wallet && wallet.role === UserRole.CUSTODY) || ('isCustody' in wallet && wallet.isCustody)
     ? custodyLabel
-    : wallet.address ?? '';
+    : (wallet.address ?? '');
 }

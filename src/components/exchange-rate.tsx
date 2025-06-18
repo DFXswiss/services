@@ -48,15 +48,15 @@ export function ExchangeRate({
     (to.blockchain === Blockchain.BITCOIN
       ? 'Lightning'
       : to.blockchain === Blockchain.ETHEREUM
-      ? 'Arbitrum / Optimism'
-      : undefined);
+        ? 'Arbitrum / Optimism'
+        : undefined);
 
   const outputInfo =
     type === TransactionType.BUY
       ? 'The output amount is computed as the input amount minus the DFX fee, bank fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.'
       : type === TransactionType.SWAP
-      ? 'The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.'
-      : 'The output amount is computed as the input amount times the base rate minus the DFX fee, bank fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.';
+        ? 'The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.'
+        : 'The output amount is computed as the input amount times the base rate minus the DFX fee, bank fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.';
 
   return (
     <StyledCollapsible
@@ -66,8 +66,8 @@ export function ExchangeRate({
         rate === Number.MAX_VALUE
           ? '∞'
           : 'blockchain' in from
-          ? Utils.formatAmountCrypto(rate)
-          : Utils.formatAmount(rate)
+            ? Utils.formatAmountCrypto(rate)
+            : Utils.formatAmount(rate)
       } ${from.name}/${to.name}`}
     >
       <StyledVerticalStack gap={2}>

@@ -6,7 +6,7 @@ import { Layout } from './layout';
 
 function LayoutWithOutlet(): JSX.Element {
   const { config } = useLayoutConfigContext();
-  
+
   return (
     <Layout {...config}>
       <Outlet />

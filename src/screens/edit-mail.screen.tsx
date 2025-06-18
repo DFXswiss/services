@@ -72,10 +72,10 @@ export default function EditMailScreen(): JSX.Element {
         e.statusCode === 403
           ? setTokenInvalid(true)
           : e.statusCode === 409 && e.message?.includes('exists')
-          ? e.message.includes('merge')
-            ? setShowLinkHint(true)
-            : setError(e.message ?? 'Unknown error')
-          : setError(e.message ?? 'Unknown error'),
+            ? e.message.includes('merge')
+              ? setShowLinkHint(true)
+              : setError(e.message ?? 'Unknown error')
+            : setError(e.message ?? 'Unknown error'),
       )
       .finally(() => setIsSubmitting(false));
   }

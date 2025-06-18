@@ -179,7 +179,7 @@ export default function SellScreen(): JSX.Element {
 
   useEffect(() => {
     const activeBlockchain = walletBlockchain ?? blockchain;
-    const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
+    const blockchains = activeBlockchain ? [activeBlockchain as Blockchain] : (availableBlockchains ?? []);
     const blockchainAssets = getAssets(blockchains, { sellable: true, comingSoon: false }).filter(
       (a) => a.category === AssetCategory.PUBLIC || a.name === assetIn,
     );
@@ -407,8 +407,8 @@ export default function SellScreen(): JSX.Element {
       return amount > 0
         ? { amount, currency, asset, iban: bankAccount.iban }
         : targetAmount > 0
-        ? { currency, asset, targetAmount, iban: bankAccount.iban }
-        : undefined;
+          ? { currency, asset, targetAmount, iban: bankAccount.iban }
+          : undefined;
     }
   }
 

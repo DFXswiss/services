@@ -180,13 +180,13 @@ export default function BuyScreen(): JSX.Element {
     selectedPaymentMethod === FiatPaymentMethod.CARD
       ? c.cardSellable
       : selectedPaymentMethod === FiatPaymentMethod.INSTANT
-      ? c.instantSellable
-      : c.sellable,
+        ? c.instantSellable
+        : c.sellable,
   );
 
   useEffect(() => {
     const activeBlockchain = walletBlockchain ?? blockchain;
-    const activeBlockchains = activeBlockchain ? [activeBlockchain as Blockchain] : availableBlockchains ?? [];
+    const activeBlockchains = activeBlockchain ? [activeBlockchain as Blockchain] : (availableBlockchains ?? []);
     const blockchainAssets = getAssets(activeBlockchains, { buyable: true, comingSoon: false }).filter(
       (a) => a.category === AssetCategory.PUBLIC || a.name === assetOut,
     );
@@ -397,8 +397,8 @@ export default function BuyScreen(): JSX.Element {
       return amount > 0
         ? { amount, currency, asset, paymentMethod }
         : targetAmount > 0
-        ? { currency, asset, targetAmount, paymentMethod }
-        : undefined;
+          ? { currency, asset, targetAmount, paymentMethod }
+          : undefined;
     }
   }
 
@@ -449,8 +449,8 @@ export default function BuyScreen(): JSX.Element {
   const title = showsCompletion
     ? translate('screens/buy', 'Done!')
     : showsSwitchScreen
-    ? translate('screens/buy', 'Switch address')
-    : translate('navigation/links', 'Buy');
+      ? translate('screens/buy', 'Switch address')
+      : translate('navigation/links', 'Buy');
 
   useLayoutOptions({
     title,

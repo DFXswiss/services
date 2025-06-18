@@ -210,7 +210,7 @@ export default function SwapScreen(): JSX.Element {
     const activeSourceAssets = filterAssets(blockchainSourceAssets, assetFilter);
     setSourceAssets(activeSourceAssets);
 
-    const activeTargetBlockchains = blockchain ? [blockchain as Blockchain] : targetBlockchains ?? [];
+    const activeTargetBlockchains = blockchain ? [blockchain as Blockchain] : (targetBlockchains ?? []);
     const blockchainTargetAssets = getAssets(activeTargetBlockchains ?? [], { buyable: true, comingSoon: false });
     const activeTargetAssets = filterAssets(blockchainTargetAssets, assetFilter);
     setTargetAssets(activeTargetAssets);
@@ -419,8 +419,8 @@ export default function SwapScreen(): JSX.Element {
       return amount > 0
         ? { amount, sourceAsset, targetAsset, receiverAddress: address.address }
         : targetAmount > 0
-        ? { sourceAsset, targetAsset, targetAmount, receiverAddress: address.address }
-        : undefined;
+          ? { sourceAsset, targetAsset, targetAmount, receiverAddress: address.address }
+          : undefined;
     }
   }
 

@@ -294,10 +294,13 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           type: getParameter(query, 'type'),
           ...Object.entries(params)
             .filter(([_, val]) => typeof val === 'string')
-            .reduce((prev, [key, val]) => {
-              prev[key] = val;
-              return prev;
-            }, {} as { [key: string]: string }),
+            .reduce(
+              (prev, [key, val]) => {
+                prev[key] = val;
+                return prev;
+              },
+              {} as { [key: string]: string },
+            ),
         }
       : {
           headless: getParameter(query, 'headless'),

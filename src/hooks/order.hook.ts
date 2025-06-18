@@ -126,7 +126,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
   // ---- Fetch crypto balances (across source and target assets) ----
 
   useEffect(() => {
-    let cryptoAssets = isBuy ? targetAssets ?? [] : isSell ? sourceAssets ?? [] : [];
+    let cryptoAssets = isBuy ? (targetAssets ?? []) : isSell ? (sourceAssets ?? []) : [];
     cryptoAssets ??= isSwap ? (sourceAssets ?? []).concat(targetAssets ?? []) : [];
 
     if (cryptoAssets && selectedAddress?.address) {
@@ -162,8 +162,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
         paymentMethod === FiatPaymentMethod.CARD
           ? c.cardSellable
           : paymentMethod === FiatPaymentMethod.INSTANT
-          ? c.instantSellable
-          : c.sellable,
+            ? c.instantSellable
+            : c.sellable,
       ) ?? [],
     [currencies],
   );
@@ -171,7 +171,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
   // ---- Fetch available blockchain addresses based on session and available crypto assets ----
 
   const addressItems: Address[] = useMemo(() => {
-    const cryptoAssets = (isBuy ? targetAssets ?? [] : sourceAssets ?? []) as Asset[];
+    const cryptoAssets = (isBuy ? (targetAssets ?? []) : (sourceAssets ?? [])) as Asset[];
     const blockchains = availableBlockchains?.filter((b) => cryptoAssets?.some((a) => a.blockchain === b));
 
     return session?.address && blockchains?.length

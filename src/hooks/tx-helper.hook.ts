@@ -91,6 +91,17 @@ export function useTxHelper(): TxHelperInterface {
   }
   return useMemo(
     () => ({ getBalances, sendTransaction, canSendTransaction }),
-    [createTransactionMetaMask, createTransactionWalletConnect, sendPayment, activeWallet, session, getParamBalances, getAddressBalances, requestChangeToBlockchainMetaMask, requestChangeToBlockchainWalletConnect, canClose],
+    [
+      createTransactionMetaMask,
+      createTransactionWalletConnect,
+      sendPayment,
+      activeWallet,
+      session,
+      getParamBalances,
+      getAddressBalances,
+      requestChangeToBlockchainMetaMask,
+      requestChangeToBlockchainWalletConnect,
+      canClose,
+    ],
   );
 }

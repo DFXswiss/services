@@ -58,8 +58,8 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
               type === TransactionType.SELL
                 ? 'your sell transaction volume'
                 : type === TransactionType.SWAP
-                ? 'your swap transaction volume'
-                : 'your credit card transaction volume',
+                  ? 'your swap transaction volume'
+                  : 'your credit card transaction volume',
             ),
             limit: limitToString(defaultLimit),
           },
@@ -109,15 +109,15 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
               error === TransactionError.KYC_DATA_REQUIRED
                 ? 'Enter user data'
                 : isComplete
-                ? 'Increase limit'
-                : 'Complete KYC',
+                  ? 'Increase limit'
+                  : 'Complete KYC',
             )}
             onClick={
               error === TransactionError.KYC_DATA_REQUIRED
                 ? () => navigate('/profile', { setRedirect: true })
                 : isComplete
-                ? () => navigate({ pathname: '/support/issue', search: '?issue-type=LimitRequest' })
-                : start
+                  ? () => navigate({ pathname: '/support/issue', search: '?issue-type=LimitRequest' })
+                  : start
             }
           />
           {user?.kyc.level === 0 && (
