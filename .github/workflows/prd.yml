@@ -63,6 +63,13 @@ jobs:
           replace: ${{ secrets.PRD_SIFT_BEACON_KEY}}
           regex: false
 
+      - name: Update Tatum Key
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: '{TATUM_KEY}'
+          replace: ${{ secrets.PRD_TATUM_KEY}}
+          regex: false
+
       - name: Build code
         env:
           REACT_APP_BUILD_ID: ${{ github.run_number }}-${{ github.run_id }}

@@ -49,7 +49,8 @@
     "Create support ticket": "Créer un ticket de support",
     "View file": "Voir le fichier",
     "Edit": "Modifier",
-    "Set default": "Définir par défaut"
+    "Set default": "Définir par défaut",
+    "Download sticker": "Télécharger l'autocollant"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -102,17 +103,17 @@
     "Residence permit": "Permis de séjour",
     "DFX approval": "Approbation DFX",
 
-    "Public Limited Company (PLC)": "Société anonyme (SA)",
-    "Limited Liability Company (LLC)": "Société à responsabilité limitée (SARL)",
-    "Entrepreneurial Company (UG)": "Société entrepreneuriale (UG)",
+    "Stock corporation (AG, Ltd, SA)": "Société anonyme (AG, Ltd, SA)",
+    "Limited liability company under Swiss/German/Austrian law (GmbH, LLC, Sàrl)": "Société à responsabilité limitée (GmbH, LLC, Sàrl)",
+    "Entrepreneurial company (UG)": "Société entrepreneuriale (UG)",
     "Company under civil law (GbR)": "Société civile (GbR)",
-    "Life Insurance": "Assurance-vie",
+    "Life insurance": "Assurance-vie",
     "Association": "Association",
     "Foundation": "Fondation",
     "Trust": "Fiducie",
     "Other": "Autre",
-    "Publicly traded shares": "Actions cotées en bourse",
-    "Privately held ownership stakes (no shareholders)": "Participations privées (pas d'actionnaires)",
+    "Organization with shareholders": "Organisation avec actionnaires",
+    "Organization with partners": "Organisation avec associés",
     "Privately held with limited liability, low capital requirement": "Propriété privée à responsabilité limitée, faible exigence de capital",
     "Simple and flexible form of cooperation between two or more people who join forces for a common purpose": "Forme simple et flexible de coopération entre deux ou plusieurs personnes qui s'associent dans un but commun",
     "An internet excerpt is sufficient. No notarization is required. The extract must not be older than 2 months.": "Un extrait d'internet suffit. Aucune authentification n'est requise. L'extrait ne doit pas dater de plus de 2 mois.",
@@ -236,7 +237,13 @@
     "Is the organization operationally active?": "L'organisation est-elle opérationnellement active ?",
     "Organizations that primarily manage their own money, such as investment companies, are considered non-operating. Operationally active organizations are those that offer and sell goods or services, conduct regular business activities that generate revenue, employ staff and have operational structures.": "Les organisations qui gèrent principalement leur propre argent, comme les sociétés d'investissement, sont considérées comme non opérationnelles. Les organisations opérationnelles sont celles qui offrent et vendent des biens ou des services, exercent des activités commerciales régulières générant des revenus, emploient du personnel et disposent de structures opérationnelles.",
     "Organization website (optional)": "Site web de l'organisation (optionnel)",
-    "https://my-organization.org": "https://mon-entreprise.org"
+    "https://my-organization.org": "https://mon-entreprise.org",
+
+    "Purpose of the payments": "Objet des paiements",
+    "Purpose": "Objet",
+    "Assignment agreement": "Contrat de cession",
+    "agreement": "DFX offre à ses clients la possibilité de lui céder des créances ouvertes résultant de la vente de biens et de services, afin de permettre un paiement au moyen de crypto-monnaies. Le client a la possibilité de transmettre une créance ouverte via notre API (api.dfx.swiss) ou via le frontend (app.dfx.swiss).<1/><2/>Le montant dû est versé au client après déduction de frais de traitement de 0,2%. Le paiement peut être effectué, selon la configuration spécifique du client, soit en crypto-monnaies, soit en monnaie fiduciaire par transaction bancaire.<4/><5/>Les conditions générales de DFX s'appliquent à toutes les transactions. La cession prend fin automatiquement à la clôture du compte DFX ou peut être immédiatement résiliée par DFX ou le client en cas de non-respect du contrat ou d'insolvabilité.<7/><8/>Une signature n'est pas nécessaire. Le contrat de cession de créance est envoyé au client par e-mail pour confirmation.<10/><11/>Pour tous les autres points juridiques, le Code suisse des obligations (CO) et le droit des contrats s'appliquent.",
+    "I accept the agreement": "J'accepte l'accord"
   },
   "screens/2fa": {
     "2FA": "2FA",
@@ -297,6 +304,8 @@
 
     "Please confirm the connection in your MetaMask.": "Veuillez confirmer la connexion dans votre MetaMask.",
     "Please confirm the connection in the Alby browser extension.": "Veuillez confirmer la connexion dans l'extension du navigateur Alby.",
+    "Please confirm the connection in your Phantom browser extension.": "Veuillez confirmer la connexion dans l'extension du navigateur Phantom.",
+    "Please confirm the connection in your Trust browser extension.": "Veuillez confirmer la connexion dans l'extension du navigateur Trust.",
     "Please confirm the connection in your wallet.": "Veuillez confirmer la connexion dans votre portefeuille.",
     "Please confirm the connection with your Ledger.": "Veuillez confirmer la connexion avec votre Ledger.",
     "Connection failed!": "Échec de la connexion !",
@@ -335,6 +344,10 @@
     "You need to install the MetaMask or Rabby browser extension to be able to use this service.": "Vous devez installer l'extension de navigateur MetaMask ou Rabby pour pouvoir utiliser ce service.",
     "Please install Alby!": "Installez Alby !",
     "You need to install the Alby browser extension to be able to use this service.": "Vous devez installer l'extension de navigateur Alby pour pouvoir utiliser ce service.",
+    "Please install Phantom!": "Installez Phantom !",
+    "You need to install the Phantom browser extension to be able to use this service.": "Vous devez installer l'extension de navigateur Phantom pour pouvoir utiliser ce service.",
+    "Please install Trust!": "Installez Trust !",
+    "You need to install the Trust browser extension to be able to use this service.": "Vous devez installer l'extension de navigateur Trust pour pouvoir utiliser ce service.",
     "Browser not supported!": "Navigateur non pris en charge !",
     "Mobile not supported!": "Mobile non pris en charge !",
     "Please use a desktop device with a compatible browser (e.g. Chrome) to be able to use this service.": "Veuillez utiliser un appareil desktop avec un navigateur compatible (par exemple Chrome) pour pouvoir utiliser ce service.",
@@ -495,7 +508,7 @@
     "State": "Statut",
     "Created": "Créé",
     "Processing": "En cours",
-    "AML pending": "En attente d'AML",
+    "DFX check pending": "Vérification DFX en attente",
     "KYC required": "KYC nécessaire",
     "Fee to high": "Frais élevés",
     "Completed": "Terminé",
@@ -601,7 +614,6 @@
     "Configuration": "Configuration",
     "Default configuration": "Configuration par défaut",
     "Payment standards": "Normes de paiement",
-    "Payment blockchains": "Blockchains de paiement",
     "Min. completion status": "Statut min. d'achèvement",
     "Display QR code": "Afficher le code QR",
     "Payment timeout (seconds)": "Délai de paiement (secondes)",
@@ -745,7 +757,10 @@
     "Portfolio value": "Valeur du portefeuille",
     "Assets": "Actifs",
     "Total portfolio value": "Valeur totale du portefeuille",
-    "No assets found": "Aucun actif trouvé"
+    "No assets found": "Aucun actif trouvé",
+    "Deposit": "Dépôt",
+    "Deposit Complete": "Dépôt terminé",
+    "Your deposit will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Votre dépôt sera traité et ajouté à votre portefeuille Safe. Nous vous informerons par e-mail de l'état d'avancement de vos transactions."
   },
   "screens/blockchain": {
     "Transaction signing": "Signature de la transaction",

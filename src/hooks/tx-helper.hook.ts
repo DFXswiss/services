@@ -32,8 +32,8 @@ export function useTxHelper(): TxHelperInterface {
   const { activeWallet } = useWalletContext();
   const { session } = useAuthContext();
   const { canClose } = useAppHandlingContext();
-  const { getAddressBalances: evmBalances } = useAlchemy();
-  const { getAddressBalances: solanaBalances } = useSolana();
+  const { getAddressBalances: getEvmBalances } = useAlchemy();
+  const { getAddressBalances: getSolanaBalances } = useSolana();
 
   async function getBalances(
     assets: Asset[],
@@ -48,11 +48,11 @@ export function useTxHelper(): TxHelperInterface {
       case WalletType.TREZOR_ETH:
       case WalletType.BITBOX_ETH:
       case WalletType.CLI_ETH:
-        return evmBalances(assets, address, blockchain);
+        return getEvmBalances(assets, address, blockchain);
       case WalletType.PHANTOM_SOL:
       case WalletType.TRUST_SOL:
       case WalletType.CLI_SOL:
-        return solanaBalances(assets, address);
+        return getSolanaBalances(assets, address);
       default:
         // no balance available
         return undefined;
@@ -114,11 +114,15 @@ export function useTxHelper(): TxHelperInterface {
     [
       createTransactionMetaMask,
       createTransactionWalletConnect,
-      createTransactionPhantom,
-      createTransactionTrust,
       sendPayment,
       activeWallet,
       session,
+      getParamBalances,
+      getEvmBalances,
+      getSolanaBalances,
+      requestChangeToBlockchainMetaMask,
+      requestChangeToBlockchainWalletConnect,
+      canClose,
     ],
   );
 }

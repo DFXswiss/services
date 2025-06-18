@@ -1,115 +1,125 @@
-import { ApiError, useApi, User, useSessionContext, useUserContext } from '@dfx.swiss/react';
-import { useEffect, useState } from 'react';
-import { useWalletContext } from 'src/contexts/wallet.context';
+import {
+  ApiError,
+  Asset,
+  Blockchain,
+  Fiat,
+  useApi,
+  useAssetContext,
+  useAuthContext,
+  useBuy,
+  User,
+  useSessionContext,
+  useUser,
+  useUserContext,
+} from '@dfx.swiss/react';
+import { SignIn } from '@dfx.swiss/react/dist/definitions/auth';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
+import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
+import { OrderFormData } from './order.hook';
 
-export enum FiatCurrency {
-  CHF = 'chf',
-  EUR = 'eur',
-  USD = 'usd',
-}
-
-export interface CustodyAsset {
-  name: string;
-  description: string;
-}
-
-export interface CustodyAssetBalance {
-  asset: CustodyAsset;
-  balance: number;
-  value: CustodyFiatValue;
-}
-
-export interface CustodyBalance {
-  totalValue: CustodyFiatValue;
-  balances: CustodyAssetBalance[];
-}
+const DEPOSIT_PAIRS: Record<string, string> = {
+  EUR: 'dEURO',
+  CHF: 'ZCHF',
+};
 
 export interface UseSafeResult {
   isInitialized: boolean;
-  totalValue: CustodyFiatValue;
-  portfolio: CustodyAssetBalance[];
-  history: CustodyHistoryEntry[];
   isLoadingPortfolio: boolean;
   isLoadingHistory: boolean;
+  portfolio: CustodyBalance;
+  history: CustodyHistoryEntry[];
   error?: string;
-}
-
-export interface CustodyFiatValue {
-  chf: number;
-  eur: number;
-  usd: number;
-}
-
-export interface CustodyHistoryEntry {
-  date: string;
-  value: CustodyFiatValue;
-}
-
-export interface CustodyHistory {
-  totalValue: CustodyHistoryEntry[];
+  availableCurrencies?: Fiat[];
+  availableAssets?: CustodyAsset[];
+  fetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
+  confirmPayment: () => Promise<void>;
+  pairMap: (asset: string) => Asset | undefined;
 }
 
 export function useSafe(): UseSafeResult {
   const { call } = useApi();
+  const { currencies } = useBuy();
+  const { session } = useAuthContext();
+  const { changeUserAddress } = useUser();
+  const { getAssets } = useAssetContext();
   const { user, isUserLoading } = useUserContext();
-  const { isLoggedIn } = useSessionContext();
-  const { setSession } = useWalletContext();
+  const { isLoggedIn, tokenStore } = useSessionContext();
+
+  const currentOrderId = useRef<number>();
 
   const [error, setError] = useState<string>();
   const [isInitialized, setIsInitialized] = useState(false);
-  const [totalValue, setTotalValue] = useState<CustodyFiatValue>({ chf: 0, eur: 0, usd: 0 });
-  const [portfolio, setPortfolio] = useState<CustodyAssetBalance[]>([]);
+  const [portfolio, setPortfolio] = useState<CustodyBalance>({ totalValue: { chf: 0, eur: 0, usd: 0 }, balances: [] });
   const [history, setHistory] = useState<CustodyHistoryEntry[]>([]);
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
+  // ---- Safe Screen Initialization ----
+
   useEffect(() => {
-    if (!isUserLoading && user && isLoggedIn) {
-      createAccountIfRequired(user)
+    if (!isUserLoading && session && user && isLoggedIn) {
+      createCustodyOrSwitch(user)
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
         .finally(() => setIsInitialized(true));
     }
-  }, [isUserLoading, user, isLoggedIn]);
+  }, [isUserLoading, user, isLoggedIn, session]);
 
   useEffect(() => {
     if (!user || !isLoggedIn) return;
-
     setIsLoadingPortfolio(true);
     getBalances()
-      .then(({ balances, totalValue }) => {
-        setPortfolio(balances);
-        setTotalValue(totalValue);
-      })
-      .catch((error: ApiError) => {
-        setError(error.message ?? 'Unknown error');
-      })
+      .then((portfolio) => setPortfolio(portfolio))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoadingPortfolio(false));
   }, [user, isLoggedIn]);
 
   useEffect(() => {
     if (!user || !isLoggedIn) return;
-
     setIsLoadingHistory(true);
     getHistory()
-      .then(({ totalValue }) => {
-        setHistory(totalValue);
-      })
-      .catch((error: ApiError) => {
-        setError(error.message ?? 'Unknown error');
-      })
+      .then(({ totalValue }) => setHistory(totalValue))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoadingHistory(false));
   }, [user, isLoggedIn]);
 
-  async function createAccountIfRequired(user: User): Promise<void> {
-    if (!user.addresses.some((a) => a.isCustody)) {
-      return call<{ accessToken: string }>({
-        url: 'custody',
-        method: 'POST',
-        data: {
-          addressType: 'EVM',
-        },
-      }).then(({ accessToken }) => setSession(accessToken));
+  // ---- Available Deposit Pairs ----
+
+  const availableCurrencies = useMemo(() => {
+    return currencies?.filter((c) => Object.keys(DEPOSIT_PAIRS).includes(c.name));
+  }, [currencies]);
+
+  const availableAssets = useMemo(() => {
+    return getAssets([Blockchain.ETHEREUM], { buyable: true, comingSoon: false }).filter((a) =>
+      Object.values(DEPOSIT_PAIRS).includes(a.name),
+    );
+  }, [getAssets]);
+
+  const pairMap = useCallback(
+    (asset: string) => availableAssets?.find((a) => a.name === DEPOSIT_PAIRS[asset]),
+    [availableAssets],
+  );
+
+  // ---- Custody Token Management ----
+
+  async function createCustodyOrSwitch(user: User): Promise<void> {
+    const custodyAddress = user.addresses.find((a) => a.isCustody);
+    if (!custodyAddress) {
+      return createCustodyUser().then(({ accessToken }) => tokenStore.set('custody', accessToken));
+    } else if (!tokenStore.get('custody') && session?.address !== custodyAddress.address) {
+      const custodyToken = (await changeUserAddress(custodyAddress.address)).accessToken;
+      tokenStore.set('custody', custodyToken);
     }
+  }
+
+  // ---- API Calls ----
+
+  async function createCustodyUser(): Promise<SignIn> {
+    return call<SignIn>({
+      url: 'custody',
+      method: 'POST',
+      data: { addressType: 'EVM' },
+    });
   }
 
   async function getBalances(): Promise<CustodyBalance> {
@@ -126,13 +136,59 @@ export function useSafe(): UseSafeResult {
     });
   }
 
-  return {
-    isInitialized,
-    portfolio,
-    history,
-    totalValue,
-    isLoadingPortfolio,
-    isLoadingHistory,
-    error,
-  };
+  async function fetchPaymentInfo(data: OrderFormData): Promise<OrderPaymentInfo> {
+    const order = await call<OrderPaymentInfo>({
+      url: 'custody/order',
+      method: 'POST',
+      data: {
+        type: CustodyOrderType.DEPOSIT,
+        sourceAsset: data.sourceAsset.name,
+        targetAsset: DEPOSIT_PAIRS[data.sourceAsset.name],
+        sourceAmount: Number(data.sourceAmount),
+        paymentMethod: data.paymentMethod,
+      },
+      token: tokenStore.get('custody'),
+    });
+
+    currentOrderId.current = order.orderId;
+    return order;
+  }
+
+  async function confirmPayment(): Promise<void> {
+    if (!currentOrderId.current) return;
+
+    await call({
+      url: `custody/order/${currentOrderId.current}/confirm`,
+      method: 'POST',
+      token: tokenStore.get('custody'),
+    }).then(() => (currentOrderId.current = undefined));
+  }
+
+  return useMemo<UseSafeResult>(
+    () => ({
+      isInitialized,
+      isLoadingPortfolio,
+      isLoadingHistory,
+      portfolio,
+      history,
+      error,
+      availableCurrencies,
+      availableAssets,
+      fetchPaymentInfo,
+      confirmPayment,
+      pairMap,
+    }),
+    [
+      isInitialized,
+      isLoadingPortfolio,
+      isLoadingHistory,
+      portfolio,
+      history,
+      error,
+      availableCurrencies,
+      availableAssets,
+      fetchPaymentInfo,
+      confirmPayment,
+    ],
+  );
 }

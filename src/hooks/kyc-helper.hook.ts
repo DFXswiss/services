@@ -62,6 +62,7 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepName.ADDITIONAL_DOCUMENTS]: 'Additional documents',
     [KycStepName.RESIDENCE_PERMIT]: 'Residence permit',
     [KycStepName.DFX_APPROVAL]: 'DFX approval',
+    [KycStepName.PAYMENT_AGREEMENT]: 'Assignment agreement',
   };
 
   const typeMap: Record<KycStepType, string> = {
@@ -73,11 +74,11 @@ export function useKycHelper(): KycHelperInterface {
   };
 
   const legalEntityMap: Record<LegalEntity, string> = {
-    [LegalEntity.AG]: 'Public Limited Company (PLC)',
-    [LegalEntity.GMBH]: 'Limited Liability Company (LLC)',
-    [LegalEntity.UG]: 'Entrepreneurial Company (UG)',
+    [LegalEntity.AG]: 'Stock corporation (AG, Ltd, SA)',
+    [LegalEntity.GMBH]: 'Limited liability company under Swiss/German/Austrian law (GmbH, LLC, Sàrl)',
+    [LegalEntity.UG]: 'Entrepreneurial company (UG)',
     [LegalEntity.GBR]: 'Company under civil law (GbR)',
-    [LegalEntity.LIFE_INSURANCE]: 'Life Insurance',
+    [LegalEntity.LIFE_INSURANCE]: 'Life insurance',
     [LegalEntity.ASSOCIATION]: 'Association',
     [LegalEntity.FOUNDATION]: 'Foundation',
     [LegalEntity.TRUST]: 'Trust',
@@ -85,8 +86,8 @@ export function useKycHelper(): KycHelperInterface {
   };
 
   const legalEntityDescriptionMap: { [e in LegalEntity]?: string } = {
-    [LegalEntity.AG]: 'Publicly traded shares',
-    [LegalEntity.GMBH]: 'Privately held ownership stakes (no shareholders)',
+    [LegalEntity.AG]: 'Organization with shareholders',
+    [LegalEntity.GMBH]: 'Organization with partners',
     [LegalEntity.UG]: 'Privately held with limited liability, low capital requirement',
     [LegalEntity.GBR]:
       'Simple and flexible form of cooperation between two or more people who join forces for a common purpose',

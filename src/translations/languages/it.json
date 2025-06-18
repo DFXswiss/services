@@ -49,7 +49,8 @@
     "Create support ticket": "Crea un ticket di supporto",
     "View file": "Visualizza il file",
     "Edit": "Modifica",
-    "Set default": "Imposta predefinito"
+    "Set default": "Imposta predefinito",
+    "Download sticker": "Scarica l'adesivo"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -102,17 +103,17 @@
     "Residence permit": "Permesso di soggiorno",
     "DFX approval": "Approvazione DFX",
 
-    "Public Limited Company (PLC)": "Società per azioni (S.p.A.)",
-    "Limited Liability Company (LLC)": "Società a responsabilità limitata (S.r.l)",
-    "Entrepreneurial Company (UG)": "Società imprenditoriale (UG)",
+    "Stock corporation (AG, Ltd, SA)": "Società per azioni (AG, Ltd, SA)",
+    "Limited liability company under Swiss/German/Austrian law (GmbH, LLC, Sàrl)": "Società a responsabilità limitata (GmbH, LLC, Sàrl)",
+    "Entrepreneurial company (UG)": "Società imprenditoriale (UG)",
     "Company under civil law (GbR)": "Società di persone di diritto civile (GbR)",
-    "Life Insurance": "Assicurazione sulla vita",
+    "Life insurance": "Assicurazione sulla vita",
     "Association": "Associazione",
     "Foundation": "Fondazione",
     "Trust": "Fiducia",
     "Other": "Altro",
-    "Publicly traded shares": "Azioni quotate in borsa",
-    "Privately held ownership stakes (no shareholders)": "Partecipazioni private (senza azionisti)",
+    "Organization with shareholders": "Organizzazione con azionisti",
+    "Organization with partners": "Organizzazione con soci",
     "Privately held with limited liability, low capital requirement": "Privatamente detenuto con responsabilità limitata, basso requisito di capitale",
     "Simple and flexible form of cooperation between two or more people who join forces for a common purpose": "Forma semplice e flessibile di cooperazione tra due o più persone che uniscono le forze per uno scopo comune",
     "An internet excerpt is sufficient. No notarization is required. The extract must not be older than 2 months.": "È sufficiente un estratto da Internet. Non è richiesta l'autenticazione notarile. L'estratto non deve essere più vecchio di 2 mesi.",
@@ -236,7 +237,13 @@
     "Is the organization operationally active?": "L'organizzazione è operativamente attiva?",
     "Organizations that primarily manage their own money, such as investment companies, are considered non-operating. Operationally active organizations are those that offer and sell goods or services, conduct regular business activities that generate revenue, employ staff and have operational structures.": "Le organizzazioni che gestiscono principalmente il proprio denaro, come le società di investimento, sono considerate non operative. Le organizzazioni operative sono quelle che offrono e vendono beni o servizi, svolgono attività commerciali regolari che generano entrate, impiegano personale e dispongono di strutture operative.",
     "Organization website (optional)": "Sito web dell'organizzazione (opzionale)",
-    "https://my-organization.org": "https://mia-azienda.org"
+    "https://my-organization.org": "https://mia-azienda.org",
+
+    "Purpose of the payments": "Finalità dei pagamenti",
+    "Purpose": "Finalità",
+    "Assignment agreement": "Contratto di cessione",
+    "agreement": "DFX offre ai propri clienti la possibilità di cedere a DFX i crediti insoluti derivanti dalla vendita di beni e servizi per consentire il pagamento con criptovalute. Il cliente ha la possibilità di trasferire un credito insoluto tramite la nostra API (api.dfx.swiss) o tramite il front-end (app.dfx.swiss).<1/><2/>L'importo dovuto viene versato al cliente dopo aver dedotto una commissione di elaborazione dello 0,2%. A seconda della configurazione specifica del cliente, il pagamento può essere effettuato in criptovalute o in valuta fiat tramite transazione bancaria.<4/><5/>Le CG di DFX si applicano a tutte le transazioni. La cessione termina automaticamente con la chiusura del conto DFX o può essere interrotta immediatamente da DFX o dal cliente in caso di violazione del contratto o di insolvenza.<7/><8/>Non è richiesta la firma. Il contratto di cessione dei crediti sarà inviato al cliente via e-mail per la conferma.<10/><11/>Per tutti gli altri punti giuridici valgono il Codice delle obbligazioni svizzero (CO) e il diritto contrattuale.",
+    "I accept the agreement": "Accetto l'accordo"
   },
   "screens/2fa": {
     "2FA": "2FA",
@@ -297,6 +304,8 @@
 
     "Please confirm the connection in your MetaMask.": "Confermare la connessione nella MetaMask.",
     "Please confirm the connection in the Alby browser extension.": "Confermare la connessione nell'estensione del browser Alby.",
+    "Please confirm the connection in your Phantom browser extension.": "Confermare la connessione nell'estensione del browser Phantom.",
+    "Please confirm the connection in your Trust browser extension.": "Confermare la connessione nell'estensione del browser Trust.",
     "Please confirm the connection in your wallet.": "Confermare la connessione nel portafoglio.",
     "Please confirm the connection with your Ledger.": "Confermare il collegamento con il Ledger.",
     "Connection failed!": "Connessione fallita!",
@@ -335,6 +344,10 @@
     "You need to install the MetaMask or Rabby browser extension to be able to use this service.": "Per poter utilizzare questo servizio è necessario installare l'estensione del browser MetaMask o Rabby.",
     "Please install Alby!": "Installare Alby!",
     "You need to install the Alby browser extension to be able to use this service.": "Per poter utilizzare questo servizio è necessario installare l'estensione del browser Alby.",
+    "Please install Phantom!": "Installare Phantom!",
+    "You need to install the Phantom browser extension to be able to use this service.": "Per poter utilizzare questo servizio è necessario installare l'estensione del browser Phantom.",
+    "Please install Trust!": "Installare Trust!",
+    "You need to install the Trust browser extension to be able to use this service.": "Per poter utilizzare questo servizio è necessario installare l'estensione del browser Trust.",
     "Browser not supported!": "Browser non supportato!",
     "Mobile not supported!": "Mobile non supportato!",
     "Please use a desktop device with a compatible browser (e.g. Chrome) to be able to use this service.": "Per poter utilizzare questo servizio, utilizzare un dispositivo desktop con un browser compatibile (ad esempio Chrome).",
@@ -495,7 +508,7 @@
     "State": "Stato",
     "Created": "Creato",
     "Processing": "In corso",
-    "AML pending": "In attesa di AML",
+    "DFX check pending": "Controllo DFX in attesa",
     "KYC required": "KYC necessario",
     "Fee to high": "Tassa elevata",
     "Completed": "Completato",
@@ -601,7 +614,6 @@
     "Configuration": "Configurazione",
     "Default configuration": "Configurazione predefinita",
     "Payment standards": "Standard di pagamento",
-    "Payment blockchains": "Blockchain di pagamento",
     "Min. completion status": "Stato min. di completamento",
     "Display QR code": "Mostra codice QR",
     "Payment timeout (seconds)": "Timeout di pagamento (secondi)",
@@ -745,7 +757,10 @@
     "Portfolio value": "Valore del portafoglio",
     "Assets": "Asset",
     "Total portfolio value": "Valore totale del portafoglio",
-    "No assets found": "Nessun asset trovato"
+    "No assets found": "Nessun asset trovato",
+    "Deposit": "Deposito",
+    "Deposit Complete": "Deposito completato",
+    "Your deposit will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Il tuo deposito verrà elaborato e aggiunto al tuo portafoglio Safe. Ti informeremo via e-mail sui progressi delle tue transazioni."
   },
   "screens/blockchain": {
     "Transaction signing": "Firma della transazione",

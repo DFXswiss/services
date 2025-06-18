@@ -6,6 +6,7 @@ import { Navigate, Outlet, RouteObject, RouterProvider } from 'react-router-dom'
 import { Layout } from './components/layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
+import { OrderUIContextProvider } from './contexts/order-ui.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
@@ -30,6 +31,7 @@ const KycLogScreen = lazy(() => import('./screens/kyc-log.screen'));
 const LinkScreen = lazy(() => import('./screens/link.screen'));
 const PaymentRoutesScreen = lazy(() => import('./screens/payment-routes.screen'));
 const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
+const PaymentLinkPosScreen = lazy(() => import('./screens/payment-link-pos.screen'));
 const InvoiceScreen = lazy(() => import('./screens/invoice.screen'));
 const SellInfoScreen = lazy(() => import('./screens/sell-info.screen'));
 const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
@@ -120,11 +122,21 @@ export const Routes = [
   },
   {
     path: '/pl',
-    element: withSuspense(
+    element: (
       <PaymentLinkProvider>
-        <PaymentLinkScreen />
-      </PaymentLinkProvider>,
+        <Outlet />
+      </PaymentLinkProvider>
     ),
+    children: [
+      {
+        index: true,
+        element: withSuspense(<PaymentLinkScreen />),
+      },
+      {
+        path: 'pos',
+        element: withSuspense(<PaymentLinkPosScreen />),
+      },
+    ],
   },
   {
     path: '/payment-link',
@@ -272,19 +284,21 @@ function App({ routerFactory, params }: AppProps) {
     <WindowContextProvider>
       <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
         <BalanceContextProvider>
-          <AppHandlingContextProvider
-            isWidget={params != null}
-            service={params?.service}
-            closeCallback={params?.onClose}
-            params={params}
-            router={router}
-          >
-            <SettingsContextProvider>
-              <WalletContextProvider router={router}>
-                <RouterProvider router={router} />
-              </WalletContextProvider>
-            </SettingsContextProvider>
-          </AppHandlingContextProvider>
+          <OrderUIContextProvider>
+            <AppHandlingContextProvider
+              isWidget={params != null}
+              service={params?.service}
+              closeCallback={params?.onClose}
+              params={params}
+              router={router}
+            >
+              <SettingsContextProvider>
+                <WalletContextProvider router={router}>
+                  <RouterProvider router={router} />
+                </WalletContextProvider>
+              </SettingsContextProvider>
+            </AppHandlingContextProvider>
+          </OrderUIContextProvider>
         </BalanceContextProvider>
       </DfxContextProvider>
     </WindowContextProvider>

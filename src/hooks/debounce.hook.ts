@@ -1,17 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { deepEqual } from 'src/util/utils';
 
-function useDebounce<T>(value?: T, delay?: number): T | undefined {
+export default function useDebounce<T>(value?: T, delay?: number): T | undefined {
   const [debouncedValue, setDebouncedValue] = useState<T>();
+  const previousValue = useRef<T>();
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(value), delay || 500);
+    // Only set timer if value has actually changed (deep equality)
+    if (!deepEqual(value, previousValue.current)) {
+      const timer = setTimeout(() => {
+        setDebouncedValue(value);
+        previousValue.current = value;
+      }, delay || 500);
 
-    return () => {
-      clearTimeout(timer);
-    };
+      return () => {
+        clearTimeout(timer);
+      };
+    }
   }, [value, delay]);
 
   return debouncedValue;
 }
-
-export default useDebounce;

@@ -59,7 +59,7 @@ function Content({ back, error }: ConnectContentProps): JSX.Element {
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       </div>
       <p className="text-dfxGray-700">
-        {translate('screens/home', 'Please confirm the connection in your Phantom Wallet.')}
+        {translate('screens/home', 'Please confirm the connection in your Phantom browser extension.')}
       </p>
     </>
   );
