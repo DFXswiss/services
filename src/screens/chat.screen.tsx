@@ -31,7 +31,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useSessionStore } from 'src/hooks/session-store.hook';
 import { blankedAddress, formatBytes } from 'src/util/utils';
-import { Layout } from '../components/layout';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { TxInfo } from './transaction.screen';
 
 const emojiSet = ['👍', '❤️', '😂', '😮', '😢', '👏'];
@@ -93,12 +93,14 @@ export default function ChatScreen(): JSX.Element {
     setClickedMessage(undefined);
   }
 
+  useLayoutOptions({
+    title: supportIssue && translate('screens/support', IssueTypeLabels[supportIssue?.type]),
+    onBack: () => navigate('/support/tickets'),
+    noPadding: true,
+  });
+
   return (
-    <Layout
-      title={supportIssue && translate('screens/support', IssueTypeLabels[supportIssue?.type])}
-      onBack={() => navigate('/support/tickets')}
-      noPadding
-    >
+    <>
       {isLoading || !supportIssue ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -145,7 +147,7 @@ export default function ChatScreen(): JSX.Element {
           )}
         </div>
       )}
-    </Layout>
+    </>
   );
 }
 

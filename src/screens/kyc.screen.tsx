@@ -79,11 +79,11 @@ import { useLayoutContext } from 'src/contexts/layout.context';
 import { SumsubReviewAnswer, SumsubReviewRejectType } from 'src/dto/sumsub.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useGeoLocation } from '../hooks/geo-location.hook';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { delay, toBase64, url } from '../util/utils';
 import { IframeMessageType } from './kyc-redirect.screen';
@@ -314,18 +314,23 @@ export default function KycScreen(): JSX.Element {
     }
   }
 
+  const handleBack = () => {
+    if (stepInProgress) {
+      setStepInProgress(undefined);
+    } else if (showLinkHint || consentClient) {
+      onLoad(false);
+    }
+  };
+
+  useLayoutOptions({
+    title: stepInProgress ? nameToString(stepInProgress.name) : translate('screens/kyc', 'DFX KYC'),
+    backButton: !!(stepInProgress || showLinkHint || consentClient),
+    onBack: handleBack,
+    noPadding: isMobile && stepInProgress?.session?.type === UrlType.BROWSER,
+  });
+
   return (
-    <Layout
-      title={stepInProgress ? nameToString(stepInProgress.name) : translate('screens/kyc', 'DFX KYC')}
-      onBack={
-        stepInProgress
-          ? () => setStepInProgress(undefined)
-          : showLinkHint || consentClient
-          ? () => onLoad(false)
-          : undefined
-      }
-      noPadding={isMobile && stepInProgress?.session?.type === UrlType.BROWSER}
-    >
+    <>
       {isLoading || isAutoStarting ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : showLinkHint ? (
@@ -439,7 +444,7 @@ export default function KycScreen(): JSX.Element {
           )}
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 

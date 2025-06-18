@@ -30,9 +30,9 @@ import { addressLabel } from 'src/config/labels';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, sortAddressesByBlockchain, url } from 'src/util/utils';
-import { Layout } from '../components/layout';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
@@ -115,10 +115,6 @@ export default function AccountScreen(): JSX.Element {
       });
   }
 
-  const title = isEmbedded ? translate('screens/home', 'DFX services') : translate('screens/home', 'Account');
-  const hasBackButton = canClose && !isEmbedded;
-  const image = 'https://content.dfx.swiss/img/v1/services/berge.jpg';
-
   const transactionItems = transactions?.map((t) => ({
     label: new Date(t.date as Date).toLocaleString(),
     text: `${t.inputAsset ? `${t.inputAmount ?? ''} ${t.inputAsset}` : ''} ${
@@ -156,8 +152,14 @@ export default function AccountScreen(): JSX.Element {
   const totalVolumeSum = totalVolumeItems?.reduce((acc, item) => acc + item.value, 0);
   const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + item.value, 0);
 
+  const title = isEmbedded ? translate('screens/home', 'DFX services') : translate('screens/home', 'Account');
+  const hasBackButton = canClose && !isEmbedded;
+  const image = 'https://content.dfx.swiss/img/v1/services/berge.jpg';
+
+  useLayoutOptions({ title, backButton: hasBackButton });
+
   return (
-    <Layout title={title} backButton={hasBackButton}>
+    <>
       {!isInitialized || !isLoggedIn || isUserLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -280,6 +282,6 @@ export default function AccountScreen(): JSX.Element {
           <img src={image} className="w-full" />
         </div>
       )}
-    </Layout>
+    </>
   );
 }

@@ -43,10 +43,10 @@ import { PrivateAssetHint } from 'src/components/private-asset-hint';
 import { addressLabel } from 'src/config/labels';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
-import { Layout } from '../components/layout';
 import { SellCompletion } from '../components/payment/sell-completion';
 import { SanctionHint } from '../components/sanction-hint';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
@@ -489,16 +489,16 @@ export default function SellScreen(): JSX.Element {
     amount: Validations.Required,
   });
 
+  useLayoutOptions({
+    title: bankAccountSelection
+      ? translate('screens/sell', 'Select payment account')
+      : translate('navigation/links', 'Sell'),
+    onBack: bankAccountSelection ? () => setBankAccountSelection(false) : undefined,
+    textStart: true,
+  });
+
   return (
-    <Layout
-      title={
-        bankAccountSelection
-          ? translate('screens/sell', 'Select payment account')
-          : translate('navigation/links', 'Sell')
-      }
-      onBack={bankAccountSelection ? () => setBankAccountSelection(false) : undefined}
-      textStart
-    >
+    <>
       {showsSwitchScreen ? (
         <AddressSwitch onClose={(r) => (r ? onAddressSwitch() : setShowsSwitchScreen(false))} />
       ) : paymentInfo && isTxDone ? (
@@ -695,6 +695,6 @@ export default function SellScreen(): JSX.Element {
           )}
         </Form>
       )}
-    </Layout>
+    </>
   );
 }

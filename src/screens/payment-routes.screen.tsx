@@ -44,7 +44,6 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
-import { Layout } from 'src/components/layout';
 import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay';
 import { EditOverlay } from 'src/components/overlay/edit-overlay';
 import { QrBasic } from 'src/components/payment/qr-code';
@@ -54,6 +53,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
 import {
@@ -253,8 +253,10 @@ export default function PaymentRoutesScreen(): JSX.Element {
     ? () => setDeleteRoute(undefined)
     : undefined;
 
+  useLayoutOptions({ title: translate('screens/payment', title), onBack, textStart: true });
+
   return (
-    <Layout title={translate('screens/payment', title)} onBack={onBack} textStart>
+    <>
       {(apiError && apiError !== 'permission denied') || error ? (
         <ErrorHint message={apiError ?? error ?? ''} />
       ) : userPaymentLinksConfigLoading ? (
@@ -748,7 +750,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
           </StyledVerticalStack>
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 

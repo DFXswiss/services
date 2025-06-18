@@ -11,9 +11,9 @@ import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { FiatCurrency } from 'src/dto/safe.dto';
 import { useUserGuard } from 'src/hooks/guard.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSafe } from 'src/hooks/safe.hook';
 import { formatCurrency } from 'src/util/utils';
-import { Layout } from '../components/layout';
 
 export default function SafeScreen(): JSX.Element {
   useUserGuard('/login');
@@ -50,8 +50,10 @@ export default function SafeScreen(): JSX.Element {
     return undefined;
   };
 
+  useLayoutOptions({ title: getTitle(), onBack: getBackHandler() });
+
   return (
-    <Layout title={getTitle()} onBack={getBackHandler}>
+    <>
       {error ? (
         <div>
           <ErrorHint message={error} />
@@ -105,6 +107,6 @@ export default function SafeScreen(): JSX.Element {
           <DepositInterface />
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }

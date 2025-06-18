@@ -2,8 +2,8 @@ import { ApiError, useApi } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 
 interface RedirectResponse {
@@ -18,6 +18,8 @@ export default function MailLoginScreen() {
   const [urlParams, setUrlParams] = useSearchParams();
 
   const otp = urlParams.get('otp');
+
+  useLayoutOptions({});
 
   useEffect(() => {
     if (otp) {
@@ -41,11 +43,9 @@ export default function MailLoginScreen() {
   }, []);
 
   return (
-    <Layout>
-      <StyledVerticalStack gap={6} full center>
-        <StyledLoadingSpinner size={SpinnerSize.LG} />
-        <p className="text-dfxGray-700">{translate('screens/home', 'Logging in...')} </p>
-      </StyledVerticalStack>
-    </Layout>
+    <StyledVerticalStack gap={6} full center>
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
+      <p className="text-dfxGray-700">{translate('screens/home', 'Logging in...')} </p>
+    </StyledVerticalStack>
   );
 }

@@ -52,7 +52,7 @@ import { BadgeType } from 'src/util/app-store-badges';
 import { EvmUri } from 'src/util/evm-uri';
 import { blankedAddress, formatLocationAddress, formatUnits } from 'src/util/utils';
 import { AppStoreBadge } from '../components/app-store-badge';
-import { Layout } from '../components/layout';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 
 interface FormData {
   paymentStandard: PaymentStandard;
@@ -199,8 +199,10 @@ export default function PaymentLinkScreen(): JSX.Element {
       ? EvmUri.decode(paymentIdentifier)
       : undefined;
 
+  useLayoutOptions({ backButton: false, smallMenu: true });
+
   return (
-    <Layout backButton={false} smallMenu>
+    <>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
       ) : (!payRequest && !merchant) || isLoadingMetaMask ? (
@@ -594,7 +596,7 @@ export default function PaymentLinkScreen(): JSX.Element {
           </div>
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 

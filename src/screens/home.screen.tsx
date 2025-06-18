@@ -5,10 +5,10 @@ import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { CustodyAssets } from 'src/components/home/wallet/connect-address';
 import { useLayoutContext } from 'src/contexts/layout.context';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { url } from 'src/util/utils';
 import { Service } from '../App';
 import { ConnectWrapper } from '../components/home/connect-wrapper';
-import { Layout } from '../components/layout';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { supportsBlockchain, useWalletContext, WalletType } from '../contexts/wallet.context';
@@ -162,14 +162,14 @@ export default function HomeScreen(): JSX.Element {
   const hasBackButton =
     (canClose && !isEmbedded) || connectTo != null || (currentPageId != null && currentPageId !== appParams.mode);
 
+  useLayoutOptions({
+    title: isEmbedded ? title : undefined,
+    backButton: hasBackButton,
+    onBack: connectTo || (specialMode === SpecialMode.CONNECT && isLoggedIn) || currentPageId ? handleBack : undefined,
+  });
+
   return (
-    <Layout
-      title={isEmbedded ? title : undefined}
-      backButton={hasBackButton}
-      onBack={
-        connectTo || (specialMode === SpecialMode.CONNECT && isLoggedIn) || currentPageId ? handleBack : undefined
-      }
-    >
+    <>
       {!isInitialized || isUserLoading || !currentPage ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -234,7 +234,7 @@ export default function HomeScreen(): JSX.Element {
           <img src={image} className="w-full" />
         </div>
       )}
-    </Layout>
+    </>
   );
 }
 

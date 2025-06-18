@@ -50,12 +50,12 @@ import CoinTracking from 'src/components/cointracking';
 import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { useWindowContext } from 'src/contexts/window.context';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, toPaymentStateLabel } from '../config/labels';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import { useUserGuard } from '../hooks/guard.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress, openPdfFromString } from '../util/utils';
 
@@ -129,8 +129,10 @@ export default function TransactionScreen(): JSX.Element {
       ? () => setShowCoinTracking(false)
       : undefined;
 
+  useLayoutOptions({ title, onBack });
+
   return (
-    <Layout title={title} onBack={onBack}>
+    <>
       {error ? (
         <ErrorHint message={error} />
       ) : isRefund ? (
@@ -186,7 +188,7 @@ export default function TransactionScreen(): JSX.Element {
           <TransactionList isSupport={false} setError={setError} />
         </>
       )}
-    </Layout>
+    </>
   );
 }
 

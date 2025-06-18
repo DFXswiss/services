@@ -43,7 +43,6 @@ import { NameEdit } from '../components/edit/name.edit';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
-import { Layout } from '../components/layout';
 import { AddressSwitch } from '../components/payment/address-switch';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PrivateAssetHint } from '../components/private-asset-hint';
@@ -57,6 +56,7 @@ import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
 enum Side {
@@ -452,13 +452,15 @@ export default function BuyScreen(): JSX.Element {
     ? translate('screens/buy', 'Switch address')
     : translate('navigation/links', 'Buy');
 
+  useLayoutOptions({
+    title,
+    backButton: !showsCompletion,
+    onBack: showsNameForm ? () => setShowsNameForm(false) : undefined,
+    textStart: true,
+  });
+
   return (
-    <Layout
-      title={title}
-      backButton={!showsCompletion}
-      onBack={showsNameForm ? () => setShowsNameForm(false) : undefined}
-      textStart
-    >
+    <>
       {showsSwitchScreen ? (
         <AddressSwitch onClose={(r) => (r ? onAddressSwitch() : setShowsSwitchScreen(false))} />
       ) : showsCompletion && paymentInfo ? (
@@ -656,6 +658,6 @@ export default function BuyScreen(): JSX.Element {
           </StyledVerticalStack>
         </Form>
       )}
-    </Layout>
+    </>
   );
 }

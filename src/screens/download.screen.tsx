@@ -3,9 +3,9 @@ import { Form, StyledButton, StyledButtonWidth, StyledInput, StyledVerticalStack
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
-import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { downloadFile, filenameDateFormat } from 'src/util/utils';
 
 interface FormData {
@@ -51,41 +51,35 @@ export default function DownloadScreen(): JSX.Element {
     ],
   });
 
+  useLayoutOptions({ title: translate('screens/kyc', 'File download') });
+
   return (
-    <Layout title={translate('screens/kyc', 'File download')}>
-      <Form
-        control={control}
-        rules={rules}
-        errors={errors}
-        onSubmit={handleSubmit(onSubmit)}
-        translate={translateError}
-      >
-        <StyledVerticalStack gap={6} full center>
-          <StyledVerticalStack gap={2} full>
-            <StyledInput
-              name="userDataIds"
-              type="text"
-              label={translate('screens/kyc', 'UserData IDs')}
-              placeholder={translate('screens/kyc', '1234, 5678, 9012')}
-            />
-          </StyledVerticalStack>
-
-          {error && (
-            <div>
-              <ErrorHint message={error} />
-            </div>
-          )}
-
-          <StyledButton
-            type="submit"
-            label={translate('general/actions', 'Download')}
-            onClick={handleSubmit(onSubmit)}
-            width={StyledButtonWidth.FULL}
-            disabled={!isValid}
-            isLoading={isLoading}
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full>
+          <StyledInput
+            name="userDataIds"
+            type="text"
+            label={translate('screens/kyc', 'UserData IDs')}
+            placeholder={translate('screens/kyc', '1234, 5678, 9012')}
           />
         </StyledVerticalStack>
-      </Form>
-    </Layout>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Download')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isLoading}
+        />
+      </StyledVerticalStack>
+    </Form>
   );
 }

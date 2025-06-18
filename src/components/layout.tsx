@@ -1,6 +1,6 @@
 import { PropsWithChildren, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { LayoutContextProvider } from 'src/contexts/layout.context';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useServiceWorker } from 'src/hooks/service-worker.hook';
 import { Routes } from '../App';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -31,9 +31,7 @@ export function Layout({
   useSift();
 
   const navRef = useRef<HTMLDivElement>(null);
-  const modalRootRef = useRef<HTMLDivElement | null>(null);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const rootRef = useRef<HTMLDivElement | null>(null);
+  const { modalRootRef, scrollRef, rootRef } = useLayoutContext();
 
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const { pathname } = useLocation();
@@ -46,8 +44,8 @@ export function Layout({
   }, [showReload]);
 
   useEffect(() => {
-    const kycRoutes = Routes.filter((r) => r.isKycScreen);
-    if (!kycRoutes.some((r) => pathname === r.path)) clearParams(['code']);
+    const kycRoutes = Routes[0].children?.filter((r) => r.isKycScreen) || [];
+    if (!kycRoutes.some((r) => pathname === `/${r.path}`)) clearParams(['code']);
   }, [pathname]);
 
   function onClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
@@ -74,27 +72,25 @@ export function Layout({
         small={smallMenu}
       />
 
-      <LayoutContextProvider modalRootRef={modalRootRef} scrollRef={scrollRef} rootRef={rootRef}>
-        <div
-          className="relative flex flex-col flex-grow overflow-auto"
-          ref={(el) => {
-            if (el) {
-              modalRootRef.current = el;
-              scrollRef.current = el;
-            }
-          }}
-        >
-          <div className="flex flex-grow justify-center">
-            <div
-              className={`relative w-full max-w-screen-md flex flex-grow flex-col items-center ${
-                textStart ? 'text-start' : 'text-center'
-              } ${!(noPadding || borderless) && 'p-5'} gap-2`}
-            >
-              {children}
-            </div>
+      <div
+        className="relative flex flex-col flex-grow overflow-auto"
+        ref={(el) => {
+          if (el) {
+            modalRootRef.current = el;
+            scrollRef.current = el;
+          }
+        }}
+      >
+        <div className="flex flex-grow justify-center">
+          <div
+            className={`relative w-full max-w-screen-md flex flex-grow flex-col items-center ${
+              textStart ? 'text-start' : 'text-center'
+            } ${!(noPadding || borderless) && 'p-5'} gap-2`}
+          >
+            {children}
           </div>
         </div>
-      </LayoutContextProvider>
+      </div>
     </div>
   );
 }

@@ -30,7 +30,6 @@ import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import ActionableList from 'src/components/actionable-list';
-import { Layout } from 'src/components/layout';
 import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay';
 import { EditBankAccount } from 'src/components/overlay/edit-bank-overlay';
 import { EditOverlay } from 'src/components/overlay/edit-overlay';
@@ -41,6 +40,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 
@@ -132,8 +132,10 @@ export default function SettingsScreen(): JSX.Element {
   const disabledAddresses = user?.disabledAddresses.sort(sortAddressesByBlockchain);
   const addressesList = (userAddresses ?? []).concat(disabledAddresses ?? []);
 
+  useLayoutOptions({ title, onBack: overlayType ? () => onCloseOverlay() : undefined });
+
   return (
-    <Layout title={title} onBack={overlayType ? () => onCloseOverlay() : undefined}>
+    <>
       {overlayType ? (
         <SettingsOverlay type={overlayType} data={overlayData} onClose={onCloseOverlay} />
       ) : (
@@ -319,7 +321,7 @@ export default function SettingsScreen(): JSX.Element {
           />
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 

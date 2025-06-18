@@ -27,13 +27,13 @@ import { useEffect, useState } from 'react';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
 import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
-import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useLayoutContext } from '../contexts/layout.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 
 export default function BuyInfoScreen(): JSX.Element {
   useAddressGuard();
@@ -135,8 +135,10 @@ export default function BuyInfoScreen(): JSX.Element {
     return buy;
   }
 
+  useLayoutOptions({ textStart: true, backButton: false });
+
   return (
-    <Layout textStart backButton={false}>
+    <>
       {showsCompletion && paymentInfo ? (
         <BuyCompletion user={user} paymentInfo={paymentInfo} navigateOnClose={false} />
       ) : errorMessage ? (
@@ -196,6 +198,6 @@ export default function BuyInfoScreen(): JSX.Element {
           </>
         )
       )}
-    </Layout>
+    </>
   );
 }

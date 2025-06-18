@@ -3,11 +3,11 @@ import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swi
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAddressGuard } from '../hooks/guard.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
 export default function BuySuccessScreen(): JSX.Element {
@@ -40,8 +40,14 @@ export default function BuySuccessScreen(): JSX.Element {
       );
   }
 
+  useLayoutOptions({
+    title: translate('screens/buy', ckoId ? 'Buy' : 'Done!'),
+    backButton: false,
+    textStart: true,
+  });
+
   return (
-    <Layout title={translate('screens/buy', ckoId ? 'Buy' : 'Done!')} backButton={false} textStart>
+    <>
       {ckoId ? (
         <>
           {error ? (
@@ -58,6 +64,6 @@ export default function BuySuccessScreen(): JSX.Element {
       ) : (
         <BuyCompletion user={user} navigateOnClose />
       )}
-    </Layout>
+    </>
   );
 }

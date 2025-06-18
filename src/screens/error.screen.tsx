@@ -1,7 +1,7 @@
 import { IconVariant, StyledButton, StyledButtonColor, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useSearchParams } from 'react-router-dom';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 
 export default function ErrorScreen(): JSX.Element {
@@ -11,8 +11,10 @@ export default function ErrorScreen(): JSX.Element {
 
   const error = params.get('msg');
 
+  useLayoutOptions({});
+
   return (
-    <Layout>
+    <>
       <StyledVerticalStack center gap={5} marginY={5}>
         <div>
           <h2 className="text-dfxBlue-800">{translate('screens/error', 'Oh, sorry, something went wrong')}</h2>
@@ -32,6 +34,6 @@ export default function ErrorScreen(): JSX.Element {
           onClick={() => navigate('/support')}
         />
       </StyledVerticalStack>
-    </Layout>
+    </>
   );
 }
