@@ -12,11 +12,12 @@ import {
   StyledLink,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import useDebounce from 'src/hooks/debounce.hook';
@@ -32,9 +33,8 @@ interface FormData {
 export default function StickersScreen(): JSX.Element {
   const { translate, translateError, language: appLanguage, availableStickerLanguages } = useSettingsContext();
   const { getPaymentRecipient, getPaymentStickers } = usePaymentRoutes();
+  const { rootRef } = useLayoutContext();
   const { route } = useAppParams();
-
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const [urlParams, setUrlParams] = useSearchParams();
   const [languageParam, setLanguageParam] = useState<string | null>(null);

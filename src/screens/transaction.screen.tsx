@@ -48,6 +48,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
 import CoinTracking from 'src/components/cointracking';
 import { AddBankAccount } from 'src/components/payment/add-bank-account';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { ErrorHint } from '../components/error-hint';
 import { PaymentFailureReasons, PaymentMethodLabels, toPaymentStateLabel } from '../config/labels';
@@ -296,6 +297,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
+  const { rootRef } = useLayoutContext();
   const { bankAccounts } = useBankAccountContext();
   const { isLoggedIn } = useSessionContext();
   const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
@@ -420,6 +422,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
           {!refundDetails.refundTarget && addresses && !isBuy && (
             <StyledDropdown<UserAddress>
               name="address"
+              rootRef={rootRef}
               label={translate('screens/payment', 'Chargeback address')}
               items={addresses}
               labelFunc={(item) => blankedAddress(item.address, { width })}
@@ -432,6 +435,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
             bankAccounts &&
             isBuy && (
               <StyledDropdown<string>
+                rootRef={rootRef}
                 name="iban"
                 label={translate('screens/payment', 'Chargeback IBAN')}
                 items={[...bankAccounts.map((b) => b.iban), AddAccount]}
@@ -479,6 +483,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const { id } = useParams();
   const { toString } = useBlockchain();
   const { pathname } = useLocation();
+  const { rootRef } = useLayoutContext();
   const { getTransactionInvoice, getTransactionReceipt } = useTransaction();
 
   const { width } = useWindowContext();
@@ -641,6 +646,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   <StyledVerticalStack gap={3} full>
                                     <p className="text-dfxGray-700 mt-4">{translate('screens/payment', 'Reference')}</p>
                                     <StyledDropdown<TransactionTarget>
+                                      rootRef={rootRef}
                                       items={transactionTargets ?? []}
                                       labelFunc={(item) => `${item.bankUsage}`}
                                       placeholder={translate('general/actions', 'Select') + '...'}

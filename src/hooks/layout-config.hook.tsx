@@ -1,3 +1,4 @@
+import { isEqual } from 'lodash';
 import { useEffect, useRef } from 'react';
 import { LayoutConfig, useLayoutConfigContext } from '../contexts/layout-config.context';
 
@@ -6,27 +7,21 @@ export function useLayoutOptions({ title, backButton, textStart, noPadding, smal
   const prevConfig = useRef<LayoutConfig>();
 
   useEffect(() => {
-    const hasOnBack = Boolean(onBack);
-    const prevOnBack = Boolean(prevConfig.current?.onBack);
+    const newConfig: LayoutConfig = {
+      title,
+      backButton,
+      textStart,
+      noPadding,
+      smallMenu,
+      onBack,
+    };
 
-    const changed =
-      prevConfig.current?.title !== title ||
-      prevConfig.current?.backButton !== backButton ||
-      prevConfig.current?.textStart !== textStart ||
-      prevConfig.current?.noPadding !== noPadding ||
-      prevConfig.current?.smallMenu !== smallMenu ||
-      prevOnBack !== hasOnBack;
+    const changed = !isEqual(
+      { ...prevConfig.current, onBack: Boolean(prevConfig.current?.onBack) },
+      { ...newConfig, onBack: Boolean(newConfig.onBack) }
+    );
 
     if (changed) {
-      const newConfig: LayoutConfig = {
-        title,
-        backButton,
-        textStart,
-        noPadding,
-        smallMenu,
-        onBack,
-      };
-
       prevConfig.current = newConfig;
       setConfig(newConfig);
     }

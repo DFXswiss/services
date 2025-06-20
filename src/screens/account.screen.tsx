@@ -27,6 +27,7 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { addressLabel } from 'src/config/labels';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
@@ -54,6 +55,7 @@ export default function AccountScreen(): JSX.Element {
   const { isInitialized, setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
   const { session } = useAuthContext();
+  const { rootRef } = useLayoutContext();
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setRefferal] = useState<Referral | undefined>();
 
@@ -234,6 +236,7 @@ export default function AccountScreen(): JSX.Element {
                 <Form control={control} errors={errors}>
                   <StyledDropdown
                     name="address"
+                    rootRef={rootRef}
                     placeholder={translate('general/actions', 'Select') + '...'}
                     items={user.addresses.sort(sortAddressesByBlockchain)}
                     labelFunc={(item) => blankedAddress(addressLabel(item), { width })}

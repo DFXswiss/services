@@ -19,6 +19,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { PaymentMethodDescriptions, PaymentMethodLabels } from 'src/config/labels';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -65,6 +66,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
 }: OrderInterfaceProps) => {
   const { width } = useWindowContext();
   const { session } = useAuthContext();
+  const { rootRef } = useLayoutContext();
   const { getDefaultCurrency } = useFiat();
   const { translate } = useSettingsContext();
   const { isInitialized } = useAppHandlingContext();
@@ -86,8 +88,6 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
     getAvailablePaymentMethods,
     handlePaymentInfoFetch,
   } = useOrder({ orderType, sourceAssets, targetAssets });
-
-  const rootRef = React.useRef<HTMLDivElement>(null);
 
   const {
     watch,
