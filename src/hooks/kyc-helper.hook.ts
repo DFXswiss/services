@@ -62,6 +62,7 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepName.ADDITIONAL_DOCUMENTS]: 'Additional documents',
     [KycStepName.RESIDENCE_PERMIT]: 'Residence permit',
     [KycStepName.DFX_APPROVAL]: 'DFX approval',
+    [KycStepName.PAYMENT_AGREEMENT]: 'Assignment agreement',
   };
 
   const typeMap: Record<KycStepType, string> = {

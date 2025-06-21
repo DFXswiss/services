@@ -13,10 +13,10 @@ import {
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
-import { Layout } from 'src/components/layout';
 import { DefaultFileTypes } from 'src/config/file-types';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { toBase64 } from 'src/util/utils';
 
 interface FormData {
@@ -80,66 +80,60 @@ export default function KycLogScreen(): JSX.Element {
     file: Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
   });
 
+  useLayoutOptions({ title: translate('screens/kyc', 'Data upload') });
+
   return (
-    <Layout title={translate('screens/kyc', 'Data upload')}>
-      <Form
-        control={control}
-        rules={rules}
-        errors={errors}
-        onSubmit={handleSubmit(onSubmit)}
-        translate={translateError}
-      >
-        <StyledVerticalStack gap={6} full center>
-          <StyledInput
-            name="userDataId"
-            type="text"
-            label={translate('screens/kyc', 'UserData ID')}
-            placeholder={translate('screens/kyc', '1234')}
-            full
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledInput
+          name="userDataId"
+          type="text"
+          label={translate('screens/kyc', 'UserData ID')}
+          placeholder={translate('screens/kyc', '1234')}
+          full
+        />
+
+        <StyledInput
+          name="eventDate"
+          label={translate('screens/kyc', 'Event date')}
+          placeholder={new Date().toISOString().split('T')[0]}
+          full
+        />
+
+        <StyledInput name="comment" label={translate('screens/kyc', 'Comment')} full />
+
+        <StyledFileUpload
+          name="file"
+          label={translate('screens/support', 'File')}
+          placeholder={translate('general/actions', 'Drop files here')}
+          buttonLabel={translate('general/actions', 'Browse')}
+          full
+        />
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        {showNotification ? (
+          <p
+            className={` flex flex-row gap-1 items-center text-dfxRed-100 font-normal transition-opacity duration-200`}
+          >
+            <DfxIcon icon={IconVariant.CHECK} size={IconSize.SM} />
+            {translate('screens/payment', 'Saved')}
+          </p>
+        ) : (
+          <StyledButton
+            type="submit"
+            label={translate('general/actions', 'Save')}
+            onClick={handleSubmit(onSubmit)}
+            width={StyledButtonWidth.FULL}
+            disabled={!isValid}
+            isLoading={isLoading}
           />
-
-          <StyledInput
-            name="eventDate"
-            label={translate('screens/kyc', 'Event date')}
-            placeholder={new Date().toISOString().split('T')[0]}
-            full
-          />
-
-          <StyledInput name="comment" label={translate('screens/kyc', 'Comment')} full />
-
-          <StyledFileUpload
-            name="file"
-            label={translate('screens/support', 'File')}
-            placeholder={translate('general/actions', 'Drop files here')}
-            buttonLabel={translate('general/actions', 'Browse')}
-            full
-          />
-
-          {error && (
-            <div>
-              <ErrorHint message={error} />
-            </div>
-          )}
-
-          {showNotification ? (
-            <p
-              className={` flex flex-row gap-1 items-center text-dfxRed-100 font-normal transition-opacity duration-200`}
-            >
-              <DfxIcon icon={IconVariant.CHECK} size={IconSize.SM} />
-              {translate('screens/payment', 'Saved')}
-            </p>
-          ) : (
-            <StyledButton
-              type="submit"
-              label={translate('general/actions', 'Save')}
-              onClick={handleSubmit(onSubmit)}
-              width={StyledButtonWidth.FULL}
-              disabled={!isValid}
-              isLoading={isLoading}
-            />
-          )}
-        </StyledVerticalStack>
-      </Form>
-    </Layout>
+        )}
+      </StyledVerticalStack>
+    </Form>
   );
 }

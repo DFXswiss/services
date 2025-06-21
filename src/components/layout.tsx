@@ -1,5 +1,6 @@
-import { PropsWithChildren, Ref, useEffect, useRef, useState } from 'react';
+import { PropsWithChildren, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useServiceWorker } from 'src/hooks/service-worker.hook';
 import { Routes } from '../App';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -14,8 +15,6 @@ interface LayoutProps extends PropsWithChildren {
   backButton?: boolean;
   onBack?: () => void;
   textStart?: boolean;
-  rootRef?: Ref<HTMLDivElement>;
-  scrollRef?: Ref<HTMLDivElement>;
   noPadding?: boolean;
   smallMenu?: boolean;
 }
@@ -26,14 +25,14 @@ export function Layout({
   onBack,
   textStart,
   children,
-  rootRef,
-  scrollRef,
   noPadding,
   smallMenu,
 }: LayoutProps): JSX.Element {
   useSift();
 
   const navRef = useRef<HTMLDivElement>(null);
+  const { modalRootRef, scrollRef, rootRef } = useLayoutContext();
+
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const { pathname } = useLocation();
   const { clearParams } = useNavigation();
@@ -45,8 +44,8 @@ export function Layout({
   }, [showReload]);
 
   useEffect(() => {
-    const kycRoutes = Routes.filter((r) => r.isKycScreen);
-    if (!kycRoutes.some((r) => pathname === r.path)) clearParams(['code']);
+    const kycRoutes = Routes[0].children?.filter((r) => r.isKycScreen) || [];
+    if (!kycRoutes.some((r) => pathname === `/${r.path}`)) clearParams(['code']);
   }, [pathname]);
 
   function onClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
@@ -73,7 +72,15 @@ export function Layout({
         small={smallMenu}
       />
 
-      <div className="flex flex-col flex-grow overflow-auto" ref={scrollRef}>
+      <div
+        className="relative flex flex-col flex-grow overflow-auto"
+        ref={(el) => {
+          if (el) {
+            modalRootRef.current = el;
+            scrollRef.current = el;
+          }
+        }}
+      >
         <div className="flex flex-grow justify-center">
           <div
             className={`relative w-full max-w-screen-md flex flex-grow flex-col items-center ${

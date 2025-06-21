@@ -33,18 +33,19 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
 import { addressLabel } from 'src/config/labels';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import useDebounce from 'src/hooks/debounce.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
-import { Layout } from '../components/layout';
 import { AddressSwitch } from '../components/payment/address-switch';
 import { SwapCompletion } from '../components/payment/swap-completion';
 import { SanctionHint } from '../components/sanction-hint';
@@ -116,7 +117,7 @@ export default function SwapScreen(): JSX.Element {
   } = useAppParams();
   const { receiveFor } = useSwap();
   const { toString } = useBlockchain();
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { rootRef } = useLayoutContext();
 
   const [sourceAssets, setSourceAssets] = useState<Asset[]>();
   const [targetAssets, setTargetAssets] = useState<Asset[]>();
@@ -496,8 +497,10 @@ export default function SwapScreen(): JSX.Element {
     amount: Validations.Required,
   });
 
+  useLayoutOptions({ title: translate('navigation/links', 'Swap'), textStart: true });
+
   return (
-    <Layout title={translate('navigation/links', 'Swap')} textStart rootRef={rootRef}>
+    <>
       {paymentInfo && isTxDone ? (
         <SwapCompletion paymentInfo={paymentInfo} navigateOnClose={true} txId={swapTxId} />
       ) : showsSwitchScreen ? (
@@ -700,6 +703,6 @@ export default function SwapScreen(): JSX.Element {
           )}
         </Form>
       )}
-    </Layout>
+    </>
   );
 }

@@ -29,6 +29,7 @@ import {
   KycStepType,
   Language,
   LegalEntity,
+  PaymentData,
   QuestionType,
   SignatoryPower,
   SupportIssueType,
@@ -67,20 +68,22 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import SumsubWebSdk from '@sumsub/websdk-react';
-import { RefObject, useEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
+import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { DefaultFileTypes } from 'src/config/file-types';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { SumsubReviewAnswer, SumsubReviewRejectType } from 'src/dto/sumsub.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useGeoLocation } from '../hooks/geo-location.hook';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { delay, toBase64, url } from '../util/utils';
 import { IframeMessageType } from './kyc-redirect.screen';
@@ -116,9 +119,9 @@ export default function KycScreen(): JSX.Element {
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
   const [showLinkHint, setShowLinkHint] = useState(false);
+  const { rootRef } = useLayoutContext();
 
   const mode = pathname.includes('/profile') ? Mode.PROFILE : pathname.includes('/contact') ? Mode.CONTACT : Mode.KYC;
-  const rootRef = useRef<HTMLDivElement>(null);
   const urlParams = new URLSearchParams(search);
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
   const allStepsCompleted = info?.kycSteps.every((s) => isStepDone(s));
@@ -311,19 +314,23 @@ export default function KycScreen(): JSX.Element {
     }
   }
 
+  const handleBack = () => {
+    if (stepInProgress) {
+      setStepInProgress(undefined);
+    } else if (showLinkHint || consentClient) {
+      onLoad(false);
+    }
+  };
+
+  useLayoutOptions({
+    title: stepInProgress ? nameToString(stepInProgress.name) : translate('screens/kyc', 'DFX KYC'),
+    backButton: !!(stepInProgress || showLinkHint || consentClient),
+    onBack: handleBack,
+    noPadding: isMobile && stepInProgress?.session?.type === UrlType.BROWSER,
+  });
+
   return (
-    <Layout
-      title={stepInProgress ? nameToString(stepInProgress.name) : translate('screens/kyc', 'DFX KYC')}
-      rootRef={rootRef}
-      onBack={
-        stepInProgress
-          ? () => setStepInProgress(undefined)
-          : showLinkHint || consentClient
-          ? () => onLoad(false)
-          : undefined
-      }
-      noPadding={isMobile && stepInProgress?.session?.type === UrlType.BROWSER}
-    >
+    <>
       {isLoading || isAutoStarting ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : showLinkHint ? (
@@ -437,7 +444,7 @@ export default function KycScreen(): JSX.Element {
           )}
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 
@@ -528,6 +535,9 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.DFX_APPROVAL:
       return <></>;
+
+    case KycStepName.PAYMENT_AGREEMENT:
+      return <PaymentAgreement {...props} />;
   }
 }
 
@@ -2030,6 +2040,101 @@ function ManualIdent({ rootRef, code, step, onDone }: EditProps): JSX.Element {
           onClick={handleSubmit(onSubmit)}
           width={StyledButtonWidth.FULL}
           disabled={!isValid}
+          isLoading={isUpdating}
+        />
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+function PaymentAgreement({ code, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { setPaymentData } = useKyc();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { isValid, errors },
+  } = useForm<PaymentData>({ mode: 'onTouched' });
+
+  const accepted = useWatch({ control, name: 'contractAccepted' });
+
+  const valid = isValid && accepted;
+
+  async function onSubmit(data: PaymentData) {
+    if (!step.session) return;
+
+    setIsUpdating(true);
+    setError(undefined);
+    setPaymentData(code, step.session.url, data)
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    purpose: Validations.Required,
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full center>
+          <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Purpose of the payments')}
+          </p>
+          <StyledInput name="purpose" label={''} placeholder={translate('screens/kyc', 'Purpose')} full smallLabel />
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Assignment agreement')}
+          </p>
+          <p className="text-dfxGray-700 text-start">
+            <Trans i18nKey="screens/kyc.agreement">
+              DFX offers its customers the option of assigning outstanding receivables from the sale of goods and
+              services to DFX in order to enable payment using cryptocurrencies. The customer has the option of
+              transferring an outstanding claim via our API (api.dfx.swiss) or via the front end (app.dfx.swiss).
+              <br />
+              <br />
+              The amount owed will be paid out to the customer after deduction of a processing fee of 0.2%. Depending on
+              the customer-specific configuration, the payment can be made either in cryptocurrencies or as fiat
+              currency via bank transaction.
+              <br />
+              <br />
+              The DFX GTC apply to all transactions. The assignment ends automatically when the DFX account is closed or
+              can be terminated immediately by DFX or the customer in the event of breaches of contract or insolvency.
+              <br />
+              <br />
+              A signature is not required. The assignment of claims agreement will be sent to the customer by e-mail for
+              confirmation.
+              <br />
+              <br />
+              The Swiss Code of Obligations (OR) and contract law apply to all other legal points.
+            </Trans>
+          </p>
+        </StyledVerticalStack>
+
+        <StyledCheckboxRow isChecked={accepted} onChange={(checked) => setValue('contractAccepted', checked)} centered>
+          {translate('screens/kyc', 'I accept the agreement')}
+        </StyledCheckboxRow>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!valid}
           isLoading={isUpdating}
         />
       </StyledVerticalStack>

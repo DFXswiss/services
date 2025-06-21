@@ -237,7 +237,13 @@
     "Is the organization operationally active?": "Ist die Organisation operativ tätig?",
     "Organizations that primarily manage their own money, such as investment companies, are considered non-operating. Operationally active organizations are those that offer and sell goods or services, conduct regular business activities that generate revenue, employ staff and have operational structures.": "Organisationen, die in erster Linie ihr eigenes Geld verwalten, wie z. B. Investmentgesellschaften, gelten als nicht-operativ. Operativ tätige Organisationen sind solche, die Waren oder Dienstleistungen anbieten und verkaufen, regelmäßige Geschäftstätigkeiten durchführen, die Einnahmen generieren, Personal beschäftigen und über betriebliche Strukturen verfügen.",
     "Organization website (optional)": "Website der Organisation (optional)",
-    "https://my-organization.org": "https://meine-firma.org"
+    "https://my-organization.org": "https://meine-firma.org",
+
+    "Purpose of the payments": "Zweck der Zahlungen",
+    "Purpose": "Zweck",
+    "Assignment agreement": "Forderungsabtretungsvertrag (Zession)",
+    "agreement": "DFX bietet seinen Kunden die Möglichkeit, offene Forderungen aus dem Verkauf von Waren und Dienstleistungen an DFX abzutreten, um eine Bezahlung mittels Kryptowährungen zu ermöglichen. Der Kunde hat die Möglichkeit, eine offene Forderung über unsere API (api.dfx.swiss) oder über das Frontend (app.dfx.swiss) zu übermitteln.<1/><2/>Der geschuldete Betrag wird nach Abzug einer Bearbeitungsgebühr von 0.2% an den Kunden ausbezahlt. Die Auszahlung kann, entsprechend der kundenspezifischen Konfiguration, entweder in Kryptowährungen oder als Fiat-Währung per Banktransaktion erfolgen.<4/><5/>Für alle Transaktionen gelten die AGB der DFX. Die Zession endet automatisch mit der Schliessung des DFX-Kontos oder kann bei Vertragsverstössen oder Zahlungsunfähigkeit sofort durch DFX oder den Kunden beendet werden.<7/><8/>Eine Unterschrift ist nicht erforderlich. Der Forderungsabtretungsvertrag wird dem Kunden zur Bestätigung per E-Mail zugesendet.<10/><11/>Für alle weiteren rechtlichen Punkte kommt das Schweizer Obligationenrecht (OR) und Vertragsrecht zur Anwendung.",
+    "I accept the agreement": "Ich stimme dem Vertrag zu"
   },
   "screens/2fa": {
     "2FA": "2FA",
@@ -746,7 +752,10 @@
     "Portfolio value": "Portfoliowert",
     "Assets": "Assets",
     "Total portfolio value": "Gesamtwert des Portfolios",
-    "No assets found": "Keine Assets gefunden"
+    "No assets found": "Keine Assets gefunden",
+    "Deposit": "Einzahlung",
+    "Deposit Complete": "Einzahlung abgeschlossen",
+    "Your deposit will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Deine Einzahlung wird verarbeitet und zu Deinem Safe-Portfolio hinzugefügt. Wir werden Dich per E-Mail über den Fortschritt Deiner Transaktionen informieren."
   },
   "screens/blockchain": {
     "Transaction signing": "Transaktionssignierung",

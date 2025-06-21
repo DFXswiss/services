@@ -27,13 +27,14 @@ import {
 } from '@dfx.swiss/react-components';
 import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/opacity.css';
 import { useSearchParams } from 'react-router-dom';
 import { QrBasic } from 'src/components/payment/qr-code';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -51,7 +52,7 @@ import { BadgeType } from 'src/util/app-store-badges';
 import { EvmUri } from 'src/util/evm-uri';
 import { blankedAddress, formatLocationAddress, formatUnits } from 'src/util/utils';
 import { AppStoreBadge } from '../components/app-store-badge';
-import { Layout } from '../components/layout';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 
 interface FormData {
   paymentStandard: PaymentStandard;
@@ -64,6 +65,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { toBlockchain } = useWeb3();
   const { width } = useWindowContext();
   const { assets } = useAssetContext();
+  const { rootRef } = useLayoutContext();
   const {
     error,
     merchant,
@@ -90,7 +92,6 @@ export default function PaymentLinkScreen(): JSX.Element {
   const { recommendedWallets, otherWallets, semiCompatibleWallets, getWalletByName, getDeeplinkByWalletId } =
     usePaymentLinkWallets();
 
-  const rootRef = useRef<HTMLDivElement>(null);
   const [assetObject, setAssetObject] = useState<Asset>();
   const [showContract, setShowContract] = useState(false);
   const [walletData, setWalletData] = useState<WalletInfo>();
@@ -198,8 +199,10 @@ export default function PaymentLinkScreen(): JSX.Element {
       ? EvmUri.decode(paymentIdentifier)
       : undefined;
 
+  useLayoutOptions({ backButton: false, smallMenu: true });
+
   return (
-    <Layout backButton={false} smallMenu rootRef={rootRef}>
+    <>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
       ) : (!payRequest && !merchant) || isLoadingMetaMask ? (
@@ -593,7 +596,7 @@ export default function PaymentLinkScreen(): JSX.Element {
           </div>
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 
@@ -670,7 +673,9 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
           return (
             <div
               key={wallet.name}
-              className={`flex flex-col items-center gap-2 max-w-[120px] min-w-0 ${!wallet.disabled ? 'cursor-pointer' : 'opacity-50'}`}
+              className={`flex flex-col items-center gap-2 max-w-[120px] min-w-0 ${
+                !wallet.disabled ? 'cursor-pointer' : 'opacity-50'
+              }`}
               onClick={
                 wallet.disabled ? undefined : () => navigate({ pathname: '/pl', search: `?wallet-id=${wallet.id}` })
               }

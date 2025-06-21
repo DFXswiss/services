@@ -27,8 +27,8 @@ import {
   PaymentLinkPayTerminal,
 } from 'src/dto/payment-link.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { Layout } from '../components/layout';
 
 interface PaymentFormProps {
   payRequest: PaymentLinkPayRequest;
@@ -41,8 +41,10 @@ export default function PaymentLinkPosScreen(): JSX.Element {
     usePaymentLinkContext();
   const { isInitialized } = useAppParams();
 
+  useLayoutOptions({ backButton: false, smallMenu: true });
+
   return (
-    <Layout backButton={false} smallMenu>
+    <>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
       ) : !payRequest || !isInitialized ? (
@@ -76,7 +78,7 @@ export default function PaymentLinkPosScreen(): JSX.Element {
           </div>
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 

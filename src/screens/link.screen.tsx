@@ -28,8 +28,8 @@ import {
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
 export default function LinkScreen(): JSX.Element {
@@ -111,8 +111,10 @@ export default function LinkScreen(): JSX.Element {
     mail: [Validations.Required, Validations.Mail],
   });
 
+  useLayoutOptions({ title: translate('screens/kyc', 'DFX KYC') });
+
   return (
-    <Layout title={translate('screens/kyc', 'DFX KYC')}>
+    <>
       {isLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : linkNotPossible ? (
@@ -181,6 +183,6 @@ export default function LinkScreen(): JSX.Element {
           </StyledVerticalStack>
         </Form>
       )}
-    </Layout>
+    </>
   );
 }
