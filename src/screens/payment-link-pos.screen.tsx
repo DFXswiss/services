@@ -33,7 +33,8 @@ import { Lnurl } from 'src/util/lnurl';
 interface PaymentFormProps {
   payRequest: PaymentLinkPayRequest;
   paymentLinkApiUrl: string;
-  fetchPayRequest: (url: string) => void;
+  paymentStatus?: ExtendedPaymentLinkStatus;
+  fetchPayRequest: (url: string, isRefetch?: boolean) => void;
 }
 
 export default function PaymentLinkPosScreen(): JSX.Element {
@@ -59,16 +60,18 @@ export default function PaymentLinkPosScreen(): JSX.Element {
             <QrBasic data={Lnurl.prependLnurl(Lnurl.encode(paymentLinkApiUrl.current))} />
           </div>
           <div className="flex flex-col w-full gap-4">
-            {paymentStatus === PaymentLinkPaymentStatus.PENDING && paymentHasQuote(payRequest) ? (
+            {PaymentLinkPaymentStatus.PENDING === paymentStatus && paymentHasQuote(payRequest) ? (
               <PendingPaymentForm
                 payRequest={payRequest}
                 paymentLinkApiUrl={paymentLinkApiUrl.current}
+                paymentStatus={paymentStatus}
                 fetchPayRequest={fetchPayRequest}
               />
             ) : (
               <CreatePaymentForm
                 payRequest={payRequest as PaymentLinkPayRequest}
                 paymentLinkApiUrl={paymentLinkApiUrl.current}
+                paymentStatus={paymentStatus}
                 fetchPayRequest={fetchPayRequest}
               />
             )}
@@ -82,11 +85,17 @@ export default function PaymentLinkPosScreen(): JSX.Element {
   );
 }
 
-function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: PaymentFormProps): JSX.Element {
+function CreatePaymentForm({
+  payRequest,
+  paymentLinkApiUrl,
+  paymentStatus,
+  fetchPayRequest,
+}: PaymentFormProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { route, key } = useAppParams();
   const { call } = useApi();
 
+  const [isSuccessAnimation, setIsSuccessAnimation] = useState(paymentStatus === PaymentLinkPaymentStatus.COMPLETED);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -94,14 +103,18 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
     amount: [Validations.Required, Validations.Custom((value) => !isNaN(Number(value)) || 'pattern')],
   });
 
+  useEffect(() => {
+    if (paymentStatus === PaymentLinkPaymentStatus.COMPLETED) setTimeout(() => setIsSuccessAnimation(false), 2000);
+  }, [paymentStatus]);
+
   const createPayment = useCallback(
     async (data: { amount: number }) => {
-      if (!route || !key || !payRequest) return;
+      if (!key || !payRequest) return;
 
       const params = new URLSearchParams({
-        route: route,
         externalLinkId: payRequest.externalId as string,
         key: key,
+        route: route ?? '',
       });
 
       setIsLoading(true);
@@ -112,9 +125,10 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
         data: {
           amount: +data.amount,
           externalId: Math.random().toString(36).substring(2, 15),
+          expiryDate: new Date(Date.now() + 180 * 1000).toISOString(),
         },
       })
-        .then(() => fetchPayRequest(paymentLinkApiUrl))
+        .then(() => fetchPayRequest(paymentLinkApiUrl, true))
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
         .finally(() => setIsLoading(false));
     },
@@ -128,6 +142,14 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
   } = useForm<{ amount: number }>({
     mode: 'onTouched',
   });
+
+  if (isSuccessAnimation) {
+    return (
+      <div className="flex justify-center items-center w-full gap-4">
+        <GoCheckCircleFill className="text-[#4BB543]" size={80} />
+      </div>
+    );
+  }
 
   return (
     <Form
@@ -160,8 +182,13 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
   );
 }
 
-const PendingPaymentForm = ({ payRequest, paymentLinkApiUrl, fetchPayRequest }: PaymentFormProps): JSX.Element => {
-  const { route, key } = useAppParams();
+const PendingPaymentForm = ({
+  payRequest,
+  paymentLinkApiUrl,
+  fetchPayRequest,
+  paymentStatus,
+}: PaymentFormProps): JSX.Element => {
+  const { key } = useAppParams();
   const { translate } = useSettingsContext();
   const { call } = useApi();
 
@@ -173,13 +200,12 @@ const PendingPaymentForm = ({ payRequest, paymentLinkApiUrl, fetchPayRequest }: 
     const paymentTime = new Date(payRequest.quote.expiration);
     const diff = paymentTime.getTime() - now.getTime();
     return Math.max(0, Math.ceil(diff / 1000));
-  }, [payRequest]);
+  }, []);
 
   const cancelPayment = async () => {
-    if (!route || !key || !payRequest) return;
+    if (!key || !payRequest) return;
 
     const params = new URLSearchParams({
-      route: route,
       externalLinkId: payRequest.externalId as string,
       key: key,
     });
@@ -190,7 +216,6 @@ const PendingPaymentForm = ({ payRequest, paymentLinkApiUrl, fetchPayRequest }: 
       url: `paymentLink/payment?${params.toString()}`,
       method: 'DELETE',
     })
-      .then(() => fetchPayRequest(paymentLinkApiUrl))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
   };
@@ -225,7 +250,7 @@ function TransactionHistory({
   payRequest: PaymentLinkPayTerminal;
   paymentStatus: ExtendedPaymentLinkStatus;
 }): JSX.Element {
-  const { route, key } = useAppParams();
+  const { key } = useAppParams();
   const { translate } = useSettingsContext();
   const { call } = useApi();
 
@@ -234,10 +259,9 @@ function TransactionHistory({
   const [error, setError] = useState<string>();
 
   const fetchTransactionHistory = useCallback(() => {
-    if (!route || !key || !payRequest) return;
+    if (!key || !payRequest) return;
 
     const params = new URLSearchParams({
-      route: route,
       externalLinkId: payRequest.externalId as string,
       status: [
         PaymentLinkPaymentStatus.PENDING,
@@ -254,14 +278,14 @@ function TransactionHistory({
       method: 'GET',
     })
       .then((response) => {
-        setTransactionHistory(
-          response[0].payments?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10) ??
-            [],
-        );
+        const payments = response.length
+          ? response[0].payments?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          : [];
+        setTransactionHistory(payments.slice(0, 10));
       })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
-  }, [route, key, payRequest, call]);
+  }, [key, payRequest, call]);
 
   useEffect(() => {
     fetchTransactionHistory();
@@ -281,25 +305,34 @@ function TransactionHistory({
   ) : error ? (
     <ErrorHint message={error} />
   ) : (
-    <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-      {transactionHistory.map((payment) => (
-        <StyledDataTableRow key={payment.id}>
-          <div className="flex flex-1 justify-between items-start">
-            <div className="flex items-center justify-center gap-2 text-dfxGray-800">
-              {statusIcon[payment.status as keyof typeof statusIcon]}
-              {translate('screens/payment', `${payment.status}`)}
-            </div>
-            <div className="flex flex-col items-end justify-start">
-              {payment.amount} {payment.currency.toUpperCase()}
-              <span className="text-dfxGray-800 text-xs">
-                {new Date(payment.date).toDateString() === new Date().toDateString()
-                  ? new Date(payment.date).toLocaleTimeString()
-                  : new Date(payment.date).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
-        </StyledDataTableRow>
-      ))}
-    </StyledDataTable>
+    <div>
+      <h2 className="ml-1.5 mt-2 mb-1.5 text-dfxGray-700 align-left flex">
+        {translate('screens/payment', 'Latest transactions')}
+      </h2>
+      <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+        {transactionHistory.length > 0 ? (
+          transactionHistory.map((payment) => (
+            <StyledDataTableRow key={payment.id}>
+              <div className="flex flex-1 justify-between items-start">
+                <div className="flex items-center justify-center gap-2 text-dfxGray-800">
+                  {statusIcon[payment.status as keyof typeof statusIcon]}
+                  {translate('screens/payment', `${payment.status}`)}
+                </div>
+                <div className="flex flex-col items-end justify-start">
+                  {payment.amount} {payment.currency.toUpperCase()}
+                  <span className="text-dfxGray-800 text-xs">
+                    {new Date(payment.date).toDateString() === new Date().toDateString()
+                      ? new Date(payment.date).toLocaleTimeString()
+                      : new Date(payment.date).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            </StyledDataTableRow>
+          ))
+        ) : (
+          <StyledDataTableRow label={translate('screens/payment', 'No transactions yet')} />
+        )}
+      </StyledDataTable>
+    </div>
   );
 }
