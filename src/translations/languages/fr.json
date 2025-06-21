@@ -474,6 +474,7 @@
     "Transaction status": "Statut de la transaction",
     "Transaction refund": "Remboursement de la transaction",
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} vers {{to}} à {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
+    "No transactions yet": "Aucune transaction",
 
     "ID": "ID",
     "External ID": "ID externe",
