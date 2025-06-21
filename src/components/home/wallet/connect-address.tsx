@@ -8,11 +8,12 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { ConnectProps } from 'src/components/home/connect-shared';
 import { addressLabel } from 'src/config/labels';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -33,10 +34,10 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
   const { changeAddress } = useUserContext();
   const { call } = useApi();
   const { assetOut } = useAppParams();
+  const { rootRef } = useLayoutContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const isCustodySignup = !user?.addresses.length && CustodyAssets.includes(assetOut ?? '');
 

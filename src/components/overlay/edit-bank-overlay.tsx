@@ -9,9 +9,10 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 
 interface FormData {
@@ -28,11 +29,10 @@ export function EditBankAccount({ bankAccount, onClose }: EditBankAccountProps):
   const { translate, translateError } = useSettingsContext();
   const { updateAccount } = useBankAccountContext();
   const { currencies } = useFiatContext();
+  const { rootRef } = useLayoutContext();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
-
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const {
     watch,

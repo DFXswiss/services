@@ -33,19 +33,19 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useCountdown } from 'src/hooks/countdown.hook';
 import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { ErrorHint } from '../components/error-hint';
 import { KycHint } from '../components/kyc-hint';
-import { Layout } from '../components/layout';
 import { SellCompletion } from '../components/payment/sell-completion';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 
 export default function SellInfoScreen(): JSX.Element {
   useAddressGuard();
@@ -69,7 +69,6 @@ export default function SellInfoScreen(): JSX.Element {
   const { closeServices } = useAppHandlingContext();
   const { sendTransaction, canSendTransaction } = useTxHelper();
   const { activeWallet } = useWalletContext();
-  const scrollRef = useRef<HTMLDivElement>(null);
   const { getTransactionByRequestId } = useTransaction();
   const { timer, remainingSeconds, startTimer } = useCountdown();
 
@@ -240,8 +239,10 @@ export default function SellInfoScreen(): JSX.Element {
     );
   }
 
+  useLayoutOptions({ textStart: true, backButton: false });
+
   return (
-    <Layout textStart backButton={false} scrollRef={scrollRef}>
+    <>
       {showsCompletion && paymentInfo ? (
         <SellCompletion paymentInfo={paymentInfo} navigateOnClose={false} txId={sellTxId} />
       ) : errorMessage ? (
@@ -361,6 +362,6 @@ export default function SellInfoScreen(): JSX.Element {
           </>
         )
       )}
-    </Layout>
+    </>
   );
 }

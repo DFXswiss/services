@@ -12,9 +12,9 @@ import {
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
-import { Layout } from 'src/components/layout';
 import { FileTypeLabels } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { handleOpenFile } from 'src/util/utils';
 
 export default function KycFileScreen(): JSX.Element {
@@ -47,8 +47,10 @@ export default function KycFileScreen(): JSX.Element {
     }
   }, [kycFileId, show]);
 
+  useLayoutOptions({ title: translate('screens/kyc', 'KYC file') });
+
   return (
-    <Layout title={translate('screens/kyc', 'KYC file')}>
+    <>
       {error ? (
         <ErrorHint message={error} />
       ) : isLoading || !file ? (
@@ -56,7 +58,7 @@ export default function KycFileScreen(): JSX.Element {
       ) : (
         <FilePreview file={file} setErrorMessage={setError} />
       )}
-    </Layout>
+    </>
   );
 }
 

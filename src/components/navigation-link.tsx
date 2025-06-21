@@ -8,12 +8,18 @@ interface NavigationLinkProps {
   label: string;
   url?: string;
   target?: HTMLAttributeAnchorTarget;
+  onClose: () => void;
 }
 
-export function NavigationLink({ icon, label, url, target }: NavigationLinkProps): JSX.Element {
+export function NavigationLink({ icon, label, url, target, onClose }: NavigationLinkProps): JSX.Element {
   const { navigate } = useNavigation();
 
-  const actionProp = url && (isAbsoluteUrl(url) ? { url } : { onClick: () => navigate(url) });
+  const handleClick = () => {
+    if (url && !isAbsoluteUrl(url)) navigate(url);
+    onClose();
+  };
+
+  const actionProp = url && (isAbsoluteUrl(url) ? { url, onClick: onClose } : { onClick: handleClick });
 
   return (
     <div className="flex flex-row items-center space-x-2">

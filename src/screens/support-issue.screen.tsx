@@ -27,13 +27,13 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { DefaultFileTypes } from 'src/config/file-types';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import {
   DateLabels,
   IssueReasonLabels,
@@ -44,6 +44,7 @@ import {
 } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress, toBase64 } from '../util/utils';
 import { TransactionList } from './transaction.screen';
@@ -103,7 +104,7 @@ const formDefaultValues = {
 
 export default function SupportIssueScreen(): JSX.Element {
   const { navigate, clearParams } = useNavigation();
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { rootRef } = useLayoutContext();
   const { translate, translateError, allowedCountries } = useSettingsContext();
   const { user } = useUserContext();
   const { isLoggedIn, logout } = useSessionContext();
@@ -302,19 +303,18 @@ export default function SupportIssueScreen(): JSX.Element {
     file: Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
   });
 
+  useLayoutOptions({
+    title: translate('screens/support', 'Support issue'),
+    onBack: selectTransaction
+      ? () => {
+          setSelectTransaction(false);
+          reset({ ...formDefaultValues, type: selectedType, reason: selectedReason });
+        }
+      : undefined,
+  });
+
   return (
-    <Layout
-      title={translate('screens/support', 'Support issue')}
-      rootRef={rootRef}
-      onBack={
-        selectTransaction
-          ? () => {
-              setSelectTransaction(false);
-              reset({ ...formDefaultValues, type: selectedType, reason: selectedReason });
-            }
-          : undefined
-      }
-    >
+    <>
       {(selectedType === SupportIssueType.LIMIT_REQUEST && isKycComplete === undefined) || isIssueLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : selectTransaction ? (
@@ -520,6 +520,6 @@ export default function SupportIssueScreen(): JSX.Element {
           </StyledVerticalStack>
         </Form>
       )}
-    </Layout>
+    </>
   );
 }

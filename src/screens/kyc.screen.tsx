@@ -68,21 +68,22 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import SumsubWebSdk from '@sumsub/websdk-react';
-import { RefObject, useEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { DefaultFileTypes } from 'src/config/file-types';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { SumsubReviewAnswer, SumsubReviewRejectType } from 'src/dto/sumsub.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useGeoLocation } from '../hooks/geo-location.hook';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { delay, toBase64, url } from '../util/utils';
 import { IframeMessageType } from './kyc-redirect.screen';
@@ -118,9 +119,9 @@ export default function KycScreen(): JSX.Element {
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
   const [showLinkHint, setShowLinkHint] = useState(false);
+  const { rootRef } = useLayoutContext();
 
   const mode = pathname.includes('/profile') ? Mode.PROFILE : pathname.includes('/contact') ? Mode.CONTACT : Mode.KYC;
-  const rootRef = useRef<HTMLDivElement>(null);
   const urlParams = new URLSearchParams(search);
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
   const allStepsCompleted = info?.kycSteps.every((s) => isStepDone(s));
@@ -313,19 +314,23 @@ export default function KycScreen(): JSX.Element {
     }
   }
 
+  const handleBack = () => {
+    if (stepInProgress) {
+      setStepInProgress(undefined);
+    } else if (showLinkHint || consentClient) {
+      onLoad(false);
+    }
+  };
+
+  useLayoutOptions({
+    title: stepInProgress ? nameToString(stepInProgress.name) : translate('screens/kyc', 'DFX KYC'),
+    backButton: !!(stepInProgress || showLinkHint || consentClient),
+    onBack: handleBack,
+    noPadding: isMobile && stepInProgress?.session?.type === UrlType.BROWSER,
+  });
+
   return (
-    <Layout
-      title={stepInProgress ? nameToString(stepInProgress.name) : translate('screens/kyc', 'DFX KYC')}
-      rootRef={rootRef}
-      onBack={
-        stepInProgress
-          ? () => setStepInProgress(undefined)
-          : showLinkHint || consentClient
-          ? () => onLoad(false)
-          : undefined
-      }
-      noPadding={isMobile && stepInProgress?.session?.type === UrlType.BROWSER}
-    >
+    <>
       {isLoading || isAutoStarting ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : showLinkHint ? (
@@ -439,7 +444,7 @@ export default function KycScreen(): JSX.Element {
           )}
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 

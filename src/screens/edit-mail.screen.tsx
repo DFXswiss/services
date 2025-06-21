@@ -11,9 +11,9 @@ import {
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
-import { Layout } from 'src/components/layout';
 import { EditOverlay } from 'src/components/overlay/edit-overlay';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 
 export default function EditMailScreen(): JSX.Element {
@@ -84,81 +84,81 @@ export default function EditMailScreen(): JSX.Element {
     token: [Validations.Required],
   });
 
-  return (
-    <Layout title={translate('general/actions', 'Edit email')}>
-      <StyledVerticalStack gap={4} full center>
-        {showLinkHint ? (
-          <StyledVerticalStack gap={6} full>
-            <p className="text-dfxGray-700">
-              {translate('screens/kyc', 'It looks like you already have an account with DFX.')}{' '}
-              {translate(
-                'screens/kyc',
-                'We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.',
-              )}
-            </p>
-            <StyledButton
-              width={StyledButtonWidth.MIN}
-              label={translate('general/actions', 'OK')}
-              onClick={() => navigate('/account')}
-            />
-          </StyledVerticalStack>
-        ) : checking2fa ? (
-          <StyledLoadingSpinner size={SpinnerSize.LG} />
-        ) : !mailVerificationStep ? (
-          <EditOverlay
-            label={translate('screens/kyc', 'Email address')}
-            autocomplete="email"
-            prefill={user?.mail}
-            placeholder={translate('screens/kyc', 'Email address')}
-            validation={Validations.Mail}
-            onCancel={() => navigate('/settings')}
-            onEdit={onSubmit}
-          />
-        ) : (
-          <Form
-            control={control}
-            rules={rules}
-            errors={errors}
-            onSubmit={handleSubmit(onVerify)}
-            translate={translateError}
-          >
-            <StyledVerticalStack gap={4} full>
-              <h2 className="text-dfxGray-700">
-                <span className="font-medium">
-                  {translate(
-                    'screens/kyc',
-                    'We have sent a 6-digit code to your new email address. Please enter it here.',
-                  )}
-                </span>
-              </h2>
-              <StyledInput
-                name="token"
-                type="number"
-                placeholder={translate('screens/2fa', 'Email code')}
-                forceError={tokenInvalid}
-                forceErrorMessage={tokenInvalid ? translate('screens/2fa', 'Invalid or expired code') : undefined}
-                full
-              />
+  useLayoutOptions({ title: translate('general/actions', 'Edit email') });
 
-              <StyledVerticalStack gap={2} full center>
-                <StyledButton
-                  type="submit"
-                  width={StyledButtonWidth.MIN}
-                  label={translate('general/actions', 'Next')}
-                  onClick={handleSubmit(onVerify)}
-                  isLoading={isSubmitting}
-                  disabled={!isValid}
-                />
-              </StyledVerticalStack>
+  return (
+    <StyledVerticalStack gap={4} full center>
+      {showLinkHint ? (
+        <StyledVerticalStack gap={6} full>
+          <p className="text-dfxGray-700">
+            {translate('screens/kyc', 'It looks like you already have an account with DFX.')}{' '}
+            {translate(
+              'screens/kyc',
+              'We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.',
+            )}
+          </p>
+          <StyledButton
+            width={StyledButtonWidth.MIN}
+            label={translate('general/actions', 'OK')}
+            onClick={() => navigate('/account')}
+          />
+        </StyledVerticalStack>
+      ) : checking2fa ? (
+        <StyledLoadingSpinner size={SpinnerSize.LG} />
+      ) : !mailVerificationStep ? (
+        <EditOverlay
+          label={translate('screens/kyc', 'Email address')}
+          autocomplete="email"
+          prefill={user?.mail}
+          placeholder={translate('screens/kyc', 'Email address')}
+          validation={Validations.Mail}
+          onCancel={() => navigate('/settings')}
+          onEdit={onSubmit}
+        />
+      ) : (
+        <Form
+          control={control}
+          rules={rules}
+          errors={errors}
+          onSubmit={handleSubmit(onVerify)}
+          translate={translateError}
+        >
+          <StyledVerticalStack gap={4} full>
+            <h2 className="text-dfxGray-700">
+              <span className="font-medium">
+                {translate(
+                  'screens/kyc',
+                  'We have sent a 6-digit code to your new email address. Please enter it here.',
+                )}
+              </span>
+            </h2>
+            <StyledInput
+              name="token"
+              type="number"
+              placeholder={translate('screens/2fa', 'Email code')}
+              forceError={tokenInvalid}
+              forceErrorMessage={tokenInvalid ? translate('screens/2fa', 'Invalid or expired code') : undefined}
+              full
+            />
+
+            <StyledVerticalStack gap={2} full center>
+              <StyledButton
+                type="submit"
+                width={StyledButtonWidth.MIN}
+                label={translate('general/actions', 'Next')}
+                onClick={handleSubmit(onVerify)}
+                isLoading={isSubmitting}
+                disabled={!isValid}
+              />
             </StyledVerticalStack>
-          </Form>
-        )}
-        {error && (
-          <StyledVerticalStack full center>
-            <ErrorHint message={error} />
           </StyledVerticalStack>
-        )}
-      </StyledVerticalStack>
-    </Layout>
+        </Form>
+      )}
+      {error && (
+        <StyledVerticalStack full center>
+          <ErrorHint message={error} />
+        </StyledVerticalStack>
+      )}
+    </StyledVerticalStack>
   );
 }

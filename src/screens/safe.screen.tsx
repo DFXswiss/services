@@ -1,5 +1,5 @@
 import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NameEdit } from 'src/components/edit/name.edit';
 import { ErrorHint } from 'src/components/error-hint';
 import { SafeCompletion } from 'src/components/payment/safe-completion';
@@ -11,9 +11,9 @@ import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { FiatCurrency } from 'src/dto/safe.dto';
 import { useUserGuard } from 'src/hooks/guard.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSafe } from 'src/hooks/safe.hook';
 import { formatCurrency } from 'src/util/utils';
-import { Layout } from '../components/layout';
 
 export default function SafeScreen(): JSX.Element {
   useUserGuard('/login');
@@ -29,7 +29,6 @@ export default function SafeScreen(): JSX.Element {
     setBankAccountSelection,
   } = useOrderUIContext();
 
-  const rootRef = useRef<HTMLDivElement>(null);
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
 
   useEffect(() => {
@@ -51,8 +50,10 @@ export default function SafeScreen(): JSX.Element {
     return undefined;
   };
 
+  useLayoutOptions({ title: getTitle(), onBack: getBackHandler() });
+
   return (
-    <Layout rootRef={rootRef} title={getTitle()} onBack={getBackHandler}>
+    <>
       {error ? (
         <div>
           <ErrorHint message={error} />
@@ -106,6 +107,6 @@ export default function SafeScreen(): JSX.Element {
           <DepositInterface />
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }

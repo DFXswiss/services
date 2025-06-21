@@ -2,6 +2,7 @@ import { Asset, Fiat } from '@dfx.swiss/react';
 import { AssetIconVariant, StyledDropdown } from '@dfx.swiss/react-components';
 import React, { useCallback, useMemo } from 'react';
 import { Control, RegisterOptions } from 'react-hook-form';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { ExchangeRate } from 'src/dto/order.dto';
 import { isAsset } from 'src/util/utils';
@@ -43,8 +44,7 @@ export const AssetInput: React.FC<AssetInputProps> = ({
   onAmountChange,
 }) => {
   const { translate } = useSettingsContext();
-
-  const rootRef = React.useRef<HTMLDivElement>(null);
+  const { rootRef } = useLayoutContext();
 
   if (hidden) return null;
 
