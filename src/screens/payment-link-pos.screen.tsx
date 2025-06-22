@@ -21,15 +21,16 @@ import { QrBasic } from 'src/components/payment/qr-code';
 import { usePaymentPosContext } from 'src/contexts/payment-link-pos.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PaymentLinkHistoryPayment } from 'src/dto/payment-link.dto';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { Layout } from '../components/layout';
 
 export default function PaymentLinkPosScreen(): JSX.Element {
   const { error, isLoading, isAuthenticated, payRequest, paymentLinkApiUrl, paymentStatus } = usePaymentPosContext();
+  useLayoutOptions({ backButton: false, smallMenu: true });
 
   return (
-    <Layout backButton={false} smallMenu>
+    <>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
       ) : !payRequest || isLoading ? (
@@ -49,7 +50,7 @@ export default function PaymentLinkPosScreen(): JSX.Element {
           <div className="flex flex-col w-full mt-4">{isAuthenticated ? <TransactionHistory /> : <Authenticate />}</div>
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 
