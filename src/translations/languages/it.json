@@ -50,7 +50,8 @@
     "View file": "Visualizza il file",
     "Edit": "Modifica",
     "Set default": "Imposta predefinito",
-    "Download sticker": "Scarica l'adesivo"
+    "Download sticker": "Scarica l'adesivo",
+    "Authenticate": "Autenticare"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -668,7 +669,9 @@
     "Sell transactions": "Transazioni di vendita",
     "Staking transactions": "Transazioni di staking",
     "Referral rewards": "Ricompense di referral",
-    "Edit configuration": "Modifica configurazione"
+    "Edit configuration": "Modifica configurazione",
+    "Access key": "Chiave di accesso",
+    "Please enter your access key to manage this checkout": "Per favore, inserisci la tua chiave di accesso per gestire questo checkout"
   },
   "screens/iban": {
     "Your Bank Accounts": "I tuoi conti bancari",

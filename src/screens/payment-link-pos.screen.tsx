@@ -1,4 +1,4 @@
-import { ApiError, PaymentLinkPaymentStatus, useApi, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, PaymentLinkPaymentStatus, Utils, Validations } from '@dfx.swiss/react';
 import {
   AlignContent,
   Form,
@@ -16,39 +16,23 @@ import { useForm } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoXCircleFill } from 'react-icons/go';
 import { CircularCountdown } from 'src/components/circular-countdown';
 import { ErrorHint } from 'src/components/error-hint';
+import { Modal } from 'src/components/modal';
 import { QrBasic } from 'src/components/payment/qr-code';
-import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
+import { usePaymentPosContext } from 'src/contexts/payment-link-pos.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import {
-  ExtendedPaymentLinkStatus,
-  PaymentLinkHistoryPayment,
-  PaymentLinkHistoryResponse,
-  PaymentLinkPayRequest,
-  PaymentLinkPayTerminal,
-} from 'src/dto/payment-link.dto';
-import { useAppParams } from 'src/hooks/app-params.hook';
-import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { PaymentLinkHistoryPayment } from 'src/dto/payment-link.dto';
+import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
-
-interface PaymentFormProps {
-  payRequest: PaymentLinkPayRequest;
-  paymentLinkApiUrl: string;
-  paymentStatus?: ExtendedPaymentLinkStatus;
-  fetchPayRequest: (url: string, isRefetch?: boolean) => void;
-}
+import { Layout } from '../components/layout';
 
 export default function PaymentLinkPosScreen(): JSX.Element {
-  const { error, payRequest, paymentLinkApiUrl, paymentStatus, paymentHasQuote, fetchPayRequest } =
-    usePaymentLinkContext();
-  const { isInitialized } = useAppParams();
-
-  useLayoutOptions({ backButton: false, smallMenu: true });
+  const { error, isLoading, isAuthenticated, payRequest, paymentLinkApiUrl, paymentStatus } = usePaymentPosContext();
 
   return (
-    <>
+    <Layout backButton={false} smallMenu>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
-      ) : !payRequest || !isInitialized ? (
+      ) : !payRequest || isLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center className="pt-2">
@@ -57,46 +41,24 @@ export default function PaymentLinkPosScreen(): JSX.Element {
             <div className="w-full h-[1px] bg-gradient-to-r bg-dfxGray-500 from-white via-dfxGray-500 to-white" />
           </div>
           <div className="flex justify-center items-center w-full">
-            <QrBasic data={Lnurl.prependLnurl(Lnurl.encode(paymentLinkApiUrl.current))} />
+            <QrBasic data={Lnurl.prependLnurl(Lnurl.encode(paymentLinkApiUrl))} />
           </div>
           <div className="flex flex-col w-full gap-4">
-            {PaymentLinkPaymentStatus.PENDING === paymentStatus && paymentHasQuote(payRequest) ? (
-              <PendingPaymentForm
-                payRequest={payRequest}
-                paymentLinkApiUrl={paymentLinkApiUrl.current}
-                paymentStatus={paymentStatus}
-                fetchPayRequest={fetchPayRequest}
-              />
-            ) : (
-              <CreatePaymentForm
-                payRequest={payRequest as PaymentLinkPayRequest}
-                paymentLinkApiUrl={paymentLinkApiUrl.current}
-                paymentStatus={paymentStatus}
-                fetchPayRequest={fetchPayRequest}
-              />
-            )}
+            {PaymentLinkPaymentStatus.PENDING === paymentStatus ? <PendingPaymentForm /> : <CreatePaymentForm />}
           </div>
-          <div className="flex flex-col w-full mt-4">
-            <TransactionHistory payRequest={payRequest} paymentStatus={paymentStatus} />
-          </div>
+          <div className="flex flex-col w-full mt-4">{isAuthenticated ? <TransactionHistory /> : <Authenticate />}</div>
         </StyledVerticalStack>
       )}
-    </>
+    </Layout>
   );
 }
 
-function CreatePaymentForm({
-  payRequest,
-  paymentLinkApiUrl,
-  paymentStatus,
-  fetchPayRequest,
-}: PaymentFormProps): JSX.Element {
+function CreatePaymentForm(): JSX.Element | null {
   const { translate, translateError } = useSettingsContext();
-  const { route, key } = useAppParams();
-  const { call } = useApi();
+  const { paymentStatus, isAuthenticated, createPayment } = usePaymentPosContext();
 
   const [isSuccessAnimation, setIsSuccessAnimation] = useState(paymentStatus === PaymentLinkPaymentStatus.COMPLETED);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [error, setError] = useState<string>();
 
   const rules = Utils.createRules({
@@ -107,32 +69,15 @@ function CreatePaymentForm({
     if (paymentStatus === PaymentLinkPaymentStatus.COMPLETED) setTimeout(() => setIsSuccessAnimation(false), 2000);
   }, [paymentStatus]);
 
-  const createPayment = useCallback(
-    async (data: { amount: number }) => {
-      if (!key || !payRequest) return;
-
-      const params = new URLSearchParams({
-        externalLinkId: payRequest.externalId as string,
-        key: key,
-        route: route ?? '',
-      });
-
-      setIsLoading(true);
+  const handleCreatePayment = useCallback(
+    (data: { amount: number }) => {
+      setIsCreatingPayment(true);
       setError(undefined);
-      call({
-        url: `paymentLink/payment?${params.toString()}`,
-        method: 'POST',
-        data: {
-          amount: +data.amount,
-          externalId: Math.random().toString(36).substring(2, 15),
-          expiryDate: new Date(Date.now() + 180 * 1000).toISOString(),
-        },
-      })
-        .then(() => fetchPayRequest(paymentLinkApiUrl, true))
+      createPayment(data)
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-        .finally(() => setIsLoading(false));
+        .finally(() => setIsCreatingPayment(false));
     },
-    [route, key, payRequest, call, fetchPayRequest, paymentLinkApiUrl],
+    [createPayment],
   );
 
   const {
@@ -151,11 +96,11 @@ function CreatePaymentForm({
     );
   }
 
-  return (
+  return isAuthenticated ? (
     <Form
       control={control}
       rules={rules}
-      onSubmit={handleSubmit(createPayment)}
+      onSubmit={handleSubmit(handleCreatePayment)}
       errors={errors}
       translate={translateError}
     >
@@ -171,54 +116,38 @@ function CreatePaymentForm({
         <StyledButton
           type="submit"
           label={translate('screens/payment', 'Create Payment')}
-          onClick={handleSubmit(createPayment)}
+          onClick={handleSubmit(handleCreatePayment)}
           width={StyledButtonWidth.FULL}
-          isLoading={isLoading}
+          isLoading={isCreatingPayment}
           disabled={!isValid}
         />
         {error && <ErrorHint message={error} />}
       </StyledVerticalStack>
     </Form>
-  );
+  ) : null;
 }
 
-const PendingPaymentForm = ({
-  payRequest,
-  paymentLinkApiUrl,
-  fetchPayRequest,
-  paymentStatus,
-}: PaymentFormProps): JSX.Element => {
-  const { key } = useAppParams();
+const PendingPaymentForm = (): JSX.Element => {
   const { translate } = useSettingsContext();
-  const { call } = useApi();
+  const { isAuthenticated, cancelPayment, payRequest } = usePaymentPosContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
   const remainingTime = useMemo(() => {
     const now = new Date();
-    const paymentTime = new Date(payRequest.quote.expiration);
+    const paymentTime = new Date(payRequest?.quote.expiration ?? 0);
     const diff = paymentTime.getTime() - now.getTime();
     return Math.max(0, Math.ceil(diff / 1000));
   }, []);
 
-  const cancelPayment = async () => {
-    if (!key || !payRequest) return;
-
-    const params = new URLSearchParams({
-      externalLinkId: payRequest.externalId as string,
-      key: key,
-    });
-
+  const handleCancelPayment = useCallback(() => {
     setIsLoading(true);
     setError(undefined);
-    call({
-      url: `paymentLink/payment?${params.toString()}`,
-      method: 'DELETE',
-    })
+    cancelPayment()
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
-  };
+  }, [cancelPayment]);
 
   return (
     <>
@@ -228,68 +157,32 @@ const PendingPaymentForm = ({
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
           <p>
-            {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
+            {payRequest?.requestedAmount.amount} {payRequest?.requestedAmount.asset}
           </p>
         </StyledDataTableRow>
       </StyledDataTable>
-      <StyledButton
-        label={translate('general/actions', 'Cancel')}
-        onClick={cancelPayment}
-        width={StyledButtonWidth.FULL}
-        isLoading={isLoading}
-      />
-      {error && <ErrorHint message={error} />}
+      {isAuthenticated && (
+        <>
+          <StyledButton
+            label={translate('general/actions', 'Cancel')}
+            onClick={handleCancelPayment}
+            width={StyledButtonWidth.FULL}
+            isLoading={isLoading}
+          />
+          {error && <ErrorHint message={error} />}
+        </>
+      )}
     </>
   );
 };
 
-function TransactionHistory({
-  payRequest,
-  paymentStatus,
-}: {
-  payRequest: PaymentLinkPayTerminal;
-  paymentStatus: ExtendedPaymentLinkStatus;
-}): JSX.Element {
-  const { key } = useAppParams();
-  const { translate } = useSettingsContext();
-  const { call } = useApi();
-
+function TransactionHistory(): JSX.Element {
+  const { paymentStatus, fetchTransactionHistory } = usePaymentPosContext();
   const [transactionHistory, setTransactionHistory] = useState<PaymentLinkHistoryPayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { translate } = useSettingsContext();
+
   const [error, setError] = useState<string>();
-
-  const fetchTransactionHistory = useCallback(() => {
-    if (!key || !payRequest) return;
-
-    const params = new URLSearchParams({
-      externalLinkId: payRequest.externalId as string,
-      status: [
-        PaymentLinkPaymentStatus.PENDING,
-        PaymentLinkPaymentStatus.COMPLETED,
-        PaymentLinkPaymentStatus.CANCELLED,
-        PaymentLinkPaymentStatus.EXPIRED,
-      ].join(','),
-      key: key,
-    });
-
-    setError(undefined);
-    call<PaymentLinkHistoryResponse[]>({
-      url: `paymentLink/history?${params.toString()}`,
-      method: 'GET',
-    })
-      .then((response) => {
-        const payments = response.length
-          ? response[0].payments?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-          : [];
-        setTransactionHistory(payments.slice(0, 10));
-      })
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsLoading(false));
-  }, [key, payRequest, call]);
-
-  useEffect(() => {
-    fetchTransactionHistory();
-  }, [fetchTransactionHistory, paymentStatus]);
 
   const statusIcon = {
     [PaymentLinkPaymentStatus.COMPLETED]: <GoCheckCircleFill className="text-[#4BB543]" />,
@@ -297,6 +190,13 @@ function TransactionHistory({
     [PaymentLinkPaymentStatus.EXPIRED]: <GoXCircleFill className="text-[#65728A]" />,
     [PaymentLinkPaymentStatus.PENDING]: <GoClockFill className="text-[#65728A]" />,
   };
+
+  useEffect(() => {
+    fetchTransactionHistory()
+      .then((history) => setTransactionHistory(history ?? []))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsLoading(false));
+  }, [fetchTransactionHistory, paymentStatus]);
 
   return isLoading ? (
     <div className="flex justify-center items-center w-full h-32">
@@ -334,5 +234,74 @@ function TransactionHistory({
         )}
       </StyledDataTable>
     </div>
+  );
+}
+
+function Authenticate(): JSX.Element {
+  const { paymentLinkApiUrl, checkAuthentication } = usePaymentPosContext();
+  const { translate, translateError } = useSettingsContext();
+  const { navigate } = useNavigation();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const handleAuthenticate = useCallback(
+    (data: { key: string }) => {
+      setIsLoading(true);
+      setError(undefined);
+      checkAuthentication(data.key)
+        .then(() => {
+          navigate(`${window.location.pathname}?lightning=${Lnurl.encode(paymentLinkApiUrl)}&key=${data.key}`);
+          window.location.reload();
+        })
+        .catch((error: ApiError) => {
+          setError(error.message ?? 'Unknown error');
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    },
+    [checkAuthentication, navigate, paymentLinkApiUrl],
+  );
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<{ key: string }>({
+    mode: 'onTouched',
+  });
+
+  return (
+    <>
+      <StyledButton
+        label={translate('general/actions', 'Authenticate')}
+        onClick={() => setIsModalOpen(true)}
+        width={StyledButtonWidth.FULL}
+      />
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <Form control={control} errors={errors} onSubmit={handleSubmit(handleAuthenticate)} translate={translateError}>
+          <StyledVerticalStack gap={6} full>
+            <p className="text-dfxGray-800 text-sm">
+              {translate('screens/payment', 'Please enter your access key to manage this checkout')}
+            </p>
+            <StyledInput
+              type="text"
+              name="key"
+              label={translate('screens/payment', 'Access key')}
+              placeholder="Access key"
+              full
+            />
+            <StyledButton
+              label={translate('general/actions', 'Authenticate')}
+              onClick={handleSubmit(handleAuthenticate)}
+              isLoading={isLoading}
+            />
+            {error && <ErrorHint message={error} />}
+          </StyledVerticalStack>
+        </Form>
+      </Modal>
+    </>
   );
 }
