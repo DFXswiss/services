@@ -1,4 +1,4 @@
-import { ApiError, PaymentLinkPaymentStatus, useApi, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, PaymentLinkPaymentStatus, Utils, Validations } from '@dfx.swiss/react';
 import {
   AlignContent,
   Form,
@@ -14,41 +14,26 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoXCircleFill } from 'react-icons/go';
-import { useSearchParams } from 'react-router-dom';
 import { CircularCountdown } from 'src/components/circular-countdown';
 import { ErrorHint } from 'src/components/error-hint';
+import { Modal } from 'src/components/modal';
 import { QrBasic } from 'src/components/payment/qr-code';
-import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
+import { usePaymentPosContext } from 'src/contexts/payment-link-pos.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import {
-  ExtendedPaymentLinkStatus,
-  PaymentLinkHistoryPayment,
-  PaymentLinkHistoryResponse,
-  PaymentLinkPayRequest,
-  PaymentLinkPayTerminal,
-} from 'src/dto/payment-link.dto';
-import { useAppParams } from 'src/hooks/app-params.hook';
+import { PaymentLinkHistoryPayment } from 'src/dto/payment-link.dto';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
 
-interface PaymentFormProps {
-  payRequest: PaymentLinkPayRequest;
-  paymentLinkApiUrl: string;
-  fetchPayRequest: (url: string) => void;
-}
-
 export default function PaymentLinkPosScreen(): JSX.Element {
-  const { error, payRequest, paymentLinkApiUrl, paymentStatus, paymentHasQuote, fetchPayRequest } =
-    usePaymentLinkContext();
-  const { isInitialized } = useAppParams();
-
+  const { error, isLoading, isAuthenticated, payRequest, paymentLinkApiUrl, paymentStatus } = usePaymentPosContext();
   useLayoutOptions({ backButton: false, smallMenu: true });
 
   return (
     <>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
-      ) : !payRequest || !isInitialized ? (
+      ) : !payRequest || isLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center className="pt-2">
@@ -57,72 +42,43 @@ export default function PaymentLinkPosScreen(): JSX.Element {
             <div className="w-full h-[1px] bg-gradient-to-r bg-dfxGray-500 from-white via-dfxGray-500 to-white" />
           </div>
           <div className="flex justify-center items-center w-full">
-            <QrBasic data={Lnurl.prependLnurl(Lnurl.encode(paymentLinkApiUrl.current))} />
+            <QrBasic data={Lnurl.prependLnurl(Lnurl.encode(paymentLinkApiUrl))} />
           </div>
           <div className="flex flex-col w-full gap-4">
-            {paymentStatus === PaymentLinkPaymentStatus.PENDING && paymentHasQuote(payRequest) ? (
-              <PendingPaymentForm
-                payRequest={payRequest}
-                paymentLinkApiUrl={paymentLinkApiUrl.current}
-                fetchPayRequest={fetchPayRequest}
-              />
-            ) : (
-              <CreatePaymentForm
-                payRequest={payRequest as PaymentLinkPayRequest}
-                paymentLinkApiUrl={paymentLinkApiUrl.current}
-                fetchPayRequest={fetchPayRequest}
-              />
-            )}
+            {PaymentLinkPaymentStatus.PENDING === paymentStatus ? <PendingPaymentForm /> : <CreatePaymentForm />}
           </div>
-          <div className="flex flex-col w-full mt-4">
-            <TransactionHistory payRequest={payRequest} paymentStatus={paymentStatus} />
-          </div>
+          <div className="flex flex-col w-full mt-4">{isAuthenticated ? <TransactionHistory /> : <Authenticate />}</div>
         </StyledVerticalStack>
       )}
     </>
   );
 }
 
-function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: PaymentFormProps): JSX.Element {
+function CreatePaymentForm(): JSX.Element | null {
   const { translate, translateError } = useSettingsContext();
-  const [urlParams] = useSearchParams();
-  const { call } = useApi();
+  const { paymentStatus, isAuthenticated, createPayment } = usePaymentPosContext();
 
-  const route = urlParams.get('route');
-  const key = urlParams.get('key');
-
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccessAnimation, setIsSuccessAnimation] = useState(paymentStatus === PaymentLinkPaymentStatus.COMPLETED);
+  const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [error, setError] = useState<string>();
 
   const rules = Utils.createRules({
     amount: [Validations.Required, Validations.Custom((value) => !isNaN(Number(value)) || 'pattern')],
   });
 
-  const createPayment = useCallback(
-    async (data: { amount: number }) => {
-      if (!route || !key || !payRequest) return;
+  useEffect(() => {
+    if (paymentStatus === PaymentLinkPaymentStatus.COMPLETED) setTimeout(() => setIsSuccessAnimation(false), 2000);
+  }, [paymentStatus]);
 
-      const params = new URLSearchParams({
-        route: route,
-        externalLinkId: payRequest.externalId as string,
-        key: key,
-      });
-
-      setIsLoading(true);
+  const handleCreatePayment = useCallback(
+    (data: { amount: number }) => {
+      setIsCreatingPayment(true);
       setError(undefined);
-      call({
-        url: `paymentLink/payment?${params.toString()}`,
-        method: 'POST',
-        data: {
-          amount: +data.amount,
-          externalId: Math.random().toString(36).substring(2, 15),
-        },
-      })
-        .then(() => fetchPayRequest(paymentLinkApiUrl))
+      createPayment(data)
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-        .finally(() => setIsLoading(false));
+        .finally(() => setIsCreatingPayment(false));
     },
-    [route, key, payRequest, call, fetchPayRequest, paymentLinkApiUrl],
+    [createPayment],
   );
 
   const {
@@ -133,11 +89,19 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
     mode: 'onTouched',
   });
 
-  return (
+  if (isSuccessAnimation) {
+    return (
+      <div className="flex justify-center items-center w-full gap-4">
+        <GoCheckCircleFill className="text-[#4BB543]" size={80} />
+      </div>
+    );
+  }
+
+  return isAuthenticated ? (
     <Form
       control={control}
       rules={rules}
-      onSubmit={handleSubmit(createPayment)}
+      onSubmit={handleSubmit(handleCreatePayment)}
       errors={errors}
       translate={translateError}
     >
@@ -153,53 +117,38 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
         <StyledButton
           type="submit"
           label={translate('screens/payment', 'Create Payment')}
-          onClick={handleSubmit(createPayment)}
+          onClick={handleSubmit(handleCreatePayment)}
           width={StyledButtonWidth.FULL}
-          isLoading={isLoading}
+          isLoading={isCreatingPayment}
           disabled={!isValid}
         />
         {error && <ErrorHint message={error} />}
       </StyledVerticalStack>
     </Form>
-  );
+  ) : null;
 }
 
-const PendingPaymentForm = ({ payRequest, paymentLinkApiUrl, fetchPayRequest }: PaymentFormProps): JSX.Element => {
-  const [urlParams] = useSearchParams();
+const PendingPaymentForm = (): JSX.Element => {
   const { translate } = useSettingsContext();
-  const { call } = useApi();
+  const { isAuthenticated, cancelPayment, payRequest } = usePaymentPosContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
   const remainingTime = useMemo(() => {
     const now = new Date();
-    const paymentTime = new Date(payRequest.quote.expiration);
+    const paymentTime = new Date(payRequest?.quote.expiration ?? 0);
     const diff = paymentTime.getTime() - now.getTime();
     return Math.max(0, Math.ceil(diff / 1000));
-  }, [payRequest]);
+  }, []);
 
-  const cancelPayment = async () => {
-    const route = urlParams.get('route');
-    const key = urlParams.get('key');
-    if (!route || !key || !payRequest) return;
-
-    const params = new URLSearchParams({
-      route: route,
-      externalLinkId: payRequest.externalId as string,
-      key: key,
-    });
-
+  const handleCancelPayment = useCallback(() => {
     setIsLoading(true);
     setError(undefined);
-    call({
-      url: `paymentLink/payment?${params.toString()}`,
-      method: 'DELETE',
-    })
-      .then(() => fetchPayRequest(paymentLinkApiUrl))
+    cancelPayment()
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
-  };
+  }, [cancelPayment]);
 
   return (
     <>
@@ -209,72 +158,32 @@ const PendingPaymentForm = ({ payRequest, paymentLinkApiUrl, fetchPayRequest }: 
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
           <p>
-            {payRequest.requestedAmount.amount} {payRequest.requestedAmount.asset}
+            {payRequest?.requestedAmount.amount} {payRequest?.requestedAmount.asset}
           </p>
         </StyledDataTableRow>
       </StyledDataTable>
-      <StyledButton
-        label={translate('general/actions', 'Cancel')}
-        onClick={cancelPayment}
-        width={StyledButtonWidth.FULL}
-        isLoading={isLoading}
-      />
-      {error && <ErrorHint message={error} />}
+      {isAuthenticated && (
+        <>
+          <StyledButton
+            label={translate('general/actions', 'Cancel')}
+            onClick={handleCancelPayment}
+            width={StyledButtonWidth.FULL}
+            isLoading={isLoading}
+          />
+          {error && <ErrorHint message={error} />}
+        </>
+      )}
     </>
   );
 };
 
-function TransactionHistory({
-  payRequest,
-  paymentStatus,
-}: {
-  payRequest: PaymentLinkPayTerminal;
-  paymentStatus: ExtendedPaymentLinkStatus;
-}): JSX.Element {
-  const [urlParams] = useSearchParams();
-  const { translate } = useSettingsContext();
-  const { call } = useApi();
-
-  const route = urlParams.get('route');
-  const key = urlParams.get('key');
-
+function TransactionHistory(): JSX.Element {
+  const { paymentStatus, fetchTransactionHistory } = usePaymentPosContext();
   const [transactionHistory, setTransactionHistory] = useState<PaymentLinkHistoryPayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { translate } = useSettingsContext();
+
   const [error, setError] = useState<string>();
-
-  const fetchTransactionHistory = useCallback(() => {
-    if (!route || !key || !payRequest) return;
-
-    const params = new URLSearchParams({
-      route: route,
-      externalLinkId: payRequest.externalId as string,
-      status: [
-        PaymentLinkPaymentStatus.PENDING,
-        PaymentLinkPaymentStatus.COMPLETED,
-        PaymentLinkPaymentStatus.CANCELLED,
-        PaymentLinkPaymentStatus.EXPIRED,
-      ].join(','),
-      key: key,
-    });
-
-    setError(undefined);
-    call<PaymentLinkHistoryResponse[]>({
-      url: `paymentLink/history?${params.toString()}`,
-      method: 'GET',
-    })
-      .then((response) => {
-        setTransactionHistory(
-          response[0].payments?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10) ??
-            [],
-        );
-      })
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsLoading(false));
-  }, [route, key, payRequest, call]);
-
-  useEffect(() => {
-    fetchTransactionHistory();
-  }, [fetchTransactionHistory, paymentStatus]);
 
   const statusIcon = {
     [PaymentLinkPaymentStatus.COMPLETED]: <GoCheckCircleFill className="text-[#4BB543]" />,
@@ -283,6 +192,13 @@ function TransactionHistory({
     [PaymentLinkPaymentStatus.PENDING]: <GoClockFill className="text-[#65728A]" />,
   };
 
+  useEffect(() => {
+    fetchTransactionHistory()
+      .then((history) => setTransactionHistory(history ?? []))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsLoading(false));
+  }, [fetchTransactionHistory, paymentStatus]);
+
   return isLoading ? (
     <div className="flex justify-center items-center w-full h-32">
       <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -290,25 +206,99 @@ function TransactionHistory({
   ) : error ? (
     <ErrorHint message={error} />
   ) : (
-    <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-      {transactionHistory.map((payment) => (
-        <StyledDataTableRow key={payment.id}>
-          <div className="flex flex-1 justify-between items-start">
-            <div className="flex items-center justify-center gap-2 text-dfxGray-800">
-              {statusIcon[payment.status as keyof typeof statusIcon]}
-              {translate('screens/payment', `${payment.status}`)}
-            </div>
-            <div className="flex flex-col items-end justify-start">
-              {payment.amount} {payment.currency.toUpperCase()}
-              <span className="text-dfxGray-800 text-xs">
-                {new Date(payment.date).toDateString() === new Date().toDateString()
-                  ? new Date(payment.date).toLocaleTimeString()
-                  : new Date(payment.date).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
-        </StyledDataTableRow>
-      ))}
-    </StyledDataTable>
+    <div>
+      <h2 className="ml-1.5 mt-2 mb-1.5 text-dfxGray-700 align-left flex">
+        {translate('screens/payment', 'Latest transactions')}
+      </h2>
+      <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+        {transactionHistory.length > 0 ? (
+          transactionHistory.map((payment) => (
+            <StyledDataTableRow key={payment.id}>
+              <div className="flex flex-1 justify-between items-start">
+                <div className="flex items-center justify-center gap-2 text-dfxGray-800">
+                  {statusIcon[payment.status as keyof typeof statusIcon]}
+                  {translate('screens/payment', `${payment.status}`)}
+                </div>
+                <div className="flex flex-col items-end justify-start">
+                  {payment.amount} {payment.currency.toUpperCase()}
+                  <span className="text-dfxGray-800 text-xs">
+                    {new Date(payment.date).toDateString() === new Date().toDateString()
+                      ? new Date(payment.date).toLocaleTimeString()
+                      : new Date(payment.date).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            </StyledDataTableRow>
+          ))
+        ) : (
+          <StyledDataTableRow label={translate('screens/payment', 'No transactions yet')} />
+        )}
+      </StyledDataTable>
+    </div>
+  );
+}
+
+function Authenticate(): JSX.Element {
+  const { paymentLinkApiUrl, checkAuthentication } = usePaymentPosContext();
+  const { translate, translateError } = useSettingsContext();
+  const { navigate } = useNavigation();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const handleAuthenticate = useCallback(
+    (data: { key: string }) => {
+      setIsLoading(true);
+      setError(undefined);
+      checkAuthentication(data.key)
+        .catch((error: ApiError) => {
+          setError(error.message ?? 'Unknown error');
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    },
+    [checkAuthentication, navigate, paymentLinkApiUrl],
+  );
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<{ key: string }>({
+    mode: 'onTouched',
+  });
+
+  return (
+    <>
+      <StyledButton
+        label={translate('general/actions', 'Authenticate')}
+        onClick={() => setIsModalOpen(true)}
+        width={StyledButtonWidth.FULL}
+      />
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <Form control={control} errors={errors} onSubmit={handleSubmit(handleAuthenticate)} translate={translateError}>
+          <StyledVerticalStack gap={6} full>
+            <p className="text-dfxGray-800 text-sm">
+              {translate('screens/payment', 'Please enter your access key to manage this checkout')}
+            </p>
+            <StyledInput
+              type="text"
+              name="key"
+              label={translate('screens/payment', 'Access key')}
+              placeholder="Access key"
+              full
+            />
+            <StyledButton
+              label={translate('general/actions', 'Authenticate')}
+              onClick={handleSubmit(handleAuthenticate)}
+              isLoading={isLoading}
+            />
+            {error && <ErrorHint message={error} />}
+          </StyledVerticalStack>
+        </Form>
+      </Modal>
+    </>
   );
 }

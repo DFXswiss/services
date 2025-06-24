@@ -50,7 +50,8 @@
     "View file": "Voir le fichier",
     "Edit": "Modifier",
     "Set default": "Définir par défaut",
-    "Download sticker": "Télécharger l'autocollant"
+    "Download sticker": "Télécharger l'autocollant",
+    "Authenticate": "Authentifier"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -474,6 +475,7 @@
     "Transaction status": "Statut de la transaction",
     "Transaction refund": "Remboursement de la transaction",
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} vers {{to}} à {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
+    "No transactions yet": "Aucune transaction",
 
     "ID": "ID",
     "External ID": "ID externe",
@@ -667,7 +669,9 @@
     "Sell transactions": "Transactions de vente",
     "Staking transactions": "Transactions de staking",
     "Referral rewards": "Récompenses de parrainage",
-    "Edit configuration": "Modifier la configuration"
+    "Edit configuration": "Modifier la configuration",
+    "Access key": "Clé d'accès",
+    "Please enter your access key to manage this checkout": "Veuillez entrer votre clé d'accès pour gérer ce checkout"
   },
   "screens/iban": {
     "Your Bank Accounts": "Vos comptes bancaires",
