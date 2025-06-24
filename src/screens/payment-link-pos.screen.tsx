@@ -252,10 +252,6 @@ function Authenticate(): JSX.Element {
       setIsLoading(true);
       setError(undefined);
       checkAuthentication(data.key)
-        .then(() => {
-          navigate(`${window.location.pathname}?lightning=${Lnurl.encode(paymentLinkApiUrl)}&key=${data.key}`);
-          window.location.reload();
-        })
         .catch((error: ApiError) => {
           setError(error.message ?? 'Unknown error');
         })

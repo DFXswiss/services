@@ -1,5 +1,6 @@
 import { ApiError, PaymentLinkPaymentStatus, useApi } from '@dfx.swiss/react';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import {
   ExtendedPaymentLinkStatus,
@@ -7,7 +8,6 @@ import {
   PaymentLinkHistoryResponse,
   PaymentLinkPayRequest,
 } from 'src/dto/payment-link.dto';
-import { useAppParams } from 'src/hooks/app-params.hook';
 
 interface PaymentPosContextType {
   isLoading: boolean;
@@ -30,9 +30,10 @@ export function usePaymentPosContext() {
 
 export default function PaymentLinkPosContext({ children }: { children: React.ReactNode }): JSX.Element {
   const { error, payRequest, paymentLinkApiUrl, paymentStatus, fetchPayRequest } = usePaymentLinkContext();
-  const { key, route, isInitialized } = useAppParams();
   const { call } = useApi();
+  const [urlParams, setUrlParams] = useSearchParams();
 
+  const [key, setKey] = useState<string>(urlParams.get('key') ?? '');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,7 +44,6 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
       const params = new URLSearchParams({
         externalLinkId: payRequest.externalId as string,
         key: key,
-        route: route ?? '',
       });
 
       return call({
@@ -61,7 +61,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
           throw error;
         });
     },
-    [route, key, payRequest, call, fetchPayRequest, paymentLinkApiUrl],
+    [key, payRequest, call, fetchPayRequest, paymentLinkApiUrl],
   );
 
   const cancelPayment = async () => {
@@ -120,19 +120,24 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
       return call<PaymentLinkHistoryResponse[]>({
         url: `paymentLink/history?${params.toString()}`,
         method: 'GET',
+      }).then(() => {
+        setKey(key);
+        setIsAuthenticated(true);
       });
     },
     [payRequest],
   );
 
   useEffect(() => {
-    if (!isInitialized) return;
-
     checkAuthentication(key ?? '')
       .then(() => setIsAuthenticated(true))
       .catch(() => setIsAuthenticated(false))
       .finally(() => setIsLoading(false));
-  }, [isInitialized, checkAuthentication]);
+  }, [checkAuthentication]);
+
+  useEffect(() => {
+    setUrlParams();
+  }, [key]);
 
   return (
     <PaymentPosContext.Provider
