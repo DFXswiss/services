@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoXCircleFill } from 'react-icons/go';
+import { useSearchParams } from 'react-router-dom';
 import { CircularCountdown } from 'src/components/circular-countdown';
 import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
@@ -84,8 +85,11 @@ export default function PaymentLinkPosScreen(): JSX.Element {
 
 function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: PaymentFormProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
-  const { route, key } = useAppParams();
+  const [urlParams] = useSearchParams();
   const { call } = useApi();
+
+  const route = urlParams.get('route');
+  const key = urlParams.get('key');
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -161,7 +165,7 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
 }
 
 const PendingPaymentForm = ({ payRequest, paymentLinkApiUrl, fetchPayRequest }: PaymentFormProps): JSX.Element => {
-  const { route, key } = useAppParams();
+  const [urlParams] = useSearchParams();
   const { translate } = useSettingsContext();
   const { call } = useApi();
 
@@ -176,6 +180,8 @@ const PendingPaymentForm = ({ payRequest, paymentLinkApiUrl, fetchPayRequest }: 
   }, [payRequest]);
 
   const cancelPayment = async () => {
+    const route = urlParams.get('route');
+    const key = urlParams.get('key');
     if (!route || !key || !payRequest) return;
 
     const params = new URLSearchParams({
@@ -225,9 +231,12 @@ function TransactionHistory({
   payRequest: PaymentLinkPayTerminal;
   paymentStatus: ExtendedPaymentLinkStatus;
 }): JSX.Element {
-  const { route, key } = useAppParams();
+  const [urlParams] = useSearchParams();
   const { translate } = useSettingsContext();
   const { call } = useApi();
+
+  const route = urlParams.get('route');
+  const key = urlParams.get('key');
 
   const [transactionHistory, setTransactionHistory] = useState<PaymentLinkHistoryPayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);

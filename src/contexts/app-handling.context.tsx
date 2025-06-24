@@ -57,8 +57,6 @@ const urlParamsToRemove = [
   'external-transaction-id',
   'lightning',
   'trezor-connect-src',
-  'route',
-  'key',
 ];
 
 export interface AppParams {
@@ -107,8 +105,6 @@ export interface AppParams {
   bankAccount?: string;
   externalTransactionId?: string;
   lightning?: string;
-  route?: string;
-  key?: string;
 }
 
 export enum CloseType {
@@ -347,8 +343,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           bankAccount: getParameter(query, 'bank-account'),
           externalTransactionId: getParameter(query, 'external-transaction-id'),
           lightning: getParameter(query, 'lightning'),
-          route: getParameter(query, 'route'),
-          key: getParameter(query, 'key'),
         };
   }
 
