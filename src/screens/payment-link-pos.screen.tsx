@@ -235,13 +235,14 @@ function TransactionHistory({
   const { translate } = useSettingsContext();
   const { call } = useApi();
 
+  const route = urlParams.get('route');
+  const key = urlParams.get('key');
+
   const [transactionHistory, setTransactionHistory] = useState<PaymentLinkHistoryPayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
 
   const fetchTransactionHistory = useCallback(() => {
-    const route = urlParams.get('route');
-    const key = urlParams.get('key');
     if (!route || !key || !payRequest) return;
 
     const params = new URLSearchParams({
@@ -269,7 +270,7 @@ function TransactionHistory({
       })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
-  }, [urlParams, payRequest, call]);
+  }, [route, key, payRequest, call]);
 
   useEffect(() => {
     fetchTransactionHistory();
