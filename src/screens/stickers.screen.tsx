@@ -19,7 +19,6 @@ import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { useAppParams } from 'src/hooks/app-params.hook';
 import useDebounce from 'src/hooks/debounce.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { downloadFile, filenameDateFormat, url } from 'src/util/utils';
@@ -34,7 +33,6 @@ export default function StickersScreen(): JSX.Element {
   const { translate, translateError, language: appLanguage, availableStickerLanguages } = useSettingsContext();
   const { getPaymentRecipient, getPaymentStickers } = usePaymentRoutes();
   const { rootRef } = useLayoutContext();
-  const { route } = useAppParams();
 
   const [urlParams, setUrlParams] = useSearchParams();
   const [languageParam, setLanguageParam] = useState<string | null>(null);
@@ -63,6 +61,7 @@ export default function StickersScreen(): JSX.Element {
   }, [availableStickerLanguages, languageParam, appLanguage, selectedLanguage]);
 
   useEffect(() => {
+    const route = urlParams.get('route');
     const externalIds = urlParams.get('externalIds');
     const language = urlParams.get('language');
     if (!route && !externalIds && !language) return;
