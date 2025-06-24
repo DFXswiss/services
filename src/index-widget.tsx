@@ -49,8 +49,6 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   onClose: 'function',
   service: 'string',
   lightning: 'string',
-  route: 'string',
-  key: 'string',
 };
 
 const DfxServices = createWebComponent(MainWidget, { shadow: 'closed', props });
