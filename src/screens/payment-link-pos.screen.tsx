@@ -88,6 +88,9 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
   const [urlParams] = useSearchParams();
   const { call } = useApi();
 
+  const route = urlParams.get('route');
+  const key = urlParams.get('key');
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -97,8 +100,6 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
 
   const createPayment = useCallback(
     async (data: { amount: number }) => {
-      const route = urlParams.get('route');
-      const key = urlParams.get('key');
       if (!route || !key || !payRequest) return;
 
       const params = new URLSearchParams({
@@ -121,7 +122,7 @@ function CreatePaymentForm({ payRequest, paymentLinkApiUrl, fetchPayRequest }: P
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
         .finally(() => setIsLoading(false));
     },
-    [urlParams, payRequest, call, fetchPayRequest, paymentLinkApiUrl],
+    [route, key, payRequest, call, fetchPayRequest, paymentLinkApiUrl],
   );
 
   const {
