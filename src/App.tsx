@@ -7,6 +7,7 @@ import { LayoutWrapper } from './components/layout-wrapper';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
 import { OrderUIContextProvider } from './contexts/order-ui.context';
+import PaymentLinkPosContext from './contexts/payment-link-pos.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
@@ -138,7 +139,11 @@ export const Routes = [
           },
           {
             path: 'pos',
-            element: withSuspense(<PaymentLinkPosScreen />),
+            element: withSuspense(
+              <PaymentLinkPosContext>
+                <PaymentLinkPosScreen />
+              </PaymentLinkPosContext>,
+            ),
           },
         ],
       },

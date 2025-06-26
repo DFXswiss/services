@@ -50,6 +50,7 @@ import { usePaymentLinkWallets } from 'src/hooks/payment-link-wallets.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { BadgeType } from 'src/util/app-store-badges';
 import { EvmUri } from 'src/util/evm-uri';
+import { OpenCryptoPayUtils } from 'src/util/open-crypto-pay';
 import { blankedAddress, formatLocationAddress, formatUnits } from 'src/util/utils';
 import { AppStoreBadge } from '../components/app-store-badge';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
@@ -421,8 +422,8 @@ export default function PaymentLinkScreen(): JSX.Element {
                             <div className="flex w-full items-center justify-center">
                               <div className="w-48 my-3">
                                 <QrBasic
-                                  data={paymentIdentifier ?? ''}
-                                  isLoading={isLoadingPaymentIdentifier || !paymentIdentifier}
+                                  data={OpenCryptoPayUtils.getOcpUrlByUniqueId(payRequest.id)}
+                                  isLoading={isLoadingPaymentIdentifier}
                                 />
                               </div>
                             </div>
@@ -491,8 +492,8 @@ export default function PaymentLinkScreen(): JSX.Element {
                         {payRequest.displayQr && (
                           <div className="w-48 my-3">
                             <QrBasic
-                              data={paymentIdentifier ?? ''}
-                              isLoading={isLoadingPaymentIdentifier || !paymentIdentifier}
+                              data={OpenCryptoPayUtils.getOcpUrlByUniqueId(payRequest.id)}
+                              isLoading={isLoadingPaymentIdentifier}
                             />
                           </div>
                         )}
