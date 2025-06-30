@@ -50,7 +50,8 @@
     "View file": "Datei anzeigen",
     "Edit": "Bearbeiten",
     "Set default": "Standard setzen",
-    "Download sticker": "Aufkleber herunterladen"
+    "Download sticker": "Aufkleber herunterladen",
+    "Authenticate": "Authentifizieren"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -474,6 +475,7 @@
     "Transaction status": "Status der Transaktion",
     "Transaction refund": "Rückerstattung der Transaktion",
     "{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})": "{{from}} zu {{to}} bei {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})",
+    "No transactions yet": "Noch keine Transaktionen",
 
     "ID": "ID",
     "External ID": "Externe ID",
@@ -667,7 +669,9 @@
     "Sell transactions": "Verkaufstransaktionen",
     "Staking transactions": "Staking-Transaktionen",
     "Referral rewards": "Referral-Rewards",
-    "Edit configuration": "Konfiguration bearbeiten"
+    "Edit configuration": "Konfiguration bearbeiten",
+    "Access key": "Zugangsschlüssel",
+    "Please enter your access key to manage this checkout": "Bitte gib Deinen Zugangsschlüssel ein, um diesen Checkout zu verwalten"
   },
   "screens/iban": {
     "Your Bank Accounts": "Deine Bankkonten",

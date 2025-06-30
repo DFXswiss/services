@@ -237,36 +237,38 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
     <StyledVerticalStack gap={6} full>
       <TxInfo tx={transaction} />
 
-      {transaction.state === TransactionState.UNASSIGNED && (
-        <StyledButton
-          label={translate('screens/payment', 'Assign transaction')}
-          onClick={() => handleTransactionNavigation(`/tx/${transaction.id}/assign`)}
-          width={StyledButtonWidth.FULL}
-        />
-      )}
-
-      {[
-        TransactionState.FAILED,
-        TransactionState.CHECK_PENDING,
-        TransactionState.KYC_REQUIRED,
-        TransactionState.LIMIT_EXCEEDED,
-      ].includes(transaction.state) &&
-        !transaction.chargebackAmount && (
-          <StyledVerticalStack gap={4} full>
-            <StyledButton
-              label={translate(
-                'general/actions',
-                transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
-              )}
-              onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
-            />
-            <StyledButton
-              label={translate('general/actions', 'Create support ticket')}
-              onClick={() => handleTransactionNavigation('/support/issue?issue-type=TransactionIssue')}
-              color={StyledButtonColor.STURDY_WHITE}
-            />
-          </StyledVerticalStack>
+      <StyledVerticalStack gap={4} full>
+        {transaction.state === TransactionState.UNASSIGNED && (
+          <StyledButton
+            label={translate('screens/payment', 'Assign transaction')}
+            onClick={() => handleTransactionNavigation(`/tx/${transaction.id}/assign`)}
+            width={StyledButtonWidth.FULL}
+          />
         )}
+        {[
+          TransactionState.FAILED,
+          TransactionState.CHECK_PENDING,
+          TransactionState.KYC_REQUIRED,
+          TransactionState.LIMIT_EXCEEDED,
+          TransactionState.UNASSIGNED,
+        ].includes(transaction.state) &&
+          !transaction.chargebackAmount && (
+            <>
+              <StyledButton
+                label={translate(
+                  'general/actions',
+                  transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+                )}
+                onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
+              />
+              <StyledButton
+                label={translate('general/actions', 'Create support ticket')}
+                onClick={() => handleTransactionNavigation('/support/issue?issue-type=TransactionIssue')}
+                color={StyledButtonColor.STURDY_WHITE}
+              />
+            </>
+          )}
+      </StyledVerticalStack>
     </StyledVerticalStack>
   ) : (
     <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -721,6 +723,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   TransactionState.CHECK_PENDING,
                                   TransactionState.KYC_REQUIRED,
                                   TransactionState.LIMIT_EXCEEDED,
+                                  TransactionState.UNASSIGNED,
                                 ].includes(tx.state) || !!tx.chargebackAmount
                               }
                             />
