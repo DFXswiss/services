@@ -1374,12 +1374,12 @@ export const FeatureTree: Page[] = [
       },
       {
         id: 'phantom',
-        img: 'solanachain',
+        img: 'phantom',
         wallet: { type: WalletType.PHANTOM_SOL, blockchain: Blockchain.SOLANA },
       },
       {
         id: 'trust',
-        img: 'solanachain',
+        img: 'trust',
         wallet: { type: WalletType.TRUST_SOL, blockchain: Blockchain.SOLANA },
       },
       {
