@@ -5886,7 +5886,7 @@ export const FeatureTree: Page[] = [
     tiles: [
       {
         id: 'solana',
-        img: 'solanachain',
+        img: 'solana',
         next: {
           page: 'wallets',
           tiles: ['phantom', 'trust', 'cli'],
@@ -5928,7 +5928,7 @@ export const FeatureTree: Page[] = [
     tiles: [
       {
         id: 'solana',
-        img: 'solanachain',
+        img: 'solana',
         next: {
           page: 'wallets',
           tiles: ['phantom', 'trust', 'cli'],
