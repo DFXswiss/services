@@ -125,6 +125,13 @@ export const FeatureTree: Page[] = [
           page: 'buy-base',
         },
       },
+      {
+        id: 'gnosis',
+        img: 'gnosis',
+        next: {
+          page: 'buy-gnosis',
+        },
+      },
     ],
   },
   {
@@ -701,6 +708,24 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
+    id: 'buy-gnosis',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'eth',
+        img: 'xdai',
+        next: {
+          page: 'wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.GNOSIS, assetOut: 'xDAI' },
+          },
+        },
+      },
+    ],
+  },
+  {
     id: 'sell',
     dfxStyle: true,
     tiles: [
@@ -788,6 +813,13 @@ export const FeatureTree: Page[] = [
         img: 'basechain',
         next: {
           page: 'sell-base',
+        },
+      },
+      {
+        id: 'gnosis',
+        img: 'gnosis',
+        next: {
+          page: 'sell-gnosis',
         },
       },
     ],
@@ -1317,6 +1349,24 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.BINANCE_SMART_CHAIN, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-gnosis',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'eth',
+        img: 'xdai',
+        next: {
+          page: 'wallets',
+          tiles: ['metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.GNOSIS, assetIn: 'xDAI' },
           },
         },
       },

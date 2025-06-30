@@ -25,6 +25,7 @@ const chainIds: { [id: number]: Blockchain } = {
   [10]: Blockchain.OPTIMISM,
   [137]: Blockchain.POLYGON,
   [8453]: Blockchain.BASE,
+  [100]: Blockchain.GNOSIS,
   [11235]: Blockchain.HAQQ,
 };
 
@@ -112,6 +113,19 @@ export function useWeb3(): Web3Interface {
           },
           rpcUrls: ['https://mainnet.base.org'],
           blockExplorerUrls: ['https://basescan.org/'],
+        };
+
+      case Blockchain.GNOSIS:
+        return {
+          chainId,
+          chainName: 'Gnosis',
+          nativeCurrency: {
+            name: 'xDAI',
+            symbol: 'xDAI',
+            decimals: 18,
+          },
+          rpcUrls: ['https://rpc.gnosischain.com'],
+          blockExplorerUrls: ['https://gnosisscan.io/'],
         };
 
       case Blockchain.HAQQ:

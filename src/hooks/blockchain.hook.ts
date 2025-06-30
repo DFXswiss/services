@@ -29,6 +29,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.OPTIMISM]: 'Optimism · ERC-20 token',
       [Blockchain.POLYGON]: 'Polygon · ERC-20 token',
       [Blockchain.BASE]: 'Base · ERC-20 token',
+      [Blockchain.GNOSIS]: 'Gnosis · ERC-20 token',
       [Blockchain.HAQQ]: 'Haqq · ERC-20 token',
     },
     protocols: {
@@ -38,6 +39,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.OPTIMISM]: Protocol.ERC_20,
       [Blockchain.POLYGON]: Protocol.ERC_20,
       [Blockchain.BASE]: Protocol.ERC_20,
+      [Blockchain.GNOSIS]: Protocol.ERC_20,
       [Blockchain.HAQQ]: Protocol.ERC_20,
     },
     mainToken: {
@@ -47,6 +49,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.OPTIMISM]: 'ETH',
       [Blockchain.POLYGON]: 'MATIC',
       [Blockchain.BASE]: 'ETH',
+      [Blockchain.GNOSIS]: 'xDAI',
       [Blockchain.HAQQ]: 'ISLM',
     },
     stringValue: {
