@@ -1,4 +1,14 @@
-import { Fiat, Language, useFiatContext, UserAddress, useUserContext, Validations } from '@dfx.swiss/react';
+import {
+  BankAccount,
+  Fiat,
+  Language,
+  useBankAccountContext,
+  useFiatContext,
+  UserAddress,
+  useUserContext,
+  Utils,
+  Validations,
+} from '@dfx.swiss/react';
 import {
   AlignContent,
   DfxIcon,
@@ -8,6 +18,7 @@ import {
   IconVariant,
   SpinnerSize,
   StyledButton,
+  StyledButtonWidth,
   StyledDataTable,
   StyledDataTableRow,
   StyledDropdown,
@@ -15,16 +26,21 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
-import { Layout } from 'src/components/layout';
-import { ConfirmationOverlay, EditOverlay } from 'src/components/overlays';
+import ActionableList from 'src/components/actionable-list';
+import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay';
+import { EditBankAccount } from 'src/components/overlay/edit-bank-overlay';
+import { EditOverlay } from 'src/components/overlay/edit-overlay';
+import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { addressLabel } from 'src/config/labels';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 
@@ -40,6 +56,9 @@ enum OverlayType {
   RENAME_ADDRESS,
   EDIT_EMAIL,
   EDIT_PHONE,
+  EDIT_BANK_ACCOUNT,
+  ADD_BANK_ACCOUNT,
+  DELETE_BANK_ACCOUNT,
 }
 
 const OverlayHeader: { [key in OverlayType]: string } = {
@@ -49,19 +68,21 @@ const OverlayHeader: { [key in OverlayType]: string } = {
   [OverlayType.RENAME_ADDRESS]: 'Rename address',
   [OverlayType.EDIT_EMAIL]: 'Edit email',
   [OverlayType.EDIT_PHONE]: 'Edit phone number',
+  [OverlayType.EDIT_BANK_ACCOUNT]: 'Edit bank account',
+  [OverlayType.ADD_BANK_ACCOUNT]: 'Add bank account',
+  [OverlayType.DELETE_BANK_ACCOUNT]: 'Delete bank account',
 };
 
 export default function SettingsScreen(): JSX.Element {
   const { translate, language, currency, availableLanguages, changeLanguage, changeCurrency } = useSettingsContext();
   const { currencies } = useFiatContext();
   const { user, isUserLoading } = useUserContext();
-  const { navigate } = useNavigation();
   const { width } = useWindowContext();
+  const { navigate } = useNavigation();
+  const { rootRef } = useLayoutContext();
+  const { bankAccounts, updateAccount, isLoading: isLoadingBankAccounts } = useBankAccountContext();
 
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  const [menuAddress, setMenuAddress] = useState<UserAddress>();
-  const [showDisabledWallets, setShowDisabledWallets] = useState(false);
+  const [overlayData, setOverlayData] = useState<UserAddress | BankAccount>();
   const [overlayType, setOverlayType] = useState<OverlayType>(OverlayType.NONE);
 
   useUserGuard('/login');
@@ -100,7 +121,7 @@ export default function SettingsScreen(): JSX.Element {
 
   function onCloseOverlay(): void {
     setOverlayType(OverlayType.NONE);
-    setMenuAddress(undefined);
+    setOverlayData(undefined);
   }
 
   const title = OverlayHeader[overlayType]
@@ -108,18 +129,21 @@ export default function SettingsScreen(): JSX.Element {
     : translate('screens/settings', 'Settings');
 
   const userAddresses = user?.addresses.sort(sortAddressesByBlockchain);
-  const disabledAddresses = showDisabledWallets ? user?.disabledAddresses.sort(sortAddressesByBlockchain) : [];
+  const disabledAddresses = user?.disabledAddresses.sort(sortAddressesByBlockchain);
   const addressesList = (userAddresses ?? []).concat(disabledAddresses ?? []);
 
+  useLayoutOptions({ title, onBack: overlayType ? () => onCloseOverlay() : undefined });
+
   return (
-    <Layout title={title} rootRef={rootRef} onBack={overlayType ? () => onCloseOverlay() : undefined}>
+    <>
       {overlayType ? (
-        <SettingsOverlay type={overlayType} address={menuAddress} onClose={onCloseOverlay} />
+        <SettingsOverlay type={overlayType} data={overlayData} onClose={onCloseOverlay} />
       ) : (
         <StyledVerticalStack full gap={8}>
           <StyledVerticalStack full gap={4}>
             <Form control={control} errors={errors}>
-              <StyledDropdown
+              <StyledDropdown<Language>
+                rootRef={rootRef}
                 name="language"
                 label={translate('screens/settings', 'Language')}
                 smallLabel={true}
@@ -132,6 +156,7 @@ export default function SettingsScreen(): JSX.Element {
 
             <Form control={control} errors={errors}>
               <StyledDropdown
+                rootRef={rootRef}
                 name="currency"
                 label={translate('screens/settings', 'Currency')}
                 smallLabel={true}
@@ -144,10 +169,10 @@ export default function SettingsScreen(): JSX.Element {
 
           {!!(user?.mail || user?.phone) && (
             <StyledVerticalStack full gap={2}>
-              <StyledDataTable
-                label={translate('screens/kyc', 'Personal Information')}
-                alignContent={AlignContent.BETWEEN}
-              >
+              <h1 className="text-dfxGray-800 font-semibold text-base flex justify-center">
+                {translate('screens/kyc', 'Personal Information')}
+              </h1>
+              <StyledDataTable alignContent={AlignContent.BETWEEN}>
                 {user?.mail && (
                   <StyledDataTableRow>
                     <div className="flex flex-col items-start gap-1">
@@ -182,183 +207,141 @@ export default function SettingsScreen(): JSX.Element {
             </StyledVerticalStack>
           )}
 
-          {isUserLoading ? (
+          {isLoadingBankAccounts ? (
             <div className="flex mt-4 w-full justify-center items-center">
               <StyledLoadingSpinner size={SpinnerSize.LG} />
             </div>
           ) : (
-            <>
-              {addressesList?.length ? (
-                <StyledVerticalStack full gap={2}>
-                  <StyledDataTable
-                    label={translate('screens/settings', 'Your Addresses')}
-                    alignContent={AlignContent.BETWEEN}
-                  >
-                    {addressesList.map((address) => {
-                      const isDisabled = user?.disabledAddresses.some(
-                        (disabledAddress: UserAddress) => disabledAddress.address === address.address,
-                      );
-
-                      return (
-                        <StyledDataTableRow key={address.address}>
-                          <div className="flex flex-col items-start gap-1">
-                            <div
-                              className={`flex flex-row gap-2 font-semibold ${isDisabled ? 'text-dfxGray-700' : ''}`}
-                            >
-                              {address.label ?? address.wallet}
-                              {address.address === user?.activeAddress?.address && (
-                                <div className="flex bg-dfxGray-400 font-bold rounded-sm px-1.5 text-2xs items-center justify-center">
-                                  {translate('screens/settings', 'Active').toUpperCase()}
-                                </div>
-                              )}
-                            </div>
-                            <div className="text-xs text-dfxGray-700">
-                              {blankedAddress(addressLabel(address), { width })}
-                            </div>
-                          </div>
-                          <div className="relative flex items-center">
-                            <button onClick={() => setMenuAddress(address)}>
-                              <DfxIcon icon={IconVariant.THREE_DOTS_VERT} color={IconColor.BLUE} />
-                            </button>
-                            {menuAddress?.address === address.address && (
-                              <OverflowMenu
-                                menuItems={[
-                                  {
-                                    label: translate('general/actions', 'Copy'),
-                                    onClick: () => {
-                                      copy(address.address);
-                                      setMenuAddress(undefined);
-                                    },
-                                  },
-                                  {
-                                    label: translate('general/actions', 'Open Explorer'),
-                                    onClick: () => {
-                                      window.open(address.explorerUrl, '_blank');
-                                      setMenuAddress(undefined);
-                                    },
-                                  },
-                                  {
-                                    label: translate('general/actions', 'Rename'),
-                                    onClick: () => setOverlayType(OverlayType.RENAME_ADDRESS),
-                                    hidden: isDisabled,
-                                  },
-                                  {
-                                    label: translate('general/actions', 'Delete'),
-                                    onClick: () => setOverlayType(OverlayType.DELETE_ADDRESS),
-                                    hidden: isDisabled,
-                                  },
-                                ]}
-                                onClose={() => setMenuAddress(undefined)}
-                              />
-                            )}
-                          </div>
-                        </StyledDataTableRow>
-                      );
-                    })}
-
-                    {!!user?.disabledAddresses.length && (
-                      <StyledDataTableRow>
-                        <div
-                          className="flex flex-row w-full justify-between items-start gap-1 text-xs cursor-pointer select-none text-dfxGray-700 hover:text-dfxGray-800"
-                          onClick={() => setShowDisabledWallets((prev) => !prev)}
-                        >
-                          <div>
-                            {showDisabledWallets
-                              ? translate('screens/settings', 'Hide deleted addresses')
-                              : translate('screens/settings', 'Show deleted addresses')}
-                          </div>
-                          <DfxIcon
-                            icon={showDisabledWallets ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
-                            color={IconColor.DARK_GRAY}
-                          />
-                        </div>
-                      </StyledDataTableRow>
-                    )}
-                  </StyledDataTable>
-                </StyledVerticalStack>
-              ) : (
-                <></>
-              )}
-              <StyledButton
-                label={translate('general/actions', 'Delete account')}
-                onClick={() => setOverlayType(OverlayType.DELETE_ACCOUNT)}
-              />
-            </>
+            bankAccounts && (
+              <StyledVerticalStack full gap={2}>
+                <ActionableList
+                  label={translate('screens/iban', 'Your Bank Accounts')}
+                  addButtonOnClick={() => setOverlayType(OverlayType.ADD_BANK_ACCOUNT)}
+                  items={bankAccounts.map((account) => {
+                    return {
+                      key: account.id,
+                      label: account.label ?? `${account.iban.slice(0, 2)} ${account.iban.slice(-4)}`,
+                      subLabel: blankedAddress(Utils.formatIban(account.iban) ?? account.iban, { width }),
+                      tag: account.default ? translate('screens/settings', 'Default').toUpperCase() : undefined,
+                      menuItems: [
+                        {
+                          label: translate('general/actions', 'Copy'),
+                          onClick: () => copy(account.iban),
+                          closeOnClick: true,
+                        },
+                        {
+                          label: translate('general/actions', 'Edit'),
+                          onClick: () => {
+                            setOverlayData(account);
+                            setOverlayType(OverlayType.EDIT_BANK_ACCOUNT);
+                          },
+                        },
+                        {
+                          label: translate('general/actions', 'Delete'),
+                          // onClick: () => updateAccount(account.id, { active: false }),
+                          onClick: () => {
+                            setOverlayData(account);
+                            setOverlayType(OverlayType.DELETE_BANK_ACCOUNT);
+                          },
+                          closeOnClick: true,
+                        },
+                      ].concat(
+                        !account.default
+                          ? {
+                              label: translate('general/actions', 'Set default'),
+                              onClick: () => updateAccount(account.id, { default: true }),
+                              closeOnClick: true,
+                            }
+                          : [],
+                      ),
+                    };
+                  })}
+                />
+              </StyledVerticalStack>
+            )
           )}
+
+          {isUserLoading && !isLoadingBankAccounts ? (
+            <div className="flex mt-4 w-full justify-center items-center">
+              <StyledLoadingSpinner size={SpinnerSize.LG} />
+            </div>
+          ) : (
+            <ActionableList
+              label={translate('screens/settings', 'Your Addresses')}
+              hideItemsText={translate('screens/settings', 'Hide deleted addresses')}
+              showItemsText={translate('screens/settings', 'Show deleted addresses')}
+              items={addressesList.map((address) => {
+                const isDisabled = user?.disabledAddresses.some((d) => d.address === address.address) ?? false;
+
+                return {
+                  key: address.address,
+                  label: address.label ?? address.wallet,
+                  subLabel: blankedAddress(address.address, { width }),
+                  isDisabled,
+                  tag:
+                    address.address === user?.activeAddress?.address
+                      ? translate('screens/settings', 'Active').toUpperCase()
+                      : undefined,
+                  menuItems: [
+                    {
+                      label: translate('general/actions', 'Copy'),
+                      onClick: () => copy(address.address),
+                      closeOnClick: true,
+                    },
+                    {
+                      label: translate('general/actions', 'Open Explorer'),
+                      onClick: () => window.open(address.explorerUrl, '_blank'),
+                      closeOnClick: true,
+                    },
+                    {
+                      label: translate('general/actions', 'Rename'),
+                      onClick: () => {
+                        setOverlayData(address);
+                        setOverlayType(OverlayType.RENAME_ADDRESS);
+                      },
+                      hidden: isDisabled,
+                    },
+                    {
+                      label: translate('general/actions', 'Delete'),
+                      onClick: () => {
+                        setOverlayData(address);
+                        setOverlayType(OverlayType.DELETE_ADDRESS);
+                      },
+                      hidden: isDisabled,
+                    },
+                  ],
+                };
+              })}
+            />
+          )}
+          <StyledButton
+            width={StyledButtonWidth.FULL}
+            label={translate('general/actions', 'Delete account')}
+            onClick={() => setOverlayType(OverlayType.DELETE_ACCOUNT)}
+          />
         </StyledVerticalStack>
       )}
-    </Layout>
-  );
-}
-
-interface MenuItem {
-  label: string;
-  hidden?: boolean;
-  onClick: () => void;
-}
-
-interface OverflowMenuProps {
-  menuItems: MenuItem[];
-  onClose: () => void;
-}
-
-function OverflowMenu({ menuItems, onClose }: OverflowMenuProps): JSX.Element {
-  const menuRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (document) {
-      function closeMenu(event: Event) {
-        if (!menuRef.current?.contains(event.target as Node)) {
-          onClose();
-        }
-      }
-
-      document.addEventListener('mousedown', closeMenu);
-      return () => document.removeEventListener('mousedown', closeMenu);
-    }
-  }, []);
-
-  return (
-    <div
-      ref={menuRef}
-      className="absolute right-5 top-3 border border-dfxGray-400 shadow-md z-10 bg-white rounded-md overflow-clip"
-    >
-      <div className="flex flex-col divide-y-0.5 divide-dfxGray-400 items-start bg-dfxGray-100 w-36">
-        {menuItems
-          .filter((item) => !item.hidden)
-          .map((item) => (
-            <button
-              key={item.label}
-              className="hover:bg-dfxGray-300 w-full text-left px-4 py-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                item.onClick();
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
-      </div>
-    </div>
+    </>
   );
 }
 
 interface SettingsOverlayProps {
   type: OverlayType;
-  address?: UserAddress;
+  data?: UserAddress | BankAccount;
   onClose: () => void;
 }
 
-function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.Element {
+function SettingsOverlay({ type, data, onClose }: SettingsOverlayProps): JSX.Element {
   const { user } = useUserContext();
   const { width } = useWindowContext();
   const { translate } = useSettingsContext();
   const { setWallet } = useWalletContext();
   const { deleteAddress, deleteAccount, renameAddress, updatePhone } = useUserContext();
+  const { updateAccount } = useBankAccountContext();
 
   switch (type) {
     case OverlayType.DELETE_ADDRESS:
-      const formattedAddress = blankedAddress(address ? addressLabel(address) : '', { width });
+      const formattedAddress = blankedAddress(data ? addressLabel(data as UserAddress) : '', { width });
 
       return (
         <ConfirmationOverlay
@@ -374,9 +357,10 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
           confirmLabel={translate('general/actions', 'Delete')}
           onCancel={onClose}
           onConfirm={async () => {
-            if (address) {
-              await deleteAddress(address.address);
-              address.address === user?.activeAddress?.address && setWallet();
+            if (data) {
+              const userAddress = data as UserAddress;
+              await deleteAddress(userAddress.address);
+              userAddress.address === user?.activeAddress?.address && setWallet();
             }
             onClose();
           }}
@@ -400,15 +384,16 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
         />
       );
     case OverlayType.RENAME_ADDRESS:
+      const userAddress = data as UserAddress;
       return (
         <EditOverlay
           label={translate('screens/settings', 'Address name')}
           autocomplete="address-label"
-          prefill={address?.label ?? address?.wallet}
+          prefill={userAddress?.label ?? userAddress?.wallet}
           placeholder={translate('screens/settings', 'Address name')}
           onCancel={onClose}
           onEdit={async (result) => {
-            if (address) await renameAddress(address.address, result);
+            if (userAddress) await renameAddress(userAddress.address, result);
             onClose();
           }}
         />
@@ -424,6 +409,41 @@ function SettingsOverlay({ type, address, onClose }: SettingsOverlayProps): JSX.
           onCancel={onClose}
           onEdit={async (result) => {
             await updatePhone(result);
+            onClose();
+          }}
+        />
+      );
+    case OverlayType.EDIT_BANK_ACCOUNT:
+      return <EditBankAccount bankAccount={data as BankAccount} onClose={onClose} />;
+    case OverlayType.ADD_BANK_ACCOUNT:
+      return (
+        <AddBankAccount
+          onSubmit={(_) => onClose()}
+          confirmationText={translate(
+            'screens/iban',
+            'The bank account has been added, all transactions from this IBAN will now be associated with your account.',
+          )}
+        />
+      );
+    case OverlayType.DELETE_BANK_ACCOUNT:
+      const bankAccount = data as BankAccount;
+      const formattedBankAccount = blankedAddress(Utils.formatIban(bankAccount.iban) ?? bankAccount.iban, { width });
+
+      return (
+        <ConfirmationOverlay
+          messageContent={
+            <p className="text-dfxBlue-800 mb-2">
+              <Trans i18nKey="screens/settings.delete_iban" values={{ address: formattedBankAccount }}>
+                Are you sure you want to delete the bank account <strong>{formattedBankAccount}</strong> from your DFX
+                account?
+              </Trans>
+            </p>
+          }
+          cancelLabel={translate('general/actions', 'Cancel')}
+          confirmLabel={translate('general/actions', 'Delete')}
+          onCancel={onClose}
+          onConfirm={async () => {
+            await updateAccount(bankAccount.id, { active: false });
             onClose();
           }}
         />

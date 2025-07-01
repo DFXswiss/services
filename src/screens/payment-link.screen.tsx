@@ -1,13 +1,17 @@
-import { Asset, Blockchain, PaymentLinkPaymentStatus, useApi, useAssetContext, Utils } from '@dfx.swiss/react';
+import { Asset, PaymentLinkPaymentStatus, useAssetContext, Utils } from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
+  DfxIcon,
   Form,
   IconColor,
   IconSize,
   IconVariant,
   SpinnerSize,
   SpinnerVariant,
+  StyledButton,
+  StyledButtonColor,
+  StyledButtonWidth,
   StyledCollapsible,
   StyledDataTable,
   StyledDataTableExpandableRow,
@@ -23,97 +27,33 @@ import {
 } from '@dfx.swiss/react-components';
 import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
-
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/opacity.css';
 import { useSearchParams } from 'react-router-dom';
 import { QrBasic } from 'src/components/payment/qr-code';
-import { CompatibleWallets, PaymentStandards, RecommendedWallets } from 'src/config/payment-link-wallets';
-import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { useLayoutContext } from 'src/contexts/layout.context';
+import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
-import { useAppParams } from 'src/hooks/app-params.hook';
-import { useCountdown } from 'src/hooks/countdown.hook';
+import {
+  ExtendedPaymentLinkStatus,
+  NoPaymentLinkPaymentStatus,
+  PaymentStandard,
+  WalletAppId,
+  WalletInfo,
+} from 'src/dto/payment-link.dto';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { useSessionStore } from 'src/hooks/session-store.hook';
+import { usePaymentLinkWallets } from 'src/hooks/payment-link-wallets.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
+import { BadgeType } from 'src/util/app-store-badges';
 import { EvmUri } from 'src/util/evm-uri';
-import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress, fetchJson, formatLocationAddress, formatUnits, url } from 'src/util/utils';
-import { Layout } from '../components/layout';
-
-export interface PaymentStandard {
-  id: PaymentStandardType;
-  label: string;
-  description: string;
-  paymentIdentifierLabel?: string;
-  blockchain?: Blockchain;
-}
-
-interface Quote {
-  id: string;
-  expiration: Date;
-  payment: string;
-}
-
-interface Amount {
-  asset: string;
-  amount: number;
-}
-
-export type TransferMethod = Blockchain;
-export interface TransferInfo {
-  method: TransferMethod;
-  minFee: number;
-  assets: Amount[];
-}
-
-export interface PaymentLinkPayTerminal {
-  tag: string;
-  displayName: string;
-  standard: PaymentStandardType;
-  possibleStandards: PaymentStandardType[];
-  displayQr: boolean;
-  recipient: {
-    address?: {
-      city: string;
-      country: string;
-      houseNumber: string;
-      street: string;
-      zip: string;
-    };
-    name?: string;
-    mail?: string;
-    phone?: string;
-    website?: string;
-  };
-
-  // error fields
-  statusCode?: number;
-  message?: string;
-  error?: string;
-}
-
-export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
-  quote: Quote;
-  callback: string;
-  metadata: string;
-  minSendable: number;
-  maxSendable: number;
-  requestedAmount: Amount;
-  transferAmounts: TransferInfo[];
-}
-
-interface PaymentStatus {
-  status: PaymentLinkPaymentStatus;
-}
-
-enum NoPaymentLinkPaymentStatus {
-  NO_PAYMENT = 'NoPayment',
-}
-
-type ExtendedPaymentLinkStatus = PaymentLinkPaymentStatus | NoPaymentLinkPaymentStatus;
+import { OpenCryptoPayUtils } from 'src/util/open-crypto-pay';
+import { blankedAddress, formatLocationAddress, formatUnits } from 'src/util/utils';
+import { AppStoreBadge } from '../components/app-store-badge';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 
 interface FormData {
   paymentStandard: PaymentStandard;
@@ -121,37 +61,43 @@ interface FormData {
 }
 
 export default function PaymentLinkScreen(): JSX.Element {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { translate } = useSettingsContext();
-  const { navigate } = useNavigation();
   const { toBlockchain } = useWeb3();
   const { width } = useWindowContext();
   const { assets } = useAssetContext();
-  const { call } = useApi();
-  const { timer, startTimer } = useCountdown();
+  const { rootRef } = useLayoutContext();
+  const {
+    error,
+    merchant,
+    payRequest,
+    timer,
+    paymentLinkApiUrl,
+    callbackUrl,
+    paymentStandards,
+    paymentIdentifier,
+    isLoadingPaymentIdentifier,
+    paymentStatus,
+    isLoadingMetaMask,
+    metaMaskInfo,
+    metaMaskError,
+    isMetaMaskPaying,
+    paymentHasQuote,
+    setSessionApiUrl,
+    setPaymentIdentifier,
+    fetchPayRequest,
+    fetchPaymentIdentifier,
+    payWithMetaMask,
+  } = usePaymentLinkContext();
 
-  const { paymentLinkApiUrl: paymentLinkApiUrlStore } = useSessionStore();
-  const { lightning, redirectUri, setParams } = useAppParams();
-  const { closeServices } = useAppHandlingContext();
-  const [urlParams, setUrlParams] = useSearchParams();
+  const { recommendedWallets, otherWallets, semiCompatibleWallets, getWalletByName, getDeeplinkByWalletId } =
+    usePaymentLinkWallets();
 
-  const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
-  const [paymentIdentifier, setPaymentIdentifier] = useState<string>();
-  const [paymentStandards, setPaymentStandards] = useState<PaymentStandard[]>();
   const [assetObject, setAssetObject] = useState<Asset>();
   const [showContract, setShowContract] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<ExtendedPaymentLinkStatus>(PaymentLinkPaymentStatus.PENDING);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>();
-  const refetchTimeout = useRef<NodeJS.Timeout>();
-  const [merchant, setMerchant] = useState<string>();
-
-  const sessionApiUrl = useRef<string>(paymentLinkApiUrlStore.get() ?? '');
-  const currentCallback = useRef<string>();
-
-  const setSessionApiUrl = (newUrl: string) => {
-    sessionApiUrl.current = newUrl;
-    paymentLinkApiUrlStore.set(newUrl);
-  };
+  const [walletData, setWalletData] = useState<WalletInfo>();
+  const [isOpenWallet, setIsOpenWallet] = useState(false);
+  const [isTempUnavailable, setIsTempUnavailable] = useState(false);
 
   const {
     control,
@@ -165,50 +111,30 @@ export default function PaymentLinkScreen(): JSX.Element {
   const selectedAsset = useWatch({ control, name: 'asset' });
 
   useEffect(() => {
-    const lightningParam = lightning;
+    const walletId = searchParams.get('wallet-id') as WalletAppId;
 
-    const merchantParam = urlParams.get('merchant');
-    if (merchantParam) {
-      setMerchant(merchantParam);
-      return;
+    if (walletId) {
+      setWalletData(getWalletByName(walletId));
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('wallet-id');
+      setSearchParams(newParams);
     }
-
-    let apiUrl: string | undefined;
-    if (lightningParam) {
-      apiUrl = Lnurl.decode(lightningParam);
-      setParams({ lightning: undefined });
-    } else if (urlParams.size) {
-      apiUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment?${urlParams.toString()}`;
-      setUrlParams(new URLSearchParams());
-    }
-
-    if (apiUrl) {
-      setSessionApiUrl(apiUrl);
-    } else if (!sessionApiUrl.current) {
-      navigate('/', { replace: true });
-    }
-
-    fetchPayRequest(sessionApiUrl.current);
-
-    return () => {
-      if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
-    };
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
-    if (!hasQuote(payRequest)) return;
+    if (!paymentHasQuote(payRequest)) return;
 
-    const currUrlStandard = new URL(sessionApiUrl.current).searchParams.get('standard');
+    const currUrlStandard = new URL(paymentLinkApiUrl.current).searchParams.get('standard');
 
     if (!currUrlStandard || (selectedPaymentStandard && currUrlStandard !== selectedPaymentStandard?.id)) {
-      const url = new URL(sessionApiUrl.current);
+      const url = new URL(paymentLinkApiUrl.current);
       url.searchParams.set('standard', selectedPaymentStandard?.id ?? payRequest.standard);
 
       setSessionApiUrl(url.toString());
       fetchPayRequest(url.toString());
 
       setPaymentIdentifier(undefined);
-      currentCallback.current = undefined;
+      callbackUrl.current = undefined;
       setValue('asset', undefined);
       setAssetObject(undefined);
     } else {
@@ -223,7 +149,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   }, [payRequest, selectedPaymentStandard, selectedAsset]);
 
   useEffect(() => {
-    if (!hasQuote(payRequest)) return;
+    if (!paymentHasQuote(payRequest)) return;
 
     const paymentStandard = paymentStandards?.find((item) => item.id === payRequest.standard);
     if (!selectedPaymentStandard && paymentStandard) {
@@ -247,164 +173,26 @@ export default function PaymentLinkScreen(): JSX.Element {
     }
   }, [selectedAsset, selectedPaymentStandard]);
 
-  async function fetchPayRequest(url: string, isRefetch = false): Promise<number | undefined> {
-    setError(undefined);
-    let refetchDelay: number | undefined;
+  const handleBackButton = () => {
+    setWalletData(undefined);
+    setIsTempUnavailable(false);
+  };
 
+  const openWallet = async (walletId: WalletAppId) => {
     try {
-      const urlObj = new URL(url);
-      urlObj.searchParams.set('timeout', isRefetch ? '10' : '0');
-
-      const payRequest = await fetchJson(urlObj);
-      if (sessionApiUrl.current !== url) return undefined;
-
-      setPayRequest(payRequest);
-
-      if (hasQuote(payRequest)) {
-        setPaymentStatus(PaymentLinkPaymentStatus.PENDING);
-
-        setPaymentStandardSelection(payRequest);
-        awaitPayment(payRequest.quote.payment)
-          .then((response) => {
-            if (response.status !== PaymentLinkPaymentStatus.PENDING) {
-              setPaymentStatus(response.status);
-              if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
-              if (response.status === PaymentLinkPaymentStatus.COMPLETED && redirectUri) {
-                closeServices({ type: CloseType.PAYMENT }, false);
-              }
-            }
-          })
-          .catch(() => {
-            fetchPayRequest(url);
-          });
-        refetchDelay = new Date(payRequest.quote.expiration).getTime() - Date.now();
-        startTimer(new Date(payRequest.quote.expiration));
-      } else {
-        setPaymentStatus(NoPaymentLinkPaymentStatus.NO_PAYMENT);
-        refetchDelay = 100;
+      setIsOpenWallet(true);
+      const deeplink = await getDeeplinkByWalletId(walletId);
+      if (deeplink) {
+        window.open(deeplink, '_blank');
       }
-
-      if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
-      refetchTimeout.current = setTimeout(() => fetchPayRequest(url, true), refetchDelay);
-    } catch (error: any) {
-      setError(error.message ?? 'Unknown Error');
+    } catch (error) {
+      setIsTempUnavailable(true);
+    } finally {
+      setIsOpenWallet(false);
     }
-  }
-
-  function setPaymentStandardSelection(data: PaymentLinkPayRequest | PaymentLinkPayTerminal) {
-    if (!hasQuote(data) || paymentStandards) return;
-
-    const possibleStandards: PaymentStandard[] = data.possibleStandards.flatMap((type: PaymentStandardType) => {
-      const paymentStandard = PaymentStandards[type];
-
-      if (type !== PaymentStandardType.PAY_TO_ADDRESS) {
-        return paymentStandard;
-      } else {
-        return data.transferAmounts
-          .filter((chain) => chain.method !== 'Lightning')
-          .map((chain) => {
-            return { ...paymentStandard, blockchain: chain.method };
-          });
-      }
-    });
-
-    setPaymentStandards(possibleStandards);
-  }
-
-  async function fetchPaymentIdentifier(
-    payRequest: PaymentLinkPayTerminal | PaymentLinkPayRequest,
-    selectedPaymentMethod?: Blockchain,
-    selectedAsset?: string,
-  ): Promise<void> {
-    if (
-      !hasQuote(payRequest) ||
-      (payRequest.standard === PaymentStandardType.PAY_TO_ADDRESS && !(selectedPaymentMethod && selectedAsset))
-    )
-      return;
-
-    switch (payRequest.standard) {
-      case PaymentStandardType.OPEN_CRYPTO_PAY:
-      case PaymentStandardType.FRANKENCOIN_PAY:
-        currentCallback.current = payRequest.callback;
-        setPaymentIdentifier(Lnurl.prependLnurl(Lnurl.encode(simplifyUrl(sessionApiUrl.current))));
-        break;
-      case PaymentStandardType.LIGHTNING_BOLT11:
-        invokeCallback(
-          url(
-            payRequest.callback,
-            new URLSearchParams({ quote: payRequest.quote.id, amount: payRequest.minSendable.toString() }),
-          ),
-        );
-        break;
-      case PaymentStandardType.PAY_TO_ADDRESS:
-        invokeCallback(
-          url(
-            payRequest.callback,
-            new URLSearchParams({
-              quote: payRequest.quote.id,
-              method: selectedPaymentMethod ?? '',
-              asset: selectedAsset ?? '',
-            }),
-          ),
-        );
-        break;
-    }
-  }
-
-  async function awaitPayment(id: string): Promise<PaymentStatus> {
-    return call<PaymentStatus>({
-      url: `lnurlp/wait/${id}`,
-      method: 'GET',
-    });
-  }
-
-  async function invokeCallback(callbackUrl: string): Promise<void> {
-    if (currentCallback.current === callbackUrl) return;
-    currentCallback.current = callbackUrl;
-
-    setIsLoading(true);
-    setPaymentIdentifier(undefined);
-    fetchJson(callbackUrl)
-      .then((response) => {
-        if (response && response.statusCode !== 409 && callbackUrl === currentCallback.current) {
-          response && setPaymentIdentifier(response.uri ?? response.pr);
-        }
-      })
-      .catch((error) => {
-        setError(error.message);
-        setPaymentIdentifier(undefined);
-      })
-      .finally(() => setIsLoading(false));
-  }
-
-  function simplifyUrl(url: string): string {
-    const replacementMap: { [key: string]: string } = {
-      '/v1/paymentLink/payment': '/v1/plp',
-      routeId: 'r',
-      externalId: 'e',
-      message: 'm',
-      amount: 'a',
-      currency: 'c',
-      expiryDate: 'd',
-    };
-
-    const urlObj = new URL(url);
-    const newPath = replacementMap[urlObj.pathname] || urlObj.pathname;
-    const newParams = new URLSearchParams();
-    urlObj.searchParams.forEach((value, key) => {
-      const shortKey = replacementMap[key] || key;
-      newParams.append(shortKey, value);
-    });
-
-    return `${urlObj.origin}${newPath}?${newParams.toString()}`;
-  }
-
-  function hasQuote(request?: PaymentLinkPayTerminal | PaymentLinkPayRequest): request is PaymentLinkPayRequest {
-    return !!request && 'quote' in request;
-  }
-
+  };
   const assetsList =
-    hasQuote(payRequest) &&
+    paymentHasQuote(payRequest) &&
     payRequest.transferAmounts.find((item) => item.method === selectedPaymentStandard?.blockchain)?.assets;
 
   const parsedEvmUri =
@@ -412,11 +200,13 @@ export default function PaymentLinkScreen(): JSX.Element {
       ? EvmUri.decode(paymentIdentifier)
       : undefined;
 
+  useLayoutOptions({ backButton: false, smallMenu: true });
+
   return (
-    <Layout backButton={false} smallMenu>
+    <>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
-      ) : !payRequest && !merchant ? (
+      ) : (!payRequest && !merchant) || isLoadingMetaMask ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center className="pt-8">
@@ -424,54 +214,60 @@ export default function PaymentLinkScreen(): JSX.Element {
             <p className="text-dfxBlue-800 font-bold text-xl">{payRequest?.displayName ?? merchant}</p>
             <div className="w-full h-[1px] bg-gradient-to-r bg-dfxGray-500 from-white via-dfxGray-500 to-white" />
             {!merchant && (
-              <div className="mb-8">
-                {hasQuote(payRequest) ? (
-                  <p className="text-xl font-bold text-dfxBlue-800">
+              <>
+                {paymentHasQuote(payRequest) ? (
+                  <p className="text-xl font-bold text-dfxBlue-800 mb-8">
                     <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
                     {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
                   </p>
-                ) : (
-                  <div className="flex w-full justify-center">
+                ) : [PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(
+                    paymentStatus,
+                  ) ? (
+                  <div className="flex w-full justify-center mb-8" hidden={!isLoadingPaymentIdentifier}>
                     <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
                   </div>
-                )}
-              </div>
+                ) : null}
+              </>
             )}
           </div>
           <PaymentStatusTile status={paymentStatus} />
-          {paymentStatus === PaymentLinkPaymentStatus.PENDING && hasQuote(payRequest) && paymentStandards?.length && (
-            <Form control={control} errors={errors}>
-              <StyledVerticalStack full gap={4} center>
-                <StyledDropdown<PaymentStandard>
-                  name="paymentStandard"
-                  items={paymentStandards}
-                  labelFunc={(item) =>
-                    translate('screens/payment', item.label, { blockchain: item.blockchain?.toString() ?? '' })
-                  }
-                  descriptionFunc={(item) =>
-                    translate('screens/payment', item.description, { blockchain: item.blockchain?.toString() ?? '' })
-                  }
-                  smallLabel
-                  full
-                />
-
-                {assetsList && (
-                  <StyledDropdown<string>
-                    name="asset"
-                    items={assetsList?.map((item) => item.asset) ?? []}
-                    labelFunc={(item) => item}
-                    descriptionFunc={() => selectedPaymentStandard?.blockchain ?? ''}
-                    full
+          {paymentStatus === PaymentLinkPaymentStatus.PENDING &&
+            paymentHasQuote(payRequest) &&
+            paymentStandards?.length &&
+            !(metaMaskInfo || metaMaskError) && (
+              <Form control={control} errors={errors}>
+                <StyledVerticalStack full gap={4} center>
+                  <StyledDropdown<PaymentStandard>
+                    rootRef={rootRef}
+                    name="paymentStandard"
+                    items={paymentStandards}
+                    labelFunc={(item) =>
+                      translate('screens/payment', item.label, { blockchain: item.blockchain?.toString() ?? '' })
+                    }
+                    descriptionFunc={(item) =>
+                      translate('screens/payment', item.description, { blockchain: item.blockchain?.toString() ?? '' })
+                    }
                     smallLabel
+                    full
                   />
-                )}
-              </StyledVerticalStack>
-            </Form>
-          )}
 
+                  {assetsList && (
+                    <StyledDropdown<string>
+                      rootRef={rootRef}
+                      name="asset"
+                      items={assetsList?.map((item) => item.asset) ?? []}
+                      labelFunc={(item) => item}
+                      descriptionFunc={() => selectedPaymentStandard?.blockchain ?? ''}
+                      full
+                      smallLabel
+                    />
+                  )}
+                </StyledVerticalStack>
+              </Form>
+            )}
           {[PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(paymentStatus) && (
             <>
-              {payRequest && (hasQuote(payRequest) || payRequest.recipient) && (
+              {payRequest && (paymentHasQuote(payRequest) || payRequest.recipient) && (
                 <StyledCollapsible
                   full
                   titleContent={
@@ -490,14 +286,22 @@ export default function PaymentLinkScreen(): JSX.Element {
                 >
                   <StyledVerticalStack full gap={4} className="text-left">
                     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                      {hasQuote(payRequest) && (
+                      {payRequest.externalId && (
+                        <StyledDataTableRow
+                          label={translate('screens/payment', 'External ID')}
+                          isLoading={isLoadingPaymentIdentifier}
+                        >
+                          <p>{payRequest.externalId}</p>
+                        </StyledDataTableRow>
+                      )}
+                      {paymentHasQuote(payRequest) && (
                         <>
                           {parsedEvmUri && paymentIdentifier && (
                             <>
                               {parsedEvmUri.amount && (
                                 <StyledDataTableRow
                                   label={translate('screens/payment', 'Amount')}
-                                  isLoading={isLoading || !paymentIdentifier}
+                                  isLoading={isLoadingPaymentIdentifier || !paymentIdentifier}
                                 >
                                   <p>{formatUnits(parsedEvmUri.amount, assetObject?.decimals)}</p>
                                   <CopyButton onCopy={() => copy(parsedEvmUri.amount ?? '')} />
@@ -538,7 +342,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                               {parsedEvmUri.address && (
                                 <StyledDataTableRow
                                   label={translate('screens/home', 'Address')}
-                                  isLoading={isLoading || !paymentIdentifier}
+                                  isLoading={isLoadingPaymentIdentifier || !paymentIdentifier}
                                 >
                                   <p>{blankedAddress(parsedEvmUri.address ?? '', { width, scale: 0.8 })}</p>
                                   <CopyButton onCopy={() => copy(parsedEvmUri.address ?? '')} />
@@ -548,7 +352,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                               {toBlockchain(parsedEvmUri.chainId ?? '') && (
                                 <StyledDataTableRow
                                   label={translate('screens/home', 'Blockchain')}
-                                  isLoading={isLoading || !paymentIdentifier}
+                                  isLoading={isLoadingPaymentIdentifier || !paymentIdentifier}
                                 >
                                   <p>{toBlockchain(parsedEvmUri.chainId ?? '')}</p>
                                   <CopyButton onCopy={() => copy(toBlockchain(parsedEvmUri.chainId ?? '') ?? '')} />
@@ -603,28 +407,31 @@ export default function PaymentLinkScreen(): JSX.Element {
                           <p>{payRequest.recipient.name}</p>
                         </StyledDataTableExpandableRow>
                       )}
-                      {hasQuote(payRequest) && (
+                      {paymentHasQuote(payRequest) && (
                         <StyledDataTableRow
                           label={translate('screens/payment', 'Expiry date')}
-                          isLoading={isLoading || !paymentIdentifier}
+                          isLoading={isLoadingPaymentIdentifier || !paymentIdentifier}
                         >
                           <p>{new Date(payRequest.quote.expiration).toLocaleString()}</p>
                         </StyledDataTableRow>
                       )}
-                      {hasQuote(payRequest) && !payRequest.displayQr && (
+                      {paymentHasQuote(payRequest) && !payRequest.displayQr && (
                         <StyledDataTableExpandableRow
                           label={translate('screens/payment', 'QR Code')}
                           expansionContent={
                             <div className="flex w-full items-center justify-center">
                               <div className="w-48 my-3">
-                                <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
+                                <QrBasic
+                                  data={OpenCryptoPayUtils.getOcpUrlByUniqueId(payRequest.id)}
+                                  isLoading={isLoadingPaymentIdentifier}
+                                />
                               </div>
                             </div>
                           }
                         />
                       )}
                     </StyledDataTable>
-                    {hasQuote(payRequest) && selectedPaymentStandard?.blockchain && (
+                    {paymentHasQuote(payRequest) && selectedPaymentStandard?.blockchain && (
                       <StyledInfoText
                         textSize={StyledInfoTextSize.XS}
                         iconColor={IconColor.GRAY}
@@ -651,45 +458,125 @@ export default function PaymentLinkScreen(): JSX.Element {
                   </StyledVerticalStack>
                 </StyledCollapsible>
               )}
-
-              {(!selectedPaymentStandard ||
-                [PaymentStandardType.OPEN_CRYPTO_PAY, PaymentStandardType.FRANKENCOIN_PAY].includes(
-                  selectedPaymentStandard.id as PaymentStandardType,
-                )) && (
-                <StyledVerticalStack full gap={8} center>
-                  {hasQuote(payRequest) ? (
-                    <div className="flex flex-col w-full items-center justify-center">
-                      {payRequest.displayQr && (
-                        <div className="w-48 my-3">
-                          <QrBasic data={paymentIdentifier ?? ''} isLoading={isLoading || !paymentIdentifier} />
-                        </div>
-                      )}
+              {metaMaskError ? (
+                <>
+                  <p className="text-dfxRed-100 font-bold my-6">{translate('screens/payment', metaMaskError)}</p>
+                </>
+              ) : metaMaskInfo ? (
+                <>
+                  <p className="text-base pt-3 text-dfxGray-700">
+                    {translate(
+                      'screens/payment',
+                      'Complete this payment using {{amount}} {{asset}} on {{blockchain}}.',
+                      {
+                        amount: metaMaskInfo.transferAmount,
+                        asset: metaMaskInfo.transferAsset.name,
+                        blockchain: metaMaskInfo.transferAsset.blockchain,
+                      },
+                    )}
+                  </p>
+                  <StyledButton
+                    label={translate('screens/payment', 'Pay')}
+                    onClick={payWithMetaMask}
+                    color={StyledButtonColor.RED}
+                    className="mb-5"
+                    isLoading={isMetaMaskPaying}
+                  />
+                </>
+              ) : (
+                (!selectedPaymentStandard ||
+                  PaymentStandardType.OPEN_CRYPTO_PAY === (selectedPaymentStandard.id as PaymentStandardType)) && (
+                  <StyledVerticalStack full gap={8} center>
+                    {paymentHasQuote(payRequest) ? (
+                      <div className="flex flex-col w-full items-center justify-center">
+                        {payRequest.displayQr && (
+                          <div className="w-48 my-3">
+                            <QrBasic
+                              data={OpenCryptoPayUtils.getOcpUrlByUniqueId(payRequest.id)}
+                              isLoading={isLoadingPaymentIdentifier}
+                            />
+                          </div>
+                        )}
+                        <p className="text-base pt-3 text-dfxGray-700">
+                          {translate(
+                            'screens/payment',
+                            'Scan the QR-Code with a compatible wallet to complete the payment.',
+                          )}
+                        </p>
+                      </div>
+                    ) : (
                       <p className="text-base pt-3 text-dfxGray-700">
                         {translate(
                           'screens/payment',
-                          'Scan the QR-Code with a compatible wallet to complete the payment.',
+                          'Tell the cashier that you want to pay with crypto and then scan the QR-Code with a compatible wallet to complete the payment.',
                         )}
                       </p>
-                    </div>
-                  ) : (
-                    <p className="text-base pt-3 text-dfxGray-700">
-                      {translate(
-                        'screens/payment',
-                        'Tell the cashier that you want to pay with crypto and then scan the QR-Code with a compatible wallet to complete the payment.',
-                      )}
-                    </p>
-                  )}
-                  <WalletGrid
-                    wallets={RecommendedWallets}
-                    header={translate('screens/payment', 'Recommended wallets')}
-                  />
-                  <WalletGrid header={translate('screens/payment', 'Other compatible wallets')} />
-                </StyledVerticalStack>
+                    )}
+                    {walletData ? (
+                      <StyledVerticalStack full gap={4} center>
+                        <div className="relative flex flex-col items-center w-full gap-6">
+                          <DividerWithHeader header={walletData.name} />
+                          <button
+                            className="absolute top-[88px] left-14 bg-dfxGray-400 w-9 h-9 pl-1.5 rounded-full flex items-center justify-center"
+                            onClick={handleBackButton}
+                          >
+                            <DfxIcon icon={IconVariant.BACK} size={IconSize.SM} color={IconColor.BLUE} />
+                          </button>
+                          <WalletLogo wallet={walletData} size={128} />
+
+                          <StyledVerticalStack full gap={3} center className="pt-2 px-4">
+                            <StyledButton
+                              label={
+                                isTempUnavailable
+                                  ? translate('screens/home', 'App temporarily unavailable')
+                                  : translate('screens/home', 'Pay in app')
+                              }
+                              onClick={() => openWallet(walletData.id)}
+                              color={StyledButtonColor.BLUE}
+                              width={StyledButtonWidth.FULL}
+                              hidden={!walletData.deepLink || !paymentIdentifier}
+                              isLoading={isOpenWallet}
+                              disabled={isTempUnavailable}
+                            />
+                            <StyledButton
+                              label={translate('screens/home', 'Open website')}
+                              onClick={() => window.open(walletData.websiteUrl, '_blank')}
+                              color={StyledButtonColor.STURDY_WHITE}
+                              width={StyledButtonWidth.FULL}
+                            />
+                            <div
+                              className="flex flex-row gap-3 w-full justify-center pt-5 pb-2"
+                              hidden={!walletData.playStoreUrl && !walletData.appStoreUrl}
+                            >
+                              <AppStoreBadge type={BadgeType.PLAY_STORE} url={walletData.playStoreUrl} />
+                              <AppStoreBadge type={BadgeType.APP_STORE} url={walletData.appStoreUrl} />
+                            </div>
+                          </StyledVerticalStack>
+                        </div>
+                      </StyledVerticalStack>
+                    ) : (
+                      <>
+                        <WalletGrid
+                          wallets={recommendedWallets}
+                          header={translate('screens/payment', 'Recommended wallets')}
+                        />
+                        <WalletGrid
+                          wallets={otherWallets}
+                          header={translate('screens/payment', 'Other compatible wallets')}
+                        />
+                        <WalletGrid
+                          wallets={semiCompatibleWallets}
+                          header={translate('screens/payment', 'Semi compatible wallets')}
+                        />
+                      </>
+                    )}
+                  </StyledVerticalStack>
+                )
               )}
             </>
           )}
 
-          <div>
+          <div className="pt-4 pb-2 w-full leading-none">
             <StyledLink
               label={translate('screens/payment', 'Find out more about the OpenCryptoPay payment standard')}
               url="https://opencryptopay.io"
@@ -710,7 +597,7 @@ export default function PaymentLinkScreen(): JSX.Element {
           </div>
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 
@@ -772,42 +659,58 @@ function PaymentStatusTile({ status }: PaymentStatusTileProps): JSX.Element {
 }
 
 interface WalletGridProps {
-  wallets?: string[];
+  wallets: WalletInfo[];
   header?: string;
 }
 
 function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
-  const walletNames = wallets ?? Object.keys(CompatibleWallets);
+  const { navigate } = useNavigation();
 
   return (
     <div className="flex flex-col w-full gap-4 px-4">
-      {header && (
-        <div className="flex flex-row items-center gap-2">
-          <div className="flex-grow bg-gradient-to-r from-white to-dfxGray-600 h-[1px]" />
-          <p className="text-xs font-medium text-dfxGray-600 whitespace-nowrap">{header.toUpperCase()}</p>
-          <div className="flex-grow bg-gradient-to-r from-dfxGray-600 to-white h-[1px]" />
-        </div>
-      )}
+      {header && <DividerWithHeader header={header.toUpperCase()} />}
       <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))' }}>
-        {walletNames.map((walletName) => {
-          const wallet = CompatibleWallets[walletName];
-
+        {wallets.map((wallet) => {
           return (
             <div
-              key={walletName}
-              className="flex flex-col items-center gap-2 cursor-pointer max-w-[120px] min-w-0"
-              onClick={() => window.open(wallet.websiteUrl)}
+              key={wallet.name}
+              className={`flex flex-col items-center gap-2 max-w-[120px] min-w-0 ${
+                !wallet.disabled ? 'cursor-pointer' : 'opacity-50'
+              }`}
+              onClick={
+                wallet.disabled ? undefined : () => navigate({ pathname: '/pl', search: `?wallet-id=${wallet.id}` })
+              }
             >
-              <img
-                className="border border-dfxGray-400 shadow-md bg-white rounded-md"
-                src={wallet.iconUrl}
-                alt={walletName}
-              />
-              <p className="text-center font-semibold text-dfxGray-600 w-full text-xs truncate">{walletName}</p>
+              <WalletLogo wallet={wallet} size={60} />
+              <p className="text-center font-semibold text-dfxGray-600 w-full text-xs truncate">{wallet.name}</p>
             </div>
           );
         })}
       </div>
     </div>
+  );
+}
+
+function DividerWithHeader({ header }: { header: string }): JSX.Element {
+  return (
+    <div className="flex flex-row items-center gap-2 w-full">
+      <div className="flex-grow bg-gradient-to-r from-white to-dfxGray-600 h-[1px]" />
+      <p className="text-xs font-medium text-dfxGray-600 whitespace-nowrap">{header}</p>
+      <div className="flex-grow bg-gradient-to-r from-dfxGray-600 to-white h-[1px]" />
+    </div>
+  );
+}
+
+function WalletLogo({ wallet, size }: { wallet: WalletInfo; size: number }): JSX.Element {
+  return (
+    <LazyLoadImage
+      className="border border-dfxGray-400 shadow-md bg-white rounded-md"
+      src={wallet.iconUrl}
+      alt={wallet.name}
+      effect="opacity"
+      width={size}
+      height={size}
+      placeholderSrc={`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${size} ${size}'%3E%3Crect width='${size}' height='${size}' fill='%23f4f5f6'/%3E%3C/svg%3E`}
+    />
   );
 }

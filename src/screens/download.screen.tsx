@@ -3,17 +3,17 @@ import { Form, StyledButton, StyledButtonWidth, StyledInput, StyledVerticalStack
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
-import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { useAdminGuard } from 'src/hooks/guard.hook';
-import { generateExportFileName } from 'src/util/utils';
+import { useComplianceGuard } from 'src/hooks/guard.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { downloadFile, filenameDateFormat } from 'src/util/utils';
 
 interface FormData {
   userDataIds: string;
 }
 
 export default function DownloadScreen(): JSX.Element {
-  useAdminGuard();
+  useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
   const { call } = useApi();
@@ -31,19 +31,14 @@ export default function DownloadScreen(): JSX.Element {
     setIsLoading(true);
     setError(undefined);
 
-    call<Blob>({
+    call<{ data: Blob; headers: Record<string, string> }>({
       url: 'userData/download',
       method: 'POST',
       data: { userDataIds: data.userDataIds.split(',').map((id) => Number(id)) },
       responseType: ResponseType.BLOB,
     })
-      .then((blob) => {
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.href = url;
-        link.download = generateExportFileName();
-        link.click();
-        URL.revokeObjectURL(url);
+      .then(({ data, headers }) => {
+        downloadFile(data, headers, `DFX_export_${filenameDateFormat()}.zip`);
       })
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
@@ -56,41 +51,35 @@ export default function DownloadScreen(): JSX.Element {
     ],
   });
 
+  useLayoutOptions({ title: translate('screens/kyc', 'File download') });
+
   return (
-    <Layout title={translate('screens/kyc', 'File download')}>
-      <Form
-        control={control}
-        rules={rules}
-        errors={errors}
-        onSubmit={handleSubmit(onSubmit)}
-        translate={translateError}
-      >
-        <StyledVerticalStack gap={6} full center>
-          <StyledVerticalStack gap={2} full>
-            <StyledInput
-              name="userDataIds"
-              type="text"
-              label={translate('screens/kyc', 'UserData IDs')}
-              placeholder={translate('screens/kyc', '1234, 5678, 9012')}
-            />
-          </StyledVerticalStack>
-
-          {error && (
-            <div>
-              <ErrorHint message={error} />
-            </div>
-          )}
-
-          <StyledButton
-            type="submit"
-            label={translate('general/actions', 'Download')}
-            onClick={handleSubmit(onSubmit)}
-            width={StyledButtonWidth.FULL}
-            disabled={!isValid}
-            isLoading={isLoading}
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full>
+          <StyledInput
+            name="userDataIds"
+            type="text"
+            label={translate('screens/kyc', 'UserData IDs')}
+            placeholder={translate('screens/kyc', '1234, 5678, 9012')}
           />
         </StyledVerticalStack>
-      </Form>
-    </Layout>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Download')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isLoading}
+        />
+      </StyledVerticalStack>
+    </Form>
   );
 }

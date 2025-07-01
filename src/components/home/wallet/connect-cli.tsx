@@ -35,6 +35,7 @@ const Wallets = [
   WalletType.CLI_XMR,
   WalletType.CLI_ADA,
   WalletType.CLI_AR,
+  WalletType.CLI_SOL,
 ];
 
 const SupportedBlockchains = Wallets.map((w) => WalletBlockchains[w])
@@ -83,7 +84,7 @@ interface ContentProps extends ConnectContentProps {
   form: UseFormReturn<FormData, any>;
 }
 
-function Content({ wallet, isConnecting, connect, error, form, onSwitch }: ContentProps): JSX.Element {
+function Content({ wallet, isConnecting, connect, error, form, onSwitch, rootRef }: ContentProps): JSX.Element {
   const { translate, translateError, language } = useSettingsContext();
   const { copy } = useClipboard();
   const { getSignMessage } = useAuth();
@@ -96,6 +97,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch }: Conte
     [WalletType.CLI_ETH]: /^0x\w{40}$/,
     [WalletType.CLI_ADA]: /^stake[a-z0-9]{54}$/,
     [WalletType.CLI_AR]: /^[\w-]{43}$/,
+    [WalletType.CLI_SOL]: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
   };
 
   function validateAddress(address: string): true | string {
@@ -155,6 +157,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch }: Conte
     <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(submit)} translate={translateError}>
       <StyledVerticalStack gap={6} full>
         <StyledDropdown
+          rootRef={rootRef}
           name="blockchain"
           label={translate('screens/home', 'Blockchain')}
           disabled={isConnecting}

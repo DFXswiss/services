@@ -2,8 +2,8 @@ import { ApiError, useApi } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Layout } from 'src/components/layout';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 
 interface RedirectResponse {
@@ -19,6 +19,8 @@ export default function MailLoginScreen() {
 
   const otp = urlParams.get('otp');
 
+  useLayoutOptions({});
+
   useEffect(() => {
     if (otp) {
       call<RedirectResponse>({
@@ -29,24 +31,21 @@ export default function MailLoginScreen() {
           window.location.href = redirectUrl;
         })
         .catch((error: ApiError) => {
-          navigate(`/error?msg=${error.message}`);
+          navigate({ pathname: `/error`, search: `?msg=${error.message}` });
+        })
+        .finally(() => {
+          urlParams.delete('otp');
+          setUrlParams(urlParams);
         });
     } else {
       navigate('/login');
     }
-
-    if (urlParams.has('otp')) {
-      urlParams.delete('otp');
-      setUrlParams(urlParams);
-    }
   }, []);
 
   return (
-    <Layout>
-      <StyledVerticalStack gap={6} full center>
-        <StyledLoadingSpinner size={SpinnerSize.LG} />
-        <p className="text-dfxGray-700">{translate('screens/home', 'Logging in...')} </p>
-      </StyledVerticalStack>
-    </Layout>
+    <StyledVerticalStack gap={6} full center>
+      <StyledLoadingSpinner size={SpinnerSize.LG} />
+      <p className="text-dfxGray-700">{translate('screens/home', 'Logging in...')} </p>
+    </StyledVerticalStack>
   );
 }

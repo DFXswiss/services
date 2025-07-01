@@ -12,9 +12,9 @@ import {
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
-import { Layout } from 'src/components/layout';
 import { FileTypeLabels } from 'src/config/labels';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { handleOpenFile } from 'src/util/utils';
 
 export default function KycFileScreen(): JSX.Element {
@@ -32,7 +32,12 @@ export default function KycFileScreen(): JSX.Element {
     if (kycFileId) {
       setIsLoading(true);
       getFile(kycFileId)
-        .then(setFile)
+        .then((fetchedFile) => {
+          setFile(fetchedFile);
+          if (show) {
+            handleOpenFile(fetchedFile, setError, false);
+          }
+        })
         .catch((e: ApiError) => {
           setError(e.message ?? 'Unknown error');
         })
@@ -40,24 +45,20 @@ export default function KycFileScreen(): JSX.Element {
     } else {
       setError('No key provided');
     }
-  }, [kycFileId]);
+  }, [kycFileId, show]);
 
-  useEffect(() => {
-    if (show && file) {
-      handleOpenFile(file, setError, false);
-    }
-  }, [show, file]);
+  useLayoutOptions({ title: translate('screens/kyc', 'KYC file') });
 
   return (
-    <Layout title={translate('screens/kyc', 'KYC file')}>
+    <>
       {error ? (
         <ErrorHint message={error} />
-      ) : show || isLoading || !file ? (
+      ) : isLoading || !file ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <FilePreview file={file} setErrorMessage={setError} />
       )}
-    </Layout>
+    </>
   );
 }
 

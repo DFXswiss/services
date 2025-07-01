@@ -12,7 +12,7 @@ import {
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
-import { Layout } from 'src/components/layout';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAdminGuard } from '../hooks/guard.hook';
 
@@ -74,53 +74,47 @@ export default function SepaScreen(): JSX.Element {
     file: [Validations.Required, Validations.Custom((file) => (file.type !== 'text/xml' ? 'xml_file' : true))],
   });
 
+  useLayoutOptions({ title: translate('screens/kyc', 'SEPA XML') });
+
   return (
-    <Layout title={translate('screens/kyc', 'SEPA XML')}>
-      <Form
-        control={control}
-        rules={rules}
-        errors={errors}
-        onSubmit={handleSubmit(onSubmit)}
-        translate={translateError}
-      >
-        <StyledVerticalStack gap={6} full center>
-          <StyledVerticalStack gap={2} full>
-            <p className="flex flex-row justify-between w-full text-dfxGray-700 text-xs font-semibold uppercase text-start px-3">
-              <span>{translate('screens/kyc', 'Upload your SEPA file here')}</span>
-              <span
-                className={` flex flex-row gap-1 items-center text-dfxRed-100 font-normal transition-opacity duration-200 ${
-                  showNotification ? 'opacity-100' : 'opacity-0'
-                }`}
-              >
-                <DfxIcon icon={IconVariant.CHECK} size={IconSize.SM} />
-                {translate('screens/kyc', 'Uploaded')}
-              </span>
-            </p>
-            <StyledFileUpload
-              name="file"
-              label=""
-              placeholder={translate('general/actions', 'Drop files here')}
-              buttonLabel={translate('general/actions', 'Browse')}
-              full
-            />
-          </StyledVerticalStack>
-
-          {error && (
-            <div>
-              <ErrorHint message={error} />
-            </div>
-          )}
-
-          <StyledButton
-            type="submit"
-            label={translate('general/actions', 'Next')}
-            onClick={handleSubmit(onSubmit)}
-            width={StyledButtonWidth.FULL}
-            disabled={!isValid}
-            isLoading={isUploading}
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full>
+          <p className="flex flex-row justify-between w-full text-dfxGray-700 text-xs font-semibold uppercase text-start px-3">
+            <span>{translate('screens/kyc', 'Upload your SEPA file here')}</span>
+            <span
+              className={` flex flex-row gap-1 items-center text-dfxRed-100 font-normal transition-opacity duration-200 ${
+                showNotification ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <DfxIcon icon={IconVariant.CHECK} size={IconSize.SM} />
+              {translate('screens/kyc', 'Uploaded')}
+            </span>
+          </p>
+          <StyledFileUpload
+            name="file"
+            label=""
+            placeholder={translate('general/actions', 'Drop files here')}
+            buttonLabel={translate('general/actions', 'Browse')}
+            full
           />
         </StyledVerticalStack>
-      </Form>
-    </Layout>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUploading}
+        />
+      </StyledVerticalStack>
+    </Form>
   );
 }

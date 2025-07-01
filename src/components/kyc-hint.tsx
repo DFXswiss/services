@@ -116,7 +116,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
               error === TransactionError.KYC_DATA_REQUIRED
                 ? () => navigate('/profile', { setRedirect: true })
                 : isComplete
-                ? () => navigate('/support/issue?issue-type=LimitRequest')
+                ? () => navigate({ pathname: '/support/issue', search: '?issue-type=LimitRequest' })
                 : start
             }
           />

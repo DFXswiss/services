@@ -1,7 +1,16 @@
-import { KycFile, UserAddress } from '@dfx.swiss/react';
+import { Asset, Fiat, KycFile, UserAddress } from '@dfx.swiss/react';
 
 export function isDefined<T>(item: T | undefined): item is T {
   return item != null;
+}
+
+export function isEmpty(val: any): boolean {
+  return val === undefined || val === '' || val === null || (Array.isArray(val) && val.length === 0);
+}
+
+export function removeNullFields<T extends Record<any, any>>(entity?: T): Partial<T> | undefined {
+  if (!entity) return entity;
+  return Object.fromEntries(Object.entries(entity).filter(([_, v]) => v != null)) as Partial<T>;
 }
 
 export function delay(s: number): Promise<void> {
@@ -14,9 +23,29 @@ export async function timeout<T>(promise: Promise<T>, timeout: number): Promise<
   return Promise.race([promise, timeoutPromise]);
 }
 
-export function url(url: string, params: URLSearchParams): string {
-  const search = Array.from(params.entries()).length > 0 ? `?${params}` : '';
-  return `${url}${search}`;
+export function url({
+  base = process.env.REACT_APP_PUBLIC_URL,
+  path = '',
+  params,
+}: {
+  base?: string;
+  path?: string;
+  params?: URLSearchParams;
+}): string {
+  if (isAbsoluteUrl(path)) return url({ base: path, params });
+
+  const normalizedBase = base?.replace(/\/+$/, '') + '/'; // end with a single slash
+  const normalizedPath = path.replace(/^\/+/, ''); // remove leading slashes
+  const absoluteUrl = new URL(normalizedPath, normalizedBase);
+  if (params) absoluteUrl.search = params.toString();
+  return absoluteUrl.href;
+}
+
+export function relativeUrl({ path, params }: { path: string; params?: URLSearchParams }): string {
+  if (isAbsoluteUrl(path)) return url({ base: path, params });
+
+  const normalizedPath = '/' + path.replace(/^\/+/, ''); // start with a single slash
+  return params && params.toString() ? `${normalizedPath}?${params}` : normalizedPath;
 }
 
 export function isAbsoluteUrl(url: string): boolean {
@@ -59,13 +88,21 @@ export function readFileAsText(file: File): Promise<string> {
 
 export function openPdfFromString(pdf: string, newTab = true) {
   const byteArray = Uint8Array.from(atob(pdf), (c) => c.charCodeAt(0));
-  const file = new Blob([byteArray], { type: 'application/pdf;base64' });
+  const file = new Blob([byteArray], { type: 'application/pdf' });
   const fileURL = URL.createObjectURL(file);
 
   if (newTab) {
     window.open(fileURL);
   } else {
-    window.location.href = fileURL;
+    const viewerContainer = createFullScreenContainer();
+    const embed = document.createElement('embed');
+    embed.style.flex = '1';
+    embed.style.border = 'none';
+    embed.style.backgroundColor = 'white';
+    embed.type = 'application/pdf';
+    embed.src = fileURL + '#toolbar=1&navpanes=1&scrollbar=1';
+    viewerContainer.appendChild(embed);
+    document.body.appendChild(viewerContainer);
   }
 }
 
@@ -76,7 +113,15 @@ export function openImageFromString(image: string, contentType: string, newTab =
   if (newTab) {
     window.open(imageUrl);
   } else {
-    window.location.href = imageUrl;
+    const viewerContainer = createFullScreenContainer();
+    const imageElement = document.createElement('img');
+    imageElement.style.maxWidth = '100%';
+    imageElement.style.maxHeight = '100%';
+    imageElement.style.objectFit = 'contain';
+    imageElement.style.transition = 'transform 0.2s';
+    imageElement.src = imageUrl;
+    viewerContainer.appendChild(imageElement);
+    document.body.appendChild(viewerContainer);
   }
 }
 
@@ -86,6 +131,7 @@ export function handleOpenFile(file: KycFile, setErrorMessage: (message: string)
 
   if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
     setErrorMessage('Invalid file type');
+    return;
   }
 
   const base64Data = Buffer.from(content.data).toString('base64');
@@ -95,6 +141,18 @@ export function handleOpenFile(file: KycFile, setErrorMessage: (message: string)
   } else if (fileType === 'image') {
     openImageFromString(base64Data, contentType, newTab);
   }
+}
+
+function createFullScreenContainer(): HTMLDivElement {
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.width = '100%';
+  container.style.height = '100%';
+  container.style.backgroundColor = 'rgba(0,0,0,0.9)';
+  container.style.zIndex = '9999';
+  return container;
 }
 
 export function sortAddressesByBlockchain(a: UserAddress, b: UserAddress): number {
@@ -133,7 +191,7 @@ export function formatBytes(bytes: number, decimals = 2): string {
   return `${parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
 }
 
-export async function fetchJson(url: string | URL): Promise<any> {
+export async function fetchJson<T = any>(url: string | URL): Promise<T> {
   const response = await fetch(url);
   return response.json();
 }
@@ -153,7 +211,100 @@ export function formatUnits(value: string, decimals = 18): string {
   return `${integerPart.toString()}.${fractionalStr}`;
 }
 
-export function generateExportFileName(): string {
-  const [date, time] = new Date().toISOString().replace(/[-:]/g, '').split(/[T\.]/);
-  return `DFX_export_${date}_${time}.zip`;
+export function filenameDateFormat(): string {
+  return new Date().toISOString().split('.')[0].replace(/:/g, '-').replace(/T/g, '_').replace(/-/g, '');
+}
+
+export function extractFilename(contentDisposition?: string): string | undefined {
+  if (!contentDisposition) return undefined;
+
+  const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+  if (filenameMatch && filenameMatch[1]) {
+    return filenameMatch[1].replace(/['"]/g, '').trim();
+  }
+
+  return undefined;
+}
+
+export function downloadFile(blob: Blob, headers: Record<string, string>, fallbackFilename: string): void {
+  const extractedFilename = extractFilename(headers['content-disposition']);
+  const filename = extractedFilename || fallbackFilename;
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+export enum FormatType {
+  US,
+  TINY,
+  SWISS,
+}
+
+export const formatCurrency = (
+  value: string | number,
+  minimumFractionDigits = 0,
+  maximumFractionDigits = 2,
+  format = FormatType.SWISS,
+) => {
+  const amount = typeof value === 'string' ? parseFloat(value) : value;
+
+  // exceptions
+  if (amount === null || !!isNaN(amount)) return null;
+  if (amount < 0.01 && amount > 0 && maximumFractionDigits) {
+    return '< 0.01';
+  }
+
+  if (format === FormatType.SWISS) {
+    const formatter = new Intl.NumberFormat('de-CH', {
+      maximumFractionDigits,
+      minimumFractionDigits,
+    });
+    return formatter.format(amount);
+  }
+
+  if (format === FormatType.US) {
+    const formatter = new Intl.NumberFormat('en-US', {
+      maximumFractionDigits,
+      minimumFractionDigits,
+    });
+    return formatter.format(amount);
+  }
+
+  if (format === FormatType.TINY) {
+    const formatter = new Intl.NumberFormat('en-US', {
+      maximumFractionDigits: amount < 1000 && amount > -1000 ? 2 : 0,
+      minimumFractionDigits: amount < 1000 && amount > -1000 ? 2 : 0,
+    });
+    return formatter.format(amount).split(',').join(' ');
+  }
+};
+
+export function deepEqual(a: any, b: any): boolean {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (typeof a !== 'object' || typeof b !== 'object') return false;
+
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+
+  if (keysA.length !== keysB.length) return false;
+
+  for (const key of keysA) {
+    if (!keysB.includes(key)) return false;
+    if (!deepEqual(a[key], b[key])) return false;
+  }
+
+  return true;
+}
+
+export const isAsset = (item: Asset | Fiat): item is Asset => 'chainId' in item;
+
+export function equalsIgnoreCase(left?: string, right?: string): boolean {
+  return left?.toLowerCase() === right?.toLowerCase();
 }

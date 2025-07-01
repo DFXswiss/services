@@ -27,12 +27,13 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
+import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { DefaultFileTypes } from 'src/config/file-types';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import {
   DateLabels,
   IssueReasonLabels,
@@ -43,6 +44,7 @@ import {
 } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { blankedAddress, toBase64 } from '../util/utils';
 import { TransactionList } from './transaction.screen';
@@ -101,14 +103,14 @@ const formDefaultValues = {
 };
 
 export default function SupportIssueScreen(): JSX.Element {
-  const { navigate } = useNavigation();
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { navigate, clearParams } = useNavigation();
+  const { rootRef } = useLayoutContext();
   const { translate, translateError, allowedCountries } = useSettingsContext();
   const { user } = useUserContext();
   const { isLoggedIn, logout } = useSessionContext();
   const { getBanks } = useBank();
   const { bankAccounts } = useBankAccountContext();
-  const [urlParams, setUrlParams] = useSearchParams();
+  const [urlParams] = useSearchParams();
   const {
     createSupportIssue,
     loadSupportIssue,
@@ -143,11 +145,35 @@ export default function SupportIssueScreen(): JSX.Element {
   const issueTypeParam = urlParams.get('issue-type');
   const reasonParam = urlParams.get('reason');
 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (orderParam || issueTypeParam || reasonParam) {
+        clearParams([...Array.from(urlParams.keys())]);
+      }
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    const issueType = issueTypeParam && issues.find((t) => t === issueTypeParam);
+    if (issueType) {
+      setSupportIssue((prev) => ({ ...prev, type: issueType }));
+      setValue('type', issueType);
+    }
+
+    const reasonEnum = issueType && reasonParam && IssueReasons[issueType].find((r) => r === reasonParam);
+    if (reasonEnum) {
+      setSupportIssue((prev) => ({ ...prev, reason: reasonEnum }));
+      setValue('reason', reasonEnum);
+    }
+  }, [issueTypeParam, reasonParam, issues]);
+
   useUserGuard('/login', !orderParam);
   useKycLevelGuard(KycLevel.Link, '/contact');
 
   function startChat(issueUid: string) {
-    navigate({ pathname: `/support/chat/${issueUid}` }, { clearParams: ['quote', 'order', 'issue-type', 'reason'] });
+    navigate({ pathname: `/support/chat/${issueUid}` });
   }
 
   useEffect(() => {
@@ -168,22 +194,6 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [user, selectedType]);
 
   useEffect(() => {
-    setSelectTransaction(false);
-
-    const issueType = issueTypeParam && issues.find((t) => t === issueTypeParam);
-    if (issueType) {
-      setSupportIssue((prev) => ({ ...prev, type: issueType }));
-      setValue('type', issueType);
-    }
-
-    const reasonEnum = issueType && reasonParam && IssueReasons[issueType].find((r) => r === reasonParam);
-    if (reasonEnum) {
-      setSupportIssue((prev) => ({ ...prev, reason: reasonEnum }));
-      setValue('reason', reasonEnum);
-    }
-  }, [urlParams]);
-
-  useEffect(() => {
     if (orderParam) {
       const issueType = SupportIssueType.TRANSACTION_ISSUE;
       setSupportIssue((prev) => ({ ...prev, type: issueType }));
@@ -202,11 +212,6 @@ export default function SupportIssueScreen(): JSX.Element {
       startChat(existingIssue.uid);
     }
   }, [isIssueLoading, existingIssue]);
-
-  useEffect(() => {
-    if (selectedSender === AddAccount)
-      navigate('/bank-accounts', { setRedirect: true, redirectPath: '/tx', state: { isMissingTxIssue: true } });
-  }, [selectedSender]);
 
   useEffect(() => {
     if (selectedTransaction?.uid === selectTxButtonLabel) setSelectTransaction(true);
@@ -268,13 +273,6 @@ export default function SupportIssueScreen(): JSX.Element {
         };
       }
 
-      // reset URL params
-      if (issueTypeParam || reasonParam) {
-        issueTypeParam && urlParams.delete('issue-type');
-        reasonParam && urlParams.delete('reason');
-        setUrlParams(urlParams);
-      }
-
       await createSupportIssue(request, data.file)
         .then((response) => startChat(response))
         .catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
@@ -305,19 +303,18 @@ export default function SupportIssueScreen(): JSX.Element {
     file: Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
   });
 
+  useLayoutOptions({
+    title: translate('screens/support', 'Support issue'),
+    onBack: selectTransaction
+      ? () => {
+          setSelectTransaction(false);
+          reset({ ...formDefaultValues, type: selectedType, reason: selectedReason });
+        }
+      : undefined,
+  });
+
   return (
-    <Layout
-      title={translate('screens/support', 'Support issue')}
-      rootRef={rootRef}
-      onBack={
-        selectTransaction
-          ? () => {
-              setSelectTransaction(false);
-              reset({ ...formDefaultValues, type: selectedType, reason: selectedReason });
-            }
-          : undefined
-      }
-    >
+    <>
       {(selectedType === SupportIssueType.LIMIT_REQUEST && isKycComplete === undefined) || isIssueLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : selectTransaction ? (
@@ -327,6 +324,17 @@ export default function SupportIssueScreen(): JSX.Element {
           </p>
           <TransactionList isSupport={true} onSelectTransaction={onSelectTransaction} setError={setError} />
         </>
+      ) : selectedSender === AddAccount ? (
+        <AddBankAccount
+          onSubmit={(account) => {
+            setValue('senderIban', account.iban);
+            setSupportIssue((prev) => ({ ...prev, senderIban: account.iban }));
+          }}
+          confirmationText={translate(
+            'screens/iban',
+            'The bank account has been added, all transactions from this IBAN will now be associated with your account.',
+          )}
+        />
       ) : (
         <Form
           control={control}
@@ -512,6 +520,6 @@ export default function SupportIssueScreen(): JSX.Element {
           </StyledVerticalStack>
         </Form>
       )}
-    </Layout>
+    </>
   );
 }

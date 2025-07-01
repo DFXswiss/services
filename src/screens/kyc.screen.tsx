@@ -29,6 +29,7 @@ import {
   KycStepType,
   Language,
   LegalEntity,
+  PaymentData,
   QuestionType,
   SignatoryPower,
   SupportIssueType,
@@ -66,24 +67,25 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import snsWebSdk from '@sumsub/websdk';
 import SumsubWebSdk from '@sumsub/websdk-react';
-import { RefObject, useEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
+import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { DefaultFileTypes } from 'src/config/file-types';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
-import { SumsubReviewAnswer } from 'src/dto/sumsub.dto';
+import { useLayoutContext } from 'src/contexts/layout.context';
+import { SumsubReviewAnswer, SumsubReviewRejectType } from 'src/dto/sumsub.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useGeoLocation } from '../hooks/geo-location.hook';
 import { useUserGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { delay, toBase64 } from '../util/utils';
+import { delay, toBase64, url } from '../util/utils';
 import { IframeMessageType } from './kyc-redirect.screen';
 
 enum Mode {
@@ -117,9 +119,9 @@ export default function KycScreen(): JSX.Element {
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
   const [showLinkHint, setShowLinkHint] = useState(false);
+  const { rootRef } = useLayoutContext();
 
   const mode = pathname.includes('/profile') ? Mode.PROFILE : pathname.includes('/contact') ? Mode.CONTACT : Mode.KYC;
-  const rootRef = useRef<HTMLDivElement>(null);
   const urlParams = new URLSearchParams(search);
   const kycStarted = info?.kycSteps.some((s) => s.status !== KycStepStatus.NOT_STARTED);
   const allStepsCompleted = info?.kycSteps.every((s) => isStepDone(s));
@@ -266,7 +268,9 @@ export default function KycScreen(): JSX.Element {
   }
 
   function onContinue() {
-    return allStepsCompleted ? navigate('/support/issue?issue-type=LimitRequest') : onLoad(true);
+    return allStepsCompleted
+      ? navigate({ pathname: '/support/issue', search: '?issue-type=LimitRequest' })
+      : onLoad(true);
   }
 
   function onConsent(client: string) {
@@ -291,7 +295,7 @@ export default function KycScreen(): JSX.Element {
         return { icon: IconVariant.EDIT, label: translate('screens/kyc', 'In progress'), size: IconSize.MD };
 
       case KycStepStatus.IN_REVIEW:
-        return { icon: IconVariant.LOADING, label: translate('screens/kyc', 'In review'), size: IconSize.XS };
+        return { icon: IconVariant.REVIEW, label: translate('screens/kyc', 'In review'), size: IconSize.XS };
 
       case KycStepStatus.COMPLETED:
         return { icon: IconVariant.CHECKBOX_CHECKED, label: translate('screens/kyc', 'Completed'), size: IconSize.MD };
@@ -304,22 +308,29 @@ export default function KycScreen(): JSX.Element {
 
       case KycStepStatus.DATA_REQUESTED:
         return { icon: IconVariant.HELP, label: translate('screens/kyc', 'Data requested'), size: IconSize.MD };
+
+      case KycStepStatus.ON_HOLD:
+        return { icon: IconVariant.CHECKBOX_EMPTY, label: '', size: IconSize.MD };
     }
   }
 
+  const handleBack = () => {
+    if (stepInProgress) {
+      setStepInProgress(undefined);
+    } else if (showLinkHint || consentClient) {
+      onLoad(false);
+    }
+  };
+
+  useLayoutOptions({
+    title: stepInProgress ? nameToString(stepInProgress.name) : translate('screens/kyc', 'DFX KYC'),
+    backButton: !!(stepInProgress || showLinkHint || consentClient),
+    onBack: handleBack,
+    noPadding: isMobile && stepInProgress?.session?.type === UrlType.BROWSER,
+  });
+
   return (
-    <Layout
-      title={stepInProgress ? nameToString(stepInProgress.name) : translate('screens/kyc', 'DFX KYC')}
-      rootRef={rootRef}
-      onBack={
-        stepInProgress
-          ? () => setStepInProgress(undefined)
-          : showLinkHint || consentClient
-          ? () => onLoad(false)
-          : undefined
-      }
-      noPadding={isMobile && stepInProgress?.session?.type === UrlType.BROWSER}
-    >
+    <>
       {isLoading || isAutoStarting ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : showLinkHint ? (
@@ -433,7 +444,7 @@ export default function KycScreen(): JSX.Element {
           )}
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 
@@ -451,6 +462,8 @@ interface EditProps {
 }
 
 function KycEdit(props: EditProps): JSX.Element {
+  const { translate } = useSettingsContext();
+
   switch (props.step.name) {
     case KycStepName.CONTACT_DATA:
       return <ContactData {...props} />;
@@ -461,20 +474,42 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.LEGAL_ENTITY:
       return <LegalEntityData {...props} />;
 
-    case KycStepName.OWNER_DIRECTORY:
-      return <FileUpload {...props} />;
+    case KycStepName.OWNER_DIRECTORY: {
+      const urls = {
+        EN: 'https://docs.google.com/document/d/1ICxt-RZihMyiz486NMS4gEJZdgrZG_LVTuDiLMbzyC0/edit',
+        DE: 'https://docs.google.com/document/d/11m3MkP0RALZFYRoxZNdY0SwVv8oN3Vl_gzXaIO_YIxY/edit',
+        FR: 'https://docs.google.com/document/d/1uRV6Z1D6FYmF6VQZLfXK8GniR7hf5a9phBRqGNYlqW4/edit',
+      };
+
+      return <FileUpload {...props} templateUrls={urls} />;
+    }
 
     case KycStepName.NATIONALITY_DATA:
       return <NationalityData {...props} />;
 
     case KycStepName.COMMERCIAL_REGISTER:
-      return <FileUpload {...props} />;
+      return (
+        <FileUpload
+          {...props}
+          hint={translate(
+            'screens/kyc',
+            'An internet excerpt is sufficient. No notarization is required. The extract must not be older than 2 months.',
+          )}
+        />
+      );
 
     case KycStepName.SIGNATORY_POWER:
       return <SignatoryPowerData {...props} />;
 
-    case KycStepName.AUTHORITY:
-      return <FileUpload {...props} />;
+    case KycStepName.AUTHORITY: {
+      const urls = {
+        EN: 'https://docs.google.com/document/d/1PKk0XvX6v7wdcO-bjCVJXj56uuIlDToca6Zpzff_t6g/edit',
+        DE: 'https://docs.google.com/document/d/1Sqob5OAM93Uwni7U099XOXxztytXfN6i6upO9ymDgGw/edit',
+        FR: 'https://docs.google.com/document/d/17H2f0gAlNpp8e_1aEE6jTbEHbQnoLgr821yWfaSElms/edit',
+      };
+
+      return <FileUpload {...props} templateUrls={urls} />;
+    }
 
     case KycStepName.BENEFICIAL_OWNER:
       return <BeneficialOwner {...props} />;
@@ -500,6 +535,9 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.DFX_APPROVAL:
       return <></>;
+
+    case KycStepName.PAYMENT_AGREEMENT:
+      return <PaymentAgreement {...props} />;
   }
 }
 
@@ -587,6 +625,8 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack, showLinkHint
 function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: EditProps): JSX.Element {
   const { allowedCountries, allowedOrganizationCountries, translate, translateError } = useSettingsContext();
   const { setPersonalData } = useKyc();
+  const { accountTypeToString } = useKycHelper();
+
   const { countryCode } = useGeoLocation();
 
   const [countries, setCountries] = useState<Country[]>([]);
@@ -672,7 +712,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
             label=""
             placeholder={translate('general/actions', 'Select') + '...'}
             items={Object.values(AccountType)}
-            labelFunc={(item) => translate('screens/kyc', item)}
+            labelFunc={(item) => translate('screens/kyc', accountTypeToString(item))}
           />
         </StyledVerticalStack>
         {selectedAccountType && (
@@ -846,7 +886,7 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
 function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setLegalEntityData } = useKyc();
-  const { legalEntityToString } = useKycHelper();
+  const { legalEntityToString, legalEntityToDescription } = useKycHelper();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
@@ -887,6 +927,7 @@ function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps):
             placeholder={translate('general/actions', 'Select') + '...'}
             items={Object.values(LegalEntity)}
             labelFunc={(item) => legalEntityToString(item)}
+            descriptionFunc={(item) => legalEntityToDescription(item) ?? ''}
           />
         </StyledVerticalStack>
 
@@ -983,13 +1024,20 @@ interface FormDataFile {
   file: File;
 }
 
-function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
-  const { translate, translateError } = useSettingsContext();
+interface FileUploadProps extends EditProps {
+  templateUrls?: { [lang: string]: string };
+  hint?: string;
+}
+
+function FileUpload({ code, isLoading, step, onDone, templateUrls, hint }: FileUploadProps): JSX.Element {
+  const { translate, translateError, language } = useSettingsContext();
   const { nameToString } = useKycHelper();
   const { setFileData } = useKyc();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
+
+  const templateUrl = language && templateUrls && (templateUrls[language.symbol] ?? templateUrls.EN);
 
   const {
     control,
@@ -1040,6 +1088,18 @@ function FileUpload({ code, isLoading, step, onDone }: EditProps): JSX.Element {
             full
           />
         </StyledVerticalStack>
+
+        {templateUrl && (
+          <StyledButton
+            type="button"
+            label={translate('screens/kyc', 'Document template')}
+            onClick={() => window.open(templateUrl, '_blank')}
+            width={StyledButtonWidth.FULL}
+            color={StyledButtonColor.GRAY_OUTLINE}
+          />
+        )}
+
+        {hint && <div className="text-dfxGray-700 text-sm">{hint}</div>}
 
         {error && (
           <div>
@@ -1545,29 +1605,6 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
     if (message.type === IframeMessageType) isStepDone(message as KycStepBase) ? onDone() : onBack();
   }
 
-  useEffect(() => {
-    if (step.type === KycStepType.SUMSUB_VIDEO && step.session?.url) {
-      launchWebSdk(step.session.url);
-    }
-  }, [step]);
-
-  function launchWebSdk(accessToken: string) {
-    const snsWebSdkInstance = snsWebSdk
-      .init(accessToken, () => {
-        onError('Token expired');
-        return Promise.resolve('');
-      })
-      .withConf({
-        lang: lang.symbol.toLowerCase(),
-      })
-      .withOptions({ addViewportTag: false, adaptIframeHeight: true })
-      .on('idCheck.stepCompleted', (_payload) => setIsDone(true))
-      .on('idCheck.onError', ({ error }) => onError(error))
-      .build();
-
-    snsWebSdkInstance.launch('#sumsub-websdk-container');
-  }
-
   return step.session ? (
     error ? (
       <div>
@@ -1585,8 +1622,6 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
       </div>
     ) : isDone ? (
       <StyledLoadingSpinner size={SpinnerSize.LG} />
-    ) : step.type === KycStepType.SUMSUB_VIDEO ? (
-      <div id="sumsub-websdk-container" className="w-full"></div>
     ) : (
       <>
         {step.session.type === UrlType.TOKEN ? (
@@ -1599,15 +1634,24 @@ function Ident({ step, lang, onDone, onBack, onError }: EditProps): JSX.Element 
             }}
             config={{ lang: lang.symbol.toLowerCase() }}
             onMessage={(type: string, payload: any) => {
-              if (type === 'idCheck.onApplicantStatusChanged') {
-                if (payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.RED) {
-                  setError(payload.reviewResult.moderationComment ?? 'Unknown error');
-                } else if (payload?.reviewStatus === 'completed') {
-                  setIsDone(true);
-                }
+              switch (type) {
+                case 'idCheck.onApplicantStatusChanged':
+                  if (
+                    payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.RED &&
+                    payload?.reviewResult?.reviewRejectType === SumsubReviewRejectType.FINAL
+                  ) {
+                    setError(payload.reviewResult.moderationComment ?? 'Unknown error');
+                  } else {
+                    payload?.reviewResult?.reviewAnswer === SumsubReviewAnswer.GREEN && setIsDone(true);
+                  }
+                  break;
+
+                case 'idCheck.onStepCompleted':
+                  step.type === KycStepType.SUMSUB_VIDEO && setIsDone(true);
+                  break;
               }
             }}
-            onError={({ error }) => setError(error)}
+            onError={({ error }: { error: string }) => setError(error)}
           />
         ) : (
           <iframe
@@ -1641,11 +1685,13 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const [responses, setResponses] = useState<KycFinancialResponse[]>([]);
   const [index, setIndex] = useState<number>();
 
-  const currentQuestion = index != null ? questions[index - 1] : undefined;
+  const visibleQuestions = filterQuestions(questions);
+  const currentQuestion = index != null ? visibleQuestions[index - 1] : undefined;
   const currentOptions = currentQuestion?.options ?? [];
   const currentResponse = responses.find((r) => currentQuestion?.key === r.key);
   const nocLinkText = 'app.dfx.swiss/support/issue';
-  const nocSupportLink = `${process.env.PUBLIC_URL}/support/issue?issue-type=${SupportIssueType.NOTIFICATION_OF_CHANGES}`;
+  const params = new URLSearchParams({ 'issue-type': SupportIssueType.NOTIFICATION_OF_CHANGES });
+  const nocSupportLink = url({ path: '/support/issue', params });
 
   useEffect(() => {
     if (!step.session) return;
@@ -1656,8 +1702,10 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
         setQuestions(questions);
         setResponses(responses);
 
-        const currentQuestion = questions.find((q) => !responses.find((r) => q.key === r.key));
-        currentQuestion && setIndex(questions.indexOf(currentQuestion) + 1);
+        const visibleQuestions = filterQuestions(questions);
+        const currentQuestion = visibleQuestions.find((q) => !responses.find((r) => q.key === r.key));
+
+        currentQuestion && setIndex(visibleQuestions.indexOf(currentQuestion) + 1);
       })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
@@ -1714,6 +1762,14 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
     );
   }
 
+  function filterQuestions(questions: KycFinancialQuestion[]): KycFinancialQuestion[] {
+    return questions.filter(
+      (q) =>
+        !q.conditions?.length ||
+        q.conditions.some((c) => responses.some((r) => r.key === c.question && r.value === c.response)),
+    );
+  }
+
   return error ? (
     <StyledVerticalStack gap={6} full center>
       <ErrorHint message={error} onBack={onBack} />
@@ -1725,7 +1781,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
           {index > 1 ? <StyledIconButton icon={IconVariant.CHEV_LEFT} size={IconSize.XL} onClick={goBack} /> : <div />}
           <h2 className="text-dfxGray-700">{currentQuestion.title}</h2>
           <p className="text-dfxGray-700">
-            {index}/{questions.length}
+            {index}/{visibleQuestions.length}
           </p>
         </div>
 
@@ -1984,6 +2040,101 @@ function ManualIdent({ rootRef, code, step, onDone }: EditProps): JSX.Element {
           onClick={handleSubmit(onSubmit)}
           width={StyledButtonWidth.FULL}
           disabled={!isValid}
+          isLoading={isUpdating}
+        />
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+function PaymentAgreement({ code, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { setPaymentData } = useKyc();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { isValid, errors },
+  } = useForm<PaymentData>({ mode: 'onTouched' });
+
+  const accepted = useWatch({ control, name: 'contractAccepted' });
+
+  const valid = isValid && accepted;
+
+  async function onSubmit(data: PaymentData) {
+    if (!step.session) return;
+
+    setIsUpdating(true);
+    setError(undefined);
+    setPaymentData(code, step.session.url, data)
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    purpose: Validations.Required,
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full center>
+          <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Purpose of the payments')}
+          </p>
+          <StyledInput name="purpose" label={''} placeholder={translate('screens/kyc', 'Purpose')} full smallLabel />
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Assignment agreement')}
+          </p>
+          <p className="text-dfxGray-700 text-start">
+            <Trans i18nKey="screens/kyc.agreement">
+              DFX offers its customers the option of assigning outstanding receivables from the sale of goods and
+              services to DFX in order to enable payment using cryptocurrencies. The customer has the option of
+              transferring an outstanding claim via our API (api.dfx.swiss) or via the front end (app.dfx.swiss).
+              <br />
+              <br />
+              The amount owed will be paid out to the customer after deduction of a processing fee of 0.2%. Depending on
+              the customer-specific configuration, the payment can be made either in cryptocurrencies or as fiat
+              currency via bank transaction.
+              <br />
+              <br />
+              The DFX GTC apply to all transactions. The assignment ends automatically when the DFX account is closed or
+              can be terminated immediately by DFX or the customer in the event of breaches of contract or insolvency.
+              <br />
+              <br />
+              A signature is not required. The assignment of claims agreement will be sent to the customer by e-mail for
+              confirmation.
+              <br />
+              <br />
+              The Swiss Code of Obligations (OR) and contract law apply to all other legal points.
+            </Trans>
+          </p>
+        </StyledVerticalStack>
+
+        <StyledCheckboxRow isChecked={accepted} onChange={(checked) => setValue('contractAccepted', checked)} centered>
+          {translate('screens/kyc', 'I accept the agreement')}
+        </StyledCheckboxRow>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!valid}
           isLoading={isUpdating}
         />
       </StyledVerticalStack>

@@ -24,15 +24,16 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { addressLabel } from 'src/config/labels';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
-import { Layout } from '../components/layout';
+import { blankedAddress, sortAddressesByBlockchain, url } from 'src/util/utils';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
@@ -54,8 +55,7 @@ export default function AccountScreen(): JSX.Element {
   const { isInitialized, setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
   const { session } = useAuthContext();
-
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { rootRef } = useLayoutContext();
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setRefferal] = useState<Referral | undefined>();
 
@@ -70,11 +70,11 @@ export default function AccountScreen(): JSX.Element {
   const selectedAddress = useWatch({ control, name: 'address' });
 
   useEffect(() => {
-    if (user?.activeAddress && !isUserLoading) {
+    if (user?.activeAddress && !isUserLoading && isLoggedIn) {
       loadRefferal();
       setValue('address', user.activeAddress);
     }
-  }, [user?.activeAddress, isUserLoading, session?.role]);
+  }, [user?.activeAddress, isUserLoading, session?.role, isLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn) loadTransactions();
@@ -118,10 +118,6 @@ export default function AccountScreen(): JSX.Element {
       });
   }
 
-  const title = isEmbedded ? translate('screens/home', 'DFX services') : translate('screens/home', 'Account');
-  const hasBackButton = canClose && !isEmbedded;
-  const image = 'https://content.dfx.swiss/img/v1/services/berge.jpg';
-
   const transactionItems = transactions?.map((t) => ({
     label: new Date(t.date as Date).toLocaleString(),
     text: `${t.inputAsset ? `${t.inputAmount ?? ''} ${t.inputAsset}` : ''} ${
@@ -159,8 +155,14 @@ export default function AccountScreen(): JSX.Element {
   const totalVolumeSum = totalVolumeItems?.reduce((acc, item) => acc + item.value, 0);
   const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + item.value, 0);
 
+  const title = isEmbedded ? translate('screens/home', 'DFX services') : translate('screens/home', 'Account');
+  const hasBackButton = canClose && !isEmbedded;
+  const image = 'https://content.dfx.swiss/img/v1/services/berge.jpg';
+
+  useLayoutOptions({ title, backButton: hasBackButton });
+
   return (
-    <Layout title={title} backButton={hasBackButton} rootRef={rootRef}>
+    <>
       {!isInitialized || !isLoggedIn || isUserLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -213,7 +215,11 @@ export default function AccountScreen(): JSX.Element {
                   <p>{limitToString(user.tradingLimit)}</p>
                   <StyledIconButton
                     icon={IconVariant.ARROW_UP}
-                    onClick={() => navigate(user.kyc.level < 50 ? '/kyc' : '/support/issue?issue-type=LimitRequest')}
+                    onClick={() =>
+                      user.kyc.level < 50
+                        ? navigate('/kyc')
+                        : navigate({ pathname: '/support/issue', search: '?issue-type=LimitRequest' })
+                    }
                   />
                 </div>
               </StyledDataTableRow>
@@ -231,6 +237,7 @@ export default function AccountScreen(): JSX.Element {
                 <Form control={control} errors={errors}>
                   <StyledDropdown
                     name="address"
+                    rootRef={rootRef}
                     placeholder={translate('general/actions', 'Select') + '...'}
                     items={user.addresses.sort(sortAddressesByBlockchain)}
                     labelFunc={(item) => blankedAddress(addressLabel(item), { width })}
@@ -252,7 +259,16 @@ export default function AccountScreen(): JSX.Element {
             >
               <StyledDataTableRow label={translate('screens/home', 'Referral link')}>
                 {referral.code}
-                <CopyButton onCopy={() => copy(`${process.env.REACT_APP_REF_URL}${referral.code}`)} />
+                <CopyButton
+                  onCopy={() =>
+                    copy(
+                      url({
+                        base: process.env.REACT_APP_REF_URL,
+                        params: new URLSearchParams({ code: referral.code ?? '' }),
+                      }),
+                    )
+                  }
+                />
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
                 {(referral.commission * 100).toFixed(2)}%
@@ -270,6 +286,6 @@ export default function AccountScreen(): JSX.Element {
           <img src={image} className="w-full" />
         </div>
       )}
-    </Layout>
+    </>
   );
 }

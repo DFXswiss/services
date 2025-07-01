@@ -40,22 +40,25 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { PdfDocument } from '@dfx.swiss/react/dist/definitions/buy';
 import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLocation, useParams } from 'react-router-dom';
 import CoinTracking from 'src/components/cointracking';
+import { AddBankAccount } from 'src/components/payment/add-bank-account';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import { PaymentFailureReasons, PaymentMethodLabels, toPaymentStateLabel } from '../config/labels';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import { useUserGuard } from '../hooks/guard.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { blankedAddress } from '../util/utils';
+import { blankedAddress, openPdfFromString } from '../util/utils';
 
 export enum ExportType {
   COMPACT = 'Compact',
@@ -127,8 +130,10 @@ export default function TransactionScreen(): JSX.Element {
       ? () => setShowCoinTracking(false)
       : undefined;
 
+  useLayoutOptions({ title, onBack });
+
   return (
-    <Layout rootRef={rootRef} title={title} onBack={onBack}>
+    <>
       {error ? (
         <ErrorHint message={error} />
       ) : isRefund ? (
@@ -184,7 +189,7 @@ export default function TransactionScreen(): JSX.Element {
           <TransactionList isSupport={false} setError={setError} />
         </>
       )}
-    </Layout>
+    </>
   );
 }
 
@@ -232,36 +237,38 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
     <StyledVerticalStack gap={6} full>
       <TxInfo tx={transaction} />
 
-      {transaction.state === TransactionState.UNASSIGNED && (
-        <StyledButton
-          label={translate('screens/payment', 'Assign transaction')}
-          onClick={() => handleTransactionNavigation(`/tx/${transaction.id}/assign`)}
-          width={StyledButtonWidth.FULL}
-        />
-      )}
-
-      {[
-        TransactionState.FAILED,
-        TransactionState.AML_PENDING,
-        TransactionState.KYC_REQUIRED,
-        TransactionState.LIMIT_EXCEEDED,
-      ].includes(transaction.state) &&
-        !transaction.chargebackAmount && (
-          <StyledVerticalStack gap={4} full>
-            <StyledButton
-              label={translate(
-                'general/actions',
-                transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
-              )}
-              onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
-            />
-            <StyledButton
-              label={translate('general/actions', 'Create support ticket')}
-              onClick={() => handleTransactionNavigation('/support/issue?issue-type=TransactionIssue')}
-              color={StyledButtonColor.STURDY_WHITE}
-            />
-          </StyledVerticalStack>
+      <StyledVerticalStack gap={4} full>
+        {transaction.state === TransactionState.UNASSIGNED && (
+          <StyledButton
+            label={translate('screens/payment', 'Assign transaction')}
+            onClick={() => handleTransactionNavigation(`/tx/${transaction.id}/assign`)}
+            width={StyledButtonWidth.FULL}
+          />
         )}
+        {[
+          TransactionState.FAILED,
+          TransactionState.CHECK_PENDING,
+          TransactionState.KYC_REQUIRED,
+          TransactionState.LIMIT_EXCEEDED,
+          TransactionState.UNASSIGNED,
+        ].includes(transaction.state) &&
+          !transaction.chargebackAmount && (
+            <>
+              <StyledButton
+                label={translate(
+                  'general/actions',
+                  transaction.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
+                )}
+                onClick={() => handleTransactionNavigation(`/tx/${transaction.uid}/refund`)}
+              />
+              <StyledButton
+                label={translate('general/actions', 'Create support ticket')}
+                onClick={() => handleTransactionNavigation('/support/issue?issue-type=TransactionIssue')}
+                color={StyledButtonColor.STURDY_WHITE}
+              />
+            </>
+          )}
+      </StyledVerticalStack>
     </StyledVerticalStack>
   ) : (
     <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -292,11 +299,10 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
+  const { rootRef } = useLayoutContext();
   const { bankAccounts } = useBankAccountContext();
   const { isLoggedIn } = useSessionContext();
   const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
-
-  const rootRef = useRef<HTMLDivElement>(null);
   const refetchTimeout = useRef<NodeJS.Timeout | undefined>();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -343,11 +349,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   }, [transaction]);
 
   useEffect(() => {
-    if (selectedIban === AddAccount)
-      navigate('/bank-accounts', { setRedirect: true, redirectPath: `/tx/${id}/refund` });
-  }, [selectedIban]);
-
-  useEffect(() => {
     if (transaction && user) {
       const allowedAddresses = user.addresses.filter(
         (a) => transaction?.inputBlockchain && a.blockchains.includes(transaction?.inputBlockchain),
@@ -378,7 +379,15 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     iban: Validations.Required,
   });
 
-  return refundDetails && transaction ? (
+  return selectedIban === AddAccount ? (
+    <AddBankAccount
+      onSubmit={(account) => setValue('iban', account.iban)}
+      confirmationText={translate(
+        'screens/iban',
+        'The bank account has been added, all transactions from this IBAN will now be associated with your account.',
+      )}
+    />
+  ) : refundDetails && transaction ? (
     <StyledVerticalStack gap={6} full>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'Transaction amount')}>
@@ -414,8 +423,8 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
         <StyledVerticalStack gap={6} full>
           {!refundDetails.refundTarget && addresses && !isBuy && (
             <StyledDropdown<UserAddress>
-              rootRef={rootRef}
               name="address"
+              rootRef={rootRef}
               label={translate('screens/payment', 'Chargeback address')}
               items={addresses}
               labelFunc={(item) => blankedAddress(item.address, { width })}
@@ -476,9 +485,10 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const { id } = useParams();
   const { toString } = useBlockchain();
   const { pathname } = useLocation();
+  const { rootRef } = useLayoutContext();
+  const { getTransactionInvoice, getTransactionReceipt } = useTransaction();
 
   const { width } = useWindowContext();
-  const rootRef = useRef<HTMLDivElement>(null);
   const txRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [transactions, setTransactions] = useState<Record<string, DetailTransaction[]>>();
@@ -486,6 +496,8 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const [isTargetsLoading, setIsTargetsLoading] = useState(false);
   const [isTransactionLoading, setIsTransactionLoading] = useState(false);
   const [editTransaction, setEditTransaction] = useState<number>();
+  const [isInvoiceLoading, setIsInvoiceLoading] = useState<number>();
+  const [isReceiptLoading, setIsReceiptLoading] = useState<number>();
 
   useEffect(() => {
     if (id) setTimeout(() => txRefs.current[id]?.scrollIntoView());
@@ -676,6 +688,34 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               hidden={!tx.outputTxUrl}
                             />
                             <StyledButton
+                              label={translate('general/actions', 'Open invoice')}
+                              onClick={() => {
+                                setIsInvoiceLoading(tx.id);
+                                getTransactionInvoice(tx.id)
+                                  .then((response: PdfDocument) => {
+                                    openPdfFromString(response.pdfData);
+                                  })
+                                  .finally(() => setIsInvoiceLoading(undefined));
+                              }}
+                              hidden={tx.state !== TransactionState.COMPLETED}
+                              isLoading={isInvoiceLoading === tx.id}
+                              color={StyledButtonColor.STURDY_WHITE}
+                            />
+                            <StyledButton
+                              label={translate('general/actions', 'Open receipt')}
+                              onClick={() => {
+                                setIsReceiptLoading(tx.id);
+                                getTransactionReceipt(tx.id)
+                                  .then((response: PdfDocument) => {
+                                    openPdfFromString(response.pdfData);
+                                  })
+                                  .finally(() => setIsReceiptLoading(undefined));
+                              }}
+                              hidden={tx.state !== TransactionState.COMPLETED}
+                              isLoading={isReceiptLoading === tx.id}
+                              color={StyledButtonColor.STURDY_WHITE}
+                            />
+                            <StyledButton
                               label={translate(
                                 'general/actions',
                                 tx.state === TransactionState.FAILED ? 'Confirm refund' : 'Request refund',
@@ -685,11 +725,18 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               hidden={
                                 ![
                                   TransactionState.FAILED,
-                                  TransactionState.AML_PENDING,
+                                  TransactionState.CHECK_PENDING,
                                   TransactionState.KYC_REQUIRED,
                                   TransactionState.LIMIT_EXCEEDED,
+                                  TransactionState.UNASSIGNED,
                                 ].includes(tx.state) || !!tx.chargebackAmount
                               }
+                            />
+                            <StyledButton
+                              label={translate('screens/kyc', 'Increase limit')}
+                              color={StyledButtonColor.STURDY_WHITE}
+                              onClick={() => navigate(`/support/issue?issue-type=LimitRequest`)}
+                              hidden={tx.state !== TransactionState.LIMIT_EXCEEDED || isSupport}
                             />
                             {tx.state === TransactionState.KYC_REQUIRED && (
                               <StyledButton
@@ -866,7 +913,7 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
       {tx.chargebackAmount && (
         <StyledDataTableRow label={translate('screens/payment', 'Chargeback amount')}>
           <p>
-            {tx.chargebackAmount} {tx.inputAsset}
+            {tx.chargebackAmount} {tx.chargebackAsset}
           </p>
         </StyledDataTableRow>
       )}

@@ -33,7 +33,7 @@ export const PaymentStateLabels = {
   ['WaitingForPayment']: 'Waiting for payment',
   [TransactionState.CREATED]: 'Created',
   [TransactionState.PROCESSING]: 'Processing',
-  [TransactionState.AML_PENDING]: 'AML pending',
+  [TransactionState.CHECK_PENDING]: 'DFX check pending',
   [TransactionState.KYC_REQUIRED]: 'KYC required',
   [TransactionState.FEE_TOO_HIGH]: 'Fee to high',
   [TransactionState.COMPLETED]: 'Completed',
@@ -75,6 +75,8 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.USER_DELETED]: 'Address deleted',
   [TransactionFailureReason.VIDEO_IDENT_NEEDED]: 'Video identification required',
   [TransactionFailureReason.MISSING_LIQUIDITY]: 'Missing liquidity',
+  [TransactionFailureReason.KYC_DATA_NEEDED]: 'KYC data needed',
+  [TransactionFailureReason.BANK_TX_NEEDED]: 'Bank transaction needed',
 };
 
 export const PaymentQuoteStatusLabels = {

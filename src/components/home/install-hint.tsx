@@ -22,12 +22,19 @@ export function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: 
     case WalletType.TREZOR_ETH:
       return <TrezorHint onConfirm={onConfirm} />;
 
+    case WalletType.PHANTOM_SOL:
+      return <PhantomHint onConfirm={onConfirm} />;
+
+    case WalletType.TRUST_SOL:
+      return <TrustHint onConfirm={onConfirm} />;
+
     case WalletType.CLI_BTC:
     case WalletType.CLI_LN:
     case WalletType.CLI_XMR:
     case WalletType.CLI_ETH:
     case WalletType.CLI_ADA:
     case WalletType.CLI_AR:
+    case WalletType.CLI_SOL:
     case WalletType.DFX_TARO:
     case WalletType.WALLET_CONNECT:
     case WalletType.CAKE:
@@ -127,6 +134,46 @@ function TrezorHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
           Visit <StyledLink label="trezor.io" url="https://trezor.io/learn/a/what-is-trezor-bridge" dark /> for more
           details.
         </Trans>
+      </p>
+
+      <div className="mx-auto">
+        <StyledButton width={StyledButtonWidth.SM} onClick={onConfirm} label={translate('general/actions', 'OK')} />
+      </div>
+    </StyledVerticalStack>
+  );
+}
+
+function PhantomHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  return (
+    <StyledVerticalStack gap={4}>
+      <h1 className="text-dfxGray-700">{translate('screens/home', 'Please install Phantom!')}</h1>
+      <p className="text-dfxGray-700">
+        {translate('screens/home', 'You need to install the Phantom browser extension to be able to use this service.')}{' '}
+        <Trans i18nKey="screens/home.visit">
+          Visit <StyledLink label="phantom.app" url="https://phantom.app/" dark /> for more details.
+        </Trans>{' '}
+      </p>
+
+      <div className="mx-auto">
+        <StyledButton width={StyledButtonWidth.SM} onClick={onConfirm} label={translate('general/actions', 'OK')} />
+      </div>
+    </StyledVerticalStack>
+  );
+}
+
+function TrustHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  return (
+    <StyledVerticalStack gap={4}>
+      <h1 className="text-dfxGray-700">{translate('screens/home', 'Please install Trust!')}</h1>
+      <p className="text-dfxGray-700">
+        {translate('screens/home', 'You need to install the Trust browser extension to be able to use this service.')}{' '}
+        <Trans i18nKey="screens/home.visit">
+          Visit <StyledLink label="trustwallet.com" url="https://trustwallet.com" dark /> for more details.
+        </Trans>{' '}
       </p>
 
       <div className="mx-auto">

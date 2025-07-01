@@ -49,11 +49,25 @@ jobs:
           replace: ${{ secrets.PRD_WC_PID}}
           regex: false
 
+      - name: Update Alchemy Key
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: '{ALCHEMY_KEY}'
+          replace: ${{ secrets.PRD_ALCHEMY_KEY}}
+          regex: false
+
       - name: Update Sift Beacon Key
         uses: jacobtomlinson/gha-find-replace@v3
         with:
           find: '{SIFT_BEACON_KEY}'
           replace: ${{ secrets.PRD_SIFT_BEACON_KEY}}
+          regex: false
+
+      - name: Update Tatum Key
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: '{TATUM_KEY}'
+          replace: ${{ secrets.PRD_TATUM_KEY}}
           regex: false
 
       - name: Build code
@@ -86,6 +100,7 @@ jobs:
           cp ./widget/static/js/main.*.js ./build/widget/$version
           cp ./widget/static/css/main.*.css ./build/widget/$version.css
           cp ./widget/$version-chunks/*.chunk.js ./build/widget/$version-chunks
+          cp ./widget/$version-chunks/*.chunk.css ./build/widget/$version-chunks || true
           cp ./widget/$version-chunks/*.module.wasm ./build/widget/$version-chunks
 
           sed -i "s|main-widget.css|https://app.dfx.swiss/widget/$version.css|g" "./build/widget/$version"

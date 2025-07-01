@@ -4,13 +4,12 @@ import {
   Country,
   Fiat,
   MinCompletionStatus,
-  PaymentLinkBlockchain,
   PaymentLinkPaymentMode,
   PaymentLinkPaymentStatus,
   PaymentLinkStatus,
   PaymentRouteType,
   SellRoute,
-  useFiatContext,
+  usePaymentRoutes,
   usePaymentRoutesContext,
   useUserContext,
   Utils,
@@ -19,7 +18,9 @@ import {
 import {
   AlignContent,
   CopyButton,
+  DfxIcon,
   Form,
+  IconSize,
   IconVariant,
   SpinnerSize,
   StyledButton,
@@ -38,26 +39,37 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
+import { PaymentLink, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
-import { Layout } from 'src/components/layout';
-import { ConfirmationOverlay } from 'src/components/overlays';
+import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay';
+import { EditOverlay } from 'src/components/overlay/edit-overlay';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { PaymentQuoteStatusLabels } from 'src/config/labels';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { blankedAddress, formatLocationAddress } from 'src/util/utils';
+import {
+  blankedAddress,
+  downloadFile,
+  filenameDateFormat,
+  formatLocationAddress,
+  isEmpty,
+  removeNullFields,
+} from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 
 interface FormData {
   routeId: RouteIdSelectData;
   externalId: string;
+  label: string;
   recipientName: string;
   recipientStreet: string;
   recipientHouseNumber: string;
@@ -68,15 +80,12 @@ interface FormData {
   recipientEmail: string;
   recipientWebsite: string;
   configStandards: PaymentStandardType[];
-  configBlockchains: PaymentLinkBlockchain[];
   configMinCompletionStatus: MinCompletionStatus;
   configDisplayQr: boolean;
   configPaymentTimeout: number;
-  configTimeout: number;
   paymentMode: PaymentLinkPaymentMode;
   paymentAmount: string;
   paymentExternalId: string;
-  paymentCurrency: Fiat;
   paymentExpiryDate: Date;
 }
 
@@ -91,6 +100,7 @@ interface DeletePaymentRoute {
 }
 
 export default function PaymentRoutesScreen(): JSX.Element {
+  const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
@@ -108,8 +118,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
     deletePaymentRoute,
     error: apiError,
   } = usePaymentRoutesContext();
-
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { getPaymentStickers } = usePaymentRoutes();
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [error, setError] = useState<string>();
@@ -119,6 +128,9 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const [expandedPaymentLinkId, setExpandedPaymentLinkId] = useState<string>();
   const [showPaymentLinkForm, setShowPaymentLinkForm] = useState<PaymentLinkFormState>();
   const [updateGlobalConfig, setUpdateGlobalConfig] = useState<boolean>(false);
+  const [updatePaymentLinkLabel, setUpdatePaymentLinkLabel] = useState<string>();
+  const [isGeneratingSticker, setIsGeneratingSticker] = useState<string>();
+  const [errorGeneratingSticker, setErrorGeneratingSticker] = useState<string>();
 
   useAddressGuard('/login');
 
@@ -152,17 +164,71 @@ export default function PaymentRoutesScreen(): JSX.Element {
     await updateUserPaymentLinksConfig(data.config).catch((e: ApiError) => setError(e.message ?? 'Unknown error'));
   }
 
+  async function renamePaymentLink(id: string, label: string) {
+    await updatePaymentLink({ label }, id);
+    setUpdatePaymentLinkLabel(undefined);
+    scrollIntoView(id);
+  }
+
   function onCloseForm(id?: string) {
     setShowPaymentLinkForm(undefined);
+    scrollIntoView(id);
+  }
 
-    if (id) {
-      setTimeout(() => paymentLinkRefs.current[id]?.scrollIntoView());
-      setExpandedPaymentLinkId(id);
-    }
+  function scrollIntoView(id?: string) {
+    const scrollToId = id ?? paymentLinks?.at(-1)?.id;
+    if (!scrollToId) return;
+
+    setTimeout(() => {
+      const element = paymentLinkRefs.current[scrollToId];
+      if (element) element.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+
+    setExpandedPaymentLinkId(scrollToId);
   }
 
   function routeKey(id: number, type: PaymentRouteType): string {
     return `${type}/${id}`;
+  }
+
+  function downloadQrCode(link: PaymentLink) {
+    const qrCodeContainer = document.getElementById(`qr-code-${link.id}`);
+    const qrCodeSvg = qrCodeContainer?.querySelector('svg');
+    if (!qrCodeSvg) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1000;
+    canvas.height = 1000;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    const img = new Image();
+    img.onload = () => {
+      context.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      const filename = `${user?.accountId}_${link.externalId || link.id}`.replace(' ', '_').toLowerCase();
+      a.download = filename;
+      a.href = dataUrl;
+      a.click();
+    };
+
+    let svgData = new XMLSerializer().serializeToString(qrCodeSvg);
+    svgData = svgData.replace(/#072440/g, '#000000');
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+  }
+
+  function downloadSticker({ routeId, externalId, id }: PaymentLink) {
+    setIsGeneratingSticker(id);
+    setErrorGeneratingSticker(undefined);
+    getPaymentStickers(routeId, externalId, externalId ? undefined : id)
+      .then(({ data, headers }) => {
+        downloadFile(data, headers, `DFX_OCP_stickers_${filenameDateFormat()}.pdf`);
+      })
+      .catch((error: ApiError) => setErrorGeneratingSticker(error.message ?? 'Unknown Error'))
+      .finally(() => setIsGeneratingSticker(undefined));
   }
 
   const hasRoutes =
@@ -187,24 +253,20 @@ export default function PaymentRoutesScreen(): JSX.Element {
     ? () => setDeleteRoute(undefined)
     : undefined;
 
+  useLayoutOptions({ title: translate('screens/payment', title), onBack, textStart: true });
+
   return (
-    <Layout title={translate('screens/payment', title)} onBack={onBack} textStart rootRef={rootRef}>
+    <>
       {(apiError && apiError !== 'permission denied') || error ? (
         <ErrorHint message={apiError ?? error ?? ''} />
+      ) : userPaymentLinksConfigLoading ? (
+        <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : updateGlobalConfig ? (
         <PaymentLinkForm
           state={{
             step: PaymentLinkFormStep.CONFIG,
             paymentLinkId: undefined,
-            prefilledData: {
-              configStandards: userPaymentLinksConfig?.standards,
-              configBlockchains: userPaymentLinksConfig?.blockchains?.filter((b) => b !== Blockchain.LIGHTNING),
-              configMinCompletionStatus: userPaymentLinksConfig?.minCompletionStatus,
-              configDisplayQr: userPaymentLinksConfig?.displayQr,
-              configPaymentTimeout: userPaymentLinksConfig?.paymentTimeout,
-            },
           }}
-          setStep={(step) => setShowPaymentLinkForm((prev) => ({ ...prev, step }))}
           onClose={() => setUpdateGlobalConfig(false)}
           onSubmit={async (data) => {
             await updatePaymentLinksConfig(data);
@@ -216,6 +278,18 @@ export default function PaymentRoutesScreen(): JSX.Element {
           state={showPaymentLinkForm}
           setStep={(step) => setShowPaymentLinkForm((prev) => ({ ...prev, step }))}
           onClose={onCloseForm}
+        />
+      ) : updatePaymentLinkLabel ? (
+        <EditOverlay
+          label={translate('screens/settings', 'Label')}
+          autocomplete="label"
+          prefill={paymentLinks?.find((link) => link.id === updatePaymentLinkLabel)?.label}
+          placeholder={translate('screens/settings', 'Label')}
+          onCancel={() => {
+            setUpdatePaymentLinkLabel(undefined);
+            scrollIntoView(updatePaymentLinkLabel);
+          }}
+          onEdit={async (result) => await renamePaymentLink(updatePaymentLinkLabel, result)}
         />
       ) : deleteRoute ? (
         <ConfirmationOverlay
@@ -346,10 +420,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
                         text: userPaymentLinksConfig?.standards?.join(', '),
                       },
                       {
-                        label: translate('screens/payment', 'Payment blockchains'),
-                        text: userPaymentLinksConfig?.blockchains?.join(', '),
-                      },
-                      {
                         label: translate('screens/payment', 'Min. completion status'),
                         text:
                           userPaymentLinksConfig?.minCompletionStatus &&
@@ -384,6 +454,8 @@ export default function PaymentRoutesScreen(): JSX.Element {
                 />
               </StyledDataTable>
               {paymentLinks.map((link) => {
+                const linkConfig = { ...userPaymentLinksConfig, ...removeNullFields(link.config) };
+
                 return (
                   <div key={link.id} ref={(el) => paymentLinkRefs.current && (paymentLinkRefs.current[link.id] = el)}>
                     <StyledCollapsible
@@ -393,7 +465,9 @@ export default function PaymentRoutesScreen(): JSX.Element {
                         <div className="flex flex-row justify-between gap-2 items-center">
                           <div className="flex flex-col items-start text-left">
                             <div className="font-bold leading-none">
-                              {link.externalId ?? `${translate('screens/payment', 'Payment Link')} ${link.id}`}
+                              {link.label ??
+                                link.externalId ??
+                                `${translate('screens/payment', 'Payment Link')} ${link.id}`}
                             </div>
                             <div className="leading-none mt-1 text-dfxGray-700">
                               {`${translate('screens/payment', 'Payment route')} ${link.routeId}`}
@@ -413,6 +487,15 @@ export default function PaymentRoutesScreen(): JSX.Element {
                               <p>{link.externalId}</p>
                             </StyledDataTableRow>
                           )}
+                          <StyledDataTableRow label={translate('screens/settings', 'Label')}>
+                            <button
+                              className="flex flex-row gap-2.5"
+                              onClick={() => setUpdatePaymentLinkLabel(link.id)}
+                            >
+                              <p>{link.label ?? translate('screens/payment', 'N/A')}</p>
+                              <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} />
+                            </button>
+                          </StyledDataTableRow>
                           <StyledDataTableRow label={translate('screens/payment', 'Payment route')}>
                             <p>{link.routeId}</p>
                           </StyledDataTableRow>
@@ -533,39 +616,35 @@ export default function PaymentRoutesScreen(): JSX.Element {
                               <p>{translate('screens/payment', link.payment.status)}</p>
                             </StyledDataTableExpandableRow>
                           )}
-                          {link.config != null && (
+                          {linkConfig && (
                             <StyledDataTableExpandableRow
                               label={translate('screens/payment', 'Configuration')}
                               expansionItems={
                                 [
                                   {
                                     label: translate('screens/payment', 'Payment standards'),
-                                    text: link.config.standards?.join(', '),
-                                  },
-                                  {
-                                    label: translate('screens/payment', 'Payment blockchains'),
-                                    text: link.config.blockchains?.join(', '),
+                                    text: linkConfig.standards?.join(', '),
                                   },
                                   {
                                     label: translate('screens/payment', 'Min. completion status'),
                                     text:
-                                      link.config.minCompletionStatus &&
+                                      linkConfig.minCompletionStatus &&
                                       translate(
                                         'screens/payment',
-                                        PaymentQuoteStatusLabels[link.config.minCompletionStatus],
+                                        PaymentQuoteStatusLabels[linkConfig.minCompletionStatus],
                                       ),
                                   },
                                   {
                                     label: translate('screens/payment', 'Display QR code'),
-                                    text: link.config.displayQr?.toString(),
+                                    text: linkConfig.displayQr?.toString(),
                                   },
                                   {
                                     label: translate('screens/payment', 'Fee'),
-                                    text: link.config.fee?.toString(),
+                                    text: linkConfig.fee?.toString(),
                                   },
                                   {
                                     label: translate('screens/payment', 'Payment timeout (seconds)'),
-                                    text: link.config.paymentTimeout?.toString(),
+                                    text: linkConfig.paymentTimeout?.toString(),
                                   },
                                 ].filter((item) => item.text) as any
                               }
@@ -586,10 +665,21 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           )}
                         </StyledDataTable>
                         <div className="flex w-full items-center justify-center">
-                          <div className="w-48 py-3">
+                          <div id={`qr-code-${link.id}`} className="w-48 py-3">
                             <QrBasic data={Lnurl.prependLnurl(link.lnurl)} />
                           </div>
                         </div>
+                        <StyledButton
+                          label={translate('general/actions', 'Download QR code')}
+                          onClick={() => downloadQrCode(link)}
+                          color={StyledButtonColor.STURDY_WHITE}
+                        />
+                        <StyledButton
+                          label={translate('general/actions', 'Download sticker')}
+                          onClick={() => downloadSticker(link)}
+                          color={StyledButtonColor.STURDY_WHITE}
+                          isLoading={isGeneratingSticker === link.id}
+                        />
                         {link.status === PaymentLinkStatus.ACTIVE &&
                           (!link.payment || link.payment.status !== PaymentLinkPaymentStatus.PENDING) && (
                             <StyledButton
@@ -627,6 +717,9 @@ export default function PaymentRoutesScreen(): JSX.Element {
                             isLoading={isUpdatingPaymentLink.includes(link.id)}
                           />
                         )}
+                        <div className="text-center">
+                          {errorGeneratingSticker && <ErrorHint message={errorGeneratingSticker} />}
+                        </div>
                       </StyledVerticalStack>
                     </StyledCollapsible>
                   </div>
@@ -636,18 +729,28 @@ export default function PaymentRoutesScreen(): JSX.Element {
           ) : (
             <></>
           )}
-          {paymentRoutes?.sell.length && user?.paymentLink.active ? (
+          <StyledVerticalStack gap={2.5} full>
             <StyledButton
               label={translate('screens/payment', 'Create Payment Link')}
               width={StyledButtonWidth.FULL}
               onClick={() => setShowPaymentLinkForm({ step: PaymentLinkFormStep.ROUTE })}
+              hidden={
+                !paymentRoutes?.sell.length ||
+                !user?.paymentLink.active ||
+                !user?.activeAddress?.blockchains.includes(Blockchain.LIGHTNING)
+              }
             />
-          ) : (
-            <></>
-          )}
+            <StyledButton
+              label={translate('screens/payment', 'Create Invoice')}
+              width={StyledButtonWidth.FULL}
+              color={StyledButtonColor.STURDY_WHITE}
+              onClick={() => navigate('/invoice')}
+              hidden={paymentRoutesLoading}
+            />
+          </StyledVerticalStack>
         </StyledVerticalStack>
       )}
-    </Layout>
+    </>
   );
 }
 
@@ -719,12 +822,11 @@ enum PaymentLinkFormStep {
 interface PaymentLinkFormState {
   step: PaymentLinkFormStep;
   paymentLinkId?: string;
-  prefilledData?: any;
 }
 
 interface PaymentLinkFormProps {
   state: PaymentLinkFormState;
-  setStep: (title: PaymentLinkFormStep) => void;
+  setStep?: (title: PaymentLinkFormStep) => void;
   onClose: (id?: string) => void;
   onSubmit?: (data: any) => Promise<void>;
 }
@@ -738,19 +840,33 @@ const PaymentLinkFormStepToTitle = {
 };
 
 function PaymentLinkForm({
-  state: { step, paymentLinkId, prefilledData },
+  state: { step, paymentLinkId },
   setStep,
   onClose,
   onSubmit: onSubmitForm,
 }: PaymentLinkFormProps): JSX.Element {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const { allowedCountries, translate, translateError } = useSettingsContext();
-  const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink } = usePaymentRoutesContext();
-  const { currencies } = useFiatContext();
+  const { rootRef } = useLayoutContext();
   const { paymentRoutes, paymentLinks } = usePaymentRoutesContext();
+  const { allowedCountries, translate, translateError } = useSettingsContext();
+  const { createPaymentLink, createPaymentLinkPayment, updatePaymentLink, userPaymentLinksConfig } =
+    usePaymentRoutesContext();
 
+  const [paymentCurrency, setPaymentCurrency] = useState<Fiat>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
+
+  const configData = useMemo(
+    () =>
+      userPaymentLinksConfig
+        ? {
+            configStandards: userPaymentLinksConfig.standards,
+            configMinCompletionStatus: userPaymentLinksConfig.minCompletionStatus,
+            configDisplayQr: userPaymentLinksConfig.displayQr,
+            configPaymentTimeout: userPaymentLinksConfig.paymentTimeout,
+          }
+        : undefined,
+    [userPaymentLinksConfig],
+  );
 
   const {
     watch,
@@ -761,9 +877,10 @@ function PaymentLinkForm({
     setValue,
     formState: { errors, isValid },
   } = useForm<FormData>({
-    mode: 'onTouched',
+    mode: 'all',
     defaultValues: {
       paymentExpiryDate: new Date(Date.now() + 60 * 60 * 1000),
+      ...configData,
     },
   });
 
@@ -777,6 +894,7 @@ function PaymentLinkForm({
           (country) => country.symbol === prefilledRecipientData.address?.country,
         );
         reset({
+          ...getValues(),
           recipientName: prefilledRecipientData.name,
           recipientStreet: prefilledRecipientData.address?.street,
           recipientHouseNumber: prefilledRecipientData.address?.houseNumber,
@@ -789,25 +907,40 @@ function PaymentLinkForm({
         });
       }
 
-      const prefilledPaymentConfig = paymentLinks?.find((link) => link.id === paymentLinkId)?.config;
+      let prefilledPaymentConfig = paymentLinks?.find((link) => link.id === paymentLinkId)?.config;
+      prefilledPaymentConfig = { ...userPaymentLinksConfig, ...removeNullFields(prefilledPaymentConfig) };
       if (prefilledPaymentConfig) {
         reset({
+          ...getValues(),
           configStandards: prefilledPaymentConfig.standards,
-          configBlockchains: prefilledPaymentConfig.blockchains?.filter((b) => b !== Blockchain.LIGHTNING),
           configMinCompletionStatus: prefilledPaymentConfig.minCompletionStatus,
           configDisplayQr: prefilledPaymentConfig.displayQr,
           configPaymentTimeout: prefilledPaymentConfig.paymentTimeout,
         });
       }
-    } else if (prefilledData) {
-      reset(prefilledData);
+    } else if (configData) {
+      const currentValues = getValues();
+      const mergedData = { ...currentValues };
+      Object.entries(configData).forEach(([key, value]) => {
+        if (value !== undefined && isEmpty(currentValues[key as keyof FormData])) {
+          (mergedData as any)[key] = value;
+        }
+      });
+
+      reset(mergedData);
     }
-  }, [paymentLinks, allowedCountries]);
+  }, [paymentLinks, allowedCountries, paymentLinkId, step, configData]);
 
   useEffect(() => {
     const maxIdRoute = paymentRoutes?.sell.reduce((prev, current) => (prev.id < current.id ? prev : current));
     if (maxIdRoute) setValue('routeId', routeToRouteIdSelectData(maxIdRoute));
   }, [paymentRoutes]);
+
+  useEffect(() => {
+    const routeId = data.routeId?.id ?? paymentLinks?.find((link) => link.id === paymentLinkId)?.routeId;
+    const currency = paymentRoutes?.sell.find((route) => route.id.toString() === routeId?.toString())?.currency;
+    if (currency) setPaymentCurrency(currency);
+  }, [data.routeId, paymentLinkId, paymentLinks, paymentRoutes]);
 
   useEffect(() => {
     setError(undefined);
@@ -819,9 +952,10 @@ function PaymentLinkForm({
     try {
       const request: any = {};
 
-      if (data.routeId || data.externalId) {
+      if (data.routeId || data.externalId || data.label) {
         request.routeId = data.routeId ? +data.routeId.id : undefined;
         request.externalId = data.externalId ? data.externalId : undefined;
+        request.label = data.label ? data.label : undefined;
       }
 
       if (hasRecipientData) {
@@ -846,21 +980,18 @@ function PaymentLinkForm({
           mode: data.paymentMode,
           amount: +data.paymentAmount,
           externalId: data.paymentExternalId,
-          currency: data.paymentCurrency.name,
+          currency: paymentCurrency?.name,
           expiryDate: data.paymentExpiryDate,
         };
       }
 
-      if (hasConfigData) {
-        request.config = {
-          ...request.config,
-          standards: data.configStandards,
-          blockchains: Array.from(new Set([Blockchain.LIGHTNING, ...data.configBlockchains.flat()])),
-          minCompletionStatus: data.configMinCompletionStatus,
-          displayQr: data.configDisplayQr,
-          paymentTimeout: Number(data.configPaymentTimeout),
-        };
-      }
+      request.config = {
+        ...request.config,
+        standards: data.configStandards,
+        minCompletionStatus: data.configMinCompletionStatus,
+        displayQr: data.configDisplayQr,
+        paymentTimeout: Number(data.configPaymentTimeout),
+      };
 
       if (onSubmitForm) {
         await onSubmitForm(request);
@@ -906,8 +1037,11 @@ function PaymentLinkForm({
     paymentMode: Validations.Required,
     paymentAmount: Validations.Required,
     paymentExternalId: Validations.Required,
-    paymentCurrency: Validations.Required,
     paymentExpiryDate: Validations.Required,
+    configStandards: Validations.Required,
+    configMinCompletionStatus: Validations.Required,
+    configPaymentTimeout: Validations.Required,
+    configDisplayQr: Validations.Custom((value) => [true, false].includes(value) || 'invalid configDisplayQr'),
   });
 
   const availablePaymentRoutes: RouteIdSelectData[] = paymentRoutes?.sell?.map(routeToRouteIdSelectData) ?? [];
@@ -928,19 +1062,11 @@ function PaymentLinkForm({
     data.paymentMode &&
       data.paymentAmount !== undefined &&
       data.paymentExternalId !== undefined &&
-      data.paymentCurrency &&
       data.paymentExpiryDate,
-  );
-  const hasConfigData = Boolean(
-    data.configStandards?.length ||
-      data.configMinCompletionStatus ||
-      data.configDisplayQr !== undefined ||
-      data.configPaymentTimeout !== undefined,
   );
 
   const skipRecipientData = Boolean(!hasRecipientData && step === PaymentLinkFormStep.RECIPIENT);
   const skipPaymentData = Boolean(!hasPaymentData && step === PaymentLinkFormStep.PAYMENT);
-  const skipConfigData = Boolean(!hasConfigData && step === PaymentLinkFormStep.CONFIG);
 
   return (
     <>
@@ -955,6 +1081,7 @@ function PaymentLinkForm({
           {step === PaymentLinkFormStep.ROUTE && (
             <StyledVerticalStack gap={6} full center>
               <StyledDropdown<RouteIdSelectData>
+                rootRef={rootRef}
                 name="routeId"
                 label={translate('screens/payment', 'Route ID')}
                 placeholder={translate('screens/payment', 'Route ID')}
@@ -970,6 +1097,15 @@ function PaymentLinkForm({
                 autocomplete="route-id"
                 label={translate('screens/payment', 'External ID')}
                 placeholder={translate('screens/payment', 'External ID')}
+                full
+                smallLabel
+              />
+
+              <StyledInput
+                name="label"
+                autocomplete="label"
+                label={translate('screens/settings', 'Label')}
+                placeholder={translate('screens/settings', 'Label')}
                 full
                 smallLabel
               />
@@ -1079,6 +1215,7 @@ function PaymentLinkForm({
                 label={translate('screens/payment', 'Amount')}
                 smallLabel
                 placeholder={'0.00'}
+                prefix={paymentCurrency?.name}
                 full
               />
 
@@ -1089,16 +1226,6 @@ function PaymentLinkForm({
                 placeholder={translate('screens/payment', 'Payment ID')}
                 full
                 smallLabel
-              />
-
-              <StyledDropdown
-                name="paymentCurrency"
-                label={translate('screens/settings', 'Currency')}
-                full
-                smallLabel={true}
-                placeholder={translate('general/actions', 'Select') + '...'}
-                items={currencies ?? []}
-                labelFunc={(item) => item.name}
               />
 
               <StyledDateAndTimePicker
@@ -1118,16 +1245,6 @@ function PaymentLinkForm({
                 full
                 placeholder={translate('general/actions', 'Select...')}
                 items={Object.values(PaymentStandardType)}
-                labelFunc={(item) => item}
-              />
-              <StyledDropdownMultiChoice<PaymentLinkBlockchain>
-                rootRef={rootRef}
-                name="configBlockchains"
-                label={translate('screens/payment', 'Payment blockchains')}
-                smallLabel
-                full
-                placeholder={translate('general/actions', 'Select...')}
-                items={Object.values(PaymentLinkBlockchain).filter((item) => item !== PaymentLinkBlockchain.LIGHTNING)}
                 labelFunc={(item) => item}
               />
 
@@ -1172,6 +1289,9 @@ function PaymentLinkForm({
                 <StyledDataTableRow label={translate('screens/payment', 'External ID')}>
                   <p className="text-dfxBlue-600">{data.externalId ?? naString}</p>
                 </StyledDataTableRow>
+                <StyledDataTableRow label={translate('screens/settings', 'Label')}>
+                  <p className="text-dfxBlue-600">{data.label ?? naString}</p>
+                </StyledDataTableRow>
                 <StyledDataTableExpandableRow
                   label={translate('screens/payment', 'Recipient')}
                   isExpanded={hasRecipientData}
@@ -1196,16 +1316,12 @@ function PaymentLinkForm({
                 />
                 <StyledDataTableExpandableRow
                   label={translate('screens/payment', 'Configuration')}
-                  isExpanded={hasConfigData}
-                  discreet={!hasConfigData}
+                  isExpanded={true}
+                  discreet={false}
                   expansionItems={[
                     {
                       label: translate('screens/payment', 'Payment standards'),
                       text: data.configStandards?.toString() ?? naString,
-                    },
-                    {
-                      label: translate('screens/payment', 'Payment blockchains'),
-                      text: data.configBlockchains?.toString() ?? naString,
                     },
                     {
                       label: translate('screens/payment', 'Min. completion status'),
@@ -1235,7 +1351,10 @@ function PaymentLinkForm({
                     { label: translate('screens/payment', 'External ID'), text: data.paymentExternalId ?? naString },
                     {
                       label: translate('screens/payment', 'Amount'),
-                      text: data.paymentAmount ? `${data.paymentAmount} ${data.paymentCurrency?.name}` : naString,
+                      text:
+                        data.paymentAmount && paymentCurrency?.name
+                          ? `${data.paymentAmount} ${paymentCurrency.name}`
+                          : naString,
                     },
                     {
                       label: translate('screens/payment', 'Expiry date'),
@@ -1253,19 +1372,17 @@ function PaymentLinkForm({
             </div>
           )}
 
-          {step === PaymentLinkFormStep.DONE || paymentLinkId || prefilledData ? (
+          {step === PaymentLinkFormStep.DONE || paymentLinkId || !setStep ? (
             <div className="flex flex-col w-full gap-4">
-              {(paymentLinkId || prefilledData) && (
-                <StyledButton
-                  type="submit"
-                  label={translate('general/actions', 'Cancel')}
-                  onClick={() => onClose()}
-                  width={StyledButtonWidth.FULL}
-                  color={StyledButtonColor.STURDY_WHITE}
-                />
-              )}
               <StyledButton
-                label={translate('general/actions', paymentLinkId || prefilledData ? 'Save' : 'Create')}
+                type="submit"
+                label={translate('general/actions', 'Cancel')}
+                onClick={() => onClose()}
+                width={StyledButtonWidth.FULL}
+                color={StyledButtonColor.STURDY_WHITE}
+              />
+              <StyledButton
+                label={translate('general/actions', paymentLinkId || !setStep ? 'Save' : 'Create')}
                 onClick={handleSubmit(onSubmit)}
                 width={StyledButtonWidth.FULL}
                 isLoading={isLoading}
@@ -1274,7 +1391,7 @@ function PaymentLinkForm({
             </div>
           ) : (
             <div className="flex flex-col w-full gap-4">
-              {(skipPaymentData || skipRecipientData || skipConfigData) && (
+              {(skipPaymentData || skipRecipientData) && (
                 <StyledButton
                   label={translate('general/actions', 'Skip')}
                   onClick={() => {
@@ -1284,7 +1401,6 @@ function PaymentLinkForm({
                         paymentMode: undefined,
                         paymentAmount: undefined,
                         paymentExternalId: undefined,
-                        paymentCurrency: undefined,
                         paymentExpiryDate: undefined,
                       }),
                       ...(!hasRecipientData && {
@@ -1298,14 +1414,8 @@ function PaymentLinkForm({
                         recipientEmail: undefined,
                         recipientWebsite: undefined,
                       }),
-                      ...(!hasConfigData && {
-                        configStandards: undefined,
-                        configMinCompletionStatus: undefined,
-                        configDisplayQr: undefined,
-                        configPaymentTimeout: undefined,
-                      }),
                     });
-                    setStep(step + 1);
+                    setStep && setStep(step + 1);
                   }}
                   width={StyledButtonWidth.FULL}
                   color={StyledButtonColor.STURDY_WHITE}
@@ -1313,9 +1423,9 @@ function PaymentLinkForm({
               )}
               <StyledButton
                 label={translate('general/actions', 'Next')}
-                onClick={() => setStep(step + 1)}
+                onClick={() => setStep && setStep(step + 1)}
                 width={StyledButtonWidth.FULL}
-                disabled={skipPaymentData || skipRecipientData || skipConfigData}
+                disabled={!isValid || skipPaymentData || skipRecipientData}
               />
             </div>
           )}

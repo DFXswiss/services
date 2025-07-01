@@ -2,10 +2,8 @@ import { ApiError, TfaSetup, Utils, Validations, useKyc, useUserContext } from '
 import {
   CopyButton,
   Form,
-  IconVariant,
   SpinnerSize,
   StyledButton,
-  StyledButtonColor,
   StyledButtonWidth,
   StyledInput,
   StyledLoadingSpinner,
@@ -16,12 +14,18 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import QRCode from 'react-qr-code';
 import { useLocation } from 'react-router-dom';
+import { BadgeType } from 'src/util/app-store-badges';
+import { AppStoreBadge } from '../components/app-store-badge';
 import { ErrorHint } from '../components/error-hint';
-import { Layout } from '../components/layout';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useClipboard } from '../hooks/clipboard.hook';
 import { useUserGuard } from '../hooks/guard.hook';
+import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
+
+const IOS_AUTHENTICATOR_URL = 'https://apps.apple.com/de/app/google-authenticator/id388497605';
+const ANDROID_AUTHENTICATOR_URL =
+  'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2';
 
 export default function TfaScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
@@ -84,12 +88,10 @@ export default function TfaScreen(): JSX.Element {
       .finally(() => setIsSubmitting(false));
   }
 
-  function openAppStore(url: string) {
-    window.open(url, '_blank', 'noreferrer');
-  }
+  useLayoutOptions({ title: translate('screens/2fa', '2FA') });
 
   return (
-    <Layout title={translate('screens/2fa', '2FA')}>
+    <>
       {isLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
@@ -119,27 +121,9 @@ export default function TfaScreen(): JSX.Element {
                           )}
                         </span>
                       </h2>
-                      <div className="flex flex-row flex-wrap gap-2">
-                        <StyledButton
-                          icon={IconVariant.APPLE}
-                          label="App Store"
-                          color={StyledButtonColor.STURDY_WHITE}
-                          width={StyledButtonWidth.MIN}
-                          onClick={() => openAppStore('https://apps.apple.com/de/app/google-authenticator/id388497605')}
-                          deactivateMargin
-                        />
-                        <StyledButton
-                          icon={IconVariant.GOOGLE_PLAY}
-                          label="Google Play"
-                          color={StyledButtonColor.STURDY_WHITE}
-                          width={StyledButtonWidth.MIN}
-                          onClick={() =>
-                            openAppStore(
-                              'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2',
-                            )
-                          }
-                          deactivateMargin
-                        />
+                      <div className="flex flex-row gap-3 w-full justify-center pt-4 pb-2">
+                        <AppStoreBadge type={BadgeType.PLAY_STORE} url={ANDROID_AUTHENTICATOR_URL} />
+                        <AppStoreBadge type={BadgeType.APP_STORE} url={IOS_AUTHENTICATOR_URL} />
                       </div>
                     </StyledVerticalStack>
 
@@ -226,6 +210,6 @@ export default function TfaScreen(): JSX.Element {
           </div>
         </Form>
       )}
-    </Layout>
+    </>
   );
 }

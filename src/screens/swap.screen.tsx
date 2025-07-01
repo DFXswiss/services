@@ -33,18 +33,19 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
 import { addressLabel } from 'src/config/labels';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import useDebounce from 'src/hooks/debounce.hook';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { KycHint } from '../components/kyc-hint';
-import { Layout } from '../components/layout';
 import { AddressSwitch } from '../components/payment/address-switch';
 import { SwapCompletion } from '../components/payment/swap-completion';
 import { SanctionHint } from '../components/sanction-hint';
@@ -64,7 +65,8 @@ enum Side {
 }
 
 interface Address {
-  address: string;
+  address?: string;
+  addressLabel: string;
   label: string;
   chain?: Blockchain;
 }
@@ -115,7 +117,7 @@ export default function SwapScreen(): JSX.Element {
   } = useAppParams();
   const { receiveFor } = useSwap();
   const { toString } = useBlockchain();
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { rootRef } = useLayoutContext();
 
   const [sourceAssets, setSourceAssets] = useState<Asset[]>();
   const [targetAssets, setTargetAssets] = useState<Asset[]>();
@@ -131,10 +133,6 @@ export default function SwapScreen(): JSX.Element {
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
   const [validatedData, setValidatedData] = useState<ValidatedData>();
 
-  useEffect(() => {
-    sourceAssets && getBalances(sourceAssets).then(setBalances);
-  }, [getBalances, sourceAssets]);
-
   // form
   const { control, handleSubmit, setValue, resetField } = useForm<FormData>({ mode: 'onTouched' });
 
@@ -144,6 +142,12 @@ export default function SwapScreen(): JSX.Element {
   const selectedTargetAsset = useWatch({ control, name: 'targetAsset' });
   const selectedAddress = useWatch({ control, name: 'address' });
 
+  useEffect(() => {
+    if (sourceAssets && selectedAddress?.address) {
+      getBalances(sourceAssets, selectedAddress.address, selectedAddress?.chain).then(setBalances);
+    }
+  }, [getBalances, sourceAssets]);
+
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
     setValue(field, value, { shouldValidate: true });
@@ -151,27 +155,20 @@ export default function SwapScreen(): JSX.Element {
 
   const availableBalance = selectedSourceAsset && findBalance(selectedSourceAsset);
 
-  const SwapInputBlockchains: Blockchain[] = [
-    Blockchain.BITCOIN,
-    Blockchain.LIGHTNING,
-    Blockchain.ETHEREUM,
-    Blockchain.ARBITRUM,
-    Blockchain.OPTIMISM,
-    Blockchain.POLYGON,
-    Blockchain.BASE,
-    Blockchain.BINANCE_SMART_CHAIN,
-  ];
-
   const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
   const sourceBlockchains = availableBlockchains?.filter(
-    (b) => SwapInputBlockchains.includes(b) && filteredAssets?.some((a) => a.blockchain === b),
+    (b) => b !== Blockchain.MONERO && filteredAssets?.some((a) => a.blockchain === b),
   );
 
   const userSessions = [session, ...(user?.addresses ?? [])].filter(
     (a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i,
   ) as (Session | UserAddress)[];
 
-  const userAddresses = userSessions.map((a) => ({ address: addressLabel(a), blockchains: a.blockchains }));
+  const userAddresses = userSessions.map((a) => ({
+    address: a.address,
+    addressLabel: addressLabel(a),
+    blockchains: a.blockchains,
+  }));
 
   const targetBlockchains = userAddresses
     .flatMap((a) => a.blockchains)
@@ -183,10 +180,15 @@ export default function SwapScreen(): JSX.Element {
       ? [
           ...targetBlockchains.flatMap((b) => {
             const addresses = userAddresses.filter((a) => a.blockchains.includes(b));
-            return addresses.map((a) => ({ address: a.address, label: toString(b), chain: b }));
+            return addresses.map((a) => ({
+              address: a.address,
+              addressLabel: a.addressLabel,
+              label: toString(b),
+              chain: b,
+            }));
           }),
           {
-            address: translate('screens/buy', 'Switch address'),
+            addressLabel: translate('screens/buy', 'Switch address'),
             label: translate('screens/buy', 'Login with a different address'),
           },
         ]
@@ -484,8 +486,10 @@ export default function SwapScreen(): JSX.Element {
     amount: Validations.Required,
   });
 
+  useLayoutOptions({ title: translate('navigation/links', 'Swap'), textStart: true });
+
   return (
-    <Layout title={translate('navigation/links', 'Swap')} textStart rootRef={rootRef}>
+    <>
       {paymentInfo && isTxDone ? (
         <SwapCompletion paymentInfo={paymentInfo} navigateOnClose={true} txId={swapTxId} />
       ) : showsSwitchScreen ? (
@@ -533,7 +537,11 @@ export default function SwapScreen(): JSX.Element {
                       rootRef={rootRef}
                       name="sourceAsset"
                       placeholder={translate('general/actions', 'Select') + '...'}
-                      items={sourceAssets}
+                      items={sourceAssets.sort((a, b) => {
+                        const balanceA = findBalance(a) || 0;
+                        const balanceB = findBalance(b) || 0;
+                        return balanceB - balanceA;
+                      })}
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
                       assetIconFunc={(item) => item.name as AssetIconVariant}
@@ -589,7 +597,7 @@ export default function SwapScreen(): JSX.Element {
                     rootRef={rootRef}
                     name="address"
                     items={addressItems}
-                    labelFunc={(item) => blankedAddress(item.address, { width })}
+                    labelFunc={(item) => blankedAddress(item.addressLabel, { width })}
                     descriptionFunc={(item) => item.label}
                     full
                     forceEnable
@@ -684,6 +692,6 @@ export default function SwapScreen(): JSX.Element {
           )}
         </Form>
       )}
-    </Layout>
+    </>
   );
 }

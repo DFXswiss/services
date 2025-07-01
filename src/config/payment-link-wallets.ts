@@ -1,16 +1,12 @@
+import { Blockchain } from '@dfx.swiss/react/dist/definitions/blockchain';
 import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
+import { C2BPaymentMethod, WalletAppId, WalletInfo } from 'src/dto/payment-link.dto';
 
 export const PaymentStandards = {
   [PaymentStandardType.OPEN_CRYPTO_PAY]: {
     id: PaymentStandardType.OPEN_CRYPTO_PAY,
     label: 'OpenCryptoPay.io',
     description: 'Pay with OpenCryptoPay, Bitcoin Lightning LNURL',
-    paymentIdentifierLabel: 'URL',
-  },
-  [PaymentStandardType.FRANKENCOIN_PAY]: {
-    id: PaymentStandardType.FRANKENCOIN_PAY,
-    label: 'FrankencoinPay.com',
-    description: 'Pay with FrankencoinPay, Bitcoin Lightning LNURL',
     paymentIdentifierLabel: 'URL',
   },
   [PaymentStandardType.LIGHTNING_BOLT11]: {
@@ -28,90 +24,232 @@ export const PaymentStandards = {
   },
 };
 
-export const RecommendedWallets = ['Frankencoin', 'Phoenix', 'Wallet of Satoshi', 'BtcTaro'];
-
-export const CompatibleWallets: { [key: string]: { websiteUrl: string; iconUrl: string; recommended?: boolean } } = {
-  BitBanana: {
-    websiteUrl: 'https://bitbanana.app/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BitBanana.webp',
+export const PaymentLinkWallets: WalletInfo[] = [
+  // ----------------------- RECOMMENDED WALLETS -----------------------
+  {
+    id: WalletAppId.CAKEWALLET,
+    name: 'Cake Wallet',
+    websiteUrl: 'https://cakewallet.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CakeWallet.webp',
+    deepLink: 'cakewallet:',
+    appStoreUrl: 'https://apps.apple.com/app/cake-wallet-for-xmr-monero/id1334702542',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet',
+    recommended: true,
   },
-  Bitkit: {
-    websiteUrl: 'https://bitkit.to/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bitkit.webp',
-  },
-  Blink: {
-    websiteUrl: 'https://de.blink.sv/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blink.webp',
-  },
-  Blixt: {
-    websiteUrl: 'https://blixtwallet.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blixt.webp',
-  },
-  BlueWallet: {
-    websiteUrl: 'https://bluewallet.io/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BlueWallet.webp',
-  },
-  Breez: {
-    websiteUrl: 'https://breez.technology/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Breez.webp',
-  },
-  BtcTaro: {
-    websiteUrl: 'https://dfx.swiss/bitcoin.html',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCTaroDFX.webp',
-  },
-  CoinCorner: {
-    websiteUrl: 'https://www.coincorner.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CoinCorner.webp',
-  },
-  Electrum: {
-    websiteUrl: 'https://electrum.org/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Electrum.webp',
-  },
-  Frankencoin: {
+  {
+    id: WalletAppId.FRANKENCOIN,
+    name: 'Frankencoin',
     websiteUrl: 'https://frankencoin.app/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Frankencoin.webp',
+    appStoreUrl: 'https://apps.apple.com/app/frankencoin-wallet/id6480348701',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=swiss.dfx.frankencoin_wallet',
     recommended: true,
   },
-  LifPay: {
-    websiteUrl: 'https://lifpay.me/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LifPay.webp',
-  },
-  LipaWallet: {
-    websiteUrl: 'https://lipa.swiss/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/lipawallet.webp',
-  },
-  LNbits: {
-    websiteUrl: 'https://lnbits.com/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LNbits.webp',
-  },
-  AQUA: {
-    websiteUrl: 'https://aquawallet.io/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/aqua.webp',
-  },
-  OneKey: {
-    websiteUrl: 'https://onekey.so/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/OneKey.webp',
-  },
-  Phoenix: {
+  {
+    id: WalletAppId.PHOENIX,
+    name: 'Phoenix',
     websiteUrl: 'https://phoenix.acinq.co/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Phoenix.webp',
+    deepLink: 'phoenix:',
+    appStoreUrl: 'https://apps.apple.com/app/phoenix-wallet/id1544097028',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=fr.acinq.phoenix.mainnet',
     recommended: true,
+    transferMethod: Blockchain.LIGHTNING,
   },
-  PouchPH: {
-    websiteUrl: 'https://pouch.ph/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Pouchph.webp',
-  },
-  'Wallet of Satoshi': {
+  {
+    id: WalletAppId.WALLETOFSATOSHI,
+    name: 'Wallet of Satoshi',
     websiteUrl: 'https://www.walletofsatoshi.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/WalletofSatoshi.webp',
+    deepLink: 'walletofsatoshi:',
+    appStoreUrl: 'https://apps.apple.com/app/wallet-of-satoshi/id1438599608',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.livingroomofsatoshi.wallet',
     recommended: true,
+    transferMethod: Blockchain.LIGHTNING,
   },
-  ZEBEDEE: {
+  {
+    id: WalletAppId.BTC_TARO,
+    name: 'BtcTaro',
+    websiteUrl: 'https://dfx.swiss/bitcoin.html',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BTCTaroDFX.webp',
+    deepLink: 'dfxtaro:',
+    appStoreUrl: 'https://apps.apple.com/app/dfx-btc-taproot-asset-wallet/id6466037617',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=swiss.dfx.bitcoin',
+    recommended: true,
+    transferMethod: Blockchain.LIGHTNING,
+  },
+  // ----------------------- OTHER COMPATIBLE WALLETS -----------------------
+  {
+    id: WalletAppId.BITBANANA,
+    name: 'BitBanana',
+    websiteUrl: 'https://bitbanana.app/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BitBanana.webp',
+    deepLink: 'lightning:',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=app.michaelwuensch.bitbanana',
+    transferMethod: Blockchain.LIGHTNING,
+  },
+  {
+    id: WalletAppId.BITKIT,
+    name: 'Bitkit',
+    websiteUrl: 'https://bitkit.to/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Bitkit.webp',
+    deepLink: 'bitkit:',
+    appStoreUrl: 'https://apps.apple.com/app/bitkit-bitcoin-ln-wallet/id6502440655',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=to.bitkit',
+  },
+  {
+    id: WalletAppId.BLINK,
+    name: 'Blink',
+    websiteUrl: 'https://de.blink.sv/',
+    deepLink: 'lightning:',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blink.webp',
+    appStoreUrl: 'https://apps.apple.com/app/blink-bitcoin-beach-wallet/id1531383905',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.galoyapp',
+    transferMethod: Blockchain.LIGHTNING,
+  },
+  {
+    id: WalletAppId.BLITZWALLET,
+    name: 'Blitz Wallet',
+    websiteUrl: 'https://blitz-wallet.com/',
+    deepLink: 'lightning:',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BlitzWalletApp.webp',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.blitzwallet',
+    transferMethod: Blockchain.LIGHTNING,
+  },
+  {
+    id: WalletAppId.BLIXT,
+    name: 'Blixt',
+    websiteUrl: 'https://blixtwallet.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Blixt.webp',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.blixtwallet',
+  },
+  {
+    id: WalletAppId.BLUEWALLET,
+    name: 'BlueWallet',
+    websiteUrl: 'https://bluewallet.io/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BlueWallet.webp',
+    deepLink: 'bluewallet:',
+    appStoreUrl: 'https://apps.apple.com/app/bluewallet-bitcoin-wallet/id1376878040',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=io.bluewallet.bluewallet',
+    transferMethod: Blockchain.LIGHTNING,
+  },
+  {
+    id: WalletAppId.BREEZ,
+    name: 'Breez',
+    websiteUrl: 'https://breez.technology/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Breez.webp',
+    deepLink: 'breez:',
+    appStoreUrl: 'https://apps.apple.com/app/breez-lightning-client-pos/id1463604142',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.breez.client',
+    transferMethod: Blockchain.LIGHTNING,
+  },
+  {
+    id: WalletAppId.COINCORNER,
+    name: 'CoinCorner',
+    websiteUrl: 'https://www.coincorner.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/CoinCorner.webp',
+    deepLink: 'lightning:',
+    appStoreUrl: 'https://apps.apple.com/app/coincorner-checkout/id1464880599',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.coincorner.app.crypt',
+    transferMethod: Blockchain.LIGHTNING,
+  },
+  {
+    id: WalletAppId.ELECTRUM,
+    name: 'Electrum',
+    websiteUrl: 'https://electrum.org/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Electrum.webp',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=org.electrum.electrum',
+  },
+  {
+    id: WalletAppId.LIFPAY,
+    name: 'LifPay',
+    websiteUrl: 'https://lifpay.me/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LifPay.webp',
+    deepLink: 'lifpay:',
+    appStoreUrl: 'https://apps.apple.com/app/lifpay/id1645840182',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=flutter.android.LifePay',
+    transferMethod: Blockchain.LIGHTNING,
+  },
+  {
+    id: WalletAppId.LIPAWALLET,
+    name: 'LipaWallet',
+    websiteUrl: 'https://lipa.swiss/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/lipawallet.webp',
+    appStoreUrl: 'https://apps.apple.com/app/lipa-wallet/id1658329527',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.getlipa.wallet',
+  },
+  {
+    id: WalletAppId.LNBITS,
+    name: 'LNbits',
+    websiteUrl: 'https://lnbits.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/LNbits.webp',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.lnbits.app',
+  },
+  {
+    id: WalletAppId.AQUA,
+    name: 'AQUA',
+    websiteUrl: 'https://aquawallet.io/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/aqua.webp',
+    appStoreUrl: 'https://apps.apple.com/app/aqua-wallet/id6468594241',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=io.aquawallet.android',
+  },
+  {
+    id: WalletAppId.ONEKEY,
+    name: 'OneKey',
+    websiteUrl: 'https://onekey.so/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/OneKey.webp',
+    appStoreUrl: 'https://apps.apple.com/app/onekey-crypto-defi-wallet/id1609559473',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=so.onekey.app.wallet',
+  },
+  {
+    id: WalletAppId.POUCHPH,
+    name: 'PouchPH',
+    websiteUrl: 'https://pouch.ph/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Pouchph.webp',
+    deepLink: 'pouch:',
+    appStoreUrl: 'https://apps.apple.com/app/pouch-lightning-wallet/id1584404678',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=pouch.ph',
+  },
+  {
+    id: WalletAppId.ZEBEDEE,
+    name: 'ZEBEDEE',
     websiteUrl: 'https://zbd.gg/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/ZEBEDEE.webp',
+    deepLink: 'zebedee:',
+    appStoreUrl: 'https://apps.apple.com/app/zebedee-play-earn-shop/id1484394401',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=io.zebedee.wallet',
+    transferMethod: Blockchain.LIGHTNING,
   },
-  Zeus: {
+  {
+    id: WalletAppId.ZEUS,
+    name: 'Zeus',
     websiteUrl: 'https://zeusln.com/',
     iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Zeus.webp',
+    deepLink: 'lightning:',
+    appStoreUrl: 'https://apps.apple.com/app/zeus-wallet/id1456038895',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=app.zeusln.zeus',
+    transferMethod: Blockchain.LIGHTNING,
   },
-};
+  {
+    id: WalletAppId.BINANCEPAY,
+    name: 'Binance Pay',
+    websiteUrl: 'https://www.binance.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BinanceApp.webp',
+    deepLink: 'bnc:',
+    appStoreUrl: 'https://apps.apple.com/app/binance-buy-bitcoin-crypto/id1436799971',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.binance.dev',
+    transferMethod: C2BPaymentMethod.BINANCE_PAY,
+    semiCompatible: true,
+  },
+  {
+    id: WalletAppId.MUUN,
+    name: 'Muun',
+    websiteUrl: 'https://muun.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/Muun.webp',
+    appStoreUrl: 'https://apps.apple.com/us/app/muun-wallet/id1482037683',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=io.muun.apollo',
+    deepLink: 'muun:',
+    semiCompatible: true,
+    transferMethod: Blockchain.LIGHTNING,
+  },
+];

@@ -20,10 +20,13 @@ export enum WalletType {
   CLI_ADA = 'CliAda',
   CLI_AR = 'CliAr',
   CLI_LN = 'CliLn',
+  CLI_SOL = 'CliSol',
   DFX_TARO = 'DfxTaro',
   WALLET_CONNECT = 'WalletConnect',
   CAKE = 'Cake',
   MONERO = 'Monero',
+  PHANTOM_SOL = 'PhantomSol',
+  TRUST_SOL = 'TrustSol',
   MAIL = 'Mail',
   ADDRESS = 'Address',
 }
@@ -35,6 +38,7 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
     Blockchain.OPTIMISM,
     Blockchain.POLYGON,
     Blockchain.BASE,
+    Blockchain.GNOSIS,
     Blockchain.HAQQ,
     Blockchain.BINANCE_SMART_CHAIN,
   ],
@@ -54,11 +58,13 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
     Blockchain.OPTIMISM,
     Blockchain.POLYGON,
     Blockchain.BASE,
+    Blockchain.GNOSIS,
     Blockchain.HAQQ,
     Blockchain.BINANCE_SMART_CHAIN,
   ],
   [WalletType.CLI_ADA]: [Blockchain.CARDANO],
   [WalletType.CLI_AR]: [Blockchain.ARWEAVE],
+  [WalletType.CLI_SOL]: [Blockchain.SOLANA],
   [WalletType.DFX_TARO]: [Blockchain.LIGHTNING],
   [WalletType.WALLET_CONNECT]: [
     Blockchain.ETHEREUM,
@@ -66,11 +72,14 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
     Blockchain.OPTIMISM,
     Blockchain.POLYGON,
     Blockchain.BASE,
+    Blockchain.GNOSIS,
     Blockchain.HAQQ,
     Blockchain.BINANCE_SMART_CHAIN,
   ],
   [WalletType.CAKE]: [Blockchain.MONERO],
   [WalletType.MONERO]: [Blockchain.MONERO],
+  [WalletType.PHANTOM_SOL]: [Blockchain.SOLANA],
+  [WalletType.TRUST_SOL]: [Blockchain.SOLANA],
 };
 
 export function supportsBlockchain(wallet: WalletType, blockchain: Blockchain): boolean {
@@ -139,7 +148,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
         }
         setIsInitialized(true);
       });
-  }, [isParamsInitialized]);
+  }, [isParamsInitialized, appParams]);
 
   async function handleParamSession(): Promise<boolean> {
     try {

@@ -1,12 +1,14 @@
 import { Blockchain, useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { CustodyAssets } from 'src/components/home/wallet/connect-address';
+import { useLayoutContext } from 'src/contexts/layout.context';
+import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { url } from 'src/util/utils';
 import { Service } from '../App';
 import { ConnectWrapper } from '../components/home/connect-wrapper';
-import { Layout } from '../components/layout';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { supportsBlockchain, useWalletContext, WalletType } from '../contexts/wallet.context';
@@ -46,7 +48,7 @@ type Page = { page: string; allowedTiles: string[] | undefined };
 export default function HomeScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isLoggedIn } = useSessionContext();
-  const { session, authenticationToken } = useAuthContext();
+  const { session, getAuthToken } = useAuthContext();
   const { user, isUserLoading } = useUserContext();
   const { hasSession, canClose, service, isEmbedded, redirectPath, closeServices } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
@@ -54,7 +56,7 @@ export default function HomeScreen(): JSX.Element {
   const { pathname } = useLocation();
   const { getPage, getWallet, setOptions } = useFeatureTree();
   const appParams = useAppParams();
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { rootRef } = useLayoutContext();
 
   const [connectTo, setConnectTo] = useState<Wallet>();
   const [loginSuccessful, setLoginSuccessful] = useState(false);
@@ -129,8 +131,11 @@ export default function HomeScreen(): JSX.Element {
   function start() {
     switch (specialMode) {
       case SpecialMode.MY_DFX:
-        const url = `${process.env.REACT_APP_PAY_URL}login?token=${authenticationToken}`;
-        authenticationToken && session?.address && window.open(url, '_self');
+        if (getAuthToken() && session?.address) {
+          const params = new URLSearchParams({ token: getAuthToken() || '' });
+          const urlPath = url({ base: process.env.REACT_APP_PAY_URL, path: 'login', params });
+          window.open(urlPath, '_self');
+        }
         break;
 
       // @ts-expect-error fall through to default option
@@ -157,15 +162,14 @@ export default function HomeScreen(): JSX.Element {
   const hasBackButton =
     (canClose && !isEmbedded) || connectTo != null || (currentPageId != null && currentPageId !== appParams.mode);
 
+  useLayoutOptions({
+    title: isEmbedded ? title : undefined,
+    backButton: hasBackButton,
+    onBack: connectTo || (specialMode === SpecialMode.CONNECT && isLoggedIn) || currentPageId ? handleBack : undefined,
+  });
+
   return (
-    <Layout
-      title={isEmbedded ? title : undefined}
-      backButton={hasBackButton}
-      onBack={
-        connectTo || (specialMode === SpecialMode.CONNECT && isLoggedIn) || currentPageId ? handleBack : undefined
-      }
-      rootRef={rootRef}
-    >
+    <>
       {!isInitialized || isUserLoading || !currentPage ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -230,7 +234,7 @@ export default function HomeScreen(): JSX.Element {
           <img src={image} className="w-full" />
         </div>
       )}
-    </Layout>
+    </>
   );
 }
 
