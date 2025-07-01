@@ -163,7 +163,7 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
               {user?.addresses.some((a) => a.isCustody) && (
                 <NavigationLink
                   icon={IconVariant.SAFE}
-                  label={translate('screens/safe', 'Safe')}
+                  label={translate('navigation/links', 'Safe')}
                   url="/safe"
                   target="_self"
                   onClose={() => setIsNavigationOpen(false)}
