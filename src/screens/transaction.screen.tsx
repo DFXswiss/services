@@ -614,7 +614,15 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                         .find((a) => Object.values(AssetIconVariant).includes(a));
 
                     return (
-                      <div key={tx.uid} ref={(el) => txRefs.current && (txRefs.current[tx.uid] = el)}>
+                      <div
+                        key={tx.uid}
+                        ref={(el) => {
+                          if (txRefs.current) {
+                            tx.id && (txRefs.current[tx.id] = el);
+                            txRefs.current[tx.uid] = el;
+                          }
+                        }}
+                      >
                         <StyledCollapsible
                           full
                           isExpanded={id ? [`${tx.id}`, tx.uid].includes(id) : undefined}
