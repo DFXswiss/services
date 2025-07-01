@@ -836,9 +836,11 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
 
   return (
     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-      <StyledDataTableRow label={translate('screens/payment', 'ID')}>
-        <p>{tx.id}</p>
-      </StyledDataTableRow>
+      {tx.id && (
+        <StyledDataTableRow label={translate('screens/payment', 'ID')}>
+          <p>{tx.id}</p>
+        </StyledDataTableRow>
+      )}
       <StyledDataTableRow label={translate('screens/payment', 'Date')}>
         <p>{new Date(tx.date).toLocaleString()}</p>
       </StyledDataTableRow>
