@@ -54,7 +54,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
     setPaymentStatus(newStatus);
   };
 
-  const unauthoraizedResponse = (e: ApiError) => {
+  const unauthorizedResponse = (e: ApiError) => {
     if (e.statusCode === 401) setIsAuthenticated(false);
     throw e;
   };
@@ -71,7 +71,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
     const history = await call<PaymentLinkHistoryResponse[]>({
       url: `paymentLink/history?${params.toString()}`,
       method: 'GET',
-    }).catch(unauthoraizedResponse);
+    }).catch(unauthorizedResponse);
 
     return history?.[0]?.payments?.[0]?.externalId;
   };
@@ -90,7 +90,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
       method: 'GET',
     })
       .then(({ payment }) => setPaymentStatus(payment.status))
-      .catch(unauthoraizedResponse)
+      .catch(unauthorizedResponse)
       .catch(fetchWait);
   };
 
@@ -116,7 +116,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
           fetchPayRequest(apiUrl as string);
           fetchWait();
         })
-        .catch(unauthoraizedResponse);
+        .catch(unauthorizedResponse);
     },
     [apiUrl, key, payRequest, call, fetchPayRequest, fetchWait],
   );
@@ -134,7 +134,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
       method: 'DELETE',
     })
       .then(() => fetchPayRequest(apiUrl as string))
-      .catch(unauthoraizedResponse);
+      .catch(unauthorizedResponse);
   };
 
   const fetchTransactionHistory = useCallback(async () => {
@@ -160,7 +160,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
           ? response[0].payments?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
           : [];
       })
-      .catch(unauthoraizedResponse);
+      .catch(unauthorizedResponse);
   }, [key, payRequest, call]);
 
   const checkAuthentication = useCallback(
