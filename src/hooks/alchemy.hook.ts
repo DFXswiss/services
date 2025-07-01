@@ -15,6 +15,7 @@ const networkMapper: { [b in Blockchain]?: Network } = {
   [Blockchain.OPTIMISM]: Network.OPT_MAINNET,
   [Blockchain.POLYGON]: Network.MATIC_MAINNET,
   [Blockchain.BASE]: Network.BASE_MAINNET,
+  [Blockchain.GNOSIS]: Network.GNOSIS_MAINNET,
 };
 
 export function useAlchemy(): AlchemyInterface {

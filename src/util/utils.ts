@@ -304,3 +304,7 @@ export function deepEqual(a: any, b: any): boolean {
 }
 
 export const isAsset = (item: Asset | Fiat): item is Asset => 'chainId' in item;
+
+export function equalsIgnoreCase(left?: string, right?: string): boolean {
+  return left?.toLowerCase() === right?.toLowerCase();
+}
