@@ -690,6 +690,8 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                             <StyledButton
                               label={translate('general/actions', 'Open invoice')}
                               onClick={() => {
+                                if (!tx.id) return;
+
                                 setIsInvoiceLoading(tx.id);
                                 getTransactionInvoice(tx.id)
                                   .then((response: PdfDocument) => {
@@ -704,6 +706,8 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                             <StyledButton
                               label={translate('general/actions', 'Open receipt')}
                               onClick={() => {
+                                if (!tx.id) return;
+
                                 setIsReceiptLoading(tx.id);
                                 getTransactionReceipt(tx.id)
                                   .then((response: PdfDocument) => {
