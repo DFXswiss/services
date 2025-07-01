@@ -127,15 +127,14 @@ export const Routes = [
       },
       {
         path: 'pl',
-        element: (
-          <PaymentLinkProvider>
-            <Outlet />
-          </PaymentLinkProvider>
-        ),
         children: [
           {
             index: true,
-            element: withSuspense(<PaymentLinkScreen />),
+            element: withSuspense(
+              <PaymentLinkProvider>
+                <PaymentLinkScreen />
+              </PaymentLinkProvider>,
+            ),
           },
           {
             path: 'pos',
