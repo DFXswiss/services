@@ -712,7 +712,7 @@ export const FeatureTree: Page[] = [
     dfxStyle: true,
     tiles: [
       {
-        id: 'eth',
+        id: 'xdai',
         img: 'xdai',
         next: {
           page: 'wallets',
@@ -1359,7 +1359,7 @@ export const FeatureTree: Page[] = [
     dfxStyle: true,
     tiles: [
       {
-        id: 'eth',
+        id: 'xdai',
         img: 'xdai',
         next: {
           page: 'wallets',
