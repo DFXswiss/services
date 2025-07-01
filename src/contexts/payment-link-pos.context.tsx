@@ -188,7 +188,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
 
     fetchPayRequest(decodedUrl).catch((e) => setError(e.message ?? 'Unknown Error'));
     setApiUrl(decodedUrl);
-    setUrlParams();
+    setUrlParams(new URLSearchParams());
   }, [isParamsInitialized, lightning]);
 
   // To track authentication status
