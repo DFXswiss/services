@@ -1,4 +1,4 @@
-import { useSessionContext } from '@dfx.swiss/react';
+import { useSessionContext, useUserContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
   IconColor,
@@ -111,6 +111,7 @@ function MenuIcon({ icon, setIsNavigationOpen }: IconContentProps): JSX.Element 
 function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuContentProps): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
+  const { user } = useUserContext();
   const { isLoggedIn, logout: apiLogout } = useSessionContext();
 
   async function login() {
@@ -150,6 +151,7 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
                 target="_self"
                 onClose={() => setIsNavigationOpen(false)}
               />
+
               <NavigationLink
                 icon={IconVariant.ACCOUNT}
                 label={translate('screens/home', 'Account')}
@@ -157,6 +159,16 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
                 target="_self"
                 onClose={() => setIsNavigationOpen(false)}
               />
+
+              {user?.addresses.some((a) => a.isCustody) && (
+                <NavigationLink
+                  icon={IconVariant.SAFE}
+                  label={translate('navigation/links', 'Safe')}
+                  url="/safe"
+                  target="_self"
+                  onClose={() => setIsNavigationOpen(false)}
+                />
+              )}
               <NavigationLink
                 icon={IconVariant.TRANSACTIONS}
                 label={translate('screens/payment', 'Transactions')}
