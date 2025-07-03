@@ -4,6 +4,7 @@ import {
   Form,
   SpinnerSize,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
   StyledDataTable,
   StyledDataTableRow,
@@ -42,12 +43,22 @@ export default function PaymentLinkPosScreen(): JSX.Element {
             <div className="w-full h-[1px] bg-gradient-to-r bg-dfxGray-500 from-white via-dfxGray-500 to-white" />
           </div>
           <div className="flex justify-center items-center w-full">
-            <QrBasic data={Lnurl.prependLnurl(Lnurl.encode(paymentLinkApiUrl))} />
+            <QrBasic data={Lnurl.prependLnurl(Lnurl.encode(paymentLinkApiUrl ?? ''))} />
           </div>
-          <div className="flex flex-col w-full gap-4">
-            {PaymentLinkPaymentStatus.PENDING === paymentStatus ? <PendingPaymentForm /> : <CreatePaymentForm />}
-          </div>
-          <div className="flex flex-col w-full mt-4">{isAuthenticated ? <TransactionHistory /> : <Authenticate />}</div>
+          {isAuthenticated ? (
+            <>
+              <div className="flex flex-col w-full gap-4">
+                {PaymentLinkPaymentStatus.PENDING === paymentStatus ? <PendingPaymentForm /> : <CreatePaymentForm />}
+              </div>
+              <div className="flex flex-col w-full mt-4">
+                <TransactionHistory />
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col w-full mt-4">
+              <Authenticate />
+            </div>
+          )}
         </StyledVerticalStack>
       )}
     </>
@@ -74,9 +85,10 @@ function CreatePaymentForm(): JSX.Element | null {
     (data: { amount: number }) => {
       setIsCreatingPayment(true);
       setError(undefined);
-      createPayment(data)
-        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-        .finally(() => setIsCreatingPayment(false));
+      createPayment(data).catch((error: ApiError) => {
+        setError(error.message ?? 'Unknown error');
+        setIsCreatingPayment(false);
+      });
     },
     [createPayment],
   );
@@ -270,6 +282,10 @@ function Authenticate(): JSX.Element {
     mode: 'onTouched',
   });
 
+  const rules = Utils.createRules({
+    key: [Validations.Required],
+  });
+
   return (
     <>
       <StyledButton
@@ -278,7 +294,13 @@ function Authenticate(): JSX.Element {
         width={StyledButtonWidth.FULL}
       />
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <Form control={control} errors={errors} onSubmit={handleSubmit(handleAuthenticate)} translate={translateError}>
+        <Form
+          control={control}
+          rules={rules}
+          errors={errors}
+          onSubmit={handleSubmit(handleAuthenticate)}
+          translate={translateError}
+        >
           <StyledVerticalStack gap={6} full>
             <p className="text-dfxGray-800 text-sm">
               {translate('screens/payment', 'Please enter your access key to manage this checkout')}
@@ -287,13 +309,20 @@ function Authenticate(): JSX.Element {
               type="text"
               name="key"
               label={translate('screens/payment', 'Access key')}
-              placeholder="Access key"
+              placeholder={translate('screens/payment', 'Access key')}
               full
             />
             <StyledButton
+              type="submit"
               label={translate('general/actions', 'Authenticate')}
               onClick={handleSubmit(handleAuthenticate)}
               isLoading={isLoading}
+            />
+            <StyledButton
+              label={translate('general/actions', 'Cancel')}
+              onClick={() => setIsModalOpen(false)}
+              width={StyledButtonWidth.FULL}
+              color={StyledButtonColor.STURDY_WHITE}
             />
             {error && <ErrorHint message={error} />}
           </StyledVerticalStack>

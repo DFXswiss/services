@@ -124,16 +124,6 @@ export const PaymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.blixtwallet',
   },
   {
-    id: WalletAppId.BLUEWALLET,
-    name: 'BlueWallet',
-    websiteUrl: 'https://bluewallet.io/',
-    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/BlueWallet.webp',
-    deepLink: 'bluewallet:',
-    appStoreUrl: 'https://apps.apple.com/app/bluewallet-bitcoin-wallet/id1376878040',
-    playStoreUrl: 'https://play.google.com/store/apps/details?id=io.bluewallet.bluewallet',
-    transferMethod: Blockchain.LIGHTNING,
-  },
-  {
     id: WalletAppId.BREEZ,
     name: 'Breez',
     websiteUrl: 'https://breez.technology/',

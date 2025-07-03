@@ -139,4 +139,5 @@ export interface PaymentLinkHistoryPayment {
   amount: number;
   currency: string;
   date: Date;
+  externalId: string;
 }

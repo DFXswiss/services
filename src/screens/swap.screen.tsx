@@ -155,20 +155,9 @@ export default function SwapScreen(): JSX.Element {
 
   const availableBalance = selectedSourceAsset && findBalance(selectedSourceAsset);
 
-  const SwapInputBlockchains: Blockchain[] = [
-    Blockchain.BITCOIN,
-    Blockchain.LIGHTNING,
-    Blockchain.ETHEREUM,
-    Blockchain.ARBITRUM,
-    Blockchain.OPTIMISM,
-    Blockchain.POLYGON,
-    Blockchain.BASE,
-    Blockchain.BINANCE_SMART_CHAIN,
-  ];
-
   const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
   const sourceBlockchains = availableBlockchains?.filter(
-    (b) => SwapInputBlockchains.includes(b) && filteredAssets?.some((a) => a.blockchain === b),
+    (b) => b !== Blockchain.MONERO && filteredAssets?.some((a) => a.blockchain === b),
   );
 
   const userSessions = [session, ...(user?.addresses ?? [])].filter(
