@@ -91,7 +91,7 @@ export default function BuyScreen(): JSX.Element {
   const { translate, translateError, currency: prefCurrency } = useSettingsContext();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
-  const { currencies, receiveFor } = useBuy();
+  const { currencies, receiveFor, confirmFor } = useBuy();
   const { toSymbol } = useFiat();
   const { assets, getAssets } = useAssetContext();
   const { getAsset, isSameAsset } = useAsset();
@@ -130,6 +130,7 @@ export default function BuyScreen(): JSX.Element {
   const [showsNameForm, setShowsNameForm] = useState(false);
   const [isLoading, setIsLoading] = useState<Side>();
   const [isContinue, setIsContinue] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [validatedData, setValidatedData] = useState<ValidatedData>();
 
   // form
@@ -426,6 +427,16 @@ export default function BuyScreen(): JSX.Element {
     navigate('/connect', { setRedirect: true });
   }
 
+  function confirm(id: number) {
+    setIsConfirming(true);
+
+    confirmFor(id).finally(() => {
+      setShowsCompletion(true);
+      setIsConfirming(false);
+      scrollToTop();
+    });
+  }
+
   function onCardBuy(info: Buy) {
     if (info.error === TransactionError.NAME_REQUIRED) {
       setShowsNameForm(true);
@@ -617,10 +628,8 @@ export default function BuyScreen(): JSX.Element {
                                 <StyledButton
                                   width={StyledButtonWidth.FULL}
                                   label={translate('screens/buy', 'Click here once you have issued the transfer')}
-                                  onClick={() => {
-                                    setShowsCompletion(true);
-                                    scrollToTop();
-                                  }}
+                                  onClick={() => confirm(paymentInfo.id)}
+                                  isLoading={isConfirming}
                                   caps={false}
                                   className="mt-4"
                                 />

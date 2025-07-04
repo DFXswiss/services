@@ -30,6 +30,7 @@ export const PaymentMethodDescriptions = {
 
 export const PaymentStateLabels = {
   [TransactionState.UNASSIGNED]: 'Unassigned',
+  [TransactionState.WAITING_FOR_PAYMENT]: 'Waiting for payment',
   [TransactionState.CREATED]: 'Created',
   [TransactionState.PROCESSING]: 'Processing',
   [TransactionState.CHECK_PENDING]: 'DFX check pending',
