@@ -337,7 +337,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
           if (transaction?.id && response.expiryDate) {
             const timeout = new Date(response.expiryDate).getTime() - Date.now();
             if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
-            refetchTimeout.current = setTimeout(() => fetchRefund(transaction.id), timeout > 0 ? timeout : 0);
+            refetchTimeout.current = setTimeout(() => fetchRefund(txId), timeout > 0 ? timeout : 0);
           }
         })
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
@@ -359,7 +359,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   }, [transaction, user]);
 
   async function onSubmit(data: FormData) {
-    if (!transaction) return;
+    if (!transaction?.id) return;
     setIsLoading(true);
 
     try {
@@ -471,7 +471,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
 
 interface TransactionListProps extends TransactionStatusProps {
   isSupport: boolean;
-  onSelectTransaction?: (txId: number) => void;
+  onSelectTransaction?: (txUid: string) => void;
 }
 
 export function TransactionList({ isSupport, setError, onSelectTransaction }: TransactionListProps): JSX.Element {
@@ -554,7 +554,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
     setEditTransaction(txId);
   }
 
-  async function onSubmit({ target }: { target: TransactionTarget }) {
+  async function submitAssignment({ target }: { target: TransactionTarget }) {
     if (!editTransaction) return;
 
     setIsTransactionLoading(true);
@@ -614,10 +614,18 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                         .find((a) => Object.values(AssetIconVariant).includes(a));
 
                     return (
-                      <div key={tx.id} ref={(el) => txRefs.current && (txRefs.current[tx.id] = el)}>
+                      <div
+                        key={tx.uid}
+                        ref={(el) => {
+                          if (txRefs.current) {
+                            tx.id && (txRefs.current[tx.id] = el);
+                            txRefs.current[tx.uid] = el;
+                          }
+                        }}
+                      >
                         <StyledCollapsible
                           full
-                          isExpanded={id ? +id === tx.id : undefined}
+                          isExpanded={id ? [`${tx.id}`, tx.uid].includes(id) : undefined}
                           titleContent={
                             <div className="flex flex-row gap-2 items-center">
                               {icon ? (
@@ -644,7 +652,12 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
 
                             {isUnassigned &&
                               (editTransaction === tx.id ? (
-                                <Form control={control} errors={errors} rules={rules} onSubmit={handleSubmit(onSubmit)}>
+                                <Form
+                                  control={control}
+                                  errors={errors}
+                                  rules={rules}
+                                  onSubmit={handleSubmit(submitAssignment)}
+                                >
                                   <StyledVerticalStack gap={3} full>
                                     <p className="text-dfxGray-700 mt-4">{translate('screens/payment', 'Reference')}</p>
                                     <StyledDropdown<TransactionTarget>
@@ -666,7 +679,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                       isLoading={isTransactionLoading}
                                       disabled={!isValid}
                                       label={translate('screens/payment', 'Assign transaction')}
-                                      onClick={handleSubmit(onSubmit)}
+                                      onClick={handleSubmit(submitAssignment)}
                                     />
                                   </StyledVerticalStack>
                                 </Form>
@@ -674,7 +687,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                 <StyledButton
                                   isLoading={isTargetsLoading}
                                   label={translate('screens/payment', 'Assign transaction')}
-                                  onClick={() => assignTransaction(tx.id)}
+                                  onClick={() => tx.id && assignTransaction(tx.id)}
                                 />
                               ))}
                             <StyledButton
@@ -685,6 +698,8 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                             <StyledButton
                               label={translate('general/actions', 'Open invoice')}
                               onClick={() => {
+                                if (!tx.id) return;
+
                                 setIsInvoiceLoading(tx.id);
                                 getTransactionInvoice(tx.id)
                                   .then((response: PdfDocument) => {
@@ -699,6 +714,8 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                             <StyledButton
                               label={translate('general/actions', 'Open receipt')}
                               onClick={() => {
+                                if (!tx.id) return;
+
                                 setIsReceiptLoading(tx.id);
                                 getTransactionReceipt(tx.id)
                                   .then((response: PdfDocument) => {
@@ -743,7 +760,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               <StyledButton
                                 color={StyledButtonColor.STURDY_WHITE}
                                 label={translate('general/actions', 'Select')}
-                                onClick={() => onSelectTransaction && onSelectTransaction(tx.id)}
+                                onClick={() => onSelectTransaction && onSelectTransaction(tx.uid)}
                               />
                             )}
                           </StyledVerticalStack>
@@ -827,9 +844,11 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
 
   return (
     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-      <StyledDataTableRow label={translate('screens/payment', 'ID')}>
-        <p>{tx.id}</p>
-      </StyledDataTableRow>
+      {tx.id && (
+        <StyledDataTableRow label={translate('screens/payment', 'ID')}>
+          <p>{tx.id}</p>
+        </StyledDataTableRow>
+      )}
       <StyledDataTableRow label={translate('screens/payment', 'Date')}>
         <p>{new Date(tx.date).toLocaleString()}</p>
       </StyledDataTableRow>

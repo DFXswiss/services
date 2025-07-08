@@ -524,6 +524,7 @@
     "Limit exceeded": "Limit überschritten",
     "Refunded": "Rückerstattet",
     "Unassigned": "Nicht zugeordnet",
+    "Waiting for payment": "Warten auf Zahlung",
     "Liquidity pending": "Liquidität ausstehend",
     "Payout in progress": "Auszahlung in Bearbeitung",
     "Price undeterminable": "Preis nicht bestimmbar",
