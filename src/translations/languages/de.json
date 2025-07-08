@@ -635,7 +635,6 @@
     "Recipient not found": "Empfänger nicht gefunden",
 
     "Route": "Route",
-    "Open CryptoPay Stickers": "Open CryptoPay Aufkleber",
     "External IDs (comma separated)": "Externe IDs (kommagetrennt)",
     "Summary": "Zusammenfassung",
     "N/A": "N/A",
@@ -775,6 +774,14 @@
     "Sign transaction": "Transaktion signieren",
     "Signer": "Signierer",
     "Contract address": "Contract-Adresse"
+  },
+  "screens/stickers": {
+    "Version": "Version",
+    "Classic": "Klassisch",
+    "Classic stickers": "Klassische Aufkleber",
+    "Bitcoin Focus": "Bitcoin Fokus",
+    "Bitcoin Focus stickers": "Bitcoin Fokus Aufkleber",
+    "Open CryptoPay Stickers": "Open CryptoPay Aufkleber"
   },
   "navigation/links": {
     "Buy": "Kaufen",
