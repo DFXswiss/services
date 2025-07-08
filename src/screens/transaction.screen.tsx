@@ -513,7 +513,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   function loadTransactions(): Promise<void> {
     setTransactions(undefined);
 
-    return Promise.all([getDetailTransactions(), isSupport ? Promise.resolve([]) : getUnassignedTransactions()])
+    return Promise.all([getDetailTransactions(), getUnassignedTransactions()])
       .then((tx) => {
         const list = tx.flat().sort((a, b) => (new Date(b.date) > new Date(a.date) ? 1 : -1)) as DetailTransaction[];
         const map = list.reduce((map, tx) => {
