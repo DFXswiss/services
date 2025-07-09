@@ -23,11 +23,28 @@ import useDebounce from 'src/hooks/debounce.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { downloadFile, filenameDateFormat, url } from 'src/util/utils';
 
+interface Sticker {
+  id: string;
+  name: string;
+  description: string;
+}
+
 interface FormData {
   route: string;
   externalIds: string;
+  type: Sticker;
   language: Language;
 }
+
+enum StickerType {
+  CLASSIC = 'Classic',
+  BITCOIN_FOCUS = 'BitcoinFocus',
+}
+
+const stickerTypes: Sticker[] = [
+  { id: StickerType.CLASSIC, name: 'Classic', description: 'Classic stickers' },
+  { id: StickerType.BITCOIN_FOCUS, name: 'Bitcoin Focus', description: 'Bitcoin Focus stickers' },
+];
 
 export default function StickersScreen(): JSX.Element {
   const { translate, translateError, language: appLanguage, availableStickerLanguages } = useSettingsContext();
@@ -50,9 +67,13 @@ export default function StickersScreen(): JSX.Element {
     formState: { errors, isValid },
   } = useForm<FormData>({
     mode: 'all',
+    defaultValues: {
+      type: stickerTypes[0],
+    },
   });
 
   const selectedLanguage = watch('language');
+  const selectedType = watch('type');
   const debouncedData = useDebounce(watch(), 500);
 
   useEffect(() => {
@@ -63,12 +84,14 @@ export default function StickersScreen(): JSX.Element {
   useEffect(() => {
     const route = urlParams.get('route');
     const externalIds = urlParams.get('externalIds');
+    const stickerType = urlParams.get('sticker');
     const language = urlParams.get('language');
-    if (!route && !externalIds && !language) return;
+    if (!route && !externalIds && !stickerType && !language) return;
 
     if (route) setValue('route', route);
     if (externalIds) setValue('externalIds', externalIds);
-    if (language) setLanguageParam(language.toUpperCase());
+    if (stickerType) setValue('type', stickerTypes.find((t) => t.id === stickerType) || stickerTypes[0]);
+    if (language && validateConfig(stickerType, language.toUpperCase())) setLanguageParam(language.toUpperCase());
 
     trigger();
     setUrlParams(new URLSearchParams());
@@ -100,7 +123,7 @@ export default function StickersScreen(): JSX.Element {
 
     setIsGeneratingPdf(true);
     setErrorGeneratingPdf(undefined);
-    getPaymentStickers(data.route, data.externalIds, undefined, data.language.symbol)
+    getPaymentStickers(data.route, data.externalIds, undefined, data.type.id, data.language.symbol)
       .then(({ data, headers }) => {
         downloadFile(data, headers, `DFX_OCP_stickers_${filenameDateFormat()}.pdf`);
       })
@@ -108,12 +131,18 @@ export default function StickersScreen(): JSX.Element {
       .finally(() => setIsGeneratingPdf(false));
   }
 
+  // Albanian (SQ) is not supported for Bitcoin Focus type
+  function validateConfig(type: string | null, language?: string): boolean {
+    if (type === StickerType.BITCOIN_FOCUS && language?.toUpperCase() === 'SQ') return false;
+    return true;
+  }
+
   const rules = Utils.createRules({
     route: Validations.Required,
     externalIds: Validations.Required,
   });
 
-  useLayoutOptions({ title: translate('screens/payment', 'Open CryptoPay Stickers') });
+  useLayoutOptions({ title: translate('screens/stickers', 'Open CryptoPay Stickers') });
 
   return (
     <StyledVerticalStack gap={6} full center>
@@ -144,6 +173,17 @@ export default function StickersScreen(): JSX.Element {
             full
             smallLabel
           />
+          <StyledDropdown<Sticker>
+            full
+            rootRef={rootRef}
+            name="type"
+            label={translate('screens/payment', 'Type')}
+            smallLabel={true}
+            placeholder={translate('general/actions', 'Select') + '...'}
+            items={stickerTypes.filter((t) => validateConfig(t.id, selectedLanguage?.symbol))}
+            labelFunc={(item) => translate(`screens/stickers`, item.name)}
+            descriptionFunc={(item) => translate(`screens/stickers`, item.description)}
+          />
           <StyledDropdown<Language>
             full
             rootRef={rootRef}
@@ -151,7 +191,7 @@ export default function StickersScreen(): JSX.Element {
             label={translate('screens/settings', 'Language')}
             smallLabel={true}
             placeholder={translate('general/actions', 'Select') + '...'}
-            items={availableStickerLanguages}
+            items={availableStickerLanguages.filter((l) => validateConfig(selectedType.id, l.symbol))}
             labelFunc={(item) => item.name}
             descriptionFunc={(item) => item.foreignName}
           />
