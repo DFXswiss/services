@@ -228,10 +228,13 @@ export default function PaymentLinkScreen(): JSX.Element {
             {!merchant && (
               <>
                 {paymentHasQuote(payRequest) ? (
-                  <p className="text-xl font-bold text-dfxBlue-800 mb-8">
-                    <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
-                    {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
-                  </p>
+                  <>
+                    <p className="text-xl font-bold text-dfxBlue-800 mb-8">
+                      <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
+                      {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
+                    </p>
+                    {payRequest?.mode === PaymentLinkMode.DONATION && <EditDonationForm paymentRequest={payRequest} />}
+                  </>
                 ) : payRequest?.mode === PaymentLinkMode.DONATION &&
                   paymentStatus === NoPaymentLinkPaymentStatus.NO_PAYMENT ? (
                   <DonationForm paymentRequest={payRequest} />
@@ -245,7 +248,14 @@ export default function PaymentLinkScreen(): JSX.Element {
               </>
             )}
           </div>
-          <PaymentStatusTile status={paymentStatus} />
+          <PaymentStatusTile
+            status={paymentStatus}
+            filterStatuses={
+              payRequest?.mode === PaymentLinkMode.DONATION
+                ? [PaymentLinkPaymentStatus.CANCELLED, NoPaymentLinkPaymentStatus.NO_PAYMENT]
+                : []
+            }
+          />
           {paymentStatus === PaymentLinkPaymentStatus.PENDING &&
             paymentHasQuote(payRequest) &&
             paymentStandards?.length &&
@@ -520,12 +530,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                         </p>
                       </div>
                     ) : payRequest?.mode === PaymentLinkMode.DONATION ? (
-                      <p className="text-base pt-3 text-dfxGray-700">
-                        {translate(
-                          'screens/payment',
-                          'This payment is for a donation. Please insert the amount you want to donate to active the payment.',
-                        )}
-                      </p>
+                      <p className="text-base pt-3 text-dfxGray-700" />
                     ) : (
                       <p className="text-base pt-3 text-dfxGray-700">
                         {translate(
@@ -625,12 +630,13 @@ export default function PaymentLinkScreen(): JSX.Element {
 
 interface PaymentStatusTileProps {
   status?: ExtendedPaymentLinkStatus;
+  filterStatuses?: ExtendedPaymentLinkStatus[];
 }
 
-function PaymentStatusTile({ status }: PaymentStatusTileProps): JSX.Element {
+function PaymentStatusTile({ status, filterStatuses }: PaymentStatusTileProps): JSX.Element {
   const { translate } = useSettingsContext();
 
-  if (!status || status === PaymentLinkPaymentStatus.PENDING) {
+  if (!status || status === PaymentLinkPaymentStatus.PENDING || (filterStatuses && filterStatuses.includes(status))) {
     return <></>;
   }
 
@@ -759,6 +765,7 @@ function DonationForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTermin
     setIsActivating(true);
     const params = new URLSearchParams({
       externalLinkId: paymentRequest.externalId as string,
+      route: paymentRequest.route,
     });
 
     return call<PaymentLink>({
@@ -777,25 +784,77 @@ function DonationForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTermin
 
   return (
     <div className="w-full mb-3">
-      <Form control={control} rules={rules} errors={errors} translate={translateError}>
+      <Form
+        control={control}
+        rules={rules}
+        errors={errors}
+        translate={translateError}
+        onSubmit={handleSubmit(activateDonation)}
+      >
         <StyledVerticalStack full gap={4} center>
           <p className="text-base text-dfxGray-700">
-            {translate('screens/payment', 'Insert the amount you want to donate to active the payment.')}
+            {translate('screens/payment', 'Insert the amount to active the payment.')}
           </p>
           <StyledInput
-            label={translate('screens/payment', 'Amount')}
+            label={translate('screens/payment', 'Amount in {{currencyName}}', {
+              currencyName: paymentRequest.currencyName,
+            })}
             name="amount"
             control={control}
             type="number"
-            placeholder={translate('screens/payment', 'Amount')}
+            placeholder={`10 ${paymentRequest.currencyName}`}
             full
           />
           <StyledButton
             type="submit"
             width={StyledButtonWidth.FULL}
-            label={translate('screens/payment', 'Activate donation')}
+            label={translate('screens/payment', 'Activate')}
             onClick={handleSubmit(activateDonation)}
             isLoading={isActivating}
+          />
+          {error && <ErrorHint message={error} />}
+        </StyledVerticalStack>
+      </Form>
+    </div>
+  );
+}
+
+function EditDonationForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTerminal }): JSX.Element {
+  const { call } = useApi();
+  const { translate, translateError } = useSettingsContext();
+  const [isEditing, setIsEditing] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const { control, handleSubmit } = useForm<{ amount: number }>({
+    mode: 'onTouched',
+  });
+
+  const editDonation = () => {
+    setIsEditing(true);
+    const params = new URLSearchParams({
+      externalLinkId: paymentRequest.externalId as string,
+      route: paymentRequest.route,
+    });
+
+    return call<PaymentLink>({
+      url: `paymentLink/payment?${params.toString()}`,
+      method: 'DELETE',
+    }).catch((error: ApiError) => {
+      setError(error.message ?? 'Unknown error');
+      setIsEditing(false);
+    });
+  };
+
+  return (
+    <div className="w-full mb-3">
+      <Form control={control} errors={{}} translate={translateError} onSubmit={handleSubmit(editDonation)}>
+        <StyledVerticalStack full gap={4} center>
+          <StyledButton
+            type="submit"
+            width={StyledButtonWidth.FULL}
+            label={translate('general/actions', 'Edit')}
+            onClick={handleSubmit(editDonation)}
+            isLoading={isEditing}
           />
           {error && <ErrorHint message={error} />}
         </StyledVerticalStack>

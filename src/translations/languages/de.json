@@ -678,9 +678,8 @@
     "Edit configuration": "Konfiguration bearbeiten",
     "Access key": "Zugangsschlüssel",
     "Please enter your access key to manage this checkout": "Bitte gib Deinen Zugangsschlüssel ein, um diesen Checkout zu verwalten",
-    "Activate donation": "Spende aktivieren",
-    "Insert the amount you want to donate to active the payment.": "Gib den Betrag ein, den Du spenden möchtest, um die Zahlung zu aktivieren.",
-    "This payment is for a donation. Please insert the amount you want to donate to active the payment.": "Diese Zahlung ist für eine Spende. Bitte gib den Betrag ein, den Du spenden möchtest, um die Zahlung zu aktivieren."
+    "Insert the amount to active the payment.": "Gib den Betrag ein, um die Zahlung zu aktivieren.",
+    "Amount in {{currencyName}}": "Betrag in {{currencyName}}"
   },
   "screens/iban": {
     "Your Bank Accounts": "Deine Bankkonten",

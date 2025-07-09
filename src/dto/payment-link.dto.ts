@@ -42,6 +42,8 @@ export interface PaymentLinkPayTerminal {
   possibleStandards: PaymentStandardType[];
   displayQr: boolean;
   mode: PaymentLinkMode;
+  route: string;
+  currencyName: string;
   recipient: {
     address?: {
       city: string;
