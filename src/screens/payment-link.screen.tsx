@@ -1,4 +1,12 @@
-import { Asset, PaymentLinkPaymentStatus, useAssetContext, Utils } from '@dfx.swiss/react';
+import {
+  ApiError,
+  Asset,
+  PaymentLinkPaymentStatus,
+  useApi,
+  useAssetContext,
+  Utils,
+  Validations,
+} from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -21,11 +29,12 @@ import {
   StyledIconButton,
   StyledInfoText,
   StyledInfoTextSize,
+  StyledInput,
   StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
+import { PaymentLink, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -33,6 +42,7 @@ import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-ico
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/opacity.css';
 import { useSearchParams } from 'react-router-dom';
+import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
@@ -41,6 +51,8 @@ import { useWindowContext } from 'src/contexts/window.context';
 import {
   ExtendedPaymentLinkStatus,
   NoPaymentLinkPaymentStatus,
+  PaymentLinkMode,
+  PaymentLinkPayTerminal,
   PaymentStandard,
   WalletAppId,
   WalletInfo,
@@ -220,6 +232,9 @@ export default function PaymentLinkScreen(): JSX.Element {
                     <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
                     {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
                   </p>
+                ) : payRequest?.mode === PaymentLinkMode.DONATION &&
+                  paymentStatus === NoPaymentLinkPaymentStatus.NO_PAYMENT ? (
+                  <DonationForm paymentRequest={payRequest} />
                 ) : [PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(
                     paymentStatus,
                   ) ? (
@@ -504,6 +519,13 @@ export default function PaymentLinkScreen(): JSX.Element {
                           )}
                         </p>
                       </div>
+                    ) : payRequest?.mode === PaymentLinkMode.DONATION ? (
+                      <p className="text-base pt-3 text-dfxGray-700">
+                        {translate(
+                          'screens/payment',
+                          'This payment is for a donation. Please insert the amount you want to donate to active the payment.',
+                        )}
+                      </p>
                     ) : (
                       <p className="text-base pt-3 text-dfxGray-700">
                         {translate(
@@ -712,5 +734,72 @@ function WalletLogo({ wallet, size }: { wallet: WalletInfo; size: number }): JSX
       height={size}
       placeholderSrc={`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${size} ${size}'%3E%3Crect width='${size}' height='${size}' fill='%23f4f5f6'/%3E%3C/svg%3E`}
     />
+  );
+}
+
+function DonationForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTerminal }): JSX.Element {
+  const { call } = useApi();
+  const { translate, translateError } = useSettingsContext();
+  const [isActivating, setIsActivating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<{ amount: number }>({
+    mode: 'onTouched',
+  });
+
+  const rules = Utils.createRules({
+    amount: [Validations.Required],
+  });
+
+  const activateDonation = (data: { amount: number }) => {
+    setIsActivating(true);
+    const params = new URLSearchParams({
+      externalLinkId: paymentRequest.externalId as string,
+    });
+
+    return call<PaymentLink>({
+      url: `paymentLink/payment?${params.toString()}`,
+      method: 'POST',
+      data: {
+        amount: +data.amount,
+        externalId: Math.random().toString(36).substring(2, 15),
+        expiryDate: new Date(Date.now() + 180 * 1000).toISOString(),
+      },
+    }).catch((error: ApiError) => {
+      setError(error.message ?? 'Unknown error');
+      setIsActivating(false);
+    });
+  };
+
+  return (
+    <div className="w-full mb-3">
+      <Form control={control} rules={rules} errors={errors} translate={translateError}>
+        <StyledVerticalStack full gap={4} center>
+          <p className="text-base text-dfxGray-700">
+            {translate('screens/payment', 'Insert the amount you want to donate to active the payment.')}
+          </p>
+          <StyledInput
+            label={translate('screens/payment', 'Amount')}
+            name="amount"
+            control={control}
+            type="number"
+            placeholder={translate('screens/payment', 'Amount')}
+            full
+          />
+          <StyledButton
+            type="submit"
+            width={StyledButtonWidth.FULL}
+            label={translate('screens/payment', 'Activate donation')}
+            onClick={handleSubmit(activateDonation)}
+            isLoading={isActivating}
+          />
+          {error && <ErrorHint message={error} />}
+        </StyledVerticalStack>
+      </Form>
+    </div>
   );
 }

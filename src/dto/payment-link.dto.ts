@@ -41,6 +41,7 @@ export interface PaymentLinkPayTerminal {
   standard: PaymentStandardType;
   possibleStandards: PaymentStandardType[];
   displayQr: boolean;
+  mode: PaymentLinkMode;
   recipient: {
     address?: {
       city: string;
@@ -140,4 +141,10 @@ export interface PaymentLinkHistoryPayment {
   currency: string;
   date: Date;
   externalId: string;
+}
+
+export enum PaymentLinkMode {
+  SINGLE = 'Single',
+  MULTIPLE = 'Multiple',
+  DONATION = 'Donation',
 }
