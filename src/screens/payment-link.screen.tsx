@@ -233,11 +233,13 @@ export default function PaymentLinkScreen(): JSX.Element {
                       <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
                       {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
                     </p>
-                    {payRequest?.mode === PaymentLinkMode.DONATION && <EditDonationForm paymentRequest={payRequest} />}
+                    {payRequest?.mode === PaymentLinkMode.PUBLIC && (
+                      <EditPublicPaymentForm paymentRequest={payRequest} />
+                    )}
                   </>
-                ) : payRequest?.mode === PaymentLinkMode.DONATION &&
+                ) : payRequest?.mode === PaymentLinkMode.PUBLIC &&
                   paymentStatus === NoPaymentLinkPaymentStatus.NO_PAYMENT ? (
-                  <DonationForm paymentRequest={payRequest} />
+                  <CreatePublicPaymentForm paymentRequest={payRequest} />
                 ) : [PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(
                     paymentStatus,
                   ) ? (
@@ -251,7 +253,7 @@ export default function PaymentLinkScreen(): JSX.Element {
           <PaymentStatusTile
             status={paymentStatus}
             filterStatuses={
-              payRequest?.mode === PaymentLinkMode.DONATION
+              payRequest?.mode === PaymentLinkMode.PUBLIC
                 ? [PaymentLinkPaymentStatus.CANCELLED, NoPaymentLinkPaymentStatus.NO_PAYMENT]
                 : []
             }
@@ -529,7 +531,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           )}
                         </p>
                       </div>
-                    ) : payRequest?.mode === PaymentLinkMode.DONATION ? (
+                    ) : payRequest?.mode === PaymentLinkMode.PUBLIC ? (
                       <p className="text-base pt-3 text-dfxGray-700" />
                     ) : (
                       <p className="text-base pt-3 text-dfxGray-700">
@@ -743,7 +745,7 @@ function WalletLogo({ wallet, size }: { wallet: WalletInfo; size: number }): JSX
   );
 }
 
-function DonationForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTerminal }): JSX.Element {
+function CreatePublicPaymentForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTerminal }): JSX.Element {
   const { call } = useApi();
   const { translate, translateError } = useSettingsContext();
   const [isActivating, setIsActivating] = useState(false);
@@ -761,7 +763,7 @@ function DonationForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTermin
     amount: [Validations.Required],
   });
 
-  const activateDonation = (data: { amount: number }) => {
+  const activate = (data: { amount: number }) => {
     setIsActivating(true);
     const params = new URLSearchParams({
       externalLinkId: paymentRequest.externalId as string,
@@ -789,7 +791,7 @@ function DonationForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTermin
         rules={rules}
         errors={errors}
         translate={translateError}
-        onSubmit={handleSubmit(activateDonation)}
+        onSubmit={handleSubmit(activate)}
       >
         <StyledVerticalStack full gap={4} center>
           <p className="text-base text-dfxGray-700">
@@ -809,7 +811,7 @@ function DonationForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTermin
             type="submit"
             width={StyledButtonWidth.FULL}
             label={translate('screens/payment', 'Activate')}
-            onClick={handleSubmit(activateDonation)}
+            onClick={handleSubmit(activate)}
             isLoading={isActivating}
           />
           {error && <ErrorHint message={error} />}
@@ -819,7 +821,7 @@ function DonationForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTermin
   );
 }
 
-function EditDonationForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTerminal }): JSX.Element {
+function EditPublicPaymentForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTerminal }): JSX.Element {
   const { call } = useApi();
   const { translate, translateError } = useSettingsContext();
   const [isEditing, setIsEditing] = useState(false);
@@ -829,7 +831,7 @@ function EditDonationForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTe
     mode: 'onTouched',
   });
 
-  const editDonation = () => {
+  const edit = () => {
     setIsEditing(true);
     const params = new URLSearchParams({
       externalLinkId: paymentRequest.externalId as string,
@@ -847,13 +849,13 @@ function EditDonationForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTe
 
   return (
     <div className="w-full mb-3">
-      <Form control={control} errors={{}} translate={translateError} onSubmit={handleSubmit(editDonation)}>
+      <Form control={control} errors={{}} translate={translateError} onSubmit={handleSubmit(edit)}>
         <StyledVerticalStack full gap={4} center>
           <StyledButton
             type="submit"
             width={StyledButtonWidth.FULL}
             label={translate('general/actions', 'Edit')}
-            onClick={handleSubmit(editDonation)}
+            onClick={handleSubmit(edit)}
             isLoading={isEditing}
           />
           {error && <ErrorHint message={error} />}

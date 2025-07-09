@@ -148,5 +148,5 @@ export interface PaymentLinkHistoryPayment {
 export enum PaymentLinkMode {
   SINGLE = 'Single',
   MULTIPLE = 'Multiple',
-  DONATION = 'Donation',
+  PUBLIC = 'Public',
 }
