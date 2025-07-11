@@ -108,8 +108,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [assetObject, setAssetObject] = useState<Asset>();
   const [showContract, setShowContract] = useState(false);
   const [walletData, setWalletData] = useState<WalletInfo>();
-  const [isOpenWallet, setIsOpenWallet] = useState(false);
-  const [isTempUnavailable, setIsTempUnavailable] = useState(false);
+  const [isLoadingDeeplink, setIsLoadingDeeplink] = useState(false);
 
   const {
     control,
@@ -124,14 +123,33 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   useEffect(() => {
     const walletId = searchParams.get('wallet-id') as WalletAppId;
-
     if (walletId) {
       setWalletData(getWalletByName(walletId));
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete('wallet-id');
-      setSearchParams(newParams);
+
+      setIsLoadingDeeplink(true);
+      getDeeplinkByWalletId(walletId)
+        .then((deeplink) => {
+          const wallet = getWalletByName(walletId) as WalletInfo;
+          setWalletData({ ...wallet, deepLink: deeplink });
+        })
+        .finally(() => {
+          const newParams = new URLSearchParams(searchParams);
+          newParams.delete('wallet-id');
+          setSearchParams(newParams);
+          setIsLoadingDeeplink(false);
+        });
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (
+      [PaymentLinkPaymentStatus.CANCELLED, PaymentLinkPaymentStatus.EXPIRED].includes(
+        paymentStatus as PaymentLinkPaymentStatus,
+      )
+    ) {
+      setWalletData(undefined);
+    }
+  }, [paymentStatus]);
 
   useEffect(() => {
     if (!paymentHasQuote(payRequest)) return;
@@ -187,22 +205,8 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   const handleBackButton = () => {
     setWalletData(undefined);
-    setIsTempUnavailable(false);
   };
 
-  const openWallet = async (walletId: WalletAppId) => {
-    try {
-      setIsOpenWallet(true);
-      const deeplink = await getDeeplinkByWalletId(walletId);
-      if (deeplink) {
-        window.open(deeplink, '_blank');
-      }
-    } catch (error) {
-      setIsTempUnavailable(true);
-    } finally {
-      setIsOpenWallet(false);
-    }
-  };
   const assetsList =
     paymentHasQuote(payRequest) &&
     payRequest.transferAmounts.find((item) => item.method === selectedPaymentStandard?.blockchain)?.assets;
@@ -554,24 +558,28 @@ export default function PaymentLinkScreen(): JSX.Element {
                           <WalletLogo wallet={walletData} size={128} />
 
                           <StyledVerticalStack full gap={3} center className="pt-2 px-4">
-                            <StyledButton
-                              label={
-                                isTempUnavailable
-                                  ? translate('screens/home', 'App temporarily unavailable')
-                                  : translate('screens/home', 'Pay in app')
-                              }
-                              onClick={() => openWallet(walletData.id)}
-                              color={StyledButtonColor.BLUE}
-                              width={StyledButtonWidth.FULL}
-                              hidden={!walletData.deepLink || !paymentIdentifier}
-                              isLoading={isOpenWallet}
-                              disabled={isTempUnavailable}
-                            />
+                            {isLoadingDeeplink && !walletData.disabled ? (
+                              <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
+                            ) : (
+                              <StyledButton
+                                label={translate('screens/home', 'Pay in app')}
+                                onClick={() => window.open(walletData.deepLink, '_blank')}
+                                color={StyledButtonColor.BLUE}
+                                width={StyledButtonWidth.FULL}
+                                hidden={
+                                  !walletData.deepLink ||
+                                  !paymentIdentifier ||
+                                  !paymentHasQuote(payRequest) ||
+                                  walletData.disabled
+                                }
+                              />
+                            )}
                             <StyledButton
                               label={translate('screens/home', 'Open website')}
                               onClick={() => window.open(walletData.websiteUrl, '_blank')}
                               color={StyledButtonColor.STURDY_WHITE}
                               width={StyledButtonWidth.FULL}
+                              hidden={!walletData.websiteUrl}
                             />
                             <div
                               className="flex flex-row gap-3 w-full justify-center pt-5 pb-2"
@@ -704,12 +712,8 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
           return (
             <div
               key={wallet.name}
-              className={`flex flex-col items-center gap-2 max-w-[120px] min-w-0 ${
-                !wallet.disabled ? 'cursor-pointer' : 'opacity-50'
-              }`}
-              onClick={
-                wallet.disabled ? undefined : () => navigate({ pathname: '/pl', search: `?wallet-id=${wallet.id}` })
-              }
+              className="flex flex-col items-center gap-2 max-w-[120px] min-w-0 cursor-pointer"
+              onClick={() => navigate({ pathname: '/pl', search: `?wallet-id=${wallet.id}` })}
             >
               <WalletLogo wallet={wallet} size={60} />
               <p className="text-center font-semibold text-dfxGray-600 w-full text-xs truncate">{wallet.name}</p>

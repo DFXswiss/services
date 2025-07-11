@@ -16,30 +16,31 @@ interface PaymentLinkWalletsProps {
 export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   const { paymentIdentifier, payRequest, paymentHasQuote } = usePaymentLinkContext();
 
-  const recommendedWallets = useMemo(() => {
-    return PaymentLinkWallets.filter((wallet) => wallet.recommended === true);
-  }, []);
-
-  const otherWallets = useMemo(() => {
-    return PaymentLinkWallets.filter((wallet) => !wallet.recommended && !wallet.semiCompatible);
-  }, []);
 
   const transferMethods = paymentHasQuote(payRequest)
     ? payRequest.transferAmounts.filter((ta) => ta.available).map((ta) => ta.method)
     : [];
 
-  const isDisabled = useCallback(
-    (wallet: WalletInfo) => {
-      return wallet.transferMethod ? !transferMethods.includes(wallet.transferMethod) : wallet.disabled;
-    },
+  const PaymentLinkWalletsWithAvailability = useMemo(
+    () =>
+      PaymentLinkWallets.map((wallet) => ({
+        ...wallet,
+        disabled: wallet.transferMethod ? !transferMethods.includes(wallet.transferMethod) : wallet.disabled,
+      })),
     [transferMethods],
   );
 
+  const recommendedWallets = useMemo(() => {
+    return PaymentLinkWalletsWithAvailability.filter((wallet) => wallet.recommended === true);
+  }, [PaymentLinkWalletsWithAvailability]);
+
+  const otherWallets = useMemo(() => {
+    return PaymentLinkWalletsWithAvailability.filter((wallet) => !wallet.recommended && !wallet.semiCompatible);
+  }, [PaymentLinkWalletsWithAvailability]);
+
   const semiCompatibleWallets = useMemo(() => {
-    return PaymentLinkWallets.filter((wallet) => wallet.semiCompatible)
-      .map((wallet) => ({ ...wallet, disabled: isDisabled(wallet) }))
-      .sort((a, b) => (a.disabled ? 1 : b.disabled ? -1 : 0));
-  }, [isDisabled]);
+    return PaymentLinkWalletsWithAvailability.filter((wallet) => wallet.semiCompatible);
+  }, [PaymentLinkWalletsWithAvailability]);
 
   const getWalletByName = useCallback(
     (id: WalletAppId): WalletInfo | undefined => {
@@ -72,7 +73,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
     }
   };
 
-  const getDeeplinkByWalletId = async (id: WalletAppId) => {
+  const getDeeplinkByWalletId = async (id: WalletAppId): Promise<string | undefined> => {
     const wallet = getWalletByName(id);
     if (!wallet || !paymentIdentifier) return undefined;
 

@@ -114,7 +114,7 @@ export enum WalletAppId {
 export interface WalletInfo {
   id: WalletAppId;
   name: string;
-  websiteUrl: string;
+  websiteUrl?: string;
   iconUrl: string;
   deepLink?: string;
   appStoreUrl?: string;
