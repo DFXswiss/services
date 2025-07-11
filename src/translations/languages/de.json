@@ -677,7 +677,11 @@
     "Referral rewards": "Referral-Rewards",
     "Edit configuration": "Konfiguration bearbeiten",
     "Access key": "Zugangsschlüssel",
-    "Please enter your access key to manage this checkout": "Bitte gib Deinen Zugangsschlüssel ein, um diesen Checkout zu verwalten"
+    "Please enter your access key to manage this checkout": "Bitte gib Deinen Zugangsschlüssel ein, um diesen Checkout zu verwalten",
+    "Insert the amount to active the payment.": "Gib den Betrag ein, um die Zahlung zu aktivieren.",
+    "Amount in {{currencyName}}": "Betrag in {{currencyName}}",
+    "Latest transactions": "Letzte Transaktionen",
+    "Create Payment": "Zahlung erstellen"
   },
   "screens/iban": {
     "Your Bank Accounts": "Deine Bankkonten",
