@@ -776,7 +776,6 @@ function CreatePublicPaymentForm({ paymentRequest }: { paymentRequest: PaymentLi
       data: {
         amount: +data.amount,
         externalId: Math.random().toString(36).substring(2, 15),
-        expiryDate: new Date(Date.now() + 180 * 1000).toISOString(),
       },
     }).catch((error: ApiError) => {
       setError(error.message ?? 'Unknown error');
@@ -799,12 +798,12 @@ function CreatePublicPaymentForm({ paymentRequest }: { paymentRequest: PaymentLi
           </p>
           <StyledInput
             label={translate('screens/payment', 'Amount in {{currencyName}}', {
-              currencyName: paymentRequest.currencyName,
+              currencyName: paymentRequest.currency,
             })}
             name="amount"
             control={control}
             type="number"
-            placeholder={`10 ${paymentRequest.currencyName}`}
+            placeholder={`10 ${paymentRequest.currency}`}
             full
           />
           <StyledButton

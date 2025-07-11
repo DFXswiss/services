@@ -43,7 +43,7 @@ export interface PaymentLinkPayTerminal {
   displayQr: boolean;
   mode: PaymentLinkMode;
   route: string;
-  currencyName: string;
+  currency: string;
   recipient: {
     address?: {
       city: string;
