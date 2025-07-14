@@ -531,7 +531,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                         <p className="text-base pt-3 text-dfxGray-700">
                           {translate(
                             'screens/payment',
-                            'Scan the QR-Code with a compatible wallet to complete the payment.',
+                            'Scan the QR-Code with a compatible app to complete the payment.',
                           )}
                         </p>
                       </div>
@@ -541,7 +541,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                       <p className="text-base pt-3 text-dfxGray-700">
                         {translate(
                           'screens/payment',
-                          'Tell the cashier that you want to pay with crypto and then scan the QR-Code with a compatible wallet to complete the payment.',
+                          'Tell the cashier that you want to pay with crypto and then scan the QR-Code with a compatible app to complete the payment.',
                         )}
                       </p>
                     )}
@@ -595,15 +595,15 @@ export default function PaymentLinkScreen(): JSX.Element {
                       <>
                         <WalletGrid
                           wallets={recommendedWallets}
-                          header={translate('screens/payment', 'Recommended wallets')}
+                          header={translate('screens/payment', 'Recommended apps')}
                         />
                         <WalletGrid
                           wallets={otherWallets}
-                          header={translate('screens/payment', 'Other compatible wallets')}
+                          header={translate('screens/payment', 'Other compatible apps')}
                         />
                         <WalletGrid
                           wallets={semiCompatibleWallets}
-                          header={translate('screens/payment', 'Semi compatible wallets')}
+                          header={translate('screens/payment', 'Semi compatible apps')}
                         />
                       </>
                     )}
