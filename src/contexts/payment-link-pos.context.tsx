@@ -109,7 +109,6 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
         data: {
           amount: +data.amount,
           externalId: Math.random().toString(36).substring(2, 15),
-          expiryDate: new Date(Date.now() + 180 * 1000).toISOString(),
         },
       })
         .then(() => {
