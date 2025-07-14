@@ -25,7 +25,7 @@ export const PaymentStandards = {
 };
 
 export const PaymentLinkWallets: WalletInfo[] = [
-  // ----------------------- RECOMMENDED WALLETS -----------------------
+  // ----------------------- RECOMMENDED APPS -----------------------
   {
     id: WalletAppId.CAKEWALLET,
     name: 'Cake Wallet',
@@ -78,7 +78,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     recommended: true,
     transferMethod: Blockchain.LIGHTNING,
   },
-  // ----------------------- OTHER COMPATIBLE WALLETS -----------------------
+  // ----------------------- OTHER COMPATIBLE APPS -----------------------
   {
     id: WalletAppId.BITBANANA,
     name: 'BitBanana',
