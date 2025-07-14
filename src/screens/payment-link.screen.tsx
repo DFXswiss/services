@@ -1,4 +1,12 @@
-import { Asset, PaymentLinkPaymentStatus, useAssetContext, Utils } from '@dfx.swiss/react';
+import {
+  ApiError,
+  Asset,
+  PaymentLinkPaymentStatus,
+  useApi,
+  useAssetContext,
+  Utils,
+  Validations,
+} from '@dfx.swiss/react';
 import {
   AlignContent,
   CopyButton,
@@ -21,11 +29,12 @@ import {
   StyledIconButton,
   StyledInfoText,
   StyledInfoTextSize,
+  StyledInput,
   StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
+import { PaymentLink, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -33,6 +42,7 @@ import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-ico
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/opacity.css';
 import { useSearchParams } from 'react-router-dom';
+import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
@@ -41,6 +51,8 @@ import { useWindowContext } from 'src/contexts/window.context';
 import {
   ExtendedPaymentLinkStatus,
   NoPaymentLinkPaymentStatus,
+  PaymentLinkMode,
+  PaymentLinkPayTerminal,
   PaymentStandard,
   WalletAppId,
   WalletInfo,
@@ -96,8 +108,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [assetObject, setAssetObject] = useState<Asset>();
   const [showContract, setShowContract] = useState(false);
   const [walletData, setWalletData] = useState<WalletInfo>();
-  const [isOpenWallet, setIsOpenWallet] = useState(false);
-  const [isTempUnavailable, setIsTempUnavailable] = useState(false);
+  const [isLoadingDeeplink, setIsLoadingDeeplink] = useState(false);
 
   const {
     control,
@@ -112,14 +123,33 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   useEffect(() => {
     const walletId = searchParams.get('wallet-id') as WalletAppId;
-
     if (walletId) {
       setWalletData(getWalletByName(walletId));
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete('wallet-id');
-      setSearchParams(newParams);
+
+      setIsLoadingDeeplink(true);
+      getDeeplinkByWalletId(walletId)
+        .then((deeplink) => {
+          const wallet = getWalletByName(walletId) as WalletInfo;
+          setWalletData({ ...wallet, deepLink: deeplink });
+        })
+        .finally(() => {
+          const newParams = new URLSearchParams(searchParams);
+          newParams.delete('wallet-id');
+          setSearchParams(newParams);
+          setIsLoadingDeeplink(false);
+        });
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (
+      [PaymentLinkPaymentStatus.CANCELLED, PaymentLinkPaymentStatus.EXPIRED].includes(
+        paymentStatus as PaymentLinkPaymentStatus,
+      )
+    ) {
+      setWalletData(undefined);
+    }
+  }, [paymentStatus]);
 
   useEffect(() => {
     if (!paymentHasQuote(payRequest)) return;
@@ -175,22 +205,8 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   const handleBackButton = () => {
     setWalletData(undefined);
-    setIsTempUnavailable(false);
   };
 
-  const openWallet = async (walletId: WalletAppId) => {
-    try {
-      setIsOpenWallet(true);
-      const deeplink = await getDeeplinkByWalletId(walletId);
-      if (deeplink) {
-        window.open(deeplink, '_blank');
-      }
-    } catch (error) {
-      setIsTempUnavailable(true);
-    } finally {
-      setIsOpenWallet(false);
-    }
-  };
   const assetsList =
     paymentHasQuote(payRequest) &&
     payRequest.transferAmounts.find((item) => item.method === selectedPaymentStandard?.blockchain)?.assets;
@@ -216,10 +232,18 @@ export default function PaymentLinkScreen(): JSX.Element {
             {!merchant && (
               <>
                 {paymentHasQuote(payRequest) ? (
-                  <p className="text-xl font-bold text-dfxBlue-800 mb-8">
-                    <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
-                    {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
-                  </p>
+                  <>
+                    <p className="text-xl font-bold text-dfxBlue-800 mb-8">
+                      <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
+                      {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
+                    </p>
+                    {payRequest?.mode === PaymentLinkMode.PUBLIC && (
+                      <EditPublicPaymentForm paymentRequest={payRequest} />
+                    )}
+                  </>
+                ) : payRequest?.mode === PaymentLinkMode.PUBLIC &&
+                  paymentStatus === NoPaymentLinkPaymentStatus.NO_PAYMENT ? (
+                  <CreatePublicPaymentForm paymentRequest={payRequest} />
                 ) : [PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(
                     paymentStatus,
                   ) ? (
@@ -230,7 +254,14 @@ export default function PaymentLinkScreen(): JSX.Element {
               </>
             )}
           </div>
-          <PaymentStatusTile status={paymentStatus} />
+          <PaymentStatusTile
+            status={paymentStatus}
+            filterStatuses={
+              payRequest?.mode === PaymentLinkMode.PUBLIC
+                ? [PaymentLinkPaymentStatus.CANCELLED, NoPaymentLinkPaymentStatus.NO_PAYMENT]
+                : []
+            }
+          />
           {paymentStatus === PaymentLinkPaymentStatus.PENDING &&
             paymentHasQuote(payRequest) &&
             paymentStandards?.length &&
@@ -504,6 +535,8 @@ export default function PaymentLinkScreen(): JSX.Element {
                           )}
                         </p>
                       </div>
+                    ) : payRequest?.mode === PaymentLinkMode.PUBLIC ? (
+                      <p className="text-base pt-3 text-dfxGray-700" />
                     ) : (
                       <p className="text-base pt-3 text-dfxGray-700">
                         {translate(
@@ -525,24 +558,28 @@ export default function PaymentLinkScreen(): JSX.Element {
                           <WalletLogo wallet={walletData} size={128} />
 
                           <StyledVerticalStack full gap={3} center className="pt-2 px-4">
-                            <StyledButton
-                              label={
-                                isTempUnavailable
-                                  ? translate('screens/home', 'App temporarily unavailable')
-                                  : translate('screens/home', 'Pay in app')
-                              }
-                              onClick={() => openWallet(walletData.id)}
-                              color={StyledButtonColor.BLUE}
-                              width={StyledButtonWidth.FULL}
-                              hidden={!walletData.deepLink || !paymentIdentifier}
-                              isLoading={isOpenWallet}
-                              disabled={isTempUnavailable}
-                            />
+                            {isLoadingDeeplink && !walletData.disabled ? (
+                              <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
+                            ) : (
+                              <StyledButton
+                                label={translate('screens/home', 'Pay in app')}
+                                onClick={() => window.open(walletData.deepLink, '_blank')}
+                                color={StyledButtonColor.BLUE}
+                                width={StyledButtonWidth.FULL}
+                                hidden={
+                                  !walletData.deepLink ||
+                                  !paymentIdentifier ||
+                                  !paymentHasQuote(payRequest) ||
+                                  walletData.disabled
+                                }
+                              />
+                            )}
                             <StyledButton
                               label={translate('screens/home', 'Open website')}
                               onClick={() => window.open(walletData.websiteUrl, '_blank')}
                               color={StyledButtonColor.STURDY_WHITE}
                               width={StyledButtonWidth.FULL}
+                              hidden={!walletData.websiteUrl}
                             />
                             <div
                               className="flex flex-row gap-3 w-full justify-center pt-5 pb-2"
@@ -603,12 +640,13 @@ export default function PaymentLinkScreen(): JSX.Element {
 
 interface PaymentStatusTileProps {
   status?: ExtendedPaymentLinkStatus;
+  filterStatuses?: ExtendedPaymentLinkStatus[];
 }
 
-function PaymentStatusTile({ status }: PaymentStatusTileProps): JSX.Element {
+function PaymentStatusTile({ status, filterStatuses }: PaymentStatusTileProps): JSX.Element {
   const { translate } = useSettingsContext();
 
-  if (!status || status === PaymentLinkPaymentStatus.PENDING) {
+  if (!status || status === PaymentLinkPaymentStatus.PENDING || (filterStatuses && filterStatuses.includes(status))) {
     return <></>;
   }
 
@@ -674,12 +712,8 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
           return (
             <div
               key={wallet.name}
-              className={`flex flex-col items-center gap-2 max-w-[120px] min-w-0 ${
-                !wallet.disabled ? 'cursor-pointer' : 'opacity-50'
-              }`}
-              onClick={
-                wallet.disabled ? undefined : () => navigate({ pathname: '/pl', search: `?wallet-id=${wallet.id}` })
-              }
+              className="flex flex-col items-center gap-2 max-w-[120px] min-w-0 cursor-pointer"
+              onClick={() => navigate({ pathname: '/pl', search: `?wallet-id=${wallet.id}` })}
             >
               <WalletLogo wallet={wallet} size={60} />
               <p className="text-center font-semibold text-dfxGray-600 w-full text-xs truncate">{wallet.name}</p>
@@ -712,5 +746,124 @@ function WalletLogo({ wallet, size }: { wallet: WalletInfo; size: number }): JSX
       height={size}
       placeholderSrc={`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${size} ${size}'%3E%3Crect width='${size}' height='${size}' fill='%23f4f5f6'/%3E%3C/svg%3E`}
     />
+  );
+}
+
+function CreatePublicPaymentForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTerminal }): JSX.Element {
+  const { call } = useApi();
+  const { translate, translateError } = useSettingsContext();
+  const [isActivating, setIsActivating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<{ amount: number }>({
+    mode: 'onTouched',
+  });
+
+  const rules = Utils.createRules({
+    amount: [Validations.Required],
+  });
+
+  const activate = (data: { amount: number }) => {
+    setIsActivating(true);
+    const params = new URLSearchParams({
+      externalLinkId: paymentRequest.externalId as string,
+      route: paymentRequest.route,
+    });
+
+    return call<PaymentLink>({
+      url: `paymentLink/payment?${params.toString()}`,
+      method: 'POST',
+      data: {
+        amount: +data.amount,
+        externalId: Math.random().toString(36).substring(2, 15),
+      },
+    }).catch((error: ApiError) => {
+      setError(error.message ?? 'Unknown error');
+      setIsActivating(false);
+    });
+  };
+
+  return (
+    <div className="w-full mb-3">
+      <Form
+        control={control}
+        rules={rules}
+        errors={errors}
+        translate={translateError}
+        onSubmit={handleSubmit(activate)}
+      >
+        <StyledVerticalStack full gap={4} center>
+          <p className="text-base text-dfxGray-700">
+            {translate('screens/payment', 'Insert the amount to active the payment.')}
+          </p>
+          <StyledInput
+            label={translate('screens/payment', 'Amount in {{currencyName}}', {
+              currencyName: paymentRequest.currency,
+            })}
+            name="amount"
+            control={control}
+            type="number"
+            placeholder={`10 ${paymentRequest.currency}`}
+            full
+          />
+          <StyledButton
+            type="submit"
+            width={StyledButtonWidth.FULL}
+            label={translate('screens/payment', 'Activate')}
+            onClick={handleSubmit(activate)}
+            isLoading={isActivating}
+          />
+          {error && <ErrorHint message={error} />}
+        </StyledVerticalStack>
+      </Form>
+    </div>
+  );
+}
+
+function EditPublicPaymentForm({ paymentRequest }: { paymentRequest: PaymentLinkPayTerminal }): JSX.Element {
+  const { call } = useApi();
+  const { translate, translateError } = useSettingsContext();
+  const [isEditing, setIsEditing] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const { control, handleSubmit } = useForm<{ amount: number }>({
+    mode: 'onTouched',
+  });
+
+  const edit = () => {
+    setIsEditing(true);
+    const params = new URLSearchParams({
+      externalLinkId: paymentRequest.externalId as string,
+      route: paymentRequest.route,
+    });
+
+    return call<PaymentLink>({
+      url: `paymentLink/payment?${params.toString()}`,
+      method: 'DELETE',
+    }).catch((error: ApiError) => {
+      setError(error.message ?? 'Unknown error');
+      setIsEditing(false);
+    });
+  };
+
+  return (
+    <div className="w-full mb-3">
+      <Form control={control} errors={{}} translate={translateError} onSubmit={handleSubmit(edit)}>
+        <StyledVerticalStack full gap={4} center>
+          <StyledButton
+            type="submit"
+            width={StyledButtonWidth.FULL}
+            label={translate('general/actions', 'Edit')}
+            onClick={handleSubmit(edit)}
+            isLoading={isEditing}
+          />
+          {error && <ErrorHint message={error} />}
+        </StyledVerticalStack>
+      </Form>
+    </div>
   );
 }

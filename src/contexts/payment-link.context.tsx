@@ -3,7 +3,6 @@ import {
   Blockchain,
   PaymentLinkPaymentStatus,
   PaymentStandardType,
-  useApi,
   useAssetContext,
 } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
@@ -30,15 +29,15 @@ import {
   PaymentLinkPayRequest,
   PaymentLinkPayTerminal,
   PaymentStandard,
-  PaymentStatus,
 } from 'src/dto/payment-link.dto';
+import { usePolling } from 'src/hooks/polling';
+import { useSessionStore } from 'src/hooks/session-store.hook';
 import { EvmUri } from 'src/util/evm-uri';
 import { Lnurl } from 'src/util/lnurl';
 import { fetchJson, url } from 'src/util/utils';
 import { useAppParams } from '../hooks/app-params.hook';
 import { Timer, useCountdown } from '../hooks/countdown.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { useSessionStore } from '../hooks/session-store.hook';
 import { useMetaMask, WalletType } from '../hooks/wallets/metamask.hook';
 
 interface PaymentLinkInterface {
@@ -59,7 +58,7 @@ interface PaymentLinkInterface {
   paymentHasQuote: (request?: PaymentLinkPayTerminal | PaymentLinkPayRequest) => request is PaymentLinkPayRequest;
   setPaymentIdentifier: (id: string | undefined) => void;
   setSessionApiUrl: (url?: string) => void;
-  fetchPayRequest: (url: string, isRefetch?: boolean) => Promise<number | undefined>;
+  fetchPayRequest: (url: string) => Promise<void>;
   fetchPaymentIdentifier: (
     payRequest: PaymentLinkPayTerminal | PaymentLinkPayRequest,
     selectedPaymentMethod?: Blockchain,
@@ -75,7 +74,6 @@ export function usePaymentLinkContext(): PaymentLinkInterface {
 }
 
 export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
-  const { call } = useApi();
   const { navigate } = useNavigation();
   const { assets } = useAssetContext();
   const { timer, startTimer } = useCountdown();
@@ -85,6 +83,9 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
 
   const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction, readBalance } =
     useMetaMask();
+
+  const { init: initPaymentPolling, stop: stopPaymentPolling } = usePolling();
+  const { init: initWaitPolling, stop: stopWaitPolling } = usePolling({ timeInterval: 2000 });
 
   const [error, setError] = useState<string>();
   const [merchant, setMerchant] = useState<string>();
@@ -101,7 +102,6 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   const [isMetaMaskPaying, setIsMetaMaskPaying] = useState(false);
   const [metaMaskError, setMetaMaskError] = useState<string>();
 
-  const refetchTimeout = useRef<NodeJS.Timeout>();
   const sessionApiUrl = useRef<string>(paymentLinkApiUrlStore.get() ?? '');
 
   const callbackUrl = useRef<string>();
@@ -149,8 +149,9 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     }
 
     return () => {
-      if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
       setSessionApiUrl(undefined);
+      stopPaymentPolling();
+      stopWaitPolling();
     };
   }, [isParamsInitialized]);
 
@@ -163,48 +164,38 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     }
   }, [payRequest, isInstalled, getWalletType]);
 
-  async function fetchPayRequest(url: string, isRefetch = false): Promise<number | undefined> {
+  async function fetchPayRequest(url: string): Promise<void> {
     setError(undefined);
-    let refetchDelay: number | undefined;
 
     try {
       const urlObj = new URL(url);
-      urlObj.searchParams.set('timeout', isRefetch ? '10' : '0');
-
+      urlObj.searchParams.set('timeout', '0');
       const payRequest = await fetchJson(urlObj);
-      if (sessionApiUrl.current !== url) return undefined;
-
+      const status = getStatusFromPayRequest(payRequest);
       setPayRequest(payRequest);
+      setPaymentStatus(status);
 
-      if (hasQuote(payRequest)) {
-        setPaymentStatus(PaymentLinkPaymentStatus.PENDING);
-
-        setPaymentStandardSelection(payRequest);
-        awaitPayment(payRequest.quote.payment)
-          .then((response) => {
-            if (response.status !== PaymentLinkPaymentStatus.PENDING) {
-              setPaymentStatus(response.status);
-              if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
-              if (response.status === PaymentLinkPaymentStatus.COMPLETED && redirectUri) {
-                closeServices({ type: CloseType.PAYMENT }, false);
-              }
-            }
-          })
-          .catch(() => {
-            fetchPayRequest(url);
-          });
-        refetchDelay = new Date(payRequest.quote.expiration).getTime() - Date.now();
-        startTimer(new Date(payRequest.quote.expiration));
-      } else if (payRequest.message?.toLowerCase().includes('payment complete')) {
-        setPaymentStatus(PaymentLinkPaymentStatus.COMPLETED);
-        return;
-      } else {
-        setPaymentStatus(NoPaymentLinkPaymentStatus.NO_PAYMENT);
-        refetchDelay = 100;
+      if (status === PaymentLinkPaymentStatus.PENDING) {
+        return waitPayment(payRequest);
       }
 
-      if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
-      refetchTimeout.current = setTimeout(() => fetchPayRequest(url, true), refetchDelay);
+      urlObj.searchParams.set('timeout', '10');
+      initPaymentPolling(urlObj, (response) => {
+        setPayRequest(response);
+
+        const status = getStatusFromPayRequest(response);
+        setPaymentStatus(status);
+
+        switch (status) {
+          case PaymentLinkPaymentStatus.PENDING:
+            stopPaymentPolling();
+            waitPayment(response);
+            break;
+          case PaymentLinkPaymentStatus.COMPLETED:
+            stopPaymentPolling();
+            break;
+        }
+      });
     } catch (error: any) {
       setError(error.message ?? 'Unknown Error');
     }
@@ -231,16 +222,44 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     setPaymentStandards(possibleStandards);
   }
 
-  async function awaitPayment(id: string): Promise<PaymentStatus> {
-    return call<PaymentStatus>({
-      url: `lnurlp/wait/${id}`,
-      method: 'GET',
+  async function waitPayment(paymentRequest: PaymentLinkPayRequest) {
+    setPaymentStatus(PaymentLinkPaymentStatus.PENDING);
+    setPaymentStandardSelection(paymentRequest);
+    startTimer(new Date(paymentRequest.quote.expiration));
+
+    const lnurlpUrl = url({
+      base: process.env.REACT_APP_API_URL,
+      path: `v1/lnurlp/wait/${paymentRequest.quote.payment}`,
+    });
+
+    initWaitPolling(lnurlpUrl, (response) => {
+      stopWaitPolling();
+
+      if (response.status === PaymentLinkPaymentStatus.COMPLETED && redirectUri) {
+        setPaymentStatus(PaymentLinkPaymentStatus.COMPLETED);
+        closeServices({ type: CloseType.PAYMENT }, false);
+      } else if (response.status) {
+        setPaymentStatus(response.status);
+        setTimeout(() => fetchPayRequest(sessionApiUrl.current), 3 * 1000);
+      } else {
+        fetchPayRequest(sessionApiUrl.current);
+      }
     });
   }
 
   function hasQuote(request?: PaymentLinkPayTerminal | PaymentLinkPayRequest): request is PaymentLinkPayRequest {
     return !!request && 'quote' in request;
   }
+
+  const getStatusFromPayRequest = (payRequest: PaymentLinkPayRequest | PaymentLinkPayTerminal) => {
+    if (hasQuote(payRequest)) {
+      return PaymentLinkPaymentStatus.PENDING;
+    } else if (payRequest.message?.toLowerCase().includes('payment complete')) {
+      return PaymentLinkPaymentStatus.COMPLETED;
+    } else {
+      return NoPaymentLinkPaymentStatus.NO_PAYMENT;
+    }
+  };
 
   async function invokeCallback(_callbackUrl: string): Promise<string | undefined> {
     if (callbackUrl.current === _callbackUrl) return;
