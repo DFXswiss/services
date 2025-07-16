@@ -597,10 +597,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           wallets={recommendedWallets}
                           header={translate('screens/payment', 'Recommended apps')}
                         />
-                        <WalletGrid
-                          wallets={otherWallets}
-                          header={translate('screens/payment', 'Other compatible apps')}
-                        />
+                        <WalletGrid wallets={otherWallets} header={translate('screens/payment', 'Compatible apps')} />
                         <WalletGrid
                           wallets={semiCompatibleWallets}
                           header={translate('screens/payment', 'Semi compatible apps')}

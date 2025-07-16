@@ -78,7 +78,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     recommended: true,
     transferMethod: Blockchain.LIGHTNING,
   },
-  // ----------------------- OTHER COMPATIBLE APPS -----------------------
+  // ----------------------- COMPATIBLE APPS -----------------------
   {
     id: WalletAppId.BITBANANA,
     name: 'BitBanana',
