@@ -144,6 +144,14 @@ export const PaymentLinkWallets: WalletInfo[] = [
     transferMethod: Blockchain.LIGHTNING,
   },
   {
+    id: WalletAppId.DEUROWALLET,
+    name: 'DEURO Wallet',
+    websiteUrl: 'https://deuro.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/DeuroWallet.webp',
+    appStoreUrl: 'https://apps.apple.com/ch/app/deuro-wallet/id6746087643',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=eu.deurowallet.wallet',
+  },
+  {
     id: WalletAppId.ELECTRUM,
     name: 'Electrum',
     websiteUrl: 'https://electrum.org/',
