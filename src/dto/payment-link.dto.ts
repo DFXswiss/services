@@ -85,6 +85,7 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
 }
 
 export enum WalletAppId {
+  DEUROWALLET = 'deurowallet',
   CAKEWALLET = 'cakewallet',
   FRANKENCOIN = 'frankencoin',
   PHOENIX = 'phoenix',
