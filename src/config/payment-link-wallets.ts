@@ -25,7 +25,7 @@ export const PaymentStandards = {
 };
 
 export const PaymentLinkWallets: WalletInfo[] = [
-  // ----------------------- RECOMMENDED WALLETS -----------------------
+  // ----------------------- RECOMMENDED APPS -----------------------
   {
     id: WalletAppId.CAKEWALLET,
     name: 'Cake Wallet',
@@ -78,7 +78,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     recommended: true,
     transferMethod: Blockchain.LIGHTNING,
   },
-  // ----------------------- OTHER COMPATIBLE WALLETS -----------------------
+  // ----------------------- COMPATIBLE APPS -----------------------
   {
     id: WalletAppId.BITBANANA,
     name: 'BitBanana',
@@ -142,6 +142,14 @@ export const PaymentLinkWallets: WalletInfo[] = [
     appStoreUrl: 'https://apps.apple.com/app/coincorner-checkout/id1464880599',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.coincorner.app.crypt',
     transferMethod: Blockchain.LIGHTNING,
+  },
+  {
+    id: WalletAppId.DEUROWALLET,
+    name: 'DEURO Wallet',
+    websiteUrl: 'https://deuro.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/DeuroWallet.webp',
+    appStoreUrl: 'https://apps.apple.com/ch/app/deuro-wallet/id6746087643',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=eu.deurowallet.wallet',
   },
   {
     id: WalletAppId.ELECTRUM,
