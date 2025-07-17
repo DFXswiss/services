@@ -21,12 +21,15 @@ export enum WalletType {
   CLI_AR = 'CliAr',
   CLI_LN = 'CliLn',
   CLI_SOL = 'CliSol',
+  CLI_TRX = 'CliTrx',
   DFX_TARO = 'DfxTaro',
   WALLET_CONNECT = 'WalletConnect',
   CAKE = 'Cake',
   MONERO = 'Monero',
   PHANTOM_SOL = 'PhantomSol',
   TRUST_SOL = 'TrustSol',
+  TRUST_TRX = 'TrustTrx',
+  TRONLINK_TRX = 'TronLinkTrx',
   MAIL = 'Mail',
   ADDRESS = 'Address',
 }
@@ -65,6 +68,7 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
   [WalletType.CLI_ADA]: [Blockchain.CARDANO],
   [WalletType.CLI_AR]: [Blockchain.ARWEAVE],
   [WalletType.CLI_SOL]: [Blockchain.SOLANA],
+  [WalletType.CLI_TRX]: [Blockchain.TRON],
   [WalletType.DFX_TARO]: [Blockchain.LIGHTNING],
   [WalletType.WALLET_CONNECT]: [
     Blockchain.ETHEREUM,
@@ -80,6 +84,8 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
   [WalletType.MONERO]: [Blockchain.MONERO],
   [WalletType.PHANTOM_SOL]: [Blockchain.SOLANA],
   [WalletType.TRUST_SOL]: [Blockchain.SOLANA],
+  [WalletType.TRUST_TRX]: [Blockchain.TRON],
+  [WalletType.TRONLINK_TRX]: [Blockchain.TRON],
 };
 
 export function supportsBlockchain(wallet: WalletType, blockchain: Blockchain): boolean {
