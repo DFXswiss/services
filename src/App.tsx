@@ -54,8 +54,16 @@ setupLanguages();
 export const Routes = [
   {
     path: '/',
-    element: <LayoutWrapper />,
-    errorElement: <ErrorScreen />,
+    element: (
+      <LayoutWrapper>
+        <Outlet />
+      </LayoutWrapper>
+    ),
+    errorElement: (
+      <LayoutWrapper>
+        <ErrorScreen />
+      </LayoutWrapper>
+    ),
     children: [
       {
         index: true,
