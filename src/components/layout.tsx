@@ -1,5 +1,6 @@
 import { PropsWithChildren, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useLayoutConfigContext } from 'src/contexts/layout-config.context';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useServiceWorker } from 'src/hooks/service-worker.hook';
 import { Routes } from '../App';
@@ -10,25 +11,12 @@ import { isNode } from '../util/utils';
 import { InfoBannerComponent } from './info-banner';
 import { Navigation } from './navigation';
 
-interface LayoutProps extends PropsWithChildren {
-  title?: string;
-  backButton?: boolean;
-  onBack?: () => void;
-  textStart?: boolean;
-  noPadding?: boolean;
-  smallMenu?: boolean;
-}
-
-export function Layout({
-  title,
-  backButton,
-  onBack,
-  textStart,
-  children,
-  noPadding,
-  smallMenu,
-}: LayoutProps): JSX.Element {
+export function Layout({ children }: PropsWithChildren): JSX.Element {
   useSift();
+
+  const {
+    config: { title, backButton, onBack, textStart, noPadding, smallMenu },
+  } = useLayoutConfigContext();
 
   const navRef = useRef<HTMLDivElement>(null);
   const { modalRootRef, scrollRef, rootRef } = useLayoutContext();
