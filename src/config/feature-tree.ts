@@ -77,6 +77,13 @@ export const FeatureTree: Page[] = [
           page: 'buy-solana',
         },
       },
+      {
+        id: 'tron',
+        img: 'tron',
+        next: {
+          page: 'buy-tron',
+        },
+      },
     ],
   },
   {
@@ -767,6 +774,13 @@ export const FeatureTree: Page[] = [
           page: 'sell-solana',
         },
       },
+      {
+        id: 'tron',
+        img: 'tron',
+        next: {
+          page: 'sell-tron',
+        },
+      },
     ],
   },
   {
@@ -1423,14 +1437,19 @@ export const FeatureTree: Page[] = [
         wallet: { type: WalletType.ALBY, blockchain: Blockchain.LIGHTNING },
       },
       {
-        id: 'phantom',
+        id: 'phantom-sol',
         img: 'phantom',
         wallet: { type: WalletType.PHANTOM_SOL, blockchain: Blockchain.SOLANA },
       },
       {
-        id: 'trust',
+        id: 'trust-sol',
         img: 'trust',
         wallet: { type: WalletType.TRUST_SOL, blockchain: Blockchain.SOLANA },
+      },
+      {
+        id: 'tronlink-trx',
+        img: 'tronlink',
+        wallet: { type: WalletType.TRONLINK_TRX, blockchain: Blockchain.TRON },
       },
       {
         id: 'walletconnect',
@@ -1448,6 +1467,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_XMR };
             case Blockchain.SOLANA:
               return { type: WalletType.CLI_SOL };
+            case Blockchain.TRON:
+              return { type: WalletType.CLI_TRX };
             default:
               return { type: WalletType.CLI_ETH };
           }
@@ -1477,6 +1498,28 @@ export const FeatureTree: Page[] = [
         img: 'command',
         wallet: {
           type: WalletType.CLI_XMR,
+        },
+      },
+    ],
+  },
+  {
+    id: 'tron-wallets', // TODO: join with normal wallets
+    tiles: [
+      {
+        id: 'trust-trx',
+        img: 'trust',
+        wallet: { type: WalletType.TRUST_TRX, blockchain: Blockchain.TRON },
+      },
+      {
+        id: 'tronlink-trx',
+        img: 'tronlink',
+        wallet: { type: WalletType.TRONLINK_TRX, blockchain: Blockchain.TRON },
+      },
+      {
+        id: 'cli',
+        img: 'command',
+        wallet: {
+          type: WalletType.CLI_TRX,
         },
       },
     ],
@@ -1553,6 +1596,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_XMR };
             case Blockchain.SOLANA:
               return { type: WalletType.CLI_SOL };
+            case Blockchain.TRON:
+              return { type: WalletType.CLI_TRX };
             default:
               return { type: WalletType.CLI_ETH };
           }
@@ -5939,7 +5984,7 @@ export const FeatureTree: Page[] = [
         img: 'solana',
         next: {
           page: 'wallets',
-          tiles: ['phantom', 'trust', 'cli'],
+          tiles: ['phantom-sol', 'trust-sol', 'metamask-sol', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.SOLANA, assetOut: 'SOL' },
@@ -5951,7 +5996,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['phantom', 'trust', 'cli'],
+          tiles: ['phantom-sol', 'trust-sol', 'metamask-sol', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.SOLANA, assetOut: 'USDT' },
@@ -5963,7 +6008,7 @@ export const FeatureTree: Page[] = [
         img: 'usdc',
         next: {
           page: 'wallets',
-          tiles: ['phantom', 'trust', 'cli'],
+          tiles: ['phantom-sol', 'trust-sol', 'metamask-sol', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.SOLANA, assetOut: 'USDC' },
@@ -5981,7 +6026,7 @@ export const FeatureTree: Page[] = [
         img: 'solana',
         next: {
           page: 'wallets',
-          tiles: ['phantom', 'trust', 'cli'],
+          tiles: ['phantom-sol', 'trust-sol', 'metamask-sol', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.SOLANA, assetIn: 'SOL' },
@@ -5993,7 +6038,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['phantom', 'trust', 'cli'],
+          tiles: ['phantom-sol', 'trust-sol', 'metamask-sol', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.SOLANA, assetIn: 'USDT' },
@@ -6005,10 +6050,72 @@ export const FeatureTree: Page[] = [
         img: 'usdc',
         next: {
           page: 'wallets',
-          tiles: ['phantom', 'trust', 'cli'],
+          tiles: ['phantom-sol', 'trust-sol', 'metamask-sol', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.SOLANA, assetIn: 'USDC' },
+          },
+        },
+      },
+    ],
+  },
+
+  // --- TRON --- //
+  {
+    id: 'buy-tron',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'tron',
+        img: 'trx',
+        next: {
+          page: 'tron-wallets',
+          tiles: ['trust-trx', 'tronlink-trx', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.TRON, assetOut: 'TRX' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'tron-wallets',
+          tiles: ['trust-trx', 'tronlink-trx', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.TRON, assetOut: 'TRX' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-tron',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'tron',
+        img: 'trx',
+        next: {
+          page: 'tron-wallets',
+          tiles: ['trust-trx', 'tronlink-trx', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.TRON, assetIn: 'TRX' },
+          },
+        },
+      },
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'tron-wallets',
+          tiles: ['trust-trx', 'tronlink-trx', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.TRON, assetIn: 'USDT' },
           },
         },
       },
