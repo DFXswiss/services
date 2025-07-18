@@ -1447,11 +1447,6 @@ export const FeatureTree: Page[] = [
         wallet: { type: WalletType.TRUST_SOL, blockchain: Blockchain.SOLANA },
       },
       {
-        id: 'trust-trx',
-        img: 'trust',
-        wallet: { type: WalletType.TRUST_TRX, blockchain: Blockchain.TRON },
-      },
-      {
         id: 'tronlink-trx',
         img: 'tronlink',
         wallet: { type: WalletType.TRONLINK_TRX, blockchain: Blockchain.TRON },
@@ -1472,6 +1467,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_XMR };
             case Blockchain.SOLANA:
               return { type: WalletType.CLI_SOL };
+            case Blockchain.TRON:
+              return { type: WalletType.CLI_TRX };
             default:
               return { type: WalletType.CLI_ETH };
           }
@@ -1501,6 +1498,28 @@ export const FeatureTree: Page[] = [
         img: 'command',
         wallet: {
           type: WalletType.CLI_XMR,
+        },
+      },
+    ],
+  },
+  {
+    id: 'tron-wallets', // TODO: join with normal wallets
+    tiles: [
+      {
+        id: 'trust-trx',
+        img: 'trust',
+        wallet: { type: WalletType.TRUST_TRX, blockchain: Blockchain.TRON },
+      },
+      {
+        id: 'tronlink-trx',
+        img: 'tronlink',
+        wallet: { type: WalletType.TRONLINK_TRX, blockchain: Blockchain.TRON },
+      },
+      {
+        id: 'cli',
+        img: 'command',
+        wallet: {
+          type: WalletType.CLI_TRX,
         },
       },
     ],
@@ -6050,7 +6069,7 @@ export const FeatureTree: Page[] = [
         id: 'tron',
         img: 'trx',
         next: {
-          page: 'wallets',
+          page: 'tron-wallets',
           tiles: ['trust-trx', 'tronlink-trx', 'cli'],
           options: {
             service: 'buy',
@@ -6062,7 +6081,7 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'wallets',
+          page: 'tron-wallets',
           tiles: ['trust-trx', 'tronlink-trx', 'cli'],
           options: {
             service: 'buy',
@@ -6080,7 +6099,7 @@ export const FeatureTree: Page[] = [
         id: 'tron',
         img: 'trx',
         next: {
-          page: 'wallets',
+          page: 'tron-wallets',
           tiles: ['trust-trx', 'tronlink-trx', 'cli'],
           options: {
             service: 'sell',
@@ -6092,7 +6111,7 @@ export const FeatureTree: Page[] = [
         id: 'usdt',
         img: 'usdt',
         next: {
-          page: 'wallets',
+          page: 'tron-wallets',
           tiles: ['trust-trx', 'tronlink-trx', 'cli'],
           options: {
             service: 'sell',
