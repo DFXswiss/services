@@ -200,7 +200,7 @@ function TronLinkHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
           'You need to install the TronLink browser extension to be able to use this service.',
         )}{' '}
         <Trans i18nKey="screens/home.visit">
-          Visit <StyledLink label="trustwallet.com" url="https://www.tronlink.org" dark /> for more details.
+          Visit <StyledLink label="tronlink.org" url="https://www.tronlink.org" dark /> for more details.
         </Trans>{' '}
       </p>
 

@@ -19,8 +19,6 @@ export function useTron(): TronInterface {
     if (tronWebOfTronLinkWallet) return tronWebOfTronLinkWallet;
   }, []);
 
-  if (!tronWeb) throw new Error('No Wallet for TronWeb found');
-
   async function getAddressBalances(assets: Asset[], address: string): Promise<AssetBalance[]> {
     const balances: AssetBalance[] = [];
 
