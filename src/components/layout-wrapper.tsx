@@ -1,20 +1,9 @@
-import { useRef } from 'react';
-import { Outlet } from 'react-router-dom';
-import { LayoutConfigProvider, useLayoutConfigContext } from '../contexts/layout-config.context';
+import { PropsWithChildren, useRef } from 'react';
+import { LayoutConfigProvider } from '../contexts/layout-config.context';
 import { LayoutContextProvider } from '../contexts/layout.context';
 import { Layout } from './layout';
 
-function LayoutWithOutlet(): JSX.Element {
-  const { config } = useLayoutConfigContext();
-  
-  return (
-    <Layout {...config}>
-      <Outlet />
-    </Layout>
-  );
-}
-
-export function LayoutWrapper(): JSX.Element {
+export function LayoutWrapper({ children }: PropsWithChildren): JSX.Element {
   const modalRootRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -22,7 +11,7 @@ export function LayoutWrapper(): JSX.Element {
   return (
     <LayoutContextProvider modalRootRef={modalRootRef} scrollRef={scrollRef} rootRef={rootRef}>
       <LayoutConfigProvider>
-        <LayoutWithOutlet />
+        <Layout>{children}</Layout>
       </LayoutConfigProvider>
     </LayoutContextProvider>
   );

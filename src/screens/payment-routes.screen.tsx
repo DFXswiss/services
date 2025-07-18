@@ -118,7 +118,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
     deletePaymentRoute,
     error: apiError,
   } = usePaymentRoutesContext();
-  const { getPaymentStickers } = usePaymentRoutes();
+  const { getPaymentStickers, createPosLink } = usePaymentRoutes();
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [error, setError] = useState<string>();
@@ -130,7 +130,8 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const [updateGlobalConfig, setUpdateGlobalConfig] = useState<boolean>(false);
   const [updatePaymentLinkLabel, setUpdatePaymentLinkLabel] = useState<string>();
   const [isGeneratingSticker, setIsGeneratingSticker] = useState<string>();
-  const [errorGeneratingSticker, setErrorGeneratingSticker] = useState<string>();
+  const [isLoadingPos, setIsLoadingPos] = useState<string>();
+  const [linkError, setLinkError] = useState<string>();
 
   useAddressGuard('/login');
 
@@ -222,13 +223,22 @@ export default function PaymentRoutesScreen(): JSX.Element {
 
   function downloadSticker({ routeId, externalId, id }: PaymentLink) {
     setIsGeneratingSticker(id);
-    setErrorGeneratingSticker(undefined);
+    setLinkError(undefined);
     getPaymentStickers(routeId, externalId, externalId ? undefined : id)
       .then(({ data, headers }) => {
         downloadFile(data, headers, `DFX_OCP_stickers_${filenameDateFormat()}.pdf`);
       })
-      .catch((error: ApiError) => setErrorGeneratingSticker(error.message ?? 'Unknown Error'))
+      .catch((error: ApiError) => setLinkError(error.message ?? 'Unknown Error'))
       .finally(() => setIsGeneratingSticker(undefined));
+  }
+
+  function goToPos({ id }: PaymentLink) {
+    setIsLoadingPos(id);
+    setLinkError(undefined);
+    createPosLink(id)
+      .then(({ url }) => window.open(url, '_blank'))
+      .catch((error: ApiError) => setLinkError(error.message ?? 'Unknown Error'))
+      .finally(() => setIsLoadingPos(undefined));
   }
 
   const hasRoutes =
@@ -680,6 +690,12 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           color={StyledButtonColor.STURDY_WHITE}
                           isLoading={isGeneratingSticker === link.id}
                         />
+                        <StyledButton
+                          label={translate('screens/payment', 'Open POS')}
+                          onClick={() => goToPos(link)}
+                          color={StyledButtonColor.STURDY_WHITE}
+                          isLoading={isLoadingPos === link.id}
+                        />
                         {link.status === PaymentLinkStatus.ACTIVE &&
                           (!link.payment || link.payment.status !== PaymentLinkPaymentStatus.PENDING) && (
                             <StyledButton
@@ -717,9 +733,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
                             isLoading={isUpdatingPaymentLink.includes(link.id)}
                           />
                         )}
-                        <div className="text-center">
-                          {errorGeneratingSticker && <ErrorHint message={errorGeneratingSticker} />}
-                        </div>
+                        <div className="text-center">{linkError && <ErrorHint message={linkError} />}</div>
                       </StyledVerticalStack>
                     </StyledCollapsible>
                   </div>

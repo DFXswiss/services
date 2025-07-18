@@ -68,6 +68,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.CARDANO]: 'Cardano',
       [Blockchain.MONERO]: 'Monero',
       [Blockchain.SOLANA]: 'Solana',
+      [Blockchain.TRON]: 'Tron',
     },
   };
 

@@ -61,6 +61,7 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepName.FINANCIAL_DATA]: 'Additional data',
     [KycStepName.ADDITIONAL_DOCUMENTS]: 'Additional documents',
     [KycStepName.RESIDENCE_PERMIT]: 'Residence permit',
+    [KycStepName.STATUTES]: 'Association statutes',
     [KycStepName.DFX_APPROVAL]: 'DFX approval',
     [KycStepName.PAYMENT_AGREEMENT]: 'Assignment agreement',
   };

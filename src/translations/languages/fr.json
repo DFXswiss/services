@@ -102,6 +102,7 @@
     "Operational activity": "Activité opérationnelle",
     "Additional documents": "Documents supplémentaires",
     "Residence permit": "Permis de séjour",
+    "Association statutes": "Statuts de l'association",
     "DFX approval": "Approbation DFX",
 
     "Stock corporation (AG, Ltd, SA)": "Société anonyme (AG, Ltd, SA)",
@@ -610,6 +611,7 @@
     "Create Payment Link": "Créer un Payment Link",
     "Create payment": "Créer un paiement",
     "Cancel payment": "Annuler le paiement",
+    "Open POS": "Ouvrir le POS",
     "Payment type": "Type de paiement",
     "With payment": "Avec paiement",
     "Without payment": "Sans paiement",

@@ -7,12 +7,10 @@ import {
   GenderType,
   KycBeneficialData,
   KycContactData,
-  KycFileData,
   KycFinancialOption,
   KycFinancialQuestion,
   KycFinancialResponse,
   KycInfo,
-  KycLegalEntityData,
   KycLevel,
   KycManualIdentData,
   KycNationalityData,
@@ -462,8 +460,6 @@ interface EditProps {
 }
 
 function KycEdit(props: EditProps): JSX.Element {
-  const { translate } = useSettingsContext();
-
   switch (props.step.name) {
     case KycStepName.CONTACT_DATA:
       return <ContactData {...props} />;
@@ -473,6 +469,10 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.LEGAL_ENTITY:
       return <LegalEntityData {...props} />;
+
+    case KycStepName.COMMERCIAL_REGISTER:
+      // commercial register step is merged into legal entity
+      return <></>;
 
     case KycStepName.OWNER_DIRECTORY: {
       const urls = {
@@ -486,17 +486,6 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.NATIONALITY_DATA:
       return <NationalityData {...props} />;
-
-    case KycStepName.COMMERCIAL_REGISTER:
-      return (
-        <FileUpload
-          {...props}
-          hint={translate(
-            'screens/kyc',
-            'An internet excerpt is sufficient. No notarization is required. The extract must not be older than 2 months.',
-          )}
-        />
-      );
 
     case KycStepName.SIGNATORY_POWER:
       return <SignatoryPowerData {...props} />;
@@ -531,6 +520,9 @@ function KycEdit(props: EditProps): JSX.Element {
       return <FileUpload {...props} />;
 
     case KycStepName.RESIDENCE_PERMIT:
+      return <FileUpload {...props} />;
+
+    case KycStepName.STATUTES:
       return <FileUpload {...props} />;
 
     case KycStepName.DFX_APPROVAL:
@@ -883,6 +875,11 @@ function PersonalData({ rootRef, mode, code, isLoading, step, onDone, onBack }: 
   );
 }
 
+interface LegalEntityFormData {
+  legalEntity: LegalEntity;
+  file: File;
+}
+
 function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setLegalEntityData } = useKyc();
@@ -895,14 +892,22 @@ function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps):
     control,
     handleSubmit,
     formState: { isValid, errors },
-  } = useForm<KycLegalEntityData>({ mode: 'onTouched' });
+  } = useForm<LegalEntityFormData>({ mode: 'onTouched' });
 
-  function onSubmit(data: KycLegalEntityData) {
+  async function onSubmit(data: LegalEntityFormData) {
     if (!step.session) return;
+
+    const file = data.file && (await toBase64(data.file));
+    if (!file) {
+      setError('No file selected');
+      return;
+    }
+
+    const fileName = data.file.name;
 
     setIsUpdating(true);
     setError(undefined);
-    setLegalEntityData(code, step.session.url, data)
+    setLegalEntityData(code, step.session.url, { legalEntity: data.legalEntity, file, fileName })
       .then(onDone)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
@@ -929,6 +934,26 @@ function LegalEntityData({ rootRef, code, isLoading, step, onDone }: EditProps):
             labelFunc={(item) => legalEntityToString(item)}
             descriptionFunc={(item) => legalEntityToDescription(item) ?? ''}
           />
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Commercial register')}
+          </p>
+          <StyledFileUpload
+            name="file"
+            label=""
+            placeholder={translate('general/actions', 'Drop files here')}
+            buttonLabel={translate('general/actions', 'Browse')}
+            full
+          />
+
+          <div className="text-dfxGray-700 text-sm">
+            {translate(
+              'screens/kyc',
+              'An internet excerpt is sufficient. No notarization is required. The extract must not be older than 2 months.',
+            )}
+          </div>
         </StyledVerticalStack>
 
         {error && (
@@ -1049,15 +1074,17 @@ function FileUpload({ code, isLoading, step, onDone, templateUrls, hint }: FileU
   async function onSubmit(data: FormDataFile) {
     if (!step.session) return;
 
-    const fileData = { file: data.file && (await toBase64(data.file)), fileName: data.file?.name };
-    if (!fileData.file) {
+    const file = data.file && (await toBase64(data.file));
+    if (!file) {
       setError('No file selected');
       return;
     }
 
+    const fileName = data.file.name;
+
     setIsUpdating(true);
     setError(undefined);
-    setFileData(code, step.session.url, fileData as KycFileData)
+    setFileData(code, step.session.url, { file, fileName })
       .then(onDone)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => {
