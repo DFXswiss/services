@@ -239,7 +239,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     deepLink: 'bnc:',
     appStoreUrl: 'https://apps.apple.com/app/binance-buy-bitcoin-crypto/id1436799971',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.binance.dev',
-    category: WalletCategory.BINANCE_PAY,
+    category: WalletCategory.C2B,
     recommended: true,
   },
   {
@@ -252,5 +252,15 @@ export const PaymentLinkWallets: WalletInfo[] = [
     deepLink: 'muun:',
     semiCompatible: true,
     category: WalletCategory.LIGHTNING,
+  },
+  {
+    id: WalletAppId.KUCOINPAY,
+    name: 'Kucoin Pay',
+    websiteUrl: 'https://kucoin.com/',
+    iconUrl: 'https://content.dfx.swiss/img/v1/services/wallets/KucoinApp.webp',
+    appStoreUrl: 'https://apps.apple.com/app/dfx-btc-taproot-asset-wallet/id6466037617',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=swiss.dfx.bitcoin',
+    semiCompatible: true,
+    category: WalletCategory.C2B,
   },
 ];

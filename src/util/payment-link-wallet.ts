@@ -6,7 +6,7 @@ const compatibleMethods: Record<WalletCategory, TransferMethod[]> = {
   [WalletCategory.LIGHTNING]: [Blockchain.LIGHTNING],
   [WalletCategory.BITCOIN]: [Blockchain.BITCOIN, Blockchain.LIGHTNING],
   [WalletCategory.EVM]: Object.values(Blockchain).filter((b) => Evm.isEvm(b)),
-  [WalletCategory.BINANCE_PAY]: [C2BPaymentMethod.BINANCE_PAY],
+  [WalletCategory.C2B]: [C2BPaymentMethod.BINANCE_PAY, C2BPaymentMethod.KUCOINPAY],
   [WalletCategory.MULTI_CHAIN]: [...Object.values(Blockchain).filter((b) => b !== Blockchain.LIGHTNING)],
 };
 
