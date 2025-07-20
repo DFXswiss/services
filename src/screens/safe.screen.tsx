@@ -5,7 +5,7 @@ import { ErrorHint } from 'src/components/error-hint';
 import { SafeCompletion } from 'src/components/payment/safe-completion';
 import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
 import { PriceChart } from 'src/components/safe/chart';
-import { DepositInterface } from 'src/components/safe/deposit-interface';
+import { SafeTransactionInterface } from 'src/components/safe/safe-transaction-interface';
 import { Portfolio } from 'src/components/safe/portfolio';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -104,7 +104,7 @@ export default function SafeScreen(): JSX.Element {
             </div>
           </div>
           <Portfolio portfolio={portfolio.balances} currency={currency} isLoading={isLoadingPortfolio} />
-          <DepositInterface />
+          <SafeTransactionInterface />
         </StyledVerticalStack>
       )}
     </>
