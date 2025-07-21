@@ -18,8 +18,8 @@ export const SwapInterface = () => {
   return (
     <OrderInterface
       orderType={OrderType.SWAP}
-      sourceInputLabel={translate('screens/swap', 'You pay')}
-      targetInputLabel={translate('screens/swap', 'You receive')}
+      sourceInputLabel={translate('screens/buy', 'You spend')}
+      targetInputLabel={translate('screens/buy', 'You get about')}
       sourceAssets={swappableSourceAssets}
       targetAssets={swappableTargetAssets}
       hideAddressSelection={true}
