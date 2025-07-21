@@ -18,6 +18,7 @@ import { useForm } from 'react-hook-form';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { SafeOperationType } from 'src/dto/safe.dto';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useSafe } from 'src/hooks/safe.hook';
 import { blankedAddress } from 'src/util/utils';
@@ -33,7 +34,7 @@ export const ReceiveInterface = () => {
   const { width } = useWindowContext();
   const { toString } = useBlockchain();
   const { translate } = useSettingsContext();
-  const { setCompletion } = useOrderUIContext();
+  const { setCompletionType } = useOrderUIContext();
   const { receiveableAssets, fetchReceiveInfo, confirmReceive, custodyAddress } = useSafe();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -69,7 +70,7 @@ export const ReceiveInterface = () => {
       address: undefined,
     })
       .then(() => confirmReceive())
-      .then(() => setCompletion(true))
+      .then(() => setCompletionType(SafeOperationType.RECEIVE))
       .catch((err: any) => setError(err.message || 'Failed to create receive order'))
       .finally(() => setIsLoading(false));
   }

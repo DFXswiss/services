@@ -84,7 +84,7 @@ export function useSafe(): UseSafeResult {
         await reloadUser();
       } else {
         setCustodyAddress(custodyAddr.address);
-        setCustodyBlockchains((custodyAddr as any).blockchains?.map((b: string) => b as Blockchain) || []);
+        setCustodyBlockchains([Blockchain.ETHEREUM]);
         if (!tokenStore.get('custody') && session?.address !== custodyAddr.address) {
           const custodyToken = (await changeUserAddress(custodyAddr.address)).accessToken;
           tokenStore.set('custody', custodyToken);
@@ -130,9 +130,10 @@ export function useSafe(): UseSafeResult {
   }, [getAssets]);
 
   const receiveableAssets = useMemo(() => {
-    const allBlockchains = Object.values(Blockchain);
-    return getAssets(allBlockchains, { buyable: true, sellable: true, comingSoon: false });
-  }, [getAssets]);
+    return custodyBlockchains.length > 0
+      ? getAssets(custodyBlockchains, { sellable: true, buyable: true, comingSoon: false })
+      : [];
+  }, [getAssets, custodyBlockchains]);
 
   const swappableSourceAssets = useMemo(() => {
     return custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { sellable: true, comingSoon: false }) : [];

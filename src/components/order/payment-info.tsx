@@ -169,7 +169,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
                   />
 
                   <>
-                    {isBankWire && <PaymentInfoContent info={paymentInfo} />}
+                    {isBankWire && orderType !== OrderType.SWAP && <PaymentInfoContent info={paymentInfo} />}
                     <SanctionHint />
                     <div className="w-full text-center leading-none">
                       <StyledLink
@@ -181,7 +181,15 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
                         small
                         dark
                       />
-                      {isBankWire ? (
+                      {orderType === OrderType.SWAP ? (
+                        <StyledButton
+                          width={StyledButtonWidth.FULL}
+                          label={translate('screens/swap', 'Confirm swap')}
+                          onClick={confirmPayment}
+                          className="mt-4"
+                          caps={false}
+                        />
+                      ) : isBankWire ? (
                         <StyledButton
                           width={StyledButtonWidth.FULL}
                           label={translate('screens/buy', 'Click here once you have issued the transfer')}
