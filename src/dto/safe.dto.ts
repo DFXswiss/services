@@ -1,3 +1,9 @@
+export enum SafeOperationType {
+  DEPOSIT = 'deposit',
+  RECEIVE = 'receive',
+  SWAP = 'swap',
+}
+
 export enum FiatCurrency {
   CHF = 'chf',
   EUR = 'eur',

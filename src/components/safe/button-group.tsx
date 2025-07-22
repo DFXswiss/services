@@ -10,6 +10,7 @@ interface ButtonGroupProps<T> {
   onClick: (item: T) => void;
   buttonLabel: (item: T) => string;
   size?: ButtonGroupSize;
+  isHeader?: boolean;
 }
 
 export const ButtonGroup = <T extends React.ReactNode>({
@@ -18,8 +19,16 @@ export const ButtonGroup = <T extends React.ReactNode>({
   onClick,
   buttonLabel,
   size = ButtonGroupSize.MD,
+  isHeader = false,
 }: ButtonGroupProps<T>) => {
   const getButtonStyles = (item: T): string => {
+    if (isHeader) {
+      const baseStyles = 'px-4 py-1.5 text-md font-semibold transition-all duration-200 cursor-pointer';
+      return item === selected
+        ? `${baseStyles} text-dfxBlue-500 bg-dfxBlue-800/5 hover:bg-dfxBlue-800/15 rounded-lg`
+        : `${baseStyles} text-dfxBlue-500/30 hover:text-dfxBlue-500/70`;
+    }
+
     const padding =
       size === ButtonGroupSize.LG ? 'px-4 py-3' : size === ButtonGroupSize.SM ? 'px-2.5 py-2' : 'px-3 py-2.5';
     const baseStyles = `btn ${padding} leading-none text-sm font-medium transition-all duration-300`;
@@ -29,7 +38,13 @@ export const ButtonGroup = <T extends React.ReactNode>({
   };
 
   return (
-    <div className="z-10 w-min bg-white/80 rounded-md overflow-clip flex flex-row justify-center items-center">
+    <div
+      className={
+        isHeader
+          ? 'flex flex-row gap-4 items-center'
+          : 'z-10 w-min bg-white/80 rounded-md overflow-clip flex flex-row justify-center items-center'
+      }
+    >
       {items.map((item, index) => (
         <button key={`button-group-${index}`} className={getButtonStyles(item)} onClick={() => onClick(item)}>
           {buttonLabel(item)}

@@ -5,25 +5,26 @@ import { OrderType } from 'src/hooks/order.hook';
 import { useSafe } from 'src/hooks/safe.hook';
 import { OrderInterface } from '../order/order-interface';
 
-export const DepositInterface = () => {
+export const SwapInterface = () => {
   const { translate } = useSettingsContext();
-  const { availableCurrencies, fetchPaymentInfo, confirmPayment, pairMap } = useSafe();
+  const { swappableSourceAssets, swappableTargetAssets, fetchSwapInfo, confirmSwap } = useSafe();
   const { setCompletionType } = useOrderUIContext();
 
   async function onConfirmPayment(): Promise<void> {
-    await confirmPayment();
-    setCompletionType(SafeOperationType.DEPOSIT);
+    await confirmSwap();
+    setCompletionType(SafeOperationType.SWAP);
   }
 
   return (
     <OrderInterface
-      orderType={OrderType.DEPOSIT}
-      sourceInputLabel={translate('screens/payment', 'Amount')}
-      sourceAssets={availableCurrencies}
-      pairMap={pairMap}
+      orderType={OrderType.SWAP}
+      sourceInputLabel={translate('screens/buy', 'You spend')}
+      targetInputLabel={translate('screens/buy', 'You get about')}
+      sourceAssets={swappableSourceAssets}
+      targetAssets={swappableTargetAssets}
       hideAddressSelection={true}
       confirmPayment={onConfirmPayment}
-      onFetchPaymentInfo={fetchPaymentInfo}
+      onFetchPaymentInfo={fetchSwapInfo}
     />
   );
 };
