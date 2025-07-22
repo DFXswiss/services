@@ -67,7 +67,9 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.ARWEAVE]: 'Arweave',
       [Blockchain.CARDANO]: 'Cardano',
       [Blockchain.MONERO]: 'Monero',
+      [Blockchain.ZANO]: 'Zano',
       [Blockchain.SOLANA]: 'Solana',
+      [Blockchain.TRON]: 'Tron',
     },
   };
 
