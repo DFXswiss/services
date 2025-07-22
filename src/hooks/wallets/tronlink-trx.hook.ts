@@ -21,7 +21,7 @@ export function useTronLinkTrx(): TronLinkInterface {
   }
 
   function isInstalled(): boolean {
-    return (window as any).tronLink;
+    return Boolean((window as any).tronLink);
   }
 
   async function connect(): Promise<string> {

@@ -6095,7 +6095,7 @@ export const FeatureTree: Page[] = [
           tiles: ['trust-trx', 'tronlink-trx', 'cli'],
           options: {
             service: 'buy',
-            query: { blockchain: Blockchain.TRON, assetOut: 'TRX' },
+            query: { blockchain: Blockchain.TRON, assetOut: 'USDT' },
           },
         },
       },
