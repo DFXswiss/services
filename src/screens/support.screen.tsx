@@ -1,4 +1,5 @@
 import { DfxIcon, IconColor, IconVariant, StyledVerticalStack } from '@dfx.swiss/react-components';
+import { FaTelegram } from 'react-icons/fa';
 import { IoMdHelpCircle } from 'react-icons/io';
 import { MdEditSquare } from 'react-icons/md';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -31,6 +32,13 @@ export default function SupportScreen(): JSX.Element {
         onClick={() => navigate('/support/tickets')}
         buttonLabel={translate('screens/support', 'View tickets')}
         icon={<MdEditSquare className="h-auto w-6" />}
+      />
+      <StyledButtonTile
+        title={translate('screens/support', 'Telegram support')}
+        description={translate('screens/support', 'If you have any questions, you can also contact us via Telegram.')}
+        onClick={() => navigate('/support/telegram')}
+        buttonLabel={translate('screens/support', 'Contact us')}
+        icon={<FaTelegram className="h-auto w-6" />}
       />
     </StyledVerticalStack>
   );
