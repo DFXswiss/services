@@ -24,6 +24,8 @@
     "Continue in Trezor Connect": "Weiter zu Trezor Connect",
     "Yes": "Ja",
     "No": "Nein",
+    "True": "Richtig",
+    "False": "Falsch",
     "Drop files here": "Dateien hier ablegen",
     "Browse": "Durchsuchen",
     "Rename address": "Adresse umbenennen",
@@ -737,7 +739,9 @@
     "We have summarized the most common questions for you in our FAQ.": "Wir haben die häufigsten Fragen für Dich in unseren FAQs zusammengefasst.",
     "Search now": "Jetzt suchen",
     "Submit Ticket": "Ticket einreichen",
+    "Contact us": "Kontaktiere uns",
     "If you have a specific question or problem, you can submit a ticket here.": "Wenn Du eine spezifische Frage oder ein Problem hast, kannst Du hier ein Ticket einreichen.",
+    "If you have any questions, you can also contact us via Telegram.": "Wenn Du Fragen hast, kannst Du uns auch über Telegram kontaktieren.",
 
     "Write a message...": "Schreibe eine Nachricht...",
     "Downloading...": "Herunterladen...",
@@ -746,7 +750,13 @@
 
     "Created on": "Erstellt am",
     "Hide completed tickets": "Abgeschlossene Tickets ausblenden",
-    "Show completed tickets": "Abgeschlossene Tickets anzeigen"
+    "Show completed tickets": "Abgeschlossene Tickets anzeigen",
+
+    "Telegram Support": "Telegram Support",
+    "If someone offers you help in a private message, EVEN IF THEY APPEAR IDENTICAL TO A REAL GROUP ADMIN, should you ever respond to them?": "Wenn Dir jemand in einer privaten Nachricht Hilfe anbietet, AUCH WENN SIE IDENTISCH ZU EINEM ECHTEN GRUPPENADMIN AUSSEHEN, solltest Du jemals auf sie antworten?",
+    "True or false: Scammers who want to steal your funds will message you pretending to be admins and official support accounts.": "Richtig oder falsch: Betrüger, die Deine Gelder stehlen wollen, werden Dir Nachrichten senden und sich als Administratoren und offizielle Support-Konten ausgeben.",
+    "Admins will NEVER give help by asking for your seed phrase or requiring you to follow any links. If anyone claims they need your seed phrase to help you with a problem, should you give it to them?": "Admins werden NIEMALS Hilfe anbieten, indem sie nach Deiner Seed-Phrase fragen oder Dich auffordern, Links zu folgen. Wenn jemand behauptet, er benötige Deine Seed-Phrase, um Dir bei einem Problem zu helfen, solltest Du sie ihm geben?",
+    "Please review your answers. Remember: Never trust private messages, scammers will impersonate admins, and NEVER share your seed phrase.": "Bitte überprüfe Deine Antworten. Denke daran: Vertraue niemals privaten Nachrichten, Betrüger werden sich als Administratoren ausgeben, und teile NIEMALS Deine Seed-Phrase."
   },
   "screens/settings": {
     "Settings": "Einstellungen",

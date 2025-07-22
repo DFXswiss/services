@@ -1465,6 +1465,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_BTC };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
+            case Blockchain.ZANO:
+              return { type: WalletType.CLI_ZANO };
             case Blockchain.SOLANA:
               return { type: WalletType.CLI_SOL };
             case Blockchain.TRON:
@@ -1594,6 +1596,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_BTC };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
+            case Blockchain.ZANO:
+              return { type: WalletType.CLI_ZANO };
             case Blockchain.SOLANA:
               return { type: WalletType.CLI_SOL };
             case Blockchain.TRON:
@@ -2411,6 +2415,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_BTC };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
+            case Blockchain.ZANO:
+              return { type: WalletType.CLI_ZANO };
             case Blockchain.SOLANA:
               return { type: WalletType.CLI_SOL };
             default:
@@ -3076,6 +3082,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_BTC };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
+            case Blockchain.ZANO:
+              return { type: WalletType.CLI_ZANO };
             case Blockchain.SOLANA:
               return { type: WalletType.CLI_SOL };
             default:
@@ -4696,6 +4704,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_BTC };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
+            case Blockchain.ZANO:
+              return { type: WalletType.CLI_ZANO };
             case Blockchain.SOLANA:
               return { type: WalletType.CLI_SOL };
             default:

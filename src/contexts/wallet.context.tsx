@@ -16,6 +16,7 @@ export enum WalletType {
   TREZOR_ETH = 'TrezorEth',
   CLI_BTC = 'CliBtc',
   CLI_XMR = 'CliXmr',
+  CLI_ZANO = 'CliZano',
   CLI_ETH = 'CliEth',
   CLI_ADA = 'CliAda',
   CLI_AR = 'CliAr',
@@ -55,6 +56,7 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
   [WalletType.CLI_BTC]: [Blockchain.BITCOIN],
   [WalletType.CLI_LN]: [Blockchain.LIGHTNING],
   [WalletType.CLI_XMR]: [Blockchain.MONERO],
+  [WalletType.CLI_ZANO]: [Blockchain.ZANO],
   [WalletType.CLI_ETH]: [
     Blockchain.ETHEREUM,
     Blockchain.ARBITRUM,

@@ -24,6 +24,8 @@
     "Continue in Trezor Connect": "Continua in Trezor Connect",
     "Yes": "Sì",
     "No": "No",
+    "True": "Vero",
+    "False": "Falso",
     "Drop files here": "Lasciare i file qui",
     "Browse": "Sfogliare",
     "Rename address": "Rinominare l'indirizzo",
@@ -736,7 +738,9 @@
     "We have summarized the most common questions for you in our FAQ.": "Abbiamo riassunto le domande più comuni nelle nostre FAQ.",
     "Search now": "Cerca ora",
     "Submit Ticket": "Invia un ticket",
+    "Contact us": "Contattaci",
     "If you have a specific question or problem, you can submit a ticket here.": "Se avete una domanda o un problema specifico, potete inviare un ticket qui.",
+    "If you have any questions, you can also contact us via Telegram.": "Se hai domande, puoi anche contattarci tramite Telegram.",
 
     "Write a message...": "Scrivi un messaggio...",
     "Downloading...": "Scaricamento...",
@@ -745,7 +749,13 @@
 
     "Created on": "Creato il",
     "Hide completed tickets": "Nascondi i ticket completati",
-    "Show completed tickets": "Mostra i ticket completati"
+    "Show completed tickets": "Mostra i ticket completati",
+
+    "Telegram Support": "Supporto Telegram",
+    "If someone offers you help in a private message, EVEN IF THEY APPEAR IDENTICAL TO A REAL GROUP ADMIN, should you ever respond to them?": "Se qualcuno ti offre aiuto in un messaggio privato, ANCHE SE SEMBRA IDENTICO A UN VERO AMMINISTRATORE DEL GRUPPO, dovresti mai rispondere?",
+    "True or false: Scammers who want to steal your funds will message you pretending to be admins and official support accounts.": "Vero o falso: I truffatori che vogliono rubare i tuoi fondi ti invieranno messaggi fingendosi amministratori e account di supporto ufficiali.",
+    "Admins will NEVER give help by asking for your seed phrase or requiring you to follow any links. If anyone claims they need your seed phrase to help you with a problem, should you give it to them?": "Gli amministratori non daranno MAI aiuto chiedendo la tua frase di recupero o richiedendo di seguire link. Se qualcuno afferma di aver bisogno della tua frase di recupero per aiutarti con un problema, dovresti dargliela?",
+    "Please review your answers. Remember: Never trust private messages, scammers will impersonate admins, and NEVER share your seed phrase.": "Controlla le tue risposte. Ricorda: Non fidarti mai dei messaggi privati, i truffatori si fingeranno amministratori, e non condividere MAI la tua frase di recupero."
   },
   "screens/settings": {
     "Settings": "Impostazioni",
