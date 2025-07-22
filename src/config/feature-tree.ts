@@ -5984,7 +5984,7 @@ export const FeatureTree: Page[] = [
         img: 'solana',
         next: {
           page: 'wallets',
-          tiles: ['phantom-sol', 'trust-sol', 'metamask-sol', 'cli'],
+          tiles: ['phantom-sol', 'trust-sol', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.SOLANA, assetOut: 'SOL' },
@@ -5996,7 +5996,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['phantom-sol', 'trust-sol', 'metamask-sol', 'cli'],
+          tiles: ['phantom-sol', 'trust-sol', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.SOLANA, assetOut: 'USDT' },
@@ -6008,7 +6008,7 @@ export const FeatureTree: Page[] = [
         img: 'usdc',
         next: {
           page: 'wallets',
-          tiles: ['phantom-sol', 'trust-sol', 'metamask-sol', 'cli'],
+          tiles: ['phantom-sol', 'trust-sol', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.SOLANA, assetOut: 'USDC' },
@@ -6026,7 +6026,7 @@ export const FeatureTree: Page[] = [
         img: 'solana',
         next: {
           page: 'wallets',
-          tiles: ['phantom-sol', 'trust-sol', 'metamask-sol', 'cli'],
+          tiles: ['phantom-sol', 'trust-sol', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.SOLANA, assetIn: 'SOL' },
@@ -6038,7 +6038,7 @@ export const FeatureTree: Page[] = [
         img: 'usdt',
         next: {
           page: 'wallets',
-          tiles: ['phantom-sol', 'trust-sol', 'metamask-sol', 'cli'],
+          tiles: ['phantom-sol', 'trust-sol', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.SOLANA, assetIn: 'USDT' },
@@ -6050,7 +6050,7 @@ export const FeatureTree: Page[] = [
         img: 'usdc',
         next: {
           page: 'wallets',
-          tiles: ['phantom-sol', 'trust-sol', 'metamask-sol', 'cli'],
+          tiles: ['phantom-sol', 'trust-sol', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.SOLANA, assetIn: 'USDC' },
