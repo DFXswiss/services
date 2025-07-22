@@ -34,7 +34,7 @@ export default function SupportScreen(): JSX.Element {
         icon={<MdEditSquare className="h-auto w-6" />}
       />
       <StyledButtonTile
-        title={translate('screens/support', 'Telegram support')}
+        title={translate('screens/support', 'Telegram Support')}
         description={translate('screens/support', 'If you have any questions, you can also contact us via Telegram.')}
         onClick={() => navigate('/support/telegram')}
         buttonLabel={translate('screens/support', 'Contact us')}
