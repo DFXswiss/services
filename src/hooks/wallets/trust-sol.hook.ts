@@ -13,7 +13,7 @@ export interface TrustInterface {
   createTransaction: (amount: BigNumber, asset: Asset, from: string, to: string) => Promise<string>;
 }
 
-export function useTrust(): TrustInterface {
+export function useTrustSol(): TrustInterface {
   const { createCoinTransaction, createTokenTransaction } = useSolana();
 
   const wallet = useMemo(() => new TrustWalletAdapter(), []);
@@ -55,12 +55,12 @@ export function useTrust(): TrustInterface {
     const provider = getProvider();
 
     try {
-      const transaction =
+      const unsignedTransaction =
         asset.type === AssetType.COIN
           ? await createCoinTransaction(from, to, amount)
           : await createTokenTransaction(from, to, asset, amount);
 
-      const signedTransaction = await provider.signTransaction(transaction);
+      const signedTransaction = await provider.signTransaction(unsignedTransaction);
       return await provider.sendTransaction(signedTransaction, connection);
     } catch (error) {
       handleError(error);

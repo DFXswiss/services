@@ -19,7 +19,7 @@ export interface SolanaInterface {
 }
 
 export function useSolana(): SolanaInterface {
-  const url = `${process.env.REACT_APP_TATUM_URL}/${process.env.REACT_APP_TATUM_KEY ?? ''}`;
+  const url = `${process.env.REACT_APP_TATUM_SOLANA_URL}/${process.env.REACT_APP_TATUM_KEY ?? ''}`;
   const connection = useMemo(() => new Solana.Connection(url), []);
 
   async function getAddressBalances(assets: Asset[], address: string): Promise<AssetBalance[]> {

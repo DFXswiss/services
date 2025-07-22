@@ -7,14 +7,14 @@ import {
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
 import { isMobile } from 'react-device-detect';
-import { useTrust } from 'src/hooks/wallets/trust.hook';
+import { useTrustTrx } from 'src/hooks/wallets/trust-trx.hook';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { WalletType } from '../../../contexts/wallet.context';
 import { ConnectBase } from '../connect-base';
 import { Account, ConnectContentProps, ConnectError, ConnectProps } from '../connect-shared';
 
-export default function ConnectTrust(props: Readonly<ConnectProps>): JSX.Element {
-  const { isInstalled, connect, signMessage } = useTrust();
+export default function ConnectTrustTrx(props: Readonly<ConnectProps>): JSX.Element {
+  const { isInstalled, connect, signMessage } = useTrustTrx();
   const { session } = useAuthContext();
 
   async function getAccount(_w: WalletType, _b: Blockchain, isReconnect: boolean): Promise<Account> {
@@ -28,7 +28,7 @@ export default function ConnectTrust(props: Readonly<ConnectProps>): JSX.Element
   return (
     <ConnectBase
       isSupported={isInstalled}
-      fallback={isMobile ? WalletType.TRUST_SOL : undefined}
+      fallback={isMobile ? WalletType.TRUST_TRX : undefined}
       getAccount={getAccount}
       signMessage={(msg, addr) => signMessage(addr, msg)}
       renderContent={Content}
