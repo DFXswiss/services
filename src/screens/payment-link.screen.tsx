@@ -237,9 +237,10 @@ export default function PaymentLinkScreen(): JSX.Element {
                       <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
                       {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
                     </p>
-                    {payRequest?.mode === PaymentLinkMode.PUBLIC && (
-                      <EditPublicPaymentForm paymentRequest={payRequest} />
-                    )}
+                    {payRequest?.mode === PaymentLinkMode.PUBLIC &&
+                      ![PaymentLinkPaymentStatus.COMPLETED, PaymentLinkPaymentStatus.EXPIRED].includes(
+                        paymentStatus as PaymentLinkPaymentStatus,
+                      ) && <EditPublicPaymentForm paymentRequest={payRequest} />}
                   </>
                 ) : payRequest?.mode === PaymentLinkMode.PUBLIC &&
                   paymentStatus === NoPaymentLinkPaymentStatus.NO_PAYMENT ? (
@@ -296,7 +297,8 @@ export default function PaymentLinkScreen(): JSX.Element {
                 </StyledVerticalStack>
               </Form>
             )}
-          {[PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(paymentStatus) && (
+          {([PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(paymentStatus) ||
+            payRequest?.mode === PaymentLinkMode.PUBLIC) && (
             <>
               {payRequest && (paymentHasQuote(payRequest) || payRequest.recipient) && (
                 <StyledCollapsible
@@ -579,7 +581,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                               onClick={() => window.open(walletData.websiteUrl, '_blank')}
                               color={StyledButtonColor.STURDY_WHITE}
                               width={StyledButtonWidth.FULL}
-                              hidden={!walletData.websiteUrl}
+                              hidden={!walletData.websiteUrl || payRequest?.mode === PaymentLinkMode.PUBLIC}
                             />
                             <div
                               className="flex flex-row gap-3 w-full justify-center pt-5 pb-2"
@@ -593,15 +595,22 @@ export default function PaymentLinkScreen(): JSX.Element {
                       </StyledVerticalStack>
                     ) : (
                       <>
-                        <WalletGrid
-                          wallets={recommendedWallets}
-                          header={translate('screens/payment', 'Recommended apps')}
-                        />
-                        <WalletGrid wallets={otherWallets} header={translate('screens/payment', 'Compatible apps')} />
-                        <WalletGrid
-                          wallets={semiCompatibleWallets}
-                          header={translate('screens/payment', 'Semi compatible apps')}
-                        />
+                        {(payRequest?.mode !== PaymentLinkMode.PUBLIC || paymentHasQuote(payRequest)) && (
+                          <>
+                            <WalletGrid
+                              wallets={recommendedWallets}
+                              header={translate('screens/payment', 'Recommended apps')}
+                            />
+                            <WalletGrid
+                              wallets={otherWallets}
+                              header={translate('screens/payment', 'Compatible apps')}
+                            />
+                            <WalletGrid
+                              wallets={semiCompatibleWallets}
+                              header={translate('screens/payment', 'Semi compatible apps')}
+                            />
+                          </>
+                        )}
                       </>
                     )}
                   </StyledVerticalStack>
@@ -700,6 +709,8 @@ interface WalletGridProps {
 
 function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
   const { navigate } = useNavigation();
+
+  if (!wallets.length) return <></>;
 
   return (
     <div className="flex flex-col w-full gap-4 px-4">
