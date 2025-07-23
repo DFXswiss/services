@@ -25,6 +25,8 @@
     "@sumsub/websdk-react": "^2.3.16",
     "@tatumio/tatum": "^4.2.51",
     "@trezor/connect-web": "^9.1.1",
+    "@tronweb3/tronwallet-adapter-tronlink": "^1.1.12",
+    "@tronweb3/tronwallet-adapter-trust": "^1.0.1",
     "@wagmi/connectors": "^5.0.7",
     "@wagmi/core": "^2.10.5",
     "@walletconnect/ethereum-provider": "^2.11.0",

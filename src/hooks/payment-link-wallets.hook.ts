@@ -2,7 +2,7 @@ import { Blockchain } from '@dfx.swiss/react';
 import { useCallback, useMemo } from 'react';
 import { PaymentLinkWallets } from 'src/config/payment-link-wallets';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
-import { C2BPaymentMethod, WalletAppId, WalletInfo } from 'src/dto/payment-link.dto';
+import { C2BPaymentMethod, PaymentLinkMode, WalletAppId, WalletInfo } from 'src/dto/payment-link.dto';
 import { fetchJson, url } from 'src/util/utils';
 
 interface PaymentLinkWalletsProps {
@@ -16,6 +16,7 @@ interface PaymentLinkWalletsProps {
 export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   const { paymentIdentifier, payRequest, paymentHasQuote } = usePaymentLinkContext();
 
+  const isPublicPayment = useMemo(() => payRequest?.mode === PaymentLinkMode.PUBLIC, [payRequest]);
 
   const transferMethods = paymentHasQuote(payRequest)
     ? payRequest.transferAmounts.filter((ta) => ta.available).map((ta) => ta.method)
@@ -26,8 +27,8 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
       PaymentLinkWallets.map((wallet) => ({
         ...wallet,
         disabled: wallet.transferMethod ? !transferMethods.includes(wallet.transferMethod) : wallet.disabled,
-      })),
-    [transferMethods],
+      })).filter((wallet) => (isPublicPayment ? wallet.deepLink : true)),
+    [transferMethods, isPublicPayment],
   );
 
   const recommendedWallets = useMemo(() => {
