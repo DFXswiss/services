@@ -79,6 +79,12 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
           'screens/kyc',
           'We are unable to process this transaction due to restrictions based on your nationality.',
         );
+
+      case TransactionError.IBAN_CURRENCY_MISMATCH:
+        return translate(
+          'screens/kyc',
+          'This IBAN cannot be used with this currency.',
+        );
     }
   }
 
