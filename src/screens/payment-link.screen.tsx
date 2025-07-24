@@ -52,6 +52,7 @@ import {
   ExtendedPaymentLinkStatus,
   NoPaymentLinkPaymentStatus,
   PaymentLinkMode,
+  PaymentLinkPayRequest,
   PaymentLinkPayTerminal,
   PaymentStandard,
   WalletAppId,
@@ -320,12 +321,37 @@ export default function PaymentLinkScreen(): JSX.Element {
                   <StyledVerticalStack full gap={4} className="text-left">
                     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                       {payRequest.externalId && (
-                        <StyledDataTableRow
+                        <StyledDataTableExpandableRow
                           label={translate('screens/payment', 'External ID')}
-                          isLoading={isLoadingPaymentIdentifier}
+                          expansionItems={
+                            [
+                              {
+                                label: translate('screens/support', 'ID'),
+                                text: payRequest.id,
+                              },
+                              {
+                                label: translate('screens/home', 'Mode'),
+                                text: payRequest.mode,
+                              },
+                              {
+                                label: translate('screens/payment', 'Tag'),
+                                text: payRequest.tag,
+                              },
+                              {
+                                label: translate('screens/payment', 'Route'),
+                                text: payRequest.route,
+                              },
+                              {
+                                label: translate('screens/payment', 'Callback'),
+                                text: blankedAddress((payRequest as PaymentLinkPayRequest).callback ?? '', { width }),
+                                icon: IconVariant.COPY,
+                                onClick: () => copy((payRequest as PaymentLinkPayRequest).callback),
+                              },
+                            ].filter((item) => item.text) as any
+                          }
                         >
-                          <p>{payRequest.externalId}</p>
-                        </StyledDataTableRow>
+                          <p>{blankedAddress(payRequest.externalId ?? payRequest.id, { width, scale: 0.9 })}</p>
+                        </StyledDataTableExpandableRow>
                       )}
                       {paymentHasQuote(payRequest) && (
                         <>
@@ -345,7 +371,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                                 <StyledDataTableRow label={translate('screens/sell', 'Asset')}>
                                   {showContract && assetObject.chainId ? (
                                     <StyledHorizontalStack gap={2}>
-                                      <span>{blankedAddress(assetObject.chainId, { width, scale: 0.75 })}</span>
+                                      <span>{blankedAddress(assetObject.chainId ?? '', { width, scale: 0.75 })}</span>
                                       <StyledIconButton
                                         icon={IconVariant.COPY}
                                         onClick={() => copy(assetObject.chainId ?? '')}
@@ -441,12 +467,24 @@ export default function PaymentLinkScreen(): JSX.Element {
                         </StyledDataTableExpandableRow>
                       )}
                       {paymentHasQuote(payRequest) && (
-                        <StyledDataTableRow
+                        <StyledDataTableExpandableRow
                           label={translate('screens/payment', 'Expiry date')}
                           isLoading={isLoadingPaymentIdentifier || !paymentIdentifier}
+                          expansionItems={
+                            [
+                              {
+                                label: translate('screens/support', 'Quote ID'),
+                                text: payRequest.quote.id,
+                              },
+                              {
+                                label: translate('screens/home', 'Quote Payment'),
+                                text: payRequest.quote.payment,
+                              },
+                            ].filter((item) => item.text) as any
+                          }
                         >
                           <p>{new Date(payRequest.quote.expiration).toLocaleString()}</p>
-                        </StyledDataTableRow>
+                        </StyledDataTableExpandableRow>
                       )}
                       {paymentHasQuote(payRequest) && !payRequest.displayQr && (
                         <StyledDataTableExpandableRow
@@ -463,6 +501,65 @@ export default function PaymentLinkScreen(): JSX.Element {
                           }
                         />
                       )}
+                      {paymentHasQuote(payRequest) &&
+                        (() => {
+                          const assetMap = new Map<string, { amount: string; methods: string[] }>();
+                          const supportedMethods = payRequest.transferAmounts.filter((ta) => ta.available !== false);
+
+                          supportedMethods.forEach((transferMethod) => {
+                            transferMethod.assets.forEach((asset) => {
+                              if (!assetMap.has(asset.asset)) {
+                                assetMap.set(asset.asset, {
+                                  amount: String(asset.amount),
+                                  methods: [],
+                                });
+                              }
+                              const data = assetMap.get(asset.asset)!;
+                              data.methods.push(transferMethod.method);
+                            });
+                          });
+
+                          return (
+                            <StyledDataTableExpandableRow
+                              label={translate('screens/payment', 'Payment Methods')}
+                              expansionContent={
+                                <div className="flex flex-col gap-1">
+                                  {Array.from(assetMap.entries()).map(([assetName, data]) => {
+                                    return (
+                                      <div
+                                        key={assetName}
+                                        className="flex flex-col justify-start sm:flex-row sm:justify-between text-sm px-2 py-2 even:bg-dfxGray-300/40 rounded"
+                                      >
+                                        <div className="flex items-baseline gap-2">
+                                          <span className="text-dfxBlue-800 font-medium">{data.amount}</span>
+                                          <span className="text-dfxGray-800">{assetName}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-left text-dfxGray-700">
+                                          {data.methods.join(', ')}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                  <DividerWithHeader
+                                    header={translate('screens/payment', 'Minimum network fees').toUpperCase()}
+                                    py={1}
+                                  />
+                                  <div className="flex flex-col gap-2">
+                                    {supportedMethods.map((m) => (
+                                      <div
+                                        key={m.method}
+                                        className="flex justify-between items-center text-dfxGray-700 text-xs px-2"
+                                      >
+                                        <span className="text-dfxGray-700">{m.method}</span>
+                                        <span className="text-dfxGray-700">{m.minFee}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              }
+                            />
+                          );
+                        })()}
                     </StyledDataTable>
                     {paymentHasQuote(payRequest) && selectedPaymentStandard?.blockchain && (
                       <StyledInfoText
@@ -733,9 +830,11 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
   );
 }
 
-function DividerWithHeader({ header }: { header: string }): JSX.Element {
+function DividerWithHeader({ header, py }: { header: string; py?: number }): JSX.Element {
+  const pyClass = py === 4 ? 'py-4' : py === 2 ? 'py-2' : py === 1 ? 'py-1' : '';
+
   return (
-    <div className="flex flex-row items-center gap-2 w-full">
+    <div className={`flex flex-row items-center gap-2 ${pyClass} w-full`}>
       <div className="flex-grow bg-gradient-to-r from-white to-dfxGray-600 h-[1px]" />
       <p className="text-xs font-medium text-dfxGray-600 whitespace-nowrap">{header}</p>
       <div className="flex-grow bg-gradient-to-r from-dfxGray-600 to-white h-[1px]" />
