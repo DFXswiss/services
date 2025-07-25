@@ -65,7 +65,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   const getDeeplinkByCategory = async (wallet: WalletInfo) => {
     if (!paymentIdentifier) return undefined;
 
-    if (wallet.category === WalletCategory.LIGHTNING_ONLY) {
+    if (wallet.category === WalletCategory.LIGHTNING) {
       const lightning = new URL(paymentIdentifier).searchParams.get('lightning');
       const suffix = 'lightning:';
       const prefix = wallet.deepLink !== suffix ? `${wallet.deepLink}` : '';
@@ -84,7 +84,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
         const { pr } = (await fetchCallbackUrlForTransferMethod<{ pr: string }>(Blockchain.LIGHTNING)) ?? {};
         return `${wallet.deepLink}${pr}`;
 
-      case WalletAppId.BINANCEPAY:
+      case WalletAppId.BINANCE:
         const { uri } = (await fetchCallbackUrlForTransferMethod<{ uri: string }>(C2BPaymentMethod.BINANCE_PAY)) ?? {};
         return uri;
 

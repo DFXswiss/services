@@ -85,11 +85,11 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
 }
 
 export enum WalletCategory {
-  LIGHTNING_ONLY = 'LIGHTNING_ONLY',
+  LIGHTNING = 'LIGHTNING',
+  BITCOIN = 'BITCOIN', // Bitcoin & Lightning
   EVM = 'EVM',
-  MONERO_ONLY = 'MONERO_ONLY',
-  MULTI_CHAIN = 'MULTI_CHAIN',
-  PAYMENT_PROVIDER = 'PAYMENT_PROVIDER',
+  MULTI_CHAIN = 'MULTI_CHAIN', // excl. Lightning
+  BINANCE_PAY = 'BINANCE_PAY',
 }
 
 export enum WalletAppId {
@@ -104,10 +104,8 @@ export enum WalletAppId {
   BLINK = 'blink',
   BLITZWALLET = 'blitzwallet',
   BLIXT = 'blixt',
-  BLUEWALLET = 'bluewallet',
   BREEZ = 'breez',
   COINCORNER = 'coincorner',
-  ELECTRUM = 'electrum',
   LIFPAY = 'lifpay',
   LIPAWALLET = 'lipawallet',
   LNBITS = 'lnbits',
@@ -116,7 +114,7 @@ export enum WalletAppId {
   POUCHPH = 'pouchph',
   ZEBEDEE = 'zebedee',
   ZEUS = 'zeus',
-  BINANCEPAY = 'binancepay',
+  BINANCE = 'binance',
   MUUN = 'muun',
 }
 
