@@ -84,6 +84,14 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
   transferAmounts: TransferInfo[];
 }
 
+export enum WalletCategory {
+  LIGHTNING = 'LIGHTNING',
+  BITCOIN = 'BITCOIN', // Bitcoin & Lightning
+  EVM = 'EVM',
+  MULTI_CHAIN = 'MULTI_CHAIN', // excl. Lightning
+  BINANCE_PAY = 'BINANCE_PAY',
+}
+
 export enum WalletAppId {
   DEUROWALLET = 'deurowallet',
   CAKEWALLET = 'cakewallet',
@@ -96,10 +104,8 @@ export enum WalletAppId {
   BLINK = 'blink',
   BLITZWALLET = 'blitzwallet',
   BLIXT = 'blixt',
-  BLUEWALLET = 'bluewallet',
   BREEZ = 'breez',
   COINCORNER = 'coincorner',
-  ELECTRUM = 'electrum',
   LIFPAY = 'lifpay',
   LIPAWALLET = 'lipawallet',
   LNBITS = 'lnbits',
@@ -108,7 +114,7 @@ export enum WalletAppId {
   POUCHPH = 'pouchph',
   ZEBEDEE = 'zebedee',
   ZEUS = 'zeus',
-  BINANCEPAY = 'binancepay',
+  BINANCE = 'binance',
   MUUN = 'muun',
 }
 
@@ -121,7 +127,8 @@ export interface WalletInfo {
   appStoreUrl?: string;
   playStoreUrl?: string;
   recommended?: boolean;
-  transferMethod?: TransferMethod;
+  category: WalletCategory;
+  supportedTokens?: string[];
   semiCompatible?: boolean;
   disabled?: boolean;
 }

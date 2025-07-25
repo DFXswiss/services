@@ -1,3 +1,5 @@
+import { Blockchain } from '@dfx.swiss/react';
+
 type EvmUriData = {
   address?: string;
   chainId?: string;
@@ -6,8 +8,8 @@ type EvmUriData = {
   method?: string;
 };
 
-export class EvmUri {
-  static decode(uri: string): EvmUriData | null {
+export class Evm {
+  static decodeUri(uri: string): EvmUriData | null {
     const basePattern = /^ethereum:([^@]+)@([^/?]+)(?:\/([^?]+))?/;
     const match = basePattern.exec(uri);
 
@@ -29,5 +31,18 @@ export class EvmUri {
           chainId,
           amount: queryParams.get('value') || undefined,
         };
+  }
+
+  static isEvm(blockchain: Blockchain): boolean {
+    return [
+      Blockchain.ETHEREUM,
+      Blockchain.ARBITRUM,
+      Blockchain.OPTIMISM,
+      Blockchain.POLYGON,
+      Blockchain.BASE,
+      Blockchain.GNOSIS,
+      Blockchain.BINANCE_SMART_CHAIN,
+      Blockchain.HAQQ,
+    ].includes(blockchain);
   }
 }
