@@ -62,8 +62,9 @@ import { useNavigation } from 'src/hooks/navigation.hook';
 import { usePaymentLinkWallets } from 'src/hooks/payment-link-wallets.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { BadgeType } from 'src/util/app-store-badges';
-import { EvmUri } from 'src/util/evm-uri';
+import { Evm } from 'src/util/evm';
 import { OpenCryptoPayUtils } from 'src/util/open-crypto-pay';
+import { Wallet } from 'src/util/payment-link-wallet';
 import { blankedAddress, formatLocationAddress, formatUnits } from 'src/util/utils';
 import { AppStoreBadge } from '../components/app-store-badge';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
@@ -214,7 +215,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   const parsedEvmUri =
     selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS && paymentIdentifier
-      ? EvmUri.decode(paymentIdentifier)
+      ? Evm.decodeUri(paymentIdentifier)
       : undefined;
 
   useLayoutOptions({ backButton: false, smallMenu: true });
@@ -503,9 +504,12 @@ export default function PaymentLinkScreen(): JSX.Element {
                       )}
                       {paymentHasQuote(payRequest) &&
                         (() => {
-                          const assetMap = new Map<string, { amount: string; methods: string[] }>();
-                          const supportedMethods = payRequest.transferAmounts.filter((ta) => ta.available !== false);
+                          const filteredTransferAmounts = walletData
+                            ? Wallet.filterTransferInfoByWallet(walletData, payRequest.transferAmounts)
+                            : payRequest.transferAmounts;
+                          const supportedMethods = filteredTransferAmounts.filter((ta) => ta.available !== false);
 
+                          const assetMap = new Map<string, { amount: string; methods: string[] }>();
                           supportedMethods.forEach((transferMethod) => {
                             transferMethod.assets.forEach((asset) => {
                               if (!assetMap.has(asset.asset)) {
@@ -520,44 +524,48 @@ export default function PaymentLinkScreen(): JSX.Element {
                           });
 
                           return (
-                            <StyledDataTableExpandableRow
-                              label={translate('screens/payment', 'Payment Methods')}
-                              expansionContent={
-                                <div className="flex flex-col gap-1">
-                                  {Array.from(assetMap.entries()).map(([assetName, data]) => {
-                                    return (
-                                      <div
-                                        key={assetName}
-                                        className="flex flex-col justify-start sm:flex-row sm:justify-between text-sm px-2 py-2 even:bg-dfxGray-300/40 rounded"
-                                      >
-                                        <div className="flex items-baseline gap-2">
-                                          <span className="text-dfxBlue-800 font-medium">{data.amount}</span>
-                                          <span className="text-dfxGray-800">{assetName}</span>
+                            assetMap.size > 0 && (
+                              <StyledDataTableExpandableRow
+                                label={translate('screens/payment', 'Payment Methods')}
+                                expansionContent={
+                                  <div className="flex flex-col gap-1">
+                                    {Array.from(assetMap.entries()).map(([assetName, data]) => {
+                                      return (
+                                        <div
+                                          key={assetName}
+                                          className="flex flex-col justify-start sm:flex-row sm:justify-between text-sm px-2 py-2 even:bg-dfxGray-300/40 rounded"
+                                        >
+                                          <div className="flex items-baseline gap-2">
+                                            <span className="text-dfxBlue-800 font-medium">{data.amount}</span>
+                                            <span className="text-dfxGray-800">{assetName}</span>
+                                          </div>
+                                          <div className="flex items-center gap-2 text-xs text-left text-dfxGray-700">
+                                            {data.methods.join(', ')}
+                                          </div>
                                         </div>
-                                        <div className="flex items-center gap-2 text-xs text-left text-dfxGray-700">
-                                          {data.methods.join(', ')}
+                                      );
+                                    })}
+                                    <DividerWithHeader
+                                      header={translate('screens/payment', 'Minimum network fees').toUpperCase()}
+                                      py={1}
+                                    />
+                                    <div className="flex flex-col gap-2">
+                                      {supportedMethods.map((m) => (
+                                        <div
+                                          key={m.method}
+                                          className="flex justify-between items-center text-dfxGray-700 text-xs px-2"
+                                        >
+                                          <span className="text-dfxGray-700">{m.method}</span>
+                                          <span className="text-dfxGray-700">{m.minFee}</span>
                                         </div>
-                                      </div>
-                                    );
-                                  })}
-                                  <DividerWithHeader
-                                    header={translate('screens/payment', 'Minimum network fees').toUpperCase()}
-                                    py={1}
-                                  />
-                                  <div className="flex flex-col gap-2">
-                                    {supportedMethods.map((m) => (
-                                      <div
-                                        key={m.method}
-                                        className="flex justify-between items-center text-dfxGray-700 text-xs px-2"
-                                      >
-                                        <span className="text-dfxGray-700">{m.method}</span>
-                                        <span className="text-dfxGray-700">{m.minFee}</span>
-                                      </div>
-                                    ))}
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
-                              }
-                            />
+                                }
+                              >
+                                {walletData?.name ?? ''}
+                              </StyledDataTableExpandableRow>
+                            )
                           );
                         })()}
                     </StyledDataTable>

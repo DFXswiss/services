@@ -32,7 +32,7 @@ import {
 } from 'src/dto/payment-link.dto';
 import { usePolling } from 'src/hooks/polling';
 import { useSessionStore } from 'src/hooks/session-store.hook';
-import { EvmUri } from 'src/util/evm-uri';
+import { Evm } from 'src/util/evm';
 import { Lnurl } from 'src/util/lnurl';
 import { fetchJson, url } from 'src/util/utils';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -419,7 +419,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       );
       if (!paymentUri) throw new Error('Failed to get payment information');
 
-      const paymentData = EvmUri.decode(paymentUri);
+      const paymentData = Evm.decodeUri(paymentUri);
 
       const address = asset.type === AssetType.COIN ? paymentData?.address : paymentData?.tokenContractAddress;
       const amount = paymentData?.amount;

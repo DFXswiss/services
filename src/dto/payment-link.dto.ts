@@ -84,6 +84,14 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
   transferAmounts: TransferInfo[];
 }
 
+export enum WalletCategory {
+  LIGHTNING_ONLY = 'LIGHTNING_ONLY',
+  EVM = 'EVM',
+  MONERO_ONLY = 'MONERO_ONLY',
+  MULTI_CHAIN = 'MULTI_CHAIN',
+  PAYMENT_PROVIDER = 'PAYMENT_PROVIDER',
+}
+
 export enum WalletAppId {
   DEUROWALLET = 'deurowallet',
   CAKEWALLET = 'cakewallet',
@@ -121,7 +129,8 @@ export interface WalletInfo {
   appStoreUrl?: string;
   playStoreUrl?: string;
   recommended?: boolean;
-  transferMethod?: TransferMethod;
+  category: WalletCategory;
+  supportedTokens?: string[];
   semiCompatible?: boolean;
   disabled?: boolean;
 }
