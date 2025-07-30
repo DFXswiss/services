@@ -502,72 +502,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           }
                         />
                       )}
-                      {paymentHasQuote(payRequest) &&
-                        (() => {
-                          const filteredTransferAmounts = walletData
-                            ? Wallet.filterTransferInfoByWallet(walletData, payRequest.transferAmounts)
-                            : payRequest.transferAmounts;
-                          const supportedMethods = filteredTransferAmounts.filter((ta) => ta.available !== false);
-
-                          const assetMap = new Map<string, { amount: string; methods: string[] }>();
-                          supportedMethods.forEach((transferMethod) => {
-                            transferMethod.assets.forEach((asset) => {
-                              if (!assetMap.has(asset.asset)) {
-                                assetMap.set(asset.asset, {
-                                  amount: String(asset.amount),
-                                  methods: [],
-                                });
-                              }
-                              const data = assetMap.get(asset.asset)!;
-                              data.methods.push(transferMethod.method);
-                            });
-                          });
-
-                          return (
-                            assetMap.size > 0 && (
-                              <StyledDataTableExpandableRow
-                                label={translate('screens/payment', 'Payment Methods')}
-                                expansionContent={
-                                  <div className="flex flex-col gap-1">
-                                    {Array.from(assetMap.entries()).map(([assetName, data]) => {
-                                      return (
-                                        <div
-                                          key={assetName}
-                                          className="flex flex-col justify-start sm:flex-row sm:justify-between text-sm px-2 py-2 even:bg-dfxGray-300/40 rounded"
-                                        >
-                                          <div className="flex items-baseline gap-2">
-                                            <span className="text-dfxBlue-800 font-medium">{data.amount}</span>
-                                            <span className="text-dfxGray-800">{assetName}</span>
-                                          </div>
-                                          <div className="flex items-center gap-2 text-xs text-left text-dfxGray-700">
-                                            {data.methods.join(', ')}
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                    <DividerWithHeader
-                                      header={translate('screens/payment', 'Minimum network fees').toUpperCase()}
-                                      py={1}
-                                    />
-                                    <div className="flex flex-col gap-2">
-                                      {supportedMethods.map((m) => (
-                                        <div
-                                          key={m.method}
-                                          className="flex justify-between items-center text-dfxGray-700 text-xs px-2"
-                                        >
-                                          <span className="text-dfxGray-700">{m.method}</span>
-                                          <span className="text-dfxGray-700">{m.minFee}</span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                }
-                              >
-                                {walletData?.name ?? ''}
-                              </StyledDataTableExpandableRow>
-                            )
-                          );
-                        })()}
+                      <TransferInfoComponent payRequest={payRequest} />
                     </StyledDataTable>
                     {paymentHasQuote(payRequest) && selectedPaymentStandard?.blockchain && (
                       <StyledInfoText
@@ -665,6 +600,9 @@ export default function PaymentLinkScreen(): JSX.Element {
                           <WalletLogo wallet={walletData} size={128} />
 
                           <StyledVerticalStack full gap={3} center className="pt-2 px-4">
+                            <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                              <TransferInfoComponent payRequest={payRequest} walletData={walletData} />
+                            </StyledDataTable>
                             {isLoadingDeeplink && !walletData.disabled ? (
                               <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
                             ) : (
@@ -724,12 +662,22 @@ export default function PaymentLinkScreen(): JSX.Element {
             </>
           )}
 
-          <div className="pt-4 pb-2 w-full leading-none">
-            <StyledLink
-              label={translate('screens/payment', 'Find out more about the OpenCryptoPay payment standard')}
-              url="https://opencryptopay.io"
-              dark
-            />
+          <div className="flex flex-col gap-2 mt-6 w-full">
+            {/* <div className="w-full h-96 rounded-md overflow-clip">
+              <iframe
+                src="https://www.google.com/maps/d/embed?mid=1DzX6z5tnUqn1zlzFnL6G58xREItorRM&ehbc=2E312F"
+                width="100%"
+                height="100%"
+              ></iframe>
+            </div> */}
+            <div className="w-full leading-none">
+              <StyledButton
+                label={translate('screens/payment', 'LEARN MORE')}
+                onClick={() => window.open('https://opencryptopay.io', '_blank')}
+                color={StyledButtonColor.STURDY_WHITE}
+                width={StyledButtonWidth.FULL}
+              />
+            </div>
           </div>
 
           <div className="p-1 w-full leading-none">
@@ -746,6 +694,82 @@ export default function PaymentLinkScreen(): JSX.Element {
         </StyledVerticalStack>
       )}
     </>
+  );
+}
+
+interface TransferInfoComponentProps {
+  payRequest?: PaymentLinkPayRequest | PaymentLinkPayTerminal;
+  walletData?: WalletInfo;
+}
+
+function TransferInfoComponent({ payRequest, walletData }: TransferInfoComponentProps) {
+  const { translate } = useSettingsContext();
+  const { paymentHasQuote } = usePaymentLinkContext();
+
+  if (!paymentHasQuote(payRequest)) return <></>;
+
+  const filteredTransferAmounts = walletData
+    ? Wallet.filterTransferInfoByWallet(walletData, payRequest.transferAmounts)
+    : payRequest.transferAmounts;
+  const supportedMethods = filteredTransferAmounts.filter((ta) => ta.available !== false);
+
+  const assetMap = new Map<string, { amount: string; methods: string[] }>();
+  supportedMethods.forEach((transferMethod) => {
+    transferMethod.assets.forEach((asset) => {
+      if (!assetMap.has(asset.asset)) {
+        assetMap.set(asset.asset, {
+          amount: String(asset.amount),
+          methods: [],
+        });
+      }
+      const data = assetMap.get(asset.asset)!;
+      data.methods.push(transferMethod.method);
+    });
+  });
+
+  return (
+    assetMap.size > 0 && (
+      <StyledDataTableExpandableRow
+        label={translate('screens/payment', 'Payment Methods')}
+        expansionContent={
+          <div className="flex flex-col gap-2.5 pb-1.5">
+            {Array.from(assetMap.entries()).map(([assetName, data]) => {
+              return (
+                <div
+                  key={assetName}
+                  className="flex flex-col justify-start sm:flex-row sm:justify-between text-sm px-2 py-2 even:bg-dfxGray-300/40 rounded"
+                >
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-dfxBlue-800 font-medium">{data.amount}</span>
+                    <span className="text-dfxGray-800">{assetName}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-left text-dfxGray-700">
+                    {data.methods.join(', ')}
+                  </div>
+                </div>
+              );
+            })}
+            <StyledCollapsible
+              full
+              titleContent={
+                <div className="text-dfxGray-700 text-sm text-left">
+                  {translate('screens/payment', 'Minimum network fees')}
+                </div>
+              }
+            >
+              <div className="flex flex-col gap-2 pt-2">
+                {supportedMethods.map((m) => (
+                  <div key={m.method} className="flex justify-between items-center text-dfxGray-700 text-xs px-2">
+                    <span className="text-dfxGray-700">{m.method}</span>
+                    <span className="text-dfxGray-700">{m.minFee ? m.minFee : 'N/A'}</span>
+                  </div>
+                ))}
+              </div>
+            </StyledCollapsible>
+          </div>
+        }
+      />
+    )
   );
 }
 
