@@ -593,7 +593,7 @@
     "Please send the specified amount to the address below.": "Veuillez envoyer le montant spécifié à l'adresse ci-dessous.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Veuillez noter qu'en utilisant ce service, vous acceptez automatiquement nos conditions générales.",
     "By using this service, the outstanding claim of the above-mentioned company against DFX is assigned, and the General Terms and Conditions of DFX AG apply.": "En utilisant ce service, la créance en souffrance de l’entreprise susmentionnée envers DFX est cédée, et les Conditions Générales de DFX AG s’appliquent.",
-    "Find out more about the OpenCryptoPay payment standard": "En savoir plus sur la norme de paiement OpenCryptoPay",
+    "Learn more about OpenCryptoPay": "En savoir plus sur OpenCryptoPay",
 
     "Payment routes": "Itinéraires de paiement",
     "Payment route": "Itinéraire de paiement",
@@ -620,6 +620,10 @@
     "Activate": "Activer",
     "Deactivate": "Désactiver",
     "Expires at": "Expire à",
+
+    "Payment Methods": "Méthodes de paiement",
+    "Supported cryptocurrencies and blockchains": "Cryptomonnaies et blockchains supportées",
+    "Minimum network fees": "Frais de réseau minimum",
 
     "Configuration": "Configuration",
     "Default configuration": "Configuration par défaut",

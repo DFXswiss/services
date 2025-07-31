@@ -701,7 +701,7 @@ export default function PaymentLinkScreen(): JSX.Element {
             </div> */}
             <div className="w-full leading-none">
               <StyledButton
-                label={translate('screens/payment', 'LEARN MORE')}
+                label={translate('screens/payment', 'Learn more about OpenCryptoPay')}
                 onClick={() => window.open('https://opencryptopay.io', '_blank')}
                 color={StyledButtonColor.STURDY_WHITE}
                 width={StyledButtonWidth.FULL}
@@ -756,7 +756,7 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
 
   return (
     assetMap.size > 0 && (
-      <div className="flex flex-col gap-2.5 pb-1.5">
+      <div className="flex flex-col gap-2.5">
         {Array.from(assetMap.entries()).map(([assetName, data]) => {
           return (
             <div
@@ -765,7 +765,7 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
             >
               <div className="flex items-baseline gap-2">
                 {!isMerchantMode && <span className="text-dfxBlue-800 font-medium">{data.amount}</span>}
-                <span className="text-dfxGray-800">{assetName}</span>
+                <span className="text-dfxBlue-800">{assetName}</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-left text-dfxGray-700">
                 {data.methods.join(', ')}
