@@ -33,6 +33,20 @@ export interface TransferInfo {
   available?: boolean;
 }
 
+export interface RecipientInfo {
+  address?: {
+    city: string;
+    country: string;
+    houseNumber: string;
+    street: string;
+    zip: string;
+  };
+  name?: string;
+  mail?: string;
+  phone?: string;
+  website?: string;
+}
+
 export interface PaymentLinkPayTerminal {
   id: string;
   externalId?: string;
@@ -44,19 +58,7 @@ export interface PaymentLinkPayTerminal {
   mode: PaymentLinkMode;
   route: string;
   currency: string;
-  recipient: {
-    address?: {
-      city: string;
-      country: string;
-      houseNumber: string;
-      street: string;
-      zip: string;
-    };
-    name?: string;
-    mail?: string;
-    phone?: string;
-    website?: string;
-  };
+  recipient: RecipientInfo;
 
   // error fields
   statusCode?: number;

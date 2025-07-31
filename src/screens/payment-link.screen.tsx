@@ -97,6 +97,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     metaMaskError,
     isMetaMaskPaying,
     paymentHasQuote,
+    isMerchantMode,
     setSessionApiUrl,
     setPaymentIdentifier,
     fetchPayRequest,
@@ -224,7 +225,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     <>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
-      ) : (!payRequest && !merchant) || isLoadingMetaMask ? (
+      ) : !payRequest || isLoadingMetaMask ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center className="pt-8">
@@ -265,6 +266,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                 : []
             }
           />
+
           {paymentStatus === PaymentLinkPaymentStatus.PENDING &&
             paymentHasQuote(payRequest) &&
             paymentStandards?.length &&
@@ -299,6 +301,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                 </StyledVerticalStack>
               </Form>
             )}
+
           {([PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(paymentStatus) ||
             payRequest?.mode === PaymentLinkMode.PUBLIC) && (
             <>
@@ -321,7 +324,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                 >
                   <StyledVerticalStack full gap={4} className="text-left">
                     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                      {payRequest.externalId && (
+                      {!isMerchantMode && payRequest.externalId && (
                         <StyledDataTableExpandableRow
                           label={translate('screens/payment', 'External ID')}
                           expansionItems={
@@ -502,7 +505,12 @@ export default function PaymentLinkScreen(): JSX.Element {
                           }
                         />
                       )}
-                      <TransferInfoComponent payRequest={payRequest} />
+                      {(paymentHasQuote(payRequest) || isMerchantMode) && (
+                        <StyledDataTableExpandableRow
+                          label={translate('screens/payment', 'Payment Methods')}
+                          expansionContent={<TransferMethodsContent payRequest={payRequest as PaymentLinkPayRequest} />}
+                        />
+                      )}
                     </StyledDataTable>
                     {paymentHasQuote(payRequest) && selectedPaymentStandard?.blockchain && (
                       <StyledInfoText
@@ -600,9 +608,30 @@ export default function PaymentLinkScreen(): JSX.Element {
                           <WalletLogo wallet={walletData} size={128} />
 
                           <StyledVerticalStack full gap={3} center className="pt-2 px-4">
-                            <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                              <TransferInfoComponent payRequest={payRequest} walletData={walletData} />
-                            </StyledDataTable>
+                            {(paymentHasQuote(payRequest) || isMerchantMode) && (
+                              <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                                <StyledCollapsible
+                                  full
+                                  titleContent={
+                                    <div className="flex flex-col items-start gap-1.5 text-left -my-1">
+                                      <div className="flex flex-col items-start text-left">
+                                        <div className="font-semibold leading-none">
+                                          {translate('screens/payment', 'Payment Methods')}
+                                        </div>
+                                      </div>
+                                      <div className="leading-none text-dfxGray-800 text-xs">
+                                        {translate('screens/payment', 'Supported cryptocurrencies and blockchains')}
+                                      </div>
+                                    </div>
+                                  }
+                                >
+                                  <TransferMethodsContent
+                                    payRequest={payRequest as PaymentLinkPayRequest}
+                                    walletData={walletData}
+                                  />
+                                </StyledCollapsible>
+                              </StyledDataTable>
+                            )}
                             {isLoadingDeeplink && !walletData.disabled ? (
                               <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
                             ) : (
@@ -697,16 +726,14 @@ export default function PaymentLinkScreen(): JSX.Element {
   );
 }
 
-interface TransferInfoComponentProps {
-  payRequest?: PaymentLinkPayRequest | PaymentLinkPayTerminal;
+interface TransferMethodsContentProps {
+  payRequest: PaymentLinkPayRequest;
   walletData?: WalletInfo;
 }
 
-function TransferInfoComponent({ payRequest, walletData }: TransferInfoComponentProps) {
+function TransferMethodsContent({ payRequest, walletData }: TransferMethodsContentProps) {
   const { translate } = useSettingsContext();
-  const { paymentHasQuote } = usePaymentLinkContext();
-
-  if (!paymentHasQuote(payRequest)) return <></>;
+  const { isMerchantMode } = usePaymentLinkContext();
 
   const filteredTransferAmounts = walletData
     ? Wallet.filterTransferInfoByWallet(walletData, payRequest.transferAmounts)
@@ -729,46 +756,43 @@ function TransferInfoComponent({ payRequest, walletData }: TransferInfoComponent
 
   return (
     assetMap.size > 0 && (
-      <StyledDataTableExpandableRow
-        label={translate('screens/payment', 'Payment Methods')}
-        expansionContent={
-          <div className="flex flex-col gap-2.5 pb-1.5">
-            {Array.from(assetMap.entries()).map(([assetName, data]) => {
-              return (
-                <div
-                  key={assetName}
-                  className="flex flex-col justify-start sm:flex-row sm:justify-between text-sm px-2 py-2 even:bg-dfxGray-300/40 rounded"
-                >
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-dfxBlue-800 font-medium">{data.amount}</span>
-                    <span className="text-dfxGray-800">{assetName}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-left text-dfxGray-700">
-                    {data.methods.join(', ')}
-                  </div>
-                </div>
-              );
-            })}
-            <StyledCollapsible
-              full
-              titleContent={
-                <div className="text-dfxGray-700 text-sm text-left">
-                  {translate('screens/payment', 'Minimum network fees')}
-                </div>
-              }
+      <div className="flex flex-col gap-2.5 pb-1.5">
+        {Array.from(assetMap.entries()).map(([assetName, data]) => {
+          return (
+            <div
+              key={assetName}
+              className="flex flex-col justify-start sm:flex-row sm:justify-between text-sm px-2 py-2 even:bg-dfxGray-300/40 rounded"
             >
-              <div className="flex flex-col gap-2 pt-2">
-                {supportedMethods.map((m) => (
-                  <div key={m.method} className="flex justify-between items-center text-dfxGray-700 text-xs px-2">
-                    <span className="text-dfxGray-700">{m.method}</span>
-                    <span className="text-dfxGray-700">{m.minFee ? m.minFee : 'N/A'}</span>
-                  </div>
-                ))}
+              <div className="flex items-baseline gap-2">
+                {!isMerchantMode && <span className="text-dfxBlue-800 font-medium">{data.amount}</span>}
+                <span className="text-dfxGray-800">{assetName}</span>
               </div>
-            </StyledCollapsible>
-          </div>
-        }
-      />
+              <div className="flex items-center gap-2 text-xs text-left text-dfxGray-700">
+                {data.methods.join(', ')}
+              </div>
+            </div>
+          );
+        })}
+        {!isMerchantMode && (
+          <StyledCollapsible
+            full
+            titleContent={
+              <div className="text-dfxGray-700 text-sm text-left">
+                {translate('screens/payment', 'Minimum network fees')}
+              </div>
+            }
+          >
+            <div className="flex flex-col gap-2 pt-2">
+              {supportedMethods.map((m) => (
+                <div key={m.method} className="flex justify-between items-center text-dfxGray-700 text-xs px-2">
+                  <span className="text-dfxGray-700">{m.method}</span>
+                  <span className="text-dfxGray-700">{m.minFee ? m.minFee : 'N/A'}</span>
+                </div>
+              ))}
+            </div>
+          </StyledCollapsible>
+        )}
+      </div>
     )
   );
 }
