@@ -137,20 +137,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
 
   useAddressGuard('/login');
 
-  function PosLinkButton({ link }: { link: PaymentLink }) {
-    useEffect(() => {
-      fetchPosUrl(link.id);
-    }, [link.id]);
-
-    return (
-      <StyledLinkButton
-        label={translate('screens/payment', 'Open POS')}
-        href={posUrls[link.id] || `${window.location.origin}/pos/payment-link/${link.id}`}
-        isLoading={isLoadingPos === link.id}
-      />
-    );
-  }
-
   async function togglePaymentLinkStatus(id: string, status: PaymentLinkStatus) {
     setIsUpdatingPaymentLink((prev) => [...prev, id]);
     updatePaymentLink({ status }, id).finally(() => {
@@ -711,7 +697,13 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           color={StyledButtonColor.STURDY_WHITE}
                           isLoading={isGeneratingSticker === link.id}
                         />
-                        <PosLinkButton link={link} />
+                        <PosLinkButton
+                          link={link}
+                          posUrl={posUrls[link.id]}
+                          isLoading={isLoadingPos === link.id}
+                          onMount={fetchPosUrl}
+                          translate={translate}
+                        />
                         {link.status === PaymentLinkStatus.ACTIVE &&
                           (!link.payment || link.payment.status !== PaymentLinkPaymentStatus.PENDING) && (
                             <StyledButton
@@ -781,6 +773,28 @@ export default function PaymentRoutesScreen(): JSX.Element {
         </StyledVerticalStack>
       )}
     </>
+  );
+}
+
+interface PosLinkButtonProps {
+  link: PaymentLink;
+  posUrl?: string;
+  isLoading: boolean;
+  onMount: (linkId: string) => void;
+  translate: (namespace: string, key: string) => string;
+}
+
+function PosLinkButton({ link, posUrl, isLoading, onMount, translate }: PosLinkButtonProps) {
+  useEffect(() => {
+    onMount(link.id);
+  }, [link.id, onMount]);
+
+  return (
+    <StyledLinkButton
+      label={translate('screens/payment', 'Open POS')}
+      href={posUrl || `${window.location.origin}/pos/payment-link/${link.id}`}
+      isLoading={isLoading}
+    />
   );
 }
 

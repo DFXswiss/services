@@ -612,6 +612,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                                 <StyledCollapsible
                                   full
+                                  isExpanded={true}
                                   titleContent={
                                     <div className="flex flex-col items-start gap-1.5 text-left -my-1">
                                       <div className="flex flex-col items-start text-left">
