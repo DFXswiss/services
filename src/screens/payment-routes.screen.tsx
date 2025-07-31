@@ -65,6 +65,7 @@ import {
   removeNullFields,
 } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
+import { StyledLinkButton } from '../components/styled-link-button';
 
 interface FormData {
   routeId: RouteIdSelectData;
@@ -132,8 +133,23 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const [isGeneratingSticker, setIsGeneratingSticker] = useState<string>();
   const [isLoadingPos, setIsLoadingPos] = useState<string>();
   const [linkError, setLinkError] = useState<string>();
+  const [posUrls, setPosUrls] = useState<Record<string, string>>({});
 
   useAddressGuard('/login');
+
+  function PosLinkButton({ link }: { link: PaymentLink }) {
+    useEffect(() => {
+      fetchPosUrl(link.id);
+    }, [link.id]);
+
+    return (
+      <StyledLinkButton
+        label={translate('screens/payment', 'Open POS')}
+        href={posUrls[link.id] || `${window.location.origin}/pos/payment-link/${link.id}`}
+        isLoading={isLoadingPos === link.id}
+      />
+    );
+  }
 
   async function togglePaymentLinkStatus(id: string, status: PaymentLinkStatus) {
     setIsUpdatingPaymentLink((prev) => [...prev, id]);
@@ -232,13 +248,18 @@ export default function PaymentRoutesScreen(): JSX.Element {
       .finally(() => setIsGeneratingSticker(undefined));
   }
 
-  function goToPos({ id }: PaymentLink) {
-    setIsLoadingPos(id);
-    setLinkError(undefined);
-    createPosLink(id)
-      .then(({ url }) => window.open(url, '_blank'))
-      .catch((error: ApiError) => setLinkError(error.message ?? 'Unknown Error'))
-      .finally(() => setIsLoadingPos(undefined));
+  async function fetchPosUrl(linkId: string) {
+    if (posUrls[linkId] || isLoadingPos === linkId) return; // Already fetched
+
+    setIsLoadingPos(linkId);
+    try {
+      const { url } = await createPosLink(linkId);
+      setPosUrls((prev) => ({ ...prev, [linkId]: url }));
+    } catch (error) {
+      console.error('Failed to fetch POS URL:', error);
+    } finally {
+      setIsLoadingPos(undefined);
+    }
   }
 
   const hasRoutes =
@@ -690,12 +711,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           color={StyledButtonColor.STURDY_WHITE}
                           isLoading={isGeneratingSticker === link.id}
                         />
-                        <StyledButton
-                          label={translate('screens/payment', 'Open POS')}
-                          onClick={() => goToPos(link)}
-                          color={StyledButtonColor.STURDY_WHITE}
-                          isLoading={isLoadingPos === link.id}
-                        />
+                        <PosLinkButton link={link} />
                         {link.status === PaymentLinkStatus.ACTIVE &&
                           (!link.payment || link.payment.status !== PaymentLinkPaymentStatus.PENDING) && (
                             <StyledButton
