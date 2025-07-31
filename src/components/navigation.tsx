@@ -207,6 +207,13 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
             onClose={() => setIsNavigationOpen(false)}
           />
           <NavigationLink
+            icon={IconVariant.OPEN_CRYPTOPAY}
+            label={translate('navigation/links', 'Open CryptoPay')}
+            url="https://opencryptopay.io/"
+            target="_blank"
+            onClose={() => setIsNavigationOpen(false)}
+          />
+          <NavigationLink
             icon={IconVariant.FILE}
             label={translate('navigation/links', 'Terms and conditions')}
             url={process.env.REACT_APP_TNC_URL}
