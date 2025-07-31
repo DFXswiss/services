@@ -380,6 +380,7 @@ export default function BuyScreen(): JSX.Element {
       case TransactionError.BANK_TRANSACTION_MISSING:
       case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
+      case TransactionError.IBAN_CURRENCY_MISMATCH:
         setKycError(buy.error);
         return;
     }
