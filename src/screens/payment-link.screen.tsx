@@ -692,14 +692,14 @@ export default function PaymentLinkScreen(): JSX.Element {
             </>
           )}
 
-          <div className="flex flex-col gap-2 mt-6 w-full">
-            {/* <div className="w-full h-96 rounded-md overflow-clip">
+          <div className="flex flex-col gap-4 mt-6 w-full">
+            <div className="w-full h-96 rounded-md overflow-clip">
               <iframe
-                src="https://www.google.com/maps/d/embed?mid=1DzX6z5tnUqn1zlzFnL6G58xREItorRM&ehbc=2E312F"
+                src="https://www.google.com/maps/d/embed?mid=1DzX6z5tnUqn1zlzFnL6G58xREItorRM&ehbc=2E312F&noprof=1"
                 width="100%"
                 height="100%"
               ></iframe>
-            </div> */}
+            </div>
             <div className="w-full leading-none">
               <StyledButton
                 label={translate('screens/payment', 'Learn more about OpenCryptoPay')}
