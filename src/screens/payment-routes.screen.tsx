@@ -50,6 +50,7 @@ import { QrBasic } from 'src/components/payment/qr-code';
 import { PaymentQuoteStatusLabels } from 'src/config/labels';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
@@ -105,7 +106,8 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
-  const { user } = useUserContext();
+  const { isInitialized } = useWalletContext();
+  const { user, isUserLoading } = useUserContext();
   const {
     paymentRoutes,
     paymentLinks,
@@ -276,7 +278,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
     <>
       {(apiError && apiError !== 'permission denied') || error ? (
         <ErrorHint message={apiError ?? error ?? ''} />
-      ) : userPaymentLinksConfigLoading ? (
+      ) : userPaymentLinksConfigLoading || isUserLoading || !isInitialized ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : updateGlobalConfig ? (
         <PaymentLinkForm
