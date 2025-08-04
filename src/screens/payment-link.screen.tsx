@@ -36,7 +36,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { PaymentLink, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -52,6 +52,7 @@ import {
   ExtendedPaymentLinkStatus,
   NoPaymentLinkPaymentStatus,
   PaymentLinkMode,
+  PaymentLinkPayRequest,
   PaymentLinkPayTerminal,
   PaymentStandard,
   WalletAppId,
@@ -61,8 +62,9 @@ import { useNavigation } from 'src/hooks/navigation.hook';
 import { usePaymentLinkWallets } from 'src/hooks/payment-link-wallets.hook';
 import { useWeb3 } from 'src/hooks/web3.hook';
 import { BadgeType } from 'src/util/app-store-badges';
-import { EvmUri } from 'src/util/evm-uri';
+import { Evm } from 'src/util/evm';
 import { OpenCryptoPayUtils } from 'src/util/open-crypto-pay';
+import { Wallet } from 'src/util/payment-link-wallet';
 import { blankedAddress, formatLocationAddress, formatUnits } from 'src/util/utils';
 import { AppStoreBadge } from '../components/app-store-badge';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
@@ -94,6 +96,9 @@ export default function PaymentLinkScreen(): JSX.Element {
     metaMaskInfo,
     metaMaskError,
     isMetaMaskPaying,
+    isMerchantMode,
+    showAssets,
+    showMap,
     paymentHasQuote,
     setSessionApiUrl,
     setPaymentIdentifier,
@@ -109,6 +114,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [showContract, setShowContract] = useState(false);
   const [walletData, setWalletData] = useState<WalletInfo>();
   const [isLoadingDeeplink, setIsLoadingDeeplink] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
 
   const {
     control,
@@ -203,8 +209,16 @@ export default function PaymentLinkScreen(): JSX.Element {
     }
   }, [selectedAsset, selectedPaymentStandard]);
 
+  useEffect(() => {
+    if (showMap && payRequest) scrollToMap();
+  }, [showMap, payRequest]);
+
   const handleBackButton = () => {
     setWalletData(undefined);
+  };
+
+  const scrollToMap = () => {
+    setTimeout(() => mapRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
   };
 
   const assetsList =
@@ -213,7 +227,7 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   const parsedEvmUri =
     selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS && paymentIdentifier
-      ? EvmUri.decode(paymentIdentifier)
+      ? Evm.decodeUri(paymentIdentifier)
       : undefined;
 
   useLayoutOptions({ backButton: false, smallMenu: true });
@@ -222,7 +236,7 @@ export default function PaymentLinkScreen(): JSX.Element {
     <>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
-      ) : (!payRequest && !merchant) || isLoadingMetaMask ? (
+      ) : !payRequest || isLoadingMetaMask ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center className="pt-8">
@@ -263,6 +277,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                 : []
             }
           />
+
           {paymentStatus === PaymentLinkPaymentStatus.PENDING &&
             paymentHasQuote(payRequest) &&
             paymentStandards?.length &&
@@ -297,6 +312,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                 </StyledVerticalStack>
               </Form>
             )}
+
           {([PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(paymentStatus) ||
             payRequest?.mode === PaymentLinkMode.PUBLIC) && (
             <>
@@ -315,17 +331,42 @@ export default function PaymentLinkScreen(): JSX.Element {
                       </div>
                     </div>
                   }
-                  isExpanded={selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS}
+                  isExpanded={selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS || showAssets}
                 >
                   <StyledVerticalStack full gap={4} className="text-left">
                     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                      {payRequest.externalId && (
-                        <StyledDataTableRow
+                      {!isMerchantMode && payRequest.externalId && (
+                        <StyledDataTableExpandableRow
                           label={translate('screens/payment', 'External ID')}
-                          isLoading={isLoadingPaymentIdentifier}
+                          expansionItems={
+                            [
+                              {
+                                label: translate('screens/support', 'ID'),
+                                text: payRequest.id,
+                              },
+                              {
+                                label: translate('screens/home', 'Mode'),
+                                text: payRequest.mode,
+                              },
+                              {
+                                label: translate('screens/payment', 'Tag'),
+                                text: payRequest.tag,
+                              },
+                              {
+                                label: translate('screens/payment', 'Route'),
+                                text: payRequest.route,
+                              },
+                              {
+                                label: translate('screens/payment', 'Callback'),
+                                text: blankedAddress((payRequest as PaymentLinkPayRequest).callback ?? '', { width }),
+                                icon: IconVariant.COPY,
+                                onClick: () => copy((payRequest as PaymentLinkPayRequest).callback),
+                              },
+                            ].filter((item) => item.text) as any
+                          }
                         >
-                          <p>{payRequest.externalId}</p>
-                        </StyledDataTableRow>
+                          <p>{blankedAddress(payRequest.externalId ?? payRequest.id, { width, scale: 0.9 })}</p>
+                        </StyledDataTableExpandableRow>
                       )}
                       {paymentHasQuote(payRequest) && (
                         <>
@@ -345,7 +386,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                                 <StyledDataTableRow label={translate('screens/sell', 'Asset')}>
                                   {showContract && assetObject.chainId ? (
                                     <StyledHorizontalStack gap={2}>
-                                      <span>{blankedAddress(assetObject.chainId, { width, scale: 0.75 })}</span>
+                                      <span>{blankedAddress(assetObject.chainId ?? '', { width, scale: 0.75 })}</span>
                                       <StyledIconButton
                                         icon={IconVariant.COPY}
                                         onClick={() => copy(assetObject.chainId ?? '')}
@@ -441,12 +482,24 @@ export default function PaymentLinkScreen(): JSX.Element {
                         </StyledDataTableExpandableRow>
                       )}
                       {paymentHasQuote(payRequest) && (
-                        <StyledDataTableRow
+                        <StyledDataTableExpandableRow
                           label={translate('screens/payment', 'Expiry date')}
                           isLoading={isLoadingPaymentIdentifier || !paymentIdentifier}
+                          expansionItems={
+                            [
+                              {
+                                label: translate('screens/support', 'Quote ID'),
+                                text: payRequest.quote.id,
+                              },
+                              {
+                                label: translate('screens/home', 'Quote Payment'),
+                                text: payRequest.quote.payment,
+                              },
+                            ].filter((item) => item.text) as any
+                          }
                         >
                           <p>{new Date(payRequest.quote.expiration).toLocaleString()}</p>
-                        </StyledDataTableRow>
+                        </StyledDataTableExpandableRow>
                       )}
                       {paymentHasQuote(payRequest) && !payRequest.displayQr && (
                         <StyledDataTableExpandableRow
@@ -461,6 +514,13 @@ export default function PaymentLinkScreen(): JSX.Element {
                               </div>
                             </div>
                           }
+                        />
+                      )}
+                      {(paymentHasQuote(payRequest) || isMerchantMode) && (
+                        <StyledDataTableExpandableRow
+                          isExpanded={showAssets}
+                          label={translate('screens/payment', 'Payment Methods')}
+                          expansionContent={<TransferMethodsContent payRequest={payRequest as PaymentLinkPayRequest} />}
                         />
                       )}
                     </StyledDataTable>
@@ -560,6 +620,31 @@ export default function PaymentLinkScreen(): JSX.Element {
                           <WalletLogo wallet={walletData} size={128} />
 
                           <StyledVerticalStack full gap={3} center className="pt-2 px-4">
+                            {(paymentHasQuote(payRequest) || isMerchantMode) && (
+                              <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+                                <StyledCollapsible
+                                  full
+                                  isExpanded={true}
+                                  titleContent={
+                                    <div className="flex flex-col items-start gap-1.5 text-left -my-1">
+                                      <div className="flex flex-col items-start text-left">
+                                        <div className="font-semibold leading-none">
+                                          {translate('screens/payment', 'Payment Methods')}
+                                        </div>
+                                      </div>
+                                      <div className="leading-none text-dfxGray-800 text-xs">
+                                        {translate('screens/payment', 'Supported cryptocurrencies and blockchains')}
+                                      </div>
+                                    </div>
+                                  }
+                                >
+                                  <TransferMethodsContent
+                                    payRequest={payRequest as PaymentLinkPayRequest}
+                                    walletData={walletData}
+                                  />
+                                </StyledCollapsible>
+                              </StyledDataTable>
+                            )}
                             {isLoadingDeeplink && !walletData.disabled ? (
                               <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
                             ) : (
@@ -618,13 +703,23 @@ export default function PaymentLinkScreen(): JSX.Element {
               )}
             </>
           )}
-
-          <div className="pt-4 pb-2 w-full leading-none">
-            <StyledLink
-              label={translate('screens/payment', 'Find out more about the OpenCryptoPay payment standard')}
-              url="https://opencryptopay.io"
-              dark
-            />
+          {<DividerWithHeader header={translate('screens/payment', 'Locations').toUpperCase()} />}
+          <div ref={mapRef} className="flex flex-col gap-4 w-full">
+            <div className="w-full h-96 rounded-md overflow-clip">
+              <iframe
+                src="https://www.google.com/maps/d/embed?mid=1DzX6z5tnUqn1zlzFnL6G58xREItorRM&ehbc=2E312F&noprof=1"
+                width="100%"
+                height="100%"
+              ></iframe>
+            </div>
+            <div className="w-full leading-none">
+              <StyledButton
+                label={translate('screens/payment', 'Learn more about OpenCryptoPay')}
+                onClick={() => window.open('https://opencryptopay.io', '_blank')}
+                color={StyledButtonColor.STURDY_WHITE}
+                width={StyledButtonWidth.FULL}
+              />
+            </div>
           </div>
 
           <div className="p-1 w-full leading-none">
@@ -641,6 +736,77 @@ export default function PaymentLinkScreen(): JSX.Element {
         </StyledVerticalStack>
       )}
     </>
+  );
+}
+
+interface TransferMethodsContentProps {
+  payRequest: PaymentLinkPayRequest;
+  walletData?: WalletInfo;
+}
+
+function TransferMethodsContent({ payRequest, walletData }: TransferMethodsContentProps) {
+  const { translate } = useSettingsContext();
+  const { isMerchantMode } = usePaymentLinkContext();
+
+  const filteredTransferAmounts = walletData
+    ? Wallet.filterTransferInfoByWallet(walletData, payRequest.transferAmounts)
+    : payRequest.transferAmounts;
+  const supportedMethods = filteredTransferAmounts.filter((ta) => ta.available !== false);
+
+  const assetMap = new Map<string, { amount: string; methods: string[] }>();
+  supportedMethods.forEach((transferMethod) => {
+    transferMethod.assets.forEach((asset) => {
+      if (!assetMap.has(asset.asset)) {
+        assetMap.set(asset.asset, {
+          amount: String(asset.amount),
+          methods: [],
+        });
+      }
+      const data = assetMap.get(asset.asset)!;
+      data.methods.push(transferMethod.method);
+    });
+  });
+
+  return (
+    assetMap.size > 0 && (
+      <div className="flex flex-col gap-2.5">
+        {Array.from(assetMap.entries()).map(([assetName, data]) => {
+          return (
+            <div
+              key={assetName}
+              className="flex flex-col justify-start sm:flex-row sm:justify-between text-sm px-2 py-2 even:bg-dfxGray-300/40 rounded"
+            >
+              <div className="flex items-baseline gap-2">
+                {!isMerchantMode && <span className="text-dfxBlue-800 font-medium">{data.amount}</span>}
+                <span className="text-dfxBlue-800">{assetName}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-left text-dfxGray-700">
+                {data.methods.join(', ')}
+              </div>
+            </div>
+          );
+        })}
+        {!isMerchantMode && (
+          <StyledCollapsible
+            full
+            titleContent={
+              <div className="text-dfxGray-700 text-sm text-left">
+                {translate('screens/payment', 'Minimum network fees')}
+              </div>
+            }
+          >
+            <div className="flex flex-col gap-2 pt-2">
+              {supportedMethods.map((m) => (
+                <div key={m.method} className="flex justify-between items-center text-dfxGray-700 text-xs px-2">
+                  <span className="text-dfxGray-700">{m.method}</span>
+                  <span className="text-dfxGray-700">{m.minFee ? m.minFee : 'N/A'}</span>
+                </div>
+              ))}
+            </div>
+          </StyledCollapsible>
+        )}
+      </div>
+    )
   );
 }
 
@@ -733,9 +899,11 @@ function WalletGrid({ wallets, header }: WalletGridProps): JSX.Element {
   );
 }
 
-function DividerWithHeader({ header }: { header: string }): JSX.Element {
+function DividerWithHeader({ header, py }: { header: string; py?: number }): JSX.Element {
+  const pyClass = py === 4 ? 'py-4' : py === 2 ? 'py-2' : py === 1 ? 'py-1' : '';
+
   return (
-    <div className="flex flex-row items-center gap-2 w-full">
+    <div className={`flex flex-row items-center gap-2 ${pyClass} w-full`}>
       <div className="flex-grow bg-gradient-to-r from-white to-dfxGray-600 h-[1px]" />
       <p className="text-xs font-medium text-dfxGray-600 whitespace-nowrap">{header}</p>
       <div className="flex-grow bg-gradient-to-r from-dfxGray-600 to-white h-[1px]" />

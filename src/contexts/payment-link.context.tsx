@@ -32,7 +32,7 @@ import {
 } from 'src/dto/payment-link.dto';
 import { usePolling } from 'src/hooks/polling';
 import { useSessionStore } from 'src/hooks/session-store.hook';
-import { EvmUri } from 'src/util/evm-uri';
+import { Evm } from 'src/util/evm';
 import { Lnurl } from 'src/util/lnurl';
 import { fetchJson, url } from 'src/util/utils';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -40,10 +40,15 @@ import { Timer, useCountdown } from '../hooks/countdown.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useMetaMask, WalletType } from '../hooks/wallets/metamask.hook';
 
+const MERCHANT_INFO_KEY = 'merchant-info';
+
 interface PaymentLinkInterface {
   error: string | undefined;
   merchant: string | undefined;
   payRequest: PaymentLinkPayRequest | PaymentLinkPayTerminal | undefined;
+  isMerchantMode: boolean;
+  showAssets: boolean;
+  showMap: boolean;
   timer: Timer;
   paymentLinkApiUrl: MutableRefObject<string>;
   callbackUrl: MutableRefObject<string | undefined>;
@@ -89,6 +94,8 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
 
   const [error, setError] = useState<string>();
   const [merchant, setMerchant] = useState<string>();
+  const [showAssets, setShowAssets] = useState<boolean>(false);
+  const [showMap, setShowMap] = useState<boolean>(false);
   const [urlParams, setUrlParams] = useSearchParams();
   const [paymentStandards, setPaymentStandards] = useState<PaymentStandard[]>();
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
@@ -125,9 +132,37 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
 
     const lightningUrlParam = lightning;
     const merchantUrlParam = urlParams.get('merchant');
+    const showAssets = urlParams.has('showAssets');
+    const showMap = urlParams.has('showMap');
+
+    setShowAssets(showAssets);
+    setShowMap(showMap);
+
+    if (showAssets || showMap) {
+      const newParams = new URLSearchParams(urlParams);
+      newParams.delete('showAssets');
+      newParams.delete('showMap');
+      setUrlParams(newParams);
+    }
 
     if (merchantUrlParam) {
       setMerchant(merchantUrlParam);
+
+      // Dummy payment to fetch available payment methods
+      const minimalPaymentUrl = url({
+        base: process.env.REACT_APP_API_URL,
+        path: '/v1/paymentLink/payment',
+        params: new URLSearchParams({
+          route: merchantUrlParam,
+          amount: '0.01',
+          currency: 'CHF',
+          externalId: `${MERCHANT_INFO_KEY}-${Date.now()}`,
+          message: 'Fetch merchant info',
+        }),
+      });
+
+      setSessionApiUrl(minimalPaymentUrl);
+      fetchPayRequest(minimalPaymentUrl, true);
       return;
     }
 
@@ -136,7 +171,11 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       apiUrl = Lnurl.decode(lightningUrlParam);
       setParams({ lightning: undefined });
     } else if (isPaymentInvoiceRequest(urlParams)) {
-      apiUrl = `${process.env.REACT_APP_API_URL}/v1/paymentLink/payment?${urlParams.toString()}`;
+      apiUrl = url({
+        base: process.env.REACT_APP_API_URL,
+        path: '/v1/paymentLink/payment',
+        params: urlParams,
+      });
       setUrlParams(new URLSearchParams());
     }
 
@@ -164,13 +203,19 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     }
   }, [payRequest, isInstalled, getWalletType]);
 
-  async function fetchPayRequest(url: string): Promise<void> {
+  async function fetchPayRequest(url: string, merchantMode = false): Promise<void> {
     setError(undefined);
 
     try {
       const urlObj = new URL(url);
       urlObj.searchParams.set('timeout', '0');
-      const payRequest = await fetchJson(urlObj);
+      const payRequest = await fetchJson<PaymentLinkPayRequest>(urlObj);
+
+      if (merchantMode) {
+        setPayRequest(payRequest);
+        return;
+      }
+
       const status = getStatusFromPayRequest(payRequest);
       setPayRequest(payRequest);
       setPaymentStatus(status);
@@ -248,7 +293,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   }
 
   function hasQuote(request?: PaymentLinkPayTerminal | PaymentLinkPayRequest): request is PaymentLinkPayRequest {
-    return !!request && 'quote' in request;
+    return !!request && 'quote' in request && !payRequest?.externalId?.includes(MERCHANT_INFO_KEY);
   }
 
   const getStatusFromPayRequest = (payRequest: PaymentLinkPayRequest | PaymentLinkPayTerminal) => {
@@ -419,7 +464,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       );
       if (!paymentUri) throw new Error('Failed to get payment information');
 
-      const paymentData = EvmUri.decode(paymentUri);
+      const paymentData = Evm.decodeUri(paymentUri);
 
       const address = asset.type === AssetType.COIN ? paymentData?.address : paymentData?.tokenContractAddress;
       const amount = paymentData?.amount;
@@ -448,6 +493,9 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       error,
       merchant,
       payRequest,
+      isMerchantMode: payRequest?.externalId?.includes(MERCHANT_INFO_KEY) || false,
+      showAssets,
+      showMap,
       timer,
       paymentLinkApiUrl: sessionApiUrl,
       callbackUrl,
@@ -479,6 +527,8 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       metaMaskInfo,
       metaMaskError,
       isMetaMaskPaying,
+      showAssets,
+      showMap,
     ],
   );
 
