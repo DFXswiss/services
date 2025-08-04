@@ -460,7 +460,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                               },
                               {
                                 label: translate('screens/kyc', 'Email address'),
-                                text: payRequest.recipient.mail,
+                                text: !payRequest.recipient.mail?.endsWith('@dfx.swiss') && payRequest.recipient.mail,
                               },
                               {
                                 label: translate('screens/kyc', 'Website'),
