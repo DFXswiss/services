@@ -36,7 +36,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { PaymentLink, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -96,8 +96,10 @@ export default function PaymentLinkScreen(): JSX.Element {
     metaMaskInfo,
     metaMaskError,
     isMetaMaskPaying,
-    paymentHasQuote,
     isMerchantMode,
+    showAssets,
+    showMap,
+    paymentHasQuote,
     setSessionApiUrl,
     setPaymentIdentifier,
     fetchPayRequest,
@@ -112,6 +114,7 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [showContract, setShowContract] = useState(false);
   const [walletData, setWalletData] = useState<WalletInfo>();
   const [isLoadingDeeplink, setIsLoadingDeeplink] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
 
   const {
     control,
@@ -206,8 +209,16 @@ export default function PaymentLinkScreen(): JSX.Element {
     }
   }, [selectedAsset, selectedPaymentStandard]);
 
+  useEffect(() => {
+    if (showMap && payRequest) scrollToMap();
+  }, [showMap, payRequest]);
+
   const handleBackButton = () => {
     setWalletData(undefined);
+  };
+
+  const scrollToMap = () => {
+    setTimeout(() => mapRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
   };
 
   const assetsList =
@@ -320,7 +331,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                       </div>
                     </div>
                   }
-                  isExpanded={selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS}
+                  isExpanded={selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS || showAssets}
                 >
                   <StyledVerticalStack full gap={4} className="text-left">
                     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
@@ -507,6 +518,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                       )}
                       {(paymentHasQuote(payRequest) || isMerchantMode) && (
                         <StyledDataTableExpandableRow
+                          isExpanded={showAssets}
                           label={translate('screens/payment', 'Payment Methods')}
                           expansionContent={<TransferMethodsContent payRequest={payRequest as PaymentLinkPayRequest} />}
                         />
@@ -692,7 +704,7 @@ export default function PaymentLinkScreen(): JSX.Element {
             </>
           )}
           {<DividerWithHeader header={translate('screens/payment', 'Locations').toUpperCase()} />}
-          <div className="flex flex-col gap-4 w-full">
+          <div ref={mapRef} className="flex flex-col gap-4 w-full">
             <div className="w-full h-96 rounded-md overflow-clip">
               <iframe
                 src="https://www.google.com/maps/d/embed?mid=1DzX6z5tnUqn1zlzFnL6G58xREItorRM&ehbc=2E312F&noprof=1"

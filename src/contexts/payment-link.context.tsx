@@ -47,6 +47,8 @@ interface PaymentLinkInterface {
   merchant: string | undefined;
   payRequest: PaymentLinkPayRequest | PaymentLinkPayTerminal | undefined;
   isMerchantMode: boolean;
+  showAssets: boolean;
+  showMap: boolean;
   timer: Timer;
   paymentLinkApiUrl: MutableRefObject<string>;
   callbackUrl: MutableRefObject<string | undefined>;
@@ -92,6 +94,8 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
 
   const [error, setError] = useState<string>();
   const [merchant, setMerchant] = useState<string>();
+  const [showAssets, setShowAssets] = useState<boolean>(false);
+  const [showMap, setShowMap] = useState<boolean>(false);
   const [urlParams, setUrlParams] = useSearchParams();
   const [paymentStandards, setPaymentStandards] = useState<PaymentStandard[]>();
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
@@ -128,6 +132,18 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
 
     const lightningUrlParam = lightning;
     const merchantUrlParam = urlParams.get('merchant');
+    const showAssets = urlParams.has('showAssets');
+    const showMap = urlParams.has('showMap');
+
+    setShowAssets(showAssets);
+    setShowMap(showMap);
+
+    if (showAssets || showMap) {
+      const newParams = new URLSearchParams(urlParams);
+      newParams.delete('showAssets');
+      newParams.delete('showMap');
+      setUrlParams(newParams);
+    }
 
     if (merchantUrlParam) {
       setMerchant(merchantUrlParam);
@@ -478,6 +494,8 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       merchant,
       payRequest,
       isMerchantMode: payRequest?.externalId?.includes(MERCHANT_INFO_KEY) || false,
+      showAssets,
+      showMap,
       timer,
       paymentLinkApiUrl: sessionApiUrl,
       callbackUrl,
@@ -509,6 +527,8 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       metaMaskInfo,
       metaMaskError,
       isMetaMaskPaying,
+      showAssets,
+      showMap,
     ],
   );
 
