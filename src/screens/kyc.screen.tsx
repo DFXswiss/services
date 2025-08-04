@@ -5,6 +5,8 @@ import {
   Country,
   DocumentType,
   GenderType,
+  GoodsCategory,
+  GoodsType,
   KycBeneficialData,
   KycContactData,
   KycFinancialOption,
@@ -27,9 +29,11 @@ import {
   KycStepType,
   Language,
   LegalEntity,
+  MerchantCategory,
   PaymentData,
   QuestionType,
   SignatoryPower,
+  StoreType,
   SupportIssueType,
   UrlType,
   Utils,
@@ -2077,6 +2081,8 @@ function ManualIdent({ rootRef, code, step, onDone }: EditProps): JSX.Element {
 function PaymentAgreement({ code, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setPaymentData } = useKyc();
+  const { goodsCategoryToString, storeTypeToString, merchantCategoryToString } = useKycHelper();
+  const { rootRef } = useLayoutContext();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
@@ -2105,6 +2111,12 @@ function PaymentAgreement({ code, step, onDone }: EditProps): JSX.Element {
 
   const rules = Utils.createRules({
     purpose: Validations.Required,
+    website: Validations.Required,
+    registrationNumber: Validations.Required,
+    storeType: Validations.Required,
+    merchantCategory: Validations.Required,
+    goodsType: Validations.Required,
+    goodsCategory: Validations.Required,
   });
 
   return (
@@ -2115,6 +2127,88 @@ function PaymentAgreement({ code, step, onDone }: EditProps): JSX.Element {
             {translate('screens/kyc', 'Purpose of the payments')}
           </p>
           <StyledInput name="purpose" label={''} placeholder={translate('screens/kyc', 'Purpose')} full smallLabel />
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Website')}
+          </p>
+          <StyledInput
+            name="website"
+            autocomplete="website"
+            type="url"
+            placeholder={translate('screens/kyc', 'https://my-organization.org')}
+            full
+            smallLabel
+          />
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Registration number')}
+          </p>
+          <StyledInput
+            name="registrationNumber"
+            placeholder={translate('screens/kyc', 'CHE-000.000.000')}
+            full
+            smallLabel
+          />
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Store type')}
+          </p>
+          <StyledDropdown
+            rootRef={rootRef}
+            name="storeType"
+            label=""
+            placeholder={translate('general/actions', 'Select') + '...'}
+            items={Object.values(StoreType)}
+            labelFunc={(item) => translate('screens/kyc', storeTypeToString(item))}
+          />
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Merchant category')}
+          </p>
+          <StyledDropdown
+            rootRef={rootRef}
+            name="merchantCategory"
+            label=""
+            placeholder={translate('general/actions', 'Select') + '...'}
+            items={Object.values(MerchantCategory)}
+            labelFunc={(item) => translate('screens/kyc', merchantCategoryToString(item))}
+          />
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Goods type')}
+          </p>
+          <StyledDropdown
+            rootRef={rootRef}
+            name="goodsType"
+            label=""
+            placeholder={translate('general/actions', 'Select') + '...'}
+            items={Object.values(GoodsType)}
+            labelFunc={(item) => translate('screens/kyc', item)}
+          />
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Goods category')}
+          </p>
+          <StyledDropdown
+            rootRef={rootRef}
+            name="goodsCategory"
+            label=""
+            placeholder={translate('general/actions', 'Select') + '...'}
+            items={Object.values(GoodsCategory)}
+            labelFunc={(item) => translate('screens/kyc', goodsCategoryToString(item))}
+          />
         </StyledVerticalStack>
 
         <StyledVerticalStack gap={2} full>
