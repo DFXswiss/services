@@ -57,14 +57,7 @@ import { useAddressGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
-import {
-  blankedAddress,
-  downloadFile,
-  filenameDateFormat,
-  formatLocationAddress,
-  isEmpty,
-  removeNullFields,
-} from 'src/util/utils';
+import { blankedAddress, formatLocationAddress, isEmpty, removeNullFields, url } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 import { StyledLinkButton } from '../components/styled-link-button';
 
@@ -121,7 +114,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
     deletePaymentRoute,
     error: apiError,
   } = usePaymentRoutesContext();
-  const { getPaymentStickers, createPosLink } = usePaymentRoutes();
+  const { createPosLink } = usePaymentRoutes();
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [error, setError] = useState<string>();
@@ -132,9 +125,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const [showPaymentLinkForm, setShowPaymentLinkForm] = useState<PaymentLinkFormState>();
   const [updateGlobalConfig, setUpdateGlobalConfig] = useState<boolean>(false);
   const [updatePaymentLinkLabel, setUpdatePaymentLinkLabel] = useState<string>();
-  const [isGeneratingSticker, setIsGeneratingSticker] = useState<string>();
   const [isLoadingPos, setIsLoadingPos] = useState<string>();
-  const [linkError, setLinkError] = useState<string>();
   const [posUrls, setPosUrls] = useState<Record<string, string>>({});
 
   useAddressGuard('/login');
@@ -225,15 +216,11 @@ export default function PaymentRoutesScreen(): JSX.Element {
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
   }
 
-  function downloadSticker({ routeId, externalId, id }: PaymentLink) {
-    setIsGeneratingSticker(id);
-    setLinkError(undefined);
-    getPaymentStickers(routeId, externalId, externalId ? undefined : id)
-      .then(({ data, headers }) => {
-        downloadFile(data, headers, `DFX_OCP_stickers_${filenameDateFormat()}.pdf`);
-      })
-      .catch((error: ApiError) => setLinkError(error.message ?? 'Unknown Error'))
-      .finally(() => setIsGeneratingSticker(undefined));
+  function downloadSticker({ routeId, externalId }: PaymentLink) {
+    const params = new URLSearchParams();
+    params.append('route', routeId);
+    if (externalId) params.append('externalIds', externalId);
+    window.open(url({ path: '/stickers', params }), '_blank');
   }
 
   async function fetchPosUrl(linkId: string) {
@@ -697,7 +684,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           label={translate('general/actions', 'Download sticker')}
                           onClick={() => downloadSticker(link)}
                           color={StyledButtonColor.STURDY_WHITE}
-                          isLoading={isGeneratingSticker === link.id}
                         />
                         <PosLinkButton
                           link={link}
@@ -743,7 +729,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
                             isLoading={isUpdatingPaymentLink.includes(link.id)}
                           />
                         )}
-                        <div className="text-center">{linkError && <ErrorHint message={linkError} />}</div>
                       </StyledVerticalStack>
                     </StyledCollapsible>
                   </div>
