@@ -516,7 +516,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           }
                         />
                       )}
-                      {(paymentHasQuote(payRequest) || isMerchantMode) && (
+                      {('transferAmounts' in payRequest || isMerchantMode) && (
                         <StyledDataTableExpandableRow
                           isExpanded={showAssets}
                           label={translate('screens/payment', 'Payment Methods')}
@@ -536,7 +536,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           'The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.',
                           {
                             rate: Utils.formatAmount(
-                              payRequest.requestedAmount.amount /
+                              (payRequest.requestedAmount.amount ?? 0) /
                                 (payRequest.transferAmounts
                                   .find((item) => item.method === selectedPaymentStandard?.blockchain)
                                   ?.assets.find((item) => item.asset === selectedAsset)?.amount ?? 0),
@@ -620,7 +620,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           <WalletLogo wallet={walletData} size={128} />
 
                           <StyledVerticalStack full gap={3} center className="pt-2 px-4">
-                            {(paymentHasQuote(payRequest) || isMerchantMode) && (
+                            {('transferAmounts' in payRequest || isMerchantMode) && (
                               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                                 <StyledCollapsible
                                   full

@@ -440,7 +440,8 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       if (!asset) continue;
 
       const balance = await readBalance(asset, address, true);
-      if (balance.amount >= transferAmount.amount) return { asset: asset, amount: transferAmount.amount };
+      if (transferAmount.amount && balance.amount >= transferAmount.amount)
+        return { asset: asset, amount: transferAmount.amount };
     }
   }
 
