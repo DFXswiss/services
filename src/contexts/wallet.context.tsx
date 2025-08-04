@@ -148,7 +148,8 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   }, [isSessionInitialized, isLoggedIn, isInitialized]);
 
   useEffect(() => {
-    if (isParamsInitialized)
+    if (isParamsInitialized) {
+      // setIsInitialized(false);
       handleParamSession().then((hasSession) => {
         if (hasSession) {
           setWallet(appParams.type as WalletType);
@@ -156,6 +157,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
         }
         setIsInitialized(true);
       });
+    }
   }, [isParamsInitialized, appParams]);
 
   async function handleParamSession(): Promise<boolean> {
