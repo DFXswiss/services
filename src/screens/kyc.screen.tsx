@@ -2111,7 +2111,6 @@ function PaymentAgreement({ code, step, onDone }: EditProps): JSX.Element {
 
   const rules = Utils.createRules({
     purpose: Validations.Required,
-    website: Validations.Required,
     registrationNumber: Validations.Required,
     storeType: Validations.Required,
     merchantCategory: Validations.Required,
