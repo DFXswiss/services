@@ -536,12 +536,15 @@ export default function PaymentLinkScreen(): JSX.Element {
                           'screens/payment',
                           'The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.',
                           {
-                            rate: Utils.formatAmount(
-                              (payRequest.requestedAmount.amount ?? 0) /
-                                (payRequest.transferAmounts
-                                  .find((item) => item.method === selectedPaymentStandard?.blockchain)
-                                  ?.assets.find((item) => item.asset === selectedAsset)?.amount ?? 0),
-                            ),
+                            rate: (() => {
+                              const transferAmount = payRequest.transferAmounts
+                                .find((item) => item.method === selectedPaymentStandard?.blockchain)
+                                ?.assets.find((item) => item.asset === selectedAsset)?.amount;
+
+                              return transferAmount && transferAmount > 0
+                                ? Utils.formatAmount((payRequest.requestedAmount.amount ?? 0) / transferAmount)
+                                : 'N/A';
+                            })(),
                             currency: payRequest.requestedAmount.asset,
                             asset: selectedAsset ?? '',
                             timer: `${timer.minutes}m ${timer.seconds}s`,
@@ -767,8 +770,8 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
           methods: [],
         });
       }
-      const data = assetMap.get(asset.asset)!;
-      data.methods.push(transferMethod.method);
+      const data = assetMap.get(asset.asset);
+      data?.methods.push(transferMethod.method);
     });
   });
 
