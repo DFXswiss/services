@@ -443,7 +443,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
                 label={translate('screens/payment', 'Chargeback IBAN')}
                 items={[...bankAccounts.map((b) => b.iban), AddAccount]}
                 labelFunc={(item) =>
-                  item === AddAccount ? translate('screens/iban', item) : Utils.formatIban(item) ?? ''
+                  item === AddAccount ? translate('general/actions', item) : Utils.formatIban(item) ?? ''
                 }
                 descriptionFunc={(item) => bankAccounts.find((b) => b.iban === item)?.label ?? ''}
                 placeholder={translate('general/actions', 'Select') + '...'}

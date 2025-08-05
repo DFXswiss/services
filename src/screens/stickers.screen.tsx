@@ -23,7 +23,7 @@ import useDebounce from 'src/hooks/debounce.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { downloadFile, filenameDateFormat, url } from 'src/util/utils';
 
-interface Sticker {
+interface StickerConfig {
   id: string;
   name: string;
   description: string;
@@ -32,7 +32,8 @@ interface Sticker {
 interface FormData {
   route: string;
   externalIds: string;
-  type: Sticker;
+  type: StickerConfig;
+  mode: StickerConfig;
   language: Language;
 }
 
@@ -41,9 +42,19 @@ enum StickerType {
   BITCOIN_FOCUS = 'BitcoinFocus',
 }
 
-const stickerTypes: Sticker[] = [
-  { id: StickerType.CLASSIC, name: 'Classic', description: 'Classic stickers' },
+enum StickerMode {
+  POS = 'Pos',
+  CUSTOMER = 'Customer',
+}
+
+const stickerTypes: StickerConfig[] = [
   { id: StickerType.BITCOIN_FOCUS, name: 'Bitcoin Focus', description: 'Bitcoin Focus stickers' },
+  { id: StickerType.CLASSIC, name: 'Classic', description: 'Classic stickers' },
+];
+
+const stickerModes: StickerConfig[] = [
+  { id: StickerMode.CUSTOMER, name: 'Customer', description: 'Customer stickers' },
+  { id: StickerMode.POS, name: 'POS', description: 'Point of Sale stickers' },
 ];
 
 export default function StickersScreen(): JSX.Element {
@@ -69,6 +80,7 @@ export default function StickersScreen(): JSX.Element {
     mode: 'all',
     defaultValues: {
       type: stickerTypes[0],
+      mode: stickerModes[0],
     },
   });
 
@@ -85,12 +97,14 @@ export default function StickersScreen(): JSX.Element {
     const route = urlParams.get('route');
     const externalIds = urlParams.get('externalIds');
     const stickerType = urlParams.get('sticker');
+    const stickerMode = urlParams.get('mode');
     const language = urlParams.get('language');
-    if (!route && !externalIds && !stickerType && !language) return;
+    if (!route && !externalIds && !stickerType && !stickerMode && !language) return;
 
     if (route) setValue('route', route);
     if (externalIds) setValue('externalIds', externalIds);
     if (stickerType) setValue('type', stickerTypes.find((t) => t.id === stickerType) || stickerTypes[0]);
+    if (stickerMode) setValue('mode', stickerModes.find((m) => m.id === stickerMode) || stickerModes[0]);
     if (language && validateConfig(stickerType, language.toUpperCase())) setLanguageParam(language.toUpperCase());
 
     trigger();
@@ -123,7 +137,7 @@ export default function StickersScreen(): JSX.Element {
 
     setIsGeneratingPdf(true);
     setErrorGeneratingPdf(undefined);
-    getPaymentStickers(data.route, data.externalIds, undefined, data.type.id, data.language.symbol)
+    getPaymentStickers(data.route, data.externalIds, undefined, data.type.id, data.mode.id, data.language.symbol)
       .then(({ data, headers }) => {
         downloadFile(data, headers, `DFX_OCP_stickers_${filenameDateFormat()}.pdf`);
       })
@@ -173,7 +187,7 @@ export default function StickersScreen(): JSX.Element {
             full
             smallLabel
           />
-          <StyledDropdown<Sticker>
+          <StyledDropdown<StickerConfig>
             full
             rootRef={rootRef}
             name="type"
@@ -181,6 +195,17 @@ export default function StickersScreen(): JSX.Element {
             smallLabel={true}
             placeholder={translate('general/actions', 'Select') + '...'}
             items={stickerTypes.filter((t) => validateConfig(t.id, selectedLanguage?.symbol))}
+            labelFunc={(item) => translate(`screens/stickers`, item.name)}
+            descriptionFunc={(item) => translate(`screens/stickers`, item.description)}
+          />
+          <StyledDropdown<StickerConfig>
+            full
+            rootRef={rootRef}
+            name="mode"
+            label={translate('screens/payment', 'Mode')}
+            smallLabel={true}
+            placeholder={translate('general/actions', 'Select') + '...'}
+            items={stickerModes}
             labelFunc={(item) => translate(`screens/stickers`, item.name)}
             descriptionFunc={(item) => translate(`screens/stickers`, item.description)}
           />

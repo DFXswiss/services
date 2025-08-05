@@ -880,7 +880,11 @@
     "Classic stickers": "Autocollants classiques",
     "Bitcoin Focus": "Bitcoin Focus",
     "Bitcoin Focus stickers": "Autocollants Bitcoin Focus",
-    "Open CryptoPay Stickers": "Autocollants Open CryptoPay"
+    "Open CryptoPay Stickers": "Autocollants Open CryptoPay",
+    "Customer stickers": "Autocollants clients",
+    "Point of Sale stickers": "Autocollants Point de Vente",
+    "Customer": "Client",
+    "POS": "PDV"
   },
   "navigation/links": {
     "Buy": "Acheter",

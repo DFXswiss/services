@@ -881,7 +881,11 @@
     "Classic stickers": "Klassische Aufkleber",
     "Bitcoin Focus": "Bitcoin Fokus",
     "Bitcoin Focus stickers": "Bitcoin Fokus Aufkleber",
-    "Open CryptoPay Stickers": "Open CryptoPay Aufkleber"
+    "Open CryptoPay Stickers": "Open CryptoPay Aufkleber",
+    "Customer stickers": "Kundenaufkleber",
+    "Point of Sale stickers": "Point of Sale Aufkleber",
+    "Customer": "Kunde",
+    "POS": "POS"
   },
   "navigation/links": {
     "Buy": "Kaufen",

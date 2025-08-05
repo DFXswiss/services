@@ -392,10 +392,12 @@ export default function SupportIssueScreen(): JSX.Element {
                     <StyledDropdown<string>
                       rootRef={rootRef}
                       label={translate('screens/support', 'Sender IBAN')}
-                      items={[...bankAccounts.map((a) => a.iban), NoIban, AddAccount]}
+                      items={[...bankAccounts.map((a) => a.iban), AddAccount, NoIban]}
                       labelFunc={(item) =>
                         blankedAddress(
-                          [NoIban, AddAccount].includes(item)
+                          item === AddAccount
+                            ? translate('general/actions', item)
+                            : item === NoIban
                             ? translate('screens/iban', item)
                             : Utils.formatIban(item) ?? '',
                           { displayLength: 30 },
