@@ -37,11 +37,7 @@ export default function PaymentLinkPosScreen(): JSX.Element {
       ) : !payRequest || isLoading ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
-        <StyledVerticalStack full gap={4} center className="pt-2">
-          <div className="flex flex-col w-full gap-4 justify-center">
-            <p className="text-dfxBlue-800 font-bold text-base">{payRequest?.displayName}</p>
-            <div className="w-full h-[1px] bg-gradient-to-r bg-dfxGray-500 from-white via-dfxGray-500 to-white" />
-          </div>
+        <StyledVerticalStack full gap={4} center className="pt-4">
           <div className="flex justify-center items-center w-full">
             <QrBasic data={Lnurl.prependLnurl(Lnurl.encode(paymentLinkApiUrl ?? ''))} />
           </div>

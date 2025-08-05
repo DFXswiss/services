@@ -461,7 +461,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                               },
                               {
                                 label: translate('screens/kyc', 'Email address'),
-                                text: payRequest.recipient.mail,
+                                text: !payRequest.recipient.mail?.endsWith('@dfx.swiss') && payRequest.recipient.mail,
                               },
                               {
                                 label: translate('screens/kyc', 'Website'),
@@ -517,7 +517,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           }
                         />
                       )}
-                      {(paymentHasQuote(payRequest) || isMerchantMode) && (
+                      {('transferAmounts' in payRequest || isMerchantMode) && (
                         <StyledDataTableExpandableRow
                           isExpanded={showAssets}
                           label={translate('screens/payment', 'Payment Methods')}
@@ -537,7 +537,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           'The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.',
                           {
                             rate: Utils.formatAmount(
-                              payRequest.requestedAmount.amount /
+                              (payRequest.requestedAmount.amount ?? 0) /
                                 (payRequest.transferAmounts
                                   .find((item) => item.method === selectedPaymentStandard?.blockchain)
                                   ?.assets.find((item) => item.asset === selectedAsset)?.amount ?? 0),
@@ -621,7 +621,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           <WalletLogo wallet={walletData} size={128} />
 
                           <StyledVerticalStack full gap={3} center className="pt-2 px-4">
-                            {(paymentHasQuote(payRequest) || isMerchantMode) && (
+                            {('transferAmounts' in payRequest || isMerchantMode) && (
                               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                                 <StyledCollapsible
                                   full
@@ -704,23 +704,27 @@ export default function PaymentLinkScreen(): JSX.Element {
               )}
             </>
           )}
-          {<DividerWithHeader header={translate('screens/payment', 'Locations').toUpperCase()} />}
-          <div ref={mapRef} className="flex flex-col gap-4 w-full">
-            <div className="w-full h-96 rounded-md overflow-clip">
-              <iframe
-                src="https://www.google.com/maps/d/embed?mid=1DzX6z5tnUqn1zlzFnL6G58xREItorRM&ehbc=2E312F&noprof=1"
-                width="100%"
-                height="100%"
-              ></iframe>
-            </div>
-            <div className="w-full leading-none">
-              <StyledButton
-                label={translate('screens/payment', 'Learn more about OpenCryptoPay')}
-                onClick={() => window.open('https://opencryptopay.io', '_blank')}
-                color={StyledButtonColor.STURDY_WHITE}
-                width={StyledButtonWidth.FULL}
-              />
-            </div>
+          {merchant === 'SPAR' && (
+            <>
+              {<DividerWithHeader header={translate('screens/payment', 'Locations').toUpperCase()} />}
+              <div ref={mapRef} className="flex flex-col gap-4 w-full">
+                <div className="w-full h-96 rounded-md overflow-clip">
+                  <iframe
+                    src="https://www.google.com/maps/d/embed?mid=1DzX6z5tnUqn1zlzFnL6G58xREItorRM&ehbc=2E312F&noprof=1"
+                    width="100%"
+                    height="100%"
+                  ></iframe>
+                </div>
+              </div>
+            </>
+          )}
+          <div className="w-full leading-none">
+            <StyledButton
+              label={translate('screens/payment', 'Learn more about OpenCryptoPay')}
+              onClick={() => window.open('https://opencryptopay.io', '_blank')}
+              color={StyledButtonColor.STURDY_WHITE}
+              width={StyledButtonWidth.FULL}
+            />
           </div>
 
           <div className="p-1 w-full leading-none">
