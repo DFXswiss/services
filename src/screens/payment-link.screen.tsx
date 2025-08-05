@@ -773,7 +773,7 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
   });
 
   const amountsDefined = Array.from(assetMap.values()).some((data) => data.amount != null);
-  const showAmounts = !isMerchantMode || amountsDefined;
+  const showAmounts = !isMerchantMode && amountsDefined;
 
   return (
     assetMap.size > 0 && (
