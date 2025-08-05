@@ -541,8 +541,8 @@ export default function PaymentLinkScreen(): JSX.Element {
                                 .find((item) => item.method === selectedPaymentStandard?.blockchain)
                                 ?.assets.find((item) => item.asset === selectedAsset)?.amount;
 
-                              return transferAmount && transferAmount > 0
-                                ? Utils.formatAmount((payRequest.requestedAmount.amount ?? 0) / transferAmount)
+                              return transferAmount && transferAmount > 0 && payRequest.requestedAmount.amount
+                                ? Utils.formatAmount(payRequest.requestedAmount.amount / transferAmount)
                                 : 'N/A';
                             })(),
                             currency: payRequest.requestedAmount.asset,
