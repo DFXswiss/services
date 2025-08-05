@@ -1,15 +1,8 @@
-import { Blockchain } from '@dfx.swiss/react';
+import { Blockchain, PaymentLinkMode } from '@dfx.swiss/react';
 import { useCallback, useMemo } from 'react';
 import { PaymentLinkWallets } from 'src/config/payment-link-wallets';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
-import {
-  C2BPaymentMethod,
-  PaymentLinkMode,
-  TransferMethod,
-  WalletAppId,
-  WalletCategory,
-  WalletInfo,
-} from 'src/dto/payment-link.dto';
+import { C2BPaymentMethod, TransferMethod, WalletAppId, WalletCategory, WalletInfo } from 'src/dto/payment-link.dto';
 import { Wallet } from 'src/util/payment-link-wallet';
 import { fetchJson, url } from 'src/util/utils';
 

@@ -1,5 +1,4 @@
-import { Asset, Blockchain } from '@dfx.swiss/react';
-import { PaymentLinkPaymentStatus, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
+import { Asset, Blockchain, PaymentLinkMode, PaymentLinkPaymentStatus, PaymentStandardType } from '@dfx.swiss/react';
 
 export interface PaymentStandard {
   id: PaymentStandardType;
@@ -17,7 +16,7 @@ export interface Quote {
 
 export interface Amount {
   asset: string;
-  amount: number;
+  amount?: number;
 }
 
 export enum C2BPaymentMethod {
@@ -59,6 +58,7 @@ export interface PaymentLinkPayTerminal {
   route: string;
   currency: string;
   recipient: RecipientInfo;
+  transferAmounts: TransferInfo[];
 
   // error fields
   statusCode?: number;
@@ -83,7 +83,6 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
   minSendable: number;
   maxSendable: number;
   requestedAmount: Amount;
-  transferAmounts: TransferInfo[];
 }
 
 export enum WalletCategory {
@@ -153,10 +152,4 @@ export interface PaymentLinkHistoryPayment {
   currency: string;
   date: Date;
   externalId: string;
-}
-
-export enum PaymentLinkMode {
-  SINGLE = 'Single',
-  MULTIPLE = 'Multiple',
-  PUBLIC = 'Public',
 }

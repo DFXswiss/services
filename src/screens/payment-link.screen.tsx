@@ -1,7 +1,10 @@
 import {
   ApiError,
   Asset,
+  PaymentLink,
+  PaymentLinkMode,
   PaymentLinkPaymentStatus,
+  PaymentStandardType,
   useApi,
   useAssetContext,
   Utils,
@@ -34,7 +37,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { PaymentLink, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -51,7 +53,6 @@ import { useWindowContext } from 'src/contexts/window.context';
 import {
   ExtendedPaymentLinkStatus,
   NoPaymentLinkPaymentStatus,
-  PaymentLinkMode,
   PaymentLinkPayRequest,
   PaymentLinkPayTerminal,
   PaymentStandard,
@@ -460,7 +461,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                               },
                               {
                                 label: translate('screens/kyc', 'Email address'),
-                                text: payRequest.recipient.mail,
+                                text: !payRequest.recipient.mail?.endsWith('@dfx.swiss') && payRequest.recipient.mail,
                               },
                               {
                                 label: translate('screens/kyc', 'Website'),
@@ -516,7 +517,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           }
                         />
                       )}
-                      {(paymentHasQuote(payRequest) || isMerchantMode) && (
+                      {('transferAmounts' in payRequest || isMerchantMode) && (
                         <StyledDataTableExpandableRow
                           isExpanded={showAssets}
                           label={translate('screens/payment', 'Payment Methods')}
@@ -535,12 +536,15 @@ export default function PaymentLinkScreen(): JSX.Element {
                           'screens/payment',
                           'The exchange rate of {{rate}} {{currency}}/{{asset}} is fixed for {{timer}}, after which it will be recalculated.',
                           {
-                            rate: Utils.formatAmount(
-                              payRequest.requestedAmount.amount /
-                                (payRequest.transferAmounts
-                                  .find((item) => item.method === selectedPaymentStandard?.blockchain)
-                                  ?.assets.find((item) => item.asset === selectedAsset)?.amount ?? 0),
-                            ),
+                            rate: (() => {
+                              const transferAmount = payRequest.transferAmounts
+                                .find((item) => item.method === selectedPaymentStandard?.blockchain)
+                                ?.assets.find((item) => item.asset === selectedAsset)?.amount;
+
+                              return transferAmount && transferAmount > 0 && payRequest.requestedAmount.amount
+                                ? Utils.formatAmount(payRequest.requestedAmount.amount / transferAmount)
+                                : 'N/A';
+                            })(),
                             currency: payRequest.requestedAmount.asset,
                             asset: selectedAsset ?? '',
                             timer: `${timer.minutes}m ${timer.seconds}s`,
@@ -620,7 +624,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                           <WalletLogo wallet={walletData} size={128} />
 
                           <StyledVerticalStack full gap={3} center className="pt-2 px-4">
-                            {(paymentHasQuote(payRequest) || isMerchantMode) && (
+                            {('transferAmounts' in payRequest || isMerchantMode) && (
                               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                                 <StyledCollapsible
                                   full
@@ -703,23 +707,27 @@ export default function PaymentLinkScreen(): JSX.Element {
               )}
             </>
           )}
-          {<DividerWithHeader header={translate('screens/payment', 'Locations').toUpperCase()} />}
-          <div ref={mapRef} className="flex flex-col gap-4 w-full">
-            <div className="w-full h-96 rounded-md overflow-clip">
-              <iframe
-                src="https://www.google.com/maps/d/embed?mid=1DzX6z5tnUqn1zlzFnL6G58xREItorRM&ehbc=2E312F&noprof=1"
-                width="100%"
-                height="100%"
-              ></iframe>
-            </div>
-            <div className="w-full leading-none">
-              <StyledButton
-                label={translate('screens/payment', 'Learn more about OpenCryptoPay')}
-                onClick={() => window.open('https://opencryptopay.io', '_blank')}
-                color={StyledButtonColor.STURDY_WHITE}
-                width={StyledButtonWidth.FULL}
-              />
-            </div>
+          {merchant === 'SPAR' && (
+            <>
+              {<DividerWithHeader header={translate('screens/payment', 'Locations').toUpperCase()} />}
+              <div ref={mapRef} className="flex flex-col gap-4 w-full">
+                <div className="w-full h-96 rounded-md overflow-clip">
+                  <iframe
+                    src="https://www.google.com/maps/d/embed?mid=1DzX6z5tnUqn1zlzFnL6G58xREItorRM&ehbc=2E312F&noprof=1"
+                    width="100%"
+                    height="100%"
+                  ></iframe>
+                </div>
+              </div>
+            </>
+          )}
+          <div className="w-full leading-none">
+            <StyledButton
+              label={translate('screens/payment', 'Learn more about OpenCryptoPay')}
+              onClick={() => window.open('https://opencryptopay.io', '_blank')}
+              color={StyledButtonColor.STURDY_WHITE}
+              width={StyledButtonWidth.FULL}
+            />
           </div>
 
           <div className="p-1 w-full leading-none">
@@ -753,19 +761,22 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
     : payRequest.transferAmounts;
   const supportedMethods = filteredTransferAmounts.filter((ta) => ta.available !== false);
 
-  const assetMap = new Map<string, { amount: string; methods: string[] }>();
+  const assetMap = new Map<string, { amount?: string; methods: string[] }>();
   supportedMethods.forEach((transferMethod) => {
     transferMethod.assets.forEach((asset) => {
       if (!assetMap.has(asset.asset)) {
         assetMap.set(asset.asset, {
-          amount: String(asset.amount),
+          amount: asset.amount != null ? String(asset.amount) : undefined,
           methods: [],
         });
       }
-      const data = assetMap.get(asset.asset)!;
-      data.methods.push(transferMethod.method);
+      const data = assetMap.get(asset.asset);
+      data?.methods.push(transferMethod.method);
     });
   });
+
+  const amountsDefined = Array.from(assetMap.values()).some((data) => data.amount != null);
+  const showAmounts = !isMerchantMode && amountsDefined;
 
   return (
     assetMap.size > 0 && (
@@ -777,7 +788,9 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
               className="flex flex-col justify-start sm:flex-row sm:justify-between text-sm px-2 py-2 even:bg-dfxGray-300/40 rounded"
             >
               <div className="flex items-baseline gap-2">
-                {!isMerchantMode && <span className="text-dfxBlue-800 font-medium">{data.amount}</span>}
+                {showAmounts && data.amount && (
+                  <span className="text-dfxBlue-800 font-medium">{data.amount.replace(/\.$/, '')}</span>
+                )}
                 <span className="text-dfxBlue-800">{assetName}</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-left text-dfxGray-700">
@@ -786,7 +799,7 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
             </div>
           );
         })}
-        {!isMerchantMode && (
+        {showAmounts && (
           <StyledCollapsible
             full
             titleContent={

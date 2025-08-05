@@ -1,4 +1,4 @@
-import { PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
+import { PaymentStandardType } from '@dfx.swiss/react';
 import { WalletAppId, WalletCategory, WalletInfo } from 'src/dto/payment-link.dto';
 
 export const PaymentStandards = {

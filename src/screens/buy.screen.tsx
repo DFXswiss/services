@@ -1,6 +1,7 @@
 import {
   ApiError,
   Asset,
+  AssetCategory,
   Blockchain,
   Buy,
   BuyPaymentInfo,
@@ -33,7 +34,6 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';

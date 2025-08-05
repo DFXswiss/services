@@ -4,10 +4,13 @@ import {
   Country,
   Fiat,
   MinCompletionStatus,
+  PaymentLink,
+  PaymentLinkMode,
   PaymentLinkPaymentMode,
   PaymentLinkPaymentStatus,
   PaymentLinkStatus,
   PaymentRouteType,
+  PaymentStandardType,
   SellRoute,
   usePaymentRoutes,
   usePaymentRoutesContext,
@@ -34,12 +37,12 @@ import {
   StyledDropdown,
   StyledDropdownMultiChoice,
   StyledHorizontalStack,
+  StyledIconButton,
   StyledInput,
   StyledLoadingSpinner,
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { PaymentLink, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -133,6 +136,13 @@ export default function PaymentRoutesScreen(): JSX.Element {
   async function togglePaymentLinkStatus(id: string, status: PaymentLinkStatus) {
     setIsUpdatingPaymentLink((prev) => [...prev, id]);
     updatePaymentLink({ status }, id).finally(() => {
+      setIsUpdatingPaymentLink((prev) => prev.filter((i) => i !== id));
+    });
+  }
+
+  async function togglePaymentLinkMode(id: string, mode: PaymentLinkMode) {
+    setIsUpdatingPaymentLink((prev) => [...prev, id]);
+    updatePaymentLink({ mode }, id).finally(() => {
       setIsUpdatingPaymentLink((prev) => prev.filter((i) => i !== id));
     });
   }
@@ -507,6 +517,21 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           </StyledDataTableRow>
                           <StyledDataTableRow label={translate('screens/payment', 'State')}>
                             <p>{translate('screens/payment', link.status)}</p>
+                          </StyledDataTableRow>
+                          <StyledDataTableRow label={translate('screens/payment', 'Public')}>
+                            <p>{translate('general/actions', link.mode === PaymentLinkMode.PUBLIC ? 'Yes' : 'No')}</p>
+                            <StyledIconButton
+                              onClick={() =>
+                                togglePaymentLinkMode(
+                                  link.id,
+                                  link.mode === PaymentLinkMode.PUBLIC
+                                    ? PaymentLinkMode.MULTIPLE
+                                    : PaymentLinkMode.PUBLIC,
+                                )
+                              }
+                              icon={IconVariant.SWAP}
+                              isLoading={isUpdatingPaymentLink.includes(link.id)}
+                            />
                           </StyledDataTableRow>
                           <StyledDataTableExpandableRow
                             label="LNURL"

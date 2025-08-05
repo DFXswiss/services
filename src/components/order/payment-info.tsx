@@ -1,4 +1,6 @@
 import {
+  Asset,
+  AssetCategory,
   Fiat,
   FiatPaymentMethod,
   Sell,
@@ -16,7 +18,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { Asset, AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import React, { useEffect, useMemo, useState } from 'react';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';

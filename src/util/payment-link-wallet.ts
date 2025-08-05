@@ -33,7 +33,7 @@ export class Wallet {
 
     if (wallet.supportedTokens) {
       const filteredAssets = assets.filter(({ asset }) =>
-        wallet.supportedTokens!.some((token) => token === asset || token === `${method}:${asset}`),
+        wallet.supportedTokens?.some((token) => token === asset || token === `${method}:${asset}`),
       );
       return filteredAssets.length > 0 ? { ...transferInfo, assets: filteredAssets } : undefined;
     }
