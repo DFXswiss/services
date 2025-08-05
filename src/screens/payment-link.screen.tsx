@@ -785,7 +785,9 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
               className="flex flex-col justify-start sm:flex-row sm:justify-between text-sm px-2 py-2 even:bg-dfxGray-300/40 rounded"
             >
               <div className="flex items-baseline gap-2">
-                {showAmounts && data.amount && <span className="text-dfxBlue-800 font-medium">{data.amount}</span>}
+                {showAmounts && data.amount && (
+                  <span className="text-dfxBlue-800 font-medium">{data.amount.replace(/\.$/, '')}</span>
+                )}
                 <span className="text-dfxBlue-800">{assetName}</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-left text-dfxGray-700">
