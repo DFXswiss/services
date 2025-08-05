@@ -36,6 +36,7 @@ import {
   StyledDropdown,
   StyledDropdownMultiChoice,
   StyledHorizontalStack,
+  StyledIconButton,
   StyledInput,
   StyledLoadingSpinner,
   StyledSearchDropdown,
@@ -53,6 +54,7 @@ import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { PaymentLinkMode } from 'src/dto/payment-link.dto';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
@@ -134,6 +136,13 @@ export default function PaymentRoutesScreen(): JSX.Element {
   async function togglePaymentLinkStatus(id: string, status: PaymentLinkStatus) {
     setIsUpdatingPaymentLink((prev) => [...prev, id]);
     updatePaymentLink({ status }, id).finally(() => {
+      setIsUpdatingPaymentLink((prev) => prev.filter((i) => i !== id));
+    });
+  }
+
+  async function togglePaymentLinkMode(id: string, mode: PaymentLinkMode) {
+    setIsUpdatingPaymentLink((prev) => [...prev, id]);
+    updatePaymentLink({ mode }, id).finally(() => {
       setIsUpdatingPaymentLink((prev) => prev.filter((i) => i !== id));
     });
   }
@@ -508,6 +517,21 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           </StyledDataTableRow>
                           <StyledDataTableRow label={translate('screens/payment', 'State')}>
                             <p>{translate('screens/payment', link.status)}</p>
+                          </StyledDataTableRow>
+                          <StyledDataTableRow label={translate('screens/payment', 'Public')}>
+                            <p>{translate('general/actions', link.mode === PaymentLinkMode.PUBLIC ? 'Yes' : 'No')}</p>
+                            <StyledIconButton
+                              onClick={() =>
+                                togglePaymentLinkMode(
+                                  link.id,
+                                  link.mode === PaymentLinkMode.PUBLIC
+                                    ? PaymentLinkMode.MULTIPLE
+                                    : PaymentLinkMode.PUBLIC,
+                                )
+                              }
+                              icon={IconVariant.SWAP}
+                              isLoading={isUpdatingPaymentLink.includes(link.id)}
+                            />
                           </StyledDataTableRow>
                           <StyledDataTableExpandableRow
                             label="LNURL"
