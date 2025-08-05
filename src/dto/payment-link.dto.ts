@@ -1,4 +1,4 @@
-import { Asset, Blockchain, PaymentLinkPaymentStatus, PaymentStandardType } from '@dfx.swiss/react';
+import { Asset, Blockchain, PaymentLinkMode, PaymentLinkPaymentStatus, PaymentStandardType } from '@dfx.swiss/react';
 
 export interface PaymentStandard {
   id: PaymentStandardType;
@@ -152,10 +152,4 @@ export interface PaymentLinkHistoryPayment {
   currency: string;
   date: Date;
   externalId: string;
-}
-
-export enum PaymentLinkMode {
-  SINGLE = 'Single',
-  MULTIPLE = 'Multiple',
-  PUBLIC = 'Public',
 }

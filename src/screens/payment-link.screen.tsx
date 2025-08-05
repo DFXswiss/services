@@ -2,6 +2,7 @@ import {
   ApiError,
   Asset,
   PaymentLink,
+  PaymentLinkMode,
   PaymentLinkPaymentStatus,
   PaymentStandardType,
   useApi,
@@ -52,7 +53,6 @@ import { useWindowContext } from 'src/contexts/window.context';
 import {
   ExtendedPaymentLinkStatus,
   NoPaymentLinkPaymentStatus,
-  PaymentLinkMode,
   PaymentLinkPayRequest,
   PaymentLinkPayTerminal,
   PaymentStandard,

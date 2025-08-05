@@ -5,6 +5,7 @@ import {
   Fiat,
   MinCompletionStatus,
   PaymentLink,
+  PaymentLinkMode,
   PaymentLinkPaymentMode,
   PaymentLinkPaymentStatus,
   PaymentLinkStatus,
@@ -54,7 +55,6 @@ import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
-import { PaymentLinkMode } from 'src/dto/payment-link.dto';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
