@@ -758,12 +758,12 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
     : payRequest.transferAmounts;
   const supportedMethods = filteredTransferAmounts.filter((ta) => ta.available !== false);
 
-  const assetMap = new Map<string, { amount: string; methods: string[] }>();
+  const assetMap = new Map<string, { amount?: string; methods: string[] }>();
   supportedMethods.forEach((transferMethod) => {
     transferMethod.assets.forEach((asset) => {
       if (!assetMap.has(asset.asset)) {
         assetMap.set(asset.asset, {
-          amount: String(asset.amount),
+          amount: asset.amount != null ? String(asset.amount) : undefined,
           methods: [],
         });
       }
@@ -771,6 +771,9 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
       data.methods.push(transferMethod.method);
     });
   });
+
+  const amountsDefined = Array.from(assetMap.values()).some((data) => data.amount != null);
+  const showAmounts = !isMerchantMode || amountsDefined;
 
   return (
     assetMap.size > 0 && (
@@ -782,7 +785,7 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
               className="flex flex-col justify-start sm:flex-row sm:justify-between text-sm px-2 py-2 even:bg-dfxGray-300/40 rounded"
             >
               <div className="flex items-baseline gap-2">
-                {!isMerchantMode && <span className="text-dfxBlue-800 font-medium">{data.amount}</span>}
+                {showAmounts && data.amount && <span className="text-dfxBlue-800 font-medium">{data.amount}</span>}
                 <span className="text-dfxBlue-800">{assetName}</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-left text-dfxGray-700">
@@ -791,7 +794,7 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
             </div>
           );
         })}
-        {!isMerchantMode && (
+        {showAmounts && (
           <StyledCollapsible
             full
             titleContent={
