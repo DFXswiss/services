@@ -9,6 +9,7 @@ import {
   PaymentLinkPayRequest,
 } from 'src/dto/payment-link.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
+import { useSessionStore } from 'src/hooks/session-store.hook';
 import { Lnurl } from 'src/util/lnurl';
 import { fetchJson } from 'src/util/utils';
 
@@ -33,15 +34,22 @@ export function usePaymentPosContext() {
 
 export default function PaymentLinkPosContext({ children }: { children: React.ReactNode }): JSX.Element {
   const { lightning, isInitialized: isParamsInitialized } = useAppParams();
+  const { posAuthKey } = useSessionStore();
+  const { call } = useApi();
+
   const [payRequest, setPayRequest] = useState<PaymentLinkPayRequest>();
   const [paymentStatus, setPaymentStatus] = useState<ExtendedPaymentLinkStatus>();
   const [apiUrl, setApiUrl] = useState<string>();
   const [urlParams, setUrlParams] = useSearchParams();
-  const [key, setKey] = useState<string>(urlParams.get('key') ?? '');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
-  const { call } = useApi();
+
+  const [key, setKey] = useState<string>(urlParams.get('key') ?? posAuthKey.get() ?? '');
+  const setAuthKey = (newKey?: string) => {
+    newKey ? posAuthKey.set(newKey) : posAuthKey.remove();
+    setKey(newKey ?? '');
+  };
 
   const fetchPayRequest = async (url: string) => {
     const api = new URL(url);
@@ -173,7 +181,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
         url: `paymentLink/history?${params.toString()}`,
         method: 'GET',
       }).then(() => {
-        setKey(key);
+        setAuthKey(key);
         setIsAuthenticated(true);
       });
     },
@@ -187,8 +195,15 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
 
     fetchPayRequest(decodedUrl).catch((e) => setError(e.message ?? 'Unknown Error'));
     setApiUrl(decodedUrl);
-    setUrlParams(new URLSearchParams());
+
+    return () => setAuthKey();
   }, [isParamsInitialized, lightning]);
+
+  useEffect(() => {
+    if (key && urlParams.get('key')) {
+      setUrlParams(new URLSearchParams());
+    }
+  }, [key, urlParams]);
 
   // To track authentication status
   useEffect(() => {
