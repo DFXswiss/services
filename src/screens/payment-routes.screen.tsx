@@ -4,10 +4,12 @@ import {
   Country,
   Fiat,
   MinCompletionStatus,
+  PaymentLink,
   PaymentLinkPaymentMode,
   PaymentLinkPaymentStatus,
   PaymentLinkStatus,
   PaymentRouteType,
+  PaymentStandardType,
   SellRoute,
   usePaymentRoutes,
   usePaymentRoutesContext,
@@ -39,7 +41,6 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { PaymentLink, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';

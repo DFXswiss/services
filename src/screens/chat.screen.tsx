@@ -1,6 +1,8 @@
 import {
   ApiError,
+  DataFile,
   SupportMessage,
+  SupportMessageStatus,
   Transaction,
   TransactionState,
   TransactionType,
@@ -19,7 +21,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { DataFile, SupportMessageStatus } from '@dfx.swiss/react/dist/definitions/support';
 import { useEffect, useRef, useState } from 'react';
 import { BsReply } from 'react-icons/bs';
 import { HiOutlineDownload, HiOutlinePaperClip } from 'react-icons/hi';

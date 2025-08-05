@@ -4,6 +4,9 @@ import {
   DetailTransaction,
   ExportFormat,
   FiatPaymentMethod,
+  PdfDocument,
+  SupportIssueReason,
+  SupportIssueType,
   Transaction,
   TransactionRefundData,
   TransactionState,
@@ -40,8 +43,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { PdfDocument } from '@dfx.swiss/react/dist/definitions/buy';
-import { SupportIssueReason, SupportIssueType } from '@dfx.swiss/react/dist/definitions/support';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';

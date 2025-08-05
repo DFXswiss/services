@@ -1,5 +1,4 @@
-import { Asset, Blockchain } from '@dfx.swiss/react';
-import { PaymentLinkPaymentStatus, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
+import { Asset, Blockchain, PaymentLinkPaymentStatus, PaymentStandardType } from '@dfx.swiss/react';
 
 export interface PaymentStandard {
   id: PaymentStandardType;

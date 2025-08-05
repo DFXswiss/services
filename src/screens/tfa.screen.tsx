@@ -1,4 +1,4 @@
-import { ApiError, TfaSetup, Utils, Validations, useKyc, useUserContext } from '@dfx.swiss/react';
+import { ApiError, TfaLevel, TfaSetup, TfaType, Utils, Validations, useKyc, useUserContext } from '@dfx.swiss/react';
 import {
   CopyButton,
   Form,
@@ -9,7 +9,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { TfaLevel, TfaType } from '@dfx.swiss/react/dist/definitions/kyc';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import QRCode from 'react-qr-code';

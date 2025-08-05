@@ -3,6 +3,7 @@ import {
   Asset,
   Blockchain,
   Fiat,
+  SignIn,
   useApi,
   useAssetContext,
   useAuthContext,
@@ -12,7 +13,6 @@ import {
   useUser,
   useUserContext,
 } from '@dfx.swiss/react';
-import { SignIn } from '@dfx.swiss/react/dist/definitions/auth';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
 import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';

@@ -1,7 +1,9 @@
 import {
   ApiError,
   Asset,
+  PaymentLink,
   PaymentLinkPaymentStatus,
+  PaymentStandardType,
   useApi,
   useAssetContext,
   Utils,
@@ -34,7 +36,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { PaymentLink, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';

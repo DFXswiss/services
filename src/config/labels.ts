@@ -4,16 +4,15 @@ import {
   FundOrigin,
   InvestmentDate,
   Limit,
+  PaymentQuoteStatus,
   Session,
   SupportIssueReason,
   SupportIssueType,
   TransactionFailureReason,
   TransactionState,
   UserAddress,
+  UserRole,
 } from '@dfx.swiss/react';
-import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
-
-import { PaymentQuoteStatus } from '@dfx.swiss/react/dist/definitions/route';
 
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {

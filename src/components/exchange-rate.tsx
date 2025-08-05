@@ -1,6 +1,5 @@
-import { Asset, Blockchain, Fiat, PriceStep, TransactionType, Utils, useFiat } from '@dfx.swiss/react';
+import { Asset, Blockchain, Fees, Fiat, PriceStep, TransactionType, Utils, useFiat } from '@dfx.swiss/react';
 import { IconColor, StyledCollapsible, StyledInfoText, StyledVerticalStack } from '@dfx.swiss/react-components';
-import { Fees } from '@dfx.swiss/react/dist/definitions/fees';
 import { useSettingsContext } from '../contexts/settings.context';
 import { ReactComponent as PathArrow } from '../static/assets/path-arrow.svg';
 
