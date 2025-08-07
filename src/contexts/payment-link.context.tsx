@@ -4,6 +4,7 @@ import {
   PaymentLinkPaymentStatus,
   PaymentStandardType,
   useAssetContext,
+  usePaymentRoutes,
 } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { addMinutes } from 'date-fns';
@@ -70,6 +71,7 @@ interface PaymentLinkInterface {
     selectedAsset?: string,
   ) => Promise<void>;
   payWithMetaMask: () => Promise<void>;
+  assignLink: (externalId: string, publicName: string) => Promise<void>;
 }
 
 const PaymentLinkContext = createContext<PaymentLinkInterface>(undefined as any);
@@ -85,6 +87,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   const { closeServices } = useAppHandlingContext();
   const { paymentLinkApiUrlStore } = useSessionStore();
   const { lightning, redirectUri, setParams, isInitialized: isParamsInitialized } = useAppParams();
+  const { assignPaymentLink } = usePaymentRoutes();
 
   const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction, readBalance } =
     useMetaMask();
@@ -216,7 +219,14 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
         return;
       }
 
+      if (payRequest.statusCode === 400 && payRequest.message?.includes('not assigned')) {
+        setPayRequest(payRequest);
+        navigate('/pl/assign');
+        return;
+      }
+
       const status = getStatusFromPayRequest(payRequest);
+
       setPayRequest(payRequest);
       setPaymentStatus(status);
 
@@ -489,6 +499,11 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     }
   }
 
+  async function assignLink(externalId: string, publicName: string): Promise<void> {
+    await assignPaymentLink({ publicName }, undefined, externalId);
+    await fetchPayRequest(sessionApiUrl.current);
+  }
+
   const context = useMemo(
     () => ({
       error,
@@ -514,6 +529,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       fetchPayRequest,
       fetchPaymentIdentifier,
       payWithMetaMask,
+      assignLink,
     }),
     [
       error,
