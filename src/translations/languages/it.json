@@ -772,7 +772,10 @@
     "Insert the amount to active the payment.": "Inserisci l'importo per attivare il pagamento.",
     "Amount in {{currencyName}}": "Importo in {{currencyName}}",
     "Latest transactions": "Ultime transazioni",
-    "Create Payment": "Crea pagamento"
+    "Create Payment": "Crea pagamento",
+
+    "Assign payment link '{{id}}'": "Assegnare il link di pagamento '{{id}}'",
+    "Assign": "Assegnare"
   },
   "screens/iban": {
     "Your Bank Accounts": "I tuoi conti bancari",
