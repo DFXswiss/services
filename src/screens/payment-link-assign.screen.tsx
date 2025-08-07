@@ -34,10 +34,9 @@ export default function PaymentLinkAssignScreen(): JSX.Element {
     if (!payRequest?.externalId || !data.publicName) return;
 
     setIsAssigning(true);
-    assignLink(payRequest.externalId, data.publicName).catch((error: ApiError) => {
-      setError(error.message ?? 'Unknown error');
-      setIsAssigning(false);
-    });
+    assignLink(payRequest.externalId, data.publicName)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsAssigning(false));
   }
 
   const {
