@@ -772,7 +772,10 @@
     "Insert the amount to active the payment.": "Veuillez entrer le montant pour activer le paiement.",
     "Amount in {{currencyName}}": "Montant en {{currencyName}}",
     "Latest transactions": "Dernières transactions",
-    "Create Payment": "Créer un paiement"
+    "Create Payment": "Créer un paiement",
+
+    "Assign payment link '{{id}}'": "Attribuer le lien de paiement '{{id}}'",
+    "Assign": "Attribuer"
   },
   "screens/iban": {
     "Your Bank Accounts": "Vos comptes bancaires",
