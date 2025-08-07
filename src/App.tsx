@@ -33,6 +33,7 @@ const LinkScreen = lazy(() => import('./screens/link.screen'));
 const PaymentRoutesScreen = lazy(() => import('./screens/payment-routes.screen'));
 const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
 const PaymentLinkPosScreen = lazy(() => import('./screens/payment-link-pos.screen'));
+const PaymentLinkAssignScreen = lazy(() => import('./screens/payment-link-assign.screen'));
 const InvoiceScreen = lazy(() => import('./screens/invoice.screen'));
 const SellInfoScreen = lazy(() => import('./screens/sell-info.screen'));
 const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
@@ -135,23 +136,28 @@ export const Routes = [
         ),
       },
       {
+        path: 'pl/pos',
+        element: withSuspense(
+          <PaymentLinkPosContext>
+            <PaymentLinkPosScreen />
+          </PaymentLinkPosContext>,
+        ),
+      },
+      {
         path: 'pl',
+        element: withSuspense(
+          <PaymentLinkProvider>
+            <Outlet />
+          </PaymentLinkProvider>,
+        ),
         children: [
           {
             index: true,
-            element: withSuspense(
-              <PaymentLinkProvider>
-                <PaymentLinkScreen />
-              </PaymentLinkProvider>,
-            ),
+            element: <PaymentLinkScreen />,
           },
           {
-            path: 'pos',
-            element: withSuspense(
-              <PaymentLinkPosContext>
-                <PaymentLinkPosScreen />
-              </PaymentLinkPosContext>,
-            ),
+            path: 'assign',
+            element: <PaymentLinkAssignScreen />,
           },
         ],
       },
