@@ -25,6 +25,13 @@ function loadKeys(filePath) {
   }
 }
 
+// Load translations once at module level for performance
+const langs = {
+  German: loadKeys(path.join(process.cwd(), 'src/translations/languages/de.json')),
+  French: loadKeys(path.join(process.cwd(), 'src/translations/languages/fr.json')),
+  Italian: loadKeys(path.join(process.cwd(), 'src/translations/languages/it.json')),
+};
+
 module.exports = {
   meta: {
     type: 'problem',
@@ -40,13 +47,6 @@ module.exports = {
   },
 
   create(context) {
-    const root = context.getCwd();
-    const langs = {
-      German: loadKeys(path.join(root, 'src/translations/languages/de.json')),
-      French: loadKeys(path.join(root, 'src/translations/languages/fr.json')),
-      Italian: loadKeys(path.join(root, 'src/translations/languages/it.json')),
-    };
-
     return {
       CallExpression(node) {
         if (
