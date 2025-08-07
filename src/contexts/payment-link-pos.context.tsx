@@ -57,8 +57,9 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
     const response = await fetchJson(api.toString());
     setPayRequest(response);
 
-    const newStatus =
-      response.statusCode === 404 ? NoPaymentLinkPaymentStatus.NO_PAYMENT : PaymentLinkPaymentStatus.PENDING;
+    const newStatus = [400, 404].includes(response.statusCode)
+      ? NoPaymentLinkPaymentStatus.NO_PAYMENT
+      : PaymentLinkPaymentStatus.PENDING;
     setPaymentStatus(newStatus);
   };
 
