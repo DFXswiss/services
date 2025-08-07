@@ -25,7 +25,6 @@ function loadKeys(filePath) {
   }
 }
 
-// Load translations once at module level for performance
 const langs = {
   German: loadKeys(path.join(process.cwd(), 'src/translations/languages/de.json')),
   French: loadKeys(path.join(process.cwd(), 'src/translations/languages/fr.json')),
