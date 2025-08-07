@@ -2103,19 +2103,20 @@ function PaymentAgreement({ code, step, onDone }: EditProps): JSX.Element {
 
     setIsUpdating(true);
     setError(undefined);
-    setPaymentData(code, step.session.url, data)
+    setPaymentData(code, step.session.url, { ...data, website: data.website || undefined })
       .then(onDone)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
   }
 
   const rules = Utils.createRules({
-    purpose: Validations.Required,
+    name: Validations.Required,
     registrationNumber: Validations.Required,
     storeType: Validations.Required,
     merchantCategory: Validations.Required,
     goodsType: Validations.Required,
     goodsCategory: Validations.Required,
+    purpose: Validations.Required,
   });
 
   return (
@@ -2123,9 +2124,15 @@ function PaymentAgreement({ code, step, onDone }: EditProps): JSX.Element {
       <StyledVerticalStack gap={6} full center>
         <StyledVerticalStack gap={2} full center>
           <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-            {translate('screens/kyc', 'Purpose of the payments')}
+            {translate('screens/kyc', 'Public name')}
           </p>
-          <StyledInput name="purpose" label={''} placeholder={translate('screens/kyc', 'Purpose')} full smallLabel />
+          <StyledInput
+            name="name"
+            label={''}
+            placeholder={translate('screens/kyc', 'My organization')}
+            full
+            smallLabel
+          />
         </StyledVerticalStack>
 
         <StyledVerticalStack gap={2} full>
@@ -2208,6 +2215,13 @@ function PaymentAgreement({ code, step, onDone }: EditProps): JSX.Element {
             items={Object.values(GoodsCategory)}
             labelFunc={(item) => translate('screens/kyc', goodsCategoryToString(item))}
           />
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full center>
+          <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Purpose of the payments')}
+          </p>
+          <StyledInput name="purpose" label={''} placeholder={translate('screens/kyc', 'Purpose')} full smallLabel />
         </StyledVerticalStack>
 
         <StyledVerticalStack gap={2} full>
