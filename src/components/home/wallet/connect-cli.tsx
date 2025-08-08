@@ -129,7 +129,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch, rootRef
 
   useEffect(() => {
     const newWallet = Wallets.find((w) => WalletBlockchains[w]?.includes(blockchain));
-    if (newWallet) {
+    if (newWallet && newWallet !== wallet) {
       onSwitch(newWallet);
       setParams({ blockchain });
     }
