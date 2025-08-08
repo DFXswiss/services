@@ -653,7 +653,10 @@ export default function PaymentLinkScreen(): JSX.Element {
                               <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
                             ) : (
                               <StyledButton
-                                label={translate('screens/home', 'Pay in app')}
+                                label={translate(
+                                  'screens/home',
+                                  walletData.hasActionDeepLink ? 'Pay in app' : 'Open app and scan QR code again',
+                                )}
                                 onClick={() => window.open(walletData.deepLink, '_blank')}
                                 color={StyledButtonColor.BLUE}
                                 width={StyledButtonWidth.FULL}

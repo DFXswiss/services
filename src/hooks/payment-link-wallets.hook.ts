@@ -21,7 +21,11 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
     const hasQuote = paymentHasQuote(payRequest);
     const isPublicPayment = payRequest?.mode === PaymentLinkMode.PUBLIC;
     return PaymentLinkWallets.map((wallet) => {
-      return { ...wallet, disabled: hasQuote && !Wallet.qualifiesForPayment(wallet, payRequest.transferAmounts) };
+      return {
+        ...wallet,
+        disabled: hasQuote && !Wallet.qualifiesForPayment(wallet, payRequest.transferAmounts),
+        hasActionDeepLink: hasActionDeepLink(wallet),
+      };
     }).filter((wallet) => (isPublicPayment ? wallet.deepLink : true));
   }, [payRequest]);
 
@@ -66,6 +70,10 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
     }
 
     return wallet.deepLink;
+  };
+
+  const hasActionDeepLink = (wallet: WalletInfo): boolean => {
+    return wallet.category === WalletCategory.LIGHTNING;
   };
 
   const getDeeplinkByWalletId = async (id: WalletAppId): Promise<string | undefined> => {
