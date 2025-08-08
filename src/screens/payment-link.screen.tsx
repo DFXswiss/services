@@ -22,6 +22,7 @@ import {
   SpinnerVariant,
   StyledButton,
   StyledButtonColor,
+  StyledButtonSize,
   StyledButtonWidth,
   StyledCollapsible,
   StyledDataTable,
@@ -658,7 +659,8 @@ export default function PaymentLinkScreen(): JSX.Element {
                                   walletData.hasActionDeepLink ? 'Pay in app' : 'Open app and scan QR code again',
                                 )}
                                 onClick={() => window.open(walletData.deepLink, '_blank')}
-                                color={StyledButtonColor.BLUE}
+                                color={StyledButtonColor.GREEN}
+                                size={StyledButtonSize.DOUBLE}
                                 width={StyledButtonWidth.FULL}
                                 hidden={
                                   !walletData.deepLink ||
@@ -985,6 +987,8 @@ function CreatePublicPaymentForm({ paymentRequest }: { paymentRequest: PaymentLi
           <StyledButton
             type="submit"
             width={StyledButtonWidth.FULL}
+            size={StyledButtonSize.DOUBLE}
+            color={StyledButtonColor.GREEN}
             label={translate('screens/payment', 'Activate')}
             onClick={handleSubmit(activate)}
             isLoading={isActivating}
