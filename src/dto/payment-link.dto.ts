@@ -125,6 +125,7 @@ export interface WalletInfo {
   websiteUrl?: string;
   iconUrl: string;
   deepLink?: string;
+  hasActionDeepLink?: boolean;
   appStoreUrl?: string;
   playStoreUrl?: string;
   recommended?: boolean;

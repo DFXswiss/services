@@ -22,12 +22,26 @@ import { QrBasic } from 'src/components/payment/qr-code';
 import { usePaymentPosContext } from 'src/contexts/payment-link-pos.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PaymentLinkHistoryPayment } from 'src/dto/payment-link.dto';
+import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
+import { delay } from 'src/util/utils';
 
 export default function PaymentLinkPosScreen(): JSX.Element {
-  const { error, isLoading, isAuthenticated, payRequest, paymentLinkApiUrl, paymentStatus } = usePaymentPosContext();
+  const { error, isLoading, isAuthenticated, payRequest, paymentLinkApiUrl, posUrl, paymentStatus } =
+    usePaymentPosContext();
+  const { translate } = useSettingsContext();
+  const { copy } = useClipboard();
+
+  const [isCopying, setIsCopying] = useState(false);
+
+  function copyPosLink() {
+    setIsCopying(true);
+    copy(posUrl);
+    delay(0.2).then(() => setIsCopying(false));
+  }
+
   useLayoutOptions({ backButton: false, smallMenu: true });
 
   return (
@@ -50,6 +64,17 @@ export default function PaymentLinkPosScreen(): JSX.Element {
               <div className="flex flex-col w-full gap-4">
                 {PaymentLinkPaymentStatus.PENDING === paymentStatus ? <PendingPaymentForm /> : <CreatePaymentForm />}
               </div>
+
+              {posUrl && (
+                <StyledButton
+                  label={translate('screens/payment', 'Copy POS link')}
+                  onClick={copyPosLink}
+                  width={StyledButtonWidth.FULL}
+                  isLoading={isCopying}
+                  color={StyledButtonColor.STURDY_WHITE}
+                />
+              )}
+
               <div className="flex flex-col w-full mt-4">
                 <TransactionHistory />
               </div>

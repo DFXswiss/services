@@ -418,6 +418,7 @@
     "Login with your BTC Taro Wallet": "Anmeldung mit Deiner BTC Taro Wallet",
     "Install BTC Taro": "BTC Taro installieren",
     "Pay in app": "Bezahlen in der App",
+    "Open app and scan QR code again": "App öffnen und QR Code erneut scannen",
     "App temporarily unavailable": "App vorübergehend nicht verfügbar",
 
     "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Melde Dich bei Deinem DFX-Konto an, indem Du mit Deiner Unterschrift bestätigst, dass Du der alleinige Eigentümer der angegebenen Blockchain-Adresse bist.",
@@ -702,7 +703,6 @@
 
     "Payment Methods": "Zahlungsmethoden",
     "Supported cryptocurrencies and blockchains": "Unterstützte Kryptowährungen und Blockchains",
-    "Minimum network fees": "Minimale Netzwerkgebühren",
     "Locations": "Standorte",
 
     "Configuration": "Konfiguration",
@@ -773,6 +773,7 @@
     "Amount in {{currencyName}}": "Betrag in {{currencyName}}",
     "Latest transactions": "Letzte Transaktionen",
     "Create Payment": "Zahlung erstellen",
+    "Copy POS link": "POS-Link kopieren",
 
     "Assign payment link '{{id}}'": "Payment Link '{{id}}' zuweisen",
     "Assign": "Zuweisen"

@@ -78,7 +78,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     appStoreUrl: 'https://apps.apple.com/app/dfx-btc-taproot-asset-wallet/id6466037617',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=swiss.dfx.bitcoin',
     recommended: true,
-    category: WalletCategory.BITCOIN,
+    category: WalletCategory.LIGHTNING,
   },
   // ----------------------- COMPATIBLE APPS -----------------------
   {

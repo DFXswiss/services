@@ -22,6 +22,7 @@ import {
   SpinnerVariant,
   StyledButton,
   StyledButtonColor,
+  StyledButtonSize,
   StyledButtonWidth,
   StyledCollapsible,
   StyledDataTable,
@@ -653,9 +654,13 @@ export default function PaymentLinkScreen(): JSX.Element {
                               <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
                             ) : (
                               <StyledButton
-                                label={translate('screens/home', 'Pay in app')}
+                                label={translate(
+                                  'screens/home',
+                                  walletData.hasActionDeepLink ? 'Pay in app' : 'Open app and scan QR code again',
+                                )}
                                 onClick={() => window.open(walletData.deepLink, '_blank')}
-                                color={StyledButtonColor.BLUE}
+                                color={StyledButtonColor.GREEN}
+                                size={StyledButtonSize.DOUBLE}
                                 width={StyledButtonWidth.FULL}
                                 hidden={
                                   !walletData.deepLink ||
@@ -753,7 +758,6 @@ interface TransferMethodsContentProps {
 }
 
 function TransferMethodsContent({ payRequest, walletData }: TransferMethodsContentProps) {
-  const { translate } = useSettingsContext();
   const { isMerchantMode } = usePaymentLinkContext();
 
   const filteredTransferAmounts = walletData
@@ -799,25 +803,6 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
             </div>
           );
         })}
-        {showAmounts && (
-          <StyledCollapsible
-            full
-            titleContent={
-              <div className="text-dfxGray-700 text-sm text-left">
-                {translate('screens/payment', 'Minimum network fees')}
-              </div>
-            }
-          >
-            <div className="flex flex-col gap-2 pt-2">
-              {supportedMethods.map((m) => (
-                <div key={m.method} className="flex justify-between items-center text-dfxGray-700 text-xs px-2">
-                  <span className="text-dfxGray-700">{m.method}</span>
-                  <span className="text-dfxGray-700">{m.minFee ? m.minFee : 'N/A'}</span>
-                </div>
-              ))}
-            </div>
-          </StyledCollapsible>
-        )}
       </div>
     )
   );
@@ -1002,6 +987,8 @@ function CreatePublicPaymentForm({ paymentRequest }: { paymentRequest: PaymentLi
           <StyledButton
             type="submit"
             width={StyledButtonWidth.FULL}
+            size={StyledButtonSize.DOUBLE}
+            color={StyledButtonColor.GREEN}
             label={translate('screens/payment', 'Activate')}
             onClick={handleSubmit(activate)}
             isLoading={isActivating}
