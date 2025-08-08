@@ -753,7 +753,6 @@ interface TransferMethodsContentProps {
 }
 
 function TransferMethodsContent({ payRequest, walletData }: TransferMethodsContentProps) {
-  const { translate } = useSettingsContext();
   const { isMerchantMode } = usePaymentLinkContext();
 
   const filteredTransferAmounts = walletData
@@ -799,25 +798,6 @@ function TransferMethodsContent({ payRequest, walletData }: TransferMethodsConte
             </div>
           );
         })}
-        {showAmounts && (
-          <StyledCollapsible
-            full
-            titleContent={
-              <div className="text-dfxGray-700 text-sm text-left">
-                {translate('screens/payment', 'Minimum network fees')}
-              </div>
-            }
-          >
-            <div className="flex flex-col gap-2 pt-2">
-              {supportedMethods.map((m) => (
-                <div key={m.method} className="flex justify-between items-center text-dfxGray-700 text-xs px-2">
-                  <span className="text-dfxGray-700">{m.method}</span>
-                  <span className="text-dfxGray-700">{m.minFee ? m.minFee : 'N/A'}</span>
-                </div>
-              ))}
-            </div>
-          </StyledCollapsible>
-        )}
       </div>
     )
   );
