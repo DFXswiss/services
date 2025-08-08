@@ -17,6 +17,23 @@ interface PaymentLinkWalletsProps {
 export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   const { paymentIdentifier, payRequest, paymentHasQuote } = usePaymentLinkContext();
 
+  const getDeeplinkByCategory = async (wallet: WalletInfo) => {
+    if (!paymentIdentifier) return undefined;
+
+    if (wallet.category === WalletCategory.LIGHTNING) {
+      const lightning = new URL(paymentIdentifier).searchParams.get('lightning');
+      const suffix = 'lightning:';
+      const prefix = wallet.deepLink !== suffix ? `${wallet.deepLink}` : '';
+      return `${prefix}${suffix}${lightning}`;
+    }
+
+    return wallet.deepLink;
+  };
+
+  const hasActionDeepLink = (wallet: WalletInfo): boolean => {
+    return wallet.category === WalletCategory.LIGHTNING;
+  };
+
   const filteredPaymentLinkWallets = useMemo(() => {
     const hasQuote = paymentHasQuote(payRequest);
     const isPublicPayment = payRequest?.mode === PaymentLinkMode.PUBLIC;
@@ -57,23 +74,6 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
       params: new URLSearchParams({ quote: payRequest.quote.id, method: method.toString(), asset }),
     });
     return await fetchJson<T>(callbackUrl);
-  };
-
-  const getDeeplinkByCategory = async (wallet: WalletInfo) => {
-    if (!paymentIdentifier) return undefined;
-
-    if (wallet.category === WalletCategory.LIGHTNING) {
-      const lightning = new URL(paymentIdentifier).searchParams.get('lightning');
-      const suffix = 'lightning:';
-      const prefix = wallet.deepLink !== suffix ? `${wallet.deepLink}` : '';
-      return `${prefix}${suffix}${lightning}`;
-    }
-
-    return wallet.deepLink;
-  };
-
-  const hasActionDeepLink = (wallet: WalletInfo): boolean => {
-    return wallet.category === WalletCategory.LIGHTNING;
   };
 
   const getDeeplinkByWalletId = async (id: WalletAppId): Promise<string | undefined> => {
