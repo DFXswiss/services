@@ -772,6 +772,7 @@
     "Amount in {{currencyName}}": "Montant en {{currencyName}}",
     "Latest transactions": "Dernières transactions",
     "Create Payment": "Créer un paiement",
+    "Copy POS link": "Copier le lien POS",
 
     "Assign payment link '{{id}}'": "Attribuer le lien de paiement '{{id}}'",
     "Assign": "Attribuer"

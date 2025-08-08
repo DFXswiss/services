@@ -11,7 +11,7 @@ import {
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { useSessionStore } from 'src/hooks/session-store.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { fetchJson } from 'src/util/utils';
+import { fetchJson, url } from 'src/util/utils';
 
 interface PaymentPosContextType {
   isLoading: boolean;
@@ -19,6 +19,7 @@ interface PaymentPosContextType {
   paymentStatus: ExtendedPaymentLinkStatus | undefined;
   payRequest: PaymentLinkPayRequest | undefined;
   paymentLinkApiUrl: string | undefined;
+  posUrl: string | undefined;
   error: string | undefined;
   fetchTransactionHistory: () => Promise<PaymentLinkHistoryPayment[] | undefined>;
   createPayment: (data: { amount: number }) => Promise<void>;
@@ -234,6 +235,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
         paymentStatus,
         payRequest: payRequest as PaymentLinkPayRequest,
         paymentLinkApiUrl: apiUrl,
+        posUrl: lightning && key && url({ path: 'pl/pos', params: new URLSearchParams({ lightning, key }) }),
         error,
         fetchTransactionHistory,
         createPayment,
