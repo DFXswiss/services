@@ -776,7 +776,9 @@
     "Copy POS link": "POS-Link kopieren",
 
     "Assign payment link '{{id}}'": "Payment Link '{{id}}' zuweisen",
-    "Assign": "Zuweisen"
+    "Assign": "Zuweisen",
+
+    "Total amount": "Gesamtbetrag"
   },
   "screens/iban": {
     "Your Bank Accounts": "Deine Bankkonten",
