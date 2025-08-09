@@ -29,7 +29,7 @@ export function useNavigation(): NavigationInterface {
         return navigateTo(to);
 
       case 'string':
-        return navigateTo(relativeUrl({ path: to, params: new URLSearchParams(search) }), options);
+        return navigateTo(to, options);
 
       default:
         const params = addParams(new URLSearchParams(to.search), options?.clearParams);
