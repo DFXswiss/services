@@ -4,8 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   ExtendedPaymentLinkStatus,
   NoPaymentLinkPaymentStatus,
-  PaymentLinkHistoryPayment,
-  PaymentLinkHistoryResponse,
+  PaymentLinkHistory,
   PaymentLinkPayRequest,
 } from 'src/dto/payment-link.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
@@ -21,7 +20,7 @@ interface PaymentPosContextType {
   paymentLinkApiUrl: string | undefined;
   posUrl: string | undefined;
   error: string | undefined;
-  fetchTransactionHistory: () => Promise<PaymentLinkHistoryPayment[] | undefined>;
+  fetchTransactionHistory: () => Promise<PaymentLinkHistory | undefined>;
   createPayment: (data: { amount: number }) => Promise<void>;
   cancelPayment: () => Promise<unknown>;
   checkAuthentication: (key: string) => Promise<any>;
@@ -78,12 +77,12 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
       key: key,
     });
 
-    const history = await call<PaymentLinkHistoryResponse[]>({
+    const history = await call<PaymentLinkHistory[]>({
       url: `paymentLink/history?${params.toString()}`,
       method: 'GET',
     }).catch(unauthorizedResponse);
 
-    return history?.[0]?.payments?.[0]?.externalId;
+    return history?.[0]?.payments[0]?.externalId;
   };
 
   const fetchWait = async (): Promise<void> => {
@@ -160,14 +159,17 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
       key: key,
     });
 
-    return call<PaymentLinkHistoryResponse[]>({
+    return call<PaymentLinkHistory[]>({
       url: `paymentLink/history?${params.toString()}`,
       method: 'GET',
     })
       .then((response) => {
-        return response.length
-          ? response[0].payments?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-          : [];
+        if (!response?.length) return undefined;
+
+        return {
+          ...response[0],
+          payments: response[0].payments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+        };
       })
       .catch(unauthorizedResponse);
   }, [key, payRequest, call]);
@@ -179,7 +181,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
         key: key,
       });
 
-      return call<PaymentLinkHistoryResponse[]>({
+      return call<PaymentLinkHistory[]>({
         url: `paymentLink/history?${params.toString()}`,
         method: 'GET',
       }).then(() => {

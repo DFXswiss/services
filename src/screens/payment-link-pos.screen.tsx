@@ -21,7 +21,7 @@ import { Modal } from 'src/components/modal';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { usePaymentPosContext } from 'src/contexts/payment-link-pos.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { PaymentLinkHistoryPayment } from 'src/dto/payment-link.dto';
+import { PaymentLinkHistory } from 'src/dto/payment-link.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -215,8 +215,8 @@ const PendingPaymentForm = (): JSX.Element => {
 };
 
 function TransactionHistory(): JSX.Element {
-  const { paymentStatus, fetchTransactionHistory } = usePaymentPosContext();
-  const [transactionHistory, setTransactionHistory] = useState<PaymentLinkHistoryPayment[]>([]);
+  const { payRequest, paymentStatus, fetchTransactionHistory } = usePaymentPosContext();
+  const [transactionHistory, setTransactionHistory] = useState<PaymentLinkHistory>();
   const [isLoading, setIsLoading] = useState(true);
   const { translate } = useSettingsContext();
 
@@ -231,7 +231,7 @@ function TransactionHistory(): JSX.Element {
 
   useEffect(() => {
     fetchTransactionHistory()
-      .then((history) => setTransactionHistory(history ?? []))
+      .then((history) => setTransactionHistory(history))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
   }, [fetchTransactionHistory, paymentStatus]);
@@ -243,13 +243,13 @@ function TransactionHistory(): JSX.Element {
   ) : error ? (
     <ErrorHint message={error} />
   ) : (
-    <div>
+    <StyledVerticalStack full gap={2} className="pb-8">
       <h2 className="ml-1.5 mt-2 mb-1.5 text-dfxGray-700 align-left flex">
         {translate('screens/payment', 'Latest transactions')}
       </h2>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-        {transactionHistory.length > 0 ? (
-          transactionHistory.map((payment) => (
+        {transactionHistory?.payments.length ? (
+          transactionHistory.payments.map((payment) => (
             <StyledDataTableRow key={payment.id}>
               <div className="flex flex-1 justify-between items-start">
                 <div className="flex items-center justify-center gap-2 text-dfxGray-800">
@@ -271,7 +271,19 @@ function TransactionHistory(): JSX.Element {
           <StyledDataTableRow label={translate('screens/payment', 'No transactions yet')} />
         )}
       </StyledDataTable>
-    </div>
+      {transactionHistory && payRequest && (
+        <>
+          <div className="w-full h-[1px] bg-dfxGray-500 my-3" />
+          <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+            <StyledDataTableRow label={translate('screens/payment', 'Total amount')}>
+              <div className="font-bold text-dfxBlue-800">
+                {transactionHistory.totalCompletedAmount} {payRequest.currency?.toUpperCase()}
+              </div>
+            </StyledDataTableRow>
+          </StyledDataTable>
+        </>
+      )}
+    </StyledVerticalStack>
   );
 }
 
