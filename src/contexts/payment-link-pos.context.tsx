@@ -82,7 +82,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
       method: 'GET',
     }).catch(unauthorizedResponse);
 
-    return history?.[0]?.payments?.[0]?.externalId;
+    return history?.[0]?.payments[0]?.externalId;
   };
 
   const fetchWait = async (): Promise<void> => {
@@ -168,9 +168,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
 
         return {
           ...response[0],
-          payments: response[0].payments?.length
-            ? response[0].payments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-            : [],
+          payments: response[0].payments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
         };
       })
       .catch(unauthorizedResponse);

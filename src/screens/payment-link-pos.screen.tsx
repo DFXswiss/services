@@ -248,7 +248,7 @@ function TransactionHistory(): JSX.Element {
         {translate('screens/payment', 'Latest transactions')}
       </h2>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-        {transactionHistory?.payments?.length ? (
+        {transactionHistory?.payments.length ? (
           transactionHistory.payments.map((payment) => (
             <StyledDataTableRow key={payment.id}>
               <div className="flex flex-1 justify-between items-start">

@@ -144,7 +144,7 @@ export interface MetaMaskInfo {
 
 export interface PaymentLinkHistory extends PaymentLinkPayRequest {
   payments: PaymentLinkHistoryPayment[];
-  totalCompletedAmount?: number;
+  totalCompletedAmount: number;
 }
 
 export interface PaymentLinkHistoryPayment {
