@@ -67,7 +67,7 @@ import { BadgeType } from 'src/util/app-store-badges';
 import { Evm } from 'src/util/evm';
 import { OpenCryptoPayUtils } from 'src/util/open-crypto-pay';
 import { Wallet } from 'src/util/payment-link-wallet';
-import { blankedAddress, formatLocationAddress, formatUnits } from 'src/util/utils';
+import { blankedAddress, formatAmountForDisplay, formatLocationAddress, formatUnits } from 'src/util/utils';
 import { AppStoreBadge } from '../components/app-store-badge';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 
@@ -251,7 +251,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                   <>
                     <p className="text-xl font-bold text-dfxBlue-800 mb-8">
                       <span className="text-[18px]">{payRequest.requestedAmount.asset} </span>
-                      {Utils.formatAmount(payRequest.requestedAmount.amount).replace('.00', '.-').replace(' ', "'")}
+                      {formatAmountForDisplay(payRequest.requestedAmount.amount)}
                     </p>
                     {payRequest?.mode === PaymentLinkMode.PUBLIC &&
                       ![PaymentLinkPaymentStatus.COMPLETED, PaymentLinkPaymentStatus.EXPIRED].includes(
