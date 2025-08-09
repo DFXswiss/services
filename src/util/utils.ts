@@ -1,4 +1,4 @@
-import { Asset, Fiat, KycFile, UserAddress } from '@dfx.swiss/react';
+import { Asset, Fiat, KycFile, UserAddress, Utils } from '@dfx.swiss/react';
 
 export function isDefined<T>(item: T | undefined): item is T {
   return item != null;
@@ -284,6 +284,11 @@ export const formatCurrency = (
     return formatter.format(amount).split(',').join(' ');
   }
 };
+
+export function formatAmountForDisplay(amount?: number): string {
+  if (amount === undefined) return '';
+  return Utils.formatAmount(amount).replace('.00', '.-').replace(' ', "'");
+}
 
 export function deepEqual(a: any, b: any): boolean {
   if (a === b) return true;

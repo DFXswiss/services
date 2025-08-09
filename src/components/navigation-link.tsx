@@ -15,7 +15,7 @@ export function NavigationLink({ icon, label, url, target, onClose }: Navigation
   const { navigate } = useNavigation();
 
   const handleClick = () => {
-    if (url && !isAbsoluteUrl(url)) navigate(url);
+    if (url && !isAbsoluteUrl(url)) navigate(url, { clearParams: ['lightning', 'key'] });
     onClose();
   };
 

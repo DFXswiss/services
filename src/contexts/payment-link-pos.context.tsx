@@ -7,8 +7,6 @@ import {
   PaymentLinkHistory,
   PaymentLinkPayRequest,
 } from 'src/dto/payment-link.dto';
-import { useAppParams } from 'src/hooks/app-params.hook';
-import { useSessionStore } from 'src/hooks/session-store.hook';
 import { Lnurl } from 'src/util/lnurl';
 import { fetchJson, url } from 'src/util/utils';
 
@@ -33,23 +31,18 @@ export function usePaymentPosContext() {
 }
 
 export default function PaymentLinkPosContext({ children }: { children: React.ReactNode }): JSX.Element {
-  const { lightning, isInitialized: isParamsInitialized } = useAppParams();
-  const { posAuthKey } = useSessionStore();
   const { call } = useApi();
 
   const [payRequest, setPayRequest] = useState<PaymentLinkPayRequest>();
   const [paymentStatus, setPaymentStatus] = useState<ExtendedPaymentLinkStatus>();
   const [apiUrl, setApiUrl] = useState<string>();
-  const [urlParams, setUrlParams] = useSearchParams();
+  const [urlParams] = useSearchParams();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
 
-  const [key, setKey] = useState<string>(urlParams.get('key') ?? posAuthKey.get() ?? '');
-  const setAuthKey = (newKey?: string) => {
-    newKey ? posAuthKey.set(newKey) : posAuthKey.remove();
-    setKey(newKey ?? '');
-  };
+  const lightning = urlParams.get('lightning') ?? undefined;
+  const key = urlParams.get('key') ?? '';
 
   const fetchPayRequest = async (url: string) => {
     const api = new URL(url);
@@ -185,7 +178,6 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
         url: `paymentLink/history?${params.toString()}`,
         method: 'GET',
       }).then(() => {
-        setAuthKey(key);
         setIsAuthenticated(true);
       });
     },
@@ -194,20 +186,12 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
 
   // Initialization
   useEffect(() => {
-    if (!isParamsInitialized || !lightning) return;
+    if (!lightning) return;
     const decodedUrl = Lnurl.decode(lightning) as string;
 
     fetchPayRequest(decodedUrl).catch((e) => setError(e.message ?? 'Unknown Error'));
     setApiUrl(decodedUrl);
-
-    return () => setAuthKey();
-  }, [isParamsInitialized, lightning]);
-
-  useEffect(() => {
-    if (key && urlParams.get('key')) {
-      setUrlParams(new URLSearchParams());
-    }
-  }, [key, urlParams]);
+  }, [lightning]);
 
   // To track authentication status
   useEffect(() => {
@@ -237,7 +221,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
         paymentStatus,
         payRequest: payRequest as PaymentLinkPayRequest,
         paymentLinkApiUrl: apiUrl,
-        posUrl: lightning && key && url({ path: 'pl/pos', params: new URLSearchParams({ lightning, key }) }),
+        posUrl: lightning && key ? url({ path: 'pl/pos', params: new URLSearchParams({ lightning, key }) }) : undefined,
         error,
         fetchTransactionHistory,
         createPayment,

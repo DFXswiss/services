@@ -26,7 +26,7 @@ import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { delay } from 'src/util/utils';
+import { delay, formatAmountForDisplay } from 'src/util/utils';
 
 export default function PaymentLinkPosScreen(): JSX.Element {
   const { error, isLoading, isAuthenticated, payRequest, paymentLinkApiUrl, posUrl, paymentStatus } =
@@ -194,9 +194,7 @@ const PendingPaymentForm = (): JSX.Element => {
       </div>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-          <p>
-            {payRequest?.requestedAmount.amount} {payRequest?.requestedAmount.asset}
-          </p>
+          {payRequest?.requestedAmount.asset ?? ''} {formatAmountForDisplay(payRequest?.requestedAmount.amount)}
         </StyledDataTableRow>
       </StyledDataTable>
       {isAuthenticated && (
@@ -257,7 +255,7 @@ function TransactionHistory(): JSX.Element {
                   {translate('screens/payment', `${payment.status}`)}
                 </div>
                 <div className="flex flex-col items-end justify-start">
-                  {payment.amount} {payment.currency.toUpperCase()}
+                  {payment.currency.toUpperCase()} {formatAmountForDisplay(payment.amount)}
                   <span className="text-dfxGray-800 text-xs">
                     {new Date(payment.date).toDateString() === new Date().toDateString()
                       ? new Date(payment.date).toLocaleTimeString()
@@ -277,7 +275,8 @@ function TransactionHistory(): JSX.Element {
           <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
             <StyledDataTableRow label={translate('screens/payment', 'Total amount')}>
               <div className="font-bold text-dfxBlue-800">
-                {transactionHistory.totalCompletedAmount} {payRequest.currency?.toUpperCase()}
+                {payRequest.currency?.toUpperCase() ?? payRequest.requestedAmount?.asset ?? ''}{' '}
+                {formatAmountForDisplay(transactionHistory.totalCompletedAmount)}
               </div>
             </StyledDataTableRow>
           </StyledDataTable>
