@@ -142,15 +142,9 @@ export interface MetaMaskInfo {
   minFee: number;
 }
 
-export interface PaymentFiatValue {
-  chf: number;
-  eur: number;
-  usd: number;
-}
-
 export interface PaymentLinkHistory extends PaymentLinkPayRequest {
   payments: PaymentLinkHistoryPayment[];
-  totalValue?: PaymentFiatValue;
+  totalCompletedAmount?: number;
 }
 
 export interface PaymentLinkHistoryPayment {

@@ -21,7 +21,7 @@ import { Modal } from 'src/components/modal';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { usePaymentPosContext } from 'src/contexts/payment-link-pos.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { PaymentFiatValue, PaymentLinkHistory } from 'src/dto/payment-link.dto';
+import { PaymentLinkHistory } from 'src/dto/payment-link.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -236,13 +236,6 @@ function TransactionHistory(): JSX.Element {
       .finally(() => setIsLoading(false));
   }, [fetchTransactionHistory, paymentStatus]);
 
-  const totalValueCurrency = useMemo(() => {
-    if (!transactionHistory?.totalValue || !payRequest?.currency) return undefined;
-
-    const currencyKey = payRequest.currency.toLowerCase() as keyof PaymentFiatValue;
-    return transactionHistory.totalValue[currencyKey];
-  }, [payRequest?.currency, transactionHistory?.totalValue]);
-
   return isLoading ? (
     <div className="flex justify-center items-center w-full h-32">
       <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -278,13 +271,13 @@ function TransactionHistory(): JSX.Element {
           <StyledDataTableRow label={translate('screens/payment', 'No transactions yet')} />
         )}
       </StyledDataTable>
-      {totalValueCurrency && (
+      {transactionHistory && payRequest && (
         <>
           <div className="w-full h-[1px] bg-dfxGray-500 my-3" />
           <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
             <StyledDataTableRow label={translate('screens/payment', 'Total amount')}>
               <div className="font-bold text-dfxBlue-800">
-                {totalValueCurrency} {payRequest?.currency?.toUpperCase()}
+                {transactionHistory.totalCompletedAmount} {payRequest.currency?.toUpperCase()}
               </div>
             </StyledDataTableRow>
           </StyledDataTable>
