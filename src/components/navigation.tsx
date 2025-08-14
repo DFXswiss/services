@@ -109,13 +109,12 @@ function MenuIcon({ icon, setIsNavigationOpen }: IconContentProps): JSX.Element 
 }
 
 function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuContentProps): JSX.Element {
-  const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
   const { user } = useUserContext();
   const { isLoggedIn, logout: apiLogout } = useSessionContext();
 
   async function login() {
-    navigate('/login');
+    window.location.href = window.location.origin + '/login';
     setIsNavigationOpen(false);
   }
 
@@ -238,7 +237,6 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
             onClick={isLoggedIn ? logout : login}
             color={StyledButtonColor.STURDY_WHITE}
             width={StyledButtonWidth.FULL}
-            hidden={small && !isLoggedIn}
           />
 
           <div className="flex mt-4 text-xs text-dfxGray-700 w-full justify-center">
