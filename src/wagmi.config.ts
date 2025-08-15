@@ -1,11 +1,11 @@
 import { walletConnect } from '@wagmi/connectors';
 import { createConfig, http } from '@wagmi/core';
 import { arbitrum, base, bsc, mainnet, optimism, polygon } from '@wagmi/core/chains';
-import { defineChain } from 'viem';
 
-const citreaTestnet = defineChain({
+const citreaTestnet = {
   id: 5115,
   name: 'Citrea Testnet',
+  network: 'citrea-testnet',
   nativeCurrency: {
     decimals: 18,
     name: 'cBTC',
@@ -13,6 +13,9 @@ const citreaTestnet = defineChain({
   },
   rpcUrls: {
     default: {
+      http: ['https://rpc.testnet.citrea.xyz'],
+    },
+    public: {
       http: ['https://rpc.testnet.citrea.xyz'],
     },
   },
@@ -23,7 +26,7 @@ const citreaTestnet = defineChain({
     },
   },
   testnet: true,
-});
+} as const;
 
 export const config = createConfig({
   chains: [mainnet, bsc, arbitrum, optimism, polygon, base, citreaTestnet],
