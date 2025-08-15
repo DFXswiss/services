@@ -3,7 +3,7 @@ import { createConfig, http } from '@wagmi/core';
 import { arbitrum, base, bsc, mainnet, optimism, polygon, type Chain } from '@wagmi/core/chains';
 
 const citreaTestnet: Chain = {
-  id: Number(process.env.REACT_APP_CITREA_TESTNET_CHAIN_ID) || 5115,
+  id: 5115,
   name: 'Citrea Testnet',
   nativeCurrency: {
     decimals: 18,
@@ -12,7 +12,7 @@ const citreaTestnet: Chain = {
   },
   rpcUrls: {
     default: {
-      http: [process.env.REACT_APP_CITREA_TESTNET_GATEWAY_URL || 'https://rpc.testnet.citrea.xyz'],
+      http: ['https://rpc.testnet.citrea.xyz'],
     },
   },
   blockExplorers: {
