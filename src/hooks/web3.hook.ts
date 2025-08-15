@@ -27,6 +27,7 @@ const chainIds: { [id: number]: Blockchain } = {
   [8453]: Blockchain.BASE,
   [100]: Blockchain.GNOSIS,
   [11235]: Blockchain.HAQQ,
+  [5115]: Blockchain.CITREA_TESTNET,
 };
 
 export function useWeb3(): Web3Interface {
@@ -152,6 +153,19 @@ export function useWeb3(): Web3Interface {
           },
           rpcUrls: ['https://eth.llamarpc.com'],
           blockExplorerUrls: ['https://etherscan.io/'],
+        };
+
+      case Blockchain.ETHEREUM:
+        return {
+          chainId,
+          chainName: 'Citrea Testnet',
+          nativeCurrency: {
+            name: 'Bitcoin',
+            symbol: 'cBTC',
+            decimals: 18,
+          },
+          rpcUrls: ['https://rpc.testnet.citrea.xyz'],
+          blockExplorerUrls: ['https://explorer.testnet.citrea.xyz/'],
         };
 
       default:
