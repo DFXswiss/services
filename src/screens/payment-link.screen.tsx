@@ -280,41 +280,6 @@ export default function PaymentLinkScreen(): JSX.Element {
             }
           />
 
-          {paymentStatus === PaymentLinkPaymentStatus.PENDING &&
-            paymentHasQuote(payRequest) &&
-            paymentStandards?.length &&
-            !(metaMaskInfo || metaMaskError) && (
-              <Form control={control} errors={errors}>
-                <StyledVerticalStack full gap={4} center>
-                  <StyledDropdown<PaymentStandard>
-                    rootRef={rootRef}
-                    name="paymentStandard"
-                    items={paymentStandards}
-                    labelFunc={(item) =>
-                      translate('screens/payment', item.label, { blockchain: item.blockchain?.toString() ?? '' })
-                    }
-                    descriptionFunc={(item) =>
-                      translate('screens/payment', item.description, { blockchain: item.blockchain?.toString() ?? '' })
-                    }
-                    smallLabel
-                    full
-                  />
-
-                  {assetsList && (
-                    <StyledDropdown<string>
-                      rootRef={rootRef}
-                      name="asset"
-                      items={assetsList?.map((item) => item.asset) ?? []}
-                      labelFunc={(item) => item}
-                      descriptionFunc={() => selectedPaymentStandard?.blockchain ?? ''}
-                      full
-                      smallLabel
-                    />
-                  )}
-                </StyledVerticalStack>
-              </Form>
-            )}
-
           {([PaymentLinkPaymentStatus.PENDING, NoPaymentLinkPaymentStatus.NO_PAYMENT].includes(paymentStatus) ||
             payRequest?.mode === PaymentLinkMode.PUBLIC) && (
             <>
@@ -336,6 +301,44 @@ export default function PaymentLinkScreen(): JSX.Element {
                   isExpanded={selectedPaymentStandard?.id === PaymentStandardType.PAY_TO_ADDRESS || showAssets}
                 >
                   <StyledVerticalStack full gap={4} className="text-left">
+                    {paymentStatus === PaymentLinkPaymentStatus.PENDING &&
+                      paymentHasQuote(payRequest) &&
+                      paymentStandards?.length &&
+                      !(metaMaskInfo || metaMaskError) && (
+                        <Form control={control} errors={errors}>
+                          <StyledVerticalStack full gap={4} center>
+                            <StyledDropdown<PaymentStandard>
+                              rootRef={rootRef}
+                              name="paymentStandard"
+                              items={paymentStandards}
+                              labelFunc={(item) =>
+                                translate('screens/payment', item.label, {
+                                  blockchain: item.blockchain?.toString() ?? '',
+                                })
+                              }
+                              descriptionFunc={(item) =>
+                                translate('screens/payment', item.description, {
+                                  blockchain: item.blockchain?.toString() ?? '',
+                                })
+                              }
+                              smallLabel
+                              full
+                            />
+
+                            {assetsList && (
+                              <StyledDropdown<string>
+                                rootRef={rootRef}
+                                name="asset"
+                                items={assetsList?.map((item) => item.asset) ?? []}
+                                labelFunc={(item) => item}
+                                descriptionFunc={() => selectedPaymentStandard?.blockchain ?? ''}
+                                full
+                                smallLabel
+                              />
+                            )}
+                          </StyledVerticalStack>
+                        </Form>
+                      )}
                     <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
                       {!isMerchantMode && payRequest.externalId && (
                         <StyledDataTableExpandableRow
@@ -554,6 +557,13 @@ export default function PaymentLinkScreen(): JSX.Element {
                       </StyledInfoText>
                     )}
                   </StyledVerticalStack>
+                  <StyledButton
+                    label={translate('screens/payment', 'Learn more about OpenCryptoPay')}
+                    onClick={() => window.open('https://opencryptopay.io', '_blank')}
+                    color={StyledButtonColor.STURDY_WHITE}
+                    width={StyledButtonWidth.FULL}
+                    className="mt-2"
+                  />
                 </StyledCollapsible>
               )}
               {metaMaskError ? (
@@ -726,14 +736,6 @@ export default function PaymentLinkScreen(): JSX.Element {
               </div>
             </>
           )}
-          <div className="w-full leading-none">
-            <StyledButton
-              label={translate('screens/payment', 'Learn more about OpenCryptoPay')}
-              onClick={() => window.open('https://opencryptopay.io', '_blank')}
-              color={StyledButtonColor.STURDY_WHITE}
-              width={StyledButtonWidth.FULL}
-            />
-          </div>
 
           <div className="p-1 w-full leading-none">
             <StyledLink
