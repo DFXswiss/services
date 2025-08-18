@@ -155,7 +155,7 @@ export function useWeb3(): Web3Interface {
           blockExplorerUrls: ['https://etherscan.io/'],
         };
 
-      case Blockchain.ETHEREUM:
+      case Blockchain.CITREA_TESTNET:
         return {
           chainId,
           chainName: 'Citrea Testnet',
