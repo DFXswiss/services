@@ -24,6 +24,7 @@ export function useBlockchain(): BlockchainInterface {
   const definitions: BlockchainDefinitions = {
     headings: {
       [Blockchain.ETHEREUM]: 'Ethereum mainnet · ERC-20 token',
+      [Blockchain.SEPOLIA]: 'Ethereum sepolia · ERC-20 token',
       [Blockchain.BINANCE_SMART_CHAIN]: 'BNB Chain · BEP-20 token',
       [Blockchain.ARBITRUM]: 'Arbitrum One · ERC-20 token',
       [Blockchain.OPTIMISM]: 'Optimism · ERC-20 token',
@@ -35,6 +36,7 @@ export function useBlockchain(): BlockchainInterface {
     },
     protocols: {
       [Blockchain.ETHEREUM]: Protocol.ERC_20,
+      [Blockchain.SEPOLIA]: Protocol.ERC_20,
       [Blockchain.BINANCE_SMART_CHAIN]: Protocol.BEP_20,
       [Blockchain.ARBITRUM]: Protocol.ERC_20,
       [Blockchain.OPTIMISM]: Protocol.ERC_20,
@@ -46,6 +48,7 @@ export function useBlockchain(): BlockchainInterface {
     },
     mainToken: {
       [Blockchain.ETHEREUM]: 'ETH',
+      [Blockchain.SEPOLIA]: 'ETH',
       [Blockchain.BINANCE_SMART_CHAIN]: 'BNB',
       [Blockchain.ARBITRUM]: 'ETH',
       [Blockchain.OPTIMISM]: 'ETH',
@@ -57,6 +60,7 @@ export function useBlockchain(): BlockchainInterface {
     },
     stringValue: {
       [Blockchain.ETHEREUM]: 'Ethereum',
+      [Blockchain.SEPOLIA]: 'Sepolia Testnet',
       [Blockchain.BINANCE_SMART_CHAIN]: 'BNB Chain',
       [Blockchain.ARBITRUM]: 'Arbitrum',
       [Blockchain.OPTIMISM]: 'Optimism',
