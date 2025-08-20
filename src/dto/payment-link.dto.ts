@@ -21,6 +21,7 @@ export interface Amount {
 
 export enum C2BPaymentMethod {
   BINANCE_PAY = 'BinancePay',
+  KUCOINPAY = 'KucoinPay',
 }
 
 export type TransferMethod = Blockchain | C2BPaymentMethod;
@@ -90,7 +91,7 @@ export enum WalletCategory {
   BITCOIN = 'BITCOIN', // Bitcoin & Lightning
   EVM = 'EVM',
   MULTI_CHAIN = 'MULTI_CHAIN', // excl. Lightning
-  BINANCE_PAY = 'BINANCE_PAY',
+  C2B = 'C2B', // Binance Pay, Kucoin Pay
 }
 
 export enum WalletAppId {
@@ -117,6 +118,7 @@ export enum WalletAppId {
   ZEUS = 'zeus',
   BINANCE = 'binance',
   MUUN = 'muun',
+  KUCOINPAY = 'kucoinpay',
 }
 
 export interface WalletInfo {
