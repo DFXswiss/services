@@ -139,6 +139,13 @@ export const FeatureTree: Page[] = [
           page: 'buy-gnosis',
         },
       },
+      {
+        id: 'sepolia',
+        img: 'ethereum',
+        next: {
+          page: 'buy-sepolia',
+        },
+      },
     ],
   },
   {
@@ -733,6 +740,97 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
+    id: 'buy-sepolia',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.SEPOLIA, assetOut: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.SEPOLIA, assetOut: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'buy-sepolia-stable',
+        },
+      },
+      {
+        id: 'other',
+        img: 'othersethereum',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.SEPOLIA, assetOut: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'buy-sepolia-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.SEPOLIA, assetOut: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.SEPOLIA, assetOut: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.SEPOLIA, assetOut: 'DAI' },
+          },
+        },
+      },
+    ],
+  },
+  {
     id: 'sell',
     dfxStyle: true,
     tiles: [
@@ -834,6 +932,13 @@ export const FeatureTree: Page[] = [
         img: 'gnosis',
         next: {
           page: 'sell-gnosis',
+        },
+      },
+      {
+        id: 'sepolia',
+        img: 'ethereum',
+        next: {
+          page: 'sell-sepolia',
         },
       },
     ],
@@ -1381,6 +1486,97 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.GNOSIS, assetIn: 'xDAI' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-sepolia',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'eth',
+        img: 'eth',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.SEPOLIA, assetIn: 'ETH' },
+          },
+        },
+      },
+      {
+        id: 'wbtc',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.SEPOLIA, assetIn: 'WBTC' },
+          },
+        },
+      },
+      {
+        id: 'stable',
+        img: 'stablecoin',
+        next: {
+          page: 'sell-sepolia-stable',
+        },
+      },
+      {
+        id: 'other',
+        img: 'othersethereum',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.SEPOLIA, assetIn: undefined },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-sepolia-stable',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'usdt',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.SEPOLIA, assetIn: 'USDT' },
+          },
+        },
+      },
+      {
+        id: 'usdc',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.SEPOLIA, assetIn: 'USDC' },
+          },
+        },
+      },
+      {
+        id: 'dai',
+        img: 'dai',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.SEPOLIA, assetIn: 'DAI' },
           },
         },
       },

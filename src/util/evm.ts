@@ -43,6 +43,8 @@ export class Evm {
       Blockchain.GNOSIS,
       Blockchain.BINANCE_SMART_CHAIN,
       Blockchain.HAQQ,
+      Blockchain.SEPOLIA,
+      Blockchain.CITREA_TESTNET,
     ].includes(blockchain);
   }
 }

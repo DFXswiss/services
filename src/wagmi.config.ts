@@ -1,6 +1,6 @@
 import { walletConnect } from '@wagmi/connectors';
 import { createConfig, http } from '@wagmi/core';
-import { arbitrum, base, bsc, mainnet, optimism, polygon, type Chain } from '@wagmi/core/chains';
+import { arbitrum, base, bsc, mainnet, optimism, polygon, sepolia, type Chain } from '@wagmi/core/chains';
 
 const citreaTestnet: Chain = {
   id: 5115,
@@ -25,7 +25,7 @@ const citreaTestnet: Chain = {
 };
 
 export const config = createConfig({
-  chains: [mainnet, bsc, arbitrum, optimism, polygon, base, citreaTestnet],
+  chains: [mainnet, bsc, arbitrum, optimism, polygon, base, sepolia, citreaTestnet],
   connectors: [
     walletConnect({
       projectId: process.env.REACT_APP_WC_PID || 'Missing REACT_APP_WC_PID',
@@ -45,6 +45,7 @@ export const config = createConfig({
     [arbitrum.id]: http(),
     [optimism.id]: http(),
     [base.id]: http(),
+    [sepolia.id]: http(),
     [citreaTestnet.id]: http(),
   },
 });

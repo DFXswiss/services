@@ -27,6 +27,7 @@ const chainIds: { [id: number]: Blockchain } = {
   [8453]: Blockchain.BASE,
   [100]: Blockchain.GNOSIS,
   [11235]: Blockchain.HAQQ,
+  [11155111]: Blockchain.SEPOLIA,
   [5115]: Blockchain.CITREA_TESTNET,
 };
 
@@ -153,6 +154,19 @@ export function useWeb3(): Web3Interface {
           },
           rpcUrls: ['https://eth.llamarpc.com'],
           blockExplorerUrls: ['https://etherscan.io/'],
+        };
+
+      case Blockchain.SEPOLIA:
+        return {
+          chainId,
+          chainName: 'Sepolia',
+          nativeCurrency: {
+            name: 'Sepolia Ether',
+            symbol: 'ETH',
+            decimals: 18,
+          },
+          rpcUrls: ['https://rpc.sepolia.org'],
+          blockExplorerUrls: ['https://sepolia.etherscan.io/'],
         };
 
       case Blockchain.CITREA_TESTNET:
