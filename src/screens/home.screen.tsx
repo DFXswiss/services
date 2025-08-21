@@ -1,6 +1,6 @@
 import { Blockchain, useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { Suspense, useEffect, useState } from 'react';
+import { Fragment, Suspense, useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { CustodyAssets } from 'src/components/home/wallet/connect-address';
@@ -17,6 +17,17 @@ import { isWallet, Tile, useFeatureTree, Wallet } from '../hooks/feature-tree.ho
 import { useNavigation } from '../hooks/navigation.hook';
 import { useResizeObserver } from '../hooks/resize-observer.hook';
 import { Stack } from '../util/stack';
+
+export default function HomeScreen(): JSX.Element {
+  const { key } = useLocation();
+
+  return (
+    // reload home on navigation
+    <Fragment key={key}>
+      <HomeScreenContent />
+    </Fragment>
+  );
+}
 
 enum SpecialMode {
   LOGIN = 'Login',
@@ -45,7 +56,7 @@ function getMode(pathName: string): SpecialMode | undefined {
 
 type Page = { page: string; allowedTiles: string[] | undefined };
 
-export default function HomeScreen(): JSX.Element {
+function HomeScreenContent(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isLoggedIn } = useSessionContext();
   const { session, getAuthToken } = useAuthContext();
