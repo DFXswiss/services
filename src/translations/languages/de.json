@@ -182,6 +182,8 @@
     "Document type": "Dokumenttyp",
     "Document number": "Dokumentnummer",
 
+    "Sole proprietorship confirmation": "Bestätigung als Einzelunternehmen",
+
     "Please fill in personal information to continue": "Bitte gib Deine persönlichen Daten ein, um fortzufahren",
     "Please enter your contact information so that we can find your account": "Bitte gib Deine Kontaktinformationen ein, damit wir Dein Konto finden können",
 
@@ -204,6 +206,7 @@
     "We are unable to process this transaction due to restrictions based on your nationality.": "Wir können diese Transaktion wegen Beschränkungen aufgrund Deiner Nationalität nicht verarbeiten.",
     "This IBAN cannot be used with this currency.": "Die IBAN kann nicht mit dieser Währung benutzt werden.",
     "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Hinweis: Dein Konto ist nicht verifiziert. Deine Transaktion wird nur verarbeitet werden können, wenn Du nicht den gleichen Namen hast wie eine sanktionierte oder politisch exponierte Person.",
+    "A buy bank transaction is required once {{volume}} exceeds {{limit}}.": "Eine Kauf-Bank-Transaktion ist erforderlich, sobald {{volume}} {{limit}} überschreitet.",
     "A buy bank transaction or identification by video is required once {{volume}} exceeds {{limit}}.": "Eine Kauf-Bank-Transaktion oder eine Identifikation per Video ist erforderlich, sobald {{volume}} {{limit}} überschreitet.",
     "Identification by video is required once your transaction volume exceeds {{limit}}.": "Eine Identifikation per Video ist erforderlich, sobald Dein Transaktionsvolumen {{limit}} überschreitet.",
     "your sell transaction volume": "Dein Verkaufs-Transaktionsvolumen",

@@ -478,6 +478,9 @@ function KycEdit(props: EditProps): JSX.Element {
       // commercial register step is merged into legal entity
       return <></>;
 
+    case KycStepName.SOLE_PROPRIETORSHIP_CONFIRMATION:
+      return <FileUpload {...props} />;
+
     case KycStepName.OWNER_DIRECTORY: {
       const urls = {
         EN: 'https://docs.google.com/document/d/1ICxt-RZihMyiz486NMS4gEJZdgrZG_LVTuDiLMbzyC0/edit',
