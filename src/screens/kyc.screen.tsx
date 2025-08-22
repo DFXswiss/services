@@ -464,6 +464,8 @@ interface EditProps {
 }
 
 function KycEdit(props: EditProps): JSX.Element {
+  const { translate } = useSettingsContext();
+
   switch (props.step.name) {
     case KycStepName.CONTACT_DATA:
       return <ContactData {...props} />;
@@ -477,6 +479,17 @@ function KycEdit(props: EditProps): JSX.Element {
     case KycStepName.COMMERCIAL_REGISTER:
       // commercial register step is merged into legal entity
       return <></>;
+
+    case KycStepName.SOLE_PROPRIETORSHIP_CONFIRMATION:
+      return (
+        <FileUpload
+          {...props}
+          hint={translate(
+            'screens/kyc',
+            'Commercial register extract, trade license/permit, AHV confirmation, or another document proving the existence of the business',
+          )}
+        />
+      );
 
     case KycStepName.OWNER_DIRECTORY: {
       const urls = {
