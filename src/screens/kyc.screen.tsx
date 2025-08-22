@@ -534,6 +534,12 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.PAYMENT_AGREEMENT:
       return <PaymentAgreement {...props} />;
+      
+    case KycStepName.SOLE_PROPRIETORSHIP_CONFIRMATION:
+      return <></>;
+      
+    default:
+      return <></>;
   }
 }
 
