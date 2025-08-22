@@ -112,6 +112,15 @@ function HomeScreenContent(): JSX.Element {
     setPages(stack);
   }, [appParams.mode, appParams.wallets, specialMode]);
 
+  useEffect(() => {
+    if (
+      currentPage?.id.includes('wallets') &&
+      appParams.blockchain &&
+      session?.blockchains.includes(appParams.blockchain as Blockchain)
+    )
+      start();
+  }, [currentPage, session, appParams]);
+
   // tile handling
   function handleNext(tile: Tile) {
     if (isWallet(tile)) {
