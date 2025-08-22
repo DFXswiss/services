@@ -116,10 +116,11 @@ function HomeScreenContent(): JSX.Element {
     if (
       currentPage?.id.includes('wallets') &&
       appParams.blockchain &&
-      session?.blockchains.includes(appParams.blockchain as Blockchain)
+      session?.blockchains.includes(appParams.blockchain as Blockchain) &&
+      !specialMode
     )
       start();
-  }, [currentPage, session, appParams]);
+  }, [currentPage, session, appParams, specialMode]);
 
   // tile handling
   function handleNext(tile: Tile) {
