@@ -39,8 +39,8 @@ import { useWalletContext } from 'src/contexts/wallet.context';
 import { useCountdown } from 'src/hooks/countdown.hook';
 import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { ErrorHint } from '../components/error-hint';
-import { KycHint } from '../components/kyc-hint';
 import { SellCompletion } from '../components/payment/sell-completion';
+import { QuoteErrorHint } from '../components/quote-error-hint';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAppParams } from '../hooks/app-params.hook';
@@ -205,6 +205,7 @@ export default function SellInfoScreen(): JSX.Element {
       case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
+      case TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING:
       case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
       case TransactionError.IBAN_CURRENCY_MISMATCH:
@@ -270,7 +271,7 @@ export default function SellInfoScreen(): JSX.Element {
           />
         </>
       ) : kycError ? (
-        <KycHint type={TransactionType.SELL} error={kycError} />
+        <QuoteErrorHint type={TransactionType.SELL} error={kycError} />
       ) : (
         bankAccount &&
         paymentInfo && (

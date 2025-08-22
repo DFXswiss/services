@@ -20,6 +20,7 @@ export interface MetaMaskChainInterface {
 // id taken from https://chainlist.org/
 const chainIds: { [id: number]: Blockchain } = {
   [1]: Blockchain.ETHEREUM,
+  [11155111]: Blockchain.SEPOLIA,
   [56]: Blockchain.BINANCE_SMART_CHAIN,
   [42161]: Blockchain.ARBITRUM,
   [10]: Blockchain.OPTIMISM,
@@ -153,6 +154,19 @@ export function useWeb3(): Web3Interface {
           },
           rpcUrls: ['https://eth.llamarpc.com'],
           blockExplorerUrls: ['https://etherscan.io/'],
+        };
+
+      case Blockchain.SEPOLIA:
+        return {
+          chainId,
+          chainName: 'Ethereum Sepolia',
+          nativeCurrency: {
+            name: 'Ether',
+            symbol: 'ETH',
+            decimals: 18,
+          },
+          rpcUrls: ['https://sepolia.drpc.org'],
+          blockExplorerUrls: ['https://sepolia.etherscan.io/'],
         };
 
       case Blockchain.CITREA_TESTNET:

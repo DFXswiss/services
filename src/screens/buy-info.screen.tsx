@@ -26,8 +26,8 @@ import {
 import { useEffect, useState } from 'react';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
 import { ErrorHint } from '../components/error-hint';
-import { KycHint } from '../components/kyc-hint';
 import { BuyCompletion } from '../components/payment/buy-completion';
+import { QuoteErrorHint } from '../components/quote-error-hint';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useLayoutContext } from '../contexts/layout.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -126,6 +126,7 @@ export default function BuyInfoScreen(): JSX.Element {
       case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
+      case TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING:
       case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
       case TransactionError.IBAN_CURRENCY_MISMATCH:
@@ -168,7 +169,7 @@ export default function BuyInfoScreen(): JSX.Element {
           />
         </>
       ) : kycError ? (
-        <KycHint type={TransactionType.BUY} error={kycError} />
+        <QuoteErrorHint type={TransactionType.BUY} error={kycError} />
       ) : (
         paymentInfo && (
           <>

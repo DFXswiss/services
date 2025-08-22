@@ -10,7 +10,7 @@ import { useSettingsContext } from '../contexts/settings.context';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
-export function KycHint({ type, error }: { type: TransactionType; error: TransactionError }): JSX.Element {
+export function QuoteErrorHint({ type, error }: { type: TransactionType; error: TransactionError }): JSX.Element {
   const { translate } = useSettingsContext();
   const { start, startStep, limit, defaultLimit, limitToString, isComplete } = useKycHelper();
   const { navigate } = useNavigation();
@@ -49,6 +49,19 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
         );
 
       case TransactionError.BANK_TRANSACTION_MISSING:
+        return translate('screens/kyc', 'A buy bank transaction is required once {{volume}} exceeds {{limit}}.', {
+          volume: translate(
+            'screens/kyc',
+            type === TransactionType.SELL
+              ? 'your sell transaction volume'
+              : type === TransactionType.SWAP
+              ? 'your swap transaction volume'
+              : 'your credit card transaction volume',
+          ),
+          limit: limitToString(defaultLimit),
+        });
+
+      case TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING:
         return translate(
           'screens/kyc',
           'A buy bank transaction or identification by video is required once {{volume}} exceeds {{limit}}.',
@@ -81,10 +94,7 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
         );
 
       case TransactionError.IBAN_CURRENCY_MISMATCH:
-        return translate(
-          'screens/kyc',
-          'This IBAN cannot be used with this currency.',
-        );
+        return translate('screens/kyc', 'This IBAN cannot be used with this currency.');
     }
   }
 
@@ -94,17 +104,19 @@ export function KycHint({ type, error }: { type: TransactionType; error: Transac
     <StyledVerticalStack gap={4} full center>
       {hint && <StyledInfoText invertedIcon>{hint}</StyledInfoText>}
 
-      {[TransactionError.BANK_TRANSACTION_MISSING, TransactionError.VIDEO_IDENT_REQUIRED].includes(error) ? (
+      {[
+        TransactionError.NATIONALITY_NOT_ALLOWED,
+        TransactionError.IBAN_CURRENCY_MISMATCH,
+        TransactionError.BANK_TRANSACTION_MISSING,
+      ].includes(error) ? (
+        <></>
+      ) : [TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING, TransactionError.VIDEO_IDENT_REQUIRED].includes(
+          error,
+        ) ? (
         <StyledButton
           width={StyledButtonWidth.FULL}
           label={translate('screens/kyc', 'Start video identification')}
           onClick={() => startStep(KycStepName.IDENT, KycStepType.SUMSUB_VIDEO)}
-        />
-      ) : error === TransactionError.NATIONALITY_NOT_ALLOWED ? (
-        <StyledButton
-          width={StyledButtonWidth.FULL}
-          label={translate('general/actions', 'Ok')}
-          onClick={() => navigate('/account')}
         />
       ) : (
         <>

@@ -45,9 +45,9 @@ import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
-import { KycHint } from '../components/kyc-hint';
 import { AddressSwitch } from '../components/payment/address-switch';
 import { SwapCompletion } from '../components/payment/swap-completion';
+import { QuoteErrorHint } from '../components/quote-error-hint';
 import { SanctionHint } from '../components/sanction-hint';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance } from '../contexts/balance.context';
@@ -373,6 +373,7 @@ export default function SwapScreen(): JSX.Element {
       case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
+      case TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING:
       case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
       case TransactionError.IBAN_CURRENCY_MISMATCH:
@@ -518,7 +519,11 @@ export default function SwapScreen(): JSX.Element {
                       buttonLabel={availableBalance ? 'MAX' : undefined}
                       buttonClick={() => availableBalance && setVal('amount', `${availableBalance}`)}
                       forceError={
-                        (kycError && kycError === TransactionError.BANK_TRANSACTION_MISSING) ||
+                        (kycError &&
+                          [
+                            TransactionError.BANK_TRANSACTION_MISSING,
+                            TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING,
+                          ].includes(kycError)) ||
                         customAmountError != null
                       }
                       forceErrorMessage={
@@ -612,7 +617,7 @@ export default function SwapScreen(): JSX.Element {
                 </StyledVerticalStack>
               ) : (
                 <>
-                  {kycError && !customAmountError && <KycHint type={TransactionType.SWAP} error={kycError} />}
+                  {kycError && !customAmountError && <QuoteErrorHint type={TransactionType.SWAP} error={kycError} />}
 
                   {errorMessage && (
                     <StyledVerticalStack center className="text-center">

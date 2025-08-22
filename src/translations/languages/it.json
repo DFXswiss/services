@@ -182,6 +182,9 @@
     "Document type": "Tipo di documento",
     "Document number": "Numero del documento",
 
+    "Sole proprietorship confirmation": "Conferma come impresa individuale",
+    "Commercial register extract, trade license/permit, AHV confirmation, or another document proving the existence of the business": "Estratto del registro di commercio, licenza/autorizzazione commerciale, attestato AVS o altro documento che comprovi l'esistenza dell'attività commerciale.",
+
     "Please fill in personal information to continue": "Compilare i dati personali per continuare",
     "Please enter your contact information so that we can find your account": "Inserite le vostre informazioni di contatto per consentirci di trovare il vostro account",
 
@@ -204,6 +207,7 @@
     "We are unable to process this transaction due to restrictions based on your nationality.": "Non possiamo elaborare questa transazione a causa di restrizioni basate sulla vostra nazionalità.",
     "This IBAN cannot be used with this currency.": "Questo IBAN non può essere utilizzato con questa valuta.",
     "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Nota: il vostro conto non è verificato. La vostra transazione sarà elaborata solo se non avete lo stesso nome di una persona sanzionata o esposta politicamente.",
+    "A buy bank transaction is required once {{volume}} exceeds {{limit}}.": "Una transazione di acquisto viene richiesta non appena {{volume}} supera il {{limit}}.",
     "A buy bank transaction or identification by video is required once {{volume}} exceeds {{limit}}.": "Una transazione di acquisto o un'identificazione tramite video viene richiesta non appena {{volume}} supera il {{limit}}.",
     "Identification by video is required once your transaction volume exceeds {{limit}}.": "Un'identificazione tramite video viene richiesta non appena il volume delle transazioni supera il {{limit}}.",
     "your sell transaction volume": "il volume delle transazioni di vendita",

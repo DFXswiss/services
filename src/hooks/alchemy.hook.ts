@@ -10,6 +10,7 @@ export interface AlchemyInterface {
 
 const networkMapper: { [b in Blockchain]?: Network } = {
   [Blockchain.ETHEREUM]: Network.ETH_MAINNET,
+  [Blockchain.SEPOLIA]: Network.ETH_SEPOLIA,
   [Blockchain.BINANCE_SMART_CHAIN]: Network.BNB_MAINNET,
   [Blockchain.ARBITRUM]: Network.ARB_MAINNET,
   [Blockchain.OPTIMISM]: Network.OPT_MAINNET,
