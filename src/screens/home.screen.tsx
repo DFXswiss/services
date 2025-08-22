@@ -31,12 +31,16 @@ export default function HomeScreen(): JSX.Element {
 
 enum SpecialMode {
   LOGIN = 'Login',
+  LOGIN_MAIL = 'LoginMail',
+  LOGIN_WALLET = 'LoginWallet',
   CONNECT = 'Connect',
   MY_DFX = 'MyDfx',
 }
 
 const SpecialModes: { [m in SpecialMode]: string } = {
   [SpecialMode.LOGIN]: 'login',
+  [SpecialMode.LOGIN_MAIL]: 'login',
+  [SpecialMode.LOGIN_WALLET]: 'wallets',
   [SpecialMode.CONNECT]: 'wallets',
   [SpecialMode.MY_DFX]: 'wallets',
 };
@@ -47,6 +51,10 @@ function getMode(pathName: string): SpecialMode | undefined {
       return SpecialMode.MY_DFX;
     case '/login':
       return SpecialMode.LOGIN;
+    case '/login/mail':
+      return SpecialMode.LOGIN_MAIL;
+    case '/login/wallet':
+      return SpecialMode.LOGIN_WALLET;
     case '/connect':
       return SpecialMode.CONNECT;
     default:
@@ -93,6 +101,8 @@ function HomeScreenContent(): JSX.Element {
       setConnectTo({ type: WalletType.ADDRESS });
     } else if (!isLoggedIn && isConnectAddress) {
       setConnectTo(undefined);
+    } else if (specialMode === SpecialMode.LOGIN_MAIL) {
+      setConnectTo({ type: WalletType.MAIL });
     }
   }, [specialMode, isLoggedIn, session, user?.addresses]);
 
@@ -159,8 +169,10 @@ function HomeScreenContent(): JSX.Element {
         }
         break;
 
-      // @ts-expect-error fall through to default option
       case SpecialMode.LOGIN:
+      case SpecialMode.LOGIN_MAIL:
+      // @ts-expect-error fall through to default option
+      case SpecialMode.LOGIN_WALLET:
         navigate('/');
 
       default:

@@ -88,8 +88,12 @@ export const Routes = [
         element: <HomeScreen />,
       },
       {
-        path: 'mail-login',
-        element: withSuspense(<MailLoginScreen />),
+        path: 'login/mail',
+        element: <HomeScreen />,
+      },
+      {
+        path: 'login/wallet',
+        element: <HomeScreen />,
       },
       {
         path: 'connect',
