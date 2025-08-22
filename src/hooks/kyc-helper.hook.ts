@@ -58,14 +58,13 @@ export function useKycHelper(): KycHelperInterface {
     [AccountType.SOLE_PROPRIETORSHIP]: 'Sole proprietorship',
   };
 
-  const stepMap: Record<KycStepName, string> = {
+  const stepMap: Partial<Record<KycStepName, string>> = {
     [KycStepName.CONTACT_DATA]: 'Contact data',
     [KycStepName.PERSONAL_DATA]: 'Personal data',
     [KycStepName.LEGAL_ENTITY]: 'Legal entity',
     [KycStepName.OWNER_DIRECTORY]: 'Owner directory',
     [KycStepName.NATIONALITY_DATA]: 'Nationality',
     [KycStepName.COMMERCIAL_REGISTER]: 'Commercial register',
-    [KycStepName.SOLE_PROPRIETORSHIP_CONFIRMATION]: 'Sole proprietorship confirmation',
     [KycStepName.SIGNATORY_POWER]: 'Signatory power',
     [KycStepName.AUTHORITY]: 'Power of Attorney',
     [KycStepName.BENEFICIAL_OWNER]: 'Beneficial owners',
@@ -153,7 +152,7 @@ export function useKycHelper(): KycHelperInterface {
   }
 
   function nameToString(stepName: KycStepName): string {
-    return translate('screens/kyc', stepMap[stepName]);
+    return translate('screens/kyc', stepMap[stepName] ?? 'Unknown step');
   }
 
   function typeToString(stepType: KycStepType): string {
