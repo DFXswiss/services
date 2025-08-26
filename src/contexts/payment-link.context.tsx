@@ -82,7 +82,7 @@ export function usePaymentLinkContext(): PaymentLinkInterface {
 
 export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   const { navigate } = useNavigation();
-  const { assets } = useAssetContext();
+  const { assets, assetsLoading } = useAssetContext();
   const { timer, startTimer } = useCountdown();
   const { closeServices } = useAppHandlingContext();
   const { paymentLinkApiUrlStore } = useSessionStore();
@@ -196,12 +196,12 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
 
   // MetaMask in-app browser
   useEffect(() => {
-    if (hasQuote(payRequest) && isInstalled() && getWalletType() === WalletType.IN_APP_BROWSER) {
+    if (hasQuote(payRequest) && isInstalled() && getWalletType() === WalletType.IN_APP_BROWSER && !assetsLoading) {
       loadMetaMaskInfo();
     } else {
       setMetaMaskInfo(undefined);
     }
-  }, [payRequest, isInstalled, getWalletType]);
+  }, [payRequest, isInstalled, getWalletType, assetsLoading]);
 
   async function fetchPayRequest(url: string, merchantMode = false): Promise<void> {
     setError(undefined);
