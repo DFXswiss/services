@@ -262,5 +262,6 @@ export const PaymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://kucoin-android.onelink.me/xTQQ/pvve7hp8',
     semiCompatible: true,
     category: WalletCategory.C2B,
+    deepLink: 'kucoinpay:',
   },
 ];
