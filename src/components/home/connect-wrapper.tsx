@@ -11,6 +11,7 @@ const ConnectTrezor = lazy(() => import('./wallet/connect-trezor'));
 const ConnectTaro = lazy(() => import('./wallet/connect-taro'));
 const ConnectWalletConnect = lazy(() => import('./wallet/connect-wallet-connect'));
 const ConnectMonero = lazy(() => import('./wallet/connect-monero'));
+const ConnectZano = lazy(() => import('./wallet/connect-zano'));
 const ConnectPhantom = lazy(() => import('./wallet/connect-phantom'));
 const ConnectTrustSol = lazy(() => import('./wallet/connect-trust-sol'));
 const ConnectTrustTrx = lazy(() => import('./wallet/connect-trust-trx'));
@@ -58,6 +59,9 @@ export function ConnectWrapper(props: ConnectProps): JSX.Element {
     case WalletType.CAKE:
     case WalletType.MONERO:
       return <ConnectMonero {...props} wallet={props.wallet} />;
+
+    case WalletType.ZANO:
+      return <ConnectZano {...props} wallet={props.wallet} />;
 
     case WalletType.PHANTOM_SOL:
       return <ConnectPhantom {...props} />;

@@ -71,6 +71,18 @@ export const FeatureTree: Page[] = [
         },
       },
       {
+        id: 'zano',
+        img: 'zano',
+        next: {
+          page: 'zano-wallets',
+          tiles: ['zano-wallet', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ZANO, assetOut: 'ZANO' },
+          },
+        },
+      },
+      {
         id: 'solana',
         img: 'solanachain',
         next: {
@@ -764,6 +776,18 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.MONERO, assetIn: 'XMR' },
+          },
+        },
+      },
+      {
+        id: 'zano',
+        img: 'zano',
+        next: {
+          page: 'zano-wallets',
+          tiles: ['zano-wallet', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ZANO, assetIn: 'ZANO' },
           },
         },
       },
@@ -1500,6 +1524,25 @@ export const FeatureTree: Page[] = [
         img: 'command',
         wallet: {
           type: WalletType.CLI_XMR,
+        },
+      },
+    ],
+  },
+  {
+    id: 'zano-wallets',
+    tiles: [
+      {
+        id: 'zano-wallet',
+        img: 'zanowallet',
+        wallet: {
+          type: WalletType.ZANO,
+        },
+      },
+      {
+        id: 'cli',
+        img: 'command',
+        wallet: {
+          type: WalletType.CLI_ZANO,
         },
       },
     ],
