@@ -190,7 +190,7 @@ function HomeScreenContent(): JSX.Element {
   const title = translate('screens/home', currentPage?.header ?? (currentPage?.dfxStyle ? 'DFX services' : ' '));
   const image =
     currentPage?.bottomImage ??
-    (currentPage?.dfxStyle ? 'https://content.dfx.swiss/img/v1/services/berge.jpg' : undefined);
+    (currentPage?.dfxStyle ? 'https://dfx.swiss/images/app/berge.jpg' : undefined);
 
   const hasBackButton =
     (canClose && !isEmbedded) || connectTo != null || (currentPageId != null && currentPageId !== appParams.mode);

@@ -2,7 +2,7 @@
 
 Reusable web widget to buy, sell and swap crypto assets
 
-![ ](https://content.dfx.swiss/img/v1/services/iframe.png)
+![ ](https://dfx.swiss/images/app/iframe.png)
 
 ## Usage
 

@@ -223,7 +223,7 @@ function Content({
             <ConnectInstructions
               steps={steps}
               params={{ device: 'BitBox' }}
-              img={pairingCode ? undefined : 'https://content.dfx.swiss/img/v1/services/bitboxready_en.jpg'}
+              img={pairingCode ? undefined : 'https://dfx.swiss/images/app/bitboxready_en.jpg'}
             />
           )}
 

@@ -1,4 +1,4 @@
-const BASE_URL = 'https://content.dfx.swiss/img/v1/services';
+const BASE_URL = 'https://dfx.swiss/images/app';
 
 export enum BadgeType {
   APP_STORE = 'appStore',

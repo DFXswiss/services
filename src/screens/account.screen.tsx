@@ -157,7 +157,7 @@ export default function AccountScreen(): JSX.Element {
 
   const title = isEmbedded ? translate('screens/home', 'DFX services') : translate('screens/home', 'Account');
   const hasBackButton = canClose && !isEmbedded;
-  const image = 'https://content.dfx.swiss/img/v1/services/berge.jpg';
+  const image = 'https://dfx.swiss/images/app/berge.jpg';
 
   useLayoutOptions({ title, backButton: hasBackButton });
 
