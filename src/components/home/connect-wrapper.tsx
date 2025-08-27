@@ -80,5 +80,8 @@ export function ConnectWrapper(props: ConnectProps): JSX.Element {
 
     case WalletType.ADDRESS:
       return <ConnectAddress {...props} />;
+      
+    default:
+      throw new Error(`Unsupported wallet type: ${props.wallet}`);
   }
 }
