@@ -75,7 +75,7 @@ export const FeatureTree: Page[] = [
         img: 'zano',
         next: {
           page: 'zano-wallets',
-          tiles: ['zano-wallet', 'cli'],
+          tiles: ['cake', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.ZANO, assetOut: 'ZANO' },
@@ -784,7 +784,7 @@ export const FeatureTree: Page[] = [
         img: 'zano',
         next: {
           page: 'zano-wallets',
-          tiles: ['zano-wallet', 'cli'],
+          tiles: ['cake', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.ZANO, assetIn: 'ZANO' },
@@ -1532,10 +1532,10 @@ export const FeatureTree: Page[] = [
     id: 'zano-wallets',
     tiles: [
       {
-        id: 'zano-wallet',
-        img: 'zanowallet',
+        id: 'cake',
+        img: 'cake',
         wallet: {
-          type: WalletType.ZANO,
+          type: WalletType.CAKE,
         },
       },
       {
