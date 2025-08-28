@@ -7,6 +7,11 @@ import { AbortError } from '../../util/abort-error';
 
 export type TrezorWallet = WalletType.TREZOR_BTC | WalletType.TREZOR_ETH;
 
+// Type guard to safely access error property in Trezor result
+function hasErrorProperty(payload: unknown): payload is { error: string } {
+  return typeof payload === 'object' && payload !== null && 'error' in payload;
+}
+
 export interface TrezorInterface {
   isSupported: () => Promise<boolean>;
   addressTypes: BitcoinAddressType[];
@@ -35,15 +40,18 @@ export function useTrezor(): TrezorInterface {
   const [isInitialized, setIsInitialized] = useState<boolean | undefined>(get(storageKey));
 
   async function init(): Promise<boolean> {
+    // Create manifest with proper typing
+    const manifest = {
+      email: 'support@dfx.swiss',
+      appUrl: window.location.origin,
+      appName: 'DFX.swiss',
+    };
+
     return TrezorConnect.init({
       popup: true,
       debug: false,
       lazyLoad: false,
-      manifest: {
-        email: 'support@dfx.swiss',
-        appUrl: window.location.origin,
-        appName: 'DFX.swiss',
-      } as any,
+      manifest: manifest as Parameters<typeof TrezorConnect.init>[0]['manifest'],
       transports: ['WebUsbTransport'],
     })
       .then(() => initialized(true))
@@ -76,7 +84,8 @@ export function useTrezor(): TrezorInterface {
       return result.payload.address;
     }
 
-    handlePayloadError('Trezor not connected', (result.payload as any).error);
+    const errorMessage = hasErrorProperty(result.payload) ? result.payload.error : 'Unknown error';
+    handlePayloadError('Trezor not connected', errorMessage);
   }
 
   async function fetchAddresses(
@@ -107,7 +116,8 @@ export function useTrezor(): TrezorInterface {
       return result.payload.map((p) => p.address);
     }
 
-    handlePayloadError('Trezor not connected', (result.payload as any).error);
+    const errorMessage = hasErrorProperty(result.payload) ? result.payload.error : 'Unknown error';
+    handlePayloadError('Trezor not connected', errorMessage);
   }
 
   async function signMessage(
@@ -133,7 +143,8 @@ export function useTrezor(): TrezorInterface {
       return result.payload.signature;
     }
 
-    handlePayloadError('Cannot sign message', (result.payload as any).error);
+    const errorMessage = hasErrorProperty(result.payload) ? result.payload.error : 'Unknown error';
+    handlePayloadError('Cannot sign message', errorMessage);
   }
 
   function handlePayloadError(message: string, payloadError: string): never {
