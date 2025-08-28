@@ -43,7 +43,7 @@ export function useTrezor(): TrezorInterface {
         email: 'support@dfx.swiss',
         appUrl: window.location.origin,
         appName: 'DFX.swiss',
-      },
+      } as any,
       transports: ['WebUsbTransport'],
     })
       .then(() => initialized(true))
