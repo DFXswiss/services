@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 export interface BlockchainInterface {
   toHeader: (blockchain: Blockchain) => string;
-  toProtocol: (blockchain: Blockchain) => Protocol;
+  toProtocol: (blockchain: Blockchain) => Protocol | undefined;
   toMainToken: (blockchain: Blockchain) => string;
   toString: (blockchain: Blockchain) => string;
 }
@@ -83,10 +83,10 @@ export function useBlockchain(): BlockchainInterface {
 
   return useMemo(
     () => ({
-      toHeader: (blockchain: Blockchain) => definitions.headings[blockchain],
+      toHeader: (blockchain: Blockchain) => definitions.headings[blockchain] || '',
       toProtocol: (blockchain: Blockchain) => definitions.protocols[blockchain],
-      toMainToken: (blockchain: Blockchain) => definitions.mainToken[blockchain],
-      toString: (blockchain: Blockchain) => definitions.stringValue[blockchain],
+      toMainToken: (blockchain: Blockchain) => definitions.mainToken[blockchain] || '',
+      toString: (blockchain: Blockchain) => definitions.stringValue[blockchain] || '',
     }),
     [],
   );
