@@ -782,7 +782,9 @@
     "Assign payment link '{{id}}'": "Attribuer le lien de paiement '{{id}}'",
     "Assign": "Attribuer",
 
-    "Total amount": "Montant total"
+    "Total amount": "Montant total",
+    "You will be redirected to the site shortly": "Vous serez redirigé vers le site dans quelques secondes",
+    "Go back to the payment page": "Retour à la page de paiement"
   },
   "screens/iban": {
     "Your Bank Accounts": "Vos comptes bancaires",

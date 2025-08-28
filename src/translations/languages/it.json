@@ -782,7 +782,9 @@
     "Assign payment link '{{id}}'": "Assegnare il link di pagamento '{{id}}'",
     "Assign": "Assegnare",
 
-    "Total amount": "Importo totale"
+    "Total amount": "Importo totale",
+    "You will be redirected to the site shortly": "Verrai reindirizzato al sito in breve",
+    "Go back to the payment page": "Torna alla pagina di pagamento"
   },
   "screens/iban": {
     "Your Bank Accounts": "I tuoi conti bancari",
