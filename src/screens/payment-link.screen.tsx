@@ -42,6 +42,8 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { GoCheckCircleFill, GoClockFill, GoSkip, GoXCircleFill } from 'react-icons/go';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/opacity.css';
 import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
@@ -911,13 +913,14 @@ function DividerWithHeader({ header, py }: { header: string; py?: number }): JSX
 
 function WalletLogo({ wallet, size }: { wallet: WalletInfo; size: number }): JSX.Element {
   return (
-    <img
+    <LazyLoadImage
       className="border border-dfxGray-400 shadow-md bg-white rounded-md"
       src={wallet.iconUrl}
       alt={wallet.name}
+      effect="opacity"
       width={size}
       height={size}
-      loading="lazy"
+      placeholderSrc={`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${size} ${size}'%3E%3Crect width='${size}' height='${size}' fill='%23f4f5f6'/%3E%3C/svg%3E`}
     />
   );
 }

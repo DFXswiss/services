@@ -3,12 +3,10 @@ import {
   Asset,
   AssetCategory,
   Blockchain,
-  Session,
   Swap,
   SwapPaymentInfo,
   TransactionError,
   TransactionType,
-  UserAddress,
   Utils,
   Validations,
   useAsset,
@@ -54,7 +52,7 @@ import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-// import { useTxHelper } from '../hooks/tx-helper.hook';
+import { useTxHelper } from '../hooks/tx-helper.hook';
 
 enum Side {
   SPEND = 'SPEND',
@@ -93,10 +91,7 @@ export default function SwapScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
-  // const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
-  const getBalances = () => Promise.resolve(undefined);
-  const sendTransaction = () => Promise.resolve('test-tx');
-  const canSendTransaction = () => false;
+  const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
   const { availableBlockchains, logout } = useSessionContext();
   const { session } = useAuthContext();
   const { assets, getAssets } = useAssetContext();
@@ -142,10 +137,9 @@ export default function SwapScreen(): JSX.Element {
 
   useEffect(() => {
     if (sourceAssets && selectedAddress?.address) {
-      // getBalances(sourceAssets, selectedAddress.address, selectedAddress?.chain).then(setBalances);
-      console.log('getBalances disabled temporarily');
+      getBalances(sourceAssets, selectedAddress.address, selectedAddress?.chain).then(setBalances);
     }
-  }, [sourceAssets]);
+  }, [sourceAssets, selectedAddress, getBalances]);
 
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
@@ -451,8 +445,7 @@ export default function SwapScreen(): JSX.Element {
     if (canSendTransaction() && !activeWallet) return close(paymentInfo, false);
 
     try {
-      // if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSwapTxId);
-      console.log('sendTransaction disabled temporarily');
+      if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSwapTxId);
 
       setTxDone(true);
     } finally {
