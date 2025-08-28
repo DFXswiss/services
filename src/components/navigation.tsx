@@ -64,7 +64,11 @@ export const Navigation = forwardRef<HTMLDivElement, NavigationIframeProps>(
           <MenuIcon icon={isOpen ? IconVariant.CLOSE : IconVariant.MENU} setIsNavigationOpen={setIsOpen} />
         </div>
 
-        {isOpen && <NavigationMenu setIsNavigationOpen={setIsOpen} small={small} />}
+        {isOpen && (
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)}>
+            <NavigationMenu setIsNavigationOpen={setIsOpen} small={small} />
+          </div>
+        )}
       </div>
     ) : (
       <></>
@@ -125,8 +129,8 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
   }
 
   return (
-    <nav>
-      <div className="absolute top-14 right-2 border-1 drop-shadow-md w-64 z-20 flex flex-col bg-dfxGray-300">
+    <nav onClick={(e) => e.stopPropagation()}>
+      <div className="absolute top-14 right-2 border border-dfxGray-400 shadow-lg w-64 z-20 flex flex-col bg-dfxGray-300 rounded-lg">
         <div className="mx-4 py-4 text-dfxGray-800">
           {!small && (
             <>
