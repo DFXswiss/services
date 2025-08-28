@@ -33,10 +33,11 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
-// import { AddressSelector } from 'src/components/order/address-selector';
-// import { BlockchainSelector } from 'src/components/order/blockchain-selector';
+import { AddressSelector } from 'src/components/order/address-selector';
+import { BlockchainSelector } from 'src/components/order/blockchain-selector';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
+import { addressLabel } from '../config/labels';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import useDebounce from 'src/hooks/debounce.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
@@ -61,8 +62,7 @@ enum Side {
 }
 
 interface Address {
-  address?: string;
-  addressLabel: string;
+  address: string;
   label: string;
   chain?: Blockchain;
 }
@@ -145,7 +145,7 @@ export default function SwapScreen(): JSX.Element {
       // getBalances(sourceAssets, selectedAddress.address, selectedAddress?.chain).then(setBalances);
       console.log('getBalances disabled temporarily');
     }
-  }, [getBalances, sourceAssets]);
+  }, [sourceAssets]);
 
   // default params
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
@@ -192,7 +192,7 @@ export default function SwapScreen(): JSX.Element {
   useEffect(() => setBlockchainAndAddress(), [session?.address, translate]);
 
   useEffect(() => {
-    if (selectedAddress && selectedAddress.addressLabel === translate('screens/buy', 'Switch address')) {
+    if (selectedAddress && selectedAddress.address === 'Switch address') {
       setShowsSwitchScreen(true);
       setBlockchainAndAddress();
     }
@@ -428,6 +428,14 @@ export default function SwapScreen(): JSX.Element {
       const defaultBlockchain = blockchain ? targetBlockchains.find(b => b === blockchain) || targetBlockchains[0] : targetBlockchains[0];
       if (defaultBlockchain) {
         setVal('blockchain', defaultBlockchain);
+        
+        // Set current address as default
+        const currentAddress = {
+          address: addressLabel(session),
+          label: 'Current address',
+          chain: defaultBlockchain,
+        };
+        setVal('address', currentAddress);
       }
     }
   }
@@ -512,7 +520,6 @@ export default function SwapScreen(): JSX.Element {
                       full
                     />
                   </div>
-
                   <div className="flex-[1_0_9rem]">
                     <StyledSearchDropdown<Asset>
                       rootRef={rootRef}
@@ -524,6 +531,7 @@ export default function SwapScreen(): JSX.Element {
                         return balanceB - balanceA;
                       })}
                       labelFunc={(item) => item.name}
+                      descriptionFunc={(item) => item.blockchain}
                       balanceFunc={findBalanceString}
                       assetIconFunc={(item) => item.name as AssetIconVariant}
                       filterFunc={(item: Asset, search?: string | undefined) =>
@@ -575,12 +583,10 @@ export default function SwapScreen(): JSX.Element {
                 {!hideTargetSelection && (
                   <StyledHorizontalStack gap={1}>
                     <div className="flex-[3_1_9rem] min-w-0">
-                      {/* <AddressSelector control={control} name="address" selectedBlockchain={selectedBlockchain} /> */}
-                      <div>Address: Test Address</div>
+                      <AddressSelector control={control} name="address" selectedBlockchain={selectedBlockchain} />
                     </div>
                     <div className="flex-[1_0_9rem] min-w-0">
-                      {/* <BlockchainSelector control={control} name="blockchain" availableBlockchains={targetBlockchains ?? []} selectedBlockchain={selectedBlockchain} /> */}
-                      <div>Blockchain: {selectedBlockchain || 'None'}</div>
+                      <BlockchainSelector control={control} name="blockchain" availableBlockchains={targetBlockchains ?? []} selectedBlockchain={selectedBlockchain} />
                     </div>
                   </StyledHorizontalStack>
                 )}
