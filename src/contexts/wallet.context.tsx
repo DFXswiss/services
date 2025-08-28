@@ -88,7 +88,7 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
     Blockchain.CITREA_TESTNET,
     Blockchain.SEPOLIA,
   ],
-  [WalletType.CAKE]: [Blockchain.MONERO],
+  [WalletType.CAKE]: [Blockchain.MONERO, Blockchain.ZANO],
   [WalletType.MONERO]: [Blockchain.MONERO],
   [WalletType.PHANTOM_SOL]: [Blockchain.SOLANA],
   [WalletType.TRUST_SOL]: [Blockchain.SOLANA],

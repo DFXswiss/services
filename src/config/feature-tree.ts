@@ -62,11 +62,23 @@ export const FeatureTree: Page[] = [
         id: 'monero',
         img: 'monero',
         next: {
-          page: 'monero-wallets',
+          page: 'wallets-cake',
           tiles: ['cake', 'monero-wallet', 'cli'],
           options: {
             service: 'buy',
             query: { blockchain: Blockchain.MONERO, assetOut: 'XMR' },
+          },
+        },
+      },
+      {
+        id: 'zano',
+        img: 'zano',
+        next: {
+          page: 'wallets-cake',
+          tiles: ['cake', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.ZANO, assetOut: 'ZANO' },
           },
         },
       },
@@ -759,11 +771,23 @@ export const FeatureTree: Page[] = [
         id: 'monero',
         img: 'monero',
         next: {
-          page: 'monero-wallets',
+          page: 'wallets-cake',
           tiles: ['cake', 'monero-wallet', 'cli'],
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.MONERO, assetIn: 'XMR' },
+          },
+        },
+      },
+      {
+        id: 'zano',
+        img: 'zano',
+        next: {
+          page: 'wallets-cake',
+          tiles: ['cake', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.ZANO, assetIn: 'ZANO' },
           },
         },
       },
@@ -1479,7 +1503,7 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
-    id: 'monero-wallets',
+    id: 'wallets-cake',
     tiles: [
       {
         id: 'cake',
@@ -1498,8 +1522,15 @@ export const FeatureTree: Page[] = [
       {
         id: 'cli',
         img: 'command',
-        wallet: {
-          type: WalletType.CLI_XMR,
+        wallet: (params) => {
+          switch (params.blockchain) {
+            case Blockchain.MONERO:
+              return { type: WalletType.CLI_XMR };
+            case Blockchain.ZANO:
+              return { type: WalletType.CLI_ZANO };
+            default:
+              return { type: WalletType.CLI_ETH };
+          }
         },
       },
     ],
@@ -1806,7 +1837,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin',
     header: 'Frankencoin',
     description: 'Buy and sell Frankencoin Assets',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'buy',
@@ -1840,7 +1871,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy',
     header: 'Blockchain',
     description: 'Select a blockchain to buy Frankencoin Assets',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'ethereum',
@@ -1884,7 +1915,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-sell',
     header: 'Blockchain',
     description: 'Select a blockchain to sell Frankencoin Assets',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'ethereum',
@@ -1921,7 +1952,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy-ethereum',
     header: 'Buy Frankencoin Assets on Ethereum',
     description: 'Buy Frankencoin Assets on Ethereum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'eth',
@@ -1978,7 +2009,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy-polygon',
     header: 'Buy Frankencoin Assets on Polygon',
     description: 'Buy Frankencoin Assets on Polygon',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'pol',
@@ -2035,7 +2066,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy-arbitrum',
     header: 'Buy Frankencoin Assets on Arbitrum',
     description: 'Buy Frankencoin Assets on Arbitrum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'eth',
@@ -2085,7 +2116,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy-base',
     header: 'Buy Frankencoin Assets on Base',
     description: 'Buy Frankencoin Assets on Base',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'eth',
@@ -2123,7 +2154,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-buy-optimism',
     header: 'Buy Frankencoin Assets on Optimism',
     description: 'Buy Frankencoin Assets on Optimism',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'eth',
@@ -2173,7 +2204,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-sell-ethereum',
     header: 'Sell Frankencoin Assets on Ethereum',
     description: 'Sell Frankencoin Assets on Ethereum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'eth',
@@ -2230,7 +2261,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-sell-polygon',
     header: 'Sell Frankencoin Assets on Polygon',
     description: 'Sell Frankencoin Assets on Polygon',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'pol',
@@ -2287,7 +2318,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-sell-arbitrum',
     header: 'Sell Frankencoin Assets on Arbitrum',
     description: 'Sell Frankencoin Assets on Arbitrum',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'pol',
@@ -2337,7 +2368,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-sell-optimism',
     header: 'Sell Frankencoin Assets on Optimism',
     description: 'Sell Frankencoin Assets on Optimism',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'pol',
@@ -2387,7 +2418,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-wallets',
     header: 'Frankencoin Assets',
     description: 'Buy and Sell Frankencoin Assets',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'metamask',
@@ -2431,7 +2462,7 @@ export const FeatureTree: Page[] = [
     id: 'frankencoin-hw-wallets',
     header: 'Frankencoin Assets',
     description: 'Buy and Sell Frankencoin Assets',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/frankencoin_services.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/frankencoin_services.jpg',
     tiles: [
       {
         id: 'bitbox',
@@ -3601,7 +3632,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'marcsteiner-buy',
@@ -3623,7 +3654,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-buy',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'marcsteiner-buy-bitcoin',
@@ -3650,7 +3681,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-buy-erc20',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'ethereum',
@@ -3686,7 +3717,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-buy-ethereum',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'eth',
@@ -3742,7 +3773,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-buy-arbitrum',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'eth',
@@ -3798,7 +3829,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-buy-optimism',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'eth',
@@ -3854,7 +3885,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-buy-polygon',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'pol',
@@ -3899,7 +3930,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-sell',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'marcsteiner-sell-bitcoin',
@@ -3926,7 +3957,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-sell-erc20',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'ethereum',
@@ -3962,7 +3993,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-sell-ethereum',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'eth',
@@ -4018,7 +4049,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-sell-arbitrum',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'eth',
@@ -4074,7 +4105,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-sell-optimism',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'eth',
@@ -4130,7 +4161,7 @@ export const FeatureTree: Page[] = [
     id: 'marcsteiner-sell-polygon',
     header: 'marcsteiner-consulting.ch',
     description: 'Kaufe und verkaufe Crypto direkt in Deine Wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/marcsteiner.png',
+    bottomImage: 'https://dfx.swiss/images/app/marcsteiner.png',
     tiles: [
       {
         id: 'pol',
@@ -4657,7 +4688,7 @@ export const FeatureTree: Page[] = [
     id: 'onramper',
     header: 'OnRamper x DFX',
     description: 'Buy and sell crypto directly into your wallet!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/OnRamper.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/OnRamper.jpg',
     tiles: [
       {
         id: 'dfx-wallet',
@@ -5805,7 +5836,7 @@ export const FeatureTree: Page[] = [
     id: 'chainreport',
     header: 'Chainreport x DFX',
     description: 'Buy and sell Crypto directly on your Account!',
-    bottomImage: 'https://content.dfx.swiss/img/v1/services/chainreport.jpg',
+    bottomImage: 'https://dfx.swiss/images/app/chainreport.jpg',
     tiles: [
       {
         id: 'buy',
