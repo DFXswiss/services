@@ -76,7 +76,7 @@ export function useTrezor(): TrezorInterface {
       return result.payload.address;
     }
 
-    handlePayloadError('Trezor not connected', result.payload.error);
+    handlePayloadError('Trezor not connected', (result.payload as any).error);
   }
 
   async function fetchAddresses(
@@ -107,7 +107,7 @@ export function useTrezor(): TrezorInterface {
       return result.payload.map((p) => p.address);
     }
 
-    handlePayloadError('Trezor not connected', result.payload.error);
+    handlePayloadError('Trezor not connected', (result.payload as any).error);
   }
 
   async function signMessage(
@@ -133,7 +133,7 @@ export function useTrezor(): TrezorInterface {
       return result.payload.signature;
     }
 
-    handlePayloadError('Cannot sign message', result.payload.error);
+    handlePayloadError('Cannot sign message', (result.payload as any).error);
   }
 
   function handlePayloadError(message: string, payloadError: string): never {
