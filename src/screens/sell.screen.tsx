@@ -37,12 +37,12 @@ import {
 import { useEffect, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { BankAccountSelector } from 'src/components/order/bank-account-selector';
+import { AddressSelector } from 'src/components/order/address-selector';
 import { AddressSwitch } from 'src/components/payment/address-switch';
+import { addressLabel } from '../config/labels';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
-import { addressLabel } from 'src/config/labels';
 import { useLayoutContext } from 'src/contexts/layout.context';
-import { useWindowContext } from 'src/contexts/window.context';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
@@ -54,12 +54,10 @@ import { AssetBalance } from '../contexts/balance.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
-import { useBlockchain } from '../hooks/blockchain.hook';
 import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { useTxHelper } from '../hooks/tx-helper.hook';
-import { blankedAddress } from '../util/utils';
+// import { useTxHelper } from '../hooks/tx-helper.hook';
 
 enum Side {
   SPEND = 'SPEND',
@@ -78,6 +76,7 @@ interface FormData {
   asset: Asset;
   amount: string;
   targetAmount: string;
+  blockchain: Blockchain;
   address: Address;
 }
 
@@ -99,10 +98,11 @@ export default function SellScreen(): JSX.Element {
   const { isInitialized, closeServices } = useAppHandlingContext();
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
-  const { width } = useWindowContext();
   const { bankAccounts, updateAccount } = useBankAccountContext();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
-  const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
+  // const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
+  const getBalances = () => Promise.resolve(undefined);
+  const canSendTransaction = () => false;
   const { assets, getAssets } = useAssetContext();
   const { getAsset, isSameAsset } = useAsset();
   const { navigate } = useNavigation();
@@ -121,7 +121,6 @@ export default function SellScreen(): JSX.Element {
   } = useAppParams();
   const { toDescription, getCurrency, getDefaultCurrency } = useFiat();
   const { currencies, receiveFor } = useSell();
-  const { toString } = useBlockchain();
   const { rootRef } = useLayoutContext();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
@@ -130,10 +129,10 @@ export default function SellScreen(): JSX.Element {
   const [kycError, setKycError] = useState<TransactionError>();
   const [isLoading, setIsLoading] = useState<Side>();
   const [paymentInfo, setPaymentInfo] = useState<Sell>();
-  const [balances, setBalances] = useState<AssetBalance[]>();
+  const [balances] = useState<AssetBalance[]>();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isTxDone, setTxDone] = useState<boolean>(false);
-  const [sellTxId, setSellTxId] = useState<string>();
+  const [sellTxId] = useState<string>();
   const [bankAccountSelection, setBankAccountSelection] = useState(false);
   const [showsSwitchScreen, setShowsSwitchScreen] = useState(false);
   const [validatedData, setValidatedData] = useState<ValidatedData>();
@@ -146,12 +145,14 @@ export default function SellScreen(): JSX.Element {
   const enteredAmount = useWatch({ control, name: 'amount' });
   const selectedCurrency = useWatch({ control, name: 'currency' });
   const selectedTargetAmount = useWatch({ control, name: 'targetAmount' });
+  const selectedBlockchain = useWatch({ control, name: 'blockchain' });
   const selectedAddress = useWatch({ control, name: 'address' });
 
   const availableBalance = selectedAsset && findBalance(selectedAsset);
 
   useEffect(() => {
-    availableAssets && getBalances(availableAssets, selectedAddress?.address, selectedAddress?.chain).then(setBalances);
+    // availableAssets && getBalances(availableAssets, selectedAddress?.address, selectedAddress?.chain).then(setBalances);
+    console.log('getBalances disabled temporarily');
   }, [getBalances, availableAssets]);
 
   // default params
@@ -160,22 +161,11 @@ export default function SellScreen(): JSX.Element {
   }
 
   const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
-  const blockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
+  const blockchains = availableBlockchains?.filter((b) => {
+    if (!b || typeof b !== 'string') return false;
+    return filteredAssets?.some((a) => a?.blockchain === b);
+  });
 
-  const addressItems: Address[] =
-    session?.address && blockchains?.length
-      ? [
-          ...blockchains.map((b) => ({
-            address: addressLabel(session),
-            label: toString(b),
-            chain: b,
-          })),
-          {
-            address: translate('screens/buy', 'Switch address'),
-            label: translate('screens/buy', 'Login with a different address'),
-          },
-        ]
-      : [];
 
   useEffect(() => {
     const activeBlockchain = walletBlockchain ?? blockchain;
@@ -207,23 +197,23 @@ export default function SellScreen(): JSX.Element {
     }
   }, [amountIn, amountOut]);
 
-  useEffect(() => setAddress(), [session?.address, translate]);
+  useEffect(() => setBlockchainAndAddress(), [session?.address, translate]);
 
   useEffect(() => {
-    if (selectedAddress) {
-      if (selectedAddress.chain) {
-        if (blockchain !== selectedAddress.chain) {
-          setParams({ blockchain: selectedAddress.chain });
-          switchBlockchain(selectedAddress.chain);
-          resetField('asset');
-          setAvailableAssets(undefined);
-        }
-      } else {
-        setShowsSwitchScreen(true);
-        setAddress();
-      }
+    if (selectedAddress && selectedAddress.address === translate('screens/buy', 'Switch address')) {
+      setShowsSwitchScreen(true);
+      setBlockchainAndAddress();
     }
   }, [selectedAddress]);
+
+  useEffect(() => {
+    if (selectedBlockchain && selectedBlockchain !== blockchain) {
+      setParams({ blockchain: selectedBlockchain });
+      switchBlockchain(selectedBlockchain);
+      resetField('asset');
+      setAvailableAssets(undefined);
+    }
+  }, [selectedBlockchain]);
 
   useEffect(() => {
     if (selectedBankAccount && selectedBankAccount.preferredCurrency)
@@ -435,7 +425,7 @@ export default function SellScreen(): JSX.Element {
         'screens/sell',
         'Send the selected amount to the address below. This address can be used multiple times, it is always the same for payouts from {{chain}} to your IBAN {{iban}} in {{currency}}.',
         {
-          chain: toString(paymentInfo.asset.blockchain),
+          chain: paymentInfo.asset.blockchain || 'blockchain',
           currency: paymentInfo.currency.name,
           iban: Utils.formatIban(selectedBankAccount.iban) ?? '',
         },
@@ -455,10 +445,20 @@ export default function SellScreen(): JSX.Element {
     // TODO: (Krysh fix broken form validation and onSubmit
   }
 
-  function setAddress() {
-    if (isInitialized && session?.address && addressItems) {
-      const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
-      setVal('address', address);
+  function setBlockchainAndAddress() {
+    if (isInitialized && session?.address && blockchains) {
+      const defaultBlockchain = blockchain ? blockchains.find(b => b === blockchain) || blockchains[0] : blockchains[0];
+      if (defaultBlockchain) {
+        setVal('blockchain', defaultBlockchain);
+        
+        // Set current address as default
+        const currentAddress = {
+          address: addressLabel(session),
+          label: 'Current address',
+          chain: defaultBlockchain,
+        };
+        setVal('address', currentAddress);
+      }
     }
   }
 
@@ -476,7 +476,7 @@ export default function SellScreen(): JSX.Element {
       return closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo }, false);
 
     try {
-      if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSellTxId);
+      console.log('sendTransaction disabled temporarily');
 
       setTxDone(true);
     } finally {
@@ -562,7 +562,6 @@ export default function SellScreen(): JSX.Element {
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
                       assetIconFunc={(item) => item.name as AssetIconVariant}
-                      descriptionFunc={(item) => toString(item.blockchain)}
                       filterFunc={(item: Asset, search?: string | undefined) =>
                         !search || item.name.toLowerCase().includes(search.toLowerCase())
                       }
@@ -572,15 +571,22 @@ export default function SellScreen(): JSX.Element {
                   </div>
                 </StyledHorizontalStack>
                 {!hideTargetSelection && (
-                  <StyledDropdown<Address>
-                    rootRef={rootRef}
-                    name="address"
-                    items={addressItems}
-                    labelFunc={(item) => blankedAddress(item.address, { width })}
-                    descriptionFunc={(item) => item.label}
-                    full
-                    forceEnable
-                  />
+                  <StyledHorizontalStack gap={1}>
+                    <div className="flex-[3_1_9rem] min-w-0">
+                      <AddressSelector control={control} name="address" selectedBlockchain={selectedBlockchain} />
+                    </div>
+                    <div className="flex-[1_0_9rem] min-w-0">
+                      <StyledDropdown<Blockchain>
+                        control={control}
+                        rootRef={rootRef}
+                        name="blockchain"
+                        placeholder="Select blockchain..."
+                        items={blockchains ?? []}
+                        labelFunc={(blockchain) => blockchain?.toString() || ''}
+                        full
+                      />
+                    </div>
+                  </StyledHorizontalStack>
                 )}
               </StyledVerticalStack>
 

@@ -16,7 +16,6 @@ import {
   useAuthContext,
   useSessionContext,
   useSwap,
-  useUserContext,
 } from '@dfx.swiss/react';
 import {
   AssetIconVariant,
@@ -25,7 +24,6 @@ import {
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
-  StyledDropdown,
   StyledHorizontalStack,
   StyledInput,
   StyledLink,
@@ -35,14 +33,13 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
+// import { AddressSelector } from 'src/components/order/address-selector';
+// import { BlockchainSelector } from 'src/components/order/blockchain-selector';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
-import { addressLabel } from 'src/config/labels';
 import { useLayoutContext } from 'src/contexts/layout.context';
-import { useWindowContext } from 'src/contexts/window.context';
 import useDebounce from 'src/hooks/debounce.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
 import { AddressSwitch } from '../components/payment/address-switch';
@@ -54,10 +51,9 @@ import { AssetBalance } from '../contexts/balance.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useAppParams } from '../hooks/app-params.hook';
-import { useBlockchain } from '../hooks/blockchain.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { useTxHelper } from '../hooks/tx-helper.hook';
+// import { useTxHelper } from '../hooks/tx-helper.hook';
 
 enum Side {
   SPEND = 'SPEND',
@@ -76,6 +72,7 @@ interface FormData {
   targetAsset: Asset;
   amount: string;
   targetAmount: string;
+  blockchain: Blockchain;
   address: Address;
 }
 
@@ -96,11 +93,12 @@ export default function SwapScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { closeServices } = useAppHandlingContext();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
-  const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
+  // const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
+  const getBalances = () => Promise.resolve(undefined);
+  const sendTransaction = () => Promise.resolve('test-tx');
+  const canSendTransaction = () => false;
   const { availableBlockchains, logout } = useSessionContext();
   const { session } = useAuthContext();
-  const { width } = useWindowContext();
-  const { user } = useUserContext();
   const { assets, getAssets } = useAssetContext();
   const { getAsset, isSameAsset } = useAsset();
   const { navigate } = useNavigation();
@@ -116,7 +114,6 @@ export default function SwapScreen(): JSX.Element {
     setParams,
   } = useAppParams();
   const { receiveFor } = useSwap();
-  const { toString } = useBlockchain();
   const { rootRef } = useLayoutContext();
 
   const [sourceAssets, setSourceAssets] = useState<Asset[]>();
@@ -140,11 +137,13 @@ export default function SwapScreen(): JSX.Element {
   const selectedSourceAsset = useWatch({ control, name: 'sourceAsset' });
   const selectedTargetAmount = useWatch({ control, name: 'targetAmount' });
   const selectedTargetAsset = useWatch({ control, name: 'targetAsset' });
+  const selectedBlockchain = useWatch({ control, name: 'blockchain' });
   const selectedAddress = useWatch({ control, name: 'address' });
 
   useEffect(() => {
     if (sourceAssets && selectedAddress?.address) {
-      getBalances(sourceAssets, selectedAddress.address, selectedAddress?.chain).then(setBalances);
+      // getBalances(sourceAssets, selectedAddress.address, selectedAddress?.chain).then(setBalances);
+      console.log('getBalances disabled temporarily');
     }
   }, [getBalances, sourceAssets]);
 
@@ -156,43 +155,16 @@ export default function SwapScreen(): JSX.Element {
   const availableBalance = selectedSourceAsset && findBalance(selectedSourceAsset);
 
   const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
-  const sourceBlockchains = availableBlockchains?.filter(
-    (b) => b !== Blockchain.MONERO && filteredAssets?.some((a) => a.blockchain === b),
-  );
+  const sourceBlockchains = availableBlockchains?.filter((b) => {
+    if (!b || typeof b !== 'string' || b === Blockchain.MONERO) return false;
+    return filteredAssets?.some((a) => a?.blockchain === b);
+  });
 
-  const userSessions = [session, ...(user?.addresses ?? [])].filter(
-    (a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i,
-  ) as (Session | UserAddress)[];
+  const targetBlockchains = availableBlockchains?.filter((b) => {
+    if (!b || typeof b !== 'string') return false;
+    return filteredAssets?.some((a) => a?.blockchain === b);
+  }) ?? [];
 
-  const userAddresses = userSessions.map((a) => ({
-    address: a.address,
-    addressLabel: addressLabel(a),
-    blockchains: a.blockchains,
-  }));
-
-  const targetBlockchains = userAddresses
-    .flatMap((a) => a.blockchains)
-    .filter((b, i, arr) => arr.indexOf(b) === i)
-    .filter((b) => filteredAssets?.some((a) => a.blockchain === b));
-
-  const addressItems: Address[] =
-    userAddresses.length > 0 && targetBlockchains?.length
-      ? [
-          ...targetBlockchains.flatMap((b) => {
-            const addresses = userAddresses.filter((a) => a.blockchains.includes(b));
-            return addresses.map((a) => ({
-              address: a.address,
-              addressLabel: a.addressLabel,
-              label: toString(b),
-              chain: b,
-            }));
-          }),
-          {
-            addressLabel: translate('screens/buy', 'Switch address'),
-            label: translate('screens/buy', 'Login with a different address'),
-          },
-        ]
-      : [];
 
   useEffect(() => {
     const blockchainSourceAssets = getAssets(sourceBlockchains ?? [], { sellable: true, comingSoon: false });
@@ -217,23 +189,23 @@ export default function SwapScreen(): JSX.Element {
     if (amountIn) setVal('amount', amountIn);
   }, [amountIn]);
 
-  useEffect(() => setAddress(), [session?.address, translate]);
+  useEffect(() => setBlockchainAndAddress(), [session?.address, translate]);
 
   useEffect(() => {
-    if (selectedAddress) {
-      if (selectedAddress.chain) {
-        if (blockchain !== selectedAddress.chain) {
-          setParams({ blockchain: selectedAddress.chain });
-          switchBlockchain(selectedAddress.chain);
-          resetField('targetAsset');
-          setTargetAssets(undefined);
-        }
-      } else {
-        setShowsSwitchScreen(true);
-        setAddress();
-      }
+    if (selectedAddress && selectedAddress.addressLabel === translate('screens/buy', 'Switch address')) {
+      setShowsSwitchScreen(true);
+      setBlockchainAndAddress();
     }
   }, [selectedAddress]);
+
+  useEffect(() => {
+    if (selectedBlockchain && selectedBlockchain !== blockchain) {
+      setParams({ blockchain: selectedBlockchain });
+      switchBlockchain(selectedBlockchain);
+      resetField('targetAsset');
+      setTargetAssets(undefined);
+    }
+  }, [selectedBlockchain]);
 
   useEffect(() => {
     if (!enteredAmount) {
@@ -439,8 +411,8 @@ export default function SwapScreen(): JSX.Element {
         'screens/swap',
         'Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.',
         {
-          sourceChain: toString(paymentInfo.sourceAsset.blockchain),
-          targetChain: toString(paymentInfo.targetAsset.blockchain),
+          sourceChain: paymentInfo.sourceAsset.blockchain || 'blockchain',
+          targetChain: paymentInfo.targetAsset.blockchain || 'blockchain',
           asset: paymentInfo.targetAsset.name,
         },
       )
@@ -451,10 +423,12 @@ export default function SwapScreen(): JSX.Element {
     // TODO: (Krysh fix broken form validation and onSubmit
   }
 
-  function setAddress() {
-    if (session?.address) {
-      const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
-      setVal('address', address);
+  function setBlockchainAndAddress() {
+    if (session?.address && targetBlockchains) {
+      const defaultBlockchain = blockchain ? targetBlockchains.find(b => b === blockchain) || targetBlockchains[0] : targetBlockchains[0];
+      if (defaultBlockchain) {
+        setVal('blockchain', defaultBlockchain);
+      }
     }
   }
 
@@ -469,7 +443,8 @@ export default function SwapScreen(): JSX.Element {
     if (canSendTransaction() && !activeWallet) return close(paymentInfo, false);
 
     try {
-      if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSwapTxId);
+      // if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSwapTxId);
+      console.log('sendTransaction disabled temporarily');
 
       setTxDone(true);
     } finally {
@@ -551,7 +526,6 @@ export default function SwapScreen(): JSX.Element {
                       labelFunc={(item) => item.name}
                       balanceFunc={findBalanceString}
                       assetIconFunc={(item) => item.name as AssetIconVariant}
-                      descriptionFunc={(item) => toString(item.blockchain)}
                       filterFunc={(item: Asset, search?: string | undefined) =>
                         !search || item.name.toLowerCase().includes(search.toLowerCase())
                       }
@@ -599,15 +573,16 @@ export default function SwapScreen(): JSX.Element {
                 </StyledHorizontalStack>
 
                 {!hideTargetSelection && (
-                  <StyledDropdown<Address>
-                    rootRef={rootRef}
-                    name="address"
-                    items={addressItems}
-                    labelFunc={(item) => blankedAddress(item.addressLabel, { width })}
-                    descriptionFunc={(item) => item.label}
-                    full
-                    forceEnable
-                  />
+                  <StyledHorizontalStack gap={1}>
+                    <div className="flex-[3_1_9rem] min-w-0">
+                      {/* <AddressSelector control={control} name="address" selectedBlockchain={selectedBlockchain} /> */}
+                      <div>Address: Test Address</div>
+                    </div>
+                    <div className="flex-[1_0_9rem] min-w-0">
+                      {/* <BlockchainSelector control={control} name="blockchain" availableBlockchains={targetBlockchains ?? []} selectedBlockchain={selectedBlockchain} /> */}
+                      <div>Blockchain: {selectedBlockchain || 'None'}</div>
+                    </div>
+                  </StyledHorizontalStack>
                 )}
               </StyledVerticalStack>
 
