@@ -51,6 +51,8 @@ import { BuyCompletion } from '../components/payment/buy-completion';
 import { PrivateAssetHint } from '../components/private-asset-hint';
 import { QuoteErrorHint } from '../components/quote-error-hint';
 import { SanctionHint } from '../components/sanction-hint';
+import { BlockchainSelector } from '../components/order/blockchain-selector';
+import { AddressSelector } from '../components/order/address-selector';
 import { addressLabel } from '../config/labels';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useLayoutContext } from '../contexts/layout.context';
@@ -80,6 +82,7 @@ interface FormData {
   paymentMethod: FiatPaymentMethod;
   asset: Asset;
   targetAmount: string;
+  blockchain: Blockchain;
   address: Address;
 }
 
@@ -142,6 +145,7 @@ export default function BuyScreen(): JSX.Element {
   const selectedAsset = useWatch({ control, name: 'asset' });
   const selectedTargetAmount = useWatch({ control, name: 'targetAmount' });
   const selectedPaymentMethod = useWatch({ control, name: 'paymentMethod' });
+  const selectedBlockchain = useWatch({ control, name: 'blockchain' });
   const selectedAddress = useWatch({ control, name: 'address' });
 
   function setVal(field: FieldPath<FormData>, value: FieldPathValue<FormData, FieldPath<FormData>>) {
@@ -149,22 +153,9 @@ export default function BuyScreen(): JSX.Element {
   }
 
   const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
-  const blockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
+  const blockchains = availableBlockchains || [];
 
-  const addressItems: Address[] =
-    session?.address && blockchains?.length
-      ? [
-          ...blockchains.map((b) => ({
-            address: addressLabel(session),
-            label: toString(b),
-            chain: b,
-          })),
-          {
-            address: translate('screens/buy', 'Switch address'),
-            label: translate('screens/buy', 'Login with a different address'),
-          },
-        ]
-      : [];
+  // Available blockchains for selection
   const availablePaymentMethods = [FiatPaymentMethod.BANK];
 
   // no instant payments ATM
@@ -199,6 +190,13 @@ export default function BuyScreen(): JSX.Element {
     if (asset) setVal('asset', asset);
   }, [assetOut, assetFilter, getAsset, getAssets, blockchain, walletBlockchain, availableBlockchains]);
 
+  // Set default blockchain if none selected
+  useEffect(() => {
+    if (!selectedBlockchain && blockchains.length > 0) {
+      setVal('blockchain', blockchains[0]);
+    }
+  }, [blockchains, selectedBlockchain]);
+
   useEffect(() => {
     const currency =
       getCurrency(availableCurrencies, selectedCurrency?.name) ??
@@ -228,23 +226,22 @@ export default function BuyScreen(): JSX.Element {
     }
   }, [amountIn, amountOut, selectedAsset]);
 
-  useEffect(() => setAddress(), [session?.address, translate, addressItems.length]);
+  useEffect(() => setBlockchainAndAddress(), [session?.address, translate]);
 
   useEffect(() => {
-    if (selectedAddress) {
-      if (selectedAddress.chain) {
-        if (blockchain !== selectedAddress.chain) {
-          setParams({ blockchain: selectedAddress.chain });
-          switchBlockchain(selectedAddress.chain);
-          resetField('asset');
-          setAvailableAssets(undefined);
-        }
-      } else {
-        setShowsSwitchScreen(true);
-        setAddress();
-      }
+    if (selectedBlockchain && blockchain !== selectedBlockchain) {
+      setParams({ blockchain: selectedBlockchain });
+      switchBlockchain(selectedBlockchain);
+      resetField('asset');
+      setAvailableAssets(undefined);
     }
-  }, [selectedAddress]);
+  }, [selectedBlockchain]);
+
+  useEffect(() => {
+    if (selectedAddress && translate && selectedAddress.address === translate('screens/buy', 'Switch address')) {
+      setShowsSwitchScreen(true);
+    }
+  }, [selectedAddress, translate]);
 
   useEffect(() => {
     if (!selectedAmount) {
@@ -429,10 +426,18 @@ export default function BuyScreen(): JSX.Element {
     // TODO: (Krysh fix broken form validation and onSubmit
   }
 
-  function setAddress() {
-    if (isInitialized && session?.address && addressItems) {
-      const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
-      setVal('address', address);
+  function setBlockchainAndAddress() {
+    if (isInitialized && session?.address && blockchains?.length) {
+      const selectedBlockchainValue = blockchains.find((b) => b === blockchain) ?? blockchains[0];
+      setVal('blockchain', selectedBlockchainValue);
+      
+      // Set current address as default
+      const currentAddress = {
+        address: addressLabel(session),
+        label: translate('screens/buy', 'Current address'),
+        chain: selectedBlockchainValue,
+      };
+      setVal('address', currentAddress);
     }
   }
 
@@ -474,6 +479,8 @@ export default function BuyScreen(): JSX.Element {
   const rules = Utils.createRules({
     asset: Validations.Required,
     currency: Validations.Required,
+    blockchain: Validations.Required,
+    address: Validations.Required,
   });
 
   const title = showsCompletion
@@ -564,15 +571,23 @@ export default function BuyScreen(): JSX.Element {
                   </StyledHorizontalStack>
 
                   {!hideTargetSelection && (
-                    <StyledDropdown<Address>
-                      rootRef={rootRef}
-                      name="address"
-                      items={addressItems}
-                      labelFunc={(item) => blankedAddress(item.address, { width })}
-                      descriptionFunc={(item) => item.label}
-                      full
-                      forceEnable
-                    />
+                    <StyledHorizontalStack gap={1}>
+                      <div className="flex-[3_1_9rem] min-w-0">
+                        <AddressSelector
+                          control={control}
+                          name="address"
+                          selectedBlockchain={selectedBlockchain}
+                        />
+                      </div>
+                      <div className="flex-[1_0_9rem] min-w-0">
+                        <BlockchainSelector
+                          control={control}
+                          name="blockchain"
+                          availableBlockchains={blockchains ?? []}
+                          selectedBlockchain={selectedBlockchain}
+                        />
+                      </div>
+                    </StyledHorizontalStack>
                   )}
                 </StyledVerticalStack>
 
@@ -599,6 +614,7 @@ export default function BuyScreen(): JSX.Element {
                     )}
 
                     {paymentInfo &&
+                      selectedAddress &&
                       !kycError &&
                       !errorMessage &&
                       !customAmountError &&
