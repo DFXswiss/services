@@ -13,6 +13,7 @@ import {
   StyledButton,
   StyledButtonWidth,
   StyledDropdown,
+  StyledHorizontalStack,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import React, { useCallback, useEffect, useMemo } from 'react';
@@ -30,6 +31,8 @@ import { OrderFormData, OrderType, Side, useOrder } from 'src/hooks/order.hook';
 import { blankedAddress } from 'src/util/utils';
 import { AssetInput } from './asset-input';
 import { BankAccountSelector } from './bank-account-selector';
+import { BlockchainSelector } from './blockchain-selector';
+import { AddressSelector } from './address-selector';
 import { PaymentInfo } from './payment-info';
 
 interface Address {
@@ -75,6 +78,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   const {
     isBuy,
     isSell,
+    availableBlockchains,
     addressItems,
     cryptoBalances,
     paymentInfo,
@@ -116,11 +120,17 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   }, [availablePaymentMethods, setValue]);
 
   useEffect(() => {
-    if (isInitialized && session?.address && addressItems) {
-      const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
-      setValue('address', address);
+    if (isInitialized && availableBlockchains.length) {
+      const selectedBlockchain = availableBlockchains.find((b) => b === blockchain) ?? availableBlockchains[0];
+      setValue('blockchain', selectedBlockchain);
     }
-  }, [isInitialized, session, addressItems, blockchain, setValue]);
+  }, [isInitialized, availableBlockchains, blockchain, setValue]);
+
+  useEffect(() => {
+    if (isInitialized && session?.address && addressItems.length) {
+      setValue('address', addressItems[0]);
+    }
+  }, [isInitialized, session, addressItems, setValue]);
 
   useEffect(() => {
     const defaultCurrency = getDefaultCurrency(availableCurrencies) ?? availableCurrencies?.[0];
@@ -203,17 +213,24 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
               onAmountChange={() => (lastEditedFieldRef.current = Side.TARGET)}
             />
           ) : null}
-          {!hideTargetSelection && addressItems?.length ? (
-            <StyledDropdown<Address>
-              control={control}
-              rootRef={rootRef}
-              name="address"
-              items={addressItems}
-              labelFunc={(item) => blankedAddress(item.address, { width })}
-              descriptionFunc={(item) => item.label}
-              full
-              forceEnable
-            />
+          {!hideTargetSelection ? (
+            <StyledHorizontalStack gap={1}>
+              <div className="flex-[3_1_9rem] min-w-0">
+                <AddressSelector
+                  control={control}
+                  name="address"
+                  selectedBlockchain={data.blockchain}
+                />
+              </div>
+              <div className="flex-[1_0_9rem] min-w-0">
+                <BlockchainSelector
+                  control={control}
+                  name="blockchain"
+                  availableBlockchains={availableBlockchains}
+                  selectedBlockchain={data.blockchain}
+                />
+              </div>
+            </StyledHorizontalStack>
           ) : null}
         </div>
         {isSell && (

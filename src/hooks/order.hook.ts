@@ -45,6 +45,7 @@ export interface OrderFormData {
   targetAmount?: string;
   paymentMethod?: FiatPaymentMethod;
   bankAccount?: BankAccount;
+  blockchain?: Blockchain;
   address?: Address;
   exactPrice?: boolean;
 }
@@ -75,6 +76,7 @@ export interface UseOrderResult {
   isSwap?: boolean;
   sourceAssets?: Asset[] | Fiat[];
   targetAssets?: Asset[] | Fiat[];
+  availableBlockchains: Blockchain[];
   addressItems: Address[];
   cryptoBalances: AssetBalance[];
   paymentInfo?: OrderPaymentInfo;
@@ -168,26 +170,29 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
     [currencies],
   );
 
-  // ---- Fetch available blockchain addresses based on session and available crypto assets ----
+  // ---- Get available blockchains based on available crypto assets ----
 
-  const addressItems: Address[] = useMemo(() => {
+  const availableBlockchainsFiltered = useMemo(() => {
     const cryptoAssets = (isBuy ? targetAssets ?? [] : sourceAssets ?? []) as Asset[];
-    const blockchains = availableBlockchains?.filter((b) => cryptoAssets?.some((a) => a.blockchain === b));
+    return availableBlockchains?.filter((b) => cryptoAssets?.some((a) => a.blockchain === b)) ?? [];
+  }, [isBuy, targetAssets, sourceAssets, availableBlockchains]);
 
-    return session?.address && blockchains?.length
-      ? [
-          ...blockchains.map((b) => ({
-            address: addressLabel(session),
-            label: blockchainToString(b),
-            chain: b,
-          })),
-          {
-            address: translate('screens/buy', 'Switch address'),
-            label: translate('screens/buy', 'Login with a different address'),
-          },
-        ]
-      : [];
-  }, [session, targetAssets, sourceAssets, orderType, availableBlockchains, translate]);
+  // ---- Create simplified address items for the selected blockchain ----
+  
+  const addressItems: Address[] = useMemo(() => {
+    if (!session?.address) return [];
+
+    return [
+      {
+        address: addressLabel(session),
+        label: translate('screens/buy', 'Current address'),
+      },
+      {
+        address: translate('screens/buy', 'Switch address'),
+        label: translate('screens/buy', 'Login with a different address'),
+      },
+    ];
+  }, [session, translate]);
 
   // ---- Handle validation of form data and fetching payment info ----
 
@@ -310,6 +315,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
       isSwap,
       sourceAssets,
       targetAssets,
+      availableBlockchains: availableBlockchainsFiltered,
       addressItems,
       cryptoBalances,
       paymentInfo,
@@ -329,6 +335,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
       isSwap,
       sourceAssets,
       targetAssets,
+      availableBlockchainsFiltered,
       addressItems,
       cryptoBalances,
       paymentInfo,
