@@ -62,7 +62,7 @@ export const FeatureTree: Page[] = [
         id: 'monero',
         img: 'monero',
         next: {
-          page: 'monero-wallets',
+          page: 'wallets-cake',
           tiles: ['cake', 'monero-wallet', 'cli'],
           options: {
             service: 'buy',
@@ -74,7 +74,7 @@ export const FeatureTree: Page[] = [
         id: 'zano',
         img: 'zano',
         next: {
-          page: 'zano-wallets',
+          page: 'wallets-cake',
           tiles: ['cake', 'cli'],
           options: {
             service: 'buy',
@@ -771,7 +771,7 @@ export const FeatureTree: Page[] = [
         id: 'monero',
         img: 'monero',
         next: {
-          page: 'monero-wallets',
+          page: 'wallets-cake',
           tiles: ['cake', 'monero-wallet', 'cli'],
           options: {
             service: 'sell',
@@ -783,7 +783,7 @@ export const FeatureTree: Page[] = [
         id: 'zano',
         img: 'zano',
         next: {
-          page: 'zano-wallets',
+          page: 'wallets-cake',
           tiles: ['cake', 'cli'],
           options: {
             service: 'sell',
@@ -1503,7 +1503,7 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
-    id: 'monero-wallets',
+    id: 'wallets-cake',
     tiles: [
       {
         id: 'cake',
@@ -1522,27 +1522,15 @@ export const FeatureTree: Page[] = [
       {
         id: 'cli',
         img: 'command',
-        wallet: {
-          type: WalletType.CLI_XMR,
-        },
-      },
-    ],
-  },
-  {
-    id: 'zano-wallets',
-    tiles: [
-      {
-        id: 'cake',
-        img: 'cake',
-        wallet: {
-          type: WalletType.CAKE,
-        },
-      },
-      {
-        id: 'cli',
-        img: 'command',
-        wallet: {
-          type: WalletType.CLI_ZANO,
+        wallet: (params) => {
+          switch (params.blockchain) {
+            case Blockchain.MONERO:
+              return { type: WalletType.CLI_XMR };
+            case Blockchain.ZANO:
+              return { type: WalletType.CLI_ZANO };
+            default:
+              return { type: WalletType.CLI_ETH };
+          }
         },
       },
     ],

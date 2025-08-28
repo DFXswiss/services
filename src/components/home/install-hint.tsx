@@ -48,9 +48,6 @@ export function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: 
     case WalletType.MAIL:
     case WalletType.ADDRESS:
       return <></>;
-      
-    default:
-      throw new Error(`Unsupported wallet type: ${type}`);
   }
 }
 
