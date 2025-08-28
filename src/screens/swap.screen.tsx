@@ -217,7 +217,7 @@ export default function SwapScreen(): JSX.Element {
     if (amountIn) setVal('amount', amountIn);
   }, [amountIn]);
 
-  useEffect(() => setAddress(), [session?.address, translate]);
+  useEffect(() => setAddress(), [session?.address, translate, blockchain, addressItems]);
 
   useEffect(() => {
     if (selectedAddress) {
@@ -452,7 +452,7 @@ export default function SwapScreen(): JSX.Element {
   }
 
   function setAddress() {
-    if (session?.address) {
+    if (session?.address && addressItems.length > 0) {
       const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
       setVal('address', address);
     }
