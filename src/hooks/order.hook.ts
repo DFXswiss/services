@@ -20,7 +20,6 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { OrderPaymentData, OrderPaymentInfo } from 'src/dto/order.dto';
 import { deepEqual } from 'src/util/utils';
 import { useAppParams } from './app-params.hook';
-import { useBlockchain } from './blockchain.hook';
 import { useNavigation } from './navigation.hook';
 import { useTxHelper } from './tx-helper.hook';
 
@@ -102,7 +101,6 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
   const { getBalances } = useTxHelper();
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
-  const { toString: blockchainToString } = useBlockchain();
   const { isEmbedded, isDfxHosted } = useAppHandlingContext();
   const { wallet, availableBlockchains } = useAppParams();
 
