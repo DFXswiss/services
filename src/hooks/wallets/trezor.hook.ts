@@ -42,6 +42,7 @@ export function useTrezor(): TrezorInterface {
       manifest: {
         email: 'support@dfx.swiss',
         appUrl: window.location.origin,
+        appName: 'DFX.swiss',
       },
       transports: ['WebUsbTransport'],
     })

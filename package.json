@@ -27,6 +27,7 @@
     "@trezor/connect-web": "^9.1.1",
     "@tronweb3/tronwallet-adapter-tronlink": "^1.1.12",
     "@tronweb3/tronwallet-adapter-trust": "^1.0.1",
+    "@types/lodash": "^4.17.20",
     "@wagmi/connectors": "^5.0.7",
     "@wagmi/core": "^2.10.5",
     "@walletconnect/ethereum-provider": "^2.11.0",
@@ -43,12 +44,15 @@
     "i18next": "^22.4.13",
     "i18next-browser-languagedetector": "^7.1.0",
     "ledger-bitcoin": "^0.2.3",
+    "lodash": "^4.17.21",
     "process": "^0.11.10",
     "react": "18.2.0",
     "react-apexcharts": "^1.7.0",
+    "react-device-detect": "^2.2.3",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.40.0",
     "react-i18next": "^12.2.0",
+    "react-icons": "^5.5.0",
     "react-lazy-load-image-component": "^1.6.3",
     "react-qr-code": "^2.0.11",
     "react-router-dom": "^6.10.0",
@@ -108,6 +112,12 @@
         }
       }
     ]
+  },
+  "resolutions": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@types/react": "^18.0.25",
+    "@types/react-dom": "^18.0.9"
   },
   "browserslist": {
     "production": [
