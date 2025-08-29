@@ -75,15 +75,15 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
       method: 'GET',
     }).catch(unauthorizedResponse);
 
-    return history?.[0]?.payments[0]?.externalId;
+    return history?.[0]?.payments[0] ? payRequest.externalId : undefined;
   };
 
   const fetchWait = async (): Promise<void> => {
-    const externalPaymentId = await checkIsPendingPayment();
-    if (!externalPaymentId) return setPaymentStatus(NoPaymentLinkPaymentStatus.NO_PAYMENT);
+    const externalLinkId = await checkIsPendingPayment();
+    if (!externalLinkId) return setPaymentStatus(NoPaymentLinkPaymentStatus.NO_PAYMENT);
 
     const params = new URLSearchParams({
-      externalPaymentId,
+      externalLinkId,
       key,
     });
 
