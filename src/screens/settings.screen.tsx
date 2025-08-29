@@ -217,6 +217,7 @@ export default function SettingsScreen(): JSX.Element {
                 <ActionableList
                   label={translate('screens/iban', 'Your Bank Accounts')}
                   addButtonOnClick={() => setOverlayType(OverlayType.ADD_BANK_ACCOUNT)}
+                  noItemsHint={true}
                   items={bankAccounts.map((account) => {
                     return {
                       key: account.id,
