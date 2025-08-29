@@ -67,6 +67,8 @@
     "Invalid date format": "Format de date invalide",
     "Maximum allowed characters: 4000": "Nombre maximum de caractères autorisés : 4000",
 
+    "No entries yet": "Aucune entrée pour le moment",
+
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Un problème s'est produit. Veuillez réessayer. Si le problème persiste, veuillez contacter notre service d'assistance.",
     "invoice": "DFX ne reconnaît pas un destinataire nommé <strong>{{recipient}}</strong>. Ce service ne peut être utilisé que pour des destinataires ayant un compte actif chez DFX et activés pour le service de facturation. Si vous souhaitez vous inscrire en tant que destinataire chez DFX, veuillez contacter le support à <link>{{supportLink}}</link>.",
     "iban": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez ouvrir un ticket de support sur <1></1> et joindre la confirmation de la transaction bancaire au format PDF."
@@ -648,6 +650,8 @@
     "Missing liquidity": "Liquidité manquante",
     "KYC data needed": "Données KYC nécessaires",
     "Bank transaction needed": "Transaction bancaire nécessaire",
+    "Verification by phone required": "Vérification par téléphone requise",
+    "we will call you at {{phone}}": "nous vous appellerons au {{phone}}",
 
     "Loading countries...": "Chargement des pays...",
 
@@ -782,7 +786,9 @@
     "Assign payment link '{{id}}'": "Attribuer le lien de paiement '{{id}}'",
     "Assign": "Attribuer",
 
-    "Total amount": "Montant total"
+    "Total amount": "Montant total",
+    "You will be redirected to the site shortly": "Vous serez redirigé vers le site dans quelques secondes",
+    "Go back to the payment page": "Retour à la page de paiement"
   },
   "screens/iban": {
     "Your Bank Accounts": "Vos comptes bancaires",

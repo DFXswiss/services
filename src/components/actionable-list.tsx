@@ -9,6 +9,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useRef, useState } from 'react';
+import { useSettingsContext } from 'src/contexts/settings.context';
 
 interface Item {
   key: string | number;
@@ -25,23 +26,27 @@ type ActionableListProps = {
   items?: Item[];
   hideItemsText?: string;
   showItemsText?: string;
+  noItemsHint?: boolean;
   addButtonOnClick?: () => void;
 };
 
 export default function ActionableList({
   label,
-  items,
+  items = [],
   hideItemsText = '',
   showItemsText = '',
+  noItemsHint = false,
   addButtonOnClick,
 }: ActionableListProps) {
+  const { translate } = useSettingsContext();
+
   const [activeMenuItem, setActiveMenuItem] = useState<Item>();
   const [showDisabledItems, setShowDisabledItems] = useState(false);
   const [isHoveringButton, setIsHoveringButton] = useState(false);
 
   return (
     <>
-      {items?.length ? (
+      {items.length || noItemsHint ? (
         <StyledVerticalStack full gap={2}>
           <h1 className="relative text-dfxGray-800 font-semibold text-base flex justify-center items-center">
             {label}
@@ -59,52 +64,58 @@ export default function ActionableList({
               />
             </button>
           </h1>
-          <StyledDataTable alignContent={AlignContent.BETWEEN}>
-            {items
-              .filter((item) => showDisabledItems || !item.isDisabled)
-              .map((item) => {
-                return (
-                  <StyledDataTableRow key={item.key} onClick={item.onClick}>
-                    <div className="flex flex-col items-start gap-1">
-                      <div className={`flex flex-row gap-2 font-semibold ${item.isDisabled ? 'text-dfxGray-700' : ''}`}>
-                        {item.label}
-                        {item.tag && (
-                          <div className="flex bg-dfxGray-400 font-bold rounded-sm px-1.5 text-2xs items-center justify-center">
-                            {item.tag}
-                          </div>
-                        )}
+          {items.length ? (
+            <StyledDataTable alignContent={AlignContent.BETWEEN}>
+              {items
+                .filter((item) => showDisabledItems || !item.isDisabled)
+                .map((item) => {
+                  return (
+                    <StyledDataTableRow key={item.key} onClick={item.onClick}>
+                      <div className="flex flex-col items-start gap-1">
+                        <div
+                          className={`flex flex-row gap-2 font-semibold ${item.isDisabled ? 'text-dfxGray-700' : ''}`}
+                        >
+                          {item.label}
+                          {item.tag && (
+                            <div className="flex bg-dfxGray-400 font-bold rounded-sm px-1.5 text-2xs items-center justify-center">
+                              {item.tag}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-xs text-dfxGray-700">{item.subLabel}</div>
                       </div>
-                      <div className="text-xs text-dfxGray-700">{item.subLabel}</div>
-                    </div>
-                    {item.menuItems && (
-                      <div className="relative flex items-center">
-                        <button onClick={() => setActiveMenuItem(item)}>
-                          <DfxIcon icon={IconVariant.THREE_DOTS_VERT} color={IconColor.BLUE} />
-                        </button>
-                        {activeMenuItem?.key === item.key && (
-                          <OverflowMenu menuItems={item.menuItems} onClose={() => setActiveMenuItem(undefined)} />
-                        )}
-                      </div>
-                    )}
-                  </StyledDataTableRow>
-                );
-              })}
+                      {item.menuItems && (
+                        <div className="relative flex items-center">
+                          <button onClick={() => setActiveMenuItem(item)}>
+                            <DfxIcon icon={IconVariant.THREE_DOTS_VERT} color={IconColor.BLUE} />
+                          </button>
+                          {activeMenuItem?.key === item.key && (
+                            <OverflowMenu menuItems={item.menuItems} onClose={() => setActiveMenuItem(undefined)} />
+                          )}
+                        </div>
+                      )}
+                    </StyledDataTableRow>
+                  );
+                })}
 
-            {items.some((item) => item.isDisabled) && (
-              <StyledDataTableRow>
-                <div
-                  className="flex flex-row w-full justify-between items-start gap-1 text-xs cursor-pointer select-none text-dfxGray-700 hover:text-dfxGray-800"
-                  onClick={() => setShowDisabledItems((prev) => !prev)}
-                >
-                  <div>{showDisabledItems ? hideItemsText : showItemsText}</div>
-                  <DfxIcon
-                    icon={showDisabledItems ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
-                    color={IconColor.DARK_GRAY}
-                  />
-                </div>
-              </StyledDataTableRow>
-            )}
-          </StyledDataTable>
+              {items.some((item) => item.isDisabled) && (
+                <StyledDataTableRow>
+                  <div
+                    className="flex flex-row w-full justify-between items-start gap-1 text-xs cursor-pointer select-none text-dfxGray-700 hover:text-dfxGray-800"
+                    onClick={() => setShowDisabledItems((prev) => !prev)}
+                  >
+                    <div>{showDisabledItems ? hideItemsText : showItemsText}</div>
+                    <DfxIcon
+                      icon={showDisabledItems ? IconVariant.EXPAND_LESS : IconVariant.EXPAND_MORE}
+                      color={IconColor.DARK_GRAY}
+                    />
+                  </div>
+                </StyledDataTableRow>
+              )}
+            </StyledDataTable>
+          ) : (
+            <p className="text-xs text-dfxGray-700">{translate('general/errors', 'No entries yet')}</p>
+          )}
         </StyledVerticalStack>
       ) : (
         <></>
