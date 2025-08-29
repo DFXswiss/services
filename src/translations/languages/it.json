@@ -650,6 +650,8 @@
     "Missing liquidity": "Liquidità mancante",
     "KYC data needed": "Dati KYC necessari",
     "Bank transaction needed": "Necessaria transazione bancaria",
+    "Verification by phone required": "Verifica telefonica richiesta",
+    "we will call you at {{phone}}": "ti chiameremo al {{phone}}",
 
     "Loading countries...": "Caricamento dei paesi...",
 

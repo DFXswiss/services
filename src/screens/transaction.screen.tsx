@@ -8,6 +8,7 @@ import {
   SupportIssueReason,
   SupportIssueType,
   Transaction,
+  TransactionFailureReason,
   TransactionRefundData,
   TransactionState,
   TransactionTarget,
@@ -236,7 +237,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
 
   return transaction ? (
     <StyledVerticalStack gap={6} full>
-      <TxInfo tx={transaction} />
+      <TxInfo tx={transaction} showUserDetails={false} />
 
       <StyledVerticalStack gap={4} full>
         {transaction.state === TransactionState.UNASSIGNED && (
@@ -649,7 +650,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                           }
                         >
                           <StyledVerticalStack full gap={4}>
-                            <TxInfo tx={tx} />
+                            <TxInfo tx={tx} showUserDetails={true} />
 
                             {isUnassigned &&
                               (editTransaction === tx.id ? (
@@ -783,12 +784,14 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
 
 interface TxInfoProps {
   tx: DetailTransaction;
+  showUserDetails: boolean;
 }
 
-export function TxInfo({ tx }: TxInfoProps): JSX.Element {
+export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
+  const { user } = useUserContext();
 
   const paymentMethod = [tx.inputPaymentMethod, tx.outputPaymentMethod].find(
     (p) => p !== CryptoPaymentMethod.CRYPTO,
@@ -861,7 +864,14 @@ export function TxInfo({ tx }: TxInfoProps): JSX.Element {
       </StyledDataTableRow>
       {tx.reason && (
         <StyledDataTableRow label={translate('screens/payment', 'Failure reason')}>
-          <p className="text-right">{translate('screens/payment', PaymentFailureReasons[tx.reason])}</p>
+          <p className="text-right">
+            {translate('screens/payment', PaymentFailureReasons[tx.reason])}
+            {showUserDetails && tx.reason === TransactionFailureReason.PHONE_VERIFICATION_NEEDED && user?.phone && (
+              <>
+                <br />({translate('screens/payment', 'we will call you at {{phone}}', { phone: user.phone })})
+              </>
+            )}
+          </p>
         </StyledDataTableRow>
       )}
       {paymentMethod && (

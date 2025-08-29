@@ -214,7 +214,7 @@ function TransactionComponent({ transactionUid }: TransactionComponentProps): JS
           }
         >
           <StyledVerticalStack full gap={4}>
-            <TxInfo tx={tx} />
+            <TxInfo tx={tx} showUserDetails={false} />
           </StyledVerticalStack>
         </StyledCollapsible>
       )}
