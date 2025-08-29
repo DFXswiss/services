@@ -784,7 +784,9 @@
     "Assign payment link '{{id}}'": "Payment Link '{{id}}' zuweisen",
     "Assign": "Zuweisen",
 
-    "Total amount": "Gesamtbetrag"
+    "Total amount": "Gesamtbetrag",
+    "You will be redirected to the site shortly": "Du wirst in Kürze zur Seite weitergeleitet",
+    "Go back to the payment page": "Zurück zur Zahlungsseite"
   },
   "screens/iban": {
     "Your Bank Accounts": "Deine Bankkonten",

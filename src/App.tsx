@@ -34,6 +34,7 @@ const PaymentRoutesScreen = lazy(() => import('./screens/payment-routes.screen')
 const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
 const PaymentLinkPosScreen = lazy(() => import('./screens/payment-link-pos.screen'));
 const PaymentLinkAssignScreen = lazy(() => import('./screens/payment-link-assign.screen'));
+const PaymentLinkResultScreen = lazy(() => import('./screens/payment-link-result.screen'));
 const InvoiceScreen = lazy(() => import('./screens/invoice.screen'));
 const SellInfoScreen = lazy(() => import('./screens/sell-info.screen'));
 const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
@@ -168,6 +169,10 @@ export const Routes = [
             element: <PaymentLinkAssignScreen />,
           },
         ],
+      },
+      {
+        path: 'pl/result',
+        element: withSuspense(<PaymentLinkResultScreen />),
       },
       {
         path: 'payment-link',
