@@ -76,6 +76,7 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.MISSING_LIQUIDITY]: 'Missing liquidity',
   [TransactionFailureReason.KYC_DATA_NEEDED]: 'KYC data needed',
   [TransactionFailureReason.BANK_TX_NEEDED]: 'Bank transaction needed',
+  [TransactionFailureReason.MERGE_PENDING]: 'Email confirmation pending',
   [TransactionFailureReason.PHONE_VERIFICATION_NEEDED]: 'Verification by phone required',
 };
 
