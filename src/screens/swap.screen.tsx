@@ -97,7 +97,7 @@ export default function SwapScreen(): JSX.Element {
   const { closeServices } = useAppHandlingContext();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
   const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
-  const { availableBlockchains, logout } = useSessionContext();
+  const { logout } = useSessionContext();
   const { session } = useAuthContext();
   const { width } = useWindowContext();
   const { user } = useUserContext();
@@ -114,6 +114,7 @@ export default function SwapScreen(): JSX.Element {
     externalTransactionId,
     flags,
     setParams,
+    availableBlockchains,
   } = useAppParams();
   const { receiveFor } = useSwap();
   const { toString } = useBlockchain();
@@ -217,7 +218,7 @@ export default function SwapScreen(): JSX.Element {
     if (amountIn) setVal('amount', amountIn);
   }, [amountIn]);
 
-  useEffect(() => setAddress(), [session?.address, translate, blockchain, addressItems]);
+  useEffect(() => setAddress(), [session?.address, translate, blockchain, user]);
 
   useEffect(() => {
     if (selectedAddress) {
