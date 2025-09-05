@@ -650,7 +650,7 @@
     "Missing liquidity": "Fehlende Liquidität",
     "KYC data needed": "KYC-Daten benötigt",
     "Bank transaction needed": "Bank Transaktion benötigt",
-    "Email confirmation pending": "Email Bestätigung ausstehend",
+    "Email confirmation incomplete": "Email Bestätigung nicht abgeschlossen",
     "Verification by phone required": "Verifizierung per Telefon erforderlich",
     "we will call you at {{phone}}": "wir werden Dich unter {{phone}} anrufen",
 
