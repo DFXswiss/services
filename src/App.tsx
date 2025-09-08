@@ -33,6 +33,8 @@ const LinkScreen = lazy(() => import('./screens/link.screen'));
 const PaymentRoutesScreen = lazy(() => import('./screens/payment-routes.screen'));
 const PaymentLinkScreen = lazy(() => import('./screens/payment-link.screen'));
 const PaymentLinkPosScreen = lazy(() => import('./screens/payment-link-pos.screen'));
+const PaymentLinkAssignScreen = lazy(() => import('./screens/payment-link-assign.screen'));
+const PaymentLinkResultScreen = lazy(() => import('./screens/payment-link-result.screen'));
 const InvoiceScreen = lazy(() => import('./screens/invoice.screen'));
 const SellInfoScreen = lazy(() => import('./screens/sell-info.screen'));
 const SupportIssueScreen = lazy(() => import('./screens/support-issue.screen'));
@@ -48,6 +50,7 @@ const StickersScreen = lazy(() => import('./screens/stickers.screen'));
 const BlockchainTransactionScreen = lazy(() => import('./screens/blockchain-tx.screen'));
 const EditMailScreen = lazy(() => import('./screens/edit-mail.screen'));
 const SafeScreen = lazy(() => import('./screens/safe.screen'));
+const TelegramSupportScreen = lazy(() => import('./screens/telegram-support.screen'));
 
 setupLanguages();
 
@@ -86,12 +89,20 @@ export const Routes = [
         element: <HomeScreen />,
       },
       {
-        path: 'mail-login',
-        element: withSuspense(<MailLoginScreen />),
+        path: 'login/mail',
+        element: <HomeScreen />,
+      },
+      {
+        path: 'login/wallet',
+        element: <HomeScreen />,
       },
       {
         path: 'connect',
         element: <HomeScreen />,
+      },
+      {
+        path: 'mail-login',
+        element: withSuspense(<MailLoginScreen />),
       },
       {
         path: 'my-dfx',
@@ -134,25 +145,34 @@ export const Routes = [
         ),
       },
       {
+        path: 'pl/pos',
+        element: withSuspense(
+          <PaymentLinkPosContext>
+            <PaymentLinkPosScreen />
+          </PaymentLinkPosContext>,
+        ),
+      },
+      {
         path: 'pl',
+        element: withSuspense(
+          <PaymentLinkProvider>
+            <Outlet />
+          </PaymentLinkProvider>,
+        ),
         children: [
           {
             index: true,
-            element: withSuspense(
-              <PaymentLinkProvider>
-                <PaymentLinkScreen />
-              </PaymentLinkProvider>,
-            ),
+            element: <PaymentLinkScreen />,
           },
           {
-            path: 'pos',
-            element: withSuspense(
-              <PaymentLinkPosContext>
-                <PaymentLinkPosScreen />
-              </PaymentLinkPosContext>,
-            ),
+            path: 'assign',
+            element: <PaymentLinkAssignScreen />,
           },
         ],
+      },
+      {
+        path: 'pl/result',
+        element: withSuspense(<PaymentLinkResultScreen />),
       },
       {
         path: 'payment-link',
@@ -235,6 +255,10 @@ export const Routes = [
           {
             path: 'tickets',
             element: withSuspense(<SupportTicketsScreen />),
+          },
+          {
+            path: 'telegram',
+            element: withSuspense(<TelegramSupportScreen />),
           },
           {
             path: 'issue',

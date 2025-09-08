@@ -200,7 +200,7 @@ function Content({
             steps={steps}
             params={{ app, device: 'Ledger' }}
             img={
-              addresses ? undefined : `https://content.dfx.swiss/img/v1/services/ledger${app.toLowerCase()}ready_en.jpg`
+              addresses ? undefined : `https://dfx.swiss/images/app/ledger${app.toLowerCase()}ready_en.jpg`
             }
           />
         )}

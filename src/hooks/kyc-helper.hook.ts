@@ -1,11 +1,20 @@
-import { KycLevel, KycStepName, KycStepType, LimitPeriod, TradingLimit, Utils, useUserContext } from '@dfx.swiss/react';
 import {
   AccountType,
   DocumentType,
   GenderType,
+  GoodsCategory,
+  KycLevel,
+  KycStepName,
+  KycStepType,
   LegalEntity,
+  LimitPeriod,
+  MerchantCategory,
   SignatoryPower,
-} from '@dfx.swiss/react/dist/definitions/kyc';
+  StoreType,
+  TradingLimit,
+  Utils,
+  useUserContext,
+} from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from './navigation.hook';
@@ -27,6 +36,9 @@ interface KycHelperInterface {
   genderTypeToString: (genderType: GenderType) => string;
   documentTypeToString: (documentType: DocumentType) => string;
   signatoryPowerToString: (power: SignatoryPower) => string;
+  goodsCategoryToString: (goodsCategory: GoodsCategory) => string;
+  storeTypeToString: (storeType: StoreType) => string;
+  merchantCategoryToString: (merchantCategory: MerchantCategory) => string;
 }
 
 export function useKycHelper(): KycHelperInterface {
@@ -53,6 +65,7 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepName.OWNER_DIRECTORY]: 'Owner directory',
     [KycStepName.NATIONALITY_DATA]: 'Nationality',
     [KycStepName.COMMERCIAL_REGISTER]: 'Commercial register',
+    [KycStepName.SOLE_PROPRIETORSHIP_CONFIRMATION]: 'Sole proprietorship confirmation',
     [KycStepName.SIGNATORY_POWER]: 'Signatory power',
     [KycStepName.AUTHORITY]: 'Power of Attorney',
     [KycStepName.BENEFICIAL_OWNER]: 'Beneficial owners',
@@ -175,6 +188,94 @@ export function useKycHelper(): KycHelperInterface {
     }
   }
 
+  const goodsCategoryMap: Record<GoodsCategory, string> = {
+    [GoodsCategory.ELECTRONICS_COMPUTERS]: 'Electronics & computers',
+    [GoodsCategory.BOOKS_MUSIC_MOVIES]: 'Books, music & movies',
+    [GoodsCategory.HOME_GARDEN_TOOLS]: 'Home, garden & tools',
+    [GoodsCategory.CLOTHES_SHOES_BAGS]: 'Clothes, shoes & bags',
+    [GoodsCategory.TOYS_KIDS_BABY]: 'Toys, kids & baby',
+    [GoodsCategory.AUTOMOTIVE_ACCESSORIES]: 'Automotive accessories',
+    [GoodsCategory.GAME_RECHARGE]: 'Game recharge',
+    [GoodsCategory.ENTERTAINMENT_COLLECTION]: 'Entertainment & collection',
+    [GoodsCategory.JEWELRY]: 'Jewelry',
+    [GoodsCategory.DOMESTIC_SERVICE]: 'Domestic service',
+    [GoodsCategory.BEAUTY_CARE]: 'Beauty & care',
+    [GoodsCategory.PHARMACY]: 'Pharmacy',
+    [GoodsCategory.SPORTS_OUTDOORS]: 'Sports & outdoors',
+    [GoodsCategory.FOOD_GROCERY_HEALTH_PRODUCTS]: 'Food, grocery & health products',
+    [GoodsCategory.PET_SUPPLIES]: 'Pet supplies',
+    [GoodsCategory.INDUSTRY_SCIENCE]: 'Industry & science',
+    [GoodsCategory.OTHERS]: 'Other',
+  };
+
+  const storeTypeMap: Record<StoreType, string> = {
+    [StoreType.ONLINE]: 'Online',
+    [StoreType.PHYSICAL]: 'Physical',
+    [StoreType.ONLINE_AND_PHYSICAL]: 'Online and physical',
+  };
+
+  const merchantCategoryMap: Record<MerchantCategory, string> = {
+    [MerchantCategory.ACCOMMODATION_AND_FOOD_SERVICES]: 'Accommodation and food services',
+    [MerchantCategory.ADMINISTRATIVE_SUPPORT_WASTE_MANAGEMENT]: 'Administrative support & waste management',
+    [MerchantCategory.AGRICULTURE_FORESTRY_FISHING_HUNTING]: 'Agriculture, forestry, fishing & hunting',
+    [MerchantCategory.ARTS_ENTERTAINMENT_RECREATION]: 'Arts, entertainment & recreation',
+    [MerchantCategory.CONSTRUCTION]: 'Construction',
+    [MerchantCategory.BROKER]: 'Broker',
+    [MerchantCategory.CRYPTO_ATM]: 'Crypto ATM',
+    [MerchantCategory.CRYPTO_MINING]: 'Crypto mining',
+    [MerchantCategory.PROPRIETARY_CRYPTO_TRADERS]: 'Proprietary crypto traders',
+    [MerchantCategory.ALGORITHM_CRYPTO_TRADERS]: 'Algorithm crypto traders',
+    [MerchantCategory.P2P_MERCHANTS]: 'P2P merchants',
+    [MerchantCategory.OTHER_DIGITAL_ASSET_SERVICES_PROVIDER]: 'Other digital asset services provider',
+    [MerchantCategory.BANK]: 'Bank',
+    [MerchantCategory.NON_BANK_FINANCIAL_INSTITUTION]: 'Non-bank financial institution',
+    [MerchantCategory.MONEY_SERVICES_BUSINESS_PAYMENT_SERVICE_PROVIDERS]:
+      'Money services business & payment service providers',
+    [MerchantCategory.FAMILY_OFFICE]: 'Family office',
+    [MerchantCategory.PERSONAL_INVESTMENT_COMPANIES]: 'Personal investment companies',
+    [MerchantCategory.SUPERANNUATION_FUND]: 'Superannuation fund',
+    [MerchantCategory.SOVEREIGN_WEALTH_FUND]: 'Sovereign wealth fund',
+    [MerchantCategory.INVESTMENT_FUNDS]: 'Investment funds',
+    [MerchantCategory.EDUCATIONAL_SERVICES]: 'Educational services',
+    [MerchantCategory.BETTING]: 'Betting',
+    [MerchantCategory.HEALTH_CARE_SOCIAL_ASSISTANCE]: 'Health care & social assistance',
+    [MerchantCategory.INFORMATION]: 'Information',
+    [MerchantCategory.GENERAL_WHOLESALERS]: 'General wholesalers',
+    [MerchantCategory.MANAGEMENT_OF_COMPANIES_ENTERPRISES]: 'Management of companies & enterprises',
+    [MerchantCategory.PRECIOUS_STONES_PRECIOUS_METALS_DEALERS]: 'Precious stones & precious metals dealers',
+    [MerchantCategory.CRUDE_OIL_NATURAL_GAS_DEALERS]: 'Crude oil & natural gas dealers',
+    [MerchantCategory.GENERAL_MANUFACTURING]: 'General manufacturing',
+    [MerchantCategory.MARIJUANA]: 'Marijuana',
+    [MerchantCategory.MINING_EXTRACTION]: 'Mining & extraction',
+    [MerchantCategory.PAWN_SHOPS]: 'Pawn shops',
+    [MerchantCategory.PROFESSIONAL_SERVICES]: 'Professional services',
+    [MerchantCategory.SCIENTIFIC_TECHNICAL_SERVICES]: 'Scientific & technical services',
+    [MerchantCategory.PUBLIC_ADMINISTRATION]: 'Public administration',
+    [MerchantCategory.REAL_ESTATE_RENTAL_LEASING]: 'Real estate, rental & leasing',
+    [MerchantCategory.RETAIL_STORES_ELECTRONICS]: 'Retail stores (electronics)',
+    [MerchantCategory.RETAIL_STORES_FB]: 'Retail stores (food & beverage)',
+    [MerchantCategory.RETAIL_STORES_JEWELRY]: 'Retail stores (jewelry)',
+    [MerchantCategory.RETAIL_TRADE_OTHERS]: 'Retail trade (others)',
+    [MerchantCategory.SALE_OF_DRUGS_PHARMACEUTICAL_PRODUCTS]: 'Sale of drugs & pharmaceutical products',
+    [MerchantCategory.TOBACCO]: 'Tobacco',
+    [MerchantCategory.TRANSPORTATION_WAREHOUSING]: 'Transportation & warehousing',
+    [MerchantCategory.UTILITIES]: 'Utilities',
+    [MerchantCategory.OTHER_CRYPTO_WEB3_SERVICES]: 'Other crypto/Web3 services',
+    [MerchantCategory.OTHER]: 'Other',
+  };
+
+  const goodsCategoryToString = (goodsCategory: GoodsCategory): string => {
+    return translate('screens/kyc', goodsCategoryMap[goodsCategory]);
+  };
+
+  const storeTypeToString = (storeType: StoreType): string => {
+    return translate('screens/kyc', storeTypeMap[storeType]);
+  };
+
+  const merchantCategoryToString = (merchantCategory: MerchantCategory): string => {
+    return translate('screens/kyc', merchantCategoryMap[merchantCategory]);
+  };
+
   return useMemo(
     () => ({
       start,
@@ -192,6 +293,9 @@ export function useKycHelper(): KycHelperInterface {
       genderTypeToString,
       documentTypeToString,
       signatoryPowerToString,
+      goodsCategoryToString,
+      storeTypeToString,
+      merchantCategoryToString,
     }),
     [user, translate],
   );

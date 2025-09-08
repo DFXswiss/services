@@ -16,4 +16,8 @@ export class Stack<T> {
   get current(): T | undefined {
     return this.items[0];
   }
+
+  get size(): number {
+    return this.items.length;
+  }
 }

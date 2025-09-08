@@ -4,13 +4,11 @@ import { useSearchParams } from 'react-router-dom';
 import {
   ExtendedPaymentLinkStatus,
   NoPaymentLinkPaymentStatus,
-  PaymentLinkHistoryPayment,
-  PaymentLinkHistoryResponse,
+  PaymentLinkHistory,
   PaymentLinkPayRequest,
 } from 'src/dto/payment-link.dto';
-import { useAppParams } from 'src/hooks/app-params.hook';
 import { Lnurl } from 'src/util/lnurl';
-import { fetchJson } from 'src/util/utils';
+import { fetchJson, url } from 'src/util/utils';
 
 interface PaymentPosContextType {
   isLoading: boolean;
@@ -18,8 +16,9 @@ interface PaymentPosContextType {
   paymentStatus: ExtendedPaymentLinkStatus | undefined;
   payRequest: PaymentLinkPayRequest | undefined;
   paymentLinkApiUrl: string | undefined;
+  posUrl: string | undefined;
   error: string | undefined;
-  fetchTransactionHistory: () => Promise<PaymentLinkHistoryPayment[] | undefined>;
+  fetchTransactionHistory: () => Promise<PaymentLinkHistory | undefined>;
   createPayment: (data: { amount: number }) => Promise<void>;
   cancelPayment: () => Promise<unknown>;
   checkAuthentication: (key: string) => Promise<any>;
@@ -32,16 +31,18 @@ export function usePaymentPosContext() {
 }
 
 export default function PaymentLinkPosContext({ children }: { children: React.ReactNode }): JSX.Element {
-  const { lightning, isInitialized: isParamsInitialized } = useAppParams();
+  const { call } = useApi();
+
   const [payRequest, setPayRequest] = useState<PaymentLinkPayRequest>();
   const [paymentStatus, setPaymentStatus] = useState<ExtendedPaymentLinkStatus>();
   const [apiUrl, setApiUrl] = useState<string>();
-  const [urlParams, setUrlParams] = useSearchParams();
-  const [key, setKey] = useState<string>(urlParams.get('key') ?? '');
+  const [urlParams] = useSearchParams();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
-  const { call } = useApi();
+
+  const lightning = urlParams.get('lightning') ?? undefined;
+  const key = urlParams.get('key') ?? '';
 
   const fetchPayRequest = async (url: string) => {
     const api = new URL(url);
@@ -49,8 +50,9 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
     const response = await fetchJson(api.toString());
     setPayRequest(response);
 
-    const newStatus =
-      response.statusCode === 404 ? NoPaymentLinkPaymentStatus.NO_PAYMENT : PaymentLinkPaymentStatus.PENDING;
+    const newStatus = [400, 404].includes(response.statusCode)
+      ? NoPaymentLinkPaymentStatus.NO_PAYMENT
+      : PaymentLinkPaymentStatus.PENDING;
     setPaymentStatus(newStatus);
   };
 
@@ -68,20 +70,20 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
       key: key,
     });
 
-    const history = await call<PaymentLinkHistoryResponse[]>({
+    const history = await call<PaymentLinkHistory[]>({
       url: `paymentLink/history?${params.toString()}`,
       method: 'GET',
     }).catch(unauthorizedResponse);
 
-    return history?.[0]?.payments?.[0]?.externalId;
+    return history?.[0]?.payments[0] ? payRequest.externalId : undefined;
   };
 
   const fetchWait = async (): Promise<void> => {
-    const externalPaymentId = await checkIsPendingPayment();
-    if (!externalPaymentId) return setPaymentStatus(NoPaymentLinkPaymentStatus.NO_PAYMENT);
+    const externalLinkId = await checkIsPendingPayment();
+    if (!externalLinkId) return setPaymentStatus(NoPaymentLinkPaymentStatus.NO_PAYMENT);
 
     const params = new URLSearchParams({
-      externalPaymentId,
+      externalLinkId,
       key,
     });
 
@@ -150,14 +152,17 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
       key: key,
     });
 
-    return call<PaymentLinkHistoryResponse[]>({
+    return call<PaymentLinkHistory[]>({
       url: `paymentLink/history?${params.toString()}`,
       method: 'GET',
     })
       .then((response) => {
-        return response.length
-          ? response[0].payments?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-          : [];
+        if (!response?.length) return undefined;
+
+        return {
+          ...response[0],
+          payments: response[0].payments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+        };
       })
       .catch(unauthorizedResponse);
   }, [key, payRequest, call]);
@@ -169,11 +174,10 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
         key: key,
       });
 
-      return call<PaymentLinkHistoryResponse[]>({
+      return call<PaymentLinkHistory[]>({
         url: `paymentLink/history?${params.toString()}`,
         method: 'GET',
       }).then(() => {
-        setKey(key);
         setIsAuthenticated(true);
       });
     },
@@ -182,13 +186,12 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
 
   // Initialization
   useEffect(() => {
-    if (!isParamsInitialized || !lightning) return;
+    if (!lightning) return;
     const decodedUrl = Lnurl.decode(lightning) as string;
 
     fetchPayRequest(decodedUrl).catch((e) => setError(e.message ?? 'Unknown Error'));
     setApiUrl(decodedUrl);
-    setUrlParams(new URLSearchParams());
-  }, [isParamsInitialized, lightning]);
+  }, [lightning]);
 
   // To track authentication status
   useEffect(() => {
@@ -218,6 +221,7 @@ export default function PaymentLinkPosContext({ children }: { children: React.Re
         paymentStatus,
         payRequest: payRequest as PaymentLinkPayRequest,
         paymentLinkApiUrl: apiUrl,
+        posUrl: lightning && key ? url({ path: 'pl/pos', params: new URLSearchParams({ lightning, key }) }) : undefined,
         error,
         fetchTransactionHistory,
         createPayment,

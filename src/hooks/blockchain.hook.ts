@@ -24,6 +24,7 @@ export function useBlockchain(): BlockchainInterface {
   const definitions: BlockchainDefinitions = {
     headings: {
       [Blockchain.ETHEREUM]: 'Ethereum mainnet · ERC-20 token',
+      [Blockchain.SEPOLIA]: 'Ethereum sepolia · ERC-20 token',
       [Blockchain.BINANCE_SMART_CHAIN]: 'BNB Chain · BEP-20 token',
       [Blockchain.ARBITRUM]: 'Arbitrum One · ERC-20 token',
       [Blockchain.OPTIMISM]: 'Optimism · ERC-20 token',
@@ -31,9 +32,11 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.BASE]: 'Base · ERC-20 token',
       [Blockchain.GNOSIS]: 'Gnosis · ERC-20 token',
       [Blockchain.HAQQ]: 'Haqq · ERC-20 token',
+      [Blockchain.CITREA_TESTNET]: 'Citrea Testnet · ERC-20 token',
     },
     protocols: {
       [Blockchain.ETHEREUM]: Protocol.ERC_20,
+      [Blockchain.SEPOLIA]: Protocol.ERC_20,
       [Blockchain.BINANCE_SMART_CHAIN]: Protocol.BEP_20,
       [Blockchain.ARBITRUM]: Protocol.ERC_20,
       [Blockchain.OPTIMISM]: Protocol.ERC_20,
@@ -41,9 +44,11 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.BASE]: Protocol.ERC_20,
       [Blockchain.GNOSIS]: Protocol.ERC_20,
       [Blockchain.HAQQ]: Protocol.ERC_20,
+      [Blockchain.CITREA_TESTNET]: Protocol.ERC_20,
     },
     mainToken: {
       [Blockchain.ETHEREUM]: 'ETH',
+      [Blockchain.SEPOLIA]: 'ETH',
       [Blockchain.BINANCE_SMART_CHAIN]: 'BNB',
       [Blockchain.ARBITRUM]: 'ETH',
       [Blockchain.OPTIMISM]: 'ETH',
@@ -51,9 +56,11 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.BASE]: 'ETH',
       [Blockchain.GNOSIS]: 'xDAI',
       [Blockchain.HAQQ]: 'ISLM',
+      [Blockchain.CITREA_TESTNET]: 'cBTC',
     },
     stringValue: {
       [Blockchain.ETHEREUM]: 'Ethereum',
+      [Blockchain.SEPOLIA]: 'Sepolia Testnet',
       [Blockchain.BINANCE_SMART_CHAIN]: 'BNB Chain',
       [Blockchain.ARBITRUM]: 'Arbitrum',
       [Blockchain.OPTIMISM]: 'Optimism',
@@ -67,8 +74,10 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.ARWEAVE]: 'Arweave',
       [Blockchain.CARDANO]: 'Cardano',
       [Blockchain.MONERO]: 'Monero',
+      [Blockchain.ZANO]: 'Zano',
       [Blockchain.SOLANA]: 'Solana',
       [Blockchain.TRON]: 'Tron',
+      [Blockchain.CITREA_TESTNET]: 'Citrea Testnet',
     },
   };
 

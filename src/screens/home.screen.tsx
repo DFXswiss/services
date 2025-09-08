@@ -1,6 +1,6 @@
 import { Blockchain, useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { Suspense, useEffect, useState } from 'react';
+import { Fragment, Suspense, useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { CustodyAssets } from 'src/components/home/wallet/connect-address';
@@ -18,14 +18,29 @@ import { useNavigation } from '../hooks/navigation.hook';
 import { useResizeObserver } from '../hooks/resize-observer.hook';
 import { Stack } from '../util/stack';
 
+export default function HomeScreen(): JSX.Element {
+  const { key } = useLocation();
+
+  return (
+    // reload home on navigation
+    <Fragment key={key}>
+      <HomeScreenContent />
+    </Fragment>
+  );
+}
+
 enum SpecialMode {
   LOGIN = 'Login',
+  LOGIN_MAIL = 'LoginMail',
+  LOGIN_WALLET = 'LoginWallet',
   CONNECT = 'Connect',
   MY_DFX = 'MyDfx',
 }
 
 const SpecialModes: { [m in SpecialMode]: string } = {
   [SpecialMode.LOGIN]: 'login',
+  [SpecialMode.LOGIN_MAIL]: 'login',
+  [SpecialMode.LOGIN_WALLET]: 'wallets',
   [SpecialMode.CONNECT]: 'wallets',
   [SpecialMode.MY_DFX]: 'wallets',
 };
@@ -36,6 +51,10 @@ function getMode(pathName: string): SpecialMode | undefined {
       return SpecialMode.MY_DFX;
     case '/login':
       return SpecialMode.LOGIN;
+    case '/login/mail':
+      return SpecialMode.LOGIN_MAIL;
+    case '/login/wallet':
+      return SpecialMode.LOGIN_WALLET;
     case '/connect':
       return SpecialMode.CONNECT;
     default:
@@ -45,7 +64,7 @@ function getMode(pathName: string): SpecialMode | undefined {
 
 type Page = { page: string; allowedTiles: string[] | undefined };
 
-export default function HomeScreen(): JSX.Element {
+function HomeScreenContent(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isLoggedIn } = useSessionContext();
   const { session, getAuthToken } = useAuthContext();
@@ -82,6 +101,8 @@ export default function HomeScreen(): JSX.Element {
       setConnectTo({ type: WalletType.ADDRESS });
     } else if (!isLoggedIn && isConnectAddress) {
       setConnectTo(undefined);
+    } else if (specialMode === SpecialMode.LOGIN_MAIL) {
+      setConnectTo({ type: WalletType.MAIL });
     }
   }, [specialMode, isLoggedIn, session, user?.addresses]);
 
@@ -100,6 +121,16 @@ export default function HomeScreen(): JSX.Element {
     const stack = mode ? new Stack([{ page: mode, allowedTiles: undefined }]) : new Stack<Page>();
     setPages(stack);
   }, [appParams.mode, appParams.wallets, specialMode]);
+
+  useEffect(() => {
+    if (
+      currentPage?.id.includes('wallets') &&
+      appParams.blockchain &&
+      session?.blockchains.includes(appParams.blockchain as Blockchain) &&
+      !specialMode
+    )
+      start();
+  }, [currentPage, session, appParams, specialMode]);
 
   // tile handling
   function handleNext(tile: Tile) {
@@ -138,8 +169,10 @@ export default function HomeScreen(): JSX.Element {
         }
         break;
 
-      // @ts-expect-error fall through to default option
       case SpecialMode.LOGIN:
+      case SpecialMode.LOGIN_MAIL:
+      // @ts-expect-error fall through to default option
+      case SpecialMode.LOGIN_WALLET:
         navigate('/');
 
       default:
@@ -157,7 +190,7 @@ export default function HomeScreen(): JSX.Element {
   const title = translate('screens/home', currentPage?.header ?? (currentPage?.dfxStyle ? 'DFX services' : ' '));
   const image =
     currentPage?.bottomImage ??
-    (currentPage?.dfxStyle ? 'https://content.dfx.swiss/img/v1/services/berge.jpg' : undefined);
+    (currentPage?.dfxStyle ? 'https://dfx.swiss/images/app/berge.jpg' : undefined);
 
   const hasBackButton =
     (canClose && !isEmbedded) || connectTo != null || (currentPageId != null && currentPageId !== appParams.mode);

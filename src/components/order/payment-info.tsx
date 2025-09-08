@@ -1,4 +1,6 @@
 import {
+  Asset,
+  AssetCategory,
   Fiat,
   FiatPaymentMethod,
   Sell,
@@ -16,7 +18,6 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { Asset, AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import React, { useEffect, useMemo, useState } from 'react';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';
@@ -29,8 +30,8 @@ import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { isAsset } from 'src/util/utils';
 import { ErrorHint } from '../error-hint';
 import { ExchangeRate } from '../exchange-rate';
-import { KycHint } from '../kyc-hint';
 import { PrivateAssetHint } from '../private-asset-hint';
+import { QuoteErrorHint } from '../quote-error-hint';
 import { SanctionHint } from '../sanction-hint';
 import { PaymentInfoContent } from './payment-info-content';
 
@@ -132,7 +133,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         ) : (
           <>
-            {kycError && <KycHint type={TransactionType.BUY} error={kycError} />}
+            {kycError && <QuoteErrorHint type={TransactionType.BUY} error={kycError} />}
 
             {errorMessage && (
               <StyledVerticalStack center className="text-center">

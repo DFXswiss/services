@@ -21,13 +21,27 @@ import { Modal } from 'src/components/modal';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { usePaymentPosContext } from 'src/contexts/payment-link-pos.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { PaymentLinkHistoryPayment } from 'src/dto/payment-link.dto';
+import { PaymentLinkHistory } from 'src/dto/payment-link.dto';
+import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
+import { delay, formatAmountForDisplay } from 'src/util/utils';
 
 export default function PaymentLinkPosScreen(): JSX.Element {
-  const { error, isLoading, isAuthenticated, payRequest, paymentLinkApiUrl, paymentStatus } = usePaymentPosContext();
+  const { error, isLoading, isAuthenticated, payRequest, paymentLinkApiUrl, posUrl, paymentStatus } =
+    usePaymentPosContext();
+  const { translate } = useSettingsContext();
+  const { copy } = useClipboard();
+
+  const [isCopying, setIsCopying] = useState(false);
+
+  function copyPosLink() {
+    setIsCopying(true);
+    copy(posUrl);
+    delay(0.2).then(() => setIsCopying(false));
+  }
+
   useLayoutOptions({ backButton: false, smallMenu: true });
 
   return (
@@ -50,6 +64,17 @@ export default function PaymentLinkPosScreen(): JSX.Element {
               <div className="flex flex-col w-full gap-4">
                 {PaymentLinkPaymentStatus.PENDING === paymentStatus ? <PendingPaymentForm /> : <CreatePaymentForm />}
               </div>
+
+              {posUrl && (
+                <StyledButton
+                  label={translate('screens/payment', 'Copy POS link')}
+                  onClick={copyPosLink}
+                  width={StyledButtonWidth.FULL}
+                  isLoading={isCopying}
+                  color={StyledButtonColor.STURDY_WHITE}
+                />
+              )}
+
               <div className="flex flex-col w-full mt-4">
                 <TransactionHistory />
               </div>
@@ -169,9 +194,7 @@ const PendingPaymentForm = (): JSX.Element => {
       </div>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
         <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
-          <p>
-            {payRequest?.requestedAmount.amount} {payRequest?.requestedAmount.asset}
-          </p>
+          {payRequest?.requestedAmount.asset ?? ''} {formatAmountForDisplay(payRequest?.requestedAmount.amount)}
         </StyledDataTableRow>
       </StyledDataTable>
       {isAuthenticated && (
@@ -190,8 +213,8 @@ const PendingPaymentForm = (): JSX.Element => {
 };
 
 function TransactionHistory(): JSX.Element {
-  const { paymentStatus, fetchTransactionHistory } = usePaymentPosContext();
-  const [transactionHistory, setTransactionHistory] = useState<PaymentLinkHistoryPayment[]>([]);
+  const { payRequest, paymentStatus, fetchTransactionHistory } = usePaymentPosContext();
+  const [transactionHistory, setTransactionHistory] = useState<PaymentLinkHistory>();
   const [isLoading, setIsLoading] = useState(true);
   const { translate } = useSettingsContext();
 
@@ -206,7 +229,7 @@ function TransactionHistory(): JSX.Element {
 
   useEffect(() => {
     fetchTransactionHistory()
-      .then((history) => setTransactionHistory(history ?? []))
+      .then((history) => setTransactionHistory(history))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
   }, [fetchTransactionHistory, paymentStatus]);
@@ -218,13 +241,13 @@ function TransactionHistory(): JSX.Element {
   ) : error ? (
     <ErrorHint message={error} />
   ) : (
-    <div>
+    <StyledVerticalStack full gap={2} className="pb-8">
       <h2 className="ml-1.5 mt-2 mb-1.5 text-dfxGray-700 align-left flex">
         {translate('screens/payment', 'Latest transactions')}
       </h2>
       <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-        {transactionHistory.length > 0 ? (
-          transactionHistory.map((payment) => (
+        {transactionHistory?.payments.length ? (
+          transactionHistory.payments.map((payment) => (
             <StyledDataTableRow key={payment.id}>
               <div className="flex flex-1 justify-between items-start">
                 <div className="flex items-center justify-center gap-2 text-dfxGray-800">
@@ -232,7 +255,7 @@ function TransactionHistory(): JSX.Element {
                   {translate('screens/payment', `${payment.status}`)}
                 </div>
                 <div className="flex flex-col items-end justify-start">
-                  {payment.amount} {payment.currency.toUpperCase()}
+                  {payment.currency.toUpperCase()} {formatAmountForDisplay(payment.amount)}
                   <span className="text-dfxGray-800 text-xs">
                     {new Date(payment.date).toDateString() === new Date().toDateString()
                       ? new Date(payment.date).toLocaleTimeString()
@@ -246,7 +269,20 @@ function TransactionHistory(): JSX.Element {
           <StyledDataTableRow label={translate('screens/payment', 'No transactions yet')} />
         )}
       </StyledDataTable>
-    </div>
+      {transactionHistory && payRequest && (
+        <>
+          <div className="w-full h-[1px] bg-dfxGray-500 my-3" />
+          <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
+            <StyledDataTableRow label={translate('screens/payment', 'Total amount')}>
+              <div className="font-bold text-dfxBlue-800">
+                {payRequest.currency?.toUpperCase() ?? payRequest.requestedAmount?.asset ?? ''}{' '}
+                {formatAmountForDisplay(transactionHistory.totalCompletedAmount)}
+              </div>
+            </StyledDataTableRow>
+          </StyledDataTable>
+        </>
+      )}
+    </StyledVerticalStack>
   );
 }
 

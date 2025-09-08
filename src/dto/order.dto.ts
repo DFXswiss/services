@@ -1,5 +1,4 @@
-import { Fees, PriceStep, TransactionError } from '@dfx.swiss/react';
-import { Beneficiary } from '@dfx.swiss/react/dist/definitions/sell';
+import { Beneficiary, Fees, PriceStep, TransactionError } from '@dfx.swiss/react';
 
 export class CustodyOrderBuyResponseDto {
   remittanceInfo?: string;

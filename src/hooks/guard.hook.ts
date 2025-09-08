@@ -1,5 +1,4 @@
-import { useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
-import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
+import { useAuthContext, UserRole, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { useEffect } from 'react';
 import { useWalletContext } from '../contexts/wallet.context';
 import { useNavigation } from './navigation.hook';

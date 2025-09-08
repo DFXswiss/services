@@ -93,7 +93,7 @@ export function useFeatureTree(): FeatureTreeInterface {
 
   function getImgUrl(tile: BaseTile, lang: Language): string {
     const language = supportedLanguages.find((l) => l === lang.symbol) ?? supportedLanguages[0];
-    return `https://content.dfx.swiss/img/v1/services/${tile.img}_${language.toLowerCase()}.jpg`;
+    return `https://dfx.swiss/images/app/${tile.img}_${language.toLowerCase()}.jpg`;
   }
 
   function setOptions(options: Options) {

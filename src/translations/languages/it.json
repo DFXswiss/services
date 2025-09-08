@@ -24,6 +24,8 @@
     "Continue in Trezor Connect": "Continua in Trezor Connect",
     "Yes": "Sì",
     "No": "No",
+    "True": "Vero",
+    "False": "Falso",
     "Drop files here": "Lasciare i file qui",
     "Browse": "Sfogliare",
     "Rename address": "Rinominare l'indirizzo",
@@ -64,6 +66,8 @@
     "Allowed formats: PDF, JPG, JPEG, PNG": "Formati consentiti: PDF, JPG, JPEG, PNG",
     "Invalid date format": "Formato data non valido",
     "Maximum allowed characters: 4000": "Caratteri massimi consentiti: 4000",
+
+    "No entries yet": "Nessuna voce ancora",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Qualcosa è andato storto. Riprovare. Se il problema persiste, contattate il nostro supporto.",
     "invoice": "DFX non riconosce un destinatario con il nome <strong>{{recipient}}</strong>. Questo servizio può essere utilizzato solo per i destinatari che hanno un account attivo con DFX e sono attivati per il servizio di fatturazione. Se desideri registrarti come destinatario presso DFX, contatta l’assistenza all’indirizzo <link>{{supportLink}}</link>.",
@@ -180,6 +184,9 @@
     "Document type": "Tipo di documento",
     "Document number": "Numero del documento",
 
+    "Sole proprietorship confirmation": "Conferma come impresa individuale",
+    "Commercial register extract, trade license/permit, AHV confirmation, or another document proving the existence of the business": "Estratto del registro di commercio, licenza/autorizzazione commerciale, attestato AVS o altro documento che comprovi l'esistenza dell'attività commerciale.",
+
     "Please fill in personal information to continue": "Compilare i dati personali per continuare",
     "Please enter your contact information so that we can find your account": "Inserite le vostre informazioni di contatto per consentirci di trovare il vostro account",
 
@@ -200,7 +207,9 @@
     "This transaction is only possible with a verified account. Please complete our KYC (Know-Your-Customer) process.": "Questa transazione è possibile solo con un conto verificato. Completare il processo KYC (Know-Your-Customer).",
     "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Le transazioni bancarie istantanee sono possibili solo con un conto verificato. Se desiderate utilizzare SEPA Instant, completate il nostro processo KYC (Know-Your-Customer).",
     "We are unable to process this transaction due to restrictions based on your nationality.": "Non possiamo elaborare questa transazione a causa di restrizioni basate sulla vostra nazionalità.",
+    "This IBAN cannot be used with this currency.": "Questo IBAN non può essere utilizzato con questa valuta.",
     "Note: Your account is not verified. Your transaction will only be processed if you do not have the same name as a sanctioned or politically exposed person.": "Nota: il vostro conto non è verificato. La vostra transazione sarà elaborata solo se non avete lo stesso nome di una persona sanzionata o esposta politicamente.",
+    "A buy bank transaction is required once {{volume}} exceeds {{limit}}.": "Una transazione di acquisto viene richiesta non appena {{volume}} supera il {{limit}}.",
     "A buy bank transaction or identification by video is required once {{volume}} exceeds {{limit}}.": "Una transazione di acquisto o un'identificazione tramite video viene richiesta non appena {{volume}} supera il {{limit}}.",
     "Identification by video is required once your transaction volume exceeds {{limit}}.": "Un'identificazione tramite video viene richiesta non appena il volume delle transazioni supera il {{limit}}.",
     "your sell transaction volume": "il volume delle transazioni di vendita",
@@ -245,7 +254,84 @@
     "Purpose": "Finalità",
     "Assignment agreement": "Contratto di cessione",
     "agreement": "DFX offre ai propri clienti la possibilità di cedere a DFX i crediti insoluti derivanti dalla vendita di beni e servizi per consentire il pagamento con criptovalute. Il cliente ha la possibilità di trasferire un credito insoluto tramite la nostra API (api.dfx.swiss) o tramite il front-end (app.dfx.swiss).<1/><2/>L'importo dovuto viene versato al cliente dopo aver dedotto una commissione di elaborazione dello 0,2%. A seconda della configurazione specifica del cliente, il pagamento può essere effettuato in criptovalute o in valuta fiat tramite transazione bancaria.<4/><5/>Le CG di DFX si applicano a tutte le transazioni. La cessione termina automaticamente con la chiusura del conto DFX o può essere interrotta immediatamente da DFX o dal cliente in caso di violazione del contratto o di insolvenza.<7/><8/>Non è richiesta la firma. Il contratto di cessione dei crediti sarà inviato al cliente via e-mail per la conferma.<10/><11/>Per tutti gli altri punti giuridici valgono il Codice delle obbligazioni svizzero (CO) e il diritto contrattuale.",
-    "I accept the agreement": "Accetto l'accordo"
+    "I accept the agreement": "Accetto l'accordo",
+    "Public name": "Nome pubblico",
+    "My organization": "La mia azienda",
+    "Registration number": "Numero di registrazione",
+
+    "Store type": "Tipo di negozio",
+    "Online": "Online",
+    "Physical": "Fisico",
+    "Online and physical": "Online e fisico",
+
+    "Merchant category": "Categoria del commerciante",
+    "Accommodation and food services": "Servizi di alloggio e ristorazione",
+    "Administrative support & waste management": "Servizi amministrativi e gestione dei rifiuti",
+    "Agriculture, forestry, fishing & hunting": "Agricoltura, silvicoltura, pesca e caccia",
+    "Arts, entertainment & recreation": "Arte, intrattenimento e tempo libero",
+    "Construction": "Costruzioni",
+    "Broker": "Intermediario",
+    "Crypto ATM": "Bancomat di criptovalute",
+    "Crypto mining": "Mining di criptovalute",
+    "Proprietary crypto traders": "Trader crypto proprietari",
+    "Algorithm crypto traders": "Trader crypto algoritmici",
+    "P2P merchants": "Commercianti P2P",
+    "Other digital asset services provider": "Altri fornitori di servizi di asset digitali",
+    "Bank": "Banca",
+    "Non-bank financial institution": "Istituzione finanziaria non bancaria",
+    "Money services business & payment service providers": "Servizi di pagamento e trasferimento di denaro",
+    "Family office": "Family office",
+    "Personal investment companies": "Società di investimento personale",
+    "Superannuation fund": "Fondo pensione",
+    "Sovereign wealth fund": "Fondo sovrano",
+    "Investment funds": "Fondi di investimento",
+    "Educational services": "Servizi educativi",
+    "Betting": "Scommesse",
+    "Health care & social assistance": "Assistenza sanitaria e sociale",
+    "Information": "Informazione",
+    "General wholesalers": "Grossisti generici",
+    "Management of companies & enterprises": "Gestione di aziende e imprese",
+    "Precious stones & precious metals dealers": "Commercianti di pietre preziose e metalli preziosi",
+    "Crude oil & natural gas dealers": "Commercianti di petrolio greggio e gas naturale",
+    "General manufacturing": "Produzione generale",
+    "Marijuana": "Cannabis",
+    "Mining & extraction": "Estrazione e miniere",
+    "Pawn shops": "Monte dei pegni",
+    "Professional services": "Servizi professionali",
+    "Scientific & technical services": "Servizi scientifici e tecnici",
+    "Public administration": "Amministrazione pubblica",
+    "Real estate, rental & leasing": "Immobiliare, affitto e leasing",
+    "Retail stores (electronics)": "Negozi al dettaglio (elettronica)",
+    "Retail stores (food & beverage)": "Negozi al dettaglio (alimentari e bevande)",
+    "Retail stores (jewelry)": "Negozi al dettaglio (gioielli)",
+    "Retail trade (others)": "Commercio al dettaglio (altro)",
+    "Sale of drugs & pharmaceutical products": "Vendita di farmaci e prodotti farmaceutici",
+    "Tobacco": "Tabacco",
+    "Transportation & warehousing": "Trasporti e magazzinaggio",
+    "Utilities": "Servizi pubblici",
+    "Other crypto/Web3 services": "Altri servizi crypto/Web3",
+
+    "Goods type": "Tipo di prodotto",
+    "Tangible": "Tangibile",
+    "Virtual": "Virtuale",
+
+    "Goods category": "Categoria di prodotto",
+    "Electronics & computers": "Elettronica e informatica",
+    "Books, music & movies": "Libri, musica e film",
+    "Home, garden & tools": "Casa, giardino e attrezzi",
+    "Clothes, shoes & bags": "Abbigliamento, scarpe e borse",
+    "Toys, kids & baby": "Giochi, bambini e neonati",
+    "Automotive accessories": "Accessori per auto",
+    "Game recharge": "Ricariche per giochi",
+    "Entertainment & collection": "Intrattenimento e collezionismo",
+    "Jewelry": "Gioielli",
+    "Domestic service": "Servizi domestici",
+    "Beauty & care": "Bellezza e cura personale",
+    "Pharmacy": "Farmacia",
+    "Sports & outdoors": "Sport e attività all’aperto",
+    "Food, grocery & health products": "Alimentari, spesa e prodotti per la salute",
+    "Pet supplies": "Prodotti per animali",
+    "Industry & science": "Industria e scienza"
   },
   "screens/2fa": {
     "2FA": "2FA",
@@ -308,6 +394,7 @@
     "Please confirm the connection in the Alby browser extension.": "Confermare la connessione nell'estensione del browser Alby.",
     "Please confirm the connection in your Phantom browser extension.": "Confermare la connessione nell'estensione del browser Phantom.",
     "Please confirm the connection in your Trust browser extension.": "Confermare la connessione nell'estensione del browser Trust.",
+    "Please confirm the connection in your TronLink browser extension.": "Confermare la connessione nell'estensione del browser TronLink.",
     "Please confirm the connection in your wallet.": "Confermare la connessione nel portafoglio.",
     "Please confirm the connection with your Ledger.": "Confermare il collegamento con il Ledger.",
     "Connection failed!": "Connessione fallita!",
@@ -337,6 +424,7 @@
     "Login with your BTC Taro Wallet": "Login con l'app BTC Taro",
     "Install BTC Taro": "Installare BTC Taro",
     "Pay in app": "Pagare nell'app",
+    "Open app and scan QR code again": "Aprire l'app e scansionare nuovamente il codice QR",
     "App temporarily unavailable": "App temporaneamente non disponibile",
 
     "Log in to your DFX account by verifying with your signature that you are the sole owner of the provided blockchain address.": "Accedere al proprio conto DFX verificando con la propria firma di essere l'unico proprietario dell'indirizzo blockchain fornito.",
@@ -350,6 +438,8 @@
     "You need to install the Phantom browser extension to be able to use this service.": "Per poter utilizzare questo servizio è necessario installare l'estensione del browser Phantom.",
     "Please install Trust!": "Installare Trust!",
     "You need to install the Trust browser extension to be able to use this service.": "Per poter utilizzare questo servizio è necessario installare l'estensione del browser Trust.",
+    "Please install TronLink!": "Installare TronLink!",
+    "You need to install the TronLink browser extension to be able to use this service.": "Per poter utilizzare questo servizio è necessario installare l'estensione del browser TronLink.",
     "Browser not supported!": "Browser non supportato!",
     "Mobile not supported!": "Mobile non supportato!",
     "Please use a desktop device with a compatible browser (e.g. Chrome) to be able to use this service.": "Per poter utilizzare questo servizio, utilizzare un dispositivo desktop con un browser compatibile (ad esempio Chrome).",
@@ -561,6 +651,9 @@
     "Missing liquidity": "Liquidità mancante",
     "KYC data needed": "Dati KYC necessari",
     "Bank transaction needed": "Necessaria transazione bancaria",
+    "Email confirmation incomplete": "Conferma e-mail incompleta",
+    "Verification by phone required": "Verifica telefonica richiesta",
+    "we will call you at {{phone}}": "ti chiameremo al {{phone}}",
 
     "Loading countries...": "Caricamento dei paesi...",
 
@@ -589,7 +682,7 @@
     "Please send the specified amount to the address below.": "Si prega di inviare l'importo specificato all'indirizzo sottostante.",
     "Please note that by using this service you automatically accept our terms and conditions.": "Si ricorda che utilizzando questo servizio si accettano automaticamente i nostri termini e condizioni.",
     "By using this service, the outstanding claim of the above-mentioned company against DFX is assigned, and the General Terms and Conditions of DFX AG apply.": "Con l’utilizzo di questo servizio, il credito insoluto della suddetta azienda nei confronti di DFX viene ceduto, e si applicano i Termini e Condizioni Generali della DFX AG.",
-    "Find out more about the OpenCryptoPay payment standard": "Scopri di più sullo standard di pagamento OpenCryptoPay",
+    "Learn more about OpenCryptoPay": "Scopri di più su OpenCryptoPay",
 
     "Payment routes": "Modalità di pagamento",
     "Payment route": "Modalità di pagamento",
@@ -616,6 +709,11 @@
     "Activate": "Attivare",
     "Deactivate": "Disattivare",
     "Expires at": "Scade il",
+    "Public": "Pubblico",
+
+    "Payment Methods": "Metodi di pagamento",
+    "Supported cryptocurrencies and blockchains": "Criptovalute e blockchain supportate",
+    "Locations": "Posizioni",
 
     "Configuration": "Configurazione",
     "Default configuration": "Configurazione predefinita",
@@ -684,7 +782,15 @@
     "Insert the amount to active the payment.": "Inserisci l'importo per attivare il pagamento.",
     "Amount in {{currencyName}}": "Importo in {{currencyName}}",
     "Latest transactions": "Ultime transazioni",
-    "Create Payment": "Crea pagamento"
+    "Create Payment": "Crea pagamento",
+    "Copy POS link": "Copia link POS",
+
+    "Assign payment link '{{id}}'": "Assegnare il link di pagamento '{{id}}'",
+    "Assign": "Assegnare",
+
+    "Total amount": "Importo totale",
+    "You will be redirected to the site shortly": "Verrai reindirizzato al sito in breve",
+    "Go back to the payment page": "Torna alla pagina di pagamento"
   },
   "screens/iban": {
     "Your Bank Accounts": "I tuoi conti bancari",
@@ -734,7 +840,9 @@
     "We have summarized the most common questions for you in our FAQ.": "Abbiamo riassunto le domande più comuni nelle nostre FAQ.",
     "Search now": "Cerca ora",
     "Submit Ticket": "Invia un ticket",
+    "Contact us": "Contattaci",
     "If you have a specific question or problem, you can submit a ticket here.": "Se avete una domanda o un problema specifico, potete inviare un ticket qui.",
+    "If you have any questions, you can also contact us via Telegram.": "Se hai domande, puoi anche contattarci tramite Telegram.",
 
     "Write a message...": "Scrivi un messaggio...",
     "Downloading...": "Scaricamento...",
@@ -743,7 +851,13 @@
 
     "Created on": "Creato il",
     "Hide completed tickets": "Nascondi i ticket completati",
-    "Show completed tickets": "Mostra i ticket completati"
+    "Show completed tickets": "Mostra i ticket completati",
+
+    "Telegram Support": "Supporto Telegram",
+    "If someone offers you help in a private message, EVEN IF THEY APPEAR IDENTICAL TO A REAL GROUP ADMIN, should you ever respond to them?": "Se qualcuno ti offre aiuto in un messaggio privato, ANCHE SE SEMBRA IDENTICO A UN VERO AMMINISTRATORE DEL GRUPPO, dovresti mai rispondere?",
+    "True or false: Scammers who want to steal your funds will message you pretending to be admins and official support accounts.": "Vero o falso: I truffatori che vogliono rubare i tuoi fondi ti invieranno messaggi fingendosi amministratori e account di supporto ufficiali.",
+    "Admins will NEVER give help by asking for your seed phrase or requiring you to follow any links. If anyone claims they need your seed phrase to help you with a problem, should you give it to them?": "Gli amministratori non daranno MAI aiuto chiedendo la tua frase di recupero o richiedendo di seguire link. Se qualcuno afferma di aver bisogno della tua frase di recupero per aiutarti con un problema, dovresti dargliela?",
+    "Please review your answers. Remember: Never trust private messages, scammers will impersonate admins, and NEVER share your seed phrase.": "Controlla le tue risposte. Ricorda: Non fidarti mai dei messaggi privati, i truffatori si fingeranno amministratori, e non condividere MAI la tua frase di recupero."
   },
   "screens/settings": {
     "Settings": "Impostazioni",
@@ -794,7 +908,11 @@
     "Classic stickers": "Adesivi classici",
     "Bitcoin Focus": "Bitcoin Focus",
     "Bitcoin Focus stickers": "Adesivi Bitcoin Focus",
-    "Open CryptoPay Stickers": "Adesivi Open CryptoPay"
+    "Open CryptoPay Stickers": "Adesivi Open CryptoPay",
+    "Customer stickers": "Adesivi dei clienti",
+    "Point of Sale stickers": "Adesivi del punto vendita",
+    "Customer": "Cliente",
+    "POS": "PDV"
   },
   "navigation/links": {
     "Buy": "Comprare",

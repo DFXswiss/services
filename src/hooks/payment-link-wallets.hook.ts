@@ -1,8 +1,9 @@
-import { Blockchain } from '@dfx.swiss/react';
+import { Blockchain, PaymentLinkMode } from '@dfx.swiss/react';
 import { useCallback, useMemo } from 'react';
 import { PaymentLinkWallets } from 'src/config/payment-link-wallets';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
-import { C2BPaymentMethod, WalletAppId, WalletInfo } from 'src/dto/payment-link.dto';
+import { C2BPaymentMethod, TransferMethod, WalletAppId, WalletCategory, WalletInfo } from 'src/dto/payment-link.dto';
+import { Wallet } from 'src/util/payment-link-wallet';
 import { fetchJson, url } from 'src/util/utils';
 
 interface PaymentLinkWalletsProps {
@@ -16,31 +17,46 @@ interface PaymentLinkWalletsProps {
 export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   const { paymentIdentifier, payRequest, paymentHasQuote } = usePaymentLinkContext();
 
+  const getDeeplinkByCategory = async (wallet: WalletInfo) => {
+    if (!paymentIdentifier) return undefined;
 
-  const transferMethods = paymentHasQuote(payRequest)
-    ? payRequest.transferAmounts.filter((ta) => ta.available).map((ta) => ta.method)
-    : [];
+    if (wallet.category === WalletCategory.LIGHTNING) {
+      const lightning = new URL(paymentIdentifier).searchParams.get('lightning');
+      const suffix = 'lightning:';
+      const prefix = wallet.deepLink !== suffix ? `${wallet.deepLink}` : '';
+      return `${prefix}${suffix}${lightning}`;
+    }
 
-  const PaymentLinkWalletsWithAvailability = useMemo(
-    () =>
-      PaymentLinkWallets.map((wallet) => ({
+    return wallet.deepLink;
+  };
+
+  const hasActionDeepLink = (wallet: WalletInfo): boolean => {
+    return wallet.category === WalletCategory.LIGHTNING;
+  };
+
+  const filteredPaymentLinkWallets = useMemo(() => {
+    const hasQuote = paymentHasQuote(payRequest);
+    const isPublicPayment = payRequest?.mode === PaymentLinkMode.PUBLIC;
+    return PaymentLinkWallets.map((wallet) => {
+      return {
         ...wallet,
-        disabled: wallet.transferMethod ? !transferMethods.includes(wallet.transferMethod) : wallet.disabled,
-      })),
-    [transferMethods],
-  );
+        disabled: hasQuote && !Wallet.qualifiesForPayment(wallet, payRequest.transferAmounts),
+        hasActionDeepLink: hasActionDeepLink(wallet),
+      };
+    }).filter((wallet) => (isPublicPayment ? wallet.deepLink : true));
+  }, [payRequest]);
 
   const recommendedWallets = useMemo(() => {
-    return PaymentLinkWalletsWithAvailability.filter((wallet) => wallet.recommended === true);
-  }, [PaymentLinkWalletsWithAvailability]);
+    return filteredPaymentLinkWallets.filter((wallet) => wallet.recommended === true);
+  }, [filteredPaymentLinkWallets]);
 
   const otherWallets = useMemo(() => {
-    return PaymentLinkWalletsWithAvailability.filter((wallet) => !wallet.recommended && !wallet.semiCompatible);
-  }, [PaymentLinkWalletsWithAvailability]);
+    return filteredPaymentLinkWallets.filter((wallet) => !wallet.recommended && !wallet.semiCompatible);
+  }, [filteredPaymentLinkWallets]);
 
   const semiCompatibleWallets = useMemo(() => {
-    return PaymentLinkWalletsWithAvailability.filter((wallet) => wallet.semiCompatible);
-  }, [PaymentLinkWalletsWithAvailability]);
+    return filteredPaymentLinkWallets.filter((wallet) => wallet.semiCompatible);
+  }, [filteredPaymentLinkWallets]);
 
   const getWalletByName = useCallback(
     (id: WalletAppId): WalletInfo | undefined => {
@@ -49,9 +65,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
     [recommendedWallets, otherWallets, semiCompatibleWallets],
   );
 
-  const fetchCallbackUrlForTransferMethod = async <T = any>(
-    method: Blockchain | C2BPaymentMethod,
-  ): Promise<T | undefined> => {
+  const fetchCallbackUrlForTransferMethod = async <T = any>(method: TransferMethod): Promise<T | undefined> => {
     if (!paymentHasQuote(payRequest)) return undefined;
     const transferAmount = payRequest.transferAmounts.find((ta) => ta.method === method);
     const asset = transferAmount?.assets[0].asset ?? '';
@@ -60,17 +74,6 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
       params: new URLSearchParams({ quote: payRequest.quote.id, method: method.toString(), asset }),
     });
     return await fetchJson<T>(callbackUrl);
-  };
-
-  const getDeeplinkByTransferMethod = async (wallet: WalletInfo) => {
-    if (!paymentIdentifier) return undefined;
-    switch (wallet.transferMethod) {
-      case Blockchain.LIGHTNING:
-        const lightning = new URL(paymentIdentifier).searchParams.get('lightning');
-        const suffix = 'lightning:';
-        const prefix = wallet.deepLink !== suffix ? `${wallet.deepLink}` : '';
-        return `${prefix}${suffix}${lightning}`;
-    }
   };
 
   const getDeeplinkByWalletId = async (id: WalletAppId): Promise<string | undefined> => {
@@ -82,12 +85,16 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
         const { pr } = (await fetchCallbackUrlForTransferMethod<{ pr: string }>(Blockchain.LIGHTNING)) ?? {};
         return `${wallet.deepLink}${pr}`;
 
-      case WalletAppId.BINANCEPAY:
+      case WalletAppId.BINANCE:
         const { uri } = (await fetchCallbackUrlForTransferMethod<{ uri: string }>(C2BPaymentMethod.BINANCE_PAY)) ?? {};
         return uri;
 
+      case WalletAppId.KUCOINPAY:
+        const { uri: kucoinUri } = (await fetchCallbackUrlForTransferMethod<{ uri: string }>(C2BPaymentMethod.KUCOINPAY)) ?? {};
+        return kucoinUri;
+
       default:
-        return getDeeplinkByTransferMethod(wallet) ?? wallet.deepLink;
+        return getDeeplinkByCategory(wallet);
     }
   };
 

@@ -26,15 +26,21 @@ export function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: 
       return <PhantomHint onConfirm={onConfirm} />;
 
     case WalletType.TRUST_SOL:
+    case WalletType.TRUST_TRX:
       return <TrustHint onConfirm={onConfirm} />;
+
+    case WalletType.TRONLINK_TRX:
+      return <TronLinkHint onConfirm={onConfirm} />;
 
     case WalletType.CLI_BTC:
     case WalletType.CLI_LN:
     case WalletType.CLI_XMR:
+    case WalletType.CLI_ZANO:
     case WalletType.CLI_ETH:
     case WalletType.CLI_ADA:
     case WalletType.CLI_AR:
     case WalletType.CLI_SOL:
+    case WalletType.CLI_TRX:
     case WalletType.DFX_TARO:
     case WalletType.WALLET_CONNECT:
     case WalletType.CAKE:
@@ -173,6 +179,29 @@ function TrustHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
         {translate('screens/home', 'You need to install the Trust browser extension to be able to use this service.')}{' '}
         <Trans i18nKey="screens/home.visit">
           Visit <StyledLink label="trustwallet.com" url="https://trustwallet.com" dark /> for more details.
+        </Trans>{' '}
+      </p>
+
+      <div className="mx-auto">
+        <StyledButton width={StyledButtonWidth.SM} onClick={onConfirm} label={translate('general/actions', 'OK')} />
+      </div>
+    </StyledVerticalStack>
+  );
+}
+
+function TronLinkHint({ onConfirm }: { onConfirm: () => void }): JSX.Element {
+  const { translate } = useSettingsContext();
+
+  return (
+    <StyledVerticalStack gap={4}>
+      <h1 className="text-dfxGray-700">{translate('screens/home', 'Please install TronLink!')}</h1>
+      <p className="text-dfxGray-700">
+        {translate(
+          'screens/home',
+          'You need to install the TronLink browser extension to be able to use this service.',
+        )}{' '}
+        <Trans i18nKey="screens/home.visit">
+          Visit <StyledLink label="tronlink.org" url="https://www.tronlink.org" dark /> for more details.
         </Trans>{' '}
       </p>
 

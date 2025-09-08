@@ -107,7 +107,7 @@ function Content({ connect, link, error }: ContentProps): JSX.Element {
 
         <h2 className="text-dfxGray-700 mt-8">{translate('screens/home', 'Install BTC Taro')}</h2>
         <a href="https://dfx.swiss/app/btc" target="_blank">
-          <img src="https://content.dfx.swiss/img/v1/services/btc-app.jpg" className="w-full max-w-sm" />
+          <img src="https://dfx.swiss/images/app/btc-app.jpg" className="w-full max-w-sm" />
         </a>
       </>
     );

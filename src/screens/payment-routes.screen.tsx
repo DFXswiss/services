@@ -4,10 +4,13 @@ import {
   Country,
   Fiat,
   MinCompletionStatus,
+  PaymentLink,
+  PaymentLinkMode,
   PaymentLinkPaymentMode,
   PaymentLinkPaymentStatus,
   PaymentLinkStatus,
   PaymentRouteType,
+  PaymentStandardType,
   SellRoute,
   usePaymentRoutes,
   usePaymentRoutesContext,
@@ -34,12 +37,12 @@ import {
   StyledDropdown,
   StyledDropdownMultiChoice,
   StyledHorizontalStack,
+  StyledIconButton,
   StyledInput,
   StyledLoadingSpinner,
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { PaymentLink, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
 import copy from 'copy-to-clipboard';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -50,21 +53,16 @@ import { QrBasic } from 'src/components/payment/qr-code';
 import { PaymentQuoteStatusLabels } from 'src/config/labels';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import { useAddressGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { Lnurl } from 'src/util/lnurl';
-import {
-  blankedAddress,
-  downloadFile,
-  filenameDateFormat,
-  formatLocationAddress,
-  isEmpty,
-  removeNullFields,
-} from 'src/util/utils';
+import { blankedAddress, formatLocationAddress, isEmpty, removeNullFields, url } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
+import { StyledLinkButton } from '../components/styled-link-button';
 
 interface FormData {
   routeId: RouteIdSelectData;
@@ -104,7 +102,8 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
-  const { user } = useUserContext();
+  const { isInitialized } = useWalletContext();
+  const { user, isUserLoading } = useUserContext();
   const {
     paymentRoutes,
     paymentLinks,
@@ -118,7 +117,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
     deletePaymentRoute,
     error: apiError,
   } = usePaymentRoutesContext();
-  const { getPaymentStickers, createPosLink } = usePaymentRoutes();
+  const { createPosLink } = usePaymentRoutes();
   const paymentLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [error, setError] = useState<string>();
@@ -129,15 +128,21 @@ export default function PaymentRoutesScreen(): JSX.Element {
   const [showPaymentLinkForm, setShowPaymentLinkForm] = useState<PaymentLinkFormState>();
   const [updateGlobalConfig, setUpdateGlobalConfig] = useState<boolean>(false);
   const [updatePaymentLinkLabel, setUpdatePaymentLinkLabel] = useState<string>();
-  const [isGeneratingSticker, setIsGeneratingSticker] = useState<string>();
   const [isLoadingPos, setIsLoadingPos] = useState<string>();
-  const [linkError, setLinkError] = useState<string>();
+  const [posUrls, setPosUrls] = useState<Record<string, string>>({});
 
   useAddressGuard('/login');
 
   async function togglePaymentLinkStatus(id: string, status: PaymentLinkStatus) {
     setIsUpdatingPaymentLink((prev) => [...prev, id]);
     updatePaymentLink({ status }, id).finally(() => {
+      setIsUpdatingPaymentLink((prev) => prev.filter((i) => i !== id));
+    });
+  }
+
+  async function togglePaymentLinkMode(id: string, mode: PaymentLinkMode) {
+    setIsUpdatingPaymentLink((prev) => [...prev, id]);
+    updatePaymentLink({ mode }, id).finally(() => {
       setIsUpdatingPaymentLink((prev) => prev.filter((i) => i !== id));
     });
   }
@@ -221,24 +226,25 @@ export default function PaymentRoutesScreen(): JSX.Element {
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
   }
 
-  function downloadSticker({ routeId, externalId, id }: PaymentLink) {
-    setIsGeneratingSticker(id);
-    setLinkError(undefined);
-    getPaymentStickers(routeId, externalId, externalId ? undefined : id)
-      .then(({ data, headers }) => {
-        downloadFile(data, headers, `DFX_OCP_stickers_${filenameDateFormat()}.pdf`);
-      })
-      .catch((error: ApiError) => setLinkError(error.message ?? 'Unknown Error'))
-      .finally(() => setIsGeneratingSticker(undefined));
+  function downloadSticker({ routeId, externalId }: PaymentLink) {
+    const params = new URLSearchParams();
+    params.append('route', routeId);
+    if (externalId) params.append('externalIds', externalId);
+    window.open(url({ path: '/stickers', params }), '_blank');
   }
 
-  function goToPos({ id }: PaymentLink) {
-    setIsLoadingPos(id);
-    setLinkError(undefined);
-    createPosLink(id)
-      .then(({ url }) => window.open(url, '_blank'))
-      .catch((error: ApiError) => setLinkError(error.message ?? 'Unknown Error'))
-      .finally(() => setIsLoadingPos(undefined));
+  async function fetchPosUrl(linkId: string) {
+    if (posUrls[linkId] || isLoadingPos === linkId) return; // Already fetched
+
+    setIsLoadingPos(linkId);
+    try {
+      const { url } = await createPosLink(linkId);
+      setPosUrls((prev) => ({ ...prev, [linkId]: url }));
+    } catch (error) {
+      console.error('Failed to fetch POS URL:', error);
+    } finally {
+      setIsLoadingPos(undefined);
+    }
   }
 
   const hasRoutes =
@@ -269,7 +275,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
     <>
       {(apiError && apiError !== 'permission denied') || error ? (
         <ErrorHint message={apiError ?? error ?? ''} />
-      ) : userPaymentLinksConfigLoading ? (
+      ) : userPaymentLinksConfigLoading || isUserLoading || !isInitialized ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : updateGlobalConfig ? (
         <PaymentLinkForm
@@ -512,6 +518,21 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           <StyledDataTableRow label={translate('screens/payment', 'State')}>
                             <p>{translate('screens/payment', link.status)}</p>
                           </StyledDataTableRow>
+                          <StyledDataTableRow label={translate('screens/payment', 'Public')}>
+                            <p>{translate('general/actions', link.mode === PaymentLinkMode.PUBLIC ? 'Yes' : 'No')}</p>
+                            <StyledIconButton
+                              onClick={() =>
+                                togglePaymentLinkMode(
+                                  link.id,
+                                  link.mode === PaymentLinkMode.PUBLIC
+                                    ? PaymentLinkMode.MULTIPLE
+                                    : PaymentLinkMode.PUBLIC,
+                                )
+                              }
+                              icon={IconVariant.SWAP}
+                              isLoading={isUpdatingPaymentLink.includes(link.id)}
+                            />
+                          </StyledDataTableRow>
                           <StyledDataTableExpandableRow
                             label="LNURL"
                             expansionItems={[
@@ -688,13 +709,13 @@ export default function PaymentRoutesScreen(): JSX.Element {
                           label={translate('general/actions', 'Download sticker')}
                           onClick={() => downloadSticker(link)}
                           color={StyledButtonColor.STURDY_WHITE}
-                          isLoading={isGeneratingSticker === link.id}
                         />
-                        <StyledButton
-                          label={translate('screens/payment', 'Open POS')}
-                          onClick={() => goToPos(link)}
-                          color={StyledButtonColor.STURDY_WHITE}
+                        <PosLinkButton
+                          link={link}
+                          posUrl={posUrls[link.id]}
                           isLoading={isLoadingPos === link.id}
+                          onMount={fetchPosUrl}
+                          translate={translate}
                         />
                         {link.status === PaymentLinkStatus.ACTIVE &&
                           (!link.payment || link.payment.status !== PaymentLinkPaymentStatus.PENDING) && (
@@ -733,7 +754,6 @@ export default function PaymentRoutesScreen(): JSX.Element {
                             isLoading={isUpdatingPaymentLink.includes(link.id)}
                           />
                         )}
-                        <div className="text-center">{linkError && <ErrorHint message={linkError} />}</div>
                       </StyledVerticalStack>
                     </StyledCollapsible>
                   </div>
@@ -765,6 +785,28 @@ export default function PaymentRoutesScreen(): JSX.Element {
         </StyledVerticalStack>
       )}
     </>
+  );
+}
+
+interface PosLinkButtonProps {
+  link: PaymentLink;
+  posUrl?: string;
+  isLoading: boolean;
+  onMount: (linkId: string) => void;
+  translate: (namespace: string, key: string) => string;
+}
+
+function PosLinkButton({ link, posUrl, isLoading, onMount, translate }: PosLinkButtonProps) {
+  useEffect(() => {
+    onMount(link.id);
+  }, [link.id, onMount]);
+
+  return (
+    <StyledLinkButton
+      label={translate('screens/payment', 'Open POS')}
+      href={posUrl || `${window.location.origin}/pos/payment-link/${link.id}`}
+      isLoading={isLoading}
+    />
   );
 }
 

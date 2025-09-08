@@ -1,6 +1,7 @@
 import {
   ApiError,
   Asset,
+  AssetCategory,
   Blockchain,
   Session,
   Swap,
@@ -32,7 +33,6 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
@@ -45,9 +45,9 @@ import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
-import { KycHint } from '../components/kyc-hint';
 import { AddressSwitch } from '../components/payment/address-switch';
 import { SwapCompletion } from '../components/payment/swap-completion';
+import { QuoteErrorHint } from '../components/quote-error-hint';
 import { SanctionHint } from '../components/sanction-hint';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance } from '../contexts/balance.context';
@@ -97,7 +97,7 @@ export default function SwapScreen(): JSX.Element {
   const { closeServices } = useAppHandlingContext();
   const { blockchain: walletBlockchain, activeWallet, switchBlockchain } = useWalletContext();
   const { getBalances, sendTransaction, canSendTransaction } = useTxHelper();
-  const { availableBlockchains, logout } = useSessionContext();
+  const { logout } = useSessionContext();
   const { session } = useAuthContext();
   const { width } = useWindowContext();
   const { user } = useUserContext();
@@ -114,6 +114,7 @@ export default function SwapScreen(): JSX.Element {
     externalTransactionId,
     flags,
     setParams,
+    availableBlockchains,
   } = useAppParams();
   const { receiveFor } = useSwap();
   const { toString } = useBlockchain();
@@ -217,7 +218,7 @@ export default function SwapScreen(): JSX.Element {
     if (amountIn) setVal('amount', amountIn);
   }, [amountIn]);
 
-  useEffect(() => setAddress(), [session?.address, translate]);
+  useEffect(() => setAddress(), [session?.address, translate, blockchain, user]);
 
   useEffect(() => {
     if (selectedAddress) {
@@ -373,8 +374,10 @@ export default function SwapScreen(): JSX.Element {
       case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
+      case TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING:
       case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
+      case TransactionError.IBAN_CURRENCY_MISMATCH:
         setKycError(swap.error);
         return;
     }
@@ -450,7 +453,7 @@ export default function SwapScreen(): JSX.Element {
   }
 
   function setAddress() {
-    if (session?.address) {
+    if (session?.address && addressItems.length > 0) {
       const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
       setVal('address', address);
     }
@@ -517,7 +520,11 @@ export default function SwapScreen(): JSX.Element {
                       buttonLabel={availableBalance ? 'MAX' : undefined}
                       buttonClick={() => availableBalance && setVal('amount', `${availableBalance}`)}
                       forceError={
-                        (kycError && kycError === TransactionError.BANK_TRANSACTION_MISSING) ||
+                        (kycError &&
+                          [
+                            TransactionError.BANK_TRANSACTION_MISSING,
+                            TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING,
+                          ].includes(kycError)) ||
                         customAmountError != null
                       }
                       forceErrorMessage={
@@ -611,7 +618,7 @@ export default function SwapScreen(): JSX.Element {
                 </StyledVerticalStack>
               ) : (
                 <>
-                  {kycError && !customAmountError && <KycHint type={TransactionType.SWAP} error={kycError} />}
+                  {kycError && !customAmountError && <QuoteErrorHint type={TransactionType.SWAP} error={kycError} />}
 
                   {errorMessage && (
                     <StyledVerticalStack center className="text-center">

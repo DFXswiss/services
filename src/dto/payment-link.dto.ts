@@ -1,5 +1,4 @@
-import { Asset, Blockchain } from '@dfx.swiss/react';
-import { PaymentLinkPaymentStatus, PaymentStandardType } from '@dfx.swiss/react/dist/definitions/route';
+import { Asset, Blockchain, PaymentLinkMode, PaymentLinkPaymentStatus, PaymentStandardType } from '@dfx.swiss/react';
 
 export interface PaymentStandard {
   id: PaymentStandardType;
@@ -17,11 +16,12 @@ export interface Quote {
 
 export interface Amount {
   asset: string;
-  amount: number;
+  amount?: number;
 }
 
 export enum C2BPaymentMethod {
   BINANCE_PAY = 'BinancePay',
+  KUCOINPAY = 'KucoinPay',
 }
 
 export type TransferMethod = Blockchain | C2BPaymentMethod;
@@ -31,6 +31,20 @@ export interface TransferInfo {
   minFee: number;
   assets: Amount[];
   available?: boolean;
+}
+
+export interface RecipientInfo {
+  address?: {
+    city: string;
+    country: string;
+    houseNumber: string;
+    street: string;
+    zip: string;
+  };
+  name?: string;
+  mail?: string;
+  phone?: string;
+  website?: string;
 }
 
 export interface PaymentLinkPayTerminal {
@@ -44,19 +58,8 @@ export interface PaymentLinkPayTerminal {
   mode: PaymentLinkMode;
   route: string;
   currency: string;
-  recipient: {
-    address?: {
-      city: string;
-      country: string;
-      houseNumber: string;
-      street: string;
-      zip: string;
-    };
-    name?: string;
-    mail?: string;
-    phone?: string;
-    website?: string;
-  };
+  recipient: RecipientInfo;
+  transferAmounts: TransferInfo[];
 
   // error fields
   statusCode?: number;
@@ -81,7 +84,14 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
   minSendable: number;
   maxSendable: number;
   requestedAmount: Amount;
-  transferAmounts: TransferInfo[];
+}
+
+export enum WalletCategory {
+  LIGHTNING = 'LIGHTNING',
+  BITCOIN = 'BITCOIN', // Bitcoin & Lightning
+  EVM = 'EVM',
+  MULTI_CHAIN = 'MULTI_CHAIN', // excl. Lightning
+  C2B = 'C2B', // Binance Pay, Kucoin Pay
 }
 
 export enum WalletAppId {
@@ -96,10 +106,8 @@ export enum WalletAppId {
   BLINK = 'blink',
   BLITZWALLET = 'blitzwallet',
   BLIXT = 'blixt',
-  BLUEWALLET = 'bluewallet',
   BREEZ = 'breez',
   COINCORNER = 'coincorner',
-  ELECTRUM = 'electrum',
   LIFPAY = 'lifpay',
   LIPAWALLET = 'lipawallet',
   LNBITS = 'lnbits',
@@ -108,8 +116,9 @@ export enum WalletAppId {
   POUCHPH = 'pouchph',
   ZEBEDEE = 'zebedee',
   ZEUS = 'zeus',
-  BINANCEPAY = 'binancepay',
+  BINANCE = 'binance',
   MUUN = 'muun',
+  KUCOINPAY = 'kucoinpay',
 }
 
 export interface WalletInfo {
@@ -118,10 +127,12 @@ export interface WalletInfo {
   websiteUrl?: string;
   iconUrl: string;
   deepLink?: string;
+  hasActionDeepLink?: boolean;
   appStoreUrl?: string;
   playStoreUrl?: string;
   recommended?: boolean;
-  transferMethod?: TransferMethod;
+  category: WalletCategory;
+  supportedTokens?: string[];
   semiCompatible?: boolean;
   disabled?: boolean;
 }
@@ -133,8 +144,9 @@ export interface MetaMaskInfo {
   minFee: number;
 }
 
-export interface PaymentLinkHistoryResponse extends PaymentLinkPayRequest {
+export interface PaymentLinkHistory extends PaymentLinkPayRequest {
   payments: PaymentLinkHistoryPayment[];
+  totalCompletedAmount: number;
 }
 
 export interface PaymentLinkHistoryPayment {
@@ -144,10 +156,4 @@ export interface PaymentLinkHistoryPayment {
   currency: string;
   date: Date;
   externalId: string;
-}
-
-export enum PaymentLinkMode {
-  SINGLE = 'Single',
-  MULTIPLE = 'Multiple',
-  PUBLIC = 'Public',
 }

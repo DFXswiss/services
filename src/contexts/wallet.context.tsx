@@ -16,17 +16,21 @@ export enum WalletType {
   TREZOR_ETH = 'TrezorEth',
   CLI_BTC = 'CliBtc',
   CLI_XMR = 'CliXmr',
+  CLI_ZANO = 'CliZano',
   CLI_ETH = 'CliEth',
   CLI_ADA = 'CliAda',
   CLI_AR = 'CliAr',
   CLI_LN = 'CliLn',
   CLI_SOL = 'CliSol',
+  CLI_TRX = 'CliTrx',
   DFX_TARO = 'DfxTaro',
   WALLET_CONNECT = 'WalletConnect',
   CAKE = 'Cake',
   MONERO = 'Monero',
   PHANTOM_SOL = 'PhantomSol',
   TRUST_SOL = 'TrustSol',
+  TRUST_TRX = 'TrustTrx',
+  TRONLINK_TRX = 'TronLinkTrx',
   MAIL = 'Mail',
   ADDRESS = 'Address',
 }
@@ -41,6 +45,8 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
     Blockchain.GNOSIS,
     Blockchain.HAQQ,
     Blockchain.BINANCE_SMART_CHAIN,
+    Blockchain.CITREA_TESTNET,
+    Blockchain.SEPOLIA,
   ],
   [WalletType.ALBY]: [Blockchain.LIGHTNING],
   [WalletType.LEDGER_BTC]: [Blockchain.BITCOIN],
@@ -52,6 +58,7 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
   [WalletType.CLI_BTC]: [Blockchain.BITCOIN],
   [WalletType.CLI_LN]: [Blockchain.LIGHTNING],
   [WalletType.CLI_XMR]: [Blockchain.MONERO],
+  [WalletType.CLI_ZANO]: [Blockchain.ZANO],
   [WalletType.CLI_ETH]: [
     Blockchain.ETHEREUM,
     Blockchain.ARBITRUM,
@@ -61,10 +68,13 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
     Blockchain.GNOSIS,
     Blockchain.HAQQ,
     Blockchain.BINANCE_SMART_CHAIN,
+    Blockchain.CITREA_TESTNET,
+    Blockchain.SEPOLIA,
   ],
   [WalletType.CLI_ADA]: [Blockchain.CARDANO],
   [WalletType.CLI_AR]: [Blockchain.ARWEAVE],
   [WalletType.CLI_SOL]: [Blockchain.SOLANA],
+  [WalletType.CLI_TRX]: [Blockchain.TRON],
   [WalletType.DFX_TARO]: [Blockchain.LIGHTNING],
   [WalletType.WALLET_CONNECT]: [
     Blockchain.ETHEREUM,
@@ -75,11 +85,15 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
     Blockchain.GNOSIS,
     Blockchain.HAQQ,
     Blockchain.BINANCE_SMART_CHAIN,
+    Blockchain.CITREA_TESTNET,
+    Blockchain.SEPOLIA,
   ],
-  [WalletType.CAKE]: [Blockchain.MONERO],
+  [WalletType.CAKE]: [Blockchain.MONERO, Blockchain.ZANO],
   [WalletType.MONERO]: [Blockchain.MONERO],
   [WalletType.PHANTOM_SOL]: [Blockchain.SOLANA],
   [WalletType.TRUST_SOL]: [Blockchain.SOLANA],
+  [WalletType.TRUST_TRX]: [Blockchain.TRON],
+  [WalletType.TRONLINK_TRX]: [Blockchain.TRON],
 };
 
 export function supportsBlockchain(wallet: WalletType, blockchain: Blockchain): boolean {
@@ -140,7 +154,8 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   }, [isSessionInitialized, isLoggedIn, isInitialized]);
 
   useEffect(() => {
-    if (isParamsInitialized)
+    if (isParamsInitialized) {
+      setIsInitialized(false);
       handleParamSession().then((hasSession) => {
         if (hasSession) {
           setWallet(appParams.type as WalletType);
@@ -148,6 +163,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
         }
         setIsInitialized(true);
       });
+    }
   }, [isParamsInitialized, appParams]);
 
   async function handleParamSession(): Promise<boolean> {

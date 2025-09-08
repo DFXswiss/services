@@ -1,9 +1,31 @@
 import { walletConnect } from '@wagmi/connectors';
 import { createConfig, http } from '@wagmi/core';
-import { arbitrum, base, bsc, mainnet, optimism, polygon } from '@wagmi/core/chains';
+import { arbitrum, base, bsc, mainnet, optimism, polygon, type Chain } from '@wagmi/core/chains';
+
+const citreaTestnet: Chain = {
+  id: 5115,
+  name: 'Citrea Testnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'cBTC',
+    symbol: 'cBTC',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.testnet.citrea.xyz'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Citrea Explorer',
+      url: 'https://explorer.testnet.citrea.xyz',
+    },
+  },
+  testnet: true,
+};
 
 export const config = createConfig({
-  chains: [mainnet, bsc, arbitrum, optimism, polygon, base],
+  chains: [mainnet, bsc, arbitrum, optimism, polygon, base, citreaTestnet],
   connectors: [
     walletConnect({
       projectId: process.env.REACT_APP_WC_PID || 'Missing REACT_APP_WC_PID',
@@ -23,5 +45,6 @@ export const config = createConfig({
     [arbitrum.id]: http(),
     [optimism.id]: http(),
     [base.id]: http(),
+    [citreaTestnet.id]: http(),
   },
 });

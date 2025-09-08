@@ -4,16 +4,15 @@ import {
   FundOrigin,
   InvestmentDate,
   Limit,
+  PaymentQuoteStatus,
   Session,
   SupportIssueReason,
   SupportIssueType,
   TransactionFailureReason,
   TransactionState,
   UserAddress,
+  UserRole,
 } from '@dfx.swiss/react';
-import { UserRole } from '@dfx.swiss/react/dist/definitions/jwt';
-
-import { PaymentQuoteStatus } from '@dfx.swiss/react/dist/definitions/route';
 
 // --- PAYMENTS --- //
 export const PaymentMethodLabels = {
@@ -77,6 +76,8 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.MISSING_LIQUIDITY]: 'Missing liquidity',
   [TransactionFailureReason.KYC_DATA_NEEDED]: 'KYC data needed',
   [TransactionFailureReason.BANK_TX_NEEDED]: 'Bank transaction needed',
+  [TransactionFailureReason.MERGE_INCOMPLETE]: 'Email confirmation incomplete',
+  [TransactionFailureReason.PHONE_VERIFICATION_NEEDED]: 'Verification by phone required',
 };
 
 export const PaymentQuoteStatusLabels = {

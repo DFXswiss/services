@@ -1,6 +1,7 @@
 import {
   ApiError,
   Asset,
+  AssetCategory,
   Blockchain,
   Buy,
   BuyPaymentInfo,
@@ -33,7 +34,6 @@ import {
   StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { AssetCategory } from '@dfx.swiss/react/dist/definitions/asset';
 import { useEffect, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
@@ -42,10 +42,10 @@ import { blankedAddress } from 'src/util/utils';
 import { NameEdit } from '../components/edit/name.edit';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
-import { KycHint } from '../components/kyc-hint';
 import { AddressSwitch } from '../components/payment/address-switch';
 import { BuyCompletion } from '../components/payment/buy-completion';
 import { PrivateAssetHint } from '../components/private-asset-hint';
+import { QuoteErrorHint } from '../components/quote-error-hint';
 import { SanctionHint } from '../components/sanction-hint';
 import { addressLabel, PaymentMethodDescriptions, PaymentMethodLabels } from '../config/labels';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -378,8 +378,10 @@ export default function BuyScreen(): JSX.Element {
       case TransactionError.KYC_DATA_REQUIRED:
       case TransactionError.KYC_REQUIRED_INSTANT:
       case TransactionError.BANK_TRANSACTION_MISSING:
+      case TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING:
       case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
+      case TransactionError.IBAN_CURRENCY_MISMATCH:
         setKycError(buy.error);
         return;
     }
@@ -572,7 +574,7 @@ export default function BuyScreen(): JSX.Element {
                   </StyledVerticalStack>
                 ) : (
                   <>
-                    {kycError && <KycHint type={TransactionType.BUY} error={kycError} />}
+                    {kycError && <QuoteErrorHint type={TransactionType.BUY} error={kycError} />}
 
                     {errorMessage && (
                       <StyledVerticalStack center className="text-center">
