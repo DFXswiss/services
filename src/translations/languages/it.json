@@ -654,6 +654,7 @@
     "Email confirmation incomplete": "Conferma e-mail incompleta",
     "Verification by phone required": "Verifica telefonica richiesta",
     "we will call you at {{phone}}": "ti chiameremo al {{phone}}",
+    "Bank release pending": "Rilascio bancario in attesa di conferma",
 
     "Loading countries...": "Caricamento dei paesi...",
 
