@@ -607,14 +607,14 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                   {list.map((tx) => {
                     const isUnassigned = tx.state === TransactionState.UNASSIGNED;
 
-                    const icon =
-                      !isUnassigned &&
-                      (tx.type === TransactionType.SELL
-                        ? [tx.inputAsset, tx.outputAsset]
-                        : [tx.outputAsset, tx.inputAsset]
-                      )
-                        .map((a) => a?.replace(/^d/, '') as AssetIconVariant)
-                        .find((a) => Object.values(AssetIconVariant).includes(a));
+                    const icon = isUnassigned
+                      ? undefined
+                      : Object.values(AssetIconVariant).find((icon) =>
+                          (tx.type === TransactionType.SELL
+                            ? [tx.inputAsset, tx.outputAsset]
+                            : [tx.outputAsset, tx.inputAsset]
+                          ).some((a) => a === icon || a?.replace(/^d/, '') === icon),
+                        );
 
                     return (
                       <div
@@ -632,7 +632,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                           titleContent={
                             <div className="flex flex-row gap-2 items-center">
                               {icon ? (
-                                <DfxAssetIcon asset={icon as AssetIconVariant} />
+                                <DfxAssetIcon asset={icon} />
                               ) : (
                                 <DfxIcon icon={IconVariant.HELP} size={IconSize.LG} />
                               )}
