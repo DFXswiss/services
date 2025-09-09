@@ -254,6 +254,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
           TransactionState.LIMIT_EXCEEDED,
           TransactionState.UNASSIGNED,
         ].includes(transaction.state) &&
+          ![TransactionFailureReason.BANK_RELEASE_PENDING].includes(transaction.reason) &&
           !transaction.chargebackAmount && (
             <>
               <StyledButton
@@ -743,7 +744,9 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   TransactionState.KYC_REQUIRED,
                                   TransactionState.LIMIT_EXCEEDED,
                                   TransactionState.UNASSIGNED,
-                                ].includes(tx.state) || !!tx.chargebackAmount
+                                ].includes(tx.state) ||
+                                [TransactionFailureReason.BANK_RELEASE_PENDING].includes(tx.reason) ||
+                                !!tx.chargebackAmount
                               }
                             />
                             <StyledButton
