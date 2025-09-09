@@ -138,7 +138,7 @@ export function useSafe(): UseSafeResult {
     const sourceAssets =
       custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { sellable: true, comingSoon: false }) : [];
     return sourceAssets.filter((a) => portfolio.balances.find((b) => b.asset.name === a.name && b.balance > 0));
-  }, [getAssets, custodyBlockchains]);
+  }, [getAssets, custodyBlockchains, portfolio.balances]);
 
   const swappableTargetAssets = useMemo(() => {
     return custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { buyable: true, comingSoon: false }) : [];

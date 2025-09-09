@@ -145,7 +145,7 @@ export const ReceiveInterface = () => {
           <StyledButton
             type="button"
             isLoading={isLoading}
-            label={translate('screens/sell', 'Click here once you have issued the transaction')}
+            label={translate('general/actions', 'Next')}
             width={StyledButtonWidth.FULL}
             disabled={!isValid || isLoading}
             onClick={() => {
