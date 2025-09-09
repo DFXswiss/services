@@ -23,6 +23,7 @@ import { SafeOperationType } from 'src/dto/safe.dto';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
 import useDebounce from 'src/hooks/debounce.hook';
 import { useSafe } from 'src/hooks/safe.hook';
+import { Evm } from 'src/util/evm';
 import { blankedAddress } from 'src/util/utils';
 import { AssetInput } from '../order/asset-input';
 import { QrBasic } from '../payment/qr-code';
@@ -78,8 +79,8 @@ export const ReceiveInterface = () => {
       address: undefined,
     })
       .then((response: OrderPaymentInfo) => {
-        const depositTo = response.paymentInfo.paymentRequest?.split(':')[1].split('@')[0];
-        setReceiveAddress(depositTo);
+        if (!response.paymentInfo.paymentRequest) throw new Error('No payment request received');
+        setReceiveAddress(Evm.decodeUri(response.paymentInfo.paymentRequest)?.address);
       })
       .catch((err: any) => setError(err.message || 'Failed to create receive order'))
       .finally(() => setIsLoading(false));
