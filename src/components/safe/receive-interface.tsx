@@ -18,8 +18,10 @@ import { useForm } from 'react-hook-form';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { OrderPaymentInfo } from 'src/dto/order.dto';
 import { SafeOperationType } from 'src/dto/safe.dto';
 import { useBlockchain } from 'src/hooks/blockchain.hook';
+import useDebounce from 'src/hooks/debounce.hook';
 import { useSafe } from 'src/hooks/safe.hook';
 import { blankedAddress } from 'src/util/utils';
 import { AssetInput } from '../order/asset-input';
@@ -35,9 +37,10 @@ export const ReceiveInterface = () => {
   const { toString } = useBlockchain();
   const { translate } = useSettingsContext();
   const { setCompletionType } = useOrderUIContext();
-  const { receiveableAssets, fetchReceiveInfo, confirmReceive, custodyAddress } = useSafe();
+  const { receiveableAssets, fetchReceiveInfo, confirmReceive } = useSafe();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [receiveAddress, setReceiveAddress] = useState<string>();
   const [error, setError] = useState<string>();
 
   const {
@@ -48,6 +51,7 @@ export const ReceiveInterface = () => {
   } = useForm<ReceiveFormData>({ mode: 'onChange' });
 
   const data = watch();
+  const debouncedData = useDebounce(data, 500);
 
   useEffect(() => {
     if (receiveableAssets?.length && !data.receiveAsset) {
@@ -55,10 +59,14 @@ export const ReceiveInterface = () => {
     }
   }, [receiveableAssets, data.receiveAsset, setValue]);
 
-  async function onCreateReceiveOrder(): Promise<void> {
-    if (!data.receiveAsset || !data.receiveAmount) return;
+  useEffect(() => {
+    if (isValid && debouncedData?.receiveAsset && debouncedData.receiveAmount) onCreateReceiveOrder(debouncedData);
+  }, [isValid, debouncedData]);
 
+  async function onCreateReceiveOrder(data: ReceiveFormData): Promise<void> {
     setError(undefined);
+    setReceiveAddress(undefined);
+
     setIsLoading(true);
     fetchReceiveInfo({
       sourceAsset: data.receiveAsset,
@@ -69,13 +77,13 @@ export const ReceiveInterface = () => {
       bankAccount: undefined,
       address: undefined,
     })
-      .then(() => confirmReceive())
-      .then(() => setCompletionType(SafeOperationType.RECEIVE))
+      .then((response: OrderPaymentInfo) => {
+        const depositTo = response.paymentInfo.paymentRequest?.split(':')[1].split('@')[0];
+        setReceiveAddress(depositTo);
+      })
       .catch((err: any) => setError(err.message || 'Failed to create receive order'))
       .finally(() => setIsLoading(false));
   }
-
-  const receiveAddress = custodyAddress || '';
 
   const rules = Utils.createRules({
     receiveAsset: Validations.Required,
@@ -140,7 +148,10 @@ export const ReceiveInterface = () => {
             label={translate('screens/sell', 'Click here once you have issued the transaction')}
             width={StyledButtonWidth.FULL}
             disabled={!isValid || isLoading}
-            onClick={onCreateReceiveOrder}
+            onClick={() => {
+              setCompletionType(SafeOperationType.RECEIVE);
+              confirmReceive();
+            }}
           />
         </div>
       </StyledVerticalStack>
