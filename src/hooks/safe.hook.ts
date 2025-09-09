@@ -3,7 +3,6 @@ import {
   Asset,
   Blockchain,
   Fiat,
-  FiatPaymentMethod,
   SignIn,
   useApi,
   useAssetContext,
@@ -199,7 +198,6 @@ export function useSafe(): UseSafeResult {
         sourceAsset: data.sourceAsset.name,
         targetAsset: data.sourceAsset.name,
         sourceAmount: Number(data.sourceAmount),
-        paymentMethod: FiatPaymentMethod.BANK,
       },
       token: tokenStore.get('custody'),
     });
@@ -218,7 +216,6 @@ export function useSafe(): UseSafeResult {
         targetAsset: data.targetAsset.name,
         sourceAmount: data.sourceAmount ? Number(data.sourceAmount) : undefined,
         targetAmount: data.targetAmount ? Number(data.targetAmount) : undefined,
-        paymentMethod: FiatPaymentMethod.BANK,
       },
       token: tokenStore.get('custody'),
     });

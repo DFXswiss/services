@@ -188,7 +188,6 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
                           label={translate('screens/swap', 'Confirm swap')}
                           onClick={confirmPayment}
                           className="mt-4"
-                          caps={false}
                         />
                       ) : isBankWire ? (
                         <StyledButton
@@ -205,7 +204,6 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
                           onClick={() => onCardBuy(paymentInfo)}
                           isLoading={isProcessingCardPayment}
                           className="mt-4"
-                          caps={false}
                         />
                       ) : (
                         <StyledButton
