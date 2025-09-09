@@ -14,9 +14,15 @@ import {
   useUserContext,
 } from '@dfx.swiss/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
+import { OrderPaymentInfo } from 'src/dto/order.dto';
 import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
 import { OrderFormData } from './order.hook';
+
+enum CustodyOrderType {
+  DEPOSIT = 'Deposit',
+  RECEIVE = 'Receive',
+  SWAP = 'Swap',
+}
 
 const DEPOSIT_PAIRS: Record<string, string> = {
   EUR: 'dEURO',
@@ -30,10 +36,19 @@ export interface UseSafeResult {
   portfolio: CustodyBalance;
   history: CustodyHistoryEntry[];
   error?: string;
+  custodyAddress?: string;
+  custodyBlockchains?: Blockchain[];
   availableCurrencies?: Fiat[];
   availableAssets?: CustodyAsset[];
+  receiveableAssets?: Asset[];
+  swappableSourceAssets?: Asset[];
+  swappableTargetAssets?: Asset[];
   fetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
+  fetchReceiveInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
+  fetchSwapInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   confirmPayment: () => Promise<void>;
+  confirmReceive: () => Promise<void>;
+  confirmSwap: () => Promise<void>;
   pairMap: (asset: string) => Asset | undefined;
 }
 
@@ -43,13 +58,15 @@ export function useSafe(): UseSafeResult {
   const { session } = useAuthContext();
   const { changeUserAddress } = useUser();
   const { getAssets } = useAssetContext();
-  const { user, isUserLoading } = useUserContext();
+  const { user, isUserLoading, reloadUser } = useUserContext();
   const { isLoggedIn, tokenStore } = useSessionContext();
 
   const currentOrderId = useRef<number>();
 
   const [error, setError] = useState<string>();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [custodyAddress, setCustodyAddress] = useState<string>();
+  const [custodyBlockchains, setCustodyBlockchains] = useState<Blockchain[]>([]);
   const [portfolio, setPortfolio] = useState<CustodyBalance>({ totalValue: { chf: 0, eur: 0, usd: 0 }, balances: [] });
   const [history, setHistory] = useState<CustodyHistoryEntry[]>([]);
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
@@ -58,12 +75,28 @@ export function useSafe(): UseSafeResult {
   // ---- Safe Screen Initialization ----
 
   useEffect(() => {
+    async function createCustodyOrSwitch(user: User): Promise<void> {
+      const custodyAddr = user.addresses.find((a) => a.isCustody);
+      if (!custodyAddr) {
+        const { accessToken } = await createCustodyUser();
+        tokenStore.set('custody', accessToken);
+        await reloadUser();
+      } else {
+        setCustodyAddress(custodyAddr.address);
+        setCustodyBlockchains([Blockchain.ETHEREUM]);
+        if (!tokenStore.get('custody') && session?.address !== custodyAddr.address) {
+          const custodyToken = (await changeUserAddress(custodyAddr.address)).accessToken;
+          tokenStore.set('custody', custodyToken);
+        }
+      }
+    }
+
     if (!isUserLoading && session && user && isLoggedIn) {
       createCustodyOrSwitch(user)
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
         .finally(() => setIsInitialized(true));
     }
-  }, [isUserLoading, user, isLoggedIn, session]);
+  }, [isUserLoading, user, isLoggedIn, session, reloadUser, changeUserAddress, tokenStore]);
 
   useEffect(() => {
     if (!user || !isLoggedIn) return;
@@ -95,22 +128,24 @@ export function useSafe(): UseSafeResult {
     );
   }, [getAssets]);
 
+  const receiveableAssets = useMemo(() => {
+    return custodyBlockchains.length > 0
+      ? getAssets(custodyBlockchains, { sellable: true, buyable: true, comingSoon: false })
+      : [];
+  }, [getAssets, custodyBlockchains]);
+
+  const swappableSourceAssets = useMemo(() => {
+    return custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { sellable: true, comingSoon: false }) : [];
+  }, [getAssets, custodyBlockchains]);
+
+  const swappableTargetAssets = useMemo(() => {
+    return custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { buyable: true, comingSoon: false }) : [];
+  }, [getAssets, custodyBlockchains]);
+
   const pairMap = useCallback(
     (asset: string) => availableAssets?.find((a) => a.name === DEPOSIT_PAIRS[asset]),
     [availableAssets],
   );
-
-  // ---- Custody Token Management ----
-
-  async function createCustodyOrSwitch(user: User): Promise<void> {
-    const custodyAddress = user.addresses.find((a) => a.isCustody);
-    if (!custodyAddress) {
-      return createCustodyUser().then(({ accessToken }) => tokenStore.set('custody', accessToken));
-    } else if (!tokenStore.get('custody') && session?.address !== custodyAddress.address) {
-      const custodyToken = (await changeUserAddress(custodyAddress.address)).accessToken;
-      tokenStore.set('custody', custodyToken);
-    }
-  }
 
   // ---- API Calls ----
 
@@ -154,6 +189,41 @@ export function useSafe(): UseSafeResult {
     return order;
   }
 
+  async function fetchReceiveInfo(data: OrderFormData): Promise<OrderPaymentInfo> {
+    const order = await call<OrderPaymentInfo>({
+      url: 'custody/order',
+      method: 'POST',
+      data: {
+        type: CustodyOrderType.RECEIVE,
+        sourceAsset: data.sourceAsset.name,
+        targetAsset: data.sourceAsset.name,
+        sourceAmount: Number(data.sourceAmount),
+      },
+      token: tokenStore.get('custody'),
+    });
+
+    currentOrderId.current = order.orderId;
+    return order;
+  }
+
+  async function fetchSwapInfo(data: OrderFormData): Promise<OrderPaymentInfo> {
+    const order = await call<OrderPaymentInfo>({
+      url: 'custody/order',
+      method: 'POST',
+      data: {
+        type: CustodyOrderType.SWAP,
+        sourceAsset: data.sourceAsset.name,
+        targetAsset: data.targetAsset.name,
+        sourceAmount: data.sourceAmount ? Number(data.sourceAmount) : undefined,
+        targetAmount: data.targetAmount ? Number(data.targetAmount) : undefined,
+      },
+      token: tokenStore.get('custody'),
+    });
+
+    currentOrderId.current = order.orderId;
+    return order;
+  }
+
   async function confirmPayment(): Promise<void> {
     if (!currentOrderId.current) return;
 
@@ -164,6 +234,14 @@ export function useSafe(): UseSafeResult {
     }).then(() => (currentOrderId.current = undefined));
   }
 
+  async function confirmReceive(): Promise<void> {
+    return confirmPayment();
+  }
+
+  async function confirmSwap(): Promise<void> {
+    return confirmPayment();
+  }
+
   return useMemo<UseSafeResult>(
     () => ({
       isInitialized,
@@ -172,10 +250,19 @@ export function useSafe(): UseSafeResult {
       portfolio,
       history,
       error,
+      custodyAddress,
+      custodyBlockchains,
       availableCurrencies,
       availableAssets,
+      receiveableAssets,
+      swappableSourceAssets,
+      swappableTargetAssets,
       fetchPaymentInfo,
+      fetchReceiveInfo,
+      fetchSwapInfo,
       confirmPayment,
+      confirmReceive,
+      confirmSwap,
       pairMap,
     }),
     [
@@ -185,10 +272,14 @@ export function useSafe(): UseSafeResult {
       portfolio,
       history,
       error,
+      custodyAddress,
+      custodyBlockchains,
       availableCurrencies,
       availableAssets,
-      fetchPaymentInfo,
-      confirmPayment,
+      receiveableAssets,
+      swappableSourceAssets,
+      swappableTargetAssets,
+      pairMap,
     ],
   );
 }

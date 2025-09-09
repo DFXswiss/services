@@ -531,6 +531,7 @@
     "Output amount = Input amount × Base rate - DFX fee - Network fee.": "Montant de sortie = Montant d'entrée × Taux de base - Frais DFX - Frais de réseau."
   },
   "screens/swap": {
+    "Confirm swap": "Confirmer le swap",
     "Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.": "Envoyez le montant sélectionné à l'adresse ci-dessous. Cette adresse peut être utilisée plusieurs fois, elle est toujours la même pour les échanges de {{sourceChain}} vers {{asset}} sur {{targetChain}}.",
     "As soon as the transaction arrives in our wallet, we will transfer your asset to your wallet.": "Dès que la transaction arrive dans notre portefeuille, nous transférerons votre actif dans votre portefeuille.",
     "The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "Le montant de sortie est calculé comme le montant d'entrée moins les frais DFX et les frais de réseau sur le taux de base. C'est-à-dire, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}."
@@ -883,8 +884,16 @@
     "Total portfolio value": "Valeur totale du portefeuille",
     "No assets found": "Aucun actif trouvé",
     "Deposit": "Dépôt",
+    "Receive": "Recevoir",
+    "Swap": "Swap",
+    "Send your {{asset}} to the address below to deposit into your DFX Safe": "Envoyez vos {{asset}} à l'adresse ci-dessous pour les déposer dans votre DFX Safe",
+    "Receive Address": "Adresse de réception",
     "Deposit Complete": "Dépôt terminé",
-    "Your deposit will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Votre dépôt sera traité et ajouté à votre portefeuille Safe. Nous vous informerons par e-mail de l'état d'avancement de vos transactions."
+    "Receive Complete": "Réception terminée",
+    "Swap Complete": "Swap terminé",
+    "Your deposit will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Votre dépôt sera traité et ajouté à votre portefeuille Safe. Nous vous informerons par e-mail de l'état d'avancement de vos transactions.",
+    "Your incoming transaction will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Votre transaction entrante sera traitée et ajoutée à votre portefeuille Safe. Nous vous informerons par e-mail de l'état d'avancement de vos transactions.",
+    "Your swap will be processed and reflected in your Safe portfolio. We will inform you by email about the progress of your transactions.": "Votre swap sera traité et reflété dans votre portefeuille Safe. Nous vous informerons par e-mail de l'état d'avancement de vos transactions."
   },
   "screens/blockchain": {
     "Transaction signing": "Signature de la transaction",

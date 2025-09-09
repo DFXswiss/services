@@ -46,6 +46,7 @@ interface OrderInterfaceProps {
   sourceInputLabel?: string;
   targetInputLabel?: string;
   defaultValues?: Partial<OrderFormData>;
+  hideAddressSelection?: boolean;
   pairMap?: (asset: string) => Asset | Fiat | undefined;
   onFetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   confirmPayment: () => Promise<void>;
@@ -60,6 +61,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   sourceInputLabel,
   targetInputLabel,
   defaultValues,
+  hideAddressSelection,
   pairMap,
   onFetchPaymentInfo,
   confirmPayment,
@@ -109,18 +111,20 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
     [getAvailableCurrencies, data.paymentMethod],
   );
 
-  useEffect(() => setSelectedAddress(data.address), [data.address]);
+  useEffect(() => {
+    if (!hideAddressSelection) setSelectedAddress(data.address);
+  }, [data.address, hideAddressSelection]);
 
   useEffect(() => {
     availablePaymentMethods?.length && setValue('paymentMethod', availablePaymentMethods[0]);
   }, [availablePaymentMethods, setValue]);
 
   useEffect(() => {
-    if (isInitialized && session?.address && addressItems) {
+    if (!hideAddressSelection && isInitialized && session?.address && addressItems) {
       const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
       setValue('address', address);
     }
-  }, [isInitialized, session, addressItems, blockchain, setValue]);
+  }, [hideAddressSelection, isInitialized, session, addressItems, blockchain, setValue]);
 
   useEffect(() => {
     const defaultCurrency = getDefaultCurrency(availableCurrencies) ?? availableCurrencies?.[0];
@@ -203,7 +207,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
               onAmountChange={() => (lastEditedFieldRef.current = Side.TARGET)}
             />
           ) : null}
-          {!hideTargetSelection && addressItems?.length ? (
+          {!hideTargetSelection && !hideAddressSelection && addressItems?.length ? (
             <StyledDropdown<Address>
               control={control}
               rootRef={rootRef}

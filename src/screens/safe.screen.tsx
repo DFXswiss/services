@@ -5,11 +5,11 @@ import { ErrorHint } from 'src/components/error-hint';
 import { SafeCompletion } from 'src/components/payment/safe-completion';
 import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
 import { PriceChart } from 'src/components/safe/chart';
-import { DepositInterface } from 'src/components/safe/deposit-interface';
 import { Portfolio } from 'src/components/safe/portfolio';
+import { SafeTransactionInterface } from 'src/components/safe/safe-transaction-interface';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { FiatCurrency } from 'src/dto/safe.dto';
+import { FiatCurrency, SafeOperationType } from 'src/dto/safe.dto';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSafe } from 'src/hooks/safe.hook';
@@ -21,10 +21,10 @@ export default function SafeScreen(): JSX.Element {
   const { isInitialized, portfolio, history, isLoadingPortfolio, isLoadingHistory, error } = useSafe();
   const { currency: userCurrency, translate } = useSettingsContext();
   const {
-    showsCompletion,
+    completionType,
     showPaymentNameForm,
     bankAccountSelection,
-    setCompletion,
+    setCompletionType,
     setPaymentNameForm,
     setBankAccountSelection,
   } = useOrderUIContext();
@@ -38,13 +38,22 @@ export default function SafeScreen(): JSX.Element {
   const showChart = history.length > 1;
 
   const getTitle = () => {
-    if (showsCompletion) return translate('screens/safe', 'Deposit Complete');
+    if (completionType) {
+      switch (completionType) {
+        case SafeOperationType.DEPOSIT:
+          return translate('screens/safe', 'Deposit Complete');
+        case SafeOperationType.RECEIVE:
+          return translate('screens/safe', 'Receive Complete');
+        case SafeOperationType.SWAP:
+          return translate('screens/safe', 'Swap Complete');
+      }
+    }
     if (bankAccountSelection) return translate('screens/sell', 'Select payment account');
     return translate('screens/safe', 'My DFX Safe');
   };
 
   const getBackHandler = () => {
-    if (showsCompletion) return () => setCompletion(false);
+    if (completionType) return () => setCompletionType();
     if (bankAccountSelection) return () => setBankAccountSelection(false);
     if (showPaymentNameForm) return () => setPaymentNameForm(false);
     return undefined;
@@ -60,8 +69,8 @@ export default function SafeScreen(): JSX.Element {
         </div>
       ) : !isInitialized ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
-      ) : showsCompletion ? (
-        <SafeCompletion onClose={() => setCompletion(false)} />
+      ) : completionType ? (
+        <SafeCompletion type={completionType} onClose={() => setCompletionType()} />
       ) : showPaymentNameForm ? (
         // TODO (later?): Retrigger payment execution after name edit
         <NameEdit onSuccess={() => setPaymentNameForm(false)} />
@@ -104,7 +113,7 @@ export default function SafeScreen(): JSX.Element {
             </div>
           </div>
           <Portfolio portfolio={portfolio.balances} currency={currency} isLoading={isLoadingPortfolio} />
-          <DepositInterface />
+          <SafeTransactionInterface />
         </StyledVerticalStack>
       )}
     </>
