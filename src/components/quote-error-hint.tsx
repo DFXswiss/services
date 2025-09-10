@@ -49,17 +49,7 @@ export function QuoteErrorHint({ type, error }: { type: TransactionType; error: 
         );
 
       case TransactionError.BANK_TRANSACTION_MISSING:
-        return translate('screens/kyc', 'A buy bank transaction is required once {{volume}} exceeds {{limit}}.', {
-          volume: translate(
-            'screens/kyc',
-            type === TransactionType.SELL
-              ? 'your sell transaction volume'
-              : type === TransactionType.SWAP
-              ? 'your swap transaction volume'
-              : 'your credit card transaction volume',
-          ),
-          limit: limitToString(defaultLimit),
-        });
+        return translate('screens/kyc', 'A buy bank transaction is required.');
 
       case TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING:
         return translate(
