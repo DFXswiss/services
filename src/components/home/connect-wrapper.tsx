@@ -2,26 +2,27 @@ import { lazy } from 'react';
 import { WalletType } from '../../contexts/wallet.context';
 import { ConnectProps } from './connect-shared';
 
+const ConnectBrowserExtension = lazy(() => import('./wallet/connect-browser-extension'));
 const ConnectAlby = lazy(() => import('./wallet/connect-alby'));
 const ConnectBitbox = lazy(() => import('./wallet/connect-bitbox'));
 const ConnectCli = lazy(() => import('./wallet/connect-cli'));
 const ConnectLedger = lazy(() => import('./wallet/connect-ledger'));
-const ConnectMetaMask = lazy(() => import('./wallet/connect-metamask'));
 const ConnectTrezor = lazy(() => import('./wallet/connect-trezor'));
 const ConnectTaro = lazy(() => import('./wallet/connect-taro'));
 const ConnectWalletConnect = lazy(() => import('./wallet/connect-wallet-connect'));
 const ConnectMonero = lazy(() => import('./wallet/connect-monero'));
-const ConnectPhantom = lazy(() => import('./wallet/connect-phantom'));
-const ConnectTrustSol = lazy(() => import('./wallet/connect-trust-sol'));
-const ConnectTrustTrx = lazy(() => import('./wallet/connect-trust-trx'));
-const ConnectTronLinkTrx = lazy(() => import('./wallet/connect-tronlink-trx'));
 const ConnectMail = lazy(() => import('./wallet/connect-mail'));
 const ConnectAddress = lazy(() => import('./wallet/connect-address'));
 
 export function ConnectWrapper(props: ConnectProps): JSX.Element {
   switch (props.wallet) {
     case WalletType.META_MASK:
-      return <ConnectMetaMask {...props} />;
+    case WalletType.PHANTOM_SOL:
+    case WalletType.TRUST_SOL:
+    case WalletType.TRUST_TRX:
+    case WalletType.TRON_LINK_TRX:
+    case WalletType.BROWSER_EXTENSION:
+      return <ConnectBrowserExtension {...props} />;
 
     case WalletType.ALBY:
       return <ConnectAlby {...props} />;
@@ -59,22 +60,12 @@ export function ConnectWrapper(props: ConnectProps): JSX.Element {
     case WalletType.MONERO:
       return <ConnectMonero {...props} wallet={props.wallet} />;
 
-    case WalletType.PHANTOM_SOL:
-      return <ConnectPhantom {...props} />;
-
-    case WalletType.TRUST_SOL:
-      return <ConnectTrustSol {...props} />;
-
-    case WalletType.TRUST_TRX:
-      return <ConnectTrustTrx {...props} />;
-
-    case WalletType.TRONLINK_TRX:
-      return <ConnectTronLinkTrx {...props} />;
-
     case WalletType.MAIL:
       return <ConnectMail {...props} />;
 
     case WalletType.ADDRESS:
       return <ConnectAddress {...props} />;
+    default:
+      return <></>;
   }
 }

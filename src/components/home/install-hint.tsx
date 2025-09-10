@@ -29,7 +29,7 @@ export function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: 
     case WalletType.TRUST_TRX:
       return <TrustHint onConfirm={onConfirm} />;
 
-    case WalletType.TRONLINK_TRX:
+    case WalletType.TRON_LINK_TRX:
       return <TronLinkHint onConfirm={onConfirm} />;
 
     case WalletType.CLI_BTC:
@@ -47,6 +47,8 @@ export function InstallHint({ type, onConfirm }: { type: WalletType; onConfirm: 
     case WalletType.MONERO:
     case WalletType.MAIL:
     case WalletType.ADDRESS:
+      return <></>;
+    default:
       return <></>;
   }
 }

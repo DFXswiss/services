@@ -8,11 +8,8 @@ import { useAlchemy } from './alchemy.hook';
 import { useSolana } from './solana.hook';
 import { useTron } from './tron.hook';
 import { useAlby } from './wallets/alby.hook';
-import { useMetaMask } from './wallets/metamask.hook';
-import { usePhantom } from './wallets/phantom.hook';
-import { useTronLinkTrx } from './wallets/tronlink-trx.hook';
-import { useTrustSol } from './wallets/trust-sol.hook';
-import { useTrustTrx } from './wallets/trust-trx.hook';
+
+import { useBrowserExtension } from './wallets/browser-extension.hook';
 import { useWalletConnect } from './wallets/wallet-connect.hook';
 export interface TxHelperInterface {
   getBalances: (assets: Asset[], address: string, blockchain?: Blockchain) => Promise<AssetBalance[] | undefined>;
@@ -22,17 +19,13 @@ export interface TxHelperInterface {
 
 // CAUTION: This is a helper hook for all blockchain transaction functionalities. Think about lazy loading, as soon as it gets bigger.
 export function useTxHelper(): TxHelperInterface {
-  const { createTransaction: createTransactionMetaMask, requestChangeToBlockchain: requestChangeToBlockchainMetaMask } =
-    useMetaMask();
+  const { createTransaction: createTransaction, requestChangeToBlockchain: requestChangeToBlockchain } =
+    useBrowserExtension();
   const {
     createTransaction: createTransactionWalletConnect,
     requestChangeToBlockchain: requestChangeToBlockchainWalletConnect,
   } = useWalletConnect();
   const { sendPayment } = useAlby();
-  const { createTransaction: createTransactionPhantomSol } = usePhantom();
-  const { createTransaction: createTransactionTrustSol } = useTrustSol();
-  const { createTransaction: createTransactionTrustTrx } = useTrustTrx();
-  const { createTransaction: createTransactionTronLinkTrx } = useTronLinkTrx();
   const { getBalances: getParamBalances } = useBalanceContext();
   const { activeWallet } = useWalletContext();
   const { session } = useAuthContext();
@@ -60,7 +53,7 @@ export function useTxHelper(): TxHelperInterface {
       case WalletType.CLI_SOL:
         return getSolanaBalances(assets, address);
       case WalletType.TRUST_TRX:
-      case WalletType.TRONLINK_TRX:
+      case WalletType.TRON_LINK_TRX:
       case WalletType.CLI_TRX:
         return getTronBalances(assets, address);
       default:
@@ -76,10 +69,20 @@ export function useTxHelper(): TxHelperInterface {
 
     switch (activeWallet) {
       case WalletType.META_MASK:
+      case WalletType.PHANTOM_SOL:
+      case WalletType.TRUST_SOL:
+      case WalletType.TRUST_TRX:
+      case WalletType.TRON_LINK_TRX:
         if (!session?.address) throw new Error('Address is not defined');
-
-        await requestChangeToBlockchainMetaMask(asset.blockchain);
-        return createTransactionMetaMask(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
+        if (asset.blockchain && requestChangeToBlockchain) await requestChangeToBlockchain(asset.blockchain);
+        return createTransaction(
+          new BigNumber(tx.amount),
+          asset,
+          session.address,
+          tx.depositAddress,
+          activeWallet,
+          asset.blockchain,
+        );
 
       case WalletType.ALBY:
         if (!tx.paymentRequest) throw new Error('Payment request not defined');
@@ -90,22 +93,6 @@ export function useTxHelper(): TxHelperInterface {
         if (!session?.address) throw new Error('Address is not defined');
         await requestChangeToBlockchainWalletConnect(asset.blockchain);
         return createTransactionWalletConnect(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
-
-      case WalletType.PHANTOM_SOL:
-        if (!session?.address) throw new Error('Address is not defined');
-        return createTransactionPhantomSol(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
-
-      case WalletType.TRUST_SOL:
-        if (!session?.address) throw new Error('Address is not defined');
-        return createTransactionTrustSol(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
-
-      case WalletType.TRUST_TRX:
-        if (!session?.address) throw new Error('Address is not defined');
-        return createTransactionTrustTrx(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
-
-      case WalletType.TRONLINK_TRX:
-        if (!session?.address) throw new Error('Address is not defined');
-        return createTransactionTronLinkTrx(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
       default:
         throw new Error('Not supported yet');
@@ -130,7 +117,7 @@ export function useTxHelper(): TxHelperInterface {
   return useMemo(
     () => ({ getBalances, sendTransaction, canSendTransaction }),
     [
-      createTransactionMetaMask,
+      createTransaction,
       createTransactionWalletConnect,
       sendPayment,
       activeWallet,
@@ -138,7 +125,7 @@ export function useTxHelper(): TxHelperInterface {
       getParamBalances,
       getEvmBalances,
       getSolanaBalances,
-      requestChangeToBlockchainMetaMask,
+      requestChangeToBlockchain,
       requestChangeToBlockchainWalletConnect,
       canClose,
     ],

@@ -89,7 +89,7 @@ export default function ConnectBitbox(props: Props): JSX.Element {
     <ConnectBase
       isSupported={isSupported}
       getAccount={getAccount}
-      signMessage={(msg, _a, chain, accountIndex, index, type) =>
+      signMessage={(msg, _a, _w, chain, accountIndex, index, type) =>
         signMessage(msg, props.wallet, chain, accountIndex ?? 0, type ?? defaultAddressType, index ?? 0)
       }
       renderContent={(p) => (

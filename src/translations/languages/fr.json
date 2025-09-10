@@ -390,11 +390,8 @@
     "Scan with your wallet": "Scannez avec votre portefeuille",
     "Connect your wallet": "Connectez votre portefeuille",
 
-    "Please confirm the connection in your MetaMask.": "Veuillez confirmer la connexion dans votre MetaMask.",
     "Please confirm the connection in the Alby browser extension.": "Veuillez confirmer la connexion dans l'extension du navigateur Alby.",
-    "Please confirm the connection in your Phantom browser extension.": "Veuillez confirmer la connexion dans l'extension du navigateur Phantom.",
-    "Please confirm the connection in your Trust browser extension.": "Veuillez confirmer la connexion dans l'extension du navigateur Trust.",
-    "Please confirm the connection in your TronLink browser extension.": "Veuillez confirmer la connexion dans l'extension du navigateur TronLink.",
+    "Please confirm the connection in your browser extension.": "Veuillez confirmer la connexion dans l'extension du navigateur.",
     "Please confirm the connection in your wallet.": "Veuillez confirmer la connexion dans votre portefeuille.",
     "Please confirm the connection with your Ledger.": "Veuillez confirmer la connexion avec votre Ledger.",
     "Connection failed!": "Échec de la connexion !",
