@@ -144,8 +144,18 @@ export default function SwapScreen(): JSX.Element {
   const selectedAddress = useWatch({ control, name: 'address' });
 
   useEffect(() => {
-    if (sourceAssets && selectedAddress?.address) {
-      getBalances(sourceAssets, selectedAddress.address, selectedAddress?.chain).then(setBalances);
+    if (sourceAssets && session?.address) {
+      const assetMap = sourceAssets.reduce<Record<Blockchain, Asset[]>>((acc, asset) => {
+        if (!acc[asset.blockchain]) acc[asset.blockchain] = [];
+        acc[asset.blockchain].push(asset);
+        return acc;
+      }, {} as Record<Blockchain, Asset[]>);
+
+      Promise.all(
+        Object.entries(assetMap).map(
+          ([chain, assets]) => session.address && getBalances(assets, session.address, chain as Blockchain),
+        ),
+      ).then((results) => setBalances(results.flat().filter((b) => b) as AssetBalance[]));
     }
   }, [getBalances, sourceAssets]);
 

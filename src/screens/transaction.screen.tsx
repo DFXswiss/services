@@ -254,6 +254,7 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
           TransactionState.LIMIT_EXCEEDED,
           TransactionState.UNASSIGNED,
         ].includes(transaction.state) &&
+          ![TransactionFailureReason.BANK_RELEASE_PENDING].includes(transaction.reason) &&
           !transaction.chargebackAmount && (
             <>
               <StyledButton
@@ -606,14 +607,14 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                   {list.map((tx) => {
                     const isUnassigned = tx.state === TransactionState.UNASSIGNED;
 
-                    const icon =
-                      !isUnassigned &&
-                      (tx.type === TransactionType.SELL
-                        ? [tx.inputAsset, tx.outputAsset]
-                        : [tx.outputAsset, tx.inputAsset]
-                      )
-                        .map((a) => a?.replace(/^d/, '') as AssetIconVariant)
-                        .find((a) => Object.values(AssetIconVariant).includes(a));
+                    const icon = isUnassigned
+                      ? undefined
+                      : ((tx.type === TransactionType.SELL
+                          ? [tx.inputAsset, tx.outputAsset]
+                          : [tx.outputAsset, tx.inputAsset]
+                        ).find((a) =>
+                          Object.values(AssetIconVariant).find((icon) => a === icon || a?.replace(/^d/, '') === icon),
+                        ) as AssetIconVariant | undefined);
 
                     return (
                       <div
@@ -631,7 +632,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                           titleContent={
                             <div className="flex flex-row gap-2 items-center">
                               {icon ? (
-                                <DfxAssetIcon asset={icon as AssetIconVariant} />
+                                <DfxAssetIcon asset={icon} />
                               ) : (
                                 <DfxIcon icon={IconVariant.HELP} size={IconSize.LG} />
                               )}
@@ -743,7 +744,9 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   TransactionState.KYC_REQUIRED,
                                   TransactionState.LIMIT_EXCEEDED,
                                   TransactionState.UNASSIGNED,
-                                ].includes(tx.state) || !!tx.chargebackAmount
+                                ].includes(tx.state) ||
+                                [TransactionFailureReason.BANK_RELEASE_PENDING].includes(tx.reason) ||
+                                !!tx.chargebackAmount
                               }
                             />
                             <StyledButton

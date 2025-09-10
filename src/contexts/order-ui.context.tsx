@@ -1,10 +1,11 @@
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
+import { SafeOperationType } from 'src/dto/safe.dto';
 
 interface OrderUIInterface {
-  showsCompletion: boolean;
+  completionType?: SafeOperationType;
   showPaymentNameForm: boolean;
   bankAccountSelection: boolean;
-  setCompletion: (show: boolean) => void;
+  setCompletionType: (type?: SafeOperationType) => void;
   setPaymentNameForm: (show: boolean) => void;
   setBankAccountSelection: (isOpen: boolean) => void;
 }
@@ -16,20 +17,20 @@ export function useOrderUIContext(): OrderUIInterface {
 }
 
 export function OrderUIContextProvider({ children }: { children: ReactNode }) {
-  const [showsCompletion, setShowsCompletion] = useState(false);
+  const [completionType, setCompletionType] = useState<SafeOperationType>();
   const [showPaymentNameForm, setShowPaymentNameForm] = useState(false);
   const [bankAccountSelection, setBankAccountSelection] = useState(false);
 
   const context: OrderUIInterface = useMemo(
     () => ({
-      showsCompletion,
+      completionType,
       showPaymentNameForm,
       bankAccountSelection,
-      setCompletion: setShowsCompletion,
+      setCompletionType,
       setPaymentNameForm: setShowPaymentNameForm,
       setBankAccountSelection,
     }),
-    [showsCompletion, showPaymentNameForm, bankAccountSelection],
+    [completionType, showPaymentNameForm, bankAccountSelection],
   );
 
   return <OrderUIContext.Provider value={context}>{children}</OrderUIContext.Provider>;

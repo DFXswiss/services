@@ -78,6 +78,7 @@ export const PaymentFailureReasons = {
   [TransactionFailureReason.BANK_TX_NEEDED]: 'Bank transaction needed',
   [TransactionFailureReason.MERGE_INCOMPLETE]: 'Email confirmation incomplete',
   [TransactionFailureReason.PHONE_VERIFICATION_NEEDED]: 'Verification by phone required',
+  [TransactionFailureReason.BANK_RELEASE_PENDING]: 'Bank release pending',
 };
 
 export const PaymentQuoteStatusLabels = {

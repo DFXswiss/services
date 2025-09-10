@@ -528,6 +528,7 @@
     "Output amount = Input amount × Base rate - DFX fee - Network fee.": "Ausgabebetrag = Eingabebetrag × Basiskurs - DFX-Gebühr - Netzwerkgebühr."
   },
   "screens/swap": {
+    "Confirm swap": "Swap bestätigen",
     "Send the selected amount to the address below. This address can be used multiple times, it is always the same for swaps from {{sourceChain}} to {{asset}} on {{targetChain}}.": "Sende den ausgewählten Betrag an die unten stehende Adresse. Diese Adresse kann mehrfach verwendet werden, sie ist immer die gleiche für Swaps von {{sourceChain}} zu {{asset}} auf {{targetChain}}.",
     "As soon as the transaction arrives in our wallet, we will transfer your asset to your wallet.": "Sobald die Transaktion in unserem Wallet eingegangen ist, werden wir Dein Asset auf Deine Wallet übertragen.",
     "The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "Der Ausgabebetrag wird als Eingabebetrag abzüglich der DFX-Gebühr und der Netzwerkgebühr über dem Basiskurs berechnet. Das heißt, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}."
@@ -650,6 +651,7 @@
     "Email confirmation incomplete": "Email Bestätigung nicht abgeschlossen",
     "Verification by phone required": "Verifizierung per Telefon erforderlich",
     "we will call you at {{phone}}": "wir werden Dich unter {{phone}} anrufen",
+    "Bank release pending": "Bankfreigabe ausstehend",
 
     "Loading countries...": "Länder werden geladen...",
 
@@ -881,8 +883,16 @@
     "Total portfolio value": "Gesamtwert des Portfolios",
     "No assets found": "Keine Assets gefunden",
     "Deposit": "Einzahlung",
+    "Receive": "Empfangen",
+    "Swap": "Swap",
+    "Send your {{asset}} to the address below to deposit into your DFX Safe": "Sende Deine {{asset}} an die unten stehende Adresse, um sie in Deinen DFX Safe einzuzahlen",
+    "Receive Address": "Empfangsadresse",
     "Deposit Complete": "Einzahlung abgeschlossen",
-    "Your deposit will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Deine Einzahlung wird verarbeitet und zu Deinem Safe-Portfolio hinzugefügt. Wir werden Dich per E-Mail über den Fortschritt Deiner Transaktionen informieren."
+    "Receive Complete": "Empfang abgeschlossen",
+    "Swap Complete": "Swap abgeschlossen",
+    "Your deposit will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Deine Einzahlung wird verarbeitet und zu Deinem Safe-Portfolio hinzugefügt. Wir werden Dich per E-Mail über den Fortschritt Deiner Transaktionen informieren.",
+    "Your incoming transaction will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Deine eingehende Transaktion wird verarbeitet und zu Deinem Safe-Portfolio hinzugefügt. Wir werden Dich per E-Mail über den Fortschritt Deiner Transaktionen informieren.",
+    "Your swap will be processed and reflected in your Safe portfolio. We will inform you by email about the progress of your transactions.": "Dein Swap wird verarbeitet und in Deinem Safe-Portfolio angezeigt. Wir werden Dich per E-Mail über den Fortschritt Deiner Transaktionen informieren."
   },
   "screens/blockchain": {
     "Transaction signing": "Transaktionssignierung",
