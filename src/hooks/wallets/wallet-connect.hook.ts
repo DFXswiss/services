@@ -67,7 +67,7 @@ export function useWalletConnect(): WalletConnectInterface {
   async function getWallets(): Promise<DeepWallet[]> {
     if (!process.env.REACT_APP_WC_PID) throw new Error('WalletConnect PID not defined');
 
-    return fetch(`https://explorer-api.walletconnect.com/v3/wallets?projectId=${process.env.REACT_APP_WC_PID}`).then(
+    return fetch(`https://explorer-api.walletconnect.com/v3/wallets?projectId=${process.env.REACT_APP_WC_PI}`).then(
       async (response) => {
         if (!response.ok) {
           throw new Error(response.statusText);
