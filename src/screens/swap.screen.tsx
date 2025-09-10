@@ -100,7 +100,7 @@ export default function SwapScreen(): JSX.Element {
   const { logout } = useSessionContext();
   const { session } = useAuthContext();
   const { width } = useWindowContext();
-  const { user } = useUserContext();
+  const { userAddresses } = useUserContext();
   const { assets, getAssets } = useAssetContext();
   const { getAsset, isSameAsset } = useAsset();
   const { navigate } = useNavigation();
@@ -171,26 +171,26 @@ export default function SwapScreen(): JSX.Element {
     (b) => b !== Blockchain.MONERO && filteredAssets?.some((a) => a.blockchain === b),
   );
 
-  const userSessions = [session, ...(user?.addresses ?? [])].filter(
+  const userSessions = [session, ...userAddresses].filter(
     (a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i,
   ) as (Session | UserAddress)[];
 
-  const userAddresses = userSessions.map((a) => ({
+  const userAddressItems = userSessions.map((a) => ({
     address: a.address,
     addressLabel: addressLabel(a),
     blockchains: a.blockchains,
   }));
 
-  const targetBlockchains = userAddresses
+  const targetBlockchains = userAddressItems
     .flatMap((a) => a.blockchains)
     .filter((b, i, arr) => arr.indexOf(b) === i)
     .filter((b) => filteredAssets?.some((a) => a.blockchain === b));
 
   const addressItems: Address[] =
-    userAddresses.length > 0 && targetBlockchains?.length
+    userAddressItems.length > 0 && targetBlockchains?.length
       ? [
           ...targetBlockchains.flatMap((b) => {
-            const addresses = userAddresses.filter((a) => a.blockchains.includes(b));
+            const addresses = userAddressItems.filter((a) => a.blockchains.includes(b));
             return addresses.map((a) => ({
               address: a.address,
               addressLabel: a.addressLabel,
@@ -228,7 +228,7 @@ export default function SwapScreen(): JSX.Element {
     if (amountIn) setVal('amount', amountIn);
   }, [amountIn]);
 
-  useEffect(() => setAddress(), [session?.address, translate, blockchain, user]);
+  useEffect(() => setAddress(), [session?.address, translate, blockchain, userAddresses]);
 
   useEffect(() => {
     if (selectedAddress) {

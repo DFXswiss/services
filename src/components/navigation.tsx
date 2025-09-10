@@ -116,7 +116,7 @@ function MenuIcon({ icon, setIsNavigationOpen }: IconContentProps): JSX.Element 
 function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuContentProps): JSX.Element {
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
-  const { user } = useUserContext();
+  const { hasCustody } = useUserContext();
   const { isLoggedIn, logout: apiLogout } = useSessionContext();
 
   async function login() {
@@ -165,7 +165,7 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
                 onClose={() => setIsNavigationOpen(false)}
               />
 
-              {user?.addresses.some((a) => a.isCustody) && (
+              {hasCustody && (
                 <NavigationLink
                   icon={IconVariant.SAFE}
                   label={translate('navigation/links', 'Safe')}

@@ -76,7 +76,7 @@ const OverlayHeader: { [key in OverlayType]: string } = {
 export default function SettingsScreen(): JSX.Element {
   const { translate, language, currency, availableLanguages, changeLanguage, changeCurrency } = useSettingsContext();
   const { currencies } = useFiatContext();
-  const { user, isUserLoading } = useUserContext();
+  const { user, isUserLoading, userAddresses } = useUserContext();
   const { width } = useWindowContext();
   const { navigate } = useNavigation();
   const { rootRef } = useLayoutContext();
@@ -128,9 +128,9 @@ export default function SettingsScreen(): JSX.Element {
     ? `${translate('general/actions', OverlayHeader[overlayType])}?`
     : translate('screens/settings', 'Settings');
 
-  const userAddresses = user?.addresses.sort(sortAddressesByBlockchain);
-  const disabledAddresses = user?.disabledAddresses.sort(sortAddressesByBlockchain);
-  const addressesList = (userAddresses ?? []).concat(disabledAddresses ?? []);
+  const activeAddresses = userAddresses.sort(sortAddressesByBlockchain);
+  const disabledAddresses = user?.disabledAddresses.filter((a) => !a.isCustody).sort(sortAddressesByBlockchain);
+  const addressesList = activeAddresses.concat(disabledAddresses ?? []);
 
   useLayoutOptions({ title, onBack: overlayType ? () => onCloseOverlay() : undefined });
 

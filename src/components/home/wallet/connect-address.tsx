@@ -28,7 +28,7 @@ interface FormData {
 
 export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX.Element {
   const { translate } = useSettingsContext();
-  const { user, isUserLoading } = useUserContext();
+  const { user, isUserLoading, hasAddress, userAddresses } = useUserContext();
   const { width } = useWindowContext();
   const { setWallet, setSession } = useWalletContext();
   const { changeAddress } = useUserContext();
@@ -39,7 +39,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
-  const isCustodySignup = !user?.addresses.length && CustodyAssets.includes(assetOut ?? '');
+  const isCustodySignup = !hasAddress && CustodyAssets.includes(assetOut ?? '');
 
   const {
     control,
@@ -50,11 +50,11 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
   const selectedAddress = useWatch({ control, name: 'address' });
 
   useEffect(() => {
-    const preselectedAddress = user?.activeAddress ?? (user?.addresses.length === 1 ? user.addresses[0] : undefined);
+    const preselectedAddress = user?.activeAddress ?? (userAddresses.length === 1 ? userAddresses[0] : undefined);
     if (preselectedAddress) {
       setValue('address', preselectedAddress);
     }
-  }, [user?.activeAddress, user?.addresses]);
+  }, [user?.activeAddress, userAddresses]);
 
   useEffect(() => {
     if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address && !isUserLoading) {
@@ -83,7 +83,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
         })
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
     }
-  }, [isCustodySignup, isUserLoading]);
+  }, [assetOut, hasAddress, isUserLoading]);
 
   return (isLoading || isUserLoading || isCustodySignup) && !error ? (
     <StyledLoadingSpinner size={SpinnerSize.LG} />
@@ -93,7 +93,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
     </div>
   ) : (
     <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
-      {user?.addresses.length && (
+      {userAddresses.length && (
         <>
           <p className="text-dfxGray-700">
             {translate('screens/home', 'Please select an address or add a new one to continue.')}
@@ -104,7 +104,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
               rootRef={rootRef}
               name="address"
               placeholder={translate('general/actions', 'Select') + '...'}
-              items={user.addresses.sort(sortAddressesByBlockchain)}
+              items={userAddresses.sort(sortAddressesByBlockchain)}
               labelFunc={(item) => blankedAddress(addressLabel(item), { width })}
               descriptionFunc={(item) => item.label ?? item.wallet}
               forceEnable={user?.activeAddress === undefined}

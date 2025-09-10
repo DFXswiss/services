@@ -8,7 +8,6 @@ import {
   useAssetContext,
   useAuthContext,
   useBuy,
-  User,
   useSessionContext,
   useUser,
   useUserContext,
@@ -58,7 +57,7 @@ export function useSafe(): UseSafeResult {
   const { session } = useAuthContext();
   const { changeUserAddress } = useUser();
   const { getAssets } = useAssetContext();
-  const { user, isUserLoading, reloadUser } = useUserContext();
+  const { user, isUserLoading, reloadUser, custodyAddresses } = useUserContext();
   const { isLoggedIn, tokenStore } = useSessionContext();
 
   const currentOrderId = useRef<number>();
@@ -75,8 +74,8 @@ export function useSafe(): UseSafeResult {
   // ---- Safe Screen Initialization ----
 
   useEffect(() => {
-    async function createCustodyOrSwitch(user: User): Promise<void> {
-      const custodyAddr = user.addresses.find((a) => a.isCustody);
+    async function createCustodyOrSwitch(): Promise<void> {
+      const custodyAddr = custodyAddresses.at(0);
       if (!custodyAddr) {
         const { accessToken } = await createCustodyUser();
         tokenStore.set('custody', accessToken);
@@ -92,7 +91,7 @@ export function useSafe(): UseSafeResult {
     }
 
     if (!isUserLoading && session && user && isLoggedIn) {
-      createCustodyOrSwitch(user)
+      createCustodyOrSwitch()
         .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
         .finally(() => setIsInitialized(true));
     }

@@ -48,7 +48,7 @@ export default function AccountScreen(): JSX.Element {
   const { limitToString, levelToString } = useKycHelper();
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
-  const { user, isUserLoading } = useUserContext();
+  const { user, isUserLoading, userAddresses } = useUserContext();
   const { getRef } = useUser();
   const { width } = useWindowContext();
   const { canClose, isEmbedded } = useAppHandlingContext();
@@ -226,7 +226,7 @@ export default function AccountScreen(): JSX.Element {
             </StyledDataTable>
           )}
           {/* Wallet Selector */}
-          {user?.addresses.length ? (
+          {userAddresses.length ? (
             <>
               <div className="border-b my-2.5 border-dfxGray-400 w-full"></div>
 
@@ -239,7 +239,7 @@ export default function AccountScreen(): JSX.Element {
                     name="address"
                     rootRef={rootRef}
                     placeholder={translate('general/actions', 'Select') + '...'}
-                    items={user.addresses.sort(sortAddressesByBlockchain)}
+                    items={userAddresses.sort(sortAddressesByBlockchain)}
                     labelFunc={(item) => blankedAddress(addressLabel(item), { width })}
                     descriptionFunc={(item) => item.label ?? item.wallet}
                     forceEnable={user?.activeAddress === undefined}
