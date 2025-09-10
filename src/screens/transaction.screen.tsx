@@ -609,12 +609,14 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
 
                     const icon = isUnassigned
                       ? undefined
-                      : ((tx.type === TransactionType.SELL
+                      : (tx.type === TransactionType.SELL
                           ? [tx.inputAsset, tx.outputAsset]
                           : [tx.outputAsset, tx.inputAsset]
-                        ).find((a) =>
-                          Object.values(AssetIconVariant).find((icon) => a === icon || a?.replace(/^d/, '') === icon),
-                        ) as AssetIconVariant | undefined);
+                        )
+                          .map((a) =>
+                            Object.values(AssetIconVariant).find((icon) => a === icon || a?.replace(/^d/, '') === icon),
+                          )
+                          .find((a) => a);
 
                     return (
                       <div
