@@ -301,7 +301,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { width } = useWindowContext();
   const { navigate } = useNavigation();
   const { translate } = useSettingsContext();
-  const { user } = useUserContext();
+  const { user, userAddresses } = useUserContext();
   const { rootRef } = useLayoutContext();
   const { bankAccounts } = useBankAccountContext();
   const { isLoggedIn } = useSessionContext();
@@ -353,7 +353,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
 
   useEffect(() => {
     if (transaction && user) {
-      const allowedAddresses = user.addresses.filter(
+      const allowedAddresses = userAddresses.filter(
         (a) => transaction?.inputBlockchain && a.blockchains.includes(transaction?.inputBlockchain),
       );
       setAddresses(allowedAddresses);
@@ -609,12 +609,14 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
 
                     const icon = isUnassigned
                       ? undefined
-                      : Object.values(AssetIconVariant).find((icon) =>
-                          (tx.type === TransactionType.SELL
-                            ? [tx.inputAsset, tx.outputAsset]
-                            : [tx.outputAsset, tx.inputAsset]
-                          ).some((a) => a === icon || a?.replace(/^d/, '') === icon),
-                        );
+                      : (tx.type === TransactionType.SELL
+                          ? [tx.inputAsset, tx.outputAsset]
+                          : [tx.outputAsset, tx.inputAsset]
+                        )
+                          .map((a) =>
+                            Object.values(AssetIconVariant).find((icon) => a === icon || a?.replace(/^d/, '') === icon),
+                          )
+                          .find((a) => a);
 
                     return (
                       <div

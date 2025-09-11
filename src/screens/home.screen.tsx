@@ -68,7 +68,7 @@ function HomeScreenContent(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isLoggedIn } = useSessionContext();
   const { session, getAuthToken } = useAuthContext();
-  const { user, isUserLoading } = useUserContext();
+  const { user, isUserLoading, hasAddress } = useUserContext();
   const { hasSession, canClose, service, isEmbedded, redirectPath, closeServices } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();
   const { navigate, goBack } = useNavigation();
@@ -96,7 +96,7 @@ function HomeScreenContent(): JSX.Element {
       isLoggedIn &&
       !session?.address &&
       !isConnectAddress &&
-      (user?.addresses?.length || CustodyAssets.includes(appParams.assetOut ?? ''))
+      (hasAddress || CustodyAssets.includes(appParams.assetOut ?? ''))
     ) {
       setConnectTo({ type: WalletType.ADDRESS });
     } else if (!isLoggedIn && isConnectAddress) {
@@ -104,7 +104,7 @@ function HomeScreenContent(): JSX.Element {
     } else if (specialMode === SpecialMode.LOGIN_MAIL) {
       setConnectTo({ type: WalletType.MAIL });
     }
-  }, [specialMode, isLoggedIn, session, user?.addresses]);
+  }, [specialMode, isLoggedIn, session, hasAddress]);
 
   useEffect(() => {
     if (isInitialized && isLoggedIn && user && loginSuccessful) {
@@ -189,8 +189,7 @@ function HomeScreenContent(): JSX.Element {
 
   const title = translate('screens/home', currentPage?.header ?? (currentPage?.dfxStyle ? 'DFX services' : ' '));
   const image =
-    currentPage?.bottomImage ??
-    (currentPage?.dfxStyle ? 'https://dfx.swiss/images/app/berge.jpg' : undefined);
+    currentPage?.bottomImage ?? (currentPage?.dfxStyle ? 'https://dfx.swiss/images/app/berge.jpg' : undefined);
 
   const hasBackButton =
     (canClose && !isEmbedded) || connectTo != null || (currentPageId != null && currentPageId !== appParams.mode);
