@@ -119,7 +119,6 @@ export enum WalletAppId {
   BINANCE = 'binance',
   MUUN = 'muun',
   KUCOINPAY = 'kucoinpay',
-  BRIDGEWALLET = 'bridgewallet',
 }
 
 export interface WalletInfo {
