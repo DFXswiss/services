@@ -264,4 +264,15 @@ export const PaymentLinkWallets: WalletInfo[] = [
     category: WalletCategory.C2B,
     deepLink: 'kucoinpay:',
   },
+  {
+    id: WalletAppId.BRIDGEWALLET,
+    name: 'Bridge Wallet',
+    websiteUrl: 'https://www.mtpelerin.com/de/bridge-wallet',
+    iconUrl: 'https://dfx.swiss/images/app/BridgeWallet.webp',
+    deepLink: 'bridgewallet:',
+    appStoreUrl: 'https://apps.apple.com/app/bridge-wallet/id1481859680',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.mtpelerin.bridge',
+    semiCompatible: true,
+    category: WalletCategory.BITCOIN,
+  },
 ];
