@@ -13,12 +13,6 @@ const EVM_CHAINS: TransferMethod[] = [
   Blockchain.HAQQ,
 ];
 
-const MULTI_CHAIN: TransferMethod[] = [
-  Blockchain.BITCOIN,
-  Blockchain.MONERO,
-  ...EVM_CHAINS,
-];
-
 export const PaymentStandards = {
   [PaymentStandardType.OPEN_CRYPTO_PAY]: {
     id: PaymentStandardType.OPEN_CRYPTO_PAY,
@@ -52,7 +46,11 @@ export const PaymentLinkWallets: WalletInfo[] = [
     appStoreUrl: 'https://apps.apple.com/app/cake-wallet-for-xmr-monero/id1334702542',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet',
     recommended: true,
-    supportedMethods: MULTI_CHAIN,
+    supportedMethods: [
+      Blockchain.BITCOIN,
+      Blockchain.MONERO,
+      ...EVM_CHAINS,
+    ],
   },
   {
     id: WalletAppId.FRANKENCOIN,
