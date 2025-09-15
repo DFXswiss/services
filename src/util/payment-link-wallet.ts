@@ -1,14 +1,4 @@
-import { Blockchain } from '@dfx.swiss/react';
-import { C2BPaymentMethod, TransferInfo, TransferMethod, WalletCategory, WalletInfo } from 'src/dto/payment-link.dto';
-import { Evm } from 'src/util/evm';
-
-const compatibleMethods: Record<WalletCategory, TransferMethod[]> = {
-  [WalletCategory.LIGHTNING]: [Blockchain.LIGHTNING],
-  [WalletCategory.BITCOIN]: [Blockchain.BITCOIN, Blockchain.LIGHTNING],
-  [WalletCategory.EVM]: Object.values(Blockchain).filter((b) => Evm.isEvm(b)),
-  [WalletCategory.C2B]: [C2BPaymentMethod.BINANCE_PAY, C2BPaymentMethod.KUCOINPAY],
-  [WalletCategory.MULTI_CHAIN]: [...Object.values(Blockchain).filter((b) => b !== Blockchain.LIGHTNING)],
-};
+import { TransferInfo, WalletInfo } from 'src/dto/payment-link.dto';
 
 export class Wallet {
   static filterTransferInfoByWallet(wallet: WalletInfo, transferInfoList: TransferInfo[]): TransferInfo[] {
@@ -27,10 +17,7 @@ export class Wallet {
     const { method, assets, available } = transferInfo;
     if (isAvailable && available === false) return undefined;
 
-    // Use wallet's specific supportedMethods if defined, otherwise fallback to category-based methods
-    const supportedMethods = wallet.supportedMethods ?? compatibleMethods[wallet.category];
-
-    if (!supportedMethods.includes(method)) {
+    if (!wallet.supportedMethods.includes(method)) {
       return undefined;
     }
 
