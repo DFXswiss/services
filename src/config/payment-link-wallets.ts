@@ -14,7 +14,6 @@ const EVM_CHAINS: TransferMethod[] = [
 ];
 
 const LIGHTNING_ONLY: TransferMethod[] = [Blockchain.LIGHTNING];
-const BITCOIN_AND_LIGHTNING: TransferMethod[] = [Blockchain.BITCOIN, Blockchain.LIGHTNING];
 const ALL_CHAINS_EXCEPT_LIGHTNING: TransferMethod[] = Object.values(Blockchain).filter((b) => b !== Blockchain.LIGHTNING) as TransferMethod[];
 
 export const PaymentStandards = {
