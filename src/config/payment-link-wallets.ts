@@ -14,7 +14,12 @@ const EVM_CHAINS: TransferMethod[] = [
 ];
 
 const LIGHTNING: TransferMethod[] = [Blockchain.LIGHTNING];
-const ALL_CHAINS_EXCEPT_LIGHTNING: TransferMethod[] = Object.values(Blockchain).filter((b) => b !== Blockchain.LIGHTNING) as TransferMethod[];
+const BITCOIN: TransferMethod[] = [Blockchain.BITCOIN];
+const MULTI_CHAIN: TransferMethod[] = [
+  Blockchain.BITCOIN,
+  Blockchain.MONERO,
+  ...EVM_CHAINS,
+];
 
 export const PaymentStandards = {
   [PaymentStandardType.OPEN_CRYPTO_PAY]: {
@@ -49,7 +54,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     appStoreUrl: 'https://apps.apple.com/app/cake-wallet-for-xmr-monero/id1334702542',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet',
     recommended: true,
-    supportedMethods: ALL_CHAINS_EXCEPT_LIGHTNING,
+    supportedMethods: MULTI_CHAIN,
   },
   {
     id: WalletAppId.FRANKENCOIN,
