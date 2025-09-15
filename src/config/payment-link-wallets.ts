@@ -268,7 +268,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     id: WalletAppId.BRIDGEWALLET,
     name: 'Bridge Wallet',
     websiteUrl: 'https://www.mtpelerin.com/de/bridge-wallet',
-    iconUrl: 'https://dfx.swiss/images/app/BridgeWallet.webp',
+    iconUrl: 'https://dfx.swiss/images/app/bridge-wallet-icon.webp',
     deepLink: 'bridgewallet:',
     appStoreUrl: 'https://apps.apple.com/app/bridge-wallet/id1481859680',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.mtpelerin.bridge',
