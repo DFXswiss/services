@@ -133,6 +133,7 @@ export interface WalletInfo {
   playStoreUrl?: string;
   recommended?: boolean;
   category: WalletCategory;
+  supportedMethods?: TransferMethod[];
   supportedTokens?: string[];
   semiCompatible?: boolean;
   disabled?: boolean;

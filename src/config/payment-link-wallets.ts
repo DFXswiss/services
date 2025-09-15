@@ -1,5 +1,5 @@
-import { PaymentStandardType } from '@dfx.swiss/react';
-import { WalletAppId, WalletCategory, WalletInfo } from 'src/dto/payment-link.dto';
+import { Blockchain, PaymentStandardType } from '@dfx.swiss/react';
+import { C2BPaymentMethod, WalletAppId, WalletCategory, WalletInfo } from 'src/dto/payment-link.dto';
 
 export const PaymentStandards = {
   [PaymentStandardType.OPEN_CRYPTO_PAY]: {
@@ -273,6 +273,18 @@ export const PaymentLinkWallets: WalletInfo[] = [
     appStoreUrl: 'https://apps.apple.com/app/bridge-wallet/id1481859680',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.mtpelerin.bridge',
     semiCompatible: true,
-    category: WalletCategory.BITCOIN,
+    category: WalletCategory.BITCOIN, // Fallback category
+    supportedMethods: [
+      Blockchain.BITCOIN,
+      Blockchain.LIGHTNING,
+      Blockchain.ETHEREUM,
+      Blockchain.ARBITRUM,
+      Blockchain.OPTIMISM,
+      Blockchain.POLYGON,
+      Blockchain.BASE,
+      Blockchain.GNOSIS,
+      Blockchain.BINANCE_SMART_CHAIN,
+      Blockchain.HAQQ,
+    ],
   },
 ];

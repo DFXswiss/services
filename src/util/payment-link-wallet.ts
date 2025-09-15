@@ -27,7 +27,10 @@ export class Wallet {
     const { method, assets, available } = transferInfo;
     if (isAvailable && available === false) return undefined;
 
-    if (!compatibleMethods[wallet.category].includes(method)) {
+    // Use wallet's specific supportedMethods if defined, otherwise fallback to category-based methods
+    const supportedMethods = wallet.supportedMethods ?? compatibleMethods[wallet.category];
+
+    if (!supportedMethods.includes(method)) {
       return undefined;
     }
 
