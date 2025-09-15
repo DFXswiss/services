@@ -13,8 +13,6 @@ const EVM_CHAINS: TransferMethod[] = [
   Blockchain.HAQQ,
 ];
 
-const LIGHTNING: TransferMethod[] = [Blockchain.LIGHTNING];
-const BITCOIN: TransferMethod[] = [Blockchain.BITCOIN];
 const MULTI_CHAIN: TransferMethod[] = [
   Blockchain.BITCOIN,
   Blockchain.MONERO,
@@ -76,7 +74,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     appStoreUrl: 'https://apps.apple.com/app/phoenix-wallet/id1544097028',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=fr.acinq.phoenix.mainnet',
     recommended: true,
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.WALLETOFSATOSHI,
@@ -87,7 +85,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     appStoreUrl: 'https://apps.apple.com/app/wallet-of-satoshi/id1438599608',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.livingroomofsatoshi.wallet',
     recommended: true,
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.BTC_TARO,
@@ -98,7 +96,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     appStoreUrl: 'https://apps.apple.com/app/dfx-btc-taproot-asset-wallet/id6466037617',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=swiss.dfx.bitcoin',
     recommended: true,
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   // ----------------------- COMPATIBLE APPS -----------------------
   {
@@ -108,7 +106,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     iconUrl: 'https://dfx.swiss/images/app/BitBanana.webp',
     deepLink: 'lightning:',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=app.michaelwuensch.bitbanana',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.BITKIT,
@@ -118,7 +116,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     deepLink: 'bitkit:',
     appStoreUrl: 'https://apps.apple.com/app/bitkit-bitcoin-ln-wallet/id6502440655',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=to.bitkit',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.BLINK,
@@ -128,7 +126,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     iconUrl: 'https://dfx.swiss/images/app/Blink.webp',
     appStoreUrl: 'https://apps.apple.com/app/blink-bitcoin-beach-wallet/id1531383905',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.galoyapp',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.BLITZWALLET,
@@ -137,7 +135,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     deepLink: 'lightning:',
     iconUrl: 'https://dfx.swiss/images/app/BlitzWalletApp.webp',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.blitzwallet',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.BLIXT,
@@ -145,7 +143,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     websiteUrl: 'https://blixtwallet.com/',
     iconUrl: 'https://dfx.swiss/images/app/Blixt.webp',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.blixtwallet',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.BREEZ,
@@ -155,7 +153,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     deepLink: 'breez:',
     appStoreUrl: 'https://apps.apple.com/app/breez-lightning-client-pos/id1463604142',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.breez.client',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.COINCORNER,
@@ -165,7 +163,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     deepLink: 'lightning:',
     appStoreUrl: 'https://apps.apple.com/app/coincorner-checkout/id1464880599',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.coincorner.app.crypt',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.DEUROWALLET,
@@ -185,7 +183,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     deepLink: 'lifpay:',
     appStoreUrl: 'https://apps.apple.com/app/lifpay/id1645840182',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=flutter.android.LifePay',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.LIPAWALLET,
@@ -194,7 +192,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     iconUrl: 'https://dfx.swiss/images/app/lipawallet.webp',
     appStoreUrl: 'https://apps.apple.com/app/lipa-wallet/id1658329527',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.getlipa.wallet',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.LNBITS,
@@ -202,7 +200,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     websiteUrl: 'https://lnbits.com/',
     iconUrl: 'https://dfx.swiss/images/app/LNbits.webp',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.lnbits.app',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.AQUA,
@@ -211,7 +209,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     iconUrl: 'https://dfx.swiss/images/app/aqua.webp',
     appStoreUrl: 'https://apps.apple.com/app/aqua-wallet/id6468594241',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=io.aquawallet.android',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.ONEKEY,
@@ -220,7 +218,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     iconUrl: 'https://dfx.swiss/images/app/OneKey.webp',
     appStoreUrl: 'https://apps.apple.com/app/onekey-crypto-defi-wallet/id1609559473',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=so.onekey.app.wallet',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.POUCHPH,
@@ -230,7 +228,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     deepLink: 'pouch:',
     appStoreUrl: 'https://apps.apple.com/app/pouch-lightning-wallet/id1584404678',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=pouch.ph',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.ZEBEDEE,
@@ -240,7 +238,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     deepLink: 'zebedee:',
     appStoreUrl: 'https://apps.apple.com/app/zebedee-play-earn-shop/id1484394401',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=io.zebedee.wallet',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.ZEUS,
@@ -250,7 +248,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     deepLink: 'lightning:',
     appStoreUrl: 'https://apps.apple.com/app/zeus-wallet/id1456038895',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=app.zeusln.zeus',
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.BINANCE,
@@ -271,7 +269,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     playStoreUrl: 'https://play.google.com/store/apps/details?id=io.muun.apollo',
     deepLink: 'muun:',
     semiCompatible: true,
-    supportedMethods: LIGHTNING,
+    supportedMethods: [Blockchain.LIGHTNING],
   },
   {
     id: WalletAppId.KUCOINPAY,
