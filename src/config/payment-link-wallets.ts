@@ -2,7 +2,7 @@ import { Blockchain, PaymentStandardType } from '@dfx.swiss/react';
 import { C2BPaymentMethod, TransferMethod, WalletAppId, WalletInfo } from 'src/dto/payment-link.dto';
 
 // Helper constants for common method combinations
-const EVM_CHAINS: TransferMethod[] = [
+const EVM: TransferMethod[] = [
   Blockchain.ETHEREUM,
   Blockchain.ARBITRUM,
   Blockchain.OPTIMISM,
@@ -49,7 +49,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     supportedMethods: [
       Blockchain.BITCOIN,
       Blockchain.MONERO,
-      ...EVM_CHAINS,
+      ...EVM,
     ],
   },
   {
@@ -60,7 +60,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     appStoreUrl: 'https://apps.apple.com/app/frankencoin-wallet/id6480348701',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=swiss.dfx.frankencoin_wallet',
     recommended: true,
-    supportedMethods: EVM_CHAINS,
+    supportedMethods: EVM,
     supportedTokens: ['Ethereum:ZCHF', 'Polygon:ZCHF'],
   },
   {
@@ -170,7 +170,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     iconUrl: 'https://dfx.swiss/images/app/DeuroWallet.webp',
     appStoreUrl: 'https://apps.apple.com/ch/app/deuro-wallet/id6746087643',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=eu.deurowallet.wallet',
-    supportedMethods: EVM_CHAINS,
+    supportedMethods: EVM,
     supportedTokens: ['dEURO'],
   },
   {
@@ -292,7 +292,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     supportedMethods: [
       Blockchain.BITCOIN,
       Blockchain.LIGHTNING,
-      ...EVM_CHAINS,
+      ...EVM,
     ],
   },
 ];
