@@ -100,7 +100,7 @@ function BackButton({ onBack }: BackButtonProps): JSX.Element {
 function DfxLogo(): JSX.Element {
   return (
     <a href="/">
-      <img height={23} width={73.6} src="https://content.dfx.swiss/img/v1/website/logo-dark.svg" alt="logo" />
+      <img height={23} width={73.6} src="https://dfx.swiss/images/app/logo-dark.svg" alt="logo" />
     </a>
   );
 }
