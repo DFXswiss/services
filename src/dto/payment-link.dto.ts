@@ -86,14 +86,6 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
   requestedAmount: Amount;
 }
 
-export enum WalletCategory {
-  LIGHTNING = 'LIGHTNING',
-  BITCOIN = 'BITCOIN', // Bitcoin & Lightning
-  EVM = 'EVM',
-  MULTI_CHAIN = 'MULTI_CHAIN', // excl. Lightning
-  C2B = 'C2B', // Binance Pay, Kucoin Pay
-}
-
 export enum WalletAppId {
   DEUROWALLET = 'deurowallet',
   CAKEWALLET = 'cakewallet',
@@ -132,7 +124,7 @@ export interface WalletInfo {
   appStoreUrl?: string;
   playStoreUrl?: string;
   recommended?: boolean;
-  category: WalletCategory;
+  supportedMethods: TransferMethod[];
   supportedTokens?: string[];
   semiCompatible?: boolean;
   disabled?: boolean;
