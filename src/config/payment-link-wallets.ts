@@ -1,8 +1,7 @@
 import { Blockchain, PaymentStandardType } from '@dfx.swiss/react';
 import { C2BPaymentMethod, TransferMethod, WalletAppId, WalletInfo } from 'src/dto/payment-link.dto';
 
-// Helper constants for common method combinations
-const EVM: TransferMethod[] = [
+const EvmMethods: TransferMethod[] = [
   Blockchain.ETHEREUM,
   Blockchain.ARBITRUM,
   Blockchain.OPTIMISM,
@@ -46,11 +45,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     appStoreUrl: 'https://apps.apple.com/app/cake-wallet-for-xmr-monero/id1334702542',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet',
     recommended: true,
-    supportedMethods: [
-      Blockchain.BITCOIN,
-      Blockchain.MONERO,
-      ...EVM,
-    ],
+    supportedMethods: [Blockchain.BITCOIN, Blockchain.MONERO, ...EvmMethods],
   },
   {
     id: WalletAppId.FRANKENCOIN,
@@ -60,7 +55,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     appStoreUrl: 'https://apps.apple.com/app/frankencoin-wallet/id6480348701',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=swiss.dfx.frankencoin_wallet',
     recommended: true,
-    supportedMethods: EVM,
+    supportedMethods: EvmMethods,
     supportedTokens: ['Ethereum:ZCHF', 'Polygon:ZCHF'],
   },
   {
@@ -170,7 +165,7 @@ export const PaymentLinkWallets: WalletInfo[] = [
     iconUrl: 'https://dfx.swiss/images/app/DeuroWallet.webp',
     appStoreUrl: 'https://apps.apple.com/ch/app/deuro-wallet/id6746087643',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=eu.deurowallet.wallet',
-    supportedMethods: EVM,
+    supportedMethods: EvmMethods,
     supportedTokens: ['dEURO'],
   },
   {
@@ -289,10 +284,6 @@ export const PaymentLinkWallets: WalletInfo[] = [
     appStoreUrl: 'https://apps.apple.com/app/bridge-wallet/id1481859680',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.mtpelerin.bridge',
     semiCompatible: true,
-    supportedMethods: [
-      Blockchain.BITCOIN,
-      Blockchain.LIGHTNING,
-      ...EVM,
-    ],
+    supportedMethods: [Blockchain.BITCOIN, Blockchain.LIGHTNING, ...EvmMethods],
   },
 ];
