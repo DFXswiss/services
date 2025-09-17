@@ -77,6 +77,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.ZANO]: 'Zano',
       [Blockchain.SOLANA]: 'Solana',
       [Blockchain.TRON]: 'Tron',
+      [Blockchain.SPARK]: 'Spark',
       [Blockchain.CITREA_TESTNET]: 'Citrea Testnet',
     },
   };
