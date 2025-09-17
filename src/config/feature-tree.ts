@@ -1495,8 +1495,6 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_SOL };
             case Blockchain.TRON:
               return { type: WalletType.CLI_TRX };
-            case Blockchain.SPARK:
-              return { type: WalletType.CLI_SPARK };
             default:
               return { type: WalletType.CLI_ETH };
           }
@@ -1530,8 +1528,6 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_XMR };
             case Blockchain.ZANO:
               return { type: WalletType.CLI_ZANO };
-            case Blockchain.SPARK:
-              return { type: WalletType.CLI_SPARK };
             default:
               return { type: WalletType.CLI_ETH };
           }
@@ -1637,8 +1633,6 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_SOL };
             case Blockchain.TRON:
               return { type: WalletType.CLI_TRX };
-            case Blockchain.SPARK:
-              return { type: WalletType.CLI_SPARK };
             default:
               return { type: WalletType.CLI_ETH };
           }

@@ -38,7 +38,6 @@ const Wallets = [
   WalletType.CLI_AR,
   WalletType.CLI_SOL,
   WalletType.CLI_TRX,
-  WalletType.CLI_SPARK,
 ];
 
 const SupportedBlockchains = Wallets.map((w) => WalletBlockchains[w])
@@ -103,7 +102,6 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch, rootRef
     [WalletType.CLI_AR]: /^[\w-]{43}$/,
     [WalletType.CLI_SOL]: /^[1-9A-HJ-NP-Za-km-z]{43,44}$/,
     [WalletType.CLI_TRX]: /^T[1-9A-HJ-NP-Za-km-z]{32,34}$/,
-    [WalletType.CLI_SPARK]: /^[Ss][a-km-zA-HJ-NP-Z0-9]{94}$/,
   };
 
   function validateAddress(address: string): true | string {
