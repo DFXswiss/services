@@ -1,6 +1,6 @@
 import { Blockchain, useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { Fragment, Suspense, useEffect, useState } from 'react';
+import { Fragment, Suspense, useEffect, useRef, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { CustodyAssets } from 'src/components/home/wallet/connect-address';
@@ -80,6 +80,7 @@ function HomeScreenContent(): JSX.Element {
   const [connectTo, setConnectTo] = useState<Wallet>();
   const [loginSuccessful, setLoginSuccessful] = useState(false);
   const [pages, setPages] = useState(new Stack<Page>());
+  const connectToRef = useRef<Wallet>();
 
   const currentPageId = pages.current?.page;
   const allowedTiles = pages.current?.allowedTiles;
@@ -136,6 +137,7 @@ function HomeScreenContent(): JSX.Element {
   function handleNext(tile: Tile) {
     if (isWallet(tile)) {
       const wallet = getWallet(tile, appParams);
+      connectToRef.current = wallet;
       setConnectTo(wallet);
     } else if (tile.next) {
       if (tile.next.options) setOptions(tile.next.options);
@@ -148,8 +150,11 @@ function HomeScreenContent(): JSX.Element {
   }
 
   function handleBack() {
-    if (connectTo && connectTo.type !== WalletType.ADDRESS) {
+    const actualConnectTo = connectTo || connectToRef.current;
+
+    if (actualConnectTo && actualConnectTo.type !== WalletType.ADDRESS) {
       setConnectTo(undefined);
+      connectToRef.current = undefined;
     } else if (specialMode === SpecialMode.CONNECT && isLoggedIn) {
       connectTo || !CustodyAssets.includes(appParams.assetOut ?? '')
         ? goBack()
