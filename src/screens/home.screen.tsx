@@ -1,6 +1,6 @@
 import { Blockchain, useAuthContext, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { Fragment, Suspense, useEffect, useState, useRef } from 'react';
+import { Fragment, Suspense, useEffect, useRef, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { CustodyAssets } from 'src/components/home/wallet/connect-address';
@@ -137,7 +137,7 @@ function HomeScreenContent(): JSX.Element {
   function handleNext(tile: Tile) {
     if (isWallet(tile)) {
       const wallet = getWallet(tile, appParams);
-      connectToRef.current = wallet;  // Store in ref
+      connectToRef.current = wallet;
       setConnectTo(wallet);
     } else if (tile.next) {
       if (tile.next.options) setOptions(tile.next.options);
@@ -150,7 +150,6 @@ function HomeScreenContent(): JSX.Element {
   }
 
   function handleBack() {
-    // Check ref if state is undefined (happens with Mail)
     const actualConnectTo = connectTo || connectToRef.current;
 
     if (actualConnectTo && actualConnectTo.type !== WalletType.ADDRESS) {
