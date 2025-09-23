@@ -12,8 +12,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@dfx.swiss/react": "^1.3.0-beta.189",
-    "@dfx.swiss/react-components": "^1.3.0-beta.189",
+    "@dfx.swiss/react": "^1.3.0-beta.190",
+    "@dfx.swiss/react-components": "^1.3.0-beta.190",
     "@ledgerhq/hw-app-btc": "^6.24.1",
     "@ledgerhq/hw-app-eth": "^6.33.7",
     "@ledgerhq/hw-transport-webhid": "^6.27.19",
