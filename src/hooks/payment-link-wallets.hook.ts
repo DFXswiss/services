@@ -2,7 +2,7 @@ import { Blockchain, PaymentLinkMode } from '@dfx.swiss/react';
 import { useCallback, useMemo } from 'react';
 import { PaymentLinkWallets } from 'src/config/payment-link-wallets';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
-import { C2BPaymentMethod, TransferMethod, WalletAppId, WalletCategory, WalletInfo } from 'src/dto/payment-link.dto';
+import { C2BPaymentMethod, TransferMethod, WalletAppId, WalletInfo } from 'src/dto/payment-link.dto';
 import { Wallet } from 'src/util/payment-link-wallet';
 import { fetchJson, url } from 'src/util/utils';
 
@@ -20,7 +20,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   const getDeeplinkByCategory = async (wallet: WalletInfo) => {
     if (!paymentIdentifier) return undefined;
 
-    if (wallet.category === WalletCategory.LIGHTNING) {
+    if (wallet.supportedMethods.includes(Blockchain.LIGHTNING)) {
       const lightning = new URL(paymentIdentifier).searchParams.get('lightning');
       const suffix = 'lightning:';
       const prefix = wallet.deepLink !== suffix ? `${wallet.deepLink}` : '';
@@ -31,7 +31,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   };
 
   const hasActionDeepLink = (wallet: WalletInfo): boolean => {
-    return wallet.category === WalletCategory.LIGHTNING;
+    return wallet.supportedMethods.includes(Blockchain.LIGHTNING);
   };
 
   const filteredPaymentLinkWallets = useMemo(() => {

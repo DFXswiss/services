@@ -398,6 +398,11 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
             {refundDetails.inputAmount} {refundDetails.inputAsset.name}
           </p>
         </StyledDataTableRow>
+        <StyledDataTableRow label={translate('screens/payment', 'DFX fee')}>
+          <p>
+            {refundDetails.fee.dfx} {refundDetails.refundAsset.name}
+          </p>
+        </StyledDataTableRow>
         <StyledDataTableRow label={translate('screens/payment', 'Bank fee')}>
           <p>
             {refundDetails.fee.bank} {refundDetails.refundAsset.name}
