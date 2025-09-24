@@ -81,6 +81,7 @@ interface FormData {
   configMinCompletionStatus: MinCompletionStatus;
   configDisplayQr: boolean;
   configPaymentTimeout: number;
+  configCancellable: boolean;
   paymentMode: PaymentLinkPaymentMode;
   paymentAmount: string;
   paymentExternalId: string;
@@ -919,6 +920,7 @@ function PaymentLinkForm({
             configMinCompletionStatus: userPaymentLinksConfig.minCompletionStatus,
             configDisplayQr: userPaymentLinksConfig.displayQr,
             configPaymentTimeout: userPaymentLinksConfig.paymentTimeout,
+            configCancellable: userPaymentLinksConfig.cancellable,
           }
         : undefined,
     [userPaymentLinksConfig],
@@ -972,6 +974,7 @@ function PaymentLinkForm({
           configMinCompletionStatus: prefilledPaymentConfig.minCompletionStatus,
           configDisplayQr: prefilledPaymentConfig.displayQr,
           configPaymentTimeout: prefilledPaymentConfig.paymentTimeout,
+          configCancellable: prefilledPaymentConfig.cancellable,
         });
       }
     } else if (configData) {
@@ -1047,6 +1050,7 @@ function PaymentLinkForm({
         minCompletionStatus: data.configMinCompletionStatus,
         displayQr: data.configDisplayQr,
         paymentTimeout: Number(data.configPaymentTimeout),
+        configCancellable: data.configCancellable,
       };
 
       if (onSubmitForm) {
@@ -1098,6 +1102,7 @@ function PaymentLinkForm({
     configMinCompletionStatus: Validations.Required,
     configPaymentTimeout: Validations.Required,
     configDisplayQr: Validations.Custom((value) => [true, false].includes(value) || 'invalid configDisplayQr'),
+    configCancellable: Validations.Custom((value) => [true, false].includes(value) || 'invalid configCancellable'),
   });
 
   const availablePaymentRoutes: RouteIdSelectData[] = paymentRoutes?.sell?.map(routeToRouteIdSelectData) ?? [];
@@ -1334,6 +1339,17 @@ function PaymentLinkForm({
                 items={[true, false]}
                 labelFunc={(item) => translate('general/actions', item ? 'Yes' : 'No')}
               />
+
+              <StyledDropdown
+                rootRef={rootRef}
+                name="configCancellable"
+                label={translate('screens/payment', 'Cancellable')}
+                smallLabel
+                full
+                placeholder={translate('general/actions', 'Select...')}
+                items={[true, false]}
+                labelFunc={(item) => translate('general/actions', item ? 'Yes' : 'No')}
+              />
             </>
           )}
           {step === PaymentLinkFormStep.DONE && (
@@ -1395,6 +1411,13 @@ function PaymentLinkForm({
                     {
                       label: translate('screens/payment', 'Payment timeout (seconds)'),
                       text: data.configPaymentTimeout?.toString() ?? naString,
+                    },
+                    {
+                      label: translate('screens/payment', 'Cancellable'),
+                      text:
+                        data.configCancellable !== undefined
+                          ? translate('general/actions', data.configCancellable ? 'Yes' : 'No')
+                          : naString,
                     },
                   ]}
                 />
