@@ -1,8 +1,8 @@
 import { Blockchain, PaymentLinkMode } from '@dfx.swiss/react';
 import { useCallback, useMemo } from 'react';
-import { PaymentLinkWallets } from 'src/config/payment-link-wallets';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import { C2BPaymentMethod, TransferMethod, WalletAppId, WalletInfo } from 'src/dto/payment-link.dto';
+import { useWalletAppsApi } from 'src/hooks/wallet-apps-api.hook';
 import { Wallet } from 'src/util/payment-link-wallet';
 import { fetchJson, url } from 'src/util/utils';
 
@@ -12,10 +12,13 @@ interface PaymentLinkWalletsProps {
   semiCompatibleWallets: WalletInfo[];
   getWalletByName: (id: WalletAppId) => WalletInfo | undefined;
   getDeeplinkByWalletId: (id: WalletAppId) => Promise<string | undefined>;
+  isLoading: boolean;
+  error: string | undefined;
 }
 
 export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   const { paymentIdentifier, payRequest, paymentHasQuote } = usePaymentLinkContext();
+  const { walletApps, isLoading, error } = useWalletAppsApi();
 
   const getDeeplinkByCategory = async (wallet: WalletInfo) => {
     if (!paymentIdentifier) return undefined;
@@ -37,14 +40,14 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   const filteredPaymentLinkWallets = useMemo(() => {
     const hasQuote = paymentHasQuote(payRequest);
     const isPublicPayment = payRequest?.mode === PaymentLinkMode.PUBLIC;
-    return PaymentLinkWallets.map((wallet) => {
+    return walletApps.map((wallet) => {
       return {
         ...wallet,
         disabled: hasQuote && !Wallet.qualifiesForPayment(wallet, payRequest.transferAmounts),
         hasActionDeepLink: hasActionDeepLink(wallet),
       };
     }).filter((wallet) => (isPublicPayment ? wallet.deepLink : true));
-  }, [payRequest]);
+  }, [payRequest, walletApps]);
 
   const recommendedWallets = useMemo(() => {
     return filteredPaymentLinkWallets.filter((wallet) => wallet.recommended === true);
@@ -104,5 +107,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
     semiCompatibleWallets,
     getWalletByName,
     getDeeplinkByWalletId,
+    isLoading,
+    error,
   };
 };

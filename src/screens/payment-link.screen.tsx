@@ -108,8 +108,15 @@ export default function PaymentLinkScreen(): JSX.Element {
     payWithMetaMask,
   } = usePaymentLinkContext();
 
-  const { recommendedWallets, otherWallets, semiCompatibleWallets, getWalletByName, getDeeplinkByWalletId } =
-    usePaymentLinkWallets();
+  const {
+    recommendedWallets,
+    otherWallets,
+    semiCompatibleWallets,
+    getWalletByName,
+    getDeeplinkByWalletId,
+    isLoading: isLoadingWallets,
+    error: walletsError,
+  } = usePaymentLinkWallets();
 
   const [assetObject, setAssetObject] = useState<Asset>();
   const [showContract, setShowContract] = useState(false);
@@ -237,7 +244,9 @@ export default function PaymentLinkScreen(): JSX.Element {
     <>
       {error ? (
         <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
-      ) : !payRequest || isLoadingMetaMask ? (
+      ) : walletsError ? (
+        <p className="text-dfxRed-100 text-sm mt-4">Failed to load wallet apps: {walletsError}</p>
+      ) : !payRequest || isLoadingMetaMask || isLoadingWallets ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <StyledVerticalStack full gap={4} center className="pt-8">

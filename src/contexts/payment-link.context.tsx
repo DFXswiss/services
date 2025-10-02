@@ -19,8 +19,8 @@ import {
   useState,
 } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { PaymentStandards } from 'src/config/payment-link-wallets';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
+import { useWalletAppsApi } from 'src/hooks/wallet-apps-api.hook';
 import { AssetBalance } from 'src/contexts/balance.context';
 import {
   Amount,
@@ -88,6 +88,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   const { paymentLinkApiUrlStore } = useSessionStore();
   const { redirectUri } = useAppParams();
   const { assignPaymentLink } = usePaymentRoutes();
+  const { paymentStandards: apiPaymentStandards } = useWalletAppsApi();
 
   const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction, readBalance } =
     useMetaMask();
@@ -257,7 +258,9 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     if (!hasQuote(data) || paymentStandards) return;
 
     const possibleStandards: PaymentStandard[] = data.possibleStandards.flatMap((type: PaymentStandardType) => {
-      const paymentStandard = PaymentStandards[type];
+      const paymentStandard = apiPaymentStandards[type];
+
+      if (!paymentStandard) return [];
 
       if (type !== PaymentStandardType.PAY_TO_ADDRESS) {
         return paymentStandard;
