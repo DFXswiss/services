@@ -20,7 +20,6 @@ import {
 } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
-import { useWalletAppsApi } from 'src/hooks/wallet-apps-api.hook';
 import { AssetBalance } from 'src/contexts/balance.context';
 import {
   Amount,
@@ -42,6 +41,18 @@ import { useNavigation } from '../hooks/navigation.hook';
 import { useMetaMask, WalletType } from '../hooks/wallets/metamask.hook';
 
 const MERCHANT_INFO_KEY = 'merchant-info';
+
+async function fetchPaymentStandards(): Promise<PaymentStandard[]> {
+  const apiUrl = url({
+    base: process.env.REACT_APP_API_URL,
+    path: '/v1/paymentLink/standard',
+  });
+
+  const response = await fetch(apiUrl);
+  if (!response.ok) throw new Error(`Failed to fetch payment standards: HTTP ${response.status}`);
+
+  return response.json();
+}
 
 interface PaymentLinkInterface {
   error: string | undefined;
@@ -88,7 +99,6 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   const { paymentLinkApiUrlStore } = useSessionStore();
   const { redirectUri } = useAppParams();
   const { assignPaymentLink } = usePaymentRoutes();
-  const { paymentStandards: apiPaymentStandards } = useWalletAppsApi();
 
   const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction, readBalance } =
     useMetaMask();
@@ -101,6 +111,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   const [showAssets, setShowAssets] = useState<boolean>(false);
   const [showMap, setShowMap] = useState<boolean>(false);
   const [urlParams, setUrlParams] = useSearchParams();
+  const [apiPaymentStandards, setApiPaymentStandards] = useState<Record<string, PaymentStandard>>({});
   const [paymentStandards, setPaymentStandards] = useState<PaymentStandard[]>();
   const [payRequest, setPayRequest] = useState<PaymentLinkPayTerminal | PaymentLinkPayRequest>();
   const [paymentStatus, setPaymentStatus] = useState<ExtendedPaymentLinkStatus>(PaymentLinkPaymentStatus.PENDING);
@@ -116,6 +127,21 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   const sessionApiUrl = useRef<string>(paymentLinkApiUrlStore.get() ?? '');
 
   const callbackUrl = useRef<string>();
+
+  useEffect(() => {
+    fetchPaymentStandards()
+      .then((standards) => {
+        const standardsMap = Object.fromEntries(standards.map((standard) => [standard.id, standard]));
+        setApiPaymentStandards(standardsMap);
+      })
+      .catch((error) => console.error('Failed to load payment standards:', error));
+  }, []);
+
+  useEffect(() => {
+    if (Object.keys(apiPaymentStandards).length > 0 && payRequest) {
+      setPaymentStandardSelection(payRequest);
+    }
+  }, [apiPaymentStandards, payRequest]);
 
   const setSessionApiUrl = (newUrl?: string) => {
     sessionApiUrl.current = newUrl || '';
@@ -269,7 +295,10 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
           .filter((ta) => ta.method !== 'Lightning')
           .filter((ta) => ta.available !== false)
           .map((ta) => {
-            return { ...paymentStandard, blockchain: ta.method };
+            return {
+              ...paymentStandard,
+              blockchain: ta.method as Blockchain,
+            };
           });
       }
     });
@@ -279,7 +308,6 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
 
   async function waitPayment(paymentRequest: PaymentLinkPayRequest) {
     setPaymentStatus(PaymentLinkPaymentStatus.PENDING);
-    setPaymentStandardSelection(paymentRequest);
     startTimer(new Date(paymentRequest.quote.expiration));
 
     const lnurlpUrl = url({

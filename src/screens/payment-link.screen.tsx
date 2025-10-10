@@ -56,7 +56,6 @@ import {
   PaymentLinkPayRequest,
   PaymentLinkPayTerminal,
   PaymentStandard,
-  WalletAppId,
   WalletInfo,
 } from 'src/dto/payment-link.dto';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -112,7 +111,6 @@ export default function PaymentLinkScreen(): JSX.Element {
     recommendedWallets,
     otherWallets,
     semiCompatibleWallets,
-    getWalletByName,
     getDeeplinkByWalletId,
     isLoading: isLoadingWallets,
     error: walletsError,
@@ -123,6 +121,8 @@ export default function PaymentLinkScreen(): JSX.Element {
   const [walletData, setWalletData] = useState<WalletInfo>();
   const [isLoadingDeeplink, setIsLoadingDeeplink] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
+
+  const errorToDisplay = walletsError ?? error;
 
   const {
     control,
@@ -136,14 +136,17 @@ export default function PaymentLinkScreen(): JSX.Element {
   const selectedAsset = useWatch({ control, name: 'asset' });
 
   useEffect(() => {
-    const walletId = searchParams.get('wallet-id') as WalletAppId;
-    if (walletId) {
-      setWalletData(getWalletByName(walletId));
+    const walletIdParam = searchParams.get('wallet-id');
+    const walletId = walletIdParam ? parseInt(walletIdParam, 10) : undefined;
+    const wallet = walletId
+      ? [...recommendedWallets, ...otherWallets, ...semiCompatibleWallets].find((w) => w.id === walletId)
+      : undefined;
+    if (wallet) {
+      setWalletData(wallet);
 
       setIsLoadingDeeplink(true);
-      getDeeplinkByWalletId(walletId)
+      getDeeplinkByWalletId(wallet.id)
         .then((deeplink) => {
-          const wallet = getWalletByName(walletId) as WalletInfo;
           setWalletData({ ...wallet, deepLink: deeplink });
         })
         .finally(() => {
@@ -242,10 +245,8 @@ export default function PaymentLinkScreen(): JSX.Element {
 
   return (
     <>
-      {error ? (
-        <p className="text-dfxGray-800 text-sm mt-4">{error}</p>
-      ) : walletsError ? (
-        <p className="text-dfxRed-100 text-sm mt-4">Failed to load wallet apps: {walletsError}</p>
+      {errorToDisplay ? (
+        <p className="text-dfxGray-800 text-sm mt-4">{errorToDisplay}</p>
       ) : !payRequest || isLoadingMetaMask || isLoadingWallets ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
@@ -311,7 +312,8 @@ export default function PaymentLinkScreen(): JSX.Element {
                   <StyledVerticalStack full gap={4} className="text-left">
                     {paymentStatus === PaymentLinkPaymentStatus.PENDING &&
                       paymentHasQuote(payRequest) &&
-                      paymentStandards?.length &&
+                      paymentStandards &&
+                      paymentStandards.length > 0 &&
                       !(metaMaskInfo || metaMaskError) && (
                         <Form control={control} errors={errors}>
                           <StyledVerticalStack full gap={4} center>
@@ -668,7 +670,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                                 </StyledCollapsible>
                               </StyledDataTable>
                             )}
-                            {isLoadingDeeplink && !walletData.disabled ? (
+                            {isLoadingDeeplink && walletData.active ? (
                               <StyledLoadingSpinner variant={SpinnerVariant.LIGHT_MODE} size={SpinnerSize.MD} />
                             ) : (
                               <StyledButton
@@ -684,7 +686,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                                   !walletData.deepLink ||
                                   !paymentIdentifier ||
                                   !paymentHasQuote(payRequest) ||
-                                  walletData.disabled
+                                  !walletData.active
                                 }
                               />
                             )}

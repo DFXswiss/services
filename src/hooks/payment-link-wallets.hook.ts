@@ -1,29 +1,51 @@
 import { Blockchain, PaymentLinkMode } from '@dfx.swiss/react';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
-import { C2BPaymentMethod, TransferMethod, WalletAppId, WalletInfo } from 'src/dto/payment-link.dto';
-import { useWalletAppsApi } from 'src/hooks/wallet-apps-api.hook';
+import { C2BPaymentMethod, TransferMethod, WalletInfo } from 'src/dto/payment-link.dto';
 import { Wallet } from 'src/util/payment-link-wallet';
 import { fetchJson, url } from 'src/util/utils';
+
+async function fetchWalletApps(): Promise<WalletInfo[]> {
+  const apiUrl = url({
+    base: process.env.REACT_APP_API_URL,
+    path: '/v1/paymentLink/walletApp',
+  });
+
+  const response = await fetch(apiUrl);
+  if (!response.ok) throw new Error(`Failed to fetch wallet apps: HTTP ${response.status}`);
+
+  return response.json();
+}
 
 interface PaymentLinkWalletsProps {
   recommendedWallets: WalletInfo[];
   otherWallets: WalletInfo[];
   semiCompatibleWallets: WalletInfo[];
-  getWalletByName: (id: WalletAppId) => WalletInfo | undefined;
-  getDeeplinkByWalletId: (id: WalletAppId) => Promise<string | undefined>;
+  getWalletById: (id: number) => WalletInfo | undefined;
+  getDeeplinkByWalletId: (id: number) => Promise<string | undefined>;
   isLoading: boolean;
   error: string | undefined;
 }
 
 export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   const { paymentIdentifier, payRequest, paymentHasQuote } = usePaymentLinkContext();
-  const { walletApps, isLoading, error } = useWalletAppsApi();
+
+  const [walletApps, setWalletApps] = useState<WalletInfo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | undefined>();
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetchWalletApps()
+      .then((apps) => setWalletApps(apps))
+      .catch((err: Error) => setError(err.message ?? 'Failed to load wallet apps'))
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const getDeeplinkByCategory = async (wallet: WalletInfo) => {
     if (!paymentIdentifier) return undefined;
 
-    if (wallet.supportedMethods.includes(Blockchain.LIGHTNING)) {
+    if (wallet.supportedMethods?.includes(Blockchain.LIGHTNING)) {
       const lightning = new URL(paymentIdentifier).searchParams.get('lightning');
       const suffix = 'lightning:';
       const prefix = wallet.deepLink !== suffix ? `${wallet.deepLink}` : '';
@@ -34,19 +56,20 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
   };
 
   const hasActionDeepLink = (wallet: WalletInfo): boolean => {
-    return wallet.supportedMethods.includes(Blockchain.LIGHTNING);
+    return wallet.supportedMethods?.includes(Blockchain.LIGHTNING) ?? false;
   };
 
   const filteredPaymentLinkWallets = useMemo(() => {
     const hasQuote = paymentHasQuote(payRequest);
     const isPublicPayment = payRequest?.mode === PaymentLinkMode.PUBLIC;
-    return walletApps.map((wallet) => {
-      return {
+
+    return walletApps
+      .map((wallet) => ({
         ...wallet,
-        disabled: hasQuote && !Wallet.qualifiesForPayment(wallet, payRequest.transferAmounts),
+        active: wallet.active && (!hasQuote || Wallet.qualifiesForPayment(wallet, payRequest.transferAmounts)),
         hasActionDeepLink: hasActionDeepLink(wallet),
-      };
-    }).filter((wallet) => (isPublicPayment ? wallet.deepLink : true));
+      }))
+      .filter((wallet) => (isPublicPayment ? wallet.deepLink : true));
   }, [payRequest, walletApps]);
 
   const recommendedWallets = useMemo(() => {
@@ -61,8 +84,8 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
     return filteredPaymentLinkWallets.filter((wallet) => wallet.semiCompatible);
   }, [filteredPaymentLinkWallets]);
 
-  const getWalletByName = useCallback(
-    (id: WalletAppId): WalletInfo | undefined => {
+  const getWalletById = useCallback(
+    (id: number): WalletInfo | undefined => {
       return [...recommendedWallets, ...otherWallets, ...semiCompatibleWallets].find((wallet) => wallet.id === id);
     },
     [recommendedWallets, otherWallets, semiCompatibleWallets],
@@ -79,21 +102,22 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
     return await fetchJson<T>(callbackUrl);
   };
 
-  const getDeeplinkByWalletId = async (id: WalletAppId): Promise<string | undefined> => {
-    const wallet = getWalletByName(id);
+  const getDeeplinkByWalletId = async (id: number): Promise<string | undefined> => {
+    const wallet = getWalletById(id);
     if (!wallet || !paymentIdentifier) return undefined;
 
-    switch (wallet.id) {
-      case WalletAppId.MUUN:
+    switch (wallet.name) {
+      case 'Muun':
         const { pr } = (await fetchCallbackUrlForTransferMethod<{ pr: string }>(Blockchain.LIGHTNING)) ?? {};
         return `${wallet.deepLink}${pr}`;
 
-      case WalletAppId.BINANCE:
+      case 'Binance':
         const { uri } = (await fetchCallbackUrlForTransferMethod<{ uri: string }>(C2BPaymentMethod.BINANCE_PAY)) ?? {};
         return uri;
 
-      case WalletAppId.KUCOINPAY:
-        const { uri: kucoinUri } = (await fetchCallbackUrlForTransferMethod<{ uri: string }>(C2BPaymentMethod.KUCOINPAY)) ?? {};
+      case 'Kucoin Pay':
+        const { uri: kucoinUri } =
+          (await fetchCallbackUrlForTransferMethod<{ uri: string }>(C2BPaymentMethod.KUCOINPAY)) ?? {};
         return kucoinUri;
 
       default:
@@ -105,7 +129,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
     recommendedWallets,
     otherWallets,
     semiCompatibleWallets,
-    getWalletByName,
+    getWalletById,
     getDeeplinkByWalletId,
     isLoading,
     error,
