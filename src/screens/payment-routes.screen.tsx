@@ -447,7 +447,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
                       },
                       {
                         label: translate('screens/payment', 'Display QR code'),
-                        text: userPaymentLinksConfig?.displayQr?.toString(),
+                        text: translate('general/actions', userPaymentLinksConfig?.displayQr ? 'Yes' : 'No'),
                       },
                       {
                         label: translate('screens/payment', 'Fee'),
@@ -456,6 +456,10 @@ export default function PaymentRoutesScreen(): JSX.Element {
                       {
                         label: translate('screens/payment', 'Payment timeout (seconds)'),
                         text: userPaymentLinksConfig?.paymentTimeout?.toString(),
+                      },
+                      {
+                        label: translate('screens/payment', 'Payment cancellable'),
+                        text: translate('general/actions', userPaymentLinksConfig?.cancellable ? 'Yes' : 'No'),
                       },
                     ].filter((item) => item.text) as any
                   }
@@ -668,7 +672,7 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                   },
                                   {
                                     label: translate('screens/payment', 'Display QR code'),
-                                    text: linkConfig.displayQr?.toString(),
+                                    text: translate('general/actions', linkConfig.displayQr ? 'Yes' : 'No'),
                                   },
                                   {
                                     label: translate('screens/payment', 'Fee'),
@@ -677,6 +681,10 @@ export default function PaymentRoutesScreen(): JSX.Element {
                                   {
                                     label: translate('screens/payment', 'Payment timeout (seconds)'),
                                     text: linkConfig.paymentTimeout?.toString(),
+                                  },
+                                  {
+                                    label: translate('screens/payment', 'Payment cancellable'),
+                                    text: translate('general/actions', linkConfig.cancellable ? 'Yes' : 'No'),
                                   },
                                 ].filter((item) => item.text) as any
                               }
@@ -1050,7 +1058,7 @@ function PaymentLinkForm({
         minCompletionStatus: data.configMinCompletionStatus,
         displayQr: data.configDisplayQr,
         paymentTimeout: Number(data.configPaymentTimeout),
-        configCancellable: data.configCancellable,
+        cancellable: data.configCancellable,
       };
 
       if (onSubmitForm) {
@@ -1343,7 +1351,7 @@ function PaymentLinkForm({
               <StyledDropdown
                 rootRef={rootRef}
                 name="configCancellable"
-                label={translate('screens/payment', 'Cancellable')}
+                label={translate('screens/payment', 'Payment cancellable')}
                 smallLabel
                 full
                 placeholder={translate('general/actions', 'Select...')}
@@ -1413,7 +1421,7 @@ function PaymentLinkForm({
                       text: data.configPaymentTimeout?.toString() ?? naString,
                     },
                     {
-                      label: translate('screens/payment', 'Cancellable'),
+                      label: translate('screens/payment', 'Payment cancellable'),
                       text:
                         data.configCancellable !== undefined
                           ? translate('general/actions', data.configCancellable ? 'Yes' : 'No')
