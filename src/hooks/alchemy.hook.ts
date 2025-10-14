@@ -2,7 +2,7 @@ import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
 import { Alchemy, Network } from 'alchemy-sdk';
 import { useMemo } from 'react';
 import { AssetBalance } from 'src/contexts/balance.context';
-import { formatUnits } from 'src/util/utils';
+import { equalsIgnoreCase, formatUnits } from 'src/util/utils';
 
 export interface AlchemyInterface {
   getAddressBalances: (assets: Asset[], address: string, blockchain: Blockchain) => Promise<AssetBalance[]>;
@@ -37,8 +37,9 @@ export function useAlchemy(): AlchemyInterface {
         tokenAssets.map((t) => t.chainId!),
       );
 
-      tokenAssets.forEach((asset, i) => {
-        const balanceRaw = tokenRes.tokenBalances[i]?.tokenBalance ?? '0';
+      tokenAssets.forEach((asset) => {
+        const balanceRaw =
+          tokenRes.tokenBalances.find((b) => equalsIgnoreCase(b.contractAddress, asset.chainId))?.tokenBalance ?? '0';
         const decimals = asset.decimals ?? 18;
         const amount = Number(formatUnits(balanceRaw, decimals));
         results.push({ asset, amount });
