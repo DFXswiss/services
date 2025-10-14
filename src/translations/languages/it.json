@@ -723,6 +723,7 @@
     "Min. completion status": "Stato min. di completamento",
     "Display QR code": "Mostra codice QR",
     "Payment timeout (seconds)": "Timeout di pagamento (secondi)",
+    "Payment cancellable": "Pagamento annullabile",
 
     "Actual": "Attuale",
     "Transaction received": "Transazione ricevuta",
