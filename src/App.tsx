@@ -51,6 +51,7 @@ const BlockchainTransactionScreen = lazy(() => import('./screens/blockchain-tx.s
 const EditMailScreen = lazy(() => import('./screens/edit-mail.screen'));
 const SafeScreen = lazy(() => import('./screens/safe.screen'));
 const TelegramSupportScreen = lazy(() => import('./screens/telegram-support.screen'));
+const ComplianceScreen = lazy(() => import('./screens/compliance.screen'));
 
 setupLanguages();
 
@@ -293,6 +294,10 @@ export const Routes = [
       {
         path: 'safe',
         element: withSuspense(<SafeScreen />),
+      },
+      {
+        path: 'compliance',
+        element: withSuspense(<ComplianceScreen />),
       },
     ],
   },

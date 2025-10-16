@@ -1,7 +1,7 @@
 {
   "general/actions": {
     "Select": "Selezionare",
-    "Search...": "Ricerca...",
+    "Search": "Ricerca",
     "Start": "Iniziare",
     "Next": "Avanti",
     "Continue": "Continua",
@@ -332,6 +332,12 @@
     "Food, grocery & health products": "Alimentari, spesa e prodotti per la salute",
     "Pet supplies": "Prodotti per animali",
     "Industry & science": "Industria e scienza"
+  },
+  "screens/compliance": {
+    "Compliance": "Compliance",
+    "Customer search": "Ricerca clienti",
+    "Matching customers": "Clienti corrispondenti",
+    "No customers found": "Nessun cliente trovato"
   },
   "screens/2fa": {
     "2FA": "2FA",
