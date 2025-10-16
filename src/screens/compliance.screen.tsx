@@ -21,6 +21,10 @@ interface FormData {
 
 interface UserSearchResult {
   userDataId: number;
+  kycStatus: string;
+  accountType: string;
+  mail: string;
+  verifiedName: string;
 }
 
 export default function ComplianceScreen(): JSX.Element {
@@ -90,7 +94,28 @@ export default function ComplianceScreen(): JSX.Element {
               <StyledDataTable heading={translate('screens/compliance', 'Matching customers')} minWidth={false}>
                 {userSearchResults.map((u) => (
                   <StyledDataTableRow key={u.userDataId}>
-                    <p>{u.userDataId}</p>
+                    <div className="flex flex-col gap-2 w-full">
+                      <div className="flex justify-between">
+                        <span className="font-semibold">ID:</span>
+                        <span>{u.userDataId}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-semibold">{translate('screens/compliance', 'Name')}:</span>
+                        <span>{u.verifiedName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-semibold">{translate('screens/compliance', 'Email')}:</span>
+                        <span>{u.mail}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-semibold">{translate('screens/compliance', 'KYC Status')}:</span>
+                        <span>{u.kycStatus}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-semibold">{translate('screens/compliance', 'Account Type')}:</span>
+                        <span>{u.accountType}</span>
+                      </div>
+                    </div>
                   </StyledDataTableRow>
                 ))}
               </StyledDataTable>
