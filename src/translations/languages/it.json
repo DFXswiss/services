@@ -80,6 +80,7 @@
     "Two-factor authentication": "Autenticazione a due fattori",
     "KYC progress": "Progressi KYC",
     "This step has already been finished.": "Questo passo è già stato completato.",
+    "This step has failed.": "Questo passo è fallito.",
 
     "per 24h": "per 24h",
     "per 30 days": "per 30 giorni",
@@ -331,7 +332,9 @@
     "Sports & outdoors": "Sport e attività all’aperto",
     "Food, grocery & health products": "Alimentari, spesa e prodotti per la salute",
     "Pet supplies": "Prodotti per animali",
-    "Industry & science": "Industria e scienza"
+    "Industry & science": "Industria e scienza",
+
+    "Recall agreement": "Accordo di richiamo"
   },
   "screens/2fa": {
     "2FA": "2FA",
