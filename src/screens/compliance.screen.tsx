@@ -24,7 +24,7 @@ interface UserSearchResult {
   kycStatus: string;
   accountType: string | null;
   mail: string | null;
-  verifiedName: string | null;
+  name: string | null;
 }
 
 export default function ComplianceScreen(): JSX.Element {
@@ -99,7 +99,7 @@ export default function ComplianceScreen(): JSX.Element {
                     <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">KYC Status</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">Account Type</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">Email</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">Verified Name</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">Name</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -114,7 +114,7 @@ export default function ComplianceScreen(): JSX.Element {
                       <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.kycStatus}</td>
                       <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.accountType ?? '-'}</td>
                       <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.mail ?? '-'}</td>
-                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.verifiedName ?? '-'}</td>
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.name ?? '-'}</td>
                     </tr>
                   ))}
                 </tbody>
