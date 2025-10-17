@@ -1,5 +1,16 @@
 import { AccountType, KycStatus, useApi, Utils, Validations } from '@dfx.swiss/react';
-import { Form, StyledButton, StyledButtonWidth, StyledInput, StyledVerticalStack } from '@dfx.swiss/react-components';
+import {
+  Form,
+  IconColor,
+  IconSize,
+  IconVariant,
+  StyledButton,
+  StyledButtonWidth,
+  StyledIconButton,
+  StyledInfoText,
+  StyledInput,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
@@ -28,6 +39,7 @@ export default function ComplianceScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>();
+  const [showInfo, setShowInfo] = useState(false);
 
   const {
     control,
@@ -58,13 +70,67 @@ export default function ComplianceScreen(): JSX.Element {
   return (
     <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
       <StyledVerticalStack gap={6} full center>
-        <StyledInput
-          name="key"
-          type="text"
-          label={translate('screens/compliance', 'Customer search')}
-          placeholder={translate('screens/kyc', 'example@mail.com')}
-          full
-        />
+        <div className="w-full">
+          <div className="flex items-center gap-2 mb-1 pl-3">
+            <label className="text-base font-semibold text-dfxBlue-800">
+              {translate('screens/compliance', 'Customer search')}
+            </label>
+            <StyledIconButton
+              icon={showInfo ? IconVariant.INFO : IconVariant.INFO_OUTLINE}
+              color={IconColor.DARK_GRAY}
+              size={IconSize.SM}
+              onClick={() => setShowInfo(!showInfo)}
+            />
+          </div>
+          {showInfo && (
+            <div className="mb-2">
+              <StyledInfoText iconColor={IconColor.BLUE}>
+                <div className="text-left">
+                  <strong>Search by:</strong>
+                  <ul className="mt-1 ml-4 list-disc text-left text-sm">
+                    <li>
+                      <strong>User ID:</strong> 1
+                    </li>
+                    <li>
+                      <strong>Email:</strong> user@example.com
+                    </li>
+                    <li>
+                      <strong>Phone:</strong> +xxxxxxxxxxx
+                    </li>
+                    <li>
+                      <strong>IP address:</strong> 192.168.1.1
+                    </li>
+                    <li>
+                      <strong>KYC hash:</strong> xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                    </li>
+                    <li>
+                      <strong>Bank reference:</strong> xxxx-xxxx-xxxx
+                    </li>
+                    <li>
+                      <strong>Referral code:</strong> xxx-xxx
+                    </li>
+                    <li>
+                      <strong>Blockchain address:</strong> 0x... or bc1... etc.
+                    </li>
+                    <li>
+                      <strong>Transaction ID:</strong> Blockchain TX hash
+                    </li>
+                    <li>
+                      <strong>Name:</strong> Min. 2 characters
+                    </li>
+                  </ul>
+                </div>
+              </StyledInfoText>
+            </div>
+          )}
+          <StyledInput
+            name="key"
+            type="text"
+            hideLabel
+            placeholder={translate('screens/kyc', 'example@mail.com')}
+            full
+          />
+        </div>
 
         {error && (
           <div>
