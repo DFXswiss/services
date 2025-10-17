@@ -1,4 +1,4 @@
-import { AccountType, KycStatus, useApi, Utils, Validations } from '@dfx.swiss/react';
+import { Utils, Validations } from '@dfx.swiss/react';
 import {
   Form,
   IconColor,
@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { UserSearchResult, useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
@@ -22,24 +23,17 @@ interface FormData {
   key: string;
 }
 
-interface UserSearchResult {
-  id: number;
-  kycStatus: KycStatus;
-  accountType?: AccountType;
-  mail?: string;
-  name?: string;
-}
-
 export default function ComplianceScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { call } = useApi();
+  const { searchUsers, downloadUserData } = useCompliance();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>();
   const [showInfo, setShowInfo] = useState(false);
+  const [downloadingUserId, setDownloadingUserId] = useState<number>();
 
   const {
     control,
@@ -52,18 +46,46 @@ export default function ComplianceScreen(): JSX.Element {
     setError(undefined);
     setUserSearchResults(undefined);
 
-    call<UserSearchResult[]>({
-      url: `support?key=${data.key}`,
-      method: 'GET',
-    })
+    searchUsers(data.key)
       .then(setUserSearchResults)
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
   }
 
+  async function handleDownloadUserData(userId: number) {
+    setDownloadingUserId(userId);
+    setError(undefined);
+
+    downloadUserData([userId])
+      .catch((e) => setError(e.message))
+      .finally(() => setDownloadingUserId(undefined));
+  }
+
   const rules = Utils.createRules({
     key: Validations.Required,
   });
+
+  const searchExamples = [
+    { label: 'User ID', example: '1' },
+    { label: 'Email', example: 'user@example.com' },
+    { label: 'Phone', example: '+xxxxxxxxxxx' },
+    { label: 'IP address', example: '192.168.1.1' },
+    { label: 'KYC hash', example: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' },
+    { label: 'Bank reference', example: 'xxxx-xxxx-xxxx' },
+    { label: 'Referral code', example: 'xxx-xxx' },
+    { label: 'Blockchain address', example: '0x... or bc1... etc.' },
+    { label: 'Transaction ID', example: 'Blockchain TX hash' },
+    { label: 'Name', example: 'Min. 2 characters' },
+  ];
+
+  const tableColumns = [
+    { key: 'userId', label: translate('screens/compliance', 'User ID') },
+    { key: 'kycStatus', label: translate('screens/compliance', 'KYC status') },
+    { key: 'accountType', label: translate('screens/kyc', 'Account Type') },
+    { key: 'email', label: translate('screens/compliance', 'Email') },
+    { key: 'name', label: translate('screens/kyc', 'Name') },
+    { key: 'actions', label: '' },
+  ];
 
   useLayoutOptions({ title: translate('screens/compliance', 'Compliance') });
 
@@ -88,36 +110,11 @@ export default function ComplianceScreen(): JSX.Element {
                 <div className="text-left">
                   <strong>Search by:</strong>
                   <ul className="mt-1 ml-4 list-disc text-left text-sm">
-                    <li>
-                      <strong>User ID:</strong> 1
-                    </li>
-                    <li>
-                      <strong>Email:</strong> user@example.com
-                    </li>
-                    <li>
-                      <strong>Phone:</strong> +xxxxxxxxxxx
-                    </li>
-                    <li>
-                      <strong>IP address:</strong> 192.168.1.1
-                    </li>
-                    <li>
-                      <strong>KYC hash:</strong> xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-                    </li>
-                    <li>
-                      <strong>Bank reference:</strong> xxxx-xxxx-xxxx
-                    </li>
-                    <li>
-                      <strong>Referral code:</strong> xxx-xxx
-                    </li>
-                    <li>
-                      <strong>Blockchain address:</strong> 0x... or bc1... etc.
-                    </li>
-                    <li>
-                      <strong>Transaction ID:</strong> Blockchain TX hash
-                    </li>
-                    <li>
-                      <strong>Name:</strong> Min. 2 characters
-                    </li>
+                    {searchExamples.map((e) => (
+                      <li key={e.label}>
+                        <strong>{e.label}:</strong> {e.example}
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </StyledInfoText>
@@ -154,21 +151,11 @@ export default function ComplianceScreen(): JSX.Element {
                 <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
                   <thead>
                     <tr className="bg-dfxGray-300">
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                        {translate('screens/compliance', 'User ID')}
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                        {translate('screens/compliance', 'KYC status')}
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                        {translate('screens/kyc', 'Account Type')}
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                        {translate('screens/compliance', 'Email')}
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                        {translate('screens/kyc', 'Name')}
-                      </th>
+                      {tableColumns.map((column) => (
+                        <th key={column.key} className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                          {column.label}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -179,6 +166,15 @@ export default function ComplianceScreen(): JSX.Element {
                         <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.accountType ?? '-'}</td>
                         <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.mail ?? '-'}</td>
                         <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.name ?? '-'}</td>
+                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                          <StyledIconButton
+                            icon={IconVariant.FILE}
+                            color={IconColor.BLUE}
+                            size={IconSize.SM}
+                            onClick={() => handleDownloadUserData(u.id)}
+                            isLoading={downloadingUserId === u.id}
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
