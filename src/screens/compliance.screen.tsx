@@ -66,7 +66,7 @@ export default function ComplianceScreen(): JSX.Element {
   });
 
   const searchExamples = [
-    { label: 'User ID', example: '1' },
+    { label: 'ID', example: '1' },
     { label: 'Email', example: 'user@example.com' },
     { label: 'Phone', example: '+xxxxxxxxxxx' },
     { label: 'IP address', example: '192.168.1.1' },
@@ -79,7 +79,8 @@ export default function ComplianceScreen(): JSX.Element {
   ];
 
   const tableColumns = [
-    { key: 'userId', label: translate('screens/compliance', 'User ID') },
+    { key: 'userId', label: translate('screens/compliance', 'ID') },
+    { key: 'kycStatus', label: translate('screens/compliance', 'KYC status') },
     { key: 'accountType', label: translate('screens/kyc', 'Account Type') },
     { key: 'name', label: translate('screens/kyc', 'Name') },
     { key: 'email', label: translate('screens/compliance', 'Email') },
