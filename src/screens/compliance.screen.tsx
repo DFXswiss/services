@@ -78,13 +78,40 @@ export default function ComplianceScreen(): JSX.Element {
     { label: 'Name', example: 'Min. 2 characters' },
   ];
 
-  const tableColumns = [
-    { key: 'userId', label: translate('screens/compliance', 'ID') },
-    { key: 'kycStatus', label: translate('screens/compliance', 'KYC status') },
-    { key: 'accountType', label: translate('screens/kyc', 'Account Type') },
-    { key: 'name', label: translate('screens/kyc', 'Name') },
-    { key: 'email', label: translate('screens/compliance', 'Email') },
-    { key: 'actions', label: '' },
+  const tableData = [
+    {
+      key: 'userId',
+      label: translate('screens/compliance', 'ID'),
+      render: (u: UserSearchResult) => u.id,
+    },
+    {
+      key: 'accountType',
+      label: translate('screens/kyc', 'Account Type'),
+      render: (u: UserSearchResult) => u.accountType ?? '-',
+    },
+    {
+      key: 'name',
+      label: translate('screens/kyc', 'Name'),
+      render: (u: UserSearchResult) => u.name ?? '-',
+    },
+    {
+      key: 'email',
+      label: translate('screens/compliance', 'Email'),
+      render: (u: UserSearchResult) => u.mail ?? '-',
+    },
+    {
+      key: 'actions',
+      label: '',
+      render: (u: UserSearchResult) => (
+        <StyledIconButton
+          icon={IconVariant.FILE}
+          color={IconColor.BLUE}
+          size={IconSize.SM}
+          onClick={() => handleDownloadUserData(u.id)}
+          isLoading={downloadingUserId === u.id}
+        />
+      ),
+    },
   ];
 
   useLayoutOptions({ title: translate('screens/compliance', 'Compliance') });
@@ -151,7 +178,7 @@ export default function ComplianceScreen(): JSX.Element {
                 <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
                   <thead>
                     <tr className="bg-dfxGray-300">
-                      {tableColumns.map((column) => (
+                      {tableData.map((column) => (
                         <th key={column.key} className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                           {column.label}
                         </th>
@@ -160,27 +187,19 @@ export default function ComplianceScreen(): JSX.Element {
                   </thead>
                   <tbody>
                     {userSearchResults.map((u) => {
-                      const isRedRow = [KycStatus.CHECK, KycStatus.REJECTED].includes(u.kycStatus as KycStatus);
+                      const isRedRow = [KycStatus.CHECK, KycStatus.REJECTED].includes(u.kycStatus);
                       return (
                         <tr
                           key={u.id}
                           className={`border-b border-dfxGray-300 transition-colors ${
-                            isRedRow ? 'bg-dfxRed-100 hover:bg-dfxRed-200' : 'hover:bg-dfxGray-300'
+                            isRedRow ? 'bg-dfxRed-100 hover:bg-dfxRed-150' : 'hover:bg-dfxGray-300'
                           }`}
                         >
-                          <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.id}</td>
-                          <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.accountType ?? '-'}</td>
-                          <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.name ?? '-'}</td>
-                          <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.mail ?? '-'}</td>
-                          <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                            <StyledIconButton
-                              icon={IconVariant.FILE}
-                              color={IconColor.BLUE}
-                              size={IconSize.SM}
-                              onClick={() => handleDownloadUserData(u.id)}
-                              isLoading={downloadingUserId === u.id}
-                            />
-                          </td>
+                          {tableData.map((column) => (
+                            <td key={column.key} className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                              {column.render(u)}
+                            </td>
+                          ))}
                         </tr>
                       );
                     })}
