@@ -75,7 +75,7 @@ function Content({
         <StyledVerticalStack gap={4} full>
           <h2 className="text-dfxGray-700 mt-8">{translate('screens/home', 'Connect your wallet')}</h2>
 
-          <StyledSearchInput onChange={setFilter} placeholder={translate('general/actions', 'Search...')} />
+          <StyledSearchInput onChange={setFilter} placeholder={translate('general/actions', 'Search') + '...'} />
 
           <div
             ref={containerRef}

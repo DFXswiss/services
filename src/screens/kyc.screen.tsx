@@ -32,6 +32,7 @@ import {
   MerchantCategory,
   PaymentData,
   QuestionType,
+  RecallData,
   SignatoryPower,
   StoreType,
   SupportIssueType,
@@ -386,7 +387,14 @@ export default function KycScreen(): JSX.Element {
           />
         ) : (
           <StyledVerticalStack gap={6} full center>
-            <p className="text-dfxGray-700">{translate('screens/kyc', 'This step has already been finished.')}</p>
+            {stepInProgress.status === KycStepStatus.FAILED ? (
+              <>
+                <p className="text-dfxRed-100">{translate('screens/kyc', 'This step has failed.')}</p>
+                {stepInProgress.reason && <p className="text-dfxGray-800 text-sm">{stepInProgress.reason}</p>}
+              </>
+            ) : (
+              <p className="text-dfxGray-700">{translate('screens/kyc', 'This step has already been finished.')}</p>
+            )}
 
             <StyledButton
               width={StyledButtonWidth.MIN}
@@ -547,6 +555,9 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.PAYMENT_AGREEMENT:
       return <PaymentAgreement {...props} />;
+
+    case KycStepName.RECALL_AGREEMENT:
+      return <RecallAgreement {...props} />;
   }
 }
 
@@ -2282,6 +2293,61 @@ function PaymentAgreement({ code, step, onDone }: EditProps): JSX.Element {
           onClick={handleSubmit(onSubmit)}
           width={StyledButtonWidth.FULL}
           disabled={!valid}
+          isLoading={isUpdating}
+        />
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+function RecallAgreement({ code, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { setRecallData } = useKyc();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { isValid, errors },
+  } = useForm<RecallData>({ mode: 'onTouched' });
+
+  const accepted = useWatch({ control, name: 'accepted' });
+
+  async function onSubmit(data: RecallData) {
+    if (!step.session) return;
+
+    setIsUpdating(true);
+    setError(undefined);
+    setRecallData(code, step.session.url, { accepted: Boolean(data.accepted) })
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  return (
+    <Form control={control} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <p className="text-dfxGray-700 text-start">{translate('screens/kyc', 'TODO: recall agreement text')}</p>
+
+        <StyledCheckboxRow isChecked={accepted} onChange={(checked) => setValue('accepted', checked)} centered>
+          {translate('screens/kyc', 'I accept the agreement')}
+        </StyledCheckboxRow>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
           isLoading={isUpdating}
         />
       </StyledVerticalStack>
