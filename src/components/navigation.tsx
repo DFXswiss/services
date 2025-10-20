@@ -1,4 +1,4 @@
-import { useSessionContext, useUserContext } from '@dfx.swiss/react';
+import { useAuthContext, UserRole, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
   IconColor,
@@ -8,7 +8,7 @@ import {
   StyledButtonColor,
   StyledButtonWidth,
 } from '@dfx.swiss/react-components';
-import { PropsWithChildren, SetStateAction, forwardRef } from 'react';
+import { forwardRef, PropsWithChildren, SetStateAction } from 'react';
 import { useLocation } from 'react-router-dom';
 import { REACT_APP_BUILD_ID } from 'src/version';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
@@ -118,6 +118,7 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
   const { translate } = useSettingsContext();
   const { hasCustody } = useUserContext();
   const { isLoggedIn, logout: apiLogout } = useSessionContext();
+  const { session } = useAuthContext();
 
   async function login() {
     navigate('/login');
@@ -195,6 +196,15 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
                 target="_self"
                 onClose={() => setIsNavigationOpen(false)}
               />
+              {session?.role && [UserRole.ADMIN, UserRole.COMPLIANCE].includes(session.role) && (
+                <NavigationLink
+                  icon={IconVariant.COMPLIANCE}
+                  label={translate('screens/compliance', 'Compliance')}
+                  url="/compliance"
+                  target="_self"
+                  onClose={() => setIsNavigationOpen(false)}
+                />
+              )}
             </>
           )}
 

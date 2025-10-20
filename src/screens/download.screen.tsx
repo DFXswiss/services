@@ -1,12 +1,12 @@
-import { ResponseType, useApi, Utils, Validations } from '@dfx.swiss/react';
+import { Utils, Validations } from '@dfx.swiss/react';
 import { Form, StyledButton, StyledButtonWidth, StyledInput, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { downloadFile, filenameDateFormat } from 'src/util/utils';
 
 interface FormData {
   userDataIds: string;
@@ -16,7 +16,7 @@ export default function DownloadScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { call } = useApi();
+  const { downloadUserData } = useCompliance();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -31,15 +31,9 @@ export default function DownloadScreen(): JSX.Element {
     setIsLoading(true);
     setError(undefined);
 
-    call<{ data: Blob; headers: Record<string, string> }>({
-      url: 'userData/download',
-      method: 'POST',
-      data: { userDataIds: data.userDataIds.split(',').map((id) => Number(id)) },
-      responseType: ResponseType.BLOB,
-    })
-      .then(({ data, headers }) => {
-        downloadFile(data, headers, `DFX_export_${filenameDateFormat()}.zip`);
-      })
+    const userDataIds = data.userDataIds.split(',').map((id) => Number(id));
+
+    downloadUserData(userDataIds)
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
   }
