@@ -26,7 +26,7 @@ export function useCompliance() {
 
   async function searchUsers(key: string): Promise<UserSearchResult[]> {
     return call<UserSearchResult[]>({
-      url: `support?key=${key}`,
+      url: `support?key=${encodeURIComponent(key)}`,
       method: 'GET',
     });
   }
