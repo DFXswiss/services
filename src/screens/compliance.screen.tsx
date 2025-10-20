@@ -1,4 +1,4 @@
-import { Utils, Validations } from '@dfx.swiss/react';
+import { KycStatus, Utils, Validations } from '@dfx.swiss/react';
 import {
   Form,
   IconColor,
@@ -82,8 +82,8 @@ export default function ComplianceScreen(): JSX.Element {
     { key: 'userId', label: translate('screens/compliance', 'ID') },
     { key: 'kycStatus', label: translate('screens/compliance', 'KYC status') },
     { key: 'accountType', label: translate('screens/kyc', 'Account Type') },
-    { key: 'email', label: translate('screens/compliance', 'Email') },
     { key: 'name', label: translate('screens/kyc', 'Name') },
+    { key: 'email', label: translate('screens/compliance', 'Email') },
     { key: 'actions', label: '' },
   ];
 
@@ -159,24 +159,31 @@ export default function ComplianceScreen(): JSX.Element {
                     </tr>
                   </thead>
                   <tbody>
-                    {userSearchResults.map((u) => (
-                      <tr key={u.id} className={`border-b border-dfxGray-300 hover:bg-dfxGray-300 transition-colors`}>
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.id}</td>
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.kycStatus}</td>
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.accountType ?? '-'}</td>
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.mail ?? '-'}</td>
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.name ?? '-'}</td>
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                          <StyledIconButton
-                            icon={IconVariant.FILE}
-                            color={IconColor.BLUE}
-                            size={IconSize.SM}
-                            onClick={() => handleDownloadUserData(u.id)}
-                            isLoading={downloadingUserId === u.id}
-                          />
-                        </td>
-                      </tr>
-                    ))}
+                    {userSearchResults.map((u) => {
+                      const isRedRow = [KycStatus.CHECK, KycStatus.REJECTED].includes(u.kycStatus as KycStatus);
+                      return (
+                        <tr
+                          key={u.id}
+                          className={`border-b border-dfxGray-300 transition-colors ${
+                            isRedRow ? 'bg-dfxRed-100 hover:bg-dfxRed-200' : 'hover:bg-dfxGray-300'
+                          }`}
+                        >
+                          <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.id}</td>
+                          <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.accountType ?? '-'}</td>
+                          <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.name ?? '-'}</td>
+                          <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{u.mail ?? '-'}</td>
+                          <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                            <StyledIconButton
+                              icon={IconVariant.FILE}
+                              color={IconColor.BLUE}
+                              size={IconSize.SM}
+                              onClick={() => handleDownloadUserData(u.id)}
+                              isLoading={downloadingUserId === u.id}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
