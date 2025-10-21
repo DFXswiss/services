@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { UserSearchResult, useCompliance } from 'src/hooks/compliance.hook';
+import { ComplianceSearchResult, UserSearchResult, useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
@@ -27,11 +27,11 @@ export default function ComplianceScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { searchUsers, downloadUserData } = useCompliance();
+  const { search, downloadUserData } = useCompliance();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>();
+  const [searchResult, setSearchResult] = useState<ComplianceSearchResult>();
   const [showInfo, setShowInfo] = useState(false);
   const [downloadingUserId, setDownloadingUserId] = useState<number>();
 
@@ -44,10 +44,10 @@ export default function ComplianceScreen(): JSX.Element {
   async function onSubmit(data: FormData) {
     setIsLoading(true);
     setError(undefined);
-    setUserSearchResults(undefined);
+    setSearchResult(undefined);
 
-    searchUsers(data.key)
-      .then(setUserSearchResults)
+    search(data.key)
+      .then(setSearchResult)
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
   }
@@ -170,10 +170,15 @@ export default function ComplianceScreen(): JSX.Element {
           disabled={!isValid}
           isLoading={isLoading}
         />
-        {userSearchResults &&
-          (userSearchResults.length > 0 ? (
+        {searchResult &&
+          (searchResult.userDatas.length > 0 ? (
             <div className="w-full">
-              <h2 className="text-dfxGray-700 mb-3">{translate('screens/compliance', 'Matching customers')}</h2>
+              <div className="mb-3">
+                <h2 className="text-dfxGray-700">{translate('screens/compliance', 'Matching customers')}</h2>
+                <p className="text-dfxGray-700">
+                  ({translate('screens/compliance', 'found by {{type}}', { type: searchResult.type })})
+                </p>
+              </div>
               <div className="w-full overflow-x-auto">
                 <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
                   <thead>
@@ -186,7 +191,7 @@ export default function ComplianceScreen(): JSX.Element {
                     </tr>
                   </thead>
                   <tbody>
-                    {userSearchResults.map((u) => {
+                    {searchResult.userDatas.map((u) => {
                       const isRedRow = [KycStatus.CHECK, KycStatus.REJECTED].includes(u.kycStatus);
                       return (
                         <tr
