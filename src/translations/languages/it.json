@@ -340,7 +340,8 @@
     "Compliance": "Compliance",
     "Customer search": "Ricerca clienti",
     "Matching customers": "Clienti corrispondenti",
-    "No customers found": "Nessun cliente trovato"
+    "No customers found": "Nessun cliente trovato",
+    "found by {{type}}": "trovati tramite {{type}}"
   },
   "screens/2fa": {
     "2FA": "2FA",
