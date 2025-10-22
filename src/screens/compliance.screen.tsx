@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { ComplianceSearchResult, UserSearchResult, useCompliance } from 'src/hooks/compliance.hook';
+import { BankTxSearchResult, ComplianceSearchResult, UserSearchResult, useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
@@ -78,7 +78,7 @@ export default function ComplianceScreen(): JSX.Element {
     { label: 'Name', example: 'Min. 2 characters' },
   ];
 
-  const tableData = [
+  const userTableData = [
     {
       key: 'userId',
       label: translate('screens/compliance', 'ID'),
@@ -114,6 +114,34 @@ export default function ComplianceScreen(): JSX.Element {
     },
   ];
 
+  const bankTxTableData = [
+    {
+      key: 'id',
+      label: translate('screens/compliance', 'ID'),
+      render: (b: BankTxSearchResult) => b.id,
+    },
+    {
+      key: 'id',
+      label: translate('screens/compliance', 'Type'),
+      render: (b: BankTxSearchResult) => b.type,
+    },
+    {
+      key: 'id',
+      label: translate('screens/compliance', 'Account Service Ref'),
+      render: (b: BankTxSearchResult) => b.accountServiceRef,
+    },
+    {
+      key: 'id',
+      label: translate('screens/compliance', 'Amount'),
+      render: (b: BankTxSearchResult) => `${b.amount} ${b.currency}`,
+    },
+    {
+      key: 'id',
+      label: translate('screens/compliance', 'User name'),
+      render: (b: BankTxSearchResult) => b.name ?? '-',
+    },
+  ];
+
   useLayoutOptions({ title: translate('screens/compliance', 'Compliance') });
 
   return (
@@ -122,7 +150,7 @@ export default function ComplianceScreen(): JSX.Element {
         <div className="w-full">
           <div className="flex items-center gap-2 mb-1 pl-3">
             <label className="text-base font-semibold text-dfxBlue-800">
-              {translate('screens/compliance', 'Customer search')}
+              {translate('screens/compliance', 'Database search')}
             </label>
             <StyledIconButton
               icon={showInfo ? IconVariant.INFO : IconVariant.INFO_OUTLINE}
@@ -171,49 +199,90 @@ export default function ComplianceScreen(): JSX.Element {
           isLoading={isLoading}
         />
         {searchResult &&
-          (searchResult.userDatas.length > 0 ? (
-            <div className="w-full">
-              <div className="mb-3">
-                <h2 className="text-dfxGray-700">{translate('screens/compliance', 'Matching customers')}</h2>
+          (searchResult.userDatas.length + searchResult.bankTx.length > 0 ? (
+            <>
+              <div>
+                <h1 className="text-dfxGray-700">{translate('screens/compliance', 'Matching Entries')}</h1>
                 <p className="text-dfxGray-700">
                   ({translate('screens/compliance', 'found by {{type}}', { type: searchResult.type })})
                 </p>
               </div>
-              <div className="w-full overflow-x-auto">
-                <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
-                  <thead>
-                    <tr className="bg-dfxGray-300">
-                      {tableData.map((column) => (
-                        <th key={column.key} className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                          {column.label}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {searchResult.userDatas.map((u) => {
-                      const isRedRow = [KycStatus.CHECK, KycStatus.REJECTED].includes(u.kycStatus);
-                      return (
-                        <tr
-                          key={u.id}
-                          className={`border-b border-dfxGray-300 transition-colors ${
-                            isRedRow ? 'bg-dfxRed-100 hover:bg-dfxRed-150' : 'hover:bg-dfxGray-300'
-                          }`}
-                        >
-                          {tableData.map((column) => (
-                            <td key={column.key} className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                              {column.render(u)}
-                            </td>
+              {searchResult.userDatas.length > 0 && (
+                <div className="w-full">
+                  <h2 className="text-dfxGray-700">{translate('screens/compliance', 'Customers')}</h2>
+                  <div className="w-full overflow-x-auto">
+                    <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
+                      <thead>
+                        <tr className="bg-dfxGray-300">
+                          {userTableData.map((column) => (
+                            <th key={column.key} className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                              {column.label}
+                            </th>
                           ))}
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                      </thead>
+                      <tbody>
+                        {searchResult.userDatas.map((u) => {
+                          const isRedRow = [KycStatus.CHECK, KycStatus.REJECTED].includes(u.kycStatus);
+                          return (
+                            <tr
+                              key={u.id}
+                              className={`border-b border-dfxGray-300 transition-colors ${
+                                isRedRow ? 'bg-dfxRed-100 hover:bg-dfxRed-150' : 'hover:bg-dfxGray-300'
+                              }`}
+                            >
+                              {userTableData.map((column) => (
+                                <td key={column.key} className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                                  {column.render(u)}
+                                </td>
+                              ))}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              {searchResult.bankTx.length > 0 && (
+                <div className="w-full">
+                  <h2 className="text-dfxGray-700">
+                    {translate('screens/compliance', 'Unassigned Bank Transactions')}
+                  </h2>
+                  <div className="w-full overflow-x-auto">
+                    <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
+                      <thead>
+                        <tr className="bg-dfxGray-300">
+                          {userTableData.map((column) => (
+                            <th key={column.key} className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                              {column.label}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {searchResult.bankTx.map((u) => {
+                          return (
+                            <tr
+                              key={u.id}
+                              className={`border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300`}
+                            >
+                              {bankTxTableData.map((column) => (
+                                <td key={column.key} className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                                  {column.render(u)}
+                                </td>
+                              ))}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
-            <p className="text-dfxGray-700">{translate('screens/compliance', 'No customers found')}</p>
+            <p className="text-dfxGray-700">{translate('screens/compliance', 'No entries found')}</p>
           ))}
       </StyledVerticalStack>
     </Form>
