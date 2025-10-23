@@ -20,6 +20,7 @@ export enum ComplianceSearchType {
 export interface ComplianceSearchResult {
   type: ComplianceSearchType;
   userDatas: UserSearchResult[];
+  bankTx: BankTxSearchResult[];
 }
 
 export interface UserSearchResult {
@@ -27,6 +28,15 @@ export interface UserSearchResult {
   kycStatus: KycStatus;
   accountType?: AccountType;
   mail?: string;
+  name?: string;
+}
+
+export interface BankTxSearchResult {
+  id: number;
+  accountServiceRef: string;
+  amount: number;
+  currency: string;
+  type: string;
   name?: string;
 }
 

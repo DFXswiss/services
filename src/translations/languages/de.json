@@ -338,10 +338,12 @@
   },
   "screens/compliance": {
     "Compliance": "Compliance",
-    "Customer search": "Kundensuche",
-    "Matching customers": "Passende Kunden",
-    "No customers found": "Keine Kunden gefunden",
-    "found by {{type}}": "gefunden per {{type}}"
+    "Database search": "Datenbank-Suche",
+    "Matching Entries": "Passende Einträge",
+    "No entries found": "Keine Einträge gefunden",
+    "found by {{type}}": "gefunden per {{type}}",
+    "Customers": "Kunden",
+    "Unassigned Bank Transactions": "Nicht zugeordnete Banktransaktionen"
   },
   "screens/2fa": {
     "2FA": "2FA",
