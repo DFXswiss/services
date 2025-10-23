@@ -1,7 +1,9 @@
 import { Blockchain, Utils, useApiSession, useAuth, useSessionContext, useUserContext } from '@dfx.swiss/react';
+import { AuthWalletType } from '@dfx.swiss/react/dist/definitions/auth';
 import { Router } from '@remix-run/router';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../hooks/store.hook';
+import { WalletType as MetaMaskWalletType, useMetaMask } from '../hooks/wallets/metamask.hook';
 import { useAppHandlingContext } from './app-handling.context';
 import { useBalanceContext } from './balance.context';
 
@@ -103,6 +105,37 @@ export function supportsBlockchain(wallet: WalletType, blockchain: Blockchain): 
   return !supportedChains || supportedChains.includes(blockchain);
 }
 
+const WalletTypeMap: { [k in WalletType]: AuthWalletType | undefined } = {
+  [WalletType.META_MASK]: AuthWalletType.METAMASK,
+  [WalletType.ALBY]: AuthWalletType.ALBY,
+  [WalletType.LEDGER_BTC]: AuthWalletType.LEDGER,
+  [WalletType.LEDGER_ETH]: AuthWalletType.LEDGER,
+  [WalletType.BITBOX_BTC]: AuthWalletType.BIT_BOX,
+  [WalletType.BITBOX_ETH]: AuthWalletType.BIT_BOX,
+  [WalletType.TREZOR_BTC]: AuthWalletType.TREZOR,
+  [WalletType.TREZOR_ETH]: AuthWalletType.TREZOR,
+  [WalletType.CLI_BTC]: AuthWalletType.CLI,
+  [WalletType.CLI_SPARK]: AuthWalletType.CLI,
+  [WalletType.CLI_LN]: AuthWalletType.CLI,
+  [WalletType.CLI_XMR]: AuthWalletType.CLI,
+  [WalletType.CLI_ZANO]: AuthWalletType.CLI,
+  [WalletType.CLI_ETH]: AuthWalletType.CLI,
+  [WalletType.CLI_ADA]: AuthWalletType.CLI,
+  [WalletType.CLI_AR]: AuthWalletType.CLI,
+  [WalletType.CLI_SOL]: AuthWalletType.CLI,
+  [WalletType.CLI_TRX]: AuthWalletType.CLI,
+  [WalletType.DFX_TARO]: AuthWalletType.DFX_TARO,
+  [WalletType.WALLET_CONNECT]: AuthWalletType.WALLET_CONNECT,
+  [WalletType.PHANTOM_SOL]: AuthWalletType.PHANTOM,
+  [WalletType.TRUST_SOL]: AuthWalletType.TRUST,
+  [WalletType.TRUST_TRX]: AuthWalletType.TRUST,
+  [WalletType.TRONLINK_TRX]: AuthWalletType.TRON_LINK,
+  [WalletType.CAKE]: undefined,
+  [WalletType.MONERO]: undefined,
+  [WalletType.MAIL]: undefined,
+  [WalletType.ADDRESS]: undefined,
+};
+
 interface WalletInterface {
   isInitialized: boolean;
   blockchain?: Blockchain;
@@ -138,6 +171,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const { readBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
   const { addSpecialCode } = useUserContext();
+  const { getWalletType } = useMetaMask();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
@@ -200,7 +234,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     try {
       const message = await getSignMessage(address);
       const signature = await onSignMessage(address, message);
-      await createSession(address, signature, key);
+      await createSession(address, signature, key, wallet);
     } catch (e) {
       api.logout();
       setWallet();
@@ -219,8 +253,35 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
     setActiveBlockchain(blockchain);
   }
 
-  async function createSession(address: string, signature: string, key?: string): Promise<string> {
-    return api.authenticate(address, signature, key, appParams.specialCode, appParams.wallet, appParams.refcode);
+  async function createSession(address: string, signature: string, key?: string, wallet?: WalletType): Promise<string> {
+    let authWallet = wallet && WalletTypeMap[wallet];
+
+    if (wallet === WalletType.META_MASK) {
+      const detectedWallet = getWalletType();
+      switch (detectedWallet) {
+        case MetaMaskWalletType.META_MASK:
+          authWallet = AuthWalletType.METAMASK;
+          break;
+
+        case MetaMaskWalletType.RABBY:
+          authWallet = AuthWalletType.RABBY;
+          break;
+
+        case MetaMaskWalletType.IN_APP_BROWSER:
+          authWallet = AuthWalletType.WALLET_BROWSER;
+          break;
+      }
+    }
+
+    return api.authenticate(
+      address,
+      signature,
+      key,
+      appParams.specialCode,
+      appParams.wallet,
+      appParams.refcode,
+      authWallet,
+    );
   }
 
   const context: WalletInterface = useMemo(
