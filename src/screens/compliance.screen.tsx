@@ -207,6 +207,7 @@ export default function ComplianceScreen(): JSX.Element {
                   ({translate('screens/compliance', 'found by {{type}}', { type: searchResult.type })})
                 </p>
               </div>
+
               {searchResult.userDatas.length > 0 && (
                 <div className="w-full">
                   <h2 className="text-dfxGray-700">{translate('screens/compliance', 'Customers')}</h2>
@@ -244,6 +245,7 @@ export default function ComplianceScreen(): JSX.Element {
                   </div>
                 </div>
               )}
+
               {searchResult.bankTx.length > 0 && (
                 <div className="w-full">
                   <h2 className="text-dfxGray-700">
@@ -253,7 +255,7 @@ export default function ComplianceScreen(): JSX.Element {
                     <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
                       <thead>
                         <tr className="bg-dfxGray-300">
-                          {userTableData.map((column) => (
+                          {bankTxTableData.map((column) => (
                             <th key={column.key} className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                               {column.label}
                             </th>
