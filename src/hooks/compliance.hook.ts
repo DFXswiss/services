@@ -40,6 +40,21 @@ export interface BankTxSearchResult {
   name?: string;
 }
 
+export interface ComplianceUserData {
+  userData: object;
+  kycFiles: KycFile[];
+}
+
+export interface KycFile {
+  id: number;
+  name: string;
+  type: string;
+  subType?: string;
+  protected: boolean;
+  valid: boolean;
+  uid: string;
+}
+
 export function useCompliance() {
   const { call } = useApi();
 
@@ -50,7 +65,14 @@ export function useCompliance() {
     });
   }
 
-  async function downloadUserData(userDataIds: number[]): Promise<void> {
+  async function getUserData(userDataId: number): Promise<ComplianceUserData> {
+    return call<ComplianceUserData>({
+      url: `support/${userDataId}`,
+      method: 'GET',
+    });
+  }
+
+  async function downloadUserFiles(userDataIds: number[]): Promise<void> {
     const { data, headers } = await call<{ data: Blob; headers: Record<string, string> }>({
       url: 'userData/download',
       method: 'POST',
@@ -61,5 +83,5 @@ export function useCompliance() {
     downloadFile(data, headers, `DFX_export_${filenameDateFormat()}.zip`);
   }
 
-  return useMemo(() => ({ search, downloadUserData }), [call]);
+  return useMemo(() => ({ search, getUserData, downloadUserFiles }), [call]);
 }

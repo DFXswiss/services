@@ -16,7 +16,7 @@ export default function DownloadScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { downloadUserData } = useCompliance();
+  const { downloadUserFiles } = useCompliance();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -33,7 +33,7 @@ export default function DownloadScreen(): JSX.Element {
 
     const userDataIds = data.userDataIds.split(',').map((id) => Number(id));
 
-    downloadUserData(userDataIds)
+    downloadUserFiles(userDataIds)
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
   }

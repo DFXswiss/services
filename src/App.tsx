@@ -12,6 +12,7 @@ import { PaymentLinkProvider } from './contexts/payment-link.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { WindowContextProvider } from './contexts/window.context';
+import ComplianceUserScreen from './screens/compliance-user.screen';
 import ErrorScreen from './screens/error.screen';
 import HomeScreen from './screens/home.screen';
 import { setupLanguages } from './translations';
@@ -298,6 +299,10 @@ export const Routes = [
       {
         path: 'compliance',
         element: withSuspense(<ComplianceScreen />),
+      },
+      {
+        path: 'compliance/user/:id',
+        element: withSuspense(<ComplianceUserScreen />),
       },
     ],
   },
