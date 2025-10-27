@@ -15,7 +15,7 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
   useSift();
 
   const {
-    config: { title, backButton, onBack, textStart, noPadding, smallMenu },
+    config: { title, backButton, onBack, textStart, noPadding, noMaxWidth, smallMenu },
   } = useLayoutConfigContext();
 
   const navRef = useRef<HTMLDivElement>(null);
@@ -71,7 +71,7 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
       >
         <div className="flex flex-grow justify-center">
           <div
-            className={`relative w-full max-w-screen-md flex flex-grow flex-col items-center ${
+            className={`relative w-full ${!noMaxWidth && 'max-w-screen-md'} flex flex-grow flex-col items-center ${
               textStart ? 'text-start' : 'text-center'
             } ${!(noPadding || borderless) && 'p-5'} gap-2`}
           >
