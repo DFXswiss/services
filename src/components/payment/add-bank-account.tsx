@@ -56,19 +56,7 @@ export function AddBankAccount({ onSubmit, confirmationText }: AddBankAccountPro
     createAccount(newAccount)
       .then(!confirmationText ? onSubmit : setConfirmBankAccount)
       .catch((e: ApiError) => {
-        if (e.statusCode === 403) {
-          setCustomError(translate('screens/iban', 'This IBAN already exists in another DFX customer account.'));
-        } else if (e.statusCode === 409) {
-          let error = translate('screens/iban', 'This IBAN already exists in another DFX customer account.') + ' ';
-          error += e.message?.includes('account merge')
-            ? translate(
-                'screens/kyc',
-                'We have just sent you an email. To continue with your existing account, please confirm your email address by clicking on the link sent.',
-              )
-            : translate('screens/kyc', 'Start the KYC process with the same email to merge your accounts.');
-
-          setCustomError(error);
-        } else if (e.statusCode === 400 && e.message?.includes('Multi-account IBAN')) {
+        if (e.statusCode === 400 && e.message?.includes('Multi-account IBAN')) {
           setCustomError(
             <Trans i18nKey="general/errors.iban">
               {`This is a multi-account IBAN and cannot be added as a personal account. Please open a support ticket at `}
