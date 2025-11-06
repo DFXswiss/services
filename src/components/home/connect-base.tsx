@@ -29,6 +29,7 @@ export function ConnectBase({
   rootRef,
   wallet,
   blockchain,
+  isConnect,
   isSupported,
   fallback,
   getAccount,
@@ -92,9 +93,10 @@ export function ConnectBase({
   async function doLogin(account: Account & { blockchain: Blockchain }) {
     return activeWallet === wallet &&
       'address' in account &&
-      account.address.toLowerCase() === session?.address?.toLowerCase()
+      account.address.toLowerCase() === session?.address?.toLowerCase() &&
+      !isConnect
       ? switchBlockchain(account.blockchain)
-      : logout().then(() =>
+      : (isConnect ? Promise.resolve() : logout()).then(() =>
           'session' in account
             ? setSession(account.session, wallet, account.blockchain)
             : login(
