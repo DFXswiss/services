@@ -86,36 +86,8 @@ export interface PaymentLinkPayRequest extends PaymentLinkPayTerminal {
   requestedAmount: Amount;
 }
 
-export enum WalletAppId {
-  DEUROWALLET = 'deurowallet',
-  CAKEWALLET = 'cakewallet',
-  FRANKENCOIN = 'frankencoin',
-  PHOENIX = 'phoenix',
-  WALLETOFSATOSHI = 'walletofsatoshi',
-  BTC_TARO = 'btctaro',
-  BITBANANA = 'bitbanana',
-  BITKIT = 'bitkit',
-  BLINK = 'blink',
-  BLITZWALLET = 'blitzwallet',
-  BLIXT = 'blixt',
-  BREEZ = 'breez',
-  COINCORNER = 'coincorner',
-  LIFPAY = 'lifpay',
-  LIPAWALLET = 'lipawallet',
-  LNBITS = 'lnbits',
-  AQUA = 'aqua',
-  ONEKEY = 'onekey',
-  POUCHPH = 'pouchph',
-  ZEBEDEE = 'zebedee',
-  ZEUS = 'zeus',
-  BINANCE = 'binance',
-  MUUN = 'muun',
-  KUCOINPAY = 'kucoinpay',
-  BRIDGEWALLET = 'bridgewallet',
-}
-
 export interface WalletInfo {
-  id: WalletAppId;
+  id: number;
   name: string;
   websiteUrl?: string;
   iconUrl: string;
@@ -125,9 +97,9 @@ export interface WalletInfo {
   playStoreUrl?: string;
   recommended?: boolean;
   supportedMethods: TransferMethod[];
-  supportedTokens?: string[];
+  supportedAssets?: Asset[];
   semiCompatible?: boolean;
-  disabled?: boolean;
+  active?: boolean;
 }
 
 export interface MetaMaskInfo {
