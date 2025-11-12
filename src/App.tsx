@@ -53,6 +53,7 @@ const EditMailScreen = lazy(() => import('./screens/edit-mail.screen'));
 const SafeScreen = lazy(() => import('./screens/safe.screen'));
 const TelegramSupportScreen = lazy(() => import('./screens/telegram-support.screen'));
 const ComplianceScreen = lazy(() => import('./screens/compliance.screen'));
+const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
 
 setupLanguages();
 
@@ -303,6 +304,10 @@ export const Routes = [
       {
         path: 'compliance/user/:id',
         element: withSuspense(<ComplianceUserScreen />),
+      },
+      {
+        path: 'realunit',
+        element: withSuspense(<RealunitScreen />),
       },
     ],
   },
