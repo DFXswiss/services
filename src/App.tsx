@@ -54,6 +54,7 @@ const SafeScreen = lazy(() => import('./screens/safe.screen'));
 const TelegramSupportScreen = lazy(() => import('./screens/telegram-support.screen'));
 const ComplianceScreen = lazy(() => import('./screens/compliance.screen'));
 const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
+const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
 
 setupLanguages();
 
@@ -308,6 +309,10 @@ export const Routes = [
       {
         path: 'realunit',
         element: withSuspense(<RealunitScreen />),
+      },
+      {
+        path: 'realunit/user/:address',
+        element: withSuspense(<RealunitUserScreen />),
       },
     ],
   },
