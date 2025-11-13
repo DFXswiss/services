@@ -5,6 +5,7 @@ import Chart from 'react-apexcharts';
 import { ErrorHint } from 'src/components/error-hint';
 import { ButtonGroup } from 'src/components/safe/button-group';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 
@@ -65,6 +66,8 @@ interface PriceHistoryEntry {
 }
 
 export default function RealunitScreen(): JSX.Element {
+  useAdminGuard();
+
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
 
@@ -114,10 +117,6 @@ export default function RealunitScreen(): JSX.Element {
       }
 
       const data: HoldersResponse | Holder[] = await response.json();
-
-      console.log('Raw API Response:', data);
-      console.log('Response type:', Array.isArray(data) ? 'Array' : 'Object');
-      console.log('Response keys:', Array.isArray(data) ? 'N/A' : Object.keys(data));
 
       let holdersData: Holder[] = [];
       let paginationData: PaginationInfo = {
@@ -177,15 +176,6 @@ export default function RealunitScreen(): JSX.Element {
 
       setPagination(paginationData);
       setHolders(holdersData);
-
-      console.log('Extracted Data:', {
-        holdersCount: holdersData.length,
-        pagination: paginationData,
-        hasNextPage: paginationData.hasNextPage,
-        hasPreviousPage: paginationData.hasPreviousPage,
-        endCursor: paginationData.endCursor,
-        startCursor: paginationData.startCursor,
-      });
     } catch (e: any) {
       setError(e.message || 'Failed to load holders data');
       console.error('Error fetching holders:', e);
@@ -384,7 +374,7 @@ export default function RealunitScreen(): JSX.Element {
   const chartSeries = useMemo(() => {
     return [
       {
-        name: translate('screens/compliance', 'Price'),
+        name: translate('screens/reaunit', 'Price'),
         data: priceHistory.map((entry: PriceHistoryEntry) => [
           new Date(entry.timestamp).getTime(),
           entry[selectedCurrency],
@@ -394,9 +384,7 @@ export default function RealunitScreen(): JSX.Element {
   }, [priceHistory, selectedCurrency, translate]);
 
   const handleAddressClick = (address: string) => {
-    console.log('Address clicked:', address);
     const encodedAddress = encodeURIComponent(address);
-    console.log('Encoded address:', encodedAddress);
     navigate(`/realunit/user/${encodedAddress}`);
   };
 
@@ -404,10 +392,8 @@ export default function RealunitScreen(): JSX.Element {
     const cursorToUse = cursorHistory.length > 0 ? cursorHistory[cursorHistory.length - 1] : null;
 
     if (cursorToUse !== null && cursorToUse !== undefined) {
-      console.log('Going back with cursor:', cursorToUse, 'History:', cursorHistory);
       fetchHolders(cursorToUse, 'prev');
     } else if (cursorHistory.length > 0) {
-      console.log('Going back to first page (no cursor)');
       fetchHolders(undefined, 'initial');
     }
   };
@@ -423,7 +409,6 @@ export default function RealunitScreen(): JSX.Element {
         return prev;
       });
 
-      console.log('Going forward, saving cursor to history:', currentStartCursor, 'History:', cursorHistory);
       fetchHolders(pagination.endCursor, 'next');
     }
   };
@@ -438,42 +423,38 @@ export default function RealunitScreen(): JSX.Element {
         <div className="w-full overflow-x-auto">
           <div className="mb-4">
             <h2 className="text-dfxGray-700 text-xl font-semibold mb-2">
-              {translate('screens/compliance', 'RealUnit Holders')}
+              {translate('screens/realunit', 'RealUnit Holders')}
             </h2>
 
             {(totalShares || totalSupply || totalCount !== undefined) && (
               <div className="bg-white rounded-lg shadow-sm p-4 border border-dfxGray-300 mb-6">
                 <h3 className="text-dfxBlue-800 font-semibold text-base mb-3">
-                  {translate('screens/compliance', 'RealUnit Information')}
+                  {translate('screens/realunit', 'RealUnit Information')}
                 </h3>
                 <div className="space-y-2">
                   {totalCount !== undefined && (
                     <div className="flex justify-between items-center">
                       <span className="text-dfxGray-600 text-sm">
-                        {translate('screens/compliance', 'Total holders')}:
+                        {translate('screens/realunit', 'Total holders')}:
                       </span>
                       <span className="text-dfxBlue-800 font-medium">{totalCount}</span>
                     </div>
                   )}
                   {totalShares && (
                     <div className="flex justify-between items-center">
-                      <span className="text-dfxGray-600 text-sm">
-                        {translate('screens/compliance', 'Total Shares')}:
-                      </span>
+                      <span className="text-dfxGray-600 text-sm">{translate('screens/realunit', 'Total Shares')}:</span>
                       <span className="text-dfxBlue-800 font-medium">{totalShares.total}</span>
                     </div>
                   )}
                   {totalSupply && (
                     <div className="flex justify-between items-center">
-                      <span className="text-dfxGray-600 text-sm">
-                        {translate('screens/compliance', 'Total Supply')}:
-                      </span>
+                      <span className="text-dfxGray-600 text-sm">{translate('screens/realunit', 'Total Supply')}:</span>
                       <span className="text-dfxBlue-800 font-medium">{totalSupply.value}</span>
                     </div>
                   )}
                   {totalSupply && (
                     <div className="flex justify-between items-center">
-                      <span className="text-dfxGray-600 text-sm">{translate('screens/compliance', 'Timestamp')}:</span>
+                      <span className="text-dfxGray-600 text-sm">{translate('screens/realunit', 'Timestamp')}:</span>
                       <span className="text-dfxBlue-800 text-sm">
                         {new Date(totalSupply.timestamp).toLocaleString()}
                       </span>
@@ -485,7 +466,7 @@ export default function RealunitScreen(): JSX.Element {
 
             <div className="bg-white rounded-lg shadow-sm p-4 border border-dfxGray-300 mb-6">
               <h3 className="text-dfxBlue-800 font-semibold text-base mb-3">
-                {translate('screens/compliance', 'Price History')}
+                {translate('screens/realunit', 'Price History')}
               </h3>
               {priceHistoryError ? (
                 <ErrorHint message={priceHistoryError} />
@@ -509,20 +490,20 @@ export default function RealunitScreen(): JSX.Element {
                       items={Object.values(TimeFrame)}
                       selected={selectedTimeFrame}
                       onClick={(tf) => setSelectedTimeFrame(tf)}
-                      buttonLabel={(tf) => translate('screens/compliance', tf)}
+                      buttonLabel={(tf) => translate('screens/realunit', tf)}
                     />
                   </div>
                 </div>
               ) : (
                 <p className="text-dfxGray-700 text-center py-4">
-                  {translate('screens/compliance', 'No price history available')}
+                  {translate('screens/realunit', 'No price history available')}
                 </p>
               )}
             </div>
           </div>
 
           {holders.length === 0 ? (
-            <p className="text-dfxGray-700">{translate('screens/compliance', 'No holders found')}</p>
+            <p className="text-dfxGray-700">{translate('screens/realunit', 'No holders found')}</p>
           ) : (
             <>
               <div className="w-full overflow-x-auto mb-4">
@@ -557,17 +538,6 @@ export default function RealunitScreen(): JSX.Element {
                           const isAddressColumn = column.toLowerCase().includes('address');
                           const addressValue = isAddressColumn && value ? String(value).trim() : null;
 
-                          if (isAddressColumn && addressValue) {
-                            console.log(
-                              'Address column found:',
-                              column,
-                              'Value:',
-                              addressValue,
-                              'Length:',
-                              addressValue.length,
-                            );
-                          }
-
                           return (
                             <td
                               key={column}
@@ -577,12 +547,7 @@ export default function RealunitScreen(): JSX.Element {
                                   : ''
                               }`}
                               onClick={
-                                isAddressColumn && addressValue
-                                  ? () => {
-                                      console.log('Clicking address:', addressValue);
-                                      handleAddressClick(addressValue);
-                                    }
-                                  : undefined
+                                isAddressColumn && addressValue ? () => handleAddressClick(addressValue) : undefined
                               }
                             >
                               {displayValue}
@@ -616,11 +581,11 @@ export default function RealunitScreen(): JSX.Element {
               </div>
 
               <div className="mt-2 text-sm text-dfxGray-600 text-center">
-                {translate('screens/compliance', 'Showing {{count}} entries', {
+                {translate('screens/realunit', 'Showing {{count}} entries', {
                   count: holders.length,
                 })}
-                {totalCount !== undefined && ` / ${totalCount} ${translate('screens/compliance', 'total')}`}
-                {pagination.hasNextPage && ' • ' + translate('screens/compliance', 'More available')}
+                {totalCount !== undefined && ` / ${totalCount} ${translate('screens/realunit', 'total')}`}
+                {pagination.hasNextPage && ' • ' + translate('screens/realunit', 'More available')}
               </div>
             </>
           )}

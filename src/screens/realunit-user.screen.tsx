@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { ButtonGroup } from 'src/components/safe/button-group';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
 interface HistoricalBalance {
@@ -25,6 +26,8 @@ interface AccountSummary {
 }
 
 export default function RealunitUserScreen(): JSX.Element {
+  useAdminGuard();
+
   const { translate } = useSettingsContext();
   const { address } = useParams<{ address: string }>();
 
@@ -42,10 +45,6 @@ export default function RealunitUserScreen(): JSX.Element {
 
       const fetchAccountSummary = async () => {
         try {
-          console.log('Original address param:', address);
-          console.log('Address length:', address?.length);
-          console.log('Address type:', typeof address);
-
           if (!address || address.trim() === '') {
             throw new Error('Address is empty or invalid');
           }
@@ -53,9 +52,6 @@ export default function RealunitUserScreen(): JSX.Element {
           const apiBaseUrl = process.env.REACT_APP_API_URL || 'https://dev.api.dfx.swiss';
           const apiVersion = process.env.REACT_APP_API_VERSION || 'v1';
           const url = `${apiBaseUrl}/${apiVersion}/realunit/account/${address}`;
-
-          console.log('Full API URL:', url);
-          console.log('Address for API:', address);
 
           const response = await fetch(url, {
             method: 'GET',

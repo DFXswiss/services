@@ -205,6 +205,15 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
                   onClose={() => setIsNavigationOpen(false)}
                 />
               )}
+              {session?.role && [UserRole.ADMIN].includes(session.role) && (
+                <NavigationLink
+                  icon={IconVariant.WALLET}
+                  label={translate('screens/realunit', 'RealUnit')}
+                  url="/realunit"
+                  target="_self"
+                  onClose={() => setIsNavigationOpen(false)}
+                />
+              )}
             </>
           )}
 
