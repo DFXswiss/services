@@ -76,7 +76,7 @@ export default function ConnectLedger(props: Props): JSX.Element {
     <ConnectBase
       isSupported={isSupported}
       getAccount={getAccount}
-      signMessage={(msg, _a, _b, accountIndex, index, type) =>
+      signMessage={(msg, _a, _w, _b, accountIndex, index, type) =>
         signMessage(msg, props.wallet, accountIndex ?? 0, index ?? 0, type ?? defaultAddressType)
       }
       renderContent={(p) => (
@@ -199,9 +199,7 @@ function Content({
           <ConnectInstructions
             steps={steps}
             params={{ app, device: 'Ledger' }}
-            img={
-              addresses ? undefined : `https://dfx.swiss/images/app/ledger${app.toLowerCase()}ready_en.jpg`
-            }
+            img={addresses ? undefined : `https://dfx.swiss/images/app/ledger${app.toLowerCase()}ready_en.jpg`}
           />
         )}
         {error && <ConnectError error={error} />}
