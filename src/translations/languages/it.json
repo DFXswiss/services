@@ -927,7 +927,9 @@
     "Timestamp": "Timestamp",
     "Event Type": "Tipo di evento",
     "Details": "Dettagli",
-    "Tx Hash": "Tx Hash"
+    "Tx Hash": "Tx Hash",
+    "No transactions found": "Nessuna transazione trovata",
+    "Percentage": "Percentuale"
   },
   "screens/blockchain": {
     "Transaction signing": "Firma della transazione",
