@@ -3,6 +3,7 @@
     "Select": "Selezionare",
     "Search": "Ricerca",
     "Start": "Iniziare",
+    "Previous": "Precedente",
     "Next": "Avanti",
     "Continue": "Continua",
     "Close": "Chiudere",
@@ -909,6 +910,24 @@
     "Your deposit will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Il tuo deposito verrà elaborato e aggiunto al tuo portafoglio Safe. Ti informeremo via e-mail sui progressi delle tue transazioni.",
     "Your incoming transaction will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "La tua transazione in entrata verrà elaborata e aggiunta al tuo portafoglio Safe. Ti informeremo via e-mail sui progressi delle tue transazioni.",
     "Your swap will be processed and reflected in your Safe portfolio. We will inform you by email about the progress of your transactions.": "Il tuo swap verrà elaborato e riflesso nel tuo portafoglio Safe. Ti informeremo via e-mail sui progressi delle tue transazioni."
+  },
+  "screens/realunit": {
+    "Account Summary": "Riepilogo del conto",
+    "No data available": "Nessun dato disponibile",
+    "Account Details": "Dettagli del conto",
+    "Key": "Chiave",
+    "Value": "Valore",
+    "Address": "Indirizzo",
+    "Address Type": "Tipo di indirizzo",
+    "Balance": "Saldo",
+    "Last Updated": "Ultimo aggiornamento",
+    "Balance History": "Storico del saldo",
+    "Current balance": "Saldo attuale",
+    "Transaction History": "Storico delle transazioni",
+    "Timestamp": "Timestamp",
+    "Event Type": "Tipo di evento",
+    "Details": "Dettagli",
+    "Tx Hash": "Tx Hash"
   },
   "screens/blockchain": {
     "Transaction signing": "Firma della transazione",
