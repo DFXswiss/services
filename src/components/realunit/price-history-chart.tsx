@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PriceHistoryEntry } from 'src/hooks/realunit.hook';
+import { Timeframe } from 'src/util/chart';
 import { ButtonGroup } from '../safe/button-group';
 
 export enum PriceCurrency {
@@ -12,23 +13,16 @@ export enum PriceCurrency {
   USD = 'usd',
 }
 
-export enum PriceTimeframe {
-  WEEK = 'WEEK',
-  MONTH = 'MONTH',
-  YEAR = 'YEAR',
-  ALL = 'ALL',
-}
-
 interface PriceHistoryChartProps {
   priceHistory: PriceHistoryEntry[];
   isLoading: boolean;
-  onTimeframeChange: (timeframe: PriceTimeframe) => void;
+  onTimeframeChange: (timeframe: string) => void;
 }
 
 export const PriceHistoryChart = ({ isLoading, priceHistory, onTimeframeChange }: PriceHistoryChartProps) => {
   const { translate } = useSettingsContext();
 
-  const [timeframe, setTimeframe] = useState<PriceTimeframe>(PriceTimeframe.WEEK);
+  const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.WEEK);
   const [currency, setCurrency] = useState<PriceCurrency>(PriceCurrency.CHF);
 
   useEffect(() => {
@@ -112,11 +106,11 @@ export const PriceHistoryChart = ({ isLoading, priceHistory, onTimeframeChange }
       </div>
       <Chart type="area" height={300} options={chartOptions} series={chartSeries} />
       <div className="mt-4 flex justify-center">
-        <ButtonGroup<PriceTimeframe>
-          items={Object.values(PriceTimeframe)}
+        <ButtonGroup<Timeframe>
+          items={Object.values(Timeframe)}
           selected={timeframe}
           onClick={(tf) => setTimeframe(tf)}
-          buttonLabel={(tf) => translate('screens/realunit', tf)}
+          buttonLabel={(tf) => tf}
         />
       </div>
     </div>
