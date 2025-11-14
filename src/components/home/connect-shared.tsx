@@ -24,6 +24,7 @@ export interface ConnectProps {
   rootRef: RefObject<HTMLDivElement>;
   wallet: WalletType;
   blockchain?: Blockchain;
+  isConnect: boolean;
   onLogin: () => void;
   onCancel: () => void;
   onSwitch: (wallet: WalletType) => void;

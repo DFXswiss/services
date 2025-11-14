@@ -219,6 +219,7 @@ function HomeScreenContent(): JSX.Element {
                 rootRef={rootRef}
                 wallet={connectTo.type}
                 blockchain={selectedBlockchain}
+                isConnect={specialMode === SpecialMode.CONNECT}
                 onLogin={() => setLoginSuccessful(true)}
                 onCancel={() => setConnectTo(undefined)}
                 onSwitch={(type) => setConnectTo((c) => ({ ...c, type }))}

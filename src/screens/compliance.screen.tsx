@@ -11,13 +11,15 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useLocation } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { BankTxSearchResult, ComplianceSearchResult, UserSearchResult, useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { useNavigation } from 'src/hooks/navigation.hook';
 
 interface FormData {
   key: string;
@@ -27,7 +29,9 @@ export default function ComplianceScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { search, downloadUserData } = useCompliance();
+  const { search, downloadUserFiles } = useCompliance();
+  const { navigate } = useNavigation();
+  const { search: query } = useLocation();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -35,13 +39,21 @@ export default function ComplianceScreen(): JSX.Element {
   const [showInfo, setShowInfo] = useState(false);
   const [downloadingUserId, setDownloadingUserId] = useState<number>();
 
+  const paramSearch = new URLSearchParams(query).get('search') || undefined;
+
+  useEffect(() => {
+    if (paramSearch) onSubmit({ key: paramSearch });
+  }, [paramSearch]);
+
   const {
     control,
     handleSubmit,
     formState: { isValid, errors },
-  } = useForm<FormData>({ mode: 'onChange' });
+  } = useForm<FormData>({ mode: 'onChange', defaultValues: { key: paramSearch } });
 
   async function onSubmit(data: FormData) {
+    navigate({ search: `search=${data.key}` });
+
     setIsLoading(true);
     setError(undefined);
     setSearchResult(undefined);
@@ -56,7 +68,7 @@ export default function ComplianceScreen(): JSX.Element {
     setDownloadingUserId(userId);
     setError(undefined);
 
-    downloadUserData([userId])
+    downloadUserFiles([userId])
       .catch((e) => setError(e.message))
       .finally(() => setDownloadingUserId(undefined));
   }
@@ -103,13 +115,21 @@ export default function ComplianceScreen(): JSX.Element {
       key: 'actions',
       label: '',
       render: (u: UserSearchResult) => (
-        <StyledIconButton
-          icon={IconVariant.FILE}
-          color={IconColor.BLUE}
-          size={IconSize.SM}
-          onClick={() => handleDownloadUserData(u.id)}
-          isLoading={downloadingUserId === u.id}
-        />
+        <div className="flex gap-2 justify-end items-center">
+          <StyledIconButton
+            icon={IconVariant.FILE}
+            color={IconColor.BLUE}
+            size={IconSize.SM}
+            onClick={() => handleDownloadUserData(u.id)}
+            isLoading={downloadingUserId === u.id}
+          />
+          <StyledIconButton
+            icon={IconVariant.CHEV_RIGHT}
+            color={IconColor.BLUE}
+            size={IconSize.XL}
+            onClick={() => navigate(`compliance/user/${u.id}`)}
+          />
+        </div>
       ),
     },
   ];
