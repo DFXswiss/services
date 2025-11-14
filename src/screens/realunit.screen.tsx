@@ -39,7 +39,6 @@ export default function RealunitScreen(): JSX.Element {
     fetchHolders();
   }, [fetchHolders]);
 
-  const currentHolders = holders;
   const hasRealunitInfo = Boolean(totalShares || totalSupply || totalCount);
 
   useLayoutOptions({ backButton: true });
@@ -146,7 +145,7 @@ export default function RealunitScreen(): JSX.Element {
                 </tr>
               </thead>
               <tbody>
-                {currentHolders.map((holder) => (
+                {holders.map((holder) => (
                   <tr
                     key={holder.address}
                     className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300"
