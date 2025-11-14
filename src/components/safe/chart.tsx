@@ -4,32 +4,8 @@ import { useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { CustodyHistoryEntry, FiatCurrency } from 'src/dto/safe.dto';
+import { getFromDateByTimeframe, Timeframe } from 'src/util/chart';
 import { ButtonGroup } from './button-group';
-
-enum Timeframe {
-  WEEK = '1W',
-  MONTH = '1M',
-  QUARTER = '1Q',
-  YEAR = '1Y',
-  ALL = 'All',
-}
-
-const getFromDateByTimeframe = (timeframe: Timeframe) => {
-  switch (timeframe) {
-    case Timeframe.ALL:
-      return 0;
-    case Timeframe.WEEK:
-      return Date.now() - 7 * 24 * 60 * 60 * 1000;
-    case Timeframe.MONTH:
-      return Date.now() - 30 * 24 * 60 * 60 * 1000;
-    case Timeframe.QUARTER:
-      return Date.now() - 90 * 24 * 60 * 60 * 1000;
-    case Timeframe.YEAR:
-      return Date.now() - 365 * 24 * 60 * 60 * 1000;
-    default:
-      return 0;
-  }
-};
 
 interface PriceChartProps {
   history: CustodyHistoryEntry[];

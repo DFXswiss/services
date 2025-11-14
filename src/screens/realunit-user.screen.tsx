@@ -97,7 +97,7 @@ export default function RealunitUserScreen(): JSX.Element {
               </table>
             </div>
 
-            {data.historicalBalances?.length > 0 && (
+            {data.historicalBalances && (
               <div className="shadow-card rounded-xl">
                 <div id="chart-timeline" className="relative">
                   <div className="p-2 gap-2 flex flex-col items-start">
@@ -132,14 +132,14 @@ export default function RealunitUserScreen(): JSX.Element {
               </div>
             )}
 
-            {history && history.events.length > 0 && (
+            {history && (
               <div>
                 <h2 className="text-dfxGray-700 mb-4">
-                  {translate('screens/realunit', 'Transaction History')} ({history.totalCount})
+                  {translate('screens/realunit', 'Transaction History')} ({history.totalCount ?? 0})
                 </h2>
                 {isLoadingHistory ? (
                   <StyledLoadingSpinner size={SpinnerSize.LG} />
-                ) : (
+                ) : history.history.length > 0 ? (
                   <>
                     <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
                       <thead>
@@ -159,7 +159,7 @@ export default function RealunitUserScreen(): JSX.Element {
                         </tr>
                       </thead>
                       <tbody>
-                        {history.events.map((event, index) => (
+                        {history.history.map((event, index) => (
                           <tr
                             key={index}
                             className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300"
@@ -203,6 +203,8 @@ export default function RealunitUserScreen(): JSX.Element {
                       />
                     </div>
                   </>
+                ) : (
+                  <p className="text-dfxGray-700">{translate('screens/realunit', 'No transactions found')}</p>
                 )}
               </div>
             )}
