@@ -169,14 +169,19 @@ export default function RealunitUserScreen(): JSX.Element {
                             </td>
                             <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{event.eventType}</td>
                             <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                              {event.transfer &&
-                                `From: ${event.transfer.from} To: ${event.transfer.to} Value: ${(
-                                  Number(event.transfer.value) / 100
-                                ).toFixed(2)}`}
-                              {event.approval &&
-                                `Spender: ${event.approval.spender} Value: ${(
-                                  Number(event.approval.value) / 100
-                                ).toFixed(2)}`}
+                              {event.transfer && (
+                                <div className="flex flex-col gap-1">
+                                  <div>From: {event.transfer.from}</div>
+                                  <div>To: {event.transfer.to}</div>
+                                  <div>Value: {(Number(event.transfer.value) / 100).toFixed(2)}</div>
+                                </div>
+                              )}
+                              {event.approval && (
+                                <div className="flex flex-col gap-1">
+                                  <div>Spender: {event.approval.spender}</div>
+                                  <div>Value: {(Number(event.approval.value) / 100).toFixed(2)}</div>
+                                </div>
+                              )}
                               {event.tokensDeclaredInvalid && `Amount: ${event.tokensDeclaredInvalid.amount}`}
                               {event.addressTypeUpdate && `Type: ${event.addressTypeUpdate.addressType}`}
                             </td>
