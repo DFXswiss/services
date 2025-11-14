@@ -8,7 +8,7 @@ import { getFromDateByTimeframe, Timeframe } from 'src/util/chart';
 import { ButtonGroup } from '../safe/button-group';
 
 export enum BalanceMetric {
-  TOKENS = 'tokens',
+  REALU = 'realu',
   CHF = 'chf',
 }
 

@@ -17,7 +17,7 @@ export default function RealunitUserScreen(): JSX.Element {
   const { address } = useParams<{ address: string }>();
   const { data, history, isLoading, isLoadingHistory, error, fetchAccountSummary, fetchAccountHistory } = useRealunit();
 
-  const [metric, setMetric] = useState<BalanceMetric>(BalanceMetric.TOKENS);
+  const [metric, setMetric] = useState<BalanceMetric>(BalanceMetric.REALU);
 
   useEffect(() => {
     if (address) {
@@ -110,7 +110,7 @@ export default function RealunitUserScreen(): JSX.Element {
                             items={Object.values(BalanceMetric)}
                             selected={metric}
                             onClick={setMetric}
-                            buttonLabel={(m: BalanceMetric) => (m === BalanceMetric.CHF ? 'CHF' : 'TOKENS')}
+                            buttonLabel={(m: BalanceMetric) => (m === BalanceMetric.CHF ? 'CHF' : 'REALU')}
                             size={ButtonGroupSize.SM}
                           />
                           <div className="text-dfxBlue-800">
@@ -119,7 +119,7 @@ export default function RealunitUserScreen(): JSX.Element {
                                 ? formatCurrency(data.historicalBalances[0]?.valueChf ?? 0, 2, 2)
                                 : (Number(data.balance) / 100).toFixed(2)}
                             </span>{' '}
-                            <span className="text-base">{metric === BalanceMetric.CHF ? 'CHF' : 'TOKENS'}</span>
+                            <span className="text-base">{metric === BalanceMetric.CHF ? 'CHF' : 'REALU'}</span>
                           </div>
                         </div>
                       </div>
