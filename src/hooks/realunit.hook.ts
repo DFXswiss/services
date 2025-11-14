@@ -147,7 +147,7 @@ export function useRealunit() {
 
   async function getPriceHistory(timeFrame: string): Promise<PriceHistoryEntry[]> {
     const params = new URLSearchParams();
-    params.set('timeFrame', timeFrame);
+    params.set('timeFrame', timeFrame.toUpperCase());
 
     return call<PriceHistoryEntry[]>({
       url: relativeUrl({ path: 'realunit/price/history', params }),
