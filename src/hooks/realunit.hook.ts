@@ -1,5 +1,6 @@
 import { ApiError, useApi } from '@dfx.swiss/react';
 import { useCallback, useMemo, useState } from 'react';
+import { relativeUrl } from '../util/utils';
 
 export interface HistoricalBalance {
   balance: string;
@@ -84,6 +85,13 @@ export interface PriceHistoryEntry {
   usd: number;
 }
 
+export enum PaginationDirection {
+  NEXT = 'next',
+  PREV = 'prev',
+}
+
+type Direction = PaginationDirection | 'next' | 'prev';
+
 export function useRealunit() {
   const { call } = useApi();
 
@@ -117,33 +125,32 @@ export function useRealunit() {
     });
   }
 
-  async function getAccountHistory(address: string, cursor?: string, direction?: 'next' | 'prev'): Promise<AccountHistory> {
-    let url = `realunit/account/${address}/history`;
-    if (cursor) {
-      url += direction === 'prev' ? `?before=${cursor}` : `?after=${cursor}`;
-    }
+  async function getAccountHistory(address: string, cursor?: string, direction?: Direction): Promise<AccountHistory> {
+    const params = new URLSearchParams();
+    cursor && direction && params.set(String(direction) === 'prev' ? 'before' : 'after', cursor);
 
     return call<AccountHistory>({
-      url,
+      url: relativeUrl({ path: `realunit/account/${address}/history`, params }),
       method: 'GET',
     });
   }
 
-  async function getHolders(cursor?: string, direction?: 'next' | 'prev'): Promise<HoldersResponse> {
-    let url = 'realunit/holders';
-    if (cursor) {
-      url += direction === 'prev' ? `?startCursor=${cursor}` : `?after=${cursor}`;
-    }
+  async function getHolders(cursor?: string, direction?: Direction): Promise<HoldersResponse> {
+    const params = new URLSearchParams();
+    cursor && direction && params.set(String(direction) === 'prev' ? 'startCursor' : 'after', cursor);
 
     return call<HoldersResponse>({
-      url,
+      url: relativeUrl({ path: 'realunit/holders', params }),
       method: 'GET',
     });
   }
 
   async function getPriceHistory(timeFrame: string): Promise<PriceHistoryEntry[]> {
+    const params = new URLSearchParams();
+    params.set('timeFrame', timeFrame);
+
     return call<PriceHistoryEntry[]>({
-      url: `realunit/price/history?timeFrame=${timeFrame}`,
+      url: relativeUrl({ path: 'realunit/price/history', params }),
       method: 'GET',
     });
   }
@@ -161,7 +168,7 @@ export function useRealunit() {
   );
 
   const fetchAccountHistory = useCallback(
-    (address: string, cursor?: string, direction?: 'next' | 'prev') => {
+    (address: string, cursor?: string, direction?: Direction) => {
       setIsLoadingHistory(true);
       setError(undefined);
       getAccountHistory(address, cursor, direction)
@@ -173,14 +180,14 @@ export function useRealunit() {
   );
 
   const fetchHolders = useCallback(
-    (cursor?: string, direction: 'next' | 'prev' | 'initial' = 'initial') => {
+    (cursor?: string, direction?: Direction) => {
       setIsLoadingHolders(true);
       setHoldersError(undefined);
-      getHolders(cursor, direction === 'initial' ? undefined : direction)
+      getHolders(cursor, direction)
         .then((data) => {
           setHolders(data.holders);
           setPageInfo(data.pageInfo);
-          if (direction === 'initial') {
+          if (!cursor) {
             setTotalShares(data.totalShares);
             setTotalSupply(data.totalSupply);
             setTotalCount(data.totalCount);
