@@ -8,8 +8,7 @@ import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useRealunit } from 'src/hooks/realunit.hook';
 
-enum Direction {
-  INITIAL = 'initial',
+enum PaginationDirection {
   NEXT = 'next',
   PREV = 'prev',
 }
@@ -50,13 +49,13 @@ export default function RealunitScreen(): JSX.Element {
 
   const handlePreviousPage = () => {
     if (pageInfo.hasPreviousPage && pageInfo.startCursor) {
-      fetchHolders(pageInfo.startCursor, Direction.PREV);
+      fetchHolders(pageInfo.startCursor, PaginationDirection.PREV);
     }
   };
 
   const handleNextPage = () => {
     if (pageInfo.hasNextPage && pageInfo.endCursor) {
-      fetchHolders(pageInfo.endCursor, Direction.NEXT);
+      fetchHolders(pageInfo.endCursor, PaginationDirection.NEXT);
     }
   };
 

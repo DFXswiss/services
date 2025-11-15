@@ -90,8 +90,6 @@ export enum PaginationDirection {
   PREV = 'prev',
 }
 
-type Direction = PaginationDirection | 'next' | 'prev';
-
 export function useRealunit() {
   const { call } = useApi();
 
@@ -125,7 +123,7 @@ export function useRealunit() {
     });
   }
 
-  async function getAccountHistory(address: string, cursor?: string, direction?: Direction): Promise<AccountHistory> {
+  async function getAccountHistory(address: string, cursor?: string, direction?: PaginationDirection): Promise<AccountHistory> {
     const params = new URLSearchParams();
     cursor && direction && params.set(String(direction) === 'prev' ? 'before' : 'after', cursor);
 
@@ -135,7 +133,7 @@ export function useRealunit() {
     });
   }
 
-  async function getHolders(cursor?: string, direction?: Direction): Promise<HoldersResponse> {
+  async function getHolders(cursor?: string, direction?: PaginationDirection): Promise<HoldersResponse> {
     const params = new URLSearchParams();
     cursor && direction && params.set(String(direction) === 'prev' ? 'startCursor' : 'after', cursor);
 
@@ -168,7 +166,7 @@ export function useRealunit() {
   );
 
   const fetchAccountHistory = useCallback(
-    (address: string, cursor?: string, direction?: Direction) => {
+    (address: string, cursor?: string, direction?: PaginationDirection) => {
       setIsLoadingHistory(true);
       setError(undefined);
       getAccountHistory(address, cursor, direction)
@@ -180,7 +178,7 @@ export function useRealunit() {
   );
 
   const fetchHolders = useCallback(
-    (cursor?: string, direction?: Direction) => {
+    (cursor?: string, direction?: PaginationDirection) => {
       setIsLoadingHolders(true);
       setHoldersError(undefined);
       getHolders(cursor, direction)
