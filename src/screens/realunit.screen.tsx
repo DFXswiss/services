@@ -55,7 +55,7 @@ export default function RealunitScreen(): JSX.Element {
       ) : !holders.length && isLoadingHolders ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
-        <div className="w-full overflow-x-auto">
+        <div className="w-full">
           <div className="mb-4">
             <h2 className="text-dfxGray-700 text-xl font-semibold mb-2">
               {translate('screens/realunit', 'RealUnit Holders')}
