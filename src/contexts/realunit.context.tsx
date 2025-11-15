@@ -21,17 +21,17 @@ export function useRealunitContext(): RealunitContextInterface {
 const STORAGE_KEY = 'realunit_pagination';
 
 export function RealunitContextProvider({ children }: PropsWithChildren): JSX.Element {
-  const { localStorage } = window;
+  const { sessionStorage } = window;
   const [paginationState, setPaginationState] = useState<RealunitPaginationState | undefined>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = sessionStorage.getItem(STORAGE_KEY);
     return stored ? JSON.parse(stored) : undefined;
   });
 
   useEffect(() => {
     if (paginationState) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(paginationState));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(paginationState));
     } else {
-      localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_KEY);
     }
   }, [paginationState]);
 
