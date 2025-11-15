@@ -63,7 +63,7 @@ export default function RealunitScreen(): JSX.Element {
     <>
       {holdersError ? (
         <ErrorHint message={holdersError} />
-      ) : isLoadingHolders ? (
+      ) : !holders.length && isLoadingHolders ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <div className="w-full overflow-x-auto">
