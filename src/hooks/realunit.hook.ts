@@ -1,5 +1,6 @@
 import { ApiError, useApi } from '@dfx.swiss/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRealunitContext } from 'src/contexts/realunit.context';
 import { relativeUrl } from '../util/utils';
 
 export interface HistoricalBalance {
@@ -92,7 +93,9 @@ export enum PaginationDirection {
 
 export function useRealunit() {
   const { call } = useApi();
-
+  const { paginationState, savePaginationState, clearPaginationState } = useRealunitContext();
+  const hasRestored = useRef(false);
+  
   const [data, setData] = useState<AccountSummary>();
   const [history, setHistory] = useState<AccountHistory>();
   const [isLoading, setIsLoading] = useState(false);
@@ -185,16 +188,19 @@ export function useRealunit() {
         .then((data) => {
           setHolders(data.holders);
           setPageInfo(data.pageInfo);
-          if (!cursor) {
+          if (cursor && direction) {
+            savePaginationState(cursor, direction);
+          } else {
             setTotalShares(data.totalShares);
             setTotalSupply(data.totalSupply);
             setTotalCount(data.totalCount);
+            clearPaginationState();
           }
         })
         .catch((error: ApiError) => setHoldersError(error.message ?? 'Unknown error'))
         .finally(() => setIsLoadingHolders(false));
     },
-    [call],
+    [call, savePaginationState, clearPaginationState],
   );
 
   const fetchPriceHistory = useCallback(
@@ -208,6 +214,14 @@ export function useRealunit() {
     },
     [call],
   );
+
+  useEffect(() => {
+    (!hasRestored.current) &&
+      (hasRestored.current = true,
+        paginationState
+          ? fetchHolders(paginationState.cursor, paginationState.direction)
+          : fetchHolders());
+  }, [fetchHolders, paginationState]);
 
   return useMemo(
     () => ({

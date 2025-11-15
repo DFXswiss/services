@@ -1,18 +1,11 @@
 import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { useEffect } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import { PriceHistoryChart } from 'src/components/realunit/price-history-chart';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { useRealunit } from 'src/hooks/realunit.hook';
-
-enum PaginationDirection {
-  NEXT = 'next',
-  PREV = 'prev',
-}
-
+import { PaginationDirection, useRealunit } from 'src/hooks/realunit.hook';
 export default function RealunitScreen(): JSX.Element {
   useAdminGuard();
 
@@ -33,10 +26,6 @@ export default function RealunitScreen(): JSX.Element {
     fetchHolders,
     fetchPriceHistory,
   } = useRealunit();
-
-  useEffect(() => {
-    fetchHolders();
-  }, [fetchHolders]);
 
   const hasRealunitInfo = Boolean(totalShares || totalSupply || totalCount);
 
