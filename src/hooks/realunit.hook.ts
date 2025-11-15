@@ -1,5 +1,7 @@
 import { ApiError, useApi } from '@dfx.swiss/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRealunitContext } from 'src/contexts/realunit.context';
+import { Timeframe } from 'src/util/chart';
 import { relativeUrl } from '../util/utils';
 
 export interface HistoricalBalance {
@@ -63,6 +65,11 @@ export interface TotalSupply {
   timestamp: string;
 }
 
+export interface TokenInfo {
+  totalShares: TotalShares;
+  totalSupply: TotalSupply;
+}
+
 export interface PageInfo {
   endCursor: string;
   hasNextPage: boolean;
@@ -90,11 +97,11 @@ export enum PaginationDirection {
   PREV = 'prev',
 }
 
-type Direction = PaginationDirection | 'next' | 'prev';
-
 export function useRealunit() {
   const { call } = useApi();
-
+  const { paginationState, savePaginationState, clearPaginationState } = useRealunitContext();
+  const hasRestored = useRef(false);
+  
   const [data, setData] = useState<AccountSummary>();
   const [history, setHistory] = useState<AccountHistory>();
   const [isLoading, setIsLoading] = useState(false);
@@ -102,8 +109,6 @@ export function useRealunit() {
   const [error, setError] = useState<string>();
 
   const [holders, setHolders] = useState<Holder[]>([]);
-  const [totalShares, setTotalShares] = useState<TotalShares>();
-  const [totalSupply, setTotalSupply] = useState<TotalSupply>();
   const [totalCount, setTotalCount] = useState<number>();
   const [pageInfo, setPageInfo] = useState<PageInfo>({
     hasNextPage: false,
@@ -113,6 +118,10 @@ export function useRealunit() {
   });
   const [isLoadingHolders, setIsLoadingHolders] = useState(false);
   const [holdersError, setHoldersError] = useState<string>();
+  const [tokenInfoTotalShares, setTokenInfoTotalShares] = useState<TotalShares>();
+  const [tokenInfoTotalSupply, setTokenInfoTotalSupply] = useState<TotalSupply>();
+  const [isLoadingTokenInfo, setIsLoadingTokenInfo] = useState(false);
+  const [tokenInfoError, setTokenInfoError] = useState<string>();
 
   const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
   const [isLoadingPriceHistory, setIsLoadingPriceHistory] = useState(false);
@@ -125,7 +134,7 @@ export function useRealunit() {
     });
   }
 
-  async function getAccountHistory(address: string, cursor?: string, direction?: Direction): Promise<AccountHistory> {
+  async function getAccountHistory(address: string, cursor?: string, direction?: PaginationDirection): Promise<AccountHistory> {
     const params = new URLSearchParams();
     cursor && direction && params.set(String(direction) === 'prev' ? 'before' : 'after', cursor);
 
@@ -135,7 +144,7 @@ export function useRealunit() {
     });
   }
 
-  async function getHolders(cursor?: string, direction?: Direction): Promise<HoldersResponse> {
+  async function getHolders(cursor?: string, direction?: PaginationDirection): Promise<HoldersResponse> {
     const params = new URLSearchParams();
     cursor && direction && params.set(String(direction) === 'prev' ? 'startCursor' : 'after', cursor);
 
@@ -144,8 +153,13 @@ export function useRealunit() {
       method: 'GET',
     });
   }
-
-  async function getPriceHistory(timeFrame: string): Promise<PriceHistoryEntry[]> {
+  async function getTokenInfo(): Promise<TokenInfo> {
+    return call<TokenInfo>({
+      url: 'realunit/tokenInfo',
+      method: 'GET',
+    });
+  }
+  async function getPriceHistory(timeFrame: Timeframe): Promise<PriceHistoryEntry[]> {
     const params = new URLSearchParams();
     params.set('timeFrame', timeFrame.toUpperCase());
 
@@ -168,7 +182,7 @@ export function useRealunit() {
   );
 
   const fetchAccountHistory = useCallback(
-    (address: string, cursor?: string, direction?: Direction) => {
+    (address: string, cursor?: string, direction?: PaginationDirection) => {
       setIsLoadingHistory(true);
       setError(undefined);
       getAccountHistory(address, cursor, direction)
@@ -180,27 +194,28 @@ export function useRealunit() {
   );
 
   const fetchHolders = useCallback(
-    (cursor?: string, direction?: Direction) => {
+    (cursor?: string, direction?: PaginationDirection) => {
       setIsLoadingHolders(true);
       setHoldersError(undefined);
       getHolders(cursor, direction)
         .then((data) => {
           setHolders(data.holders);
           setPageInfo(data.pageInfo);
-          if (!cursor) {
-            setTotalShares(data.totalShares);
-            setTotalSupply(data.totalSupply);
+          if (cursor && direction) {
+            savePaginationState(cursor, direction);
+          } else {
             setTotalCount(data.totalCount);
+            clearPaginationState();
           }
         })
         .catch((error: ApiError) => setHoldersError(error.message ?? 'Unknown error'))
         .finally(() => setIsLoadingHolders(false));
     },
-    [call],
+    [call, savePaginationState, clearPaginationState],
   );
 
   const fetchPriceHistory = useCallback(
-    (timeFrame: string) => {
+    (timeFrame: Timeframe) => {
       setIsLoadingPriceHistory(true);
       setPriceHistoryError(undefined);
       getPriceHistory(timeFrame)
@@ -210,6 +225,26 @@ export function useRealunit() {
     },
     [call],
   );
+
+  useEffect(() => {
+    (!hasRestored.current) &&
+      (hasRestored.current = true,
+        paginationState
+          ? fetchHolders(paginationState.cursor, paginationState.direction)
+          : fetchHolders());
+  }, [fetchHolders, paginationState]);
+
+  useEffect(() => {
+    setIsLoadingTokenInfo(true);
+    setTokenInfoError(undefined);
+    getTokenInfo()
+      .then((data) => {
+        setTokenInfoTotalShares(data.totalShares);
+        setTokenInfoTotalSupply(data.totalSupply);
+      })
+      .catch((error: ApiError) => setTokenInfoError(error.message ?? 'Unknown error'))
+      .finally(() => setIsLoadingTokenInfo(false));
+  }, [call]);
 
   return useMemo(
     () => ({
@@ -221,13 +256,15 @@ export function useRealunit() {
       fetchAccountSummary,
       fetchAccountHistory,
       holders,
-      totalShares,
-      totalSupply,
       totalCount,
       pageInfo,
       isLoadingHolders,
       holdersError,
       fetchHolders,
+      tokenInfoTotalShares,
+      tokenInfoTotalSupply,
+      isLoadingTokenInfo,
+      tokenInfoError,
       priceHistory,
       isLoadingPriceHistory,
       priceHistoryError,
@@ -242,13 +279,15 @@ export function useRealunit() {
       fetchAccountSummary,
       fetchAccountHistory,
       holders,
-      totalShares,
-      totalSupply,
       totalCount,
       pageInfo,
       isLoadingHolders,
       holdersError,
       fetchHolders,
+      tokenInfoTotalShares,
+      tokenInfoTotalSupply,
+      isLoadingTokenInfo,
+      tokenInfoError,
       priceHistory,
       isLoadingPriceHistory,
       priceHistoryError,

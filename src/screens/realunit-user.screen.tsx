@@ -10,6 +10,11 @@ import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useRealunit } from 'src/hooks/realunit.hook';
 import { formatCurrency } from 'src/util/utils';
 
+enum PaginationDirection {
+  NEXT = 'next',
+  PREV = 'prev',
+}
+
 export default function RealunitUserScreen(): JSX.Element {
   useAdminGuard();
 
@@ -30,13 +35,13 @@ export default function RealunitUserScreen(): JSX.Element {
 
   const handlePreviousPage = () => {
     if (address && history?.pageInfo.hasPreviousPage) {
-      fetchAccountHistory(address, history.pageInfo.startCursor, 'prev');
+      fetchAccountHistory(address, history.pageInfo.startCursor, PaginationDirection.PREV);
     }
   };
 
   const handleNextPage = () => {
     if (address && history?.pageInfo.hasNextPage) {
-      fetchAccountHistory(address, history.pageInfo.endCursor, 'next');
+      fetchAccountHistory(address, history.pageInfo.endCursor, PaginationDirection.NEXT);
     }
   };
 

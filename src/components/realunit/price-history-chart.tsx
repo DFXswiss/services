@@ -16,7 +16,7 @@ export enum PriceCurrency {
 interface PriceHistoryChartProps {
   priceHistory: PriceHistoryEntry[];
   isLoading: boolean;
-  onTimeframeChange: (timeframe: string) => void;
+  onTimeframeChange: (timeframe: Timeframe) => void;
 }
 
 export const PriceHistoryChart = ({ isLoading, priceHistory, onTimeframeChange }: PriceHistoryChartProps) => {

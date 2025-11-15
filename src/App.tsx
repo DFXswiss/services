@@ -9,6 +9,7 @@ import { BalanceContextProvider } from './contexts/balance.context';
 import { OrderUIContextProvider } from './contexts/order-ui.context';
 import PaymentLinkPosContext from './contexts/payment-link-pos.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
+import { RealunitContextProvider } from './contexts/realunit.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { WindowContextProvider } from './contexts/window.context';
@@ -346,19 +347,21 @@ function App({ routerFactory, params }: AppProps) {
       <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
         <BalanceContextProvider>
           <OrderUIContextProvider>
-            <AppHandlingContextProvider
-              isWidget={params != null}
-              service={params?.service}
-              closeCallback={params?.onClose}
-              params={params}
-              router={router}
-            >
-              <SettingsContextProvider>
-                <WalletContextProvider router={router}>
-                  <RouterProvider router={router} />
-                </WalletContextProvider>
-              </SettingsContextProvider>
-            </AppHandlingContextProvider>
+            <RealunitContextProvider>
+              <AppHandlingContextProvider
+                isWidget={params != null}
+                service={params?.service}
+                closeCallback={params?.onClose}
+                params={params}
+                router={router}
+              >
+                <SettingsContextProvider>
+                  <WalletContextProvider router={router}>
+                    <RouterProvider router={router} />
+                  </WalletContextProvider>
+                </SettingsContextProvider>
+              </AppHandlingContextProvider>
+            </RealunitContextProvider>
           </OrderUIContextProvider>
         </BalanceContextProvider>
       </DfxContextProvider>
