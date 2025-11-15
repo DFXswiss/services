@@ -1,6 +1,7 @@
 import { ApiError, useApi } from '@dfx.swiss/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRealunitContext } from 'src/contexts/realunit.context';
+import { Timeframe } from 'src/util/chart';
 import { relativeUrl } from '../util/utils';
 
 export interface HistoricalBalance {
@@ -158,7 +159,7 @@ export function useRealunit() {
       method: 'GET',
     });
   }
-  async function getPriceHistory(timeFrame: string): Promise<PriceHistoryEntry[]> {
+  async function getPriceHistory(timeFrame: Timeframe): Promise<PriceHistoryEntry[]> {
     const params = new URLSearchParams();
     params.set('timeFrame', timeFrame.toUpperCase());
 
@@ -214,7 +215,7 @@ export function useRealunit() {
   );
 
   const fetchPriceHistory = useCallback(
-    (timeFrame: string) => {
+    (timeFrame: Timeframe) => {
       setIsLoadingPriceHistory(true);
       setPriceHistoryError(undefined);
       getPriceHistory(timeFrame)
