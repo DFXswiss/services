@@ -64,6 +64,11 @@ export interface TotalSupply {
   timestamp: string;
 }
 
+export interface TokenInfo {
+  totalShares: TotalShares;
+  totalSupply: TotalSupply;
+}
+
 export interface PageInfo {
   endCursor: string;
   hasNextPage: boolean;
@@ -103,8 +108,6 @@ export function useRealunit() {
   const [error, setError] = useState<string>();
 
   const [holders, setHolders] = useState<Holder[]>([]);
-  const [totalShares, setTotalShares] = useState<TotalShares>();
-  const [totalSupply, setTotalSupply] = useState<TotalSupply>();
   const [totalCount, setTotalCount] = useState<number>();
   const [pageInfo, setPageInfo] = useState<PageInfo>({
     hasNextPage: false,
@@ -114,6 +117,10 @@ export function useRealunit() {
   });
   const [isLoadingHolders, setIsLoadingHolders] = useState(false);
   const [holdersError, setHoldersError] = useState<string>();
+  const [tokenInfoTotalShares, setTokenInfoTotalShares] = useState<TotalShares>();
+  const [tokenInfoTotalSupply, setTokenInfoTotalSupply] = useState<TotalSupply>();
+  const [isLoadingTokenInfo, setIsLoadingTokenInfo] = useState(false);
+  const [tokenInfoError, setTokenInfoError] = useState<string>();
 
   const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
   const [isLoadingPriceHistory, setIsLoadingPriceHistory] = useState(false);
@@ -145,7 +152,12 @@ export function useRealunit() {
       method: 'GET',
     });
   }
-
+  async function getTokenInfo(): Promise<TokenInfo> {
+    return call<TokenInfo>({
+      url: 'realunit/tokenInfo',
+      method: 'GET',
+    });
+  }
   async function getPriceHistory(timeFrame: string): Promise<PriceHistoryEntry[]> {
     const params = new URLSearchParams();
     params.set('timeFrame', timeFrame.toUpperCase());
@@ -191,8 +203,6 @@ export function useRealunit() {
           if (cursor && direction) {
             savePaginationState(cursor, direction);
           } else {
-            setTotalShares(data.totalShares);
-            setTotalSupply(data.totalSupply);
             setTotalCount(data.totalCount);
             clearPaginationState();
           }
@@ -223,6 +233,18 @@ export function useRealunit() {
           : fetchHolders());
   }, [fetchHolders, paginationState]);
 
+  useEffect(() => {
+    setIsLoadingTokenInfo(true);
+    setTokenInfoError(undefined);
+    getTokenInfo()
+      .then((data) => {
+        setTokenInfoTotalShares(data.totalShares);
+        setTokenInfoTotalSupply(data.totalSupply);
+      })
+      .catch((error: ApiError) => setTokenInfoError(error.message ?? 'Unknown error'))
+      .finally(() => setIsLoadingTokenInfo(false));
+  }, [call]);
+
   return useMemo(
     () => ({
       data,
@@ -233,13 +255,15 @@ export function useRealunit() {
       fetchAccountSummary,
       fetchAccountHistory,
       holders,
-      totalShares,
-      totalSupply,
       totalCount,
       pageInfo,
       isLoadingHolders,
       holdersError,
       fetchHolders,
+      tokenInfoTotalShares,
+      tokenInfoTotalSupply,
+      isLoadingTokenInfo,
+      tokenInfoError,
       priceHistory,
       isLoadingPriceHistory,
       priceHistoryError,
@@ -254,13 +278,15 @@ export function useRealunit() {
       fetchAccountSummary,
       fetchAccountHistory,
       holders,
-      totalShares,
-      totalSupply,
       totalCount,
       pageInfo,
       isLoadingHolders,
       holdersError,
       fetchHolders,
+      tokenInfoTotalShares,
+      tokenInfoTotalSupply,
+      isLoadingTokenInfo,
+      tokenInfoError,
       priceHistory,
       isLoadingPriceHistory,
       priceHistoryError,

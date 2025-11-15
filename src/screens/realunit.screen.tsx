@@ -14,10 +14,10 @@ export default function RealunitScreen(): JSX.Element {
 
   const {
     holders,
-    totalShares,
-    totalSupply,
     totalCount,
     pageInfo,
+    tokenInfoTotalShares,
+    tokenInfoTotalSupply,
     priceHistory,
     isLoadingHolders,
     isLoadingPriceHistory,
@@ -27,7 +27,7 @@ export default function RealunitScreen(): JSX.Element {
     fetchPriceHistory,
   } = useRealunit();
 
-  const hasRealunitInfo = Boolean(totalShares || totalSupply || totalCount);
+  const hasRealunitInfo = Boolean(tokenInfoTotalShares || tokenInfoTotalSupply);
 
   useLayoutOptions({ backButton: true });
 
@@ -75,24 +75,24 @@ export default function RealunitScreen(): JSX.Element {
                       <span className="text-dfxBlue-800 font-medium">{totalCount}</span>
                     </div>
                   )}
-                  {totalShares && (
+                  {tokenInfoTotalShares && (
                     <div className="flex justify-between items-center">
                       <span className="text-dfxGray-600 text-sm">{translate('screens/realunit', 'Total Shares')}:</span>
-                      <span className="text-dfxBlue-800 font-medium">{totalShares.total}</span>
+                      <span className="text-dfxBlue-800 font-medium">{tokenInfoTotalShares.total}</span>
                     </div>
                   )}
-                  {totalSupply && (
+                  {tokenInfoTotalSupply && (
                     <>
                       <div className="flex justify-between items-center">
                         <span className="text-dfxGray-600 text-sm">
                           {translate('screens/realunit', 'Total Supply')}:
                         </span>
-                        <span className="text-dfxBlue-800 font-medium">{totalSupply.value}</span>
+                        <span className="text-dfxBlue-800 font-medium">{tokenInfoTotalSupply.value}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-dfxGray-600 text-sm">{translate('screens/realunit', 'Timestamp')}:</span>
                         <span className="text-dfxBlue-800 text-sm">
-                          {new Date(totalSupply.timestamp).toLocaleString()}
+                          {new Date(tokenInfoTotalSupply.timestamp).toLocaleString()}
                         </span>
                       </div>
                     </>
