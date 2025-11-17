@@ -8,6 +8,11 @@ import { SendInterface } from './send-interface';
 import { SwapInterface } from './swap-interface';
 import { WithdrawInterface } from './withdraw-interface';
 
+enum TransactionType {
+  FIAT = 'fiat',
+  CRYPTO = 'crypto',
+}
+
 export const SafeTransactionInterface = () => {
   const { translate } = useSettingsContext();
   const [mode, setMode] = useState<TransactionMode>(TransactionMode.DEPOSIT);
