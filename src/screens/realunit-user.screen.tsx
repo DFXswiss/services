@@ -7,13 +7,8 @@ import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { useRealunit } from 'src/hooks/realunit.hook';
+import { PaginationDirection, useRealunit } from 'src/hooks/realunit.hook';
 import { formatCurrency } from 'src/util/utils';
-
-enum PaginationDirection {
-  NEXT = 'next',
-  PREV = 'prev',
-}
 
 export default function RealunitUserScreen(): JSX.Element {
   useAdminGuard();
