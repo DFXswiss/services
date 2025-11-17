@@ -1,6 +1,8 @@
 export enum SafeOperationType {
   DEPOSIT = 'deposit',
   RECEIVE = 'receive',
+  WITHDRAW = 'withdraw',
+  SEND = 'send',
   SWAP = 'swap',
 }
 
