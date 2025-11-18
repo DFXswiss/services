@@ -7,8 +7,6 @@ import { OrderFormData, OrderType } from 'src/hooks/order.hook';
 import { useSafe } from 'src/hooks/safe.hook';
 import { findCustodyBalanceString } from 'src/util/utils';
 import { OrderInterface } from '../order/order-interface';
-import { SendInterface } from './send-interface';
-import { TransactionType } from './transaction.types';
 
 export const WithdrawInterface = () => {
   const { translate } = useSettingsContext();
