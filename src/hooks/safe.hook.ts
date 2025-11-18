@@ -145,11 +145,12 @@ export function useSafe(): UseSafeResult {
       ? getAssets(custodyBlockchains, { sellable: true, buyable: true, comingSoon: false })
       : [];
   }, [getAssets, custodyBlockchains]);
+
   const withdrawableAssets = useMemo(() => {
-    return (availableAssets ?? []).filter((asset) =>
-      portfolio.balances.some((balance) => balance.asset.name === asset.name && balance.balance > 0),
-    );
-  }, [availableAssets, portfolio.balances]);
+    const assets =
+      custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { sellable: true, comingSoon: false }) : [];
+    return assets.filter((a) => portfolio.balances.find((b) => b.asset.name === a.name && b.balance > 0));
+  }, [getAssets, custodyBlockchains, portfolio.balances]);
 
   const withdrawableCurrencies = useMemo(() => {
     return (availableCurrencies ?? []).filter((currency) =>

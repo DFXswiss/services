@@ -50,6 +50,7 @@ interface OrderInterfaceProps {
   pairMap?: (asset: string) => Asset | Fiat | undefined;
   onFetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   confirmPayment: () => Promise<void>;
+  balanceFunc?: (asset: Asset) => string;
 }
 
 // TODO (later): Simplify and clean up logic
@@ -65,6 +66,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   pairMap,
   onFetchPaymentInfo,
   confirmPayment,
+  balanceFunc,
 }: OrderInterfaceProps) => {
   const { width } = useWindowContext();
   const { session } = useAuthContext();
@@ -165,7 +167,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
           selectedItem={data.sourceAsset}
           assetRules={rules.sourceAsset}
           amountRules={rules.sourceAmount}
-          balanceFunc={findCryptoBalanceString}
+          balanceFunc={balanceFunc ?? findCryptoBalanceString}
           onMaxButtonClick={(value) => {
             setValue('sourceAmount', value.toString(), { shouldTouch: true });
             lastEditedFieldRef.current = Side.SOURCE;

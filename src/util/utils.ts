@@ -313,3 +313,8 @@ export const isAsset = (item: Asset | Fiat): item is Asset => 'chainId' in item;
 export function equalsIgnoreCase(left?: string, right?: string): boolean {
   return left?.toLowerCase() === right?.toLowerCase();
 }
+
+export function findBalanceString(asset: Asset, balances: Array<{ asset: { name: string }; balance: number }>): string {
+  const balance = balances.find((b) => b.asset.name === asset.name)?.balance;
+  return balance != null ? Utils.formatAmountCrypto(balance) : '';
+}

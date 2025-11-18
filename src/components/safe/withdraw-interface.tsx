@@ -4,11 +4,13 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { SafeOperationType } from 'src/dto/safe.dto';
 import { OrderFormData, OrderType } from 'src/hooks/order.hook';
 import { useSafe } from 'src/hooks/safe.hook';
+import { findBalanceString } from 'src/util/utils';
 import { OrderInterface } from '../order/order-interface';
 
 export const WithdrawInterface = () => {
   const { translate } = useSettingsContext();
-  const { withdrawableAssets, withdrawableCurrencies, pairMap, fetchWithdrawInfo, confirmWithdraw } = useSafe();
+  const { withdrawableAssets, withdrawableCurrencies, pairMap, fetchWithdrawInfo, confirmWithdraw, portfolio } =
+    useSafe();
   const { setCompletionType } = useOrderUIContext();
 
   async function onConfirmWithdraw(): Promise<void> {
@@ -37,6 +39,7 @@ export const WithdrawInterface = () => {
       pairMap={pairMap}
       confirmPayment={onConfirmWithdraw}
       onFetchPaymentInfo={handleFetchWithdrawInfo}
+      balanceFunc={(asset) => findBalanceString(asset, portfolio.balances)}
     />
   );
 };

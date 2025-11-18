@@ -9,7 +9,7 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -18,7 +18,7 @@ import { OrderPaymentInfo } from 'src/dto/order.dto';
 import { SafeOperationType } from 'src/dto/safe.dto';
 import useDebounce from 'src/hooks/debounce.hook';
 import { useSafe } from 'src/hooks/safe.hook';
-import { blankedAddress } from 'src/util/utils';
+import { blankedAddress, findBalanceString } from 'src/util/utils';
 import { AssetInput } from '../order/asset-input';
 
 interface SendFormData {
@@ -79,14 +79,6 @@ export const SendInterface = () => {
     [],
   );
 
-  const findBalanceString = useCallback(
-    (asset: Asset): string => {
-      const balance = portfolio.balances.find((b) => b.asset.name === asset.name)?.balance;
-      return balance != null ? Utils.formatAmountCrypto(balance) : '';
-    },
-    [portfolio.balances],
-  );
-
   async function onConfirmSend(): Promise<void> {
     await confirmSend();
     setCompletionType(SafeOperationType.SEND);
@@ -105,7 +97,7 @@ export const SendInterface = () => {
           selectedItem={data.sendAsset}
           assetRules={rules.sendAsset}
           amountRules={rules.sendAmount}
-          balanceFunc={findBalanceString}
+          balanceFunc={(asset) => findBalanceString(asset, portfolio.balances)}
           onMaxButtonClick={(value) => setValue('sendAmount', value.toString(), { shouldTouch: true })}
           onAmountChange={() => setQuote(undefined)}
         />
