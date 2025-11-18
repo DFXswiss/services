@@ -5,45 +5,48 @@ import { SafeOperationType } from 'src/dto/safe.dto';
 import { OrderFormData, OrderType } from 'src/hooks/order.hook';
 import { useSafe } from 'src/hooks/safe.hook';
 import { OrderInterface } from '../order/order-interface';
+import { SendInterface } from './send-interface';
+import { TransactionType } from './transaction.types';
 
-export const WithdrawInterface = () => {
-    const { translate } = useSettingsContext();
-    const {
-        withdrawableAssets,
-        withdrawableCurrencies,
-        pairMap,
-        fetchWithdrawInfo,
-        confirmWithdraw,
-    } = useSafe();
-    const { setCompletionType } = useOrderUIContext();
-
-    async function onConfirmWithdraw(): Promise<void> {
-        await confirmWithdraw();
-        setCompletionType(SafeOperationType.WITHDRAW);
-    }
-
-    const handleFetchWithdrawInfo = useCallback(
-        (data: OrderFormData) => {
-            if (!data.bankAccount?.iban) {
-                return Promise.reject(new Error(translate('screens/sell', 'Add or select your IBAN')));
-            }
-            return fetchWithdrawInfo(data);
-        },
-        [fetchWithdrawInfo, translate],
-    );
-
-    return (
-        <OrderInterface
-            orderType={OrderType.SELL}
-            header={translate('screens/safe', 'Withdraw')}
-            sourceInputLabel={translate('screens/buy', 'You spend')}
-            targetInputLabel={translate('screens/buy', 'You get about')}
-            sourceAssets={withdrawableAssets}
-            targetAssets={withdrawableCurrencies}
-            pairMap={pairMap}
-            confirmPayment={onConfirmWithdraw}
-            onFetchPaymentInfo={handleFetchWithdrawInfo}
-        />
-    );
+type WithdrawInterfaceProps = {
+  transactionType: TransactionType;
 };
 
+export const WithdrawInterface = ({ transactionType }: WithdrawInterfaceProps) => {
+  const { translate } = useSettingsContext();
+  const { withdrawableAssets, withdrawableCurrencies, pairMap, fetchWithdrawInfo, confirmWithdraw } = useSafe();
+  const { setCompletionType } = useOrderUIContext();
+
+  if (transactionType === TransactionType.CRYPTO) {
+    return <SendInterface />;
+  }
+
+  async function onConfirmWithdraw(): Promise<void> {
+    await confirmWithdraw();
+    setCompletionType(SafeOperationType.WITHDRAW);
+  }
+
+  const handleFetchWithdrawInfo = useCallback(
+    (data: OrderFormData) => {
+      if (!data.bankAccount?.iban) {
+        return Promise.reject(new Error(translate('screens/sell', 'Add or select your IBAN')));
+      }
+      return fetchWithdrawInfo(data);
+    },
+    [fetchWithdrawInfo, translate],
+  );
+
+  return (
+    <OrderInterface
+      orderType={OrderType.SELL}
+      header={translate('screens/safe', 'Withdraw')}
+      sourceInputLabel={translate('screens/buy', 'You spend')}
+      targetInputLabel={translate('screens/buy', 'You get about')}
+      sourceAssets={withdrawableAssets}
+      targetAssets={withdrawableCurrencies}
+      pairMap={pairMap}
+      confirmPayment={onConfirmWithdraw}
+      onFetchPaymentInfo={handleFetchWithdrawInfo}
+    />
+  );
+};

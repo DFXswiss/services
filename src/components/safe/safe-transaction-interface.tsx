@@ -2,34 +2,14 @@ import { useState } from 'react';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { ButtonGroup, ButtonGroupSize } from './button-group';
 import { DepositInterface } from './deposit-interface';
-import { ReceiveInterface } from './receive-interface';
-import { SendInterface } from './send-interface';
 import { SwapInterface } from './swap-interface';
+import { TransactionMode, TransactionType } from './transaction.types';
 import { WithdrawInterface } from './withdraw-interface';
-
-enum TransactionMode {
-  DEPOSIT = 'deposit',
-  WITHDRAW = 'withdraw',
-  SWAP = 'swap',
-}
-
-enum TransactionType {
-  FIAT = 'fiat',
-  CRYPTO = 'crypto',
-}
 
 export const SafeTransactionInterface = () => {
   const { translate } = useSettingsContext();
   const [mode, setMode] = useState<TransactionMode>(TransactionMode.DEPOSIT);
   const [transactionType, setTransactionType] = useState<TransactionType>(TransactionType.FIAT);
-
-  const getInterface = () => {
-    if (mode === TransactionMode.SWAP) return <SwapInterface />;
-
-    if (mode === TransactionMode.DEPOSIT)
-      return transactionType === TransactionType.FIAT ? <DepositInterface /> : <ReceiveInterface />;
-    return transactionType === TransactionType.FIAT ? <WithdrawInterface /> : <SendInterface />;
-  };
 
   return (
     <div>
@@ -67,7 +47,9 @@ export const SafeTransactionInterface = () => {
           />
         </div>
       )}
-      {getInterface()}
+      {mode === TransactionMode.SWAP && <SwapInterface />}
+      {mode === TransactionMode.DEPOSIT && <DepositInterface transactionType={transactionType} />}
+      {mode === TransactionMode.WITHDRAW && <WithdrawInterface transactionType={transactionType} />}
     </div>
   );
 };
