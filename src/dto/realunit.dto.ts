@@ -84,18 +84,37 @@ export enum PaginationDirection {
   PREV = 'prev',
 }
 export interface RealunitContextData {
-  holders?: Holder[];
+  data?: AccountSummary;
+  history?: AccountHistory;
+  isLoading: boolean;
+  holders: Holder[];
   totalCount?: number;
-  pageInfo?: PageInfo;
+  pageInfo: PageInfo;
   tokenInfo?: TokenInfo;
-  priceHistory?: PriceHistoryEntry[];
+  priceHistory: PriceHistoryEntry[];
   lastTimeframe?: string;
   lastAddress?: string;
-  lastAccountData?: AccountSummary;
-  lastAccountHistory?: AccountHistory;
 }
 
 export interface RealunitContextInterface {
-  cachedData: RealunitContextData;
-  setCachedData: (data: RealunitContextData | ((prev: RealunitContextData) => RealunitContextData)) => void;
+  data?: AccountSummary;
+  setData: (data: AccountSummary | undefined) => void;
+  history?: AccountHistory;
+  setHistory: (history: AccountHistory | undefined) => void;
+  isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
+  holders: Holder[];
+  setHolders: (holders: Holder[]) => void;
+  totalCount?: number;
+  setTotalCount: (totalCount: number | undefined) => void;
+  pageInfo: PageInfo;
+  setPageInfo: (pageInfo: PageInfo) => void;
+  tokenInfo?: TokenInfo;
+  setTokenInfo: (tokenInfo: TokenInfo | undefined) => void;
+  priceHistory: PriceHistoryEntry[];
+  setPriceHistory: (priceHistory: PriceHistoryEntry[]) => void;
+  lastTimeframe?: string;
+  setLastTimeframe: (timeframe: string | undefined) => void;
+  lastAddress?: string;
+  setLastAddress: (address: string | undefined) => void;
 }

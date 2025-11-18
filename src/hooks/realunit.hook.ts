@@ -1,15 +1,12 @@
 import { useApi } from '@dfx.swiss/react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import {
   AccountHistory,
   AccountSummary,
-  Holder,
   HoldersResponse,
-  PageInfo,
   PaginationDirection,
   PriceHistoryEntry,
-  RealunitContextData,
   TokenInfo,
 } from 'src/dto/realunit.dto';
 import { Timeframe } from 'src/util/chart';
@@ -17,25 +14,28 @@ import { relativeUrl } from '../util/utils';
 
 export function useRealunit() {
   const { call } = useApi();
-  const { cachedData, setCachedData } = useRealunitContext();
-  const lastTimeframeRef = useRef<Timeframe | undefined>(cachedData.lastTimeframe as Timeframe);
-
-  const [data, setData] = useState<AccountSummary>();
-  const [history, setHistory] = useState<AccountHistory>();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const [holders, setHolders] = useState<Holder[]>(cachedData.holders || []);
-  const [totalCount, setTotalCount] = useState<number | undefined>(cachedData.totalCount);
-  const [pageInfo, setPageInfo] = useState<PageInfo>(
-    cachedData.pageInfo || {
-      hasNextPage: false,
-      hasPreviousPage: false,
-      startCursor: '',
-      endCursor: '',
-    },
-  );
-  const [tokenInfo, setTokenInfo] = useState<TokenInfo | undefined>(cachedData.tokenInfo);
-  const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>(cachedData.priceHistory || []);
+  const {
+    data,
+    setData,
+    history,
+    setHistory,
+    isLoading,
+    setIsLoading,
+    holders,
+    setHolders,
+    totalCount,
+    setTotalCount,
+    pageInfo,
+    setPageInfo,
+    tokenInfo,
+    setTokenInfo,
+    priceHistory,
+    setPriceHistory,
+    lastTimeframe,
+    setLastTimeframe,
+    lastAddress,
+    setLastAddress,
+  } = useRealunitContext();
 
   async function getAccountSummary(address: string): Promise<AccountSummary> {
     return call<AccountSummary>({
@@ -86,45 +86,27 @@ export function useRealunit() {
 
   const fetchAccountSummary = useCallback(
     (address: string) => {
-      const cached = cachedData.lastAddress === address.toLowerCase() ? cachedData.lastAccountData : undefined;
-      if (cached) {
-        setData(cached);
-        return;
-      }
       setIsLoading(true);
       getAccountSummary(address)
-        .then((data) => {
-          setData(data);
-          setCachedData((prev: RealunitContextData) => ({
-            ...prev,
-            lastAddress: address.toLowerCase(),
-            lastAccountData: data,
-          }));
+        .then((accountData) => {
+          setData(accountData);
+          setLastAddress(address.toLowerCase());
         })
         .finally(() => setIsLoading(false));
     },
-    [cachedData.lastAddress, cachedData.lastAccountData, setCachedData],
+    [setData, setIsLoading, setLastAddress],
   );
 
   const fetchAccountHistory = useCallback(
     (address: string, cursor?: string, direction?: PaginationDirection) => {
-      const cached = cachedData.lastAddress === address.toLowerCase() ? cachedData.lastAccountHistory : undefined;
-      if (!cursor && cached) {
-        setHistory(cached);
-        return;
-      }
-      getAccountHistory(address, cursor, direction).then((history) => {
-        setHistory(history);
+      getAccountHistory(address, cursor, direction).then((accountHistory) => {
+        setHistory(accountHistory);
         if (!cursor) {
-          setCachedData((prev: RealunitContextData) => ({
-            ...prev,
-            lastAddress: address.toLowerCase(),
-            lastAccountHistory: history,
-          }));
+          setLastAddress(address.toLowerCase());
         }
       });
     },
-    [cachedData.lastAddress, cachedData.lastAccountHistory, setCachedData],
+    [setHistory, setLastAddress],
   );
 
   const fetchHolders = useCallback(
@@ -132,49 +114,32 @@ export function useRealunit() {
       if (!cursor && holders.length > 0) {
         return;
       }
-      getHolders(cursor, direction).then((data) => {
-        setHolders(data.holders);
-        setPageInfo(data.pageInfo);
-        const newTotalCount = !cursor ? data.totalCount : totalCount;
+      getHolders(cursor, direction).then((holdersData) => {
+        setHolders(holdersData.holders);
+        setPageInfo(holdersData.pageInfo);
         if (!cursor) {
-          setTotalCount(data.totalCount);
+          setTotalCount(holdersData.totalCount);
         }
-        setCachedData((prev: RealunitContextData) => ({
-          ...prev,
-          holders: data.holders,
-          totalCount: newTotalCount,
-          pageInfo: data.pageInfo,
-        }));
       });
     },
-    [holders.length, totalCount, setCachedData],
+    [holders.length, setHolders, setPageInfo, setTotalCount],
   );
 
   const fetchPriceHistory = useCallback(
     (timeframe: Timeframe) => {
-      if (lastTimeframeRef.current === timeframe && priceHistory.length > 0) return;
-      lastTimeframeRef.current = timeframe;
-      getPriceHistory(timeframe).then((data) => {
-        setPriceHistory(data);
-        setCachedData((prev: RealunitContextData) => ({
-          ...prev,
-          priceHistory: data,
-          lastTimeframe: timeframe,
-        }));
+      getPriceHistory(timeframe).then((priceData) => {
+        setPriceHistory(priceData);
+        setLastTimeframe(timeframe);
       });
     },
-    [priceHistory.length, setCachedData],
+    [setPriceHistory, setLastTimeframe],
   );
 
   const fetchTokenInfo = useCallback(() => {
-    if (tokenInfo) {
-      return;
-    }
-    getTokenInfo().then((data) => {
-      setTokenInfo(data);
-      setCachedData((prev: RealunitContextData) => ({ ...prev, tokenInfo: data }));
+    getTokenInfo().then((tokenData) => {
+      setTokenInfo(tokenData);
     });
-  }, [tokenInfo, setCachedData]);
+  }, [setTokenInfo]);
 
   return useMemo(
     () => ({
@@ -191,7 +156,7 @@ export function useRealunit() {
       tokenInfo,
       priceHistory,
       fetchPriceHistory,
-      lastTimeframe: cachedData.lastTimeframe,
+      lastTimeframe,
     }),
     [
       data,
@@ -207,7 +172,7 @@ export function useRealunit() {
       tokenInfo,
       priceHistory,
       fetchPriceHistory,
-      cachedData.lastTimeframe,
+      lastTimeframe,
     ],
   );
 }

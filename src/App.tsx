@@ -4,12 +4,12 @@ import { Router } from '@remix-run/router';
 import { Suspense, lazy } from 'react';
 import { Navigate, Outlet, RouteObject, RouterProvider } from 'react-router-dom';
 import { LayoutWrapper } from './components/layout-wrapper';
-import { RealunitLayout } from './components/realunit-layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
 import { OrderUIContextProvider } from './contexts/order-ui.context';
 import PaymentLinkPosContext from './contexts/payment-link-pos.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
+import { RealunitContextProvider } from './contexts/realunit.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { WindowContextProvider } from './contexts/window.context';
@@ -309,7 +309,11 @@ export const Routes = [
       },
       {
         path: 'realunit',
-        element: <RealunitLayout />,
+        element: (
+          <RealunitContextProvider>
+            <Outlet />
+          </RealunitContextProvider>
+        ),
         children: [
           {
             index: true,

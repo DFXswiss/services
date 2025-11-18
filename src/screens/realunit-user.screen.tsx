@@ -99,7 +99,7 @@ export default function RealunitUserScreen(): JSX.Element {
                       {translate('screens/realunit', 'Balance')}
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {(Number(data.balance) / 100).toFixed(2)}
+                      {(Number(data.balance) / 100).toFixed(2)} <span className="font-bold">REALU</span>
                     </td>
                   </tr>
                   <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
@@ -185,7 +185,7 @@ export default function RealunitUserScreen(): JSX.Element {
                               {event.transfer && (
                                 <div className="flex flex-col gap-1">
                                   <div className="flex items-center gap-2">
-                                    <span>From:</span>
+                                    <span className="font-bold">From:</span>
                                     <span>{blankedAddress(event.transfer.from, { displayLength: 22 })}</span>
                                     <CopyButton
                                       color={IconColor.GRAY}
@@ -193,11 +193,14 @@ export default function RealunitUserScreen(): JSX.Element {
                                     />
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <span>To:</span>
+                                    <span className="font-bold">To:</span>
                                     <span>{blankedAddress(event.transfer.to, { displayLength: 22 })}</span>
                                     <CopyButton color={IconColor.GRAY} onCopy={() => copy(event.transfer?.to ?? '')} />
                                   </div>
-                                  <div>Value: {(Number(event.transfer.value) / 100).toFixed(2)}</div>
+                                  <div>
+                                    <span className="font-bold">Value:</span>{' '}
+                                    {(Number(event.transfer.value) / 100).toFixed(2)}
+                                  </div>
                                 </div>
                               )}
                               {event.approval && (
