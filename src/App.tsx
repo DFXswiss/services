@@ -9,9 +9,11 @@ import { BalanceContextProvider } from './contexts/balance.context';
 import { OrderUIContextProvider } from './contexts/order-ui.context';
 import PaymentLinkPosContext from './contexts/payment-link-pos.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
+import { RealunitContextProvider } from './contexts/realunit.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { WindowContextProvider } from './contexts/window.context';
+import ComplianceUserScreen from './screens/compliance-user.screen';
 import ErrorScreen from './screens/error.screen';
 import HomeScreen from './screens/home.screen';
 import { setupLanguages } from './translations';
@@ -52,6 +54,8 @@ const EditMailScreen = lazy(() => import('./screens/edit-mail.screen'));
 const SafeScreen = lazy(() => import('./screens/safe.screen'));
 const TelegramSupportScreen = lazy(() => import('./screens/telegram-support.screen'));
 const ComplianceScreen = lazy(() => import('./screens/compliance.screen'));
+const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
+const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
 
 setupLanguages();
 
@@ -298,6 +302,28 @@ export const Routes = [
       {
         path: 'compliance',
         element: withSuspense(<ComplianceScreen />),
+      },
+      {
+        path: 'compliance/user/:id',
+        element: withSuspense(<ComplianceUserScreen />),
+      },
+      {
+        path: 'realunit',
+        element: (
+          <RealunitContextProvider>
+            <Outlet />
+          </RealunitContextProvider>
+        ),
+        children: [
+          {
+            index: true,
+            element: withSuspense(<RealunitScreen />),
+          },
+          {
+            path: 'user/:address',
+            element: withSuspense(<RealunitUserScreen />),
+          },
+        ],
       },
     ],
   },

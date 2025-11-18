@@ -1,34 +1,30 @@
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { ApexOptions } from 'apexcharts';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { CustodyHistoryEntry, FiatCurrency } from 'src/dto/safe.dto';
-import { getFromDateByTimeframe, Timeframe } from 'src/util/chart';
-import { ButtonGroup } from './button-group';
+import { HistoricalBalance } from 'src/dto/realunit.dto';
 
-interface PriceChartProps {
-  history: CustodyHistoryEntry[];
-  currency: FiatCurrency;
+export enum BalanceMetric {
+  REALU = 'realu',
+  CHF = 'chf',
+}
+
+interface BalanceChartProps {
+  historicalBalances: HistoricalBalance[];
+  metric: BalanceMetric;
   isLoading: boolean;
 }
 
-export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) => {
+export const BalanceChart = ({ isLoading, historicalBalances, metric }: BalanceChartProps) => {
   const { translate, locale } = useSettingsContext();
 
-  const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.ALL);
-
-  const timeframedHistory = useMemo(() => {
-    const fromDate = getFromDateByTimeframe(timeframe);
-    const filtered = history.filter((entry) => new Date(entry.date).getTime() > fromDate);
-    if (filtered.length === 1 && history.length > 1) filtered.unshift(history[history.length - 2]);
-    return filtered;
-  }, [history, timeframe]);
-
-  const maxPrice = useMemo(
-    () => Math.max(...timeframedHistory.map((e) => e.value[currency]), 0),
-    [timeframedHistory, currency],
-  );
+  const maxBalance = useMemo(() => {
+    const values = historicalBalances.map((e) =>
+      metric === BalanceMetric.CHF ? e.valueChf ?? 0 : Number(e.balance) / 100,
+    );
+    return Math.max(...values, 0);
+  }, [historicalBalances, metric]);
 
   const chartOptions = useMemo((): ApexOptions => {
     const translatedMonths = Array.from({ length: 12 }, (_, i) =>
@@ -75,7 +71,7 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
       yaxis: {
         show: false,
         min: 0,
-        max: maxPrice * 1.5,
+        max: maxBalance * 1.5,
       },
       fill: {
         colors: ['#5A81BB'],
@@ -90,18 +86,19 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
         x: { format: 'dd MMM yyyy' },
       },
     };
-  }, [maxPrice, locale]);
+  }, [maxBalance, locale]);
 
   const chartSeries = useMemo(() => {
     return [
       {
-        name: translate('screens/safe', 'Portfolio value'),
-        data: timeframedHistory.map((entry: CustodyHistoryEntry) => {
-          return [new Date(entry.date).getTime(), entry.value[currency]];
+        name: translate('screens/realunit', 'Balance'),
+        data: historicalBalances.map((entry: HistoricalBalance) => {
+          const value = metric === BalanceMetric.CHF ? entry.valueChf ?? 0 : Number(entry.balance) / 100;
+          return [new Date(entry.timestamp).getTime(), value];
         }),
       },
     ];
-  }, [timeframedHistory, currency, translate]);
+  }, [historicalBalances, metric, translate]);
 
   return isLoading ? (
     <div className="flex justify-center items-center w-full h-full">
@@ -110,14 +107,6 @@ export const PriceChart = ({ isLoading, history, currency }: PriceChartProps) =>
   ) : (
     <div id="chart-timeline" className="text-dfxBlue-500">
       <Chart type="area" height={300} options={chartOptions} series={chartSeries} />
-      <div className="mt-1 w-full flex justify-center py-2">
-        <ButtonGroup<Timeframe>
-          items={Object.values(Timeframe)}
-          selected={timeframe}
-          onClick={(t) => setTimeframe(t)}
-          buttonLabel={(t) => t}
-        />
-      </div>
     </div>
   );
 };

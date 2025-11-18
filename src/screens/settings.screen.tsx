@@ -269,8 +269,10 @@ export default function SettingsScreen(): JSX.Element {
           ) : (
             <ActionableList
               label={translate('screens/settings', 'Your Addresses')}
+              addButtonOnClick={() => navigate('/connect')}
               hideItemsText={translate('screens/settings', 'Hide deleted addresses')}
               showItemsText={translate('screens/settings', 'Show deleted addresses')}
+              noItemsHint={true}
               items={addressesList.map((address) => {
                 const isDisabled = user?.disabledAddresses.some((d) => d.address === address.address) ?? false;
 
