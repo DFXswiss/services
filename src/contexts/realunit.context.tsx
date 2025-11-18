@@ -30,7 +30,6 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
   const [tokenInfo, setTokenInfo] = useState<TokenInfo | undefined>();
   const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
   const [lastTimeframe, setLastTimeframe] = useState<string | undefined>();
-  const [lastAddress, setLastAddress] = useState<string | undefined>();
 
   const context = useMemo(
     () => ({
@@ -52,10 +51,8 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       setPriceHistory,
       lastTimeframe,
       setLastTimeframe,
-      lastAddress,
-      setLastAddress,
     }),
-    [data, history, isLoading, holders, totalCount, pageInfo, tokenInfo, priceHistory, lastTimeframe, lastAddress],
+    [data, history, isLoading, holders, totalCount, pageInfo, tokenInfo, priceHistory, lastTimeframe],
   );
 
   return <RealunitContext.Provider value={context}>{children}</RealunitContext.Provider>;

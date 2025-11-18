@@ -33,8 +33,6 @@ export function useRealunit() {
     setPriceHistory,
     lastTimeframe,
     setLastTimeframe,
-    lastAddress,
-    setLastAddress,
   } = useRealunitContext();
 
   async function getAccountSummary(address: string): Promise<AccountSummary> {
@@ -90,23 +88,19 @@ export function useRealunit() {
       getAccountSummary(address)
         .then((accountData) => {
           setData(accountData);
-          setLastAddress(address.toLowerCase());
         })
         .finally(() => setIsLoading(false));
     },
-    [setData, setIsLoading, setLastAddress],
+    [setData, setIsLoading],
   );
 
   const fetchAccountHistory = useCallback(
     (address: string, cursor?: string, direction?: PaginationDirection) => {
       getAccountHistory(address, cursor, direction).then((accountHistory) => {
         setHistory(accountHistory);
-        if (!cursor) {
-          setLastAddress(address.toLowerCase());
-        }
       });
     },
-    [setHistory, setLastAddress],
+    [setHistory],
   );
 
   const fetchHolders = useCallback(

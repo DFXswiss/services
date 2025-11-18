@@ -93,7 +93,6 @@ export interface RealunitContextData {
   tokenInfo?: TokenInfo;
   priceHistory: PriceHistoryEntry[];
   lastTimeframe?: string;
-  lastAddress?: string;
 }
 
 export interface RealunitContextInterface {
@@ -115,6 +114,4 @@ export interface RealunitContextInterface {
   setPriceHistory: (priceHistory: PriceHistoryEntry[]) => void;
   lastTimeframe?: string;
   setLastTimeframe: (timeframe: string | undefined) => void;
-  lastAddress?: string;
-  setLastAddress: (address: string | undefined) => void;
 }
