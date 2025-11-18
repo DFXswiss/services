@@ -1,15 +1,18 @@
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { PaginationDirection } from 'src/hooks/realunit.hook';
+import { PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
+import { Holder, PageInfo, PriceHistoryEntry, TokenInfo } from 'src/dto/realunit.dto';
 
-interface RealunitPaginationState {
-  cursor: string;
-  direction: PaginationDirection;
+interface RealunitContextData {
+  holders: Holder[];
+  totalCount?: number;
+  pageInfo: PageInfo;
+  tokenInfo?: TokenInfo;
+  priceHistory?: PriceHistoryEntry[];
 }
 
 interface RealunitContextInterface {
-  paginationState?: RealunitPaginationState;
-  savePaginationState: (cursor: string, direction: PaginationDirection) => void;
-  clearPaginationState: () => void;
+  cachedData?: RealunitContextData;
+  setCachedData: (data: RealunitContextData) => void;
+  clearCache: () => void;
 }
 
 const RealunitContext = createContext<RealunitContextInterface>(undefined as any);
@@ -18,38 +21,18 @@ export function useRealunitContext(): RealunitContextInterface {
   return useContext(RealunitContext);
 }
 
-const STORAGE_KEY = 'realunit_pagination';
-
 export function RealunitContextProvider({ children }: PropsWithChildren): JSX.Element {
-  const { sessionStorage } = window;
-  const [paginationState, setPaginationState] = useState<RealunitPaginationState | undefined>(() => {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : undefined;
-  });
+  const [cachedData, setCachedData] = useState<RealunitContextData | undefined>();
 
-  useEffect(() => {
-    if (paginationState) {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(paginationState));
-    } else {
-      sessionStorage.removeItem(STORAGE_KEY);
-    }
-  }, [paginationState]);
-
-  function savePaginationState(cursor: string, direction: PaginationDirection) {
-    setPaginationState({ cursor, direction });
-  }
-
-  function clearPaginationState() {
-    setPaginationState(undefined);
-  }
+  const clearCache = () => setCachedData(undefined);
 
   const context = useMemo(
     () => ({
-      paginationState,
-      savePaginationState,
-      clearPaginationState,
+      cachedData,
+      setCachedData,
+      clearCache,
     }),
-    [paginationState],
+    [cachedData],
   );
 
   return <RealunitContext.Provider value={context}>{children}</RealunitContext.Provider>;

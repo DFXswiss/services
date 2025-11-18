@@ -1,13 +1,14 @@
 import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { BalanceChart, BalanceMetric } from 'src/components/realunit/balance-chart';
 import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { PaginationDirection } from 'src/dto/realunit.dto';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { PaginationDirection, useRealunit } from 'src/hooks/realunit.hook';
+import { useRealunit } from 'src/hooks/realunit.hook';
 import { formatCurrency } from 'src/util/utils';
 
 export default function RealunitUserScreen(): JSX.Element {
@@ -28,17 +29,22 @@ export default function RealunitUserScreen(): JSX.Element {
 
   useLayoutOptions({ title: translate('screens/realunit', 'Account Summary'), backButton: true });
 
-  const handlePreviousPage = () => {
-    if (address && history?.pageInfo.hasPreviousPage) {
-      fetchAccountHistory(address, history.pageInfo.startCursor, PaginationDirection.PREV);
-    }
-  };
+  const changePage = (dir: PaginationDirection) =>
+    address &&
+    fetchAccountHistory(
+      address,
+      dir === PaginationDirection.NEXT ? history?.pageInfo.endCursor : history?.pageInfo.startCursor,
+      dir,
+    );
 
-  const handleNextPage = () => {
-    if (address && history?.pageInfo.hasNextPage) {
-      fetchAccountHistory(address, history.pageInfo.endCursor, PaginationDirection.NEXT);
-    }
-  };
+  const currentBalance = useMemo(
+    () =>
+      data &&
+      (metric === BalanceMetric.CHF
+        ? formatCurrency(data.historicalBalances?.[0]?.valueChf ?? 0, 2, 2)
+        : (Number(data.balance) / 100).toFixed(2)),
+    [data, metric],
+  );
 
   return (
     <>
@@ -114,11 +120,7 @@ export default function RealunitUserScreen(): JSX.Element {
                             size={ButtonGroupSize.SM}
                           />
                           <div className="text-dfxBlue-800">
-                            <span className="text-lg font-bold">
-                              {metric === BalanceMetric.CHF
-                                ? formatCurrency(data.historicalBalances[0]?.valueChf ?? 0, 2, 2)
-                                : (Number(data.balance) / 100).toFixed(2)}
-                            </span>{' '}
+                            <span className="text-lg font-bold">{currentBalance}</span>{' '}
                             <span className="text-base">{metric === BalanceMetric.CHF ? 'CHF' : 'REALU'}</span>
                           </div>
                         </div>
@@ -196,13 +198,13 @@ export default function RealunitUserScreen(): JSX.Element {
                     <div className="flex items-center justify-between gap-2 mt-4">
                       <StyledButton
                         label={translate('general/actions', 'Previous')}
-                        onClick={handlePreviousPage}
+                        onClick={() => changePage(PaginationDirection.PREV)}
                         disabled={!history.pageInfo.hasPreviousPage}
                         width={StyledButtonWidth.MIN}
                       />
                       <StyledButton
                         label={translate('general/actions', 'Next')}
-                        onClick={handleNextPage}
+                        onClick={() => changePage(PaginationDirection.NEXT)}
                         disabled={!history.pageInfo.hasNextPage}
                         width={StyledButtonWidth.MIN}
                       />

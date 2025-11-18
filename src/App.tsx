@@ -4,12 +4,12 @@ import { Router } from '@remix-run/router';
 import { Suspense, lazy } from 'react';
 import { Navigate, Outlet, RouteObject, RouterProvider } from 'react-router-dom';
 import { LayoutWrapper } from './components/layout-wrapper';
+import { RealunitLayout } from './components/realunit-layout';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
 import { OrderUIContextProvider } from './contexts/order-ui.context';
 import PaymentLinkPosContext from './contexts/payment-link-pos.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
-import { RealunitContextProvider } from './contexts/realunit.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { WindowContextProvider } from './contexts/window.context';
@@ -309,11 +309,17 @@ export const Routes = [
       },
       {
         path: 'realunit',
-        element: withSuspense(<RealunitScreen />),
-      },
-      {
-        path: 'realunit/user/:address',
-        element: withSuspense(<RealunitUserScreen />),
+        element: <RealunitLayout />,
+        children: [
+          {
+            index: true,
+            element: withSuspense(<RealunitScreen />),
+          },
+          {
+            path: 'user/:address',
+            element: withSuspense(<RealunitUserScreen />),
+          },
+        ],
       },
     ],
   },
@@ -347,21 +353,19 @@ function App({ routerFactory, params }: AppProps) {
       <DfxContextProvider api={{}} data={{}} includePrivateAssets={true}>
         <BalanceContextProvider>
           <OrderUIContextProvider>
-            <RealunitContextProvider>
-              <AppHandlingContextProvider
-                isWidget={params != null}
-                service={params?.service}
-                closeCallback={params?.onClose}
-                params={params}
-                router={router}
-              >
-                <SettingsContextProvider>
-                  <WalletContextProvider router={router}>
-                    <RouterProvider router={router} />
-                  </WalletContextProvider>
-                </SettingsContextProvider>
-              </AppHandlingContextProvider>
-            </RealunitContextProvider>
+            <AppHandlingContextProvider
+              isWidget={params != null}
+              service={params?.service}
+              closeCallback={params?.onClose}
+              params={params}
+              router={router}
+            >
+              <SettingsContextProvider>
+                <WalletContextProvider router={router}>
+                  <RouterProvider router={router} />
+                </WalletContextProvider>
+              </SettingsContextProvider>
+            </AppHandlingContextProvider>
           </OrderUIContextProvider>
         </BalanceContextProvider>
       </DfxContextProvider>

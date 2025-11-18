@@ -3,15 +3,10 @@ import { ApexOptions } from 'apexcharts';
 import { useEffect, useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { PriceHistoryEntry } from 'src/hooks/realunit.hook';
+import { PriceHistoryEntry } from 'src/dto/realunit.dto';
+import { FiatCurrency } from 'src/dto/safe.dto';
 import { Timeframe } from 'src/util/chart';
 import { ButtonGroup } from '../safe/button-group';
-
-export enum PriceCurrency {
-  CHF = 'chf',
-  EUR = 'eur',
-  USD = 'usd',
-}
 
 interface PriceHistoryChartProps {
   priceHistory: PriceHistoryEntry[];
@@ -23,7 +18,7 @@ export const PriceHistoryChart = ({ isLoading, priceHistory, onTimeframeChange }
   const { translate } = useSettingsContext();
 
   const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.WEEK);
-  const [currency, setCurrency] = useState<PriceCurrency>(PriceCurrency.CHF);
+  const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
 
   useEffect(() => {
     onTimeframeChange(timeframe);
@@ -97,8 +92,8 @@ export const PriceHistoryChart = ({ isLoading, priceHistory, onTimeframeChange }
   ) : (
     <div className="text-dfxBlue-500">
       <div className="mb-4 flex justify-center gap-2">
-        <ButtonGroup<PriceCurrency>
-          items={Object.values(PriceCurrency)}
+        <ButtonGroup<FiatCurrency>
+          items={Object.values(FiatCurrency)}
           selected={currency}
           onClick={(c) => setCurrency(c)}
           buttonLabel={(c) => c.toUpperCase()}

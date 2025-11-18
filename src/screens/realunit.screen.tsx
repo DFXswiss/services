@@ -1,11 +1,13 @@
 import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import { useEffect } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import { PriceHistoryChart } from 'src/components/realunit/price-history-chart';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { PaginationDirection } from 'src/dto/realunit.dto';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { PaginationDirection, useRealunit } from 'src/hooks/realunit.hook';
+import { useRealunit } from 'src/hooks/realunit.hook';
 export default function RealunitScreen(): JSX.Element {
   useAdminGuard();
 
@@ -16,8 +18,8 @@ export default function RealunitScreen(): JSX.Element {
     holders,
     totalCount,
     pageInfo,
-    tokenInfoTotalShares,
-    tokenInfoTotalSupply,
+    tokenInfo,
+    isLoadingTokenInfo,
     priceHistory,
     isLoadingHolders,
     isLoadingPriceHistory,
@@ -25,28 +27,23 @@ export default function RealunitScreen(): JSX.Element {
     priceHistoryError,
     fetchHolders,
     fetchPriceHistory,
+    fetchTokenInfo,
   } = useRealunit();
 
-  const hasRealunitInfo = Boolean(tokenInfoTotalShares || tokenInfoTotalSupply);
-
   useLayoutOptions({ backButton: true });
+
+  useEffect(() => {
+    fetchHolders();
+    fetchTokenInfo();
+  }, [fetchHolders, fetchTokenInfo]);
 
   const handleAddressClick = (address: string) => {
     const encodedAddress = encodeURIComponent(address);
     navigate(`/realunit/user/${encodedAddress}`);
   };
 
-  const handlePreviousPage = () => {
-    if (pageInfo.hasPreviousPage && pageInfo.startCursor) {
-      fetchHolders(pageInfo.startCursor, PaginationDirection.PREV);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (pageInfo.hasNextPage && pageInfo.endCursor) {
-      fetchHolders(pageInfo.endCursor, PaginationDirection.NEXT);
-    }
-  };
+  const changePage = (dir: PaginationDirection) =>
+    fetchHolders(dir === PaginationDirection.NEXT ? pageInfo.endCursor : pageInfo.startCursor, dir);
 
   return (
     <>
@@ -60,45 +57,54 @@ export default function RealunitScreen(): JSX.Element {
             <h2 className="text-dfxGray-700 text-xl font-semibold mb-2">
               {translate('screens/realunit', 'RealUnit Holders')}
             </h2>
-
-            {hasRealunitInfo && (
+            {isLoadingTokenInfo ? (
               <div className="bg-white rounded-lg shadow-sm p-4 border border-dfxGray-300 mb-6">
-                <h3 className="text-dfxBlue-800 font-semibold text-base mb-3">
-                  {translate('screens/realunit', 'RealUnit Information')}
-                </h3>
-                <div className="space-y-2">
-                  {totalCount && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-dfxGray-600 text-sm">
-                        {translate('screens/realunit', 'Total holders')}:
-                      </span>
-                      <span className="text-dfxBlue-800 font-medium">{totalCount}</span>
-                    </div>
-                  )}
-                  {tokenInfoTotalShares && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-dfxGray-600 text-sm">{translate('screens/realunit', 'Total Shares')}:</span>
-                      <span className="text-dfxBlue-800 font-medium">{tokenInfoTotalShares.total}</span>
-                    </div>
-                  )}
-                  {tokenInfoTotalSupply && (
-                    <>
-                      <div className="flex justify-between items-center">
-                        <span className="text-dfxGray-600 text-sm">
-                          {translate('screens/realunit', 'Total Supply')}:
-                        </span>
-                        <span className="text-dfxBlue-800 font-medium">{tokenInfoTotalSupply.value}</span>
+                <StyledLoadingSpinner size={SpinnerSize.MD} />
+              </div>
+            ) : (
+              tokenInfo && (
+                <div className="bg-white rounded-lg shadow-sm p-4 border border-dfxGray-300 mb-6">
+                  {tokenInfo && (
+                    <div className="bg-white rounded-lg shadow-sm p-4 border border-dfxGray-300 mb-6">
+                      <h3 className="text-dfxBlue-800 font-semibold text-base mb-3">
+                        {translate('screens/realunit', 'RealUnit Information')}
+                      </h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-dfxGray-600 text-sm">
+                            {translate('screens/realunit', 'Total holders')}:
+                          </span>
+                          <span className="text-dfxBlue-800 font-medium">{totalCount}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-dfxGray-600 text-sm">
+                            {translate('screens/realunit', 'Total Shares')}:
+                          </span>
+                          <span className="text-dfxBlue-800 font-medium">{tokenInfo.totalShares.total}</span>
+                        </div>
+
+                        <>
+                          <div className="flex justify-between items-center">
+                            <span className="text-dfxGray-600 text-sm">
+                              {translate('screens/realunit', 'Total Supply')}:
+                            </span>
+                            <span className="text-dfxBlue-800 font-medium">{tokenInfo.totalSupply.value}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-dfxGray-600 text-sm">
+                              {translate('screens/realunit', 'Timestamp')}:
+                            </span>
+                            <span className="text-dfxBlue-800 text-sm">
+                              {new Date(tokenInfo.totalSupply.timestamp).toLocaleString()}
+                            </span>
+                          </div>
+                        </>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-dfxGray-600 text-sm">{translate('screens/realunit', 'Timestamp')}:</span>
-                        <span className="text-dfxBlue-800 text-sm">
-                          {new Date(tokenInfoTotalSupply.timestamp).toLocaleString()}
-                        </span>
-                      </div>
-                    </>
+                    </div>
                   )}
                 </div>
-              </div>
+              )
             )}
 
             <div className="bg-white rounded-lg shadow-sm p-4 border border-dfxGray-300 mb-6">
@@ -158,7 +164,7 @@ export default function RealunitScreen(): JSX.Element {
             <div className="flex items-center gap-2">
               <StyledButton
                 label={translate('general/actions', 'Previous')}
-                onClick={handlePreviousPage}
+                onClick={() => changePage(PaginationDirection.PREV)}
                 disabled={!pageInfo.hasPreviousPage}
                 width={StyledButtonWidth.MIN}
               />
@@ -167,7 +173,7 @@ export default function RealunitScreen(): JSX.Element {
             <div className="flex items-center gap-2">
               <StyledButton
                 label={translate('general/actions', 'Next')}
-                onClick={handleNextPage}
+                onClick={() => changePage(PaginationDirection.NEXT)}
                 disabled={!pageInfo.hasNextPage}
                 width={StyledButtonWidth.MIN}
               />
