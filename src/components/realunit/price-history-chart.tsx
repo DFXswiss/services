@@ -83,8 +83,8 @@ export const PriceHistoryChart = ({ priceHistory, onTimeframeChange }: PriceHist
 
   return (
     priceHistory && (
-      <div className="text-dfxBlue-500">
-        <div className="mb-4 flex justify-center gap-2">
+      <div className="justify-center text-dfxBlue-500">
+        <div className="flex justify-center gap-2">
           <ButtonGroup<FiatCurrency>
             items={Object.values(FiatCurrency)}
             selected={currency}

@@ -48,65 +48,67 @@ export default function RealunitScreen(): JSX.Element {
       ) : (
         <div className="w-full">
           <div className="mb-4">
-            <h2 className="text-dfxGray-700 text-xl font-semibold mb-2">
-              {translate('screens/realunit', 'RealUnit Holders')}
-            </h2>
             {isLoading ? (
-              <div className="bg-white rounded-lg shadow-sm p-4 border border-dfxGray-300 mb-6">
+              <div className="shadow-card rounded-xl p-6 flex justify-center mb-6">
                 <StyledLoadingSpinner size={SpinnerSize.MD} />
               </div>
             ) : (
               tokenInfo && (
-                <div className="bg-white rounded-lg shadow-sm p-4 border border-dfxGray-300 mb-6">
-                  {tokenInfo && (
-                    <div className="bg-white rounded-lg shadow-sm p-4 border border-dfxGray-300 mb-6">
-                      <h3 className="text-dfxBlue-800 font-semibold text-base mb-3">
-                        {translate('screens/realunit', 'RealUnit Information')}
-                      </h3>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-dfxGray-600 text-sm">
-                            {translate('screens/realunit', 'Total holders')}:
-                          </span>
-                          <span className="text-dfxBlue-800 font-medium">{totalCount}</span>
-                        </div>
+                <div className="mb-6">
+                  <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'RealUnit ')}</h2>
+                  <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
+                    <thead>
+                      <tr className="bg-dfxGray-300">
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                          {translate('screens/realunit', 'Overview')}
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                          {translate('screens/realunit', '')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
+                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                          {translate('screens/realunit', 'Holders')}
+                        </td>
+                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
+                          {totalCount?.toLocaleString() ?? '0'}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
+                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                          {translate('screens/realunit', 'Shares')}
+                        </td>
+                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
+                          {Number(tokenInfo.totalShares.total).toLocaleString()}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
+                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                          {translate('screens/realunit', 'Total Supply')}
+                        </td>
+                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
+                          {Number(tokenInfo.totalSupply.value).toLocaleString()} REALU
+                        </td>
+                      </tr>
 
-                        <div className="flex justify-between items-center">
-                          <span className="text-dfxGray-600 text-sm">
-                            {translate('screens/realunit', 'Total Shares')}:
-                          </span>
-                          <span className="text-dfxBlue-800 font-medium">{tokenInfo.totalShares.total}</span>
-                        </div>
-
-                        <>
-                          <div className="flex justify-between items-center">
-                            <span className="text-dfxGray-600 text-sm">
-                              {translate('screens/realunit', 'Total Supply')}:
-                            </span>
-                            <span className="text-dfxBlue-800 font-medium">{tokenInfo.totalSupply.value}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-dfxGray-600 text-sm">
-                              {translate('screens/realunit', 'Timestamp')}:
-                            </span>
-                            <span className="text-dfxBlue-800 text-sm">
-                              {new Date(tokenInfo.totalSupply.timestamp).toLocaleString()}
-                            </span>
-                          </div>
-                        </>
-                      </div>
-                    </div>
-                  )}
+                      <tr className="transition-colors hover:bg-dfxGray-300">
+                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                          {translate('screens/realunit', 'Timestamp')}
+                        </td>
+                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
+                          {new Date(tokenInfo.totalSupply.timestamp).toLocaleString()}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               )
             )}
 
-            <div className="bg-white rounded-lg shadow-sm p-4 border border-dfxGray-300 mb-6">
-              <h3 className="text-dfxBlue-800 font-semibold text-base mb-3">
-                {translate('screens/realunit', 'Price History')}
-              </h3>
-              <PriceHistoryChart priceHistory={priceHistory} onTimeframeChange={fetchPriceHistory} />
-            </div>
+            <h2 className="text-dfxGray-700 justify-center  mb-2">{translate('screens/realunit', 'Price History')}</h2>
+            <PriceHistoryChart priceHistory={priceHistory} onTimeframeChange={fetchPriceHistory} />
           </div>
 
           <div className="w-full overflow-x-auto mb-4">
