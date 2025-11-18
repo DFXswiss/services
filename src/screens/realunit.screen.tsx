@@ -1,6 +1,5 @@
 import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect } from 'react';
-import { ErrorHint } from 'src/components/error-hint';
 import { PriceHistoryChart } from 'src/components/realunit/price-history-chart';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PaginationDirection } from 'src/dto/realunit.dto';
@@ -19,15 +18,12 @@ export default function RealunitScreen(): JSX.Element {
     totalCount,
     pageInfo,
     tokenInfo,
-    isLoadingTokenInfo,
+    isLoading,
     priceHistory,
-    isLoadingHolders,
-    isLoadingPriceHistory,
-    holdersError,
-    priceHistoryError,
     fetchHolders,
     fetchPriceHistory,
     fetchTokenInfo,
+    lastTimeframe,
   } = useRealunit();
 
   useLayoutOptions({ backButton: true });
@@ -47,9 +43,7 @@ export default function RealunitScreen(): JSX.Element {
 
   return (
     <>
-      {holdersError ? (
-        <ErrorHint message={holdersError} />
-      ) : !holders.length && isLoadingHolders ? (
+      {!holders.length && !tokenInfo ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <div className="w-full">
@@ -57,7 +51,7 @@ export default function RealunitScreen(): JSX.Element {
             <h2 className="text-dfxGray-700 text-xl font-semibold mb-2">
               {translate('screens/realunit', 'RealUnit Holders')}
             </h2>
-            {isLoadingTokenInfo ? (
+            {isLoading ? (
               <div className="bg-white rounded-lg shadow-sm p-4 border border-dfxGray-300 mb-6">
                 <StyledLoadingSpinner size={SpinnerSize.MD} />
               </div>
@@ -111,15 +105,7 @@ export default function RealunitScreen(): JSX.Element {
               <h3 className="text-dfxBlue-800 font-semibold text-base mb-3">
                 {translate('screens/realunit', 'Price History')}
               </h3>
-              {priceHistoryError ? (
-                <ErrorHint message={priceHistoryError} />
-              ) : (
-                <PriceHistoryChart
-                  priceHistory={priceHistory}
-                  isLoading={isLoadingPriceHistory}
-                  onTimeframeChange={fetchPriceHistory}
-                />
-              )}
+              <PriceHistoryChart priceHistory={priceHistory} onTimeframeChange={fetchPriceHistory} />
             </div>
           </div>
 

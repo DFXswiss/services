@@ -1,5 +1,5 @@
-import { ApiError, useApi } from '@dfx.swiss/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useApi } from '@dfx.swiss/react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import {
   AccountHistory,
@@ -9,7 +9,8 @@ import {
   PageInfo,
   PaginationDirection,
   PriceHistoryEntry,
-  TokenInfo
+  RealunitContextData,
+  TokenInfo,
 } from 'src/dto/realunit.dto';
 import { Timeframe } from 'src/util/chart';
 import { relativeUrl } from '../util/utils';
@@ -17,31 +18,24 @@ import { relativeUrl } from '../util/utils';
 export function useRealunit() {
   const { call } = useApi();
   const { cachedData, setCachedData } = useRealunitContext();
-  
+  const lastTimeframeRef = useRef<Timeframe | undefined>(cachedData.lastTimeframe as Timeframe);
+
   const [data, setData] = useState<AccountSummary>();
   const [history, setHistory] = useState<AccountHistory>();
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [error, setError] = useState<string>();
 
-  const [holders, setHolders] = useState<Holder[]>(cachedData?.holders || []);
-  const [totalCount, setTotalCount] = useState<number | undefined>(cachedData?.totalCount);
-  const [pageInfo, setPageInfo] = useState<PageInfo>(cachedData?.pageInfo || {
-    hasNextPage: false,
-    hasPreviousPage: false,
-    startCursor: '',
-    endCursor: '',
-  });
-  const [isLoadingHolders, setIsLoadingHolders] = useState(false);
-  const [holdersError, setHoldersError] = useState<string>();
-  const [tokenInfo, setTokenInfo] = useState<TokenInfo | undefined>(cachedData?.tokenInfo);
-
-  const [isLoadingTokenInfo, setIsLoadingTokenInfo] = useState(false);
-  const [tokenInfoError, setTokenInfoError] = useState<string>();
-
-  const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>(cachedData?.priceHistory || []);
-  const [isLoadingPriceHistory, setIsLoadingPriceHistory] = useState(false);
-  const [priceHistoryError, setPriceHistoryError] = useState<string>();
+  const [holders, setHolders] = useState<Holder[]>(cachedData.holders || []);
+  const [totalCount, setTotalCount] = useState<number | undefined>(cachedData.totalCount);
+  const [pageInfo, setPageInfo] = useState<PageInfo>(
+    cachedData.pageInfo || {
+      hasNextPage: false,
+      hasPreviousPage: false,
+      startCursor: '',
+      endCursor: '',
+    },
+  );
+  const [tokenInfo, setTokenInfo] = useState<TokenInfo | undefined>(cachedData.tokenInfo);
+  const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>(cachedData.priceHistory || []);
 
   async function getAccountSummary(address: string): Promise<AccountSummary> {
     return call<AccountSummary>({
@@ -50,7 +44,11 @@ export function useRealunit() {
     });
   }
 
-  async function getAccountHistory(address: string, cursor?: string, direction?: PaginationDirection): Promise<AccountHistory> {
+  async function getAccountHistory(
+    address: string,
+    cursor?: string,
+    direction?: PaginationDirection,
+  ): Promise<AccountHistory> {
     const params = new URLSearchParams();
     cursor && direction && params.set(String(direction) === 'prev' ? 'before' : 'after', cursor);
 
@@ -63,7 +61,7 @@ export function useRealunit() {
   async function getHolders(cursor?: string, direction?: PaginationDirection): Promise<HoldersResponse> {
     const params = new URLSearchParams();
     cursor && direction && params.set(String(direction) === 'prev' ? 'before' : 'after', cursor);
-  
+
     return call<HoldersResponse>({
       url: relativeUrl({ path: 'realunit/holders', params }),
       method: 'GET',
@@ -88,26 +86,45 @@ export function useRealunit() {
 
   const fetchAccountSummary = useCallback(
     (address: string) => {
+      const cached = cachedData.lastAddress === address.toLowerCase() ? cachedData.lastAccountData : undefined;
+      if (cached) {
+        setData(cached);
+        return;
+      }
       setIsLoading(true);
-      setError(undefined);
       getAccountSummary(address)
-        .then((accountData) => setData(accountData))
-        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+        .then((data) => {
+          setData(data);
+          setCachedData((prev: RealunitContextData) => ({
+            ...prev,
+            lastAddress: address.toLowerCase(),
+            lastAccountData: data,
+          }));
+        })
         .finally(() => setIsLoading(false));
     },
-    [call],
+    [cachedData.lastAddress, cachedData.lastAccountData, setCachedData],
   );
 
   const fetchAccountHistory = useCallback(
     (address: string, cursor?: string, direction?: PaginationDirection) => {
-      setIsLoadingHistory(true);
-      setError(undefined);
-      getAccountHistory(address, cursor, direction)
-        .then((historyData) => setHistory(historyData))
-        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-        .finally(() => setIsLoadingHistory(false));
+      const cached = cachedData.lastAddress === address.toLowerCase() ? cachedData.lastAccountHistory : undefined;
+      if (!cursor && cached) {
+        setHistory(cached);
+        return;
+      }
+      getAccountHistory(address, cursor, direction).then((history) => {
+        setHistory(history);
+        if (!cursor) {
+          setCachedData((prev: RealunitContextData) => ({
+            ...prev,
+            lastAddress: address.toLowerCase(),
+            lastAccountHistory: history,
+          }));
+        }
+      });
     },
-    [call],
+    [cachedData.lastAddress, cachedData.lastAccountHistory, setCachedData],
   );
 
   const fetchHolders = useCallback(
@@ -115,122 +132,82 @@ export function useRealunit() {
       if (!cursor && holders.length > 0) {
         return;
       }
-
-      setIsLoadingHolders(true);
-      setHoldersError(undefined);
-      getHolders(cursor, direction)
-        .then((data) => {
-          setHolders(data.holders);
-          setPageInfo(data.pageInfo);
-          const newTotalCount = !cursor ? data.totalCount : totalCount;
-          if (!cursor) {
-            setTotalCount(data.totalCount);
-          }
-   
-          setCachedData({
-            holders: data.holders,
-            totalCount: newTotalCount,
-            pageInfo: data.pageInfo,
-            tokenInfo,
-          });
-        })
-        .catch((error: ApiError) => setHoldersError(error.message ?? 'Unknown error'))
-        .finally(() => setIsLoadingHolders(false));
+      getHolders(cursor, direction).then((data) => {
+        setHolders(data.holders);
+        setPageInfo(data.pageInfo);
+        const newTotalCount = !cursor ? data.totalCount : totalCount;
+        if (!cursor) {
+          setTotalCount(data.totalCount);
+        }
+        setCachedData((prev: RealunitContextData) => ({
+          ...prev,
+          holders: data.holders,
+          totalCount: newTotalCount,
+          pageInfo: data.pageInfo,
+        }));
+      });
     },
-    [call, holders.length, totalCount, tokenInfo, setCachedData],
+    [holders.length, totalCount, setCachedData],
   );
 
   const fetchPriceHistory = useCallback(
-    (timeFrame: Timeframe) => {
-      setIsLoadingPriceHistory(true);
-      setPriceHistoryError(undefined);
-      getPriceHistory(timeFrame)
-        .then((data) => {
-          setPriceHistory(data);
-          
-          setCachedData({
-            holders,
-            totalCount,
-            pageInfo,
-            tokenInfo,
-            priceHistory: data,  
-          });
-        })
-        .catch((error: ApiError) => setPriceHistoryError(error.message ?? 'Unknown error'))
-        .finally(() => setIsLoadingPriceHistory(false));
+    (timeframe: Timeframe) => {
+      if (lastTimeframeRef.current === timeframe && priceHistory.length > 0) return;
+      lastTimeframeRef.current = timeframe;
+      getPriceHistory(timeframe).then((data) => {
+        setPriceHistory(data);
+        setCachedData((prev: RealunitContextData) => ({
+          ...prev,
+          priceHistory: data,
+          lastTimeframe: timeframe,
+        }));
+      });
     },
-    [call, holders, totalCount, pageInfo, tokenInfo, setCachedData],
+    [priceHistory.length, setCachedData],
   );
 
   const fetchTokenInfo = useCallback(() => {
-   if (tokenInfo) {
+    if (tokenInfo) {
       return;
     }
-
-    setIsLoadingTokenInfo(true);
-    setTokenInfoError(undefined);
-    getTokenInfo()
-      .then((data) => {
-        setTokenInfo(data);
-        
-        setCachedData({
-          holders,
-          totalCount,
-          pageInfo,
-          tokenInfo: data,
-        });
-      })
-      .catch((error: ApiError) => setTokenInfoError(error.message ?? 'Unknown error'))
-      .finally(() => setIsLoadingTokenInfo(false));
-  }, [call, tokenInfo, holders, totalCount, pageInfo, setCachedData]);
+    getTokenInfo().then((data) => {
+      setTokenInfo(data);
+      setCachedData((prev: RealunitContextData) => ({ ...prev, tokenInfo: data }));
+    });
+  }, [tokenInfo, setCachedData]);
 
   return useMemo(
     () => ({
       data,
       history,
       isLoading,
-      isLoadingHistory,
-      error,
       fetchAccountSummary,
       fetchAccountHistory,
       holders,
       totalCount,
       pageInfo,
-      isLoadingHolders,
-      holdersError,
       fetchHolders,
       fetchTokenInfo,
       tokenInfo,
-      isLoadingTokenInfo,
-      tokenInfoError,
       priceHistory,
-      isLoadingPriceHistory,
-      priceHistoryError,
       fetchPriceHistory,
+      lastTimeframe: cachedData.lastTimeframe,
     }),
     [
       data,
       history,
       isLoading,
-      isLoadingHistory,
-      error,
       fetchAccountSummary,
       fetchAccountHistory,
       holders,
       totalCount,
       pageInfo,
-      isLoadingHolders,
-      holdersError,
       fetchHolders,
       fetchTokenInfo,
       tokenInfo,
-      isLoadingTokenInfo,
-      tokenInfoError,
       priceHistory,
-      isLoadingPriceHistory,
-      priceHistoryError,
       fetchPriceHistory,
+      cachedData.lastTimeframe,
     ],
   );
 }
-

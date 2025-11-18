@@ -1,19 +1,5 @@
 import { PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
-import { Holder, PageInfo, PriceHistoryEntry, TokenInfo } from 'src/dto/realunit.dto';
-
-interface RealunitContextData {
-  holders: Holder[];
-  totalCount?: number;
-  pageInfo: PageInfo;
-  tokenInfo?: TokenInfo;
-  priceHistory?: PriceHistoryEntry[];
-}
-
-interface RealunitContextInterface {
-  cachedData?: RealunitContextData;
-  setCachedData: (data: RealunitContextData) => void;
-  clearCache: () => void;
-}
+import { RealunitContextData, RealunitContextInterface } from 'src/dto/realunit.dto';
 
 const RealunitContext = createContext<RealunitContextInterface>(undefined as any);
 
@@ -22,18 +8,9 @@ export function useRealunitContext(): RealunitContextInterface {
 }
 
 export function RealunitContextProvider({ children }: PropsWithChildren): JSX.Element {
-  const [cachedData, setCachedData] = useState<RealunitContextData | undefined>();
+  const [cachedData, setCachedData] = useState<RealunitContextData>({});
 
-  const clearCache = () => setCachedData(undefined);
-
-  const context = useMemo(
-    () => ({
-      cachedData,
-      setCachedData,
-      clearCache,
-    }),
-    [cachedData],
-  );
+  const context = useMemo(() => ({ cachedData, setCachedData }), [cachedData]);
 
   return <RealunitContext.Provider value={context}>{children}</RealunitContext.Provider>;
 }

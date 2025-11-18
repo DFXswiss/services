@@ -83,4 +83,19 @@ export enum PaginationDirection {
   NEXT = 'next',
   PREV = 'prev',
 }
+export interface RealunitContextData {
+  holders?: Holder[];
+  totalCount?: number;
+  pageInfo?: PageInfo;
+  tokenInfo?: TokenInfo;
+  priceHistory?: PriceHistoryEntry[];
+  lastTimeframe?: string;
+  lastAddress?: string;
+  lastAccountData?: AccountSummary;
+  lastAccountHistory?: AccountHistory;
+}
 
+export interface RealunitContextInterface {
+  cachedData: RealunitContextData;
+  setCachedData: (data: RealunitContextData | ((prev: RealunitContextData) => RealunitContextData)) => void;
+}

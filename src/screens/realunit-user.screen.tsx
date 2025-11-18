@@ -1,7 +1,6 @@
 import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ErrorHint } from 'src/components/error-hint';
 import { BalanceChart, BalanceMetric } from 'src/components/realunit/balance-chart';
 import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -16,7 +15,7 @@ export default function RealunitUserScreen(): JSX.Element {
 
   const { translate } = useSettingsContext();
   const { address } = useParams<{ address: string }>();
-  const { data, history, isLoading, isLoadingHistory, error, fetchAccountSummary, fetchAccountHistory } = useRealunit();
+  const { data, history, isLoading, fetchAccountSummary, fetchAccountHistory } = useRealunit();
 
   const [metric, setMetric] = useState<BalanceMetric>(BalanceMetric.REALU);
 
@@ -48,9 +47,7 @@ export default function RealunitUserScreen(): JSX.Element {
 
   return (
     <>
-      {error ? (
-        <ErrorHint message={error} />
-      ) : isLoading ? (
+      {!data ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : !data ? (
         <p className="text-dfxGray-700">{translate('screens/realunit', 'No data available')}</p>
@@ -139,7 +136,7 @@ export default function RealunitUserScreen(): JSX.Element {
                 <h2 className="text-dfxGray-700 mb-4">
                   {translate('screens/realunit', 'Transaction History')} ({history.totalCount ?? 0})
                 </h2>
-                {isLoadingHistory ? (
+                {isLoading ? (
                   <StyledLoadingSpinner size={SpinnerSize.LG} />
                 ) : history.history.length > 0 ? (
                   <>

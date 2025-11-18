@@ -1,4 +1,3 @@
-import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { ApexOptions } from 'apexcharts';
 import { useEffect, useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
@@ -10,14 +9,13 @@ import { ButtonGroup } from '../safe/button-group';
 
 interface PriceHistoryChartProps {
   priceHistory: PriceHistoryEntry[];
-  isLoading: boolean;
   onTimeframeChange: (timeframe: Timeframe) => void;
 }
 
-export const PriceHistoryChart = ({ isLoading, priceHistory, onTimeframeChange }: PriceHistoryChartProps) => {
+export const PriceHistoryChart = ({ priceHistory, onTimeframeChange }: PriceHistoryChartProps) => {
   const { translate } = useSettingsContext();
 
-  const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.WEEK);
+  const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.ALL);
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
 
   useEffect(() => {
@@ -83,31 +81,27 @@ export const PriceHistoryChart = ({ isLoading, priceHistory, onTimeframeChange }
     ];
   }, [priceHistory, currency, translate]);
 
-  return isLoading ? (
-    <div className="flex justify-center items-center py-8">
-      <StyledLoadingSpinner size={SpinnerSize.LG} />
-    </div>
-  ) : priceHistory.length === 0 ? (
-    <p className="text-dfxGray-700 text-center py-4">{translate('screens/realunit', 'No price history available')}</p>
-  ) : (
-    <div className="text-dfxBlue-500">
-      <div className="mb-4 flex justify-center gap-2">
-        <ButtonGroup<FiatCurrency>
-          items={Object.values(FiatCurrency)}
-          selected={currency}
-          onClick={(c) => setCurrency(c)}
-          buttonLabel={(c) => c.toUpperCase()}
-        />
+  return (
+    priceHistory && (
+      <div className="text-dfxBlue-500">
+        <div className="mb-4 flex justify-center gap-2">
+          <ButtonGroup<FiatCurrency>
+            items={Object.values(FiatCurrency)}
+            selected={currency}
+            onClick={(c) => setCurrency(c)}
+            buttonLabel={(c) => c.toUpperCase()}
+          />
+        </div>
+        <Chart type="area" height={300} options={chartOptions} series={chartSeries} />
+        <div className="mt-4 flex justify-center">
+          <ButtonGroup<Timeframe>
+            items={Object.values(Timeframe)}
+            selected={timeframe}
+            onClick={(tf) => setTimeframe(tf)}
+            buttonLabel={(tf) => tf}
+          />
+        </div>
       </div>
-      <Chart type="area" height={300} options={chartOptions} series={chartSeries} />
-      <div className="mt-4 flex justify-center">
-        <ButtonGroup<Timeframe>
-          items={Object.values(Timeframe)}
-          selected={timeframe}
-          onClick={(tf) => setTimeframe(tf)}
-          buttonLabel={(tf) => tf}
-        />
-      </div>
-    </div>
+    )
   );
 };
