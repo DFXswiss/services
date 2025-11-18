@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { TransactionMode, TransactionType } from 'src/dto/safe.dto';
 import { ButtonGroup, ButtonGroupSize } from './button-group';
 import { DepositInterface } from './deposit-interface';
 import { ReceiveInterface } from './receive-interface';
 import { SendInterface } from './send-interface';
 import { SwapInterface } from './swap-interface';
-import { TransactionMode, TransactionType } from './transaction.types';
 import { WithdrawInterface } from './withdraw-interface';
 
 export const SafeTransactionInterface = () => {

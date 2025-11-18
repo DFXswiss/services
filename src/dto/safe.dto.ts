@@ -6,6 +6,17 @@ export enum SafeOperationType {
   SWAP = 'swap',
 }
 
+export enum TransactionMode {
+  DEPOSIT = SafeOperationType.DEPOSIT,
+  WITHDRAW = SafeOperationType.WITHDRAW,
+  SWAP = SafeOperationType.SWAP,
+}
+
+export enum TransactionType {
+  FIAT = 'fiat',
+  CRYPTO = 'crypto',
+}
+
 export enum FiatCurrency {
   CHF = 'chf',
   EUR = 'eur',
