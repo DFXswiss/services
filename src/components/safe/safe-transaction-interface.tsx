@@ -6,7 +6,6 @@ import { DepositInterface } from './deposit-interface';
 import { ReceiveInterface } from './receive-interface';
 import { SendInterface } from './send-interface';
 import { SwapInterface } from './swap-interface';
-import { TransactionMode, TransactionType } from './transaction.types';
 import { WithdrawInterface } from './withdraw-interface';
 
 enum TransactionType {
