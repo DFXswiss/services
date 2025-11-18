@@ -17,10 +17,6 @@ export const WithdrawInterface = ({ transactionType }: WithdrawInterfaceProps) =
   const { withdrawableAssets, withdrawableCurrencies, pairMap, fetchWithdrawInfo, confirmWithdraw } = useSafe();
   const { setCompletionType } = useOrderUIContext();
 
-  if (transactionType === TransactionType.CRYPTO) {
-    return <SendInterface />;
-  }
-
   async function onConfirmWithdraw(): Promise<void> {
     await confirmWithdraw();
     setCompletionType(SafeOperationType.WITHDRAW);
@@ -35,6 +31,9 @@ export const WithdrawInterface = ({ transactionType }: WithdrawInterfaceProps) =
     },
     [fetchWithdrawInfo, translate],
   );
+  if (transactionType === TransactionType.CRYPTO) {
+    return <SendInterface />;
+  }
 
   return (
     <OrderInterface
