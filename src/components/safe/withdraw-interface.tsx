@@ -1,3 +1,4 @@
+import { useBankAccountContext } from '@dfx.swiss/react';
 import { useCallback } from 'react';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -12,6 +13,7 @@ export const WithdrawInterface = () => {
   const { withdrawableAssets, withdrawableCurrencies, pairMap, fetchWithdrawInfo, confirmWithdraw, portfolio } =
     useSafe();
   const { setCompletionType } = useOrderUIContext();
+  const { bankAccounts } = useBankAccountContext();
 
   async function onConfirmWithdraw(): Promise<void> {
     await confirmWithdraw();
@@ -27,6 +29,7 @@ export const WithdrawInterface = () => {
     },
     [fetchWithdrawInfo, translate],
   );
+  const defaultBankAccount = bankAccounts?.find((a) => a.default);
 
   return (
     <OrderInterface
@@ -40,6 +43,7 @@ export const WithdrawInterface = () => {
       confirmPayment={onConfirmWithdraw}
       onFetchPaymentInfo={handleFetchWithdrawInfo}
       balanceFunc={(asset) => findBalanceString(asset, portfolio.balances)}
+      defaultValues={{ bankAccount: defaultBankAccount }}
     />
   );
 };
