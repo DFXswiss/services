@@ -9,6 +9,7 @@ import { BalanceContextProvider } from './contexts/balance.context';
 import { OrderUIContextProvider } from './contexts/order-ui.context';
 import PaymentLinkPosContext from './contexts/payment-link-pos.context';
 import { PaymentLinkProvider } from './contexts/payment-link.context';
+import { RealunitContextProvider } from './contexts/realunit.context';
 import { SettingsContextProvider } from './contexts/settings.context';
 import { WalletContextProvider } from './contexts/wallet.context';
 import { WindowContextProvider } from './contexts/window.context';
@@ -308,11 +309,21 @@ export const Routes = [
       },
       {
         path: 'realunit',
-        element: withSuspense(<RealunitScreen />),
-      },
-      {
-        path: 'realunit/user/:address',
-        element: withSuspense(<RealunitUserScreen />),
+        element: (
+          <RealunitContextProvider>
+            <Outlet />
+          </RealunitContextProvider>
+        ),
+        children: [
+          {
+            index: true,
+            element: withSuspense(<RealunitScreen />),
+          },
+          {
+            path: 'user/:address',
+            element: withSuspense(<RealunitUserScreen />),
+          },
+        ],
       },
     ],
   },

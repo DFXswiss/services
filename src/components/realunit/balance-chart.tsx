@@ -3,7 +3,7 @@ import { ApexOptions } from 'apexcharts';
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { HistoricalBalance } from 'src/hooks/realunit.hook';
+import { HistoricalBalance } from 'src/dto/realunit.dto';
 
 export enum BalanceMetric {
   REALU = 'realu',
