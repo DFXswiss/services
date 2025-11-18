@@ -55,12 +55,6 @@ export const ReceiveInterface = () => {
   const debouncedData = useDebounce(data, 500);
 
   useEffect(() => {
-    if (receiveableAssets?.length && !data.receiveAsset) {
-      setValue('receiveAsset', receiveableAssets[0]);
-    }
-  }, [receiveableAssets, data.receiveAsset, setValue]);
-
-  useEffect(() => {
     if (isValid && debouncedData?.receiveAsset && debouncedData.receiveAmount) onCreateReceiveOrder(debouncedData);
   }, [isValid, debouncedData]);
 
