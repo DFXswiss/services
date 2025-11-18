@@ -5,14 +5,8 @@ import { SafeOperationType } from 'src/dto/safe.dto';
 import { OrderFormData, OrderType } from 'src/hooks/order.hook';
 import { useSafe } from 'src/hooks/safe.hook';
 import { OrderInterface } from '../order/order-interface';
-import { SendInterface } from './send-interface';
-import { TransactionType } from './transaction.types';
 
-type WithdrawInterfaceProps = {
-  transactionType: TransactionType;
-};
-
-export const WithdrawInterface = ({ transactionType }: WithdrawInterfaceProps) => {
+export const WithdrawInterface = () => {
   const { translate } = useSettingsContext();
   const { withdrawableAssets, withdrawableCurrencies, pairMap, fetchWithdrawInfo, confirmWithdraw } = useSafe();
   const { setCompletionType } = useOrderUIContext();
@@ -31,9 +25,6 @@ export const WithdrawInterface = ({ transactionType }: WithdrawInterfaceProps) =
     },
     [fetchWithdrawInfo, translate],
   );
-  if (transactionType === TransactionType.CRYPTO) {
-    return <SendInterface />;
-  }
 
   return (
     <OrderInterface

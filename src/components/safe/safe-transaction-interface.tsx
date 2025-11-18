@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { ButtonGroup, ButtonGroupSize } from './button-group';
 import { DepositInterface } from './deposit-interface';
+import { ReceiveInterface } from './receive-interface';
+import { SendInterface } from './send-interface';
 import { SwapInterface } from './swap-interface';
 import { TransactionMode, TransactionType } from './transaction.types';
 import { WithdrawInterface } from './withdraw-interface';
@@ -31,7 +33,7 @@ export const SafeTransactionInterface = () => {
           isHeader={true}
         />
       </div>
-      {mode !== TransactionMode.SWAP && (
+      {[TransactionMode.DEPOSIT, TransactionMode.WITHDRAW].includes(mode) && (
         <div className="flex items-center gap-2 mb-4">
           <span className="text-sm text-dfxGray-700">{translate('screens/payment', 'Type')}:</span>
           <ButtonGroup<TransactionType>
@@ -47,9 +49,11 @@ export const SafeTransactionInterface = () => {
           />
         </div>
       )}
+      {mode === TransactionMode.DEPOSIT &&
+        (transactionType === TransactionType.FIAT ? <DepositInterface /> : <ReceiveInterface />)}
+      {mode === TransactionMode.WITHDRAW &&
+        (transactionType === TransactionType.FIAT ? <WithdrawInterface /> : <SendInterface />)}
       {mode === TransactionMode.SWAP && <SwapInterface />}
-      {mode === TransactionMode.DEPOSIT && <DepositInterface transactionType={transactionType} />}
-      {mode === TransactionMode.WITHDRAW && <WithdrawInterface transactionType={transactionType} />}
     </div>
   );
 };

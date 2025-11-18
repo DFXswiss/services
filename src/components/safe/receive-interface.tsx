@@ -36,7 +36,7 @@ interface ReceiveFormData {
 export const ReceiveInterface = () => {
   const { width } = useWindowContext();
   const { toString } = useBlockchain();
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
   const { setCompletionType } = useOrderUIContext();
   const { receiveableAssets, fetchReceiveInfo, confirmReceive } = useSafe();
 
@@ -47,7 +47,6 @@ export const ReceiveInterface = () => {
   const {
     watch,
     control,
-    setValue,
     formState: { errors, isValid },
   } = useForm<ReceiveFormData>({ mode: 'onChange' });
 
@@ -85,8 +84,13 @@ export const ReceiveInterface = () => {
     receiveAmount: Validations.Required,
   });
 
+  const handleConfirmReceive = () => {
+    setCompletionType(SafeOperationType.RECEIVE);
+    confirmReceive();
+  };
+
   return (
-    <Form control={control} rules={rules} errors={errors} hasFormElement={false}>
+    <Form control={control} rules={rules} errors={errors} hasFormElement={false} translate={translateError}>
       <StyledVerticalStack gap={4} full className="pt-2">
         <AssetInput
           control={control}
@@ -143,10 +147,7 @@ export const ReceiveInterface = () => {
             label={translate('general/actions', 'Next')}
             width={StyledButtonWidth.FULL}
             disabled={!isValid || isLoading}
-            onClick={() => {
-              setCompletionType(SafeOperationType.RECEIVE);
-              confirmReceive();
-            }}
+            onClick={handleConfirmReceive}
           />
         </div>
       </StyledVerticalStack>
