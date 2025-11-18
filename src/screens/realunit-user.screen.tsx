@@ -1,19 +1,28 @@
-import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import {
+  CopyButton,
+  IconColor,
+  SpinnerSize,
+  StyledButton,
+  StyledButtonWidth,
+  StyledLoadingSpinner,
+} from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BalanceChart, BalanceMetric } from 'src/components/realunit/balance-chart';
 import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PaginationDirection } from 'src/dto/realunit.dto';
+import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useRealunit } from 'src/hooks/realunit.hook';
-import { formatCurrency } from 'src/util/utils';
+import { blankedAddress, formatCurrency } from 'src/util/utils';
 
 export default function RealunitUserScreen(): JSX.Element {
   useAdminGuard();
 
   const { translate } = useSettingsContext();
+  const { copy } = useClipboard();
   const { address } = useParams<{ address: string }>();
   const { data, history, isLoading, fetchAccountSummary, fetchAccountHistory } = useRealunit();
 
@@ -72,7 +81,12 @@ export default function RealunitUserScreen(): JSX.Element {
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                       {translate('screens/realunit', 'Address')}
                     </td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 break-all">{data.address}</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 break-all">
+                      <div className="flex items-center gap-2">
+                        <span>{blankedAddress(data.address, { displayLength: 22 })}</span>
+                        <CopyButton color={IconColor.GRAY} onCopy={() => copy(data.address)} />
+                      </div>
+                    </td>
                   </tr>
                   <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
@@ -147,7 +161,7 @@ export default function RealunitUserScreen(): JSX.Element {
                             {translate('screens/realunit', 'Timestamp')}
                           </th>
                           <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                            {translate('screens/realunit', 'Event Type')}
+                            {translate('screens/realunit', 'Type')}
                           </th>
                           <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                             {translate('screens/realunit', 'Details')}
@@ -170,14 +184,32 @@ export default function RealunitUserScreen(): JSX.Element {
                             <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                               {event.transfer && (
                                 <div className="flex flex-col gap-1">
-                                  <div>From: {event.transfer.from}</div>
-                                  <div>To: {event.transfer.to}</div>
+                                  <div className="flex items-center gap-2">
+                                    <span>From:</span>
+                                    <span>{blankedAddress(event.transfer.from, { displayLength: 22 })}</span>
+                                    <CopyButton
+                                      color={IconColor.GRAY}
+                                      onCopy={() => copy(event.transfer?.from ?? '')}
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span>To:</span>
+                                    <span>{blankedAddress(event.transfer.to, { displayLength: 22 })}</span>
+                                    <CopyButton color={IconColor.GRAY} onCopy={() => copy(event.transfer?.to ?? '')} />
+                                  </div>
                                   <div>Value: {(Number(event.transfer.value) / 100).toFixed(2)}</div>
                                 </div>
                               )}
                               {event.approval && (
                                 <div className="flex flex-col gap-1">
-                                  <div>Spender: {event.approval.spender}</div>
+                                  <div className="flex items-center gap-2">
+                                    <span>Spender:</span>
+                                    <span>{blankedAddress(event.approval.spender, { displayLength: 22 })}</span>
+                                    <CopyButton
+                                      color={IconColor.GRAY}
+                                      onCopy={() => copy(event.approval?.spender ?? '')}
+                                    />
+                                  </div>
                                   <div>Value: {(Number(event.approval.value) / 100).toFixed(2)}</div>
                                 </div>
                               )}
@@ -185,7 +217,14 @@ export default function RealunitUserScreen(): JSX.Element {
                               {event.addressTypeUpdate && `Type: ${event.addressTypeUpdate.addressType}`}
                             </td>
                             <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 break-all">
-                              {event.txHash ?? '-'}
+                              {event.txHash ? (
+                                <div className="flex items-center gap-2">
+                                  <span>{blankedAddress(event.txHash, { displayLength: 22 })}</span>
+                                  <CopyButton color={IconColor.GRAY} onCopy={() => copy(event.txHash ?? '')} />
+                                </div>
+                              ) : (
+                                '-'
+                              )}
                             </td>
                           </tr>
                         ))}

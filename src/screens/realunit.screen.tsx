@@ -1,17 +1,27 @@
-import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import {
+  CopyButton,
+  IconColor,
+  SpinnerSize,
+  StyledButton,
+  StyledButtonWidth,
+  StyledLoadingSpinner,
+} from '@dfx.swiss/react-components';
 import { useEffect } from 'react';
 import { PriceHistoryChart } from 'src/components/realunit/price-history-chart';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PaginationDirection } from 'src/dto/realunit.dto';
+import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { useRealunit } from 'src/hooks/realunit.hook';
+import { blankedAddress } from 'src/util/utils';
 export default function RealunitScreen(): JSX.Element {
   useAdminGuard();
 
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
+  const { copy } = useClipboard();
 
   const {
     holders,
@@ -111,7 +121,8 @@ export default function RealunitScreen(): JSX.Element {
             <PriceHistoryChart priceHistory={priceHistory} onTimeframeChange={fetchPriceHistory} />
           </div>
 
-          <div className="w-full overflow-x-auto mb-4">
+          <div className="w-full overflow-x-auto mt-8 mb-4">
+            <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'Top Holders')}</h2>
             <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
               <thead>
                 <tr className="bg-dfxGray-300">
@@ -126,17 +137,24 @@ export default function RealunitScreen(): JSX.Element {
                   </th>
                 </tr>
               </thead>
+
               <tbody>
                 {holders.map((holder) => (
                   <tr
                     key={holder.address}
                     className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300"
                   >
-                    <td
-                      className="px-4 py-3 text-left text-sm text-dfxBlue-800 cursor-pointer hover:text-dfxBlue-600 hover:underline break-all"
-                      onClick={() => handleAddressClick(holder.address)}
-                    >
-                      {holder.address}
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="text-left text-sm text-dfxBlue-800 cursor-pointer hover:text-dfxBlue-600 hover:underline break-all bg-transparent border-0 p-0"
+                          onClick={() => handleAddressClick(holder.address)}
+                        >
+                          {blankedAddress(holder.address, { displayLength: 18 })}
+                        </button>
+                        <CopyButton color={IconColor.GRAY} onCopy={() => copy(holder.address)} />
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                       {(Number(holder.balance) / 100).toFixed(2)}
