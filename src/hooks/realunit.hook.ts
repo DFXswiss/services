@@ -8,6 +8,7 @@ import {
   PaginationDirection,
   PriceHistoryEntry,
   TokenInfo,
+  TokenPrice,
 } from 'src/dto/realunit.dto';
 import { Timeframe } from 'src/util/chart';
 import { relativeUrl } from '../util/utils';
@@ -29,6 +30,8 @@ export function useRealunit() {
     setPageInfo,
     tokenInfo,
     setTokenInfo,
+    tokenPrice,
+    setTokenPrice,
     priceHistory,
     setPriceHistory,
     lastTimeframe,
@@ -72,6 +75,14 @@ export function useRealunit() {
       method: 'GET',
     });
   }
+
+  async function getTokenPrice(): Promise<TokenPrice> {
+    return call<TokenPrice>({
+      url: 'realunit/price',
+      method: 'GET',
+    });
+  }
+
   async function getPriceHistory(timeFrame: Timeframe): Promise<PriceHistoryEntry[]> {
     const params = new URLSearchParams();
     params.set('timeFrame', timeFrame.toUpperCase());
@@ -135,6 +146,12 @@ export function useRealunit() {
     });
   }, [setTokenInfo]);
 
+  const fetchTokenPrice = useCallback(() => {
+    getTokenPrice().then((tokenPrice) => {
+      setTokenPrice(tokenPrice);
+    });
+  }, [setTokenPrice]);
+
   return useMemo(
     () => ({
       data,
@@ -147,7 +164,10 @@ export function useRealunit() {
       pageInfo,
       fetchHolders,
       fetchTokenInfo,
+      fetchTokenPrice,
       tokenInfo,
+      tokenPrice,
+      setTokenPrice,
       priceHistory,
       fetchPriceHistory,
       lastTimeframe,
@@ -163,7 +183,10 @@ export function useRealunit() {
       pageInfo,
       fetchHolders,
       fetchTokenInfo,
+      fetchTokenPrice,
       tokenInfo,
+      tokenPrice,
+      setTokenPrice,
       priceHistory,
       fetchPriceHistory,
       lastTimeframe,

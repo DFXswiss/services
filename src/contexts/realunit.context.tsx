@@ -7,6 +7,7 @@ import {
   PriceHistoryEntry,
   RealunitContextInterface,
   TokenInfo,
+  TokenPrice,
 } from 'src/dto/realunit.dto';
 
 const RealunitContext = createContext<RealunitContextInterface>(undefined as any);
@@ -28,6 +29,7 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
     endCursor: '',
   });
   const [tokenInfo, setTokenInfo] = useState<TokenInfo | undefined>();
+  const [tokenPrice, setTokenPrice] = useState<TokenPrice | undefined>();
   const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
   const [lastTimeframe, setLastTimeframe] = useState<string | undefined>();
 
@@ -47,12 +49,14 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       setPageInfo,
       tokenInfo,
       setTokenInfo,
+      tokenPrice,
+      setTokenPrice,
       priceHistory,
       setPriceHistory,
       lastTimeframe,
       setLastTimeframe,
     }),
-    [data, history, isLoading, holders, totalCount, pageInfo, tokenInfo, priceHistory, lastTimeframe],
+    [data, history, isLoading, holders, totalCount, pageInfo, tokenInfo, tokenPrice, priceHistory, lastTimeframe],
   );
 
   return <RealunitContext.Provider value={context}>{children}</RealunitContext.Provider>;

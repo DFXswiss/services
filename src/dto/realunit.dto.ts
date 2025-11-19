@@ -59,6 +59,14 @@ export interface TokenInfo {
     timestamp: string;
   };
 }
+
+export interface TokenPrice {
+  timestamp: string;
+  chf: number;
+  eur: number;
+  usd: number;
+}
+
 export interface PageInfo {
   endCursor: string;
   hasNextPage: boolean;
@@ -110,6 +118,8 @@ export interface RealunitContextInterface {
   setPageInfo: (pageInfo: PageInfo) => void;
   tokenInfo?: TokenInfo;
   setTokenInfo: (tokenInfo: TokenInfo | undefined) => void;
+  tokenPrice?: TokenPrice;
+  setTokenPrice: (tokenPrice: TokenPrice | undefined) => void;
   priceHistory: PriceHistoryEntry[];
   setPriceHistory: (priceHistory: PriceHistoryEntry[]) => void;
   lastTimeframe?: string;
