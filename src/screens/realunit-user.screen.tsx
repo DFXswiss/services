@@ -61,7 +61,7 @@ export default function RealunitUserScreen(): JSX.Element {
       ) : !data ? (
         <p className="text-dfxGray-700">{translate('screens/realunit', 'No data available')}</p>
       ) : (
-        <div className="w-full overflow-x-auto">
+        <div className="w-full">
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'Account Details')}</h2>
