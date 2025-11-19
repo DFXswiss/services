@@ -74,6 +74,12 @@ export const SendInterface = () => {
   }, [addressItems, data.address, setValue]);
 
   useEffect(() => {
+    if (data.address) {
+      setQuote(undefined);
+    }
+  }, [data.address]);
+
+  useEffect(() => {
     if (!debouncedData?.sendAsset || !debouncedData.sendAmount || !debouncedData.address?.address) return;
     if (!debouncedData.address.blockchains?.length) return;
 
