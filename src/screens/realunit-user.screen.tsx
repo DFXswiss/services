@@ -24,7 +24,7 @@ export default function RealunitUserScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { copy } = useClipboard();
   const { address } = useParams<{ address: string }>();
-  const { data, history, isLoading, fetchAccountSummary, fetchAccountHistory } = useRealunit();
+  const { data, history, isLoading, fetchAccountSummary, fetchAccountHistory, priceHistory } = useRealunit();
 
   const [metric, setMetric] = useState<BalanceMetric>(BalanceMetric.REALU);
 
@@ -49,8 +49,8 @@ export default function RealunitUserScreen(): JSX.Element {
     () =>
       data &&
       (metric === BalanceMetric.CHF
-        ? formatCurrency(data.historicalBalances?.[0]?.valueChf ?? 0, 2, 2)
-        : (Number(data.balance) / 100).toFixed(2)),
+        ? formatCurrency(Number(data.balance) * (priceHistory?.[0]?.chf ?? 0), 2, 2)
+        : Number(data.balance).toFixed(2)),
     [data, metric],
   );
 
@@ -99,7 +99,7 @@ export default function RealunitUserScreen(): JSX.Element {
                       {translate('screens/realunit', 'Balance')}
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {(Number(data.balance) / 100).toFixed(2)} <span className="font-bold">REALU</span>
+                      {Number(data.balance).toFixed(2)} <span className="font-bold">REALU</span>
                     </td>
                   </tr>
                   <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
@@ -137,7 +137,12 @@ export default function RealunitUserScreen(): JSX.Element {
                         </div>
                       </div>
                       <div className="absolute inset-0">
-                        <BalanceChart historicalBalances={data.historicalBalances} metric={metric} isLoading={false} />
+                        <BalanceChart
+                          historicalBalances={data.historicalBalances ?? []}
+                          metric={metric}
+                          isLoading={false}
+                          priceHistory={priceHistory}
+                        />
                       </div>
                     </div>
                   </div>
@@ -198,8 +203,7 @@ export default function RealunitUserScreen(): JSX.Element {
                                     <CopyButton color={IconColor.GRAY} onCopy={() => copy(event.transfer?.to ?? '')} />
                                   </div>
                                   <div>
-                                    <span className="font-bold">Value:</span>{' '}
-                                    {(Number(event.transfer.value) / 100).toFixed(2)}
+                                    <span className="font-bold">Value:</span> {Number(event.transfer.value).toFixed(2)}
                                   </div>
                                 </div>
                               )}
@@ -213,7 +217,7 @@ export default function RealunitUserScreen(): JSX.Element {
                                       onCopy={() => copy(event.approval?.spender ?? '')}
                                     />
                                   </div>
-                                  <div>Value: {(Number(event.approval.value) / 100).toFixed(2)}</div>
+                                  <div>Value: {Number(event.approval.value).toFixed(2)}</div>
                                 </div>
                               )}
                               {event.tokensDeclaredInvalid && `Amount: ${event.tokensDeclaredInvalid.amount}`}

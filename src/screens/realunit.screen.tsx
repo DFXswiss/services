@@ -157,7 +157,7 @@ export default function RealunitScreen(): JSX.Element {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {(Number(holder.balance) / 100).toFixed(2)}
+                      {Number(holder.balance).toFixed(2)}
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{holder.percentage.toFixed(2)}%</td>
                   </tr>
