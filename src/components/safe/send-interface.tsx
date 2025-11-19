@@ -1,16 +1,17 @@
-import { ApiError, Asset, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, Asset, UserAddress, Utils, Validations, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
   StyledButtonWidth,
   StyledDataTable,
   StyledDataTableRow,
+  StyledDropdown,
   StyledInfoText,
-  StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -24,7 +25,7 @@ import { AssetInput } from '../order/asset-input';
 interface SendFormData {
   sendAsset?: Asset;
   sendAmount?: string;
-  address?: string;
+  address?: UserAddress;
 }
 
 export const SendInterface = () => {
@@ -36,16 +37,29 @@ export const SendInterface = () => {
   const [quote, setQuote] = useState<OrderPaymentInfo>();
   const [isFetchingQuote, setIsFetchingQuote] = useState(false);
   const [error, setError] = useState<string>();
+  const { user } = useUserContext();
+  const { rootRef } = useLayoutContext();
 
   const {
     control,
     watch,
     setValue,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm<SendFormData>({ mode: 'onChange' });
 
   const data = watch();
   const debouncedData = useDebounce(data, 500);
+  const addressItems = useMemo(() => {
+    const walletAddresses = user?.addresses?.filter((a) => !a.isCustody) ?? [];
+    return [
+      ...walletAddresses,
+      {
+        address: translate('screens/buy', 'Switch address'),
+        label: translate('screens/buy', 'Login with a different address'),
+        blockchains: [],
+      } as any,
+    ];
+  }, [user?.addresses, translate]);
 
   useEffect(() => {
     if (sendableAssets?.length && !data.sendAsset) {
@@ -54,7 +68,14 @@ export const SendInterface = () => {
   }, [data.sendAsset, sendableAssets, setValue]);
 
   useEffect(() => {
-    if (!isValid || !debouncedData?.sendAsset || !debouncedData.sendAmount || !debouncedData.address) return;
+    if (addressItems.length && !data.address) {
+      setValue('address', addressItems[0]);
+    }
+  }, [addressItems, data.address, setValue]);
+
+  useEffect(() => {
+    if (!debouncedData?.sendAsset || !debouncedData.sendAmount || !debouncedData.address?.address) return;
+    if (!debouncedData.address.blockchains?.length) return;
 
     setIsFetchingQuote(true);
     setError(undefined);
@@ -62,12 +83,12 @@ export const SendInterface = () => {
     fetchSendInfo({
       asset: debouncedData.sendAsset,
       amount: debouncedData.sendAmount,
-      address: debouncedData.address,
+      address: debouncedData.address.address,
     })
       .then((response) => setQuote(response))
       .catch((err: ApiError | Error) => setError(err.message ?? 'Unknown error'))
       .finally(() => setIsFetchingQuote(false));
-  }, [debouncedData, fetchSendInfo, isValid]);
+  }, [debouncedData, fetchSendInfo]);
 
   const rules = useMemo(
     () =>
@@ -102,10 +123,16 @@ export const SendInterface = () => {
           onAmountChange={() => setQuote(undefined)}
         />
 
-        <StyledInput
+        <StyledDropdown
+          control={control}
+          rootRef={rootRef}
           name="address"
           label={translate('screens/sell', 'Destination address')}
-          placeholder={translate('screens/sell', 'Enter the recipient address')}
+          items={addressItems}
+          labelFunc={(item) => (item.blockchains?.length ? blankedAddress(item.address, { width }) : item.address)}
+          descriptionFunc={(item) => (item.blockchains?.length ? item.blockchains[0] : item.label)}
+          full
+          forceEnable
         />
 
         {error && <div className="text-sm text-center text-dfxRed-100">{error}</div>}
@@ -127,7 +154,7 @@ export const SendInterface = () => {
                 {quote.paymentInfo.fees.network} {quote.paymentInfo.sourceAsset}
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/safe', 'Destination address')}>
-                {blankedAddress(debouncedData?.address ?? '', { width })}
+                {blankedAddress(debouncedData?.address?.address ?? '', { width })}
               </StyledDataTableRow>
             </StyledDataTable>
           </StyledVerticalStack>
