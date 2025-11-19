@@ -3,7 +3,7 @@ import { ApexOptions } from 'apexcharts';
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { HistoricalBalance, PriceHistoryEntry } from 'src/dto/realunit.dto';
+import { HistoricalBalance } from 'src/dto/realunit.dto';
 
 export enum BalanceMetric {
   REALU = 'realu',
@@ -14,19 +14,15 @@ interface BalanceChartProps {
   historicalBalances: HistoricalBalance[];
   metric: BalanceMetric;
   isLoading: boolean;
-  priceHistory: PriceHistoryEntry[];
 }
 
-export const BalanceChart = ({ isLoading, historicalBalances, metric, priceHistory }: BalanceChartProps) => {
+export const BalanceChart = ({ isLoading, historicalBalances, metric }: BalanceChartProps) => {
   const { translate, locale } = useSettingsContext();
-  const currentPriceChf = priceHistory?.[0]?.chf ?? 0;
 
   const maxBalance = useMemo(() => {
-    const values = historicalBalances.map((e) =>
-      metric === BalanceMetric.CHF ? Number(e.balance) * currentPriceChf : Number(e.balance),
-    );
+    const values = historicalBalances.map((e) => (metric === BalanceMetric.CHF ? e.valueChf ?? 0 : Number(e.balance)));
     return Math.max(...values, 0);
-  }, [historicalBalances, metric, currentPriceChf]);
+  }, [historicalBalances, metric]);
 
   const chartOptions = useMemo((): ApexOptions => {
     const translatedMonths = Array.from({ length: 12 }, (_, i) =>
@@ -95,12 +91,12 @@ export const BalanceChart = ({ isLoading, historicalBalances, metric, priceHisto
       {
         name: translate('screens/realunit', 'Balance'),
         data: historicalBalances.map((entry: HistoricalBalance) => {
-          const value = metric === BalanceMetric.CHF ? Number(entry.balance) * currentPriceChf : Number(entry.balance);
+          const value = metric === BalanceMetric.CHF ? entry.valueChf ?? 0 : Number(entry.balance);
           return [new Date(entry.timestamp).getTime(), Number(value.toFixed(2))];
         }),
       },
     ];
-  }, [historicalBalances, metric, translate, currentPriceChf]);
+  }, [historicalBalances, metric, translate]);
 
   return isLoading ? (
     <div className="flex justify-center items-center w-full h-full">

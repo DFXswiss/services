@@ -24,9 +24,22 @@ export default function RealunitUserScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { copy } = useClipboard();
   const { address } = useParams<{ address: string }>();
-  const { data, history, isLoading, fetchAccountSummary, fetchAccountHistory, priceHistory } = useRealunit();
+  const {
+    data,
+    history,
+    isLoading,
+    fetchAccountSummary,
+    fetchAccountHistory,
+    priceHistory,
+    tokenPrice,
+    fetchTokenPrice,
+  } = useRealunit();
 
   const [metric, setMetric] = useState<BalanceMetric>(BalanceMetric.REALU);
+
+  useEffect(() => {
+    fetchTokenPrice();
+  }, [fetchTokenPrice]);
 
   useEffect(() => {
     if (address) {
@@ -49,9 +62,9 @@ export default function RealunitUserScreen(): JSX.Element {
     () =>
       data &&
       (metric === BalanceMetric.CHF
-        ? formatCurrency(Number(data.balance) * (priceHistory?.[0]?.chf ?? 0), 2, 2)
-        : Number(data.balance).toFixed(2)),
-    [data, metric],
+        ? formatCurrency(Number(data.balance) * (tokenPrice?.chf ?? 0), 2, 2)
+        : data.balance),
+    [data, metric, tokenPrice],
   );
 
   return (
@@ -99,7 +112,7 @@ export default function RealunitUserScreen(): JSX.Element {
                       {translate('screens/realunit', 'Balance')}
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {Number(data.balance).toFixed(2)} <span className="font-bold">REALU</span>
+                      {data.balance} <span className="font-bold">REALU</span>
                     </td>
                   </tr>
                   <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
@@ -141,7 +154,6 @@ export default function RealunitUserScreen(): JSX.Element {
                           historicalBalances={data.historicalBalances ?? []}
                           metric={metric}
                           isLoading={false}
-                          priceHistory={priceHistory}
                         />
                       </div>
                     </div>
