@@ -76,7 +76,10 @@ export const PriceHistoryChart = ({ priceHistory, onTimeframeChange }: PriceHist
     return [
       {
         name: translate('screens/realunit', 'Price'),
-        data: priceHistory.map((entry: PriceHistoryEntry) => [new Date(entry.timestamp).getTime(), entry[currency]]),
+        data: priceHistory.map((entry: PriceHistoryEntry) => [
+          new Date(entry.timestamp).getTime(),
+          Number(entry[currency].toFixed(4)),
+        ]),
       },
     ];
   }, [priceHistory, currency, translate]);
