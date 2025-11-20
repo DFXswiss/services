@@ -8,6 +8,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect } from 'react';
 import { PriceHistoryChart } from 'src/components/realunit/price-history-chart';
+import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PaginationDirection } from 'src/dto/realunit.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
@@ -22,19 +23,8 @@ export default function RealunitScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { copy } = useClipboard();
-
-  const {
-    holders,
-    totalCount,
-    pageInfo,
-    tokenInfo,
-    isLoading,
-    priceHistory,
-    fetchHolders,
-    fetchPriceHistory,
-    fetchTokenInfo,
-    lastTimeframe,
-  } = useRealunit();
+  const { holders, totalCount, pageInfo, tokenInfo, isLoading, priceHistory } = useRealunitContext();
+  const { fetchHolders, fetchPriceHistory, fetchTokenInfo } = useRealunit();
 
   useLayoutOptions({ backButton: true });
 

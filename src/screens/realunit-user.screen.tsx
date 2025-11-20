@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BalanceChart, BalanceMetric } from 'src/components/realunit/balance-chart';
 import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
+import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PaginationDirection } from 'src/dto/realunit.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
@@ -24,16 +25,8 @@ export default function RealunitUserScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { copy } = useClipboard();
   const { address } = useParams<{ address: string }>();
-  const {
-    data,
-    history,
-    isLoading,
-    fetchAccountSummary,
-    fetchAccountHistory,
-    priceHistory,
-    tokenPrice,
-    fetchTokenPrice,
-  } = useRealunit();
+  const { fetchAccountSummary, fetchAccountHistory, fetchTokenPrice } = useRealunit();
+  const { isLoading, data, history, tokenPrice } = useRealunitContext();
 
   const [metric, setMetric] = useState<BalanceMetric>(BalanceMetric.REALU);
 
