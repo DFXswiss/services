@@ -1,3 +1,5 @@
+import { Timeframe } from 'src/util/chart';
+
 export interface HistoricalBalance {
   balance: string;
   timestamp: string;
@@ -91,37 +93,22 @@ export enum PaginationDirection {
   NEXT = 'next',
   PREV = 'prev',
 }
-export interface RealunitContextData {
-  data?: AccountSummary;
-  history?: AccountHistory;
-  isLoading: boolean;
-  holders: Holder[];
-  totalCount?: number;
-  pageInfo: PageInfo;
-  tokenInfo?: TokenInfo;
-  priceHistory: PriceHistoryEntry[];
-  lastTimeframe?: string;
-}
 
 export interface RealunitContextInterface {
-  data?: AccountSummary;
-  setData: (data: AccountSummary | undefined) => void;
+  accountSummary?: AccountSummary;
   history?: AccountHistory;
-  setHistory: (history: AccountHistory | undefined) => void;
   isLoading: boolean;
-  setIsLoading: (isLoading: boolean) => void;
   holders: Holder[];
-  setHolders: (holders: Holder[]) => void;
   totalCount?: number;
-  setTotalCount: (totalCount: number | undefined) => void;
   pageInfo: PageInfo;
-  setPageInfo: (pageInfo: PageInfo) => void;
   tokenInfo?: TokenInfo;
-  setTokenInfo: (tokenInfo: TokenInfo | undefined) => void;
   tokenPrice?: TokenPrice;
-  setTokenPrice: (tokenPrice: TokenPrice | undefined) => void;
   priceHistory: PriceHistoryEntry[];
-  setPriceHistory: (priceHistory: PriceHistoryEntry[]) => void;
-  lastTimeframe?: string;
-  setLastTimeframe: (timeframe: string | undefined) => void;
+  timeframe: Timeframe;
+  fetchAccountSummary: (address: string) => void;
+  fetchAccountHistory: (address: string, cursor?: string, direction?: PaginationDirection) => void;
+  fetchHolders: (cursor?: string, direction?: PaginationDirection) => void;
+  fetchTokenInfo: () => void;
+  fetchPriceHistory: (timeframe?: Timeframe) => void;
+  fetchTokenPrice: () => void;
 }

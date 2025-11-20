@@ -1,5 +1,5 @@
 import { ApexOptions } from 'apexcharts';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Chart from 'react-apexcharts';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PriceHistoryEntry } from 'src/dto/realunit.dto';
@@ -8,19 +8,15 @@ import { Timeframe } from 'src/util/chart';
 import { ButtonGroup } from '../safe/button-group';
 
 interface PriceHistoryChartProps {
+  timeframe: Timeframe;
   priceHistory: PriceHistoryEntry[];
   onTimeframeChange: (timeframe: Timeframe) => void;
 }
 
-export const PriceHistoryChart = ({ priceHistory, onTimeframeChange }: PriceHistoryChartProps) => {
+export const PriceHistoryChart = ({ timeframe, priceHistory, onTimeframeChange }: PriceHistoryChartProps) => {
   const { translate } = useSettingsContext();
 
-  const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.ALL);
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
-
-  useEffect(() => {
-    onTimeframeChange(timeframe);
-  }, [timeframe, onTimeframeChange]);
 
   const maxPrice = useMemo(() => Math.max(...priceHistory.map((e) => e[currency]), 0), [priceHistory, currency]);
 
@@ -100,7 +96,7 @@ export const PriceHistoryChart = ({ priceHistory, onTimeframeChange }: PriceHist
           <ButtonGroup<Timeframe>
             items={Object.values(Timeframe)}
             selected={timeframe}
-            onClick={(tf) => setTimeframe(tf)}
+            onClick={(tf) => onTimeframeChange(tf)}
             buttonLabel={(tf) => tf}
           />
         </div>

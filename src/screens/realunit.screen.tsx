@@ -8,13 +8,13 @@ import {
 } from '@dfx.swiss/react-components';
 import { useEffect } from 'react';
 import { PriceHistoryChart } from 'src/components/realunit/price-history-chart';
+import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PaginationDirection } from 'src/dto/realunit.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { useRealunit } from 'src/hooks/realunit.hook';
 import { blankedAddress } from 'src/util/utils';
 export default function RealunitScreen(): JSX.Element {
   useAdminGuard();
@@ -30,17 +30,18 @@ export default function RealunitScreen(): JSX.Element {
     tokenInfo,
     isLoading,
     priceHistory,
+    timeframe,
     fetchHolders,
     fetchPriceHistory,
     fetchTokenInfo,
-    lastTimeframe,
-  } = useRealunit();
+  } = useRealunitContext();
 
   useLayoutOptions({ backButton: true });
 
   useEffect(() => {
-    fetchHolders();
-    fetchTokenInfo();
+    if (!holders.length) fetchHolders();
+    if (!tokenInfo) fetchTokenInfo();
+    if (!priceHistory.length) fetchPriceHistory();
   }, [fetchHolders, fetchTokenInfo]);
 
   const handleAddressClick = (address: string) => {
@@ -118,7 +119,11 @@ export default function RealunitScreen(): JSX.Element {
             )}
 
             <h2 className="text-dfxGray-700 justify-center  mb-2">{translate('screens/realunit', 'Price History')}</h2>
-            <PriceHistoryChart priceHistory={priceHistory} onTimeframeChange={fetchPriceHistory} />
+            <PriceHistoryChart
+              timeframe={timeframe}
+              priceHistory={priceHistory}
+              onTimeframeChange={fetchPriceHistory}
+            />
           </div>
 
           <div className="w-full overflow-x-auto mt-8 mb-4">
