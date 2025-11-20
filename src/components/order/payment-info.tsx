@@ -170,7 +170,9 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
                   />
 
                   <>
-                    {isBankWire && orderType !== OrderType.SWAP && <PaymentInfoContent info={paymentInfo} />}
+                    {isBankWire && orderType !== OrderType.SWAP && paymentInfo?.buyInfos && (
+                      <PaymentInfoContent info={paymentInfo} />
+                    )}
                     <SanctionHint />
                     <div className="w-full text-center leading-none">
                       <StyledLink
