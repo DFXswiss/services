@@ -22,12 +22,9 @@ export const WithdrawInterface = () => {
 
   const handleFetchWithdrawInfo = useCallback(
     (data: OrderFormData) => {
-      if (!data.bankAccount?.iban) {
-        return Promise.reject(new Error(translate('screens/sell', 'Add or select your IBAN')));
-      }
       return fetchWithdrawInfo(data);
     },
-    [fetchWithdrawInfo, translate],
+    [fetchWithdrawInfo],
   );
   const defaultBankAccount = bankAccounts?.find((a) => a.default);
 
@@ -40,6 +37,7 @@ export const WithdrawInterface = () => {
       sourceAssets={withdrawableAssets}
       targetAssets={withdrawableCurrencies}
       pairMap={pairMap}
+      hideAddressSelection={true}
       confirmPayment={onConfirmWithdraw}
       onFetchPaymentInfo={handleFetchWithdrawInfo}
       balanceFunc={(asset) => findBalanceString(asset, portfolio.balances)}
