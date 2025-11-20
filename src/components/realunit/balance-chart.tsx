@@ -20,9 +20,7 @@ export const BalanceChart = ({ isLoading, historicalBalances, metric }: BalanceC
   const { translate, locale } = useSettingsContext();
 
   const maxBalance = useMemo(() => {
-    const values = historicalBalances.map((e) =>
-      metric === BalanceMetric.CHF ? e.valueChf ?? 0 : Number(e.balance) / 100,
-    );
+    const values = historicalBalances.map((e) => (metric === BalanceMetric.CHF ? e.valueChf ?? 0 : Number(e.balance)));
     return Math.max(...values, 0);
   }, [historicalBalances, metric]);
 
@@ -93,8 +91,8 @@ export const BalanceChart = ({ isLoading, historicalBalances, metric }: BalanceC
       {
         name: translate('screens/realunit', 'Balance'),
         data: historicalBalances.map((entry: HistoricalBalance) => {
-          const value = metric === BalanceMetric.CHF ? entry.valueChf ?? 0 : Number(entry.balance) / 100;
-          return [new Date(entry.timestamp).getTime(), value];
+          const value = metric === BalanceMetric.CHF ? entry.valueChf ?? 0 : Number(entry.balance);
+          return [new Date(entry.timestamp).getTime(), Number(value.toFixed(2))];
         }),
       },
     ];
