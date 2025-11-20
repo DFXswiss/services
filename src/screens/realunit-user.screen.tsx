@@ -10,12 +10,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BalanceChart, BalanceMetric } from 'src/components/realunit/balance-chart';
 import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
+import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PaginationDirection } from 'src/dto/realunit.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { useRealunit } from 'src/hooks/realunit.hook';
 import { blankedAddress, formatCurrency } from 'src/util/utils';
 
 export default function RealunitUserScreen(): JSX.Element {
@@ -24,9 +24,14 @@ export default function RealunitUserScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { copy } = useClipboard();
   const { address } = useParams<{ address: string }>();
-  const { data, history, isLoading, fetchAccountSummary, fetchAccountHistory } = useRealunit();
+  const { accountSummary, history, isLoading, fetchAccountSummary, fetchAccountHistory, tokenPrice, fetchTokenPrice } =
+    useRealunitContext();
 
   const [metric, setMetric] = useState<BalanceMetric>(BalanceMetric.REALU);
+
+  useEffect(() => {
+    fetchTokenPrice();
+  }, [fetchTokenPrice]);
 
   useEffect(() => {
     if (address) {
@@ -47,21 +52,21 @@ export default function RealunitUserScreen(): JSX.Element {
 
   const currentBalance = useMemo(
     () =>
-      data &&
+      accountSummary &&
       (metric === BalanceMetric.CHF
-        ? formatCurrency(data.historicalBalances?.[0]?.valueChf ?? 0, 2, 2)
-        : (Number(data.balance) / 100).toFixed(2)),
-    [data, metric],
+        ? formatCurrency(Number(accountSummary.balance) * (tokenPrice?.chf ?? 0), 2, 2)
+        : accountSummary.balance),
+    [accountSummary, metric, tokenPrice],
   );
 
   return (
     <>
-      {!data ? (
+      {!accountSummary ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
-      ) : !data ? (
+      ) : !accountSummary ? (
         <p className="text-dfxGray-700">{translate('screens/realunit', 'No data available')}</p>
       ) : (
-        <div className="w-full overflow-x-auto">
+        <div className="w-full">
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'Account Details')}</h2>
@@ -83,8 +88,8 @@ export default function RealunitUserScreen(): JSX.Element {
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 break-all">
                       <div className="flex items-center gap-2">
-                        <span>{blankedAddress(data.address, { displayLength: 22 })}</span>
-                        <CopyButton color={IconColor.GRAY} onCopy={() => copy(data.address)} />
+                        <span>{blankedAddress(accountSummary.address, { displayLength: 22 })}</span>
+                        <CopyButton color={IconColor.GRAY} onCopy={() => copy(accountSummary.address)} />
                       </div>
                     </td>
                   </tr>
@@ -92,14 +97,14 @@ export default function RealunitUserScreen(): JSX.Element {
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                       {translate('screens/realunit', 'Address Type')}
                     </td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{data.addressType}</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{accountSummary.addressType}</td>
                   </tr>
                   <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                       {translate('screens/realunit', 'Balance')}
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {(Number(data.balance) / 100).toFixed(2)} <span className="font-bold">REALU</span>
+                      {accountSummary.balance} <span className="font-bold">REALU</span>
                     </td>
                   </tr>
                   <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
@@ -107,14 +112,14 @@ export default function RealunitUserScreen(): JSX.Element {
                       {translate('screens/realunit', 'Last Updated')}
                     </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {new Date(data.lastUpdated).toLocaleString()}
+                      {new Date(accountSummary.lastUpdated).toLocaleString()}
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            {data.historicalBalances && (
+            {accountSummary.historicalBalances && (
               <div className="shadow-card rounded-xl">
                 <div id="chart-timeline" className="relative">
                   <div className="p-2 gap-2 flex flex-col items-start">
@@ -137,7 +142,11 @@ export default function RealunitUserScreen(): JSX.Element {
                         </div>
                       </div>
                       <div className="absolute inset-0">
-                        <BalanceChart historicalBalances={data.historicalBalances} metric={metric} isLoading={false} />
+                        <BalanceChart
+                          historicalBalances={accountSummary.historicalBalances ?? []}
+                          metric={metric}
+                          isLoading={false}
+                        />
                       </div>
                     </div>
                   </div>
@@ -198,8 +207,7 @@ export default function RealunitUserScreen(): JSX.Element {
                                     <CopyButton color={IconColor.GRAY} onCopy={() => copy(event.transfer?.to ?? '')} />
                                   </div>
                                   <div>
-                                    <span className="font-bold">Value:</span>{' '}
-                                    {(Number(event.transfer.value) / 100).toFixed(2)}
+                                    <span className="font-bold">Value:</span> {Number(event.transfer.value).toFixed(2)}
                                   </div>
                                 </div>
                               )}
@@ -213,7 +221,7 @@ export default function RealunitUserScreen(): JSX.Element {
                                       onCopy={() => copy(event.approval?.spender ?? '')}
                                     />
                                   </div>
-                                  <div>Value: {(Number(event.approval.value) / 100).toFixed(2)}</div>
+                                  <div>Value: {Number(event.approval.value).toFixed(2)}</div>
                                 </div>
                               )}
                               {event.tokensDeclaredInvalid && `Amount: ${event.tokensDeclaredInvalid.amount}`}
