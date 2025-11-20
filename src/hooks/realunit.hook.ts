@@ -16,16 +16,25 @@ import { relativeUrl } from '../util/utils';
 export function useRealunit() {
   const { call } = useApi();
   const {
+    data,
     setData,
+    history,
     setHistory,
+    isLoading,
     setIsLoading,
     holders,
     setHolders,
+    totalCount,
     setTotalCount,
+    pageInfo,
     setPageInfo,
+    tokenInfo,
     setTokenInfo,
+    tokenPrice,
     setTokenPrice,
+    priceHistory,
     setPriceHistory,
+    lastTimeframe,
     setLastTimeframe,
   } = useRealunitContext();
 
@@ -145,24 +154,42 @@ export function useRealunit() {
 
   return useMemo(
     () => ({
+      data,
+      history,
+      isLoading,
       fetchAccountSummary,
       fetchAccountHistory,
       holders,
+      totalCount,
+      pageInfo,
       fetchHolders,
       fetchTokenInfo,
       fetchTokenPrice,
+      tokenInfo,
+      tokenPrice,
       setTokenPrice,
+      priceHistory,
       fetchPriceHistory,
+      lastTimeframe,
     }),
     [
+      data,
+      history,
+      isLoading,
       fetchAccountSummary,
       fetchAccountHistory,
       holders,
+      totalCount,
+      pageInfo,
       fetchHolders,
       fetchTokenInfo,
       fetchTokenPrice,
+      tokenInfo,
+      tokenPrice,
       setTokenPrice,
+      priceHistory,
       fetchPriceHistory,
+      lastTimeframe,
     ],
   );
 }
