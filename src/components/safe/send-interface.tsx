@@ -74,10 +74,10 @@ export const SendInterface = () => {
   }, [addressItems, data.address, setValue]);
 
   useEffect(() => {
-    if (data.address) {
+    if (data.address || data.sendAsset) {
       setQuote(undefined);
     }
-  }, [data.address]);
+  }, [data.address, data.sendAsset]);
 
   useEffect(() => {
     if (!debouncedData?.sendAsset || !debouncedData.sendAmount || !debouncedData.address?.address) return;
