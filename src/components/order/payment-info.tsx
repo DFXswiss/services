@@ -151,6 +151,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
               !kycError &&
               !errorMessage &&
               !amountError?.hideInfos &&
+              targetAsset &&
               (privateAssets?.length && !flags?.includes('private') ? (
                 <PrivateAssetHint asset={privateAssets[0] as Asset} />
               ) : (

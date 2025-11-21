@@ -19,7 +19,7 @@ import { OrderPaymentInfo } from 'src/dto/order.dto';
 import { SafeOperationType } from 'src/dto/safe.dto';
 import useDebounce from 'src/hooks/debounce.hook';
 import { useSafe } from 'src/hooks/safe.hook';
-import { blankedAddress, findBalanceString } from 'src/util/utils';
+import { blankedAddress, findCustodyBalanceString } from 'src/util/utils';
 import { AssetInput } from '../order/asset-input';
 
 interface SendFormData {
@@ -124,7 +124,7 @@ export const SendInterface = () => {
           selectedItem={data.sendAsset}
           assetRules={rules.sendAsset}
           amountRules={rules.sendAmount}
-          balanceFunc={(asset) => findBalanceString(asset, portfolio.balances)}
+          balanceFunc={(asset) => findCustodyBalanceString(asset, portfolio.balances)}
           onMaxButtonClick={(value) => setValue('sendAmount', value.toString(), { shouldTouch: true })}
           onAmountChange={() => setQuote(undefined)}
         />
@@ -160,7 +160,7 @@ export const SendInterface = () => {
                 {quote.paymentInfo.fees.network} {quote.paymentInfo.sourceAsset}
               </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/safe', 'Destination address')}>
-                {blankedAddress(debouncedData?.address?.address ?? '', { width })}
+                <p className="break-all">{blankedAddress(debouncedData?.address?.address ?? '', { width })}</p>
               </StyledDataTableRow>
             </StyledDataTable>
           </StyledVerticalStack>

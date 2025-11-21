@@ -1,4 +1,5 @@
 import { Asset, Fiat, KycFile, UserAddress, Utils } from '@dfx.swiss/react';
+import { CustodyAsset, CustodyAssetBalance } from 'src/dto/safe.dto';
 
 export function isDefined<T>(item: T | undefined): item is T {
   return item != null;
@@ -314,7 +315,7 @@ export function equalsIgnoreCase(left?: string, right?: string): boolean {
   return left?.toLowerCase() === right?.toLowerCase();
 }
 
-export function findBalanceString(asset: Asset, balances: Array<{ asset: { name: string }; balance: number }>): string {
+export function findCustodyBalanceString(asset: CustodyAsset, balances: CustodyAssetBalance[]): string {
   const balance = balances.find((b) => b.asset.name === asset.name)?.balance;
-  return balance != null ? Utils.formatAmountCrypto(balance) : '';
+  return balance !== undefined ? Utils.formatAmountCrypto(balance) : '';
 }

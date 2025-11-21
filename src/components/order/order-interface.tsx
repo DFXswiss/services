@@ -51,6 +51,7 @@ interface OrderInterfaceProps {
   onFetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   confirmPayment: () => Promise<void>;
   balanceFunc?: (asset: Asset) => string;
+  onSourceAssetChange?: (sourceAsset: string) => void;
 }
 
 // TODO (later): Simplify and clean up logic
@@ -67,6 +68,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   onFetchPaymentInfo,
   confirmPayment,
   balanceFunc,
+  onSourceAssetChange,
 }: OrderInterfaceProps) => {
   const { width } = useWindowContext();
   const { session } = useAuthContext();
@@ -97,6 +99,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
     watch,
     control,
     setValue,
+    resetField,
     formState: { errors },
   } = useForm<OrderFormData>({ mode: 'onChange', defaultValues });
 
@@ -138,9 +141,17 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   }, [sourceAssets, targetAssets, availableCurrencies, orderType, setValue, getDefaultCurrency]);
 
   useEffect(() => {
-    if (debouncedData && (!isSell || debouncedData.bankAccount?.iban))
-      handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue);
+    if (debouncedData) handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue);
   }, [debouncedData, onFetchPaymentInfo, setValue, handlePaymentInfoFetch]);
+
+  useEffect(() => {
+    if (!isSell && data.sourceAsset) {
+      onSourceAssetChange?.(data.sourceAsset.name);
+      resetField('targetAsset');
+      resetField('targetAmount');
+      resetField('sourceAmount');
+    }
+  }, [data.sourceAsset, onSourceAssetChange, resetField]);
 
   const findCryptoBalanceString: (asset: Asset) => string = useCallback(
     (asset: Asset): string => {
@@ -157,7 +168,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
 
   return (
     <Form control={control} rules={rules} errors={errors} hasFormElement={false}>
-      <StyledVerticalStack gap={2} full>
+      <StyledVerticalStack gap={4} full>
         <div className="px-2 text-dfxBlue-500 text-left text-lg font-semibold">{header}</div>
         <AssetInput
           control={control}
@@ -230,7 +241,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
             placeholder={translate('screens/sell', 'Add or select your IBAN')}
             isModalOpen={bankAccountSelection}
             onModalToggle={setBankAccountSelection}
-            className="left-0 right-0 px-[1rem] absolute translate-y-[70rem] h-fit"
+            className="left-0 right-0 px-[1rem] translate-y-[72rem] h-fit "
           />
         )}
         <div className="w-full">

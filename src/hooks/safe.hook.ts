@@ -14,7 +14,7 @@ import {
 } from '@dfx.swiss/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
-import { CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
+import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
 import { OrderFormData } from './order.hook';
 
 const DEPOSIT_PAIRS: Record<string, string> = {
@@ -44,13 +44,14 @@ export interface UseSafeResult {
   custodyAddress?: string;
   custodyBlockchains?: Blockchain[];
   availableCurrencies?: Fiat[];
-  availableAssets?: Asset[];
+  availableAssets?: CustodyAsset[];
   receiveableAssets?: Asset[];
   withdrawableAssets?: Asset[];
   withdrawableCurrencies?: Fiat[];
   sendableAssets?: Asset[];
   swappableSourceAssets?: Asset[];
   swappableTargetAssets?: Asset[];
+  setSelectedSourceAsset: (asset: string) => void;
   fetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   fetchReceiveInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   fetchSwapInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
@@ -83,6 +84,7 @@ export function useSafe(): UseSafeResult {
   const [history, setHistory] = useState<CustodyHistoryEntry[]>([]);
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [selectedSourceAsset, setSelectedSourceAsset] = useState<string>();
 
   // ---- Safe Screen Initialization ----
 
@@ -167,8 +169,10 @@ export function useSafe(): UseSafeResult {
   }, [getAssets, custodyBlockchains, portfolio.balances]);
 
   const swappableTargetAssets = useMemo(() => {
-    return custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { buyable: true, comingSoon: false }) : [];
-  }, [getAssets, custodyBlockchains]);
+    const targetAssets =
+      custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { buyable: true, comingSoon: false }) : [];
+    return targetAssets?.filter((a) => a.name !== selectedSourceAsset);
+  }, [getAssets, custodyBlockchains, selectedSourceAsset]);
 
   const sendableAssets = useMemo(() => {
     const assets =
@@ -343,6 +347,7 @@ export function useSafe(): UseSafeResult {
       sendableAssets,
       swappableSourceAssets,
       swappableTargetAssets,
+      setSelectedSourceAsset,
       fetchPaymentInfo,
       fetchReceiveInfo,
       fetchSwapInfo,
@@ -372,6 +377,7 @@ export function useSafe(): UseSafeResult {
       sendableAssets,
       swappableSourceAssets,
       swappableTargetAssets,
+      selectedSourceAsset,
       pairMap,
     ],
   );

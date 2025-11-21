@@ -5,7 +5,7 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { SafeOperationType } from 'src/dto/safe.dto';
 import { OrderFormData, OrderType } from 'src/hooks/order.hook';
 import { useSafe } from 'src/hooks/safe.hook';
-import { findBalanceString } from 'src/util/utils';
+import { findCustodyBalanceString } from 'src/util/utils';
 import { OrderInterface } from '../order/order-interface';
 
 export const WithdrawInterface = () => {
@@ -40,7 +40,7 @@ export const WithdrawInterface = () => {
       hideAddressSelection={true}
       confirmPayment={onConfirmWithdraw}
       onFetchPaymentInfo={handleFetchWithdrawInfo}
-      balanceFunc={(asset) => findBalanceString(asset, portfolio.balances)}
+      balanceFunc={(asset) => findCustodyBalanceString(asset, portfolio.balances)}
       defaultValues={{ bankAccount: defaultBankAccount }}
     />
   );

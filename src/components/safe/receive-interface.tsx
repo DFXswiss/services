@@ -53,6 +53,10 @@ export const ReceiveInterface = () => {
   const data = watch();
   const debouncedData = useDebounce(data, 500);
 
+  const isReceiveDataValid = () => {
+    return isValid && debouncedData?.receiveAsset && Number(debouncedData.receiveAmount) > 0;
+  };
+
   useEffect(() => {
     if (isValid && debouncedData?.receiveAsset && debouncedData.receiveAmount) onCreateReceiveOrder(debouncedData);
   }, [isValid, debouncedData]);
@@ -138,15 +142,13 @@ export const ReceiveInterface = () => {
           </StyledVerticalStack>
         )}
 
-        {error && <div className="text-red-500 text-sm text-center">{error}</div>}
-
         <div className="w-full">
           <StyledButton
             type="button"
             isLoading={isLoading}
             label={translate('general/actions', 'Next')}
             width={StyledButtonWidth.FULL}
-            disabled={!isValid || isLoading}
+            disabled={isLoading || !isReceiveDataValid()}
             onClick={handleConfirmReceive}
           />
         </div>
