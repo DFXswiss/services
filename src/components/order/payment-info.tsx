@@ -28,7 +28,6 @@ import { useAppParams } from 'src/hooks/app-params.hook';
 import { AmountError, OrderType } from 'src/hooks/order.hook';
 import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { isAsset } from 'src/util/utils';
-import { ErrorHint } from '../error-hint';
 import { ExchangeRate } from '../exchange-rate';
 import { PrivateAssetHint } from '../private-asset-hint';
 import { QuoteErrorHint } from '../quote-error-hint';
@@ -137,7 +136,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
 
             {errorMessage && (
               <StyledVerticalStack center className="text-center">
-                <ErrorHint message={errorMessage} />
+                <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
                 <StyledButton
                   width={StyledButtonWidth.MIN}
                   label={translate('general/actions', 'Retry')}
