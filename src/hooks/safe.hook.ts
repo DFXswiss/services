@@ -50,7 +50,7 @@ export interface UseSafeResult {
   custodyAddress?: string;
   custodyBlockchains?: Blockchain[];
   availableCurrencies?: Fiat[];
-  availableAssets?: Asset[];
+  availableAssets?: CustodyAsset[];
   receiveableAssets?: Asset[];
   withdrawableAssets?: Asset[];
   withdrawableCurrencies?: Fiat[];
