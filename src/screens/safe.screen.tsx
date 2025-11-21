@@ -44,6 +44,10 @@ export default function SafeScreen(): JSX.Element {
           return translate('screens/safe', 'Deposit Complete');
         case SafeOperationType.RECEIVE:
           return translate('screens/safe', 'Receive Complete');
+        case SafeOperationType.WITHDRAW:
+          return translate('screens/safe', 'Withdraw Complete');
+        case SafeOperationType.SEND:
+          return translate('screens/safe', 'Send Complete');
         case SafeOperationType.SWAP:
           return translate('screens/safe', 'Swap Complete');
       }

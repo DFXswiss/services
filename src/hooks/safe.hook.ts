@@ -13,20 +13,26 @@ import {
   useUserContext,
 } from '@dfx.swiss/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { OrderPaymentInfo } from 'src/dto/order.dto';
+import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
 import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
 import { OrderFormData } from './order.hook';
-
-enum CustodyOrderType {
-  DEPOSIT = 'Deposit',
-  RECEIVE = 'Receive',
-  SWAP = 'Swap',
-}
 
 const DEPOSIT_PAIRS: Record<string, string> = {
   EUR: 'dEURO',
   CHF: 'ZCHF',
 };
+
+const WITHDRAW_PAIRS: Record<string, string> = Object.entries(DEPOSIT_PAIRS).reduce(
+  (acc, [fiat, custody]) => ({ ...acc, [custody]: fiat }),
+  {},
+);
+
+export interface SendOrderFormData {
+  asset: Asset;
+  amount?: string;
+  targetAmount?: string;
+  address: string;
+}
 
 export interface UseSafeResult {
   isInitialized: boolean;
@@ -40,15 +46,23 @@ export interface UseSafeResult {
   availableCurrencies?: Fiat[];
   availableAssets?: CustodyAsset[];
   receiveableAssets?: Asset[];
+  withdrawableAssets?: Asset[];
+  withdrawableCurrencies?: Fiat[];
+  sendableAssets?: Asset[];
   swappableSourceAssets?: Asset[];
   swappableTargetAssets?: Asset[];
+  setSelectedSourceAsset: (asset: string) => void;
   fetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   fetchReceiveInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   fetchSwapInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
+  fetchWithdrawInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
+  fetchSendInfo: (data: SendOrderFormData) => Promise<OrderPaymentInfo>;
   confirmPayment: () => Promise<void>;
   confirmReceive: () => Promise<void>;
   confirmSwap: () => Promise<void>;
-  pairMap: (asset: string) => Asset | undefined;
+  confirmWithdraw: () => Promise<void>;
+  confirmSend: () => Promise<void>;
+  pairMap: (asset: string) => Asset | Fiat | undefined;
 }
 
 export function useSafe(): UseSafeResult {
@@ -70,6 +84,7 @@ export function useSafe(): UseSafeResult {
   const [history, setHistory] = useState<CustodyHistoryEntry[]>([]);
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [selectedSourceAsset, setSelectedSourceAsset] = useState<string>();
 
   // ---- Safe Screen Initialization ----
 
@@ -133,6 +148,20 @@ export function useSafe(): UseSafeResult {
       : [];
   }, [getAssets, custodyBlockchains]);
 
+  const withdrawableAssets = useMemo(() => {
+    const assets =
+      custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { sellable: true, comingSoon: false }) : [];
+    return assets.filter((a) => portfolio.balances.find((b) => b.asset.name === a.name && b.balance > 0));
+  }, [getAssets, custodyBlockchains, portfolio.balances]);
+
+  const withdrawableCurrencies = useMemo(() => {
+    return (availableCurrencies ?? []).filter((currency) =>
+      portfolio.balances.some(
+        (balance) => balance.asset.name === DEPOSIT_PAIRS[currency.name as keyof typeof DEPOSIT_PAIRS],
+      ),
+    );
+  }, [availableCurrencies, portfolio.balances]);
+
   const swappableSourceAssets = useMemo(() => {
     const sourceAssets =
       custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { sellable: true, comingSoon: false }) : [];
@@ -140,12 +169,22 @@ export function useSafe(): UseSafeResult {
   }, [getAssets, custodyBlockchains, portfolio.balances]);
 
   const swappableTargetAssets = useMemo(() => {
-    return custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { buyable: true, comingSoon: false }) : [];
-  }, [getAssets, custodyBlockchains]);
+    const targetAssets =
+      custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { buyable: true, comingSoon: false }) : [];
+    return targetAssets?.filter((a) => a.name !== selectedSourceAsset);
+  }, [getAssets, custodyBlockchains, selectedSourceAsset]);
+
+  const sendableAssets = useMemo(() => {
+    const assets =
+      custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { sellable: true, comingSoon: false }) : [];
+    return assets.filter((a) => portfolio.balances.find((b) => b.asset.name === a.name && b.balance > 0));
+  }, [getAssets, custodyBlockchains, portfolio.balances]);
 
   const pairMap = useCallback(
-    (asset: string) => availableAssets?.find((a) => a.name === DEPOSIT_PAIRS[asset]),
-    [availableAssets],
+    (asset: string) =>
+      availableAssets?.find((a) => a.name === DEPOSIT_PAIRS[asset]) ||
+      availableCurrencies?.find((c) => c.name === WITHDRAW_PAIRS[asset]),
+    [availableAssets, availableCurrencies],
   );
 
   // ---- API Calls ----
@@ -225,6 +264,45 @@ export function useSafe(): UseSafeResult {
     return order;
   }
 
+  async function fetchWithdrawInfo(data: OrderFormData): Promise<OrderPaymentInfo> {
+    const order = await call<OrderPaymentInfo>({
+      url: 'custody/order',
+      method: 'POST',
+      data: {
+        type: CustodyOrderType.WITHDRAWAL,
+        sourceAsset: data.sourceAsset.name,
+        targetAsset: data.targetAsset.name,
+        sourceAmount: data.sourceAmount ? Number(data.sourceAmount) : undefined,
+        targetAmount: data.targetAmount ? Number(data.targetAmount) : undefined,
+        targetIban: data.bankAccount?.iban,
+      },
+      token: tokenStore.get('custody'),
+    });
+
+    currentOrderId.current = order.orderId;
+    return order;
+  }
+
+  async function fetchSendInfo(data: SendOrderFormData): Promise<OrderPaymentInfo> {
+    const order = await call<OrderPaymentInfo>({
+      url: 'custody/order',
+      method: 'POST',
+      data: {
+        type: CustodyOrderType.SEND,
+        sourceAsset: data.asset.name,
+        targetAsset: data.asset.name,
+        sourceAmount: data.amount ? Number(data.amount) : undefined,
+        targetAmount: data.targetAmount ? Number(data.targetAmount) : undefined,
+        targetAddress: data.address,
+        targetBlockchain: data.asset.blockchain,
+      },
+      token: tokenStore.get('custody'),
+    });
+
+    currentOrderId.current = order.orderId;
+    return order;
+  }
+
   async function confirmPayment(): Promise<void> {
     if (!currentOrderId.current) return;
 
@@ -243,6 +321,14 @@ export function useSafe(): UseSafeResult {
     return confirmPayment();
   }
 
+  async function confirmWithdraw(): Promise<void> {
+    return confirmPayment();
+  }
+
+  async function confirmSend(): Promise<void> {
+    return confirmPayment();
+  }
+
   return useMemo<UseSafeResult>(
     () => ({
       isInitialized,
@@ -256,14 +342,22 @@ export function useSafe(): UseSafeResult {
       availableCurrencies,
       availableAssets,
       receiveableAssets,
+      withdrawableAssets,
+      withdrawableCurrencies,
+      sendableAssets,
       swappableSourceAssets,
       swappableTargetAssets,
+      setSelectedSourceAsset,
       fetchPaymentInfo,
       fetchReceiveInfo,
       fetchSwapInfo,
+      fetchWithdrawInfo,
+      fetchSendInfo,
       confirmPayment,
       confirmReceive,
       confirmSwap,
+      confirmWithdraw,
+      confirmSend,
       pairMap,
     }),
     [
@@ -278,8 +372,12 @@ export function useSafe(): UseSafeResult {
       availableCurrencies,
       availableAssets,
       receiveableAssets,
+      withdrawableAssets,
+      withdrawableCurrencies,
+      sendableAssets,
       swappableSourceAssets,
       swappableTargetAssets,
+      selectedSourceAsset,
       pairMap,
     ],
   );
