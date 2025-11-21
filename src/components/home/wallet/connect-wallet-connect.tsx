@@ -36,7 +36,7 @@ export default function ConnectWalletConnect(props: ConnectProps): JSX.Element {
     <ConnectBase
       isSupported={() => true}
       getAccount={getAccount}
-      signMessage={(msg, addr, chain) => signMessage(msg, addr, chain)}
+      signMessage={(msg, addr, _w, blockchain) => signMessage(msg, addr, blockchain)}
       renderContent={(p) => <Content connectUri={connectUri} wallets={wallets} {...p} />}
       autoConnect
       {...props}
