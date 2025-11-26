@@ -521,8 +521,7 @@
     "QR-bill": "QR-fattura",
 
     "The output amount is computed as the input amount minus the DFX fee, bank fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "L'importo di output è calcolato come l'importo di input meno la commissione DFX, la commissione bancaria e la commissione di rete sul tasso base. Cioè, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.",
-    "Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Importo di output = (Importo di input - Commissione DFX - Commissione di rete) ÷ Tasso base.",
-    "Native coin to cover future transaction fees": "Moneta nativa per coprire le commissioni sulle transazioni future"
+    "Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Importo di output = (Importo di input - Commissione DFX - Commissione di rete) ÷ Tasso base."
   },
   "screens/sell": {
     "Add or select your IBAN": "Aggiungere o selezionare l'IBAN",
@@ -598,6 +597,7 @@
     "Output TX": "Output TX",
     "Output 2": "Output 2",
     "TX": "TX",
+    "Native coin to cover future transaction fees": "Moneta nativa per coprire le commissioni sulle transazioni future",
 
     "Chargeback IBAN": "IBAN per il chargeback",
     "Chargeback address": "Indirizzo per il chargeback",

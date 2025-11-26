@@ -967,7 +967,7 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
                 text: `${tx.networkStartTx.exchangeRate} ${tx.inputAsset}/${tx.networkStartTx.asset}`,
               },
             ]}
-            infoText={translate(`screens/buy`, 'Native coin to cover future transaction fees')}
+            infoText={translate(`screens/payment`, 'Native coin to cover future transaction fees')}
             discreet
           >
             <p>
