@@ -595,6 +595,9 @@
     "Input TX": "Input TX",
     "Output": "Output",
     "Output TX": "Output TX",
+    "Output 2": "Output 2",
+    "TX": "TX",
+    "Native coin to cover future transaction fees": "Moneta nativa per coprire le commissioni sulle transazioni future",
 
     "Chargeback IBAN": "IBAN per il chargeback",
     "Chargeback address": "Indirizzo per il chargeback",
