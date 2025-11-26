@@ -944,7 +944,6 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
           label={translate('screens/payment', 'Exchange rate')}
           expansionItems={rateItems}
           infoText={exchangeRateInfo}
-          discreet
         >
           <p>
             {tx.rate} {tx.inputAsset}/{tx.outputAsset}
@@ -968,7 +967,6 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
               },
             ]}
             infoText={translate(`screens/payment`, 'Native coin to cover future transaction fees')}
-            discreet
           >
             <p>
               {tx.networkStartTx.amount ?? ''} {tx.networkStartTx.asset}
