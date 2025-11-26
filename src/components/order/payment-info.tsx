@@ -28,6 +28,7 @@ import { useAppParams } from 'src/hooks/app-params.hook';
 import { AmountError, OrderType } from 'src/hooks/order.hook';
 import { useTxHelper } from 'src/hooks/tx-helper.hook';
 import { isAsset } from 'src/util/utils';
+import { ErrorHint } from '../error-hint';
 import { ExchangeRate } from '../exchange-rate';
 import { PrivateAssetHint } from '../private-asset-hint';
 import { QuoteErrorHint } from '../quote-error-hint';
@@ -136,7 +137,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
 
             {errorMessage && (
               <StyledVerticalStack center className="text-center">
-                <p className="text-dfxGray-800 text-sm">{errorMessage}</p>
+                <ErrorHint message={errorMessage} />
                 <StyledButton
                   width={StyledButtonWidth.MIN}
                   label={translate('general/actions', 'Retry')}
@@ -151,7 +152,6 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
               !kycError &&
               !errorMessage &&
               !amountError?.hideInfos &&
-              targetAsset &&
               (privateAssets?.length && !flags?.includes('private') ? (
                 <PrivateAssetHint asset={privateAssets[0] as Asset} />
               ) : (
@@ -170,9 +170,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
                   />
 
                   <>
-                    {isBankWire && orderType !== OrderType.SWAP && paymentInfo?.buyInfos && (
-                      <PaymentInfoContent info={paymentInfo} />
-                    )}
+                    {isBankWire && orderType !== OrderType.SWAP && <PaymentInfoContent info={paymentInfo} />}
                     <SanctionHint />
                     <div className="w-full text-center leading-none">
                       <StyledLink
