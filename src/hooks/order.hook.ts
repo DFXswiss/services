@@ -205,8 +205,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
         (!editedSource || Number(debouncedData.sourceAmount) > 0) &&
         (editedSource || Number(debouncedData.targetAmount) > 0) &&
         (!sourceAssets || debouncedData.sourceAsset) &&
-        (!targetAssets || debouncedData.targetAsset) &&
-        (!isSell || debouncedData.bankAccount);
+        (!targetAssets || debouncedData.targetAsset);
 
       const validatedOrderForm = orderIsValid && {
         ...debouncedData,
