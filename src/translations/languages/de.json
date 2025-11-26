@@ -521,7 +521,8 @@
     "QR-bill": "QR-Rechnung",
 
     "The output amount is computed as the input amount minus the DFX fee, bank fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "Der Ausgabebetrag wird als Eingabebetrag abzüglich der DFX-Gebühr, Bankgebühr und Netzwerkgebühr über dem Basiskurs berechnet. Das heißt, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.",
-    "Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Ausgabebetrag = (Eingabebetrag - DFX-Gebühr - Netzwerkgebühr) ÷ Basiskurs."
+    "Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Ausgabebetrag = (Eingabebetrag - DFX-Gebühr - Netzwerkgebühr) ÷ Basiskurs.",
+    "Native coin to cover future transaction fees": "Native Kryptowährung zur Deckung künftiger Transaktionsgebühren"
   },
   "screens/sell": {
     "Add or select your IBAN": "Deine IBAN hinzufügen oder auswählen",
