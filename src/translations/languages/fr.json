@@ -522,7 +522,7 @@
 
     "The output amount is computed as the input amount minus the DFX fee, bank fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.": "Le montant de sortie est calculé comme le montant d'entrée moins les frais DFX, les frais bancaires et les frais de réseau sur le taux de base. C'est-à-dire, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.",
     "Output amount = (Input amount - DFX fee - Network fee) ÷ Base rate.": "Montant de sortie = (Montant d'entrée - Frais DFX - Frais de réseau) ÷ Taux de base.",
-    "Native coin to cover future transaction fees": "Pièce native pour couvrir les frais de transaction futurs"
+    "Native coin to cover future transaction fees": "Crypto native pour couvrir les frais de transaction futurs"
   },
   "screens/sell": {
     "Add or select your IBAN": "Ajouter ou sélectionner votre IBAN",
@@ -596,6 +596,8 @@
     "Input TX": "Input TX",
     "Output": "Output",
     "Output TX": "Output TX",
+    "Output 2": "Output 2",
+    "TX": "TX",
 
     "Chargeback IBAN": "IBAN de rétrofacturation",
     "Chargeback address": "Adresse de rétrofacturation",

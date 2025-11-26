@@ -596,6 +596,8 @@
     "Input TX": "Input TX",
     "Output": "Output",
     "Output TX": "Output TX",
+    "Output 2": "Output 2",
+    "TX": "TX",
 
     "Chargeback IBAN": "IBAN per il chargeback",
     "Chargeback address": "Indirizzo per il chargeback",

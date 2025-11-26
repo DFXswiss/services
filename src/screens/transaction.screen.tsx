@@ -820,8 +820,6 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
       : 'Output amount = Input amount × Base rate - DFX fee - Network fee.',
   );
 
-  const networkStartInfo = translate(`screens/buy`, 'Native coin to cover future transaction fees');
-
   const baseRateInfo = tx.priceSteps
     ?.map((step) =>
       translate('screens/payment', '{{from}} to {{to}} at {{price}} {{from}}/{{to}} ({{source}}, {{timestamp}})', {
@@ -858,18 +856,10 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
       label: translate('screens/payment', 'Bank fee'),
       text: `${tx.fees.bank} ${tx.inputAsset}`,
     });
-
-  const networkStartItems = [];
-  tx.networkStartTx != null &&
-    networkStartItems.push({
-      label: translate('screens/payment', 'TX'),
-      url: tx.networkStartTx.txUrl,
-      text: blankedAddress(tx.networkStartTx.txId, { width }),
-    });
-  tx.networkStartTx != null &&
-    networkStartItems.push({
-      label: translate('screens/payment', 'Exchange rate'),
-      text: `${tx.networkStartTx.exchangeRate} ${tx.inputAsset}/${tx.networkStartTx.asset}`,
+  tx?.fees?.networkStart &&
+    rateItems.push({
+      label: translate('screens/payment', 'Network start fee'),
+      text: `${tx?.fees?.networkStart} ${tx.inputAsset}`,
     });
 
   return (
@@ -961,12 +951,23 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
           </p>
         </StyledDataTableExpandableRow>
       )}
+
       {tx.networkStartTx && (
         <>
           <StyledDataTableExpandableRow
             label={translate('screens/payment', 'Output 2')}
-            expansionItems={networkStartItems}
-            infoText={networkStartInfo}
+            expansionItems={[
+              {
+                label: translate('screens/payment', 'TX'),
+                // url: tx.networkStartTx.txUrl, // TODO: link item?
+                text: blankedAddress(tx.networkStartTx.txId, { width }),
+              },
+              {
+                label: translate('screens/payment', 'Exchange rate'),
+                text: `${tx.networkStartTx.exchangeRate} ${tx.inputAsset}/${tx.networkStartTx.asset}`,
+              },
+            ]}
+            infoText={translate(`screens/buy`, 'Native coin to cover future transaction fees')}
             discreet
           >
             <p>
@@ -976,6 +977,7 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
           </StyledDataTableExpandableRow>
         </>
       )}
+
       {tx.chargebackAmount && (
         <StyledDataTableRow label={translate('screens/payment', 'Chargeback amount')}>
           <p>
