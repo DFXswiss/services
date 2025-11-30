@@ -54,7 +54,9 @@
     "Edit": "Bearbeiten",
     "Set default": "Standard setzen",
     "Download sticker": "Aufkleber herunterladen",
-    "Authenticate": "Authentifizieren"
+    "Authenticate": "Authentifizieren",
+    "Confirm": "Bestätigen",
+    "Reject": "Ablehnen"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -131,6 +133,7 @@
     "Male": "Männlich",
 
     "Birthday": "Geburtstag",
+    "YYYY-MM-DD": "JJJJ-MM-TT",
 
     "Passport": "Pass",
     "ID card": "ID-Karte",
@@ -167,6 +170,7 @@
     "John Doe": "Max Mustermann",
     "Last name": "Nachname",
     "Doe": "Mustermann",
+    "New York, USA": "Zürich, Schweiz",
     "Street": "Strasse",
     "House nr.": "Hausnummer",
     "ZIP code": "PLZ",
@@ -260,6 +264,7 @@
     "Public name": "Öffentlicher Name",
     "My organization": "Meine Firma",
     "Registration number": "Registrierungsnummer",
+    "CHE-000.000.000": "CHE-000.000.000",
 
     "Store type": "Geschäftstyp",
     "Online": "Online",
@@ -335,7 +340,14 @@
     "Pet supplies": "Tierbedarf",
     "Industry & science": "Industrie & Wissenschaft",
 
-    "Recall agreement": "Rückrufvereinbarung"
+    "Recall agreement": "Rückrufvereinbarung",
+
+    "Recommendation": "Empfehlung",
+    "Please enter a invitation or referral code or an email of an existing user": "Bitte gib einen Einladungs- oder Referral-Code oder die E-Mail eines bestehenden Benutzers ein",
+    "Invitation/referral code or email": "Einladungs-/Referral-Code oder E-Mail",
+    "No matching user found": "Kein passender Benutzer gefunden",
+    "Invalid invitation code": "Ungültiger Einladungscode",
+    "Invalid key": "Ungültiger Key"
   },
   "screens/compliance": {
     "Compliance": "Compliance",
@@ -878,6 +890,19 @@
     "True or false: Scammers who want to steal your funds will message you pretending to be admins and official support accounts.": "Richtig oder falsch: Betrüger, die Deine Gelder stehlen wollen, werden Dir Nachrichten senden und sich als Administratoren und offizielle Support-Konten ausgeben.",
     "Admins will NEVER give help by asking for your seed phrase or requiring you to follow any links. If anyone claims they need your seed phrase to help you with a problem, should you give it to them?": "Admins werden NIEMALS Hilfe anbieten, indem sie nach Deiner Seed-Phrase fragen oder Dich auffordern, Links zu folgen. Wenn jemand behauptet, er benötige Deine Seed-Phrase, um Dir bei einem Problem zu helfen, solltest Du sie ihm geben?",
     "Please review your answers. Remember: Never trust private messages, scammers will impersonate admins, and NEVER share your seed phrase.": "Bitte überprüfe Deine Antworten. Denke daran: Vertraue niemals privaten Nachrichten, Betrüger werden sich als Administratoren ausgeben, und teile NIEMALS Deine Seed-Phrase."
+  },
+  "screens/recommendation": {
+    "Recommendations": "Empfehlungen",
+    "Create invitation": "Einladung erstellen",
+    "Pending Requests": "Ausstehende Anfragen",
+    "Your Invitations": "Deine Einladungen",
+    "Code": "Code",
+    "No invitations yet": "Noch keine Einladungen",
+    "Who would you like to invite?": "Wen möchtest Du einladen?",
+    "Created": "Erstellt",
+    "Pending": "Ausstehend",
+    "Expired": "Abgelaufen",
+    "Completed": "Abgeschlossen"
   },
   "screens/settings": {
     "Settings": "Einstellungen",

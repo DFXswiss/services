@@ -54,7 +54,9 @@
     "Edit": "Modifica",
     "Set default": "Imposta predefinito",
     "Download sticker": "Scarica l'adesivo",
-    "Authenticate": "Autenticare"
+    "Authenticate": "Autenticare",
+    "Confirm": "Confermare",
+    "Reject": "Rifiutare"
   },
   "general/errors": {
     "Mandatory field": "Campo obbligatorio",
@@ -131,6 +133,7 @@
     "Male": "Maschio",
 
     "Birthday": "Compleanno",
+    "YYYY-MM-DD": "AAAA-MM-GG",
 
     "Passport": "Passaporto",
     "ID card": "Carta d'identità",
@@ -167,6 +170,7 @@
     "John Doe": "Giovanni Rossi",
     "Last name": "Cognome",
     "Doe": "Sconosciuto",
+    "New York, USA": "Lugano, Svizzera",
     "Street": "Via",
     "House nr.": "Casa n.",
     "ZIP code": "CAP",
@@ -260,6 +264,7 @@
     "Public name": "Nome pubblico",
     "My organization": "La mia azienda",
     "Registration number": "Numero di registrazione",
+    "CHE-000.000.000": "CHE-000.000.000",
 
     "Store type": "Tipo di negozio",
     "Online": "Online",
@@ -335,7 +340,14 @@
     "Pet supplies": "Prodotti per animali",
     "Industry & science": "Industria e scienza",
 
-    "Recall agreement": "Accordo di richiamo"
+    "Recall agreement": "Accordo di richiamo",
+
+    "Recommendation": "Raccomandazione",
+    "Please enter a invitation or referral code or an email of an existing user": "Inserisci un codice di invito o referral o l'e-mail di un utente esistente",
+    "Invitation/referral code or email": "Codice invito/referral o e-mail",
+    "No matching user found": "Nessun utente corrispondente trovato",
+    "Invalid invitation code": "Codice di invito non valido",
+    "Invalid key": "Key non valida"
   },
   "screens/compliance": {
     "Compliance": "Compliance",
@@ -877,6 +889,19 @@
     "True or false: Scammers who want to steal your funds will message you pretending to be admins and official support accounts.": "Vero o falso: I truffatori che vogliono rubare i tuoi fondi ti invieranno messaggi fingendosi amministratori e account di supporto ufficiali.",
     "Admins will NEVER give help by asking for your seed phrase or requiring you to follow any links. If anyone claims they need your seed phrase to help you with a problem, should you give it to them?": "Gli amministratori non daranno MAI aiuto chiedendo la tua frase di recupero o richiedendo di seguire link. Se qualcuno afferma di aver bisogno della tua frase di recupero per aiutarti con un problema, dovresti dargliela?",
     "Please review your answers. Remember: Never trust private messages, scammers will impersonate admins, and NEVER share your seed phrase.": "Controlla le tue risposte. Ricorda: Non fidarti mai dei messaggi privati, i truffatori si fingeranno amministratori, e non condividere MAI la tua frase di recupero."
+  },
+  "screens/recommendation": {
+    "Recommendations": "Raccomandazioni",
+    "Create invitation": "Crea invito",
+    "Pending Requests": "Richieste in sospeso",
+    "Your Invitations": "I tuoi inviti",
+    "Code": "Codice",
+    "No invitations yet": "Nessun invito ancora",
+    "Who would you like to invite?": "Chi vorresti invitare?",
+    "Created": "Creato",
+    "Pending": "In sospeso",
+    "Expired": "Scaduto",
+    "Completed": "Completato"
   },
   "screens/settings": {
     "Settings": "Impostazioni",
