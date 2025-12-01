@@ -4,6 +4,21 @@ export function isDefined<T>(item: T | undefined): item is T {
   return item != null;
 }
 
+export function partition<T>(array: T[] | undefined, predicate: (item: T) => boolean): [T[], T[]] {
+  const truthy: T[] = [];
+  const falsy: T[] = [];
+
+  array?.forEach((item) => {
+    if (predicate(item)) {
+      truthy.push(item);
+    } else {
+      falsy.push(item);
+    }
+  });
+
+  return [truthy, falsy];
+}
+
 export function isEmpty(val: any): boolean {
   return val === undefined || val === '' || val === null || (Array.isArray(val) && val.length === 0);
 }

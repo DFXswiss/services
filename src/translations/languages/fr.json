@@ -54,7 +54,9 @@
     "Edit": "Modifier",
     "Set default": "Définir par défaut",
     "Download sticker": "Télécharger l'autocollant",
-    "Authenticate": "Authentifier"
+    "Authenticate": "Authentifier",
+    "Confirm": "Confirmer",
+    "Reject": "Rejeter"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -131,6 +133,7 @@
     "Male": "Homme",
 
     "Birthday": "Anniversaire",
+    "YYYY-MM-DD": "AAAA-MM-JJ",
 
     "Passport": "Passeport",
     "ID card": "Carte d'identité",
@@ -167,6 +170,7 @@
     "John Doe": "Jean Dupont",
     "Last name": "Nom de famille",
     "Doe": "Exemple",
+    "New York, USA": "Lausanne, Suisse",
     "Street": "Rue",
     "House nr.": "Maison nr.",
     "ZIP code": "Code postal",
@@ -260,6 +264,7 @@
     "Public name": "Nom public",
     "My organization": "Mon entreprise",
     "Registration number": "Numéro d'enregistrement",
+    "CHE-000.000.000": "CHE-000.000.000",
 
     "Store type": "Type de magasin",
     "Online": "En ligne",
@@ -335,7 +340,14 @@
     "Pet supplies": "Fournitures pour animaux",
     "Industry & science": "Industrie & science",
 
-    "Recall agreement": "Contrat de rappel"
+    "Recall agreement": "Contrat de rappel",
+
+    "Recommendation": "Recommandation",
+    "Please enter a invitation or referral code or an email of an existing user": "Veuillez entrer un code d'invitation ou de parrainage ou l'e-mail d'un utilisateur existant",
+    "Invitation/referral code or email": "Code d'invitation/parrainage ou e-mail",
+    "No matching user found": "Aucun utilisateur correspondant trouvé",
+    "Invalid invitation code": "Code d'invitation invalide",
+    "Invalid key": "Key invalide"
   },
   "screens/compliance": {
     "Compliance": "Compliance",
@@ -877,6 +889,19 @@
     "True or false: Scammers who want to steal your funds will message you pretending to be admins and official support accounts.": "Vrai ou faux: Les escrocs qui veulent voler vos fonds vous enverront des messages en se faisant passer pour des administrateurs et des comptes de support officiels.",
     "Admins will NEVER give help by asking for your seed phrase or requiring you to follow any links. If anyone claims they need your seed phrase to help you with a problem, should you give it to them?": "Les administrateurs ne donneront JAMAIS d'aide en demandant votre phrase de récupération ou en vous demandant de suivre des liens. Si quelqu'un prétend avoir besoin de votre phrase de récupération pour vous aider avec un problème, devriez-vous la lui donner?",
     "Please review your answers. Remember: Never trust private messages, scammers will impersonate admins, and NEVER share your seed phrase.": "Veuillez vérifier vos réponses. Rappelez-vous: Ne faites jamais confiance aux messages privés, les escrocs se feront passer pour des administrateurs, et ne partagez JAMAIS votre phrase de récupération."
+  },
+  "screens/recommendation": {
+    "Recommendations": "Recommandations",
+    "Create invitation": "Créer une invitation",
+    "Pending Requests": "Demandes en attente",
+    "Your Invitations": "Vos invitations",
+    "Code": "Code",
+    "No invitations yet": "Aucune invitation pour le moment",
+    "Who would you like to invite?": "Qui souhaitez-vous inviter?",
+    "Created": "Créé",
+    "Pending": "En attente",
+    "Expired": "Expiré",
+    "Completed": "Terminé"
   },
   "screens/settings": {
     "Settings": "Paramètres",

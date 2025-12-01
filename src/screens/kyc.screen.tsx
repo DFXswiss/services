@@ -18,6 +18,7 @@ import {
   KycNationalityData,
   KycOperationalData,
   KycPersonalData,
+  KycRecommendationData,
   KycSession,
   KycSignatoryPowerData,
   KycStep,
@@ -511,6 +512,9 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.NATIONALITY_DATA:
       return <NationalityData {...props} />;
+
+    case KycStepName.RECOMMENDATION:
+      return <RecommendationData {...props} />;
 
     case KycStepName.SIGNATORY_POWER:
       return <SignatoryPowerData {...props} />;
@@ -1068,6 +1072,83 @@ function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps):
           disabled={!isValid}
           isLoading={isUpdating || isLoading}
         />
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+function RecommendationData({ code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { setRecommendationData } = useKyc();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+  const [keyError, setKeyError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<KycRecommendationData>({ mode: 'onTouched' });
+
+  function onSubmit(data: KycRecommendationData) {
+    if (!step.session) return;
+
+    setIsUpdating(true);
+    setError(undefined);
+    setKeyError(undefined);
+
+    setRecommendationData(code, step.session.url, data)
+      .then(onDone)
+      .catch((error: ApiError) => {
+        if (error.statusCode === 404) {
+          setKeyError('No matching user found');
+        } else if (error.statusCode === 400) {
+          if (error.message.toLowerCase().includes('recommendation code')) {
+            setKeyError('Invalid invitation code');
+          } else {
+            setKeyError('Invalid key');
+          }
+        } else {
+          setError(error.message ?? 'Unknown error');
+        }
+      })
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    key: Validations.Required,
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <div className="text-dfxGray-700 w-full text-sm text-left">
+          {translate('screens/kyc', 'Please enter a invitation or referral code or an email of an existing user')}
+        </div>
+
+        <StyledInput
+          name="key"
+          placeholder={translate('screens/kyc', 'Invitation/referral code or email')}
+          full
+          forceError={!!keyError}
+          forceErrorMessage={keyError && translate('screens/kyc', keyError)}
+        />
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUpdating || isLoading}
+        />
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
       </StyledVerticalStack>
     </Form>
   );
