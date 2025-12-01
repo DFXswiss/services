@@ -34,7 +34,7 @@ export default function RecommendationScreen(): JSX.Element {
   useUserGuard('/login');
   useKycLevelGuard(50);
 
-  const { translate, translateError } = useSettingsContext();
+  const { translate, translateError, locale } = useSettingsContext();
   const { getRecommendations, createRecommendation, confirmRecommendation, rejectRecommendation } = useRecommendation();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -71,7 +71,11 @@ export default function RecommendationScreen(): JSX.Element {
     setError(undefined);
 
     return getRecommendations()
-      .then(setRecommendations)
+      .then((r) =>
+        setRecommendations(
+          r.sort((a, b) => new Date(b.expirationDate).getTime() - new Date(a.expirationDate).getTime()),
+        ),
+      )
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
   }
@@ -237,7 +241,7 @@ export default function RecommendationScreen(): JSX.Element {
                       },
                       {
                         label: translate('screens/payment', 'Expiry date'),
-                        text: new Date(recommendation.expirationDate).toLocaleDateString(),
+                        text: new Date(recommendation.expirationDate).toLocaleDateString(locale),
                       },
                     ]}
                   >
