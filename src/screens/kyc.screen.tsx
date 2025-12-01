@@ -1124,7 +1124,7 @@ function RecommendationData({ code, isLoading, step, onDone }: EditProps): JSX.E
     <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
       <StyledVerticalStack gap={6} full center>
         <div className="text-dfxGray-700 w-full text-sm text-left">
-          {translate('screens/kyc', 'Please enter a invitation or referral code or an email of an existing user')}
+          {translate('screens/kyc', 'Please enter an invitation or referral code or an email of an existing user who must have KYC and be approved')}
         </div>
 
         <StyledInput

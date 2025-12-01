@@ -2,6 +2,7 @@ export enum RecommendationStatus {
   CREATED = 'Created',
   PENDING = 'Pending',
   EXPIRED = 'Expired',
+  REJECTED = 'Rejected',
   COMPLETED = 'Completed',
 }
 

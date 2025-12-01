@@ -343,7 +343,7 @@
     "Recall agreement": "Accordo di richiamo",
 
     "Recommendation": "Raccomandazione",
-    "Please enter a invitation or referral code or an email of an existing user": "Inserisci un codice di invito o referral o l'e-mail di un utente esistente",
+    "Please enter an invitation or referral code or an email of an existing user who must have KYC and be approved": "Inserisci un codice di invito o referral o l'e-mail di un utente esistente che deve avere il KYC ed essere approvato",
     "Invitation/referral code or email": "Codice invito/referral o e-mail",
     "No matching user found": "Nessun utente corrispondente trovato",
     "Invalid invitation code": "Codice di invito non valido",
@@ -901,7 +901,8 @@
     "Created": "Creato",
     "Pending": "In sospeso",
     "Expired": "Scaduto",
-    "Completed": "Completato"
+    "Completed": "Completato",
+    "Rejected": "Rifiutato"
   },
   "screens/settings": {
     "Settings": "Impostazioni",

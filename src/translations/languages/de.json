@@ -343,7 +343,7 @@
     "Recall agreement": "Rückrufvereinbarung",
 
     "Recommendation": "Empfehlung",
-    "Please enter a invitation or referral code or an email of an existing user": "Bitte gib einen Einladungs- oder Referral-Code oder die E-Mail eines bestehenden Benutzers ein",
+    "Please enter an invitation or referral code or an email of an existing user who must have KYC and be approved": "Bitte gib einen Einladungs- oder Referral-Code oder die E-Mail eines bestehenden Benutzers ein, der KYC haben muss und freigeschaltet sein muss",
     "Invitation/referral code or email": "Einladungs-/Referral-Code oder E-Mail",
     "No matching user found": "Kein passender Benutzer gefunden",
     "Invalid invitation code": "Ungültiger Einladungscode",
@@ -902,7 +902,8 @@
     "Created": "Erstellt",
     "Pending": "Ausstehend",
     "Expired": "Abgelaufen",
-    "Completed": "Abgeschlossen"
+    "Completed": "Abgeschlossen",
+    "Rejected": "Abgelehnt"
   },
   "screens/settings": {
     "Settings": "Einstellungen",
