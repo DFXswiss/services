@@ -34,6 +34,11 @@ export interface SendOrderFormData {
   address: string;
 }
 
+export interface PdfDownloadParams {
+  date: Date;
+  currency: 'CHF' | 'EUR' | 'USD';
+}
+
 export interface UseSafeResult {
   isInitialized: boolean;
   isLoadingPortfolio: boolean;
@@ -63,6 +68,7 @@ export interface UseSafeResult {
   confirmWithdraw: () => Promise<void>;
   confirmSend: () => Promise<void>;
   pairMap: (asset: string) => Asset | Fiat | undefined;
+  downloadPdf: (params: PdfDownloadParams) => Promise<void>;
 }
 
 export function useSafe(): UseSafeResult {
@@ -329,6 +335,41 @@ export function useSafe(): UseSafeResult {
     return confirmPayment();
   }
 
+  async function downloadPdf(params: PdfDownloadParams): Promise<void> {
+    if (!custodyAddress || custodyBlockchains.length === 0) return;
+
+    const queryParams = new URLSearchParams({
+      address: custodyAddress,
+      blockchain: custodyBlockchains[0],
+      currency: params.currency,
+      date: params.date.toISOString(),
+    });
+
+    const response = await fetch(
+      `${process.env.REACT_APP_API_URL}/${process.env.REACT_APP_API_VERSION}/balance/pdf?${queryParams}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/pdf',
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to download PDF');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `DFX_Balance_${custodyBlockchains[0]}_${params.date.toISOString().split('T')[0]}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }
+
   return useMemo<UseSafeResult>(
     () => ({
       isInitialized,
@@ -359,6 +400,7 @@ export function useSafe(): UseSafeResult {
       confirmWithdraw,
       confirmSend,
       pairMap,
+      downloadPdf,
     }),
     [
       isInitialized,

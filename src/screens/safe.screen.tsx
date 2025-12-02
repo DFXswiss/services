@@ -36,7 +36,7 @@ interface PdfFormData {
 export default function SafeScreen(): JSX.Element {
   useUserGuard('/login');
 
-  const { isInitialized, portfolio, history, isLoadingPortfolio, isLoadingHistory, error } = useSafe();
+  const { isInitialized, portfolio, history, isLoadingPortfolio, isLoadingHistory, error, downloadPdf } = useSafe();
   const { currency: userCurrency, translate } = useSettingsContext();
   const {
     completionType,
@@ -61,9 +61,15 @@ export default function SafeScreen(): JSX.Element {
     },
   });
 
-  const onPdfSubmit = (data: PdfFormData) => {
-    // TODO: Implement PDF generation with selected date
-    console.log('Generate PDF for date:', data.date);
+  const onPdfSubmit = async (data: PdfFormData) => {
+    try {
+      await downloadPdf({
+        date: data.date,
+        currency: currency.toUpperCase() as 'CHF' | 'EUR' | 'USD',
+      });
+    } catch (error) {
+      console.error('Failed to download PDF:', error);
+    }
     setIsPdfModalOpen(false);
   };
 
