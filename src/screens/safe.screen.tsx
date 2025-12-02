@@ -116,7 +116,7 @@ export default function SafeScreen(): JSX.Element {
               </div>
             </div>
           </div>
-          <Portfolio portfolio={portfolio.balances} currency={currency} isLoading={isLoadingPortfolio} />
+          <Portfolio portfolio={portfolio.balances.filter((b) => b.balance > 0)} currency={currency} isLoading={isLoadingPortfolio} />
           <SafeTransactionInterface />
         </StyledVerticalStack>
       )}
