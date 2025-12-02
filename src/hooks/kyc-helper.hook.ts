@@ -64,6 +64,7 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepName.LEGAL_ENTITY]: 'Legal entity',
     [KycStepName.OWNER_DIRECTORY]: 'Owner directory',
     [KycStepName.NATIONALITY_DATA]: 'Nationality',
+    [KycStepName.RECOMMENDATION]: 'Recommendation',
     [KycStepName.COMMERCIAL_REGISTER]: 'Commercial register',
     [KycStepName.SOLE_PROPRIETORSHIP_CONFIRMATION]: 'Sole proprietorship confirmation',
     [KycStepName.SIGNATORY_POWER]: 'Signatory power',

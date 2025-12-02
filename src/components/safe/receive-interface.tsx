@@ -36,7 +36,7 @@ interface ReceiveFormData {
 export const ReceiveInterface = () => {
   const { width } = useWindowContext();
   const { toString } = useBlockchain();
-  const { translate } = useSettingsContext();
+  const { translate, translateError } = useSettingsContext();
   const { setCompletionType } = useOrderUIContext();
   const { receiveableAssets, fetchReceiveInfo, confirmReceive } = useSafe();
 
@@ -47,18 +47,15 @@ export const ReceiveInterface = () => {
   const {
     watch,
     control,
-    setValue,
     formState: { errors, isValid },
   } = useForm<ReceiveFormData>({ mode: 'onChange' });
 
   const data = watch();
   const debouncedData = useDebounce(data, 500);
 
-  useEffect(() => {
-    if (receiveableAssets?.length && !data.receiveAsset) {
-      setValue('receiveAsset', receiveableAssets[0]);
-    }
-  }, [receiveableAssets, data.receiveAsset, setValue]);
+  const isReceiveDataValid = () => {
+    return isValid && debouncedData?.receiveAsset && Number(debouncedData.receiveAmount) > 0;
+  };
 
   useEffect(() => {
     if (isValid && debouncedData?.receiveAsset && debouncedData.receiveAmount) onCreateReceiveOrder(debouncedData);
@@ -91,8 +88,13 @@ export const ReceiveInterface = () => {
     receiveAmount: Validations.Required,
   });
 
+  const handleConfirmReceive = () => {
+    setCompletionType(SafeOperationType.RECEIVE);
+    confirmReceive();
+  };
+
   return (
-    <Form control={control} rules={rules} errors={errors} hasFormElement={false}>
+    <Form control={control} rules={rules} errors={errors} hasFormElement={false} translate={translateError}>
       <StyledVerticalStack gap={4} full className="pt-2">
         <AssetInput
           control={control}
@@ -140,19 +142,14 @@ export const ReceiveInterface = () => {
           </StyledVerticalStack>
         )}
 
-        {error && <div className="text-red-500 text-sm text-center">{error}</div>}
-
         <div className="w-full">
           <StyledButton
             type="button"
             isLoading={isLoading}
             label={translate('general/actions', 'Next')}
             width={StyledButtonWidth.FULL}
-            disabled={!isValid || isLoading}
-            onClick={() => {
-              setCompletionType(SafeOperationType.RECEIVE);
-              confirmReceive();
-            }}
+            disabled={isLoading || !isReceiveDataValid()}
+            onClick={handleConfirmReceive}
           />
         </div>
       </StyledVerticalStack>

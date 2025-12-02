@@ -18,6 +18,7 @@ import {
   KycNationalityData,
   KycOperationalData,
   KycPersonalData,
+  KycRecommendationData,
   KycSession,
   KycSignatoryPowerData,
   KycStep,
@@ -56,6 +57,7 @@ import {
   StyledButtonColor,
   StyledButtonWidth,
   StyledCheckboxRow,
+  StyledCollapsible,
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
@@ -71,6 +73,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import SumsubWebSdk from '@sumsub/websdk-react';
+import { FaHandshake } from 'react-icons/fa';
 import { RefObject, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
@@ -511,6 +514,9 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.NATIONALITY_DATA:
       return <NationalityData {...props} />;
+
+    case KycStepName.RECOMMENDATION:
+      return <RecommendationData {...props} />;
 
     case KycStepName.SIGNATORY_POWER:
       return <SignatoryPowerData {...props} />;
@@ -1068,6 +1074,137 @@ function NationalityData({ rootRef, code, isLoading, step, onDone }: EditProps):
           disabled={!isValid}
           isLoading={isUpdating || isLoading}
         />
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+function RecommendationData({ code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { setRecommendationData } = useKyc();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+  const [keyError, setKeyError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<KycRecommendationData>({ mode: 'onTouched' });
+
+  function onSubmit(data: KycRecommendationData) {
+    if (!step.session) return;
+
+    setIsUpdating(true);
+    setError(undefined);
+    setKeyError(undefined);
+
+    setRecommendationData(code, step.session.url, data)
+      .then(onDone)
+      .catch((error: ApiError) => {
+        if (error.statusCode === 404) {
+          setKeyError('No matching user found');
+        } else if (error.statusCode === 400) {
+          if (error.message.toLowerCase().includes('recommendation code')) {
+            setKeyError('Invalid invitation code');
+          } else {
+            setKeyError('Invalid key');
+          }
+        } else {
+          setError(error.message ?? 'Unknown error');
+        }
+      })
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    key: Validations.Required,
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <FaHandshake className="text-dfxBlue-800" size={40} />
+        <p className="text-base font-bold text-dfxBlue-800">
+          {translate('screens/kyc', 'How did you hear about DFX?')}
+        </p>
+
+        <div className="text-dfxGray-700 w-full text-sm text-left">
+          {translate('screens/kyc', 'Please enter the email address or referral code of your contact person. This lets us know you have a trusted contact to guide you into the crypto space.')}
+        </div>
+
+        <StyledInput
+          name="key"
+          placeholder={translate('screens/kyc', 'Invitation/referral code or email')}
+          full
+          forceError={!!keyError}
+          forceErrorMessage={keyError && translate('screens/kyc', keyError)}
+        />
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUpdating || isLoading}
+        />
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-base font-bold text-dfxBlue-800">{translate('screens/kyc', 'FAQ')}</p>
+          <StyledCollapsible
+            full
+            titleContent={
+              <p className="text-dfxBlue-800 font-semibold text-left">
+                {translate('screens/kyc', 'How can I become a DFX customer?')}
+              </p>
+            }
+          >
+            <p className="text-dfxGray-700 text-sm">
+              {translate(
+                'screens/kyc',
+                'Opening an account with DFX is only possible through a referral. You need either the ref code, ref link, or email address of an existing customer. This person serves as your point of contact and must additionally confirm their referral. Once this confirmation is received, you can complete your onboarding and use your DFX account.',
+              )}
+            </p>
+          </StyledCollapsible>
+          <StyledCollapsible
+            full
+            titleContent={
+              <p className="text-dfxBlue-800 font-semibold text-left">
+                {translate('screens/kyc', 'What is a referral code?')}
+              </p>
+            }
+          >
+            <p className="text-dfxGray-700 text-sm">
+              {translate(
+                'screens/kyc',
+                'A referral code is your personal code at DFX. When someone registers using your ref link or code and successfully completes the KYC process, you both receive a corresponding reward. In short: You recommend DFX and get rewarded for it.',
+              )}
+            </p>
+          </StyledCollapsible>
+          <StyledCollapsible
+            full
+            titleContent={
+              <p className="text-dfxBlue-800 font-semibold text-left">
+                {translate('screens/kyc', 'Who can make a referral?')}
+              </p>
+            }
+          >
+            <p className="text-dfxGray-700 text-sm">
+              {translate(
+                'screens/kyc',
+                'A referral can be made by any customer who already has a DFX account, has a verified KYC level 50, and is logged in.',
+              )}
+            </p>
+          </StyledCollapsible>
+        </StyledVerticalStack>
       </StyledVerticalStack>
     </Form>
   );

@@ -54,7 +54,9 @@
     "Edit": "Modifier",
     "Set default": "Définir par défaut",
     "Download sticker": "Télécharger l'autocollant",
-    "Authenticate": "Authentifier"
+    "Authenticate": "Authentifier",
+    "Confirm": "Confirmer",
+    "Reject": "Rejeter"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -131,6 +133,7 @@
     "Male": "Homme",
 
     "Birthday": "Anniversaire",
+    "YYYY-MM-DD": "AAAA-MM-JJ",
 
     "Passport": "Passeport",
     "ID card": "Carte d'identité",
@@ -167,6 +170,7 @@
     "John Doe": "Jean Dupont",
     "Last name": "Nom de famille",
     "Doe": "Exemple",
+    "New York, USA": "Lausanne, Suisse",
     "Street": "Rue",
     "House nr.": "Maison nr.",
     "ZIP code": "Code postal",
@@ -190,6 +194,7 @@
     "Commercial register extract, trade license/permit, AHV confirmation, or another document proving the existence of the business": "Extrait du registre du commerce, licence/autorisation commerciale, attestation AVS ou tout autre document prouvant l'existence de l'activité commerciale.",
 
     "Please fill in personal information to continue": "Veuillez compléter vos informations personnelles pour continuer",
+    "How did you hear about DFX?": "Comment avez-vous découvert DFX ?",
     "Please enter your contact information so that we can find your account": "Veuillez saisir vos coordonnées afin que nous puissions retrouver votre compte",
 
     "How many natural persons are there who directly or indirectly hold 25% or more of company shares?": "Combien de personnes physiques détiennent directement ou indirectement 25 % ou plus des parts de l'entreprise ?",
@@ -260,6 +265,7 @@
     "Public name": "Nom public",
     "My organization": "Mon entreprise",
     "Registration number": "Numéro d'enregistrement",
+    "CHE-000.000.000": "CHE-000.000.000",
 
     "Store type": "Type de magasin",
     "Online": "En ligne",
@@ -335,7 +341,22 @@
     "Pet supplies": "Fournitures pour animaux",
     "Industry & science": "Industrie & science",
 
-    "Recall agreement": "Contrat de rappel"
+    "Recall agreement": "Contrat de rappel",
+
+    "Recommendation": "Recommandation",
+    "Please enter the email address or referral code of your contact person. This lets us know you have a trusted contact to guide you into the crypto space.": "Veuillez saisir l'adresse e-mail ou le code de parrainage de votre personne de contact. Cela nous permet de savoir que vous avez un contact de confiance pour vous accompagner dans l'univers des cryptomonnaies.",
+    "Invitation/referral code or email": "Code d'invitation/parrainage ou e-mail",
+    "No matching user found": "Aucun utilisateur correspondant trouvé",
+    "Invalid invitation code": "Code d'invitation invalide",
+    "Invalid key": "Key invalide",
+
+    "FAQ": "FAQ",
+    "How can I become a DFX customer?": "Comment puis-je devenir client chez DFX ?",
+    "Opening an account with DFX is only possible through a referral. You need either the ref code, ref link, or email address of an existing customer. This person serves as your point of contact and must additionally confirm their referral. Once this confirmation is received, you can complete your onboarding and use your DFX account.": "L'ouverture d'un compte chez DFX n'est possible que par parrainage. Vous avez besoin soit du code de parrainage, du lien de parrainage ou de l'adresse e-mail d'un client existant. Cette personne vous sert de point de contact et doit confirmer son parrainage. Une fois cette confirmation reçue, vous pouvez finaliser votre inscription et utiliser votre compte DFX.",
+    "What is a referral code?": "Qu'est-ce qu'un code de parrainage ?",
+    "A referral code is your personal code at DFX. When someone registers using your ref link or code and successfully completes the KYC process, you both receive a corresponding reward. In short: You recommend DFX and get rewarded for it.": "Un code de parrainage est votre code personnel chez DFX. Lorsque quelqu'un s'inscrit via votre lien ou code de parrainage et termine avec succès le processus KYC, vous recevez tous les deux une récompense correspondante. En bref : vous recommandez DFX et vous êtes récompensé pour cela.",
+    "Who can make a referral?": "Qui peut faire un parrainage ?",
+    "A referral can be made by any customer who already has a DFX account, has a verified KYC level 50, and is logged in.": "Un parrainage peut être effectué par tout client qui possède déjà un compte DFX, a un niveau KYC 50 vérifié et est connecté."
   },
   "screens/compliance": {
     "Compliance": "Compliance",
@@ -878,6 +899,20 @@
     "Admins will NEVER give help by asking for your seed phrase or requiring you to follow any links. If anyone claims they need your seed phrase to help you with a problem, should you give it to them?": "Les administrateurs ne donneront JAMAIS d'aide en demandant votre phrase de récupération ou en vous demandant de suivre des liens. Si quelqu'un prétend avoir besoin de votre phrase de récupération pour vous aider avec un problème, devriez-vous la lui donner?",
     "Please review your answers. Remember: Never trust private messages, scammers will impersonate admins, and NEVER share your seed phrase.": "Veuillez vérifier vos réponses. Rappelez-vous: Ne faites jamais confiance aux messages privés, les escrocs se feront passer pour des administrateurs, et ne partagez JAMAIS votre phrase de récupération."
   },
+  "screens/recommendation": {
+    "Recommendations": "Recommandations",
+    "Create invitation": "Créer une invitation",
+    "Pending Requests": "Demandes en attente",
+    "Your Invitations": "Vos invitations",
+    "Code": "Code",
+    "No invitations yet": "Aucune invitation pour le moment",
+    "Who would you like to invite?": "Qui souhaitez-vous inviter?",
+    "Created": "Créé",
+    "Pending": "En attente",
+    "Expired": "Expiré",
+    "Completed": "Terminé",
+    "Rejected": "Rejeté"
+  },
   "screens/settings": {
     "Settings": "Paramètres",
     "Your Addresses": "Vos adresses",
@@ -903,15 +938,27 @@
     "Total portfolio value": "Valeur totale du portefeuille",
     "No assets found": "Aucun actif trouvé",
     "Deposit": "Dépôt",
+    "Withdraw": "Retrait",
     "Receive": "Recevoir",
+    "Send": "Envoyer",
+    "Fiat": "Fiat",
+    "Crypto": "Crypto",
     "Swap": "Swap",
     "Send your {{asset}} to the address below to deposit into your DFX Safe": "Envoyez vos {{asset}} à l'adresse ci-dessous pour les déposer dans votre DFX Safe",
     "Receive Address": "Adresse de réception",
     "Deposit Complete": "Dépôt terminé",
     "Receive Complete": "Réception terminée",
+    "Withdraw Complete": "Retrait terminé",
+    "Send Complete": "Envoi terminé",
     "Swap Complete": "Swap terminé",
     "Your deposit will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Votre dépôt sera traité et ajouté à votre portefeuille Safe. Nous vous informerons par e-mail de l'état d'avancement de vos transactions.",
     "Your incoming transaction will be processed and added to your Safe portfolio. We will inform you by email about the progress of your transactions.": "Votre transaction entrante sera traitée et ajoutée à votre portefeuille Safe. Nous vous informerons par e-mail de l'état d'avancement de vos transactions.",
+    "Your withdrawal will be processed and paid out to your bank account. We will inform you by email about the progress of your transactions.": "Votre retrait sera traité et versé sur votre compte bancaire. Nous vous informerons par e-mail de l'état d'avancement de vos transactions.",
+    "Your send transaction will be processed and sent to your external wallet. We will inform you by email about the progress of your transactions.": "Votre envoi sera traité et envoyé vers votre portefeuille externe. Nous vous informerons par e-mail de l'état d'avancement de vos transactions.",
+    "Send {{asset}}": "Envoyer {{asset}}",
+    "Please verify the address and confirm to send your assets.": "Veuillez vérifier l'adresse et confirmer pour envoyer vos actifs.",
+    "Network fee": "Frais de réseau",
+    "Destination address": "Adresse de destination",
     "Your swap will be processed and reflected in your Safe portfolio. We will inform you by email about the progress of your transactions.": "Votre swap sera traité et reflété dans votre portefeuille Safe. Nous vous informerons par e-mail de l'état d'avancement de vos transactions."
   },
   "screens/realunit": {

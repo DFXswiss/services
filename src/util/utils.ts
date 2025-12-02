@@ -1,7 +1,23 @@
 import { Asset, Fiat, KycFile, UserAddress, Utils } from '@dfx.swiss/react';
+import { CustodyAsset, CustodyAssetBalance } from 'src/dto/safe.dto';
 
 export function isDefined<T>(item: T | undefined): item is T {
   return item != null;
+}
+
+export function partition<T>(array: T[] | undefined, predicate: (item: T) => boolean): [T[], T[]] {
+  const truthy: T[] = [];
+  const falsy: T[] = [];
+
+  array?.forEach((item) => {
+    if (predicate(item)) {
+      truthy.push(item);
+    } else {
+      falsy.push(item);
+    }
+  });
+
+  return [truthy, falsy];
 }
 
 export function isEmpty(val: any): boolean {
@@ -312,4 +328,9 @@ export const isAsset = (item: Asset | Fiat): item is Asset => 'chainId' in item;
 
 export function equalsIgnoreCase(left?: string, right?: string): boolean {
   return left?.toLowerCase() === right?.toLowerCase();
+}
+
+export function findCustodyBalanceString(asset: CustodyAsset, balances: CustodyAssetBalance[]): string {
+  const balance = balances.find((b) => b.asset.name === asset.name)?.balance;
+  return balance !== undefined ? Utils.formatAmountCrypto(balance) : '';
 }
