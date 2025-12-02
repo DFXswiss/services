@@ -1185,7 +1185,7 @@ function RecommendationData({ code, isLoading, step, onDone }: EditProps): JSX.E
             <p className="text-dfxGray-700 text-sm">
               {translate(
                 'screens/kyc',
-                'A referral code is your personal code at DFX. When someone registers using your ref link or code and successfully completes the KYC process, you both receive a corresponding reward. In short: You recommend DFX and get rewarded for it.',
+                'A referral code is your personal code at DFX. When someone registers using your code or ref link and successfully completes the KYC process, the connection is automatically recognized.',
               )}
             </p>
           </StyledCollapsible>
@@ -1200,7 +1200,7 @@ function RecommendationData({ code, isLoading, step, onDone }: EditProps): JSX.E
             <p className="text-dfxGray-700 text-sm">
               {translate(
                 'screens/kyc',
-                'A referral can be made by any customer who already has a DFX account, has a verified KYC level 50, and is logged in.',
+                'Referrals can be made by all customers who already have an account with DFX.',
               )}
             </p>
           </StyledCollapsible>

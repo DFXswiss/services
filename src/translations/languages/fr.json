@@ -354,9 +354,9 @@
     "How can I become a DFX customer?": "Comment puis-je devenir client chez DFX ?",
     "Opening an account with DFX is only possible through a referral. You need either the ref code, ref link, or email address of an existing customer. This person serves as your point of contact and must additionally confirm their referral. Once this confirmation is received, you can complete your onboarding and use your DFX account.": "L'ouverture d'un compte chez DFX n'est possible que par parrainage. Vous avez besoin soit du code de parrainage, du lien de parrainage ou de l'adresse e-mail d'un client existant. Cette personne vous sert de point de contact et doit confirmer son parrainage. Une fois cette confirmation reçue, vous pouvez finaliser votre inscription et utiliser votre compte DFX.",
     "What is a referral code?": "Qu'est-ce qu'un code de parrainage ?",
-    "A referral code is your personal code at DFX. When someone registers using your ref link or code and successfully completes the KYC process, you both receive a corresponding reward. In short: You recommend DFX and get rewarded for it.": "Un code de parrainage est votre code personnel chez DFX. Lorsque quelqu'un s'inscrit via votre lien ou code de parrainage et termine avec succès le processus KYC, vous recevez tous les deux une récompense correspondante. En bref : vous recommandez DFX et vous êtes récompensé pour cela.",
+    "A referral code is your personal code at DFX. When someone registers using your code or ref link and successfully completes the KYC process, the connection is automatically recognized.": "Un code de parrainage est votre code personnel chez DFX. Lorsque quelqu'un s'inscrit via votre code ou lien de parrainage et termine avec succès le processus KYC, la connexion est automatiquement reconnue.",
     "Who can make a referral?": "Qui peut faire un parrainage ?",
-    "A referral can be made by any customer who already has a DFX account, has a verified KYC level 50, and is logged in.": "Un parrainage peut être effectué par tout client qui possède déjà un compte DFX, a un niveau KYC 50 vérifié et est connecté."
+    "Referrals can be made by all customers who already have an account with DFX.": "Les parrainages peuvent être effectués par tous les clients qui possèdent déjà un compte chez DFX."
   },
   "screens/compliance": {
     "Compliance": "Compliance",

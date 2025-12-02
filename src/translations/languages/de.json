@@ -353,10 +353,10 @@
     "FAQ": "FAQ",
     "How can I become a DFX customer?": "Wie kann ich Kunde bei DFX werden?",
     "Opening an account with DFX is only possible through a referral. You need either the ref code, ref link, or email address of an existing customer. This person serves as your point of contact and must additionally confirm their referral. Once this confirmation is received, you can complete your onboarding and use your DFX account.": "Eine Kontoeröffnung bei DFX ist ausschliesslich über Empfehlung möglich. Du benötigst dafür entweder den Ref-Code, den Ref-Link oder die E-Mail-Adresse eines Bestandskunden. Diese Person dient dir als Ansprechstelle und muss ihre Empfehlung zusätzlich bestätigen. Sobald diese Bestätigung vorliegt, kannst du dein Onboarding vollständig abschliessen und deinen DFX Account nutzen.",
-    "What is a referral code?": "Was ist ein Empfehlungs- oder Referenzcode?",
-    "A referral code is your personal code at DFX. When someone registers using your ref link or code and successfully completes the KYC process, you both receive a corresponding reward. In short: You recommend DFX and get rewarded for it.": "Ein Empfehlungs- (oder Referral-)Code ist dein persönlicher Code bei DFX. Wenn sich jemand über deinen Ref-Link oder mithilfe deines Codes registriert und erfolgreich den KYC-Prozess abschliesst, erhaltet ihr beide eine entsprechende Vergütung. Kurz gesagt: Du empfiehlst DFX weiter und wirst dafür belohnt.",
+    "What is a referral code?": "Was ist ein Empfehlungs- oder Referralcode?",
+    "A referral code is your personal code at DFX. When someone registers using your code or ref link and successfully completes the KYC process, the connection is automatically recognized.": "Ein Empfehlungs- oder Referral-Code ist dein persönlicher Code bei DFX. Wenn sich jemand über deinen Code oder Ref-Link registriert und den KYC-Prozess erfolgreich abschliesst, wird die Verbindung automatisch erkannt.",
     "Who can make a referral?": "Wer kann eine Empfehlung aussprechen?",
-    "A referral can be made by any customer who already has a DFX account, has a verified KYC level 50, and is logged in.": "Eine Empfehlung kann jeder Kunde aussprechen, der bereits ein Konto bei DFX hat, einen verifizierten KYC-Level 50 hat und eingeloggt ist."
+    "Referrals can be made by all customers who already have an account with DFX.": "Empfehlungen können von allen Kunden ausgesprochen werden, die bereits ein Konto bei DFX führen."
   },
   "screens/compliance": {
     "Compliance": "Compliance",
