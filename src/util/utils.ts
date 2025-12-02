@@ -122,6 +122,19 @@ export function openPdfFromString(pdf: string, newTab = true) {
   }
 }
 
+export function downloadPdfFromString(pdf: string, filename: string) {
+  const byteArray = Uint8Array.from(atob(pdf), (c) => c.charCodeAt(0));
+  const blob = new Blob([byteArray], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 export function openImageFromString(image: string, contentType: string, newTab = true) {
   const imageBlob = new Blob([Uint8Array.from(atob(image), (c) => c.charCodeAt(0))], { type: contentType });
   const imageUrl = URL.createObjectURL(imageBlob);

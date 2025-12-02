@@ -42,7 +42,7 @@ import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress, openPdfFromString, sortAddressesByBlockchain, url } from 'src/util/utils';
+import { blankedAddress, downloadPdfFromString, sortAddressesByBlockchain, url } from 'src/util/utils';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
@@ -213,7 +213,9 @@ export default function AccountScreen(): JSX.Element {
         method: 'GET',
       });
 
-      openPdfFromString(response.pdfData);
+      // Generate filename: DFX_Balance_Report_<blockchain>_<date>.pdf
+      const filename = `DFX_Balance_Report_${blockchain}_${data.date}.pdf`;
+      downloadPdfFromString(response.pdfData, filename);
       closePdfModal();
     } catch (e) {
       setPdfError((e as ApiError).message ?? 'Unknown error');
