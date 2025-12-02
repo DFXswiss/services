@@ -1,8 +1,12 @@
 import {
+  ApiError,
+  Blockchain,
   DetailTransaction,
+  PdfDocument,
   Referral,
   UserAddress,
   Utils,
+  useApi,
   useAuthContext,
   useSessionContext,
   useTransaction,
@@ -15,17 +19,22 @@ import {
   Form,
   IconVariant,
   SpinnerSize,
+  StyledButton,
+  StyledButtonColor,
+  StyledButtonWidth,
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
   StyledIconButton,
+  StyledInput,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { Modal } from 'src/components/modal';
 import { addressLabel } from 'src/config/labels';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
@@ -33,13 +42,35 @@ import { useUserGuard } from 'src/hooks/guard.hook';
 import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { blankedAddress, sortAddressesByBlockchain, url } from 'src/util/utils';
+import { blankedAddress, openPdfFromString, sortAddressesByBlockchain, url } from 'src/util/utils';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 
+// Supported EVM blockchains for balance PDF
+const SUPPORTED_PDF_BLOCKCHAINS: Blockchain[] = [
+  Blockchain.ETHEREUM,
+  Blockchain.BINANCE_SMART_CHAIN,
+  Blockchain.POLYGON,
+  Blockchain.ARBITRUM,
+  Blockchain.OPTIMISM,
+  Blockchain.BASE,
+];
+
+enum FiatCurrency {
+  CHF = 'CHF',
+  EUR = 'EUR',
+  USD = 'USD',
+}
+
 interface FormData {
   address: UserAddress;
+}
+
+interface PdfFormData {
+  blockchain: Blockchain;
+  currency: FiatCurrency;
+  date: string;
 }
 
 export default function AccountScreen(): JSX.Element {
@@ -56,8 +87,12 @@ export default function AccountScreen(): JSX.Element {
   const { changeAddress } = useUserContext();
   const { session } = useAuthContext();
   const { rootRef } = useLayoutContext();
+  const { call } = useApi();
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setRefferal] = useState<Referral | undefined>();
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string>();
 
   useUserGuard('/login');
 
@@ -67,7 +102,22 @@ export default function AccountScreen(): JSX.Element {
     setValue,
   } = useForm<FormData>();
 
+  const {
+    control: pdfControl,
+    formState: { errors: pdfErrors },
+    handleSubmit: handlePdfSubmit,
+    setValue: setPdfValue,
+    reset: resetPdfForm,
+  } = useForm<PdfFormData>();
+
   const selectedAddress = useWatch({ control, name: 'address' });
+  const selectedPdfBlockchain = useWatch({ control: pdfControl, name: 'blockchain' });
+  const selectedPdfCurrency = useWatch({ control: pdfControl, name: 'currency' });
+  const selectedPdfDate = useWatch({ control: pdfControl, name: 'date' });
+
+  // Get supported blockchains for the selected address
+  const supportedBlockchains = selectedAddress?.blockchains.filter((b) => SUPPORTED_PDF_BLOCKCHAINS.includes(b)) ?? [];
+  const canDownloadPdf = supportedBlockchains.length > 0;
 
   useEffect(() => {
     if (user?.activeAddress && !isUserLoading && isLoggedIn) {
@@ -116,6 +166,54 @@ export default function AccountScreen(): JSX.Element {
       .catch(() => {
         // ignore errors
       });
+  }
+
+  function openPdfModal(): void {
+    setPdfError(undefined);
+    // Set defaults
+    if (supportedBlockchains.length === 1) {
+      setPdfValue('blockchain', supportedBlockchains[0]);
+    }
+    setPdfValue('currency', FiatCurrency.CHF);
+    // Set default date to yesterday
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    setPdfValue('date', yesterday.toISOString().split('T')[0]);
+    setShowPdfModal(true);
+  }
+
+  function closePdfModal(): void {
+    setShowPdfModal(false);
+    resetPdfForm();
+    setPdfError(undefined);
+  }
+
+  async function downloadBalancePdf(data: PdfFormData): Promise<void> {
+    if (!selectedAddress) return;
+
+    setIsPdfLoading(true);
+    setPdfError(undefined);
+
+    try {
+      const params = new URLSearchParams({
+        address: selectedAddress.address,
+        blockchain: data.blockchain,
+        currency: data.currency,
+        date: data.date,
+      });
+
+      const response = await call<PdfDocument>({
+        url: `balance/pdf?${params.toString()}`,
+        method: 'GET',
+      });
+
+      openPdfFromString(response.pdfData);
+      closePdfModal();
+    } catch (e) {
+      setPdfError((e as ApiError).message ?? 'Unknown error');
+    } finally {
+      setIsPdfLoading(false);
+    }
   }
 
   const transactionItems = transactions?.map((t) => ({
@@ -246,6 +344,16 @@ export default function AccountScreen(): JSX.Element {
                   />
                 </Form>
               </div>
+
+              {/* PDF Download Button */}
+              {canDownloadPdf && (
+                <StyledButton
+                  label={translate('screens/home', 'PDF Download Address Report')}
+                  onClick={openPdfModal}
+                  width={StyledButtonWidth.FULL}
+                  color={StyledButtonColor.STURDY_WHITE}
+                />
+              )}
             </>
           ) : (
             <></>
@@ -286,6 +394,69 @@ export default function AccountScreen(): JSX.Element {
           <img src={image} className="w-full" />
         </div>
       )}
+
+      {/* PDF Download Modal */}
+      <Modal isOpen={showPdfModal} onClose={closePdfModal}>
+        <StyledVerticalStack gap={6} full>
+          <div className="flex justify-between items-center">
+            <h2 className="text-dfxBlue-800 text-xl font-bold">
+              {translate('screens/home', 'PDF Download Address Report')}
+            </h2>
+            <StyledIconButton icon={IconVariant.CLOSE} onClick={closePdfModal} />
+          </div>
+
+          <Form control={pdfControl} errors={pdfErrors} onSubmit={handlePdfSubmit(downloadBalancePdf)}>
+            <StyledVerticalStack gap={4} full>
+              {supportedBlockchains.length > 1 && (
+                <StyledDropdown<Blockchain>
+                  name="blockchain"
+                  rootRef={rootRef}
+                  label={translate('screens/home', 'Blockchain')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
+                  items={supportedBlockchains}
+                  labelFunc={(item) => item}
+                  full
+                />
+              )}
+
+              <StyledDropdown<FiatCurrency>
+                name="currency"
+                rootRef={rootRef}
+                label={translate('screens/home', 'Currency')}
+                placeholder={translate('general/actions', 'Select') + '...'}
+                items={Object.values(FiatCurrency)}
+                labelFunc={(item) => item}
+                full
+              />
+
+              <StyledInput
+                name="date"
+                type="date"
+                label={translate('screens/home', 'Date')}
+                full
+              />
+
+              {pdfError && <p className="text-dfxRed-100 text-sm">{pdfError}</p>}
+
+              <StyledButton
+                type="submit"
+                label={translate('general/actions', 'Download')}
+                onClick={handlePdfSubmit(downloadBalancePdf)}
+                width={StyledButtonWidth.FULL}
+                isLoading={isPdfLoading}
+                disabled={!selectedPdfBlockchain || !selectedPdfCurrency || !selectedPdfDate}
+              />
+
+              <StyledButton
+                label={translate('general/actions', 'Cancel')}
+                onClick={closePdfModal}
+                width={StyledButtonWidth.FULL}
+                color={StyledButtonColor.STURDY_WHITE}
+              />
+            </StyledVerticalStack>
+          </Form>
+        </StyledVerticalStack>
+      </Modal>
     </>
   );
 }
