@@ -73,7 +73,7 @@
     "No entries yet": "Noch keine Einträge vorhanden",
 
     "Something went wrong. Please try again. If the issue persists please reach out to our support.": "Irgendwas hat nicht funktioniert, bitte versuche es noch einmal. Wenn das Problem weiterhin besteht, wende Dich bitte an unseren Support.",
-    "invoice": "DFX kennt keinen Empfänger mit dem Namen <strong>{{recipient}}</strong>. Dieser Service kann nur für Empfänger verwendet werden, die ein aktives Konto bei DFX haben und für den Rechnungsservice aktiviert sind. Solltest Du dich als Empfänger bei DFX registrieren wollen, dann melde Dich beim Support unter <link>{{supportLink}}</link>.",
+    "invoice": "DFX kennt keinen Empfänger mit dem Namen <strong>{{recipient}}</strong>. Dieser Service kann nur für Empfänger verwendet werden, die ein aktives Konto bei DFX haben und für den Rechnungsservice aktiviert sind. Solltest Du Dich als Empfänger bei DFX registrieren wollen, dann melde Dich beim Support unter <link>{{supportLink}}</link>.",
     "iban": "Dies ist eine Multi-Account-IBAN und kann nicht als persönliches Konto hinzugefügt werden. Bitte öffne ein Support-Ticket auf <1></1> und füge die Bestätigung der Banktransaktion als PDF bei."
   },
   "screens/kyc": {
@@ -194,7 +194,7 @@
     "Commercial register extract, trade license/permit, AHV confirmation, or another document proving the existence of the business": "Handelsregisterauszug, Gewerbeschein/-bewilligung, AHV-Bestätigung, oder ein anderes Dokument welches die Existenz des Gewerbes nachweist",
 
     "Please fill in personal information to continue": "Bitte gib Deine persönlichen Daten ein, um fortzufahren",
-    "How did you hear about DFX?": "Wie bist du auf DFX aufmerksam geworden?",
+    "How did you hear about DFX?": "Wie bist Du auf DFX aufmerksam geworden?",
     "Please enter your contact information so that we can find your account": "Bitte gib Deine Kontaktinformationen ein, damit wir Dein Konto finden können",
 
     "How many natural persons are there who directly or indirectly hold 25% or more of company shares?": "Wie viele natürliche Personen gibt es, die direkt oder indirekt 25 % oder mehr der Unternehmensanteile halten?",
@@ -344,7 +344,7 @@
     "Recall agreement": "Rückrufvereinbarung",
 
     "Recommendation": "Empfehlung",
-    "Please enter the email address or referral code of your contact person. This lets us know you have a trusted contact to guide you into the crypto space.": "Gib bitte die E-Mail-Adresse oder den Empfehlungs-/Referenzcode deiner Ansprechperson ein. Damit wissen wir, dass du einen vertrauenswürdigen Kontakt hast, der dich beim Einstieg ins Kryptoumfeld begleitet.",
+    "Please enter the email address or referral code of your contact person. This lets us know you have a trusted contact to guide you into the crypto space.": "Gib bitte die E-Mail-Adresse oder den Empfehlungs-/Referenzcode Deiner Ansprechperson ein. Damit wissen wir, dass Du einen vertrauenswürdigen Kontakt hast, der Dich beim Einstieg ins Kryptoumfeld begleitet.",
     "Invitation/referral code or email": "Einladungs-/Referral-Code oder E-Mail",
     "No matching user found": "Kein passender Benutzer gefunden",
     "Invalid invitation code": "Ungültiger Einladungscode",
@@ -352,9 +352,9 @@
 
     "FAQ": "FAQ",
     "How can I become a DFX customer?": "Wie kann ich Kunde bei DFX werden?",
-    "Opening an account with DFX is only possible through a referral. You need either the ref code, ref link, or email address of an existing customer. This person serves as your point of contact and must additionally confirm their referral. Once this confirmation is received, you can complete your onboarding and use your DFX account.": "Eine Kontoeröffnung bei DFX ist ausschliesslich über Empfehlung möglich. Du benötigst dafür entweder den Ref-Code, den Ref-Link oder die E-Mail-Adresse eines Bestandskunden. Diese Person dient dir als Ansprechstelle und muss ihre Empfehlung zusätzlich bestätigen. Sobald diese Bestätigung vorliegt, kannst du dein Onboarding vollständig abschliessen und deinen DFX Account nutzen.",
+    "Opening an account with DFX is only possible through a referral. You need either the ref code, ref link, or email address of an existing customer. This person serves as your point of contact and must additionally confirm their referral. Once this confirmation is received, you can complete your onboarding and use your DFX account.": "Eine Kontoeröffnung bei DFX ist ausschliesslich über Empfehlung möglich. Du benötigst dafür entweder den Ref-Code, den Ref-Link oder die E-Mail-Adresse eines Bestandskunden. Diese Person dient Dir als Ansprechstelle und muss ihre Empfehlung zusätzlich bestätigen. Sobald diese Bestätigung vorliegt, kannst Du Dein Onboarding vollständig abschliessen und Deinen DFX Account nutzen.",
     "What is a referral code?": "Was ist ein Empfehlungs- oder Referralcode?",
-    "A referral code is your personal code at DFX. When someone registers using your code or ref link and successfully completes the KYC process, the connection is automatically recognized.": "Ein Empfehlungs- oder Referral-Code ist dein persönlicher Code bei DFX. Wenn sich jemand über deinen Code oder Ref-Link registriert und den KYC-Prozess erfolgreich abschliesst, wird die Verbindung automatisch erkannt.",
+    "A referral code is your personal code at DFX. When someone registers using your code or ref link and successfully completes the KYC process, the connection is automatically recognized.": "Ein Empfehlungs- oder Referral-Code ist Dein persönlicher Code bei DFX. Wenn sich jemand über Deinen Code oder Ref-Link registriert und den KYC-Prozess erfolgreich abschliesst, wird die Verbindung automatisch erkannt.",
     "Who can make a referral?": "Wer kann eine Empfehlung aussprechen?",
     "Referrals can be made by all customers who already have an account with DFX.": "Empfehlungen können von allen Kunden ausgesprochen werden, die bereits ein Konto bei DFX führen.",
     "Why does DFX only accept new customers by referral?": "Warum nimmt DFX neue Kundinnen und Kunden nur noch auf Empfehlung auf?",
@@ -362,9 +362,9 @@
     "What risks in the crypto space should I know about beforehand?": "Welche Risiken im Kryptobereich sollte ich vorher kennen?",
     "The crypto market is very volatile, and losses can occur quickly. Common mistakes include sending coins to the wrong address, losing access credentials, or clicking on phishing links. Additionally, fraudulent projects and a constantly changing legal framework pose additional risks. A basic understanding of the processes helps to avoid these mistakes and navigate the crypto world more safely.": "Der Kryptomarkt ist sehr volatil, und Verluste können schnell entstehen. Häufige Fehler sind beispielsweise das Versenden von Coins an die falsche Adresse, das Verlieren von Zugangsdaten oder das Anklicken von Phishing-Links. Zudem bergen betrügerische Projekte und ein sich ständig verändernder Rechtsrahmen zusätzliche Risiken. Ein grundlegendes Verständnis der Abläufe hilft, diese Fehler zu vermeiden und sicherer in der Kryptowelt unterwegs zu sein.",
     "What happens if the referral is not confirmed?": "Was passiert, wenn die Empfehlung nicht bestätigt wird?",
-    "If your referral is not confirmed by your contact person, your onboarding is considered incomplete and an account cannot be set up.": "Wenn deine Empfehlung nicht von deiner Ansprechperson bestätigt wird, gilt dein Onboarding als nicht abgeschlossen und ein Konto kann nicht eingerichtet werden.",
+    "If your referral is not confirmed by your contact person, your onboarding is considered incomplete and an account cannot be set up.": "Wenn Deine Empfehlung nicht von Deiner Ansprechperson bestätigt wird, gilt Dein Onboarding als nicht abgeschlossen und ein Konto kann nicht eingerichtet werden.",
     "Can I complete the onboarding without a referral?": "Kann ich das Onboarding ohne Empfehlung abschliessen?",
-    "No. Onboarding at DFX is only possible through a referral. You need the ref code, ref link, or email address of an existing customer who confirms your registration.": "Nein. Das Onboarding bei DFX ist ausschliesslich über eine Empfehlung möglich. Du benötigst dafür den Ref-Code, Ref-Link oder die E-Mail-Adresse eines Bestandskunden, der deine Registrierung bestätigt."
+    "No. Onboarding at DFX is only possible through a referral. You need the ref code, ref link, or email address of an existing customer who confirms your registration.": "Nein. Das Onboarding bei DFX ist ausschliesslich über eine Empfehlung möglich. Du benötigst dafür den Ref-Code, Ref-Link oder die E-Mail-Adresse eines Bestandskunden, der Deine Registrierung bestätigt."
   },
   "screens/compliance": {
     "Compliance": "Compliance",
@@ -440,7 +440,7 @@
     "Please confirm the connection in your wallet.": "Bitte bestätige die Verbindung in Deiner Wallet.",
     "Please confirm the connection with your Ledger.": "Bitte bestätige die Verbindung mit Deinem Ledger.",
     "Connection failed!": "Verbindung fehlgeschlagen!",
-    "Please make sure that all other applications and browser extensions that are connected to the ledger are completely closed when you try to connect.\nThis includes third-party wallets (Ledger Live, Metamask, Daedalus, MyEtherWallet) or other applications that could interfere with the connection between DFX.swiss and your ledger device.": "Bitte stelle sicher, dass alle anderen Anwendungen und Browsererweiterungen, die mit dem Ledger verbunden sind, vollständig geschlossen sind, wenn du versuchst, eine Verbindung herzustellen.\nDazu gehören Wallets von Drittanbietern (Ledger Live, Metamask, Daedalus, MyEtherWallet) oder andere Anwendungen, die die Verbindung zwischen DFX.swiss und deinem Ledger-Gerät stören könnten.",
+    "Please make sure that all other applications and browser extensions that are connected to the ledger are completely closed when you try to connect.\nThis includes third-party wallets (Ledger Live, Metamask, Daedalus, MyEtherWallet) or other applications that could interfere with the connection between DFX.swiss and your ledger device.": "Bitte stelle sicher, dass alle anderen Anwendungen und Browsererweiterungen, die mit dem Ledger verbunden sind, vollständig geschlossen sind, wenn Du versuchst, eine Verbindung herzustellen.\nDazu gehören Wallets von Drittanbietern (Ledger Live, Metamask, Daedalus, MyEtherWallet) oder andere Anwendungen, die die Verbindung zwischen DFX.swiss und Deinem Ledger-Gerät stören könnten.",
 
     "Connect your {{device}} with your computer": "Verbinde Deinen {{device}} mit Deinem Computer",
     "Click on \"Connect\"": "Klicke auf \"Verbinden\"",
@@ -809,7 +809,7 @@
     "Saved": "Gespeichert",
     "Cointracking Link (read rights)": "Cointracking-Verknüpfung (Leserechte)",
     "Cointracking homepage": "Cointracking Homepage",
-    "You can link your DFX account to your Cointracking account.": "Du kannst dein DFX-Konto mit deinem Cointracking-Konto verknüpfen.",
+    "You can link your DFX account to your Cointracking account.": "Du kannst Dein DFX-Konto mit Deinem Cointracking-Konto verknüpfen.",
     "Generate API key": "API-Key generieren",
     "API key": "API-Key",
     "API secret": "API-Secret",
