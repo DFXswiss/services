@@ -172,7 +172,7 @@ export default function AccountScreen(): JSX.Element {
   function openPdfModal(): void {
     setPdfError(undefined);
     // Set defaults
-    if (supportedBlockchains.length === 1) {
+    if (supportedBlockchains.length > 0) {
       setPdfValue('blockchain', supportedBlockchains[0]);
     }
     setPdfValue('currency', FiatCurrency.CHF);
