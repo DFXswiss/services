@@ -176,10 +176,8 @@ export default function AccountScreen(): JSX.Element {
       setPdfValue('blockchain', supportedBlockchains[0]);
     }
     setPdfValue('currency', FiatCurrency.CHF);
-    // Set default date to yesterday
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    setPdfValue('date', yesterday.toISOString().split('T')[0]);
+    // Set default date to today
+    setPdfValue('date', new Date().toISOString().split('T')[0]);
     setShowPdfModal(true);
   }
 
