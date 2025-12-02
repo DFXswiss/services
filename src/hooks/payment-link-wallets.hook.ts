@@ -115,7 +115,7 @@ export const usePaymentLinkWallets = (): PaymentLinkWalletsProps => {
         const { uri } = (await fetchCallbackUrlForTransferMethod<{ uri: string }>(C2BPaymentMethod.BINANCE_PAY)) ?? {};
         return uri;
 
-      case 'Kucoin Pay':
+      case 'KuCoin Pay':
         const { uri: kucoinUri } =
           (await fetchCallbackUrlForTransferMethod<{ uri: string }>(C2BPaymentMethod.KUCOINPAY)) ?? {};
         return kucoinUri;
