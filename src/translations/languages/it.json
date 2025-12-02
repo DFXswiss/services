@@ -967,7 +967,8 @@
     "Please verify the address and confirm to send your assets.": "Verifica l'indirizzo e conferma per inviare i tuoi asset.",
     "Network fee": "Commissione di rete",
     "Destination address": "Indirizzo di destinazione",
-    "Your swap will be processed and reflected in your Safe portfolio. We will inform you by email about the progress of your transactions.": "Il tuo swap verrà elaborato e riflesso nel tuo portafoglio Safe. Ti informeremo via e-mail sui progressi delle tue transazioni."
+    "Your swap will be processed and reflected in your Safe portfolio. We will inform you by email about the progress of your transactions.": "Il tuo swap verrà elaborato e riflesso nel tuo portafoglio Safe. Ti informeremo via e-mail sui progressi delle tue transazioni.",
+    "Download PDF": "Scarica PDF"
   },
   "screens/realunit": {
     "Account Summary": "Riepilogo del conto",

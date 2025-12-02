@@ -1,4 +1,12 @@
-import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
+import {
+  DfxIcon,
+  IconColor,
+  IconSize,
+  IconVariant,
+  SpinnerSize,
+  StyledLoadingSpinner,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { NameEdit } from 'src/components/edit/name.edit';
 import { ErrorHint } from 'src/components/error-hint';
@@ -85,7 +93,18 @@ export default function SafeScreen(): JSX.Element {
               <div className="p-2 gap-2 flex flex-col items-start">
                 <div className="relative w-full" style={{ height: showChart ? '350px' : '85px' }}>
                   <div className="w-full flex flex-col gap-3 text-left leading-none z-10">
+                  <div className="flex flex-row justify-between items-start">
                     <h2 className="text-dfxBlue-800">{translate('screens/safe', 'Portfolio')}</h2>
+                    <button
+                      className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
+                      onClick={() => {
+                        // TODO: Implement PDF download
+                      }}
+                      title={translate('screens/safe', 'Download PDF')}
+                    >
+                      <DfxIcon icon={IconVariant.FILE} color={IconColor.BLUE} size={IconSize.MD} />
+                    </button>
+                  </div>
                     <p className="text-dfxGray-700">{translate('screens/safe', 'Total portfolio value')}</p>
                     <div className="flex flex-row items-center gap-3 z-10">
                       <ButtonGroup<FiatCurrency>
