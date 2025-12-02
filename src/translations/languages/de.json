@@ -194,6 +194,7 @@
     "Commercial register extract, trade license/permit, AHV confirmation, or another document proving the existence of the business": "Handelsregisterauszug, Gewerbeschein/-bewilligung, AHV-Bestätigung, oder ein anderes Dokument welches die Existenz des Gewerbes nachweist",
 
     "Please fill in personal information to continue": "Bitte gib Deine persönlichen Daten ein, um fortzufahren",
+    "How did you hear about DFX?": "Wie bist du auf DFX aufmerksam geworden?",
     "Please enter your contact information so that we can find your account": "Bitte gib Deine Kontaktinformationen ein, damit wir Dein Konto finden können",
 
     "How many natural persons are there who directly or indirectly hold 25% or more of company shares?": "Wie viele natürliche Personen gibt es, die direkt oder indirekt 25 % oder mehr der Unternehmensanteile halten?",
@@ -343,7 +344,7 @@
     "Recall agreement": "Rückrufvereinbarung",
 
     "Recommendation": "Empfehlung",
-    "Please enter an invitation or referral code or an email of an existing user who must have KYC and be approved": "Bitte gib einen Einladungs- oder Referral-Code oder die E-Mail eines bestehenden Benutzers ein, der KYC haben muss und freigeschaltet sein muss",
+    "Please enter the email address or referral code of your contact person. This lets us know you have a trusted contact to guide you into the crypto space.": "Gib bitte die E-Mail-Adresse oder den Empfehlungs-/Referenzcode deiner Ansprechperson ein. Damit wissen wir, dass du einen vertrauenswürdigen Kontakt hast, der dich beim Einstieg ins Kryptoumfeld begleitet.",
     "Invitation/referral code or email": "Einladungs-/Referral-Code oder E-Mail",
     "No matching user found": "Kein passender Benutzer gefunden",
     "Invalid invitation code": "Ungültiger Einladungscode",
