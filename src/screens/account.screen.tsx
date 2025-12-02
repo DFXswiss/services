@@ -192,13 +192,17 @@ export default function AccountScreen(): JSX.Element {
   async function downloadBalancePdf(data: PdfFormData): Promise<void> {
     if (!selectedAddress) return;
 
+    // Use data.blockchain if multiple blockchains, otherwise use the single supported one
+    const blockchain = supportedBlockchains.length === 1 ? supportedBlockchains[0] : data.blockchain;
+    if (!blockchain) return;
+
     setIsPdfLoading(true);
     setPdfError(undefined);
 
     try {
       const params = new URLSearchParams({
         address: selectedAddress.address,
-        blockchain: data.blockchain,
+        blockchain: blockchain,
         currency: data.currency,
         date: data.date,
         language: language?.symbol ?? 'EN',
@@ -446,7 +450,11 @@ export default function AccountScreen(): JSX.Element {
                 onClick={handlePdfSubmit(downloadBalancePdf)}
                 width={StyledButtonWidth.FULL}
                 isLoading={isPdfLoading}
-                disabled={!selectedPdfBlockchain || !selectedPdfCurrency || !selectedPdfDate}
+                disabled={
+                  (supportedBlockchains.length > 1 && !selectedPdfBlockchain) ||
+                  !selectedPdfCurrency ||
+                  !selectedPdfDate
+                }
               />
 
               <StyledButton
