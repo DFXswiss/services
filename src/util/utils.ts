@@ -125,14 +125,7 @@ export function openPdfFromString(pdf: string, newTab = true) {
 export function downloadPdfFromString(pdf: string, filename: string) {
   const byteArray = Uint8Array.from(atob(pdf), (c) => c.charCodeAt(0));
   const blob = new Blob([byteArray], { type: 'application/pdf' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  downloadFile(blob, {}, filename);
 }
 
 export function openImageFromString(image: string, contentType: string, newTab = true) {
