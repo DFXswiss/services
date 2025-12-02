@@ -47,7 +47,7 @@ import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 
-// Supported EVM blockchains for balance PDF
+// Supported EVM blockchains for balance PDF (must match API's SUPPORTED_BLOCKCHAINS)
 const SUPPORTED_PDF_BLOCKCHAINS: Blockchain[] = [
   Blockchain.ETHEREUM,
   Blockchain.BINANCE_SMART_CHAIN,
@@ -55,6 +55,7 @@ const SUPPORTED_PDF_BLOCKCHAINS: Blockchain[] = [
   Blockchain.ARBITRUM,
   Blockchain.OPTIMISM,
   Blockchain.BASE,
+  Blockchain.GNOSIS,
 ];
 
 enum FiatCurrency {
@@ -74,7 +75,7 @@ interface PdfFormData {
 }
 
 export default function AccountScreen(): JSX.Element {
-  const { translate } = useSettingsContext();
+  const { translate, language } = useSettingsContext();
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
   const { limitToString, levelToString } = useKycHelper();
   const { navigate } = useNavigation();
@@ -200,6 +201,7 @@ export default function AccountScreen(): JSX.Element {
         blockchain: data.blockchain,
         currency: data.currency,
         date: data.date,
+        language: language?.symbol ?? 'EN',
       });
 
       const response = await call<PdfDocument>({
