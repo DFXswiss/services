@@ -64,7 +64,7 @@ export const BankAccountSelector: React.FC<BankAccountSelectorProps> = ({
       />
 
       <Modal isOpen={isModalOpen} onClose={() => onModalToggle(false)} className={className}>
-        <StyledVerticalStack gap={6} center>
+        <StyledVerticalStack gap={6} center marginX={9}>
           <ActionableList
             items={bankAccounts?.map((account) => {
               return {
