@@ -213,8 +213,8 @@ export default function AccountScreen(): JSX.Element {
         method: 'GET',
       });
 
-      // Generate filename: DFX_Balance_Report_<blockchain>_<date>.pdf
-      const filename = `DFX_Balance_Report_${blockchain}_${data.date}.pdf`;
+      // Generate filename: <date>_DFX_Balance_Report_<blockchain>.pdf
+      const filename = `${data.date}_DFX_Balance_Report_${blockchain}.pdf`;
       downloadPdfFromString(response.pdfData, filename);
       closePdfModal();
     } catch (e) {
