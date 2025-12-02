@@ -72,6 +72,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import SumsubWebSdk from '@sumsub/websdk-react';
+import { FaHandshake } from 'react-icons/fa';
 import { RefObject, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
@@ -1123,8 +1124,13 @@ function RecommendationData({ code, isLoading, step, onDone }: EditProps): JSX.E
   return (
     <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
       <StyledVerticalStack gap={6} full center>
+        <FaHandshake className="text-dfxBlue-800" size={40} />
+        <p className="text-base font-bold text-dfxBlue-800">
+          {translate('screens/kyc', 'How did you hear about DFX?')}
+        </p>
+
         <div className="text-dfxGray-700 w-full text-sm text-left">
-          {translate('screens/kyc', 'Please enter an invitation or referral code or an email of an existing user who must have KYC and be approved')}
+          {translate('screens/kyc', 'Please enter the email address or referral code of your contact person. This lets us know you have a trusted contact to guide you into the crypto space.')}
         </div>
 
         <StyledInput
