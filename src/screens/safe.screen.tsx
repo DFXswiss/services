@@ -1,15 +1,21 @@
 import {
   DfxIcon,
+  Form,
   IconColor,
   IconSize,
   IconVariant,
   SpinnerSize,
+  StyledButton,
+  StyledButtonWidth,
+  StyledDateAndTimePicker,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { NameEdit } from 'src/components/edit/name.edit';
 import { ErrorHint } from 'src/components/error-hint';
+import { Modal } from 'src/components/modal';
 import { SafeCompletion } from 'src/components/payment/safe-completion';
 import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
 import { PriceChart } from 'src/components/safe/chart';
@@ -22,6 +28,10 @@ import { useUserGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSafe } from 'src/hooks/safe.hook';
 import { formatCurrency } from 'src/util/utils';
+
+interface PdfFormData {
+  date: Date;
+}
 
 export default function SafeScreen(): JSX.Element {
   useUserGuard('/login');
@@ -38,6 +48,24 @@ export default function SafeScreen(): JSX.Element {
   } = useOrderUIContext();
 
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<PdfFormData>({
+    mode: 'onChange',
+    defaultValues: {
+      date: new Date(),
+    },
+  });
+
+  const onPdfSubmit = (data: PdfFormData) => {
+    // TODO: Implement PDF generation with selected date
+    console.log('Generate PDF for date:', data.date);
+    setIsPdfModalOpen(false);
+  };
 
   useEffect(() => {
     userCurrency && setCurrency(userCurrency?.name.toLowerCase() as FiatCurrency);
@@ -98,9 +126,7 @@ export default function SafeScreen(): JSX.Element {
                       <p className="text-dfxGray-700">{translate('screens/safe', 'Total portfolio value')}</p>
                       <button
                         className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer z-20"
-                        onClick={() => {
-                          // TODO: Implement PDF download
-                        }}
+                        onClick={() => setIsPdfModalOpen(true)}
                         title={translate('screens/safe', 'Download PDF')}
                       >
                         <DfxIcon icon={IconVariant.FILE} color={IconColor.BLUE} size={IconSize.MD} />
@@ -139,6 +165,27 @@ export default function SafeScreen(): JSX.Element {
           <SafeTransactionInterface />
         </StyledVerticalStack>
       )}
+
+      <Modal isOpen={isPdfModalOpen} onClose={() => setIsPdfModalOpen(false)}>
+        <StyledVerticalStack gap={6} full center>
+          <h2 className="text-dfxBlue-800 text-xl font-bold">{translate('screens/safe', 'Download PDF')}</h2>
+          <p className="text-dfxGray-700">{translate('screens/safe', 'Select a date for your portfolio report')}</p>
+          <Form control={control} errors={errors} onSubmit={handleSubmit(onPdfSubmit)}>
+            <StyledVerticalStack gap={6} full>
+              <StyledDateAndTimePicker
+                name="date"
+                label={translate('screens/payment', 'Date')}
+                smallLabel
+              />
+              <StyledButton
+                label={translate('screens/safe', 'Generate PDF')}
+                onClick={handleSubmit(onPdfSubmit)}
+                width={StyledButtonWidth.FULL}
+              />
+            </StyledVerticalStack>
+          </Form>
+        </StyledVerticalStack>
+      </Modal>
     </>
   );
 }

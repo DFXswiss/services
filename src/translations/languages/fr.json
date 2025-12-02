@@ -968,7 +968,9 @@
     "Network fee": "Frais de réseau",
     "Destination address": "Adresse de destination",
     "Your swap will be processed and reflected in your Safe portfolio. We will inform you by email about the progress of your transactions.": "Votre swap sera traité et reflété dans votre portefeuille Safe. Nous vous informerons par e-mail de l'état d'avancement de vos transactions.",
-    "Download PDF": "Télécharger PDF"
+    "Download PDF": "Télécharger PDF",
+    "Select a date for your portfolio report": "Sélectionnez une date pour votre rapport de portefeuille",
+    "Generate PDF": "Générer PDF"
   },
   "screens/realunit": {
     "Account Summary": "Résumé du compte",
