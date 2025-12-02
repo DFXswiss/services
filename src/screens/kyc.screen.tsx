@@ -57,6 +57,7 @@ import {
   StyledButtonColor,
   StyledButtonWidth,
   StyledCheckboxRow,
+  StyledCollapsible,
   StyledDataTable,
   StyledDataTableExpandableRow,
   StyledDataTableRow,
@@ -1155,6 +1156,55 @@ function RecommendationData({ code, isLoading, step, onDone }: EditProps): JSX.E
             <ErrorHint message={error} />
           </div>
         )}
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-base font-bold text-dfxBlue-800">{translate('screens/kyc', 'FAQ')}</p>
+          <StyledCollapsible
+            full
+            titleContent={
+              <p className="text-dfxBlue-800 font-semibold text-left">
+                {translate('screens/kyc', 'How can I become a DFX customer?')}
+              </p>
+            }
+          >
+            <p className="text-dfxGray-700 text-sm">
+              {translate(
+                'screens/kyc',
+                'Opening an account with DFX is only possible through a referral. You need either the ref code, ref link, or email address of an existing customer. This person serves as your point of contact and must additionally confirm their referral. Once this confirmation is received, you can complete your onboarding and use your DFX account.',
+              )}
+            </p>
+          </StyledCollapsible>
+          <StyledCollapsible
+            full
+            titleContent={
+              <p className="text-dfxBlue-800 font-semibold text-left">
+                {translate('screens/kyc', 'What is a referral code?')}
+              </p>
+            }
+          >
+            <p className="text-dfxGray-700 text-sm">
+              {translate(
+                'screens/kyc',
+                'A referral code is your personal code at DFX. When someone registers using your ref link or code and successfully completes the KYC process, you both receive a corresponding reward. In short: You recommend DFX and get rewarded for it.',
+              )}
+            </p>
+          </StyledCollapsible>
+          <StyledCollapsible
+            full
+            titleContent={
+              <p className="text-dfxBlue-800 font-semibold text-left">
+                {translate('screens/kyc', 'Who can make a referral?')}
+              </p>
+            }
+          >
+            <p className="text-dfxGray-700 text-sm">
+              {translate(
+                'screens/kyc',
+                'A referral can be made by any customer who already has a DFX account, has a verified KYC level 50, and is logged in.',
+              )}
+            </p>
+          </StyledCollapsible>
+        </StyledVerticalStack>
       </StyledVerticalStack>
     </Form>
   );
