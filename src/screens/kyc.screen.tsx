@@ -1204,6 +1204,66 @@ function RecommendationData({ code, isLoading, step, onDone }: EditProps): JSX.E
               )}
             </p>
           </StyledCollapsible>
+          <StyledCollapsible
+            full
+            titleContent={
+              <p className="text-dfxBlue-800 font-semibold text-left">
+                {translate('screens/kyc', 'Why does DFX only accept new customers by referral?')}
+              </p>
+            }
+          >
+            <p className="text-dfxGray-700 text-sm">
+              {translate(
+                'screens/kyc',
+                'DFX uses a referral system to ensure a safe and trustworthy environment. New customers can only open an account through an existing customer who already uses and trusts DFX. This makes onboarding safer, prevents abuse, and maintains the quality of our community in the long term.',
+              )}
+            </p>
+          </StyledCollapsible>
+          <StyledCollapsible
+            full
+            titleContent={
+              <p className="text-dfxBlue-800 font-semibold text-left">
+                {translate('screens/kyc', 'What risks in the crypto space should I know about beforehand?')}
+              </p>
+            }
+          >
+            <p className="text-dfxGray-700 text-sm">
+              {translate(
+                'screens/kyc',
+                'The crypto market is very volatile, and losses can occur quickly. Common mistakes include sending coins to the wrong address, losing access credentials, or clicking on phishing links. Additionally, fraudulent projects and a constantly changing legal framework pose additional risks. A basic understanding of the processes helps to avoid these mistakes and navigate the crypto world more safely.',
+              )}
+            </p>
+          </StyledCollapsible>
+          <StyledCollapsible
+            full
+            titleContent={
+              <p className="text-dfxBlue-800 font-semibold text-left">
+                {translate('screens/kyc', 'What happens if the referral is not confirmed?')}
+              </p>
+            }
+          >
+            <p className="text-dfxGray-700 text-sm">
+              {translate(
+                'screens/kyc',
+                'If your referral is not confirmed by your contact person, your onboarding is considered incomplete and an account cannot be set up.',
+              )}
+            </p>
+          </StyledCollapsible>
+          <StyledCollapsible
+            full
+            titleContent={
+              <p className="text-dfxBlue-800 font-semibold text-left">
+                {translate('screens/kyc', 'Can I complete the onboarding without a referral?')}
+              </p>
+            }
+          >
+            <p className="text-dfxGray-700 text-sm">
+              {translate(
+                'screens/kyc',
+                'No. Onboarding at DFX is only possible through a referral. You need the ref code, ref link, or email address of an existing customer who confirms your registration.',
+              )}
+            </p>
+          </StyledCollapsible>
         </StyledVerticalStack>
       </StyledVerticalStack>
     </Form>
