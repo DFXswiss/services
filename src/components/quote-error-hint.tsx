@@ -33,6 +33,7 @@ export function QuoteErrorHint({ type, error }: { type: TransactionType; error: 
               { limit: limit ?? '' },
             );
 
+      case TransactionError.TRADING_NOT_ALLOWED:
       case TransactionError.KYC_REQUIRED:
         return translate(
           'screens/kyc',
