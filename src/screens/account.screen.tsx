@@ -116,7 +116,6 @@ export default function AccountScreen(): JSX.Element {
   const selectedPdfCurrency = useWatch({ control: pdfControl, name: 'currency' });
   const selectedPdfDate = useWatch({ control: pdfControl, name: 'date' });
 
-  // Get supported blockchains for the selected address
   const supportedBlockchains = selectedAddress?.blockchains.filter((b) => SUPPORTED_PDF_BLOCKCHAINS.includes(b)) ?? [];
   const canDownloadPdf = supportedBlockchains.length > 0;
 
@@ -171,13 +170,12 @@ export default function AccountScreen(): JSX.Element {
 
   function openPdfModal(): void {
     setPdfError(undefined);
+
     // Set defaults
-    if (supportedBlockchains.length > 0) {
-      setPdfValue('blockchain', supportedBlockchains[0]);
-    }
+    if (supportedBlockchains.length > 0) setPdfValue('blockchain', supportedBlockchains[0]);
     setPdfValue('currency', FiatCurrency.CHF);
-    // Set default date to today
     setPdfValue('date', new Date().toISOString().split('T')[0]);
+
     setShowPdfModal(true);
   }
 
@@ -190,7 +188,6 @@ export default function AccountScreen(): JSX.Element {
   async function downloadBalancePdf(data: PdfFormData): Promise<void> {
     if (!selectedAddress) return;
 
-    // Use data.blockchain if multiple blockchains, otherwise use the single supported one
     const blockchain = supportedBlockchains.length === 1 ? supportedBlockchains[0] : data.blockchain;
     if (!blockchain) return;
 
@@ -211,7 +208,6 @@ export default function AccountScreen(): JSX.Element {
         method: 'GET',
       });
 
-      // Generate filename: <date>_DFX_Balance_Report_<blockchain>.pdf
       const filename = `${data.date}_DFX_Balance_Report_${blockchain}.pdf`;
       downloadPdfFromString(response.pdfData, filename);
       closePdfModal();
@@ -329,41 +325,7 @@ export default function AccountScreen(): JSX.Element {
               </StyledDataTableRow>
             </StyledDataTable>
           )}
-          {/* Wallet Selector */}
-          {userAddresses.length ? (
-            <>
-              <div className="border-b my-2.5 border-dfxGray-400 w-full"></div>
 
-              <div className="bg-white w-full rounded-md mb-2">
-                <h2 className="text-center text-dfxBlue-800 text-sm font-semibold ml-3.5 mb-1.5">
-                  {translate('screens/home', 'Active address')}
-                </h2>
-                <Form control={control} errors={errors}>
-                  <StyledDropdown
-                    name="address"
-                    rootRef={rootRef}
-                    placeholder={translate('general/actions', 'Select') + '...'}
-                    items={userAddresses.sort(sortAddressesByBlockchain)}
-                    labelFunc={(item) => blankedAddress(addressLabel(item), { width })}
-                    descriptionFunc={(item) => item.label ?? item.wallet}
-                    forceEnable={user?.activeAddress === undefined}
-                  />
-                </Form>
-              </div>
-
-              {/* PDF Download Button */}
-              {canDownloadPdf && (
-                <StyledButton
-                  label={translate('screens/home', 'PDF Download Address Report')}
-                  onClick={openPdfModal}
-                  width={StyledButtonWidth.FULL}
-                  color={StyledButtonColor.STURDY_WHITE}
-                />
-              )}
-            </>
-          ) : (
-            <></>
-          )}
           {referral?.code && (
             <StyledDataTable
               label={translate('screens/home', 'Referral')}
@@ -393,6 +355,41 @@ export default function AccountScreen(): JSX.Element {
               />
             </StyledDataTable>
           )}
+
+          {/* Wallet Selector */}
+          {userAddresses.length ? (
+            <>
+              <div className="border-b my-2.5 border-dfxGray-400 w-full"></div>
+
+              <div className="bg-white w-full rounded-md mb-2">
+                <h2 className="text-center text-dfxBlue-800 text-sm font-semibold ml-3.5 mb-1.5">
+                  {translate('screens/home', 'Active address')}
+                </h2>
+                <Form control={control} errors={errors}>
+                  <StyledDropdown
+                    name="address"
+                    rootRef={rootRef}
+                    placeholder={translate('general/actions', 'Select') + '...'}
+                    items={userAddresses.sort(sortAddressesByBlockchain)}
+                    labelFunc={(item) => blankedAddress(addressLabel(item), { width })}
+                    descriptionFunc={(item) => item.label ?? item.wallet}
+                    forceEnable={user?.activeAddress === undefined}
+                  />
+                </Form>
+              </div>
+
+              {canDownloadPdf && (
+                <StyledButton
+                  label={translate('screens/home', 'PDF Download Address Report')}
+                  onClick={openPdfModal}
+                  width={StyledButtonWidth.FULL}
+                  color={StyledButtonColor.STURDY_WHITE}
+                />
+              )}
+            </>
+          ) : (
+            <></>
+          )}
         </StyledVerticalStack>
       )}
       {image && (
@@ -404,12 +401,9 @@ export default function AccountScreen(): JSX.Element {
       {/* PDF Download Modal */}
       <Modal isOpen={showPdfModal} onClose={closePdfModal}>
         <StyledVerticalStack gap={6} full>
-          <div className="flex justify-between items-center">
-            <h2 className="text-dfxBlue-800 text-xl font-bold">
-              {translate('screens/home', 'PDF Download Address Report')}
-            </h2>
-            <StyledIconButton icon={IconVariant.CLOSE} onClick={closePdfModal} />
-          </div>
+          <h2 className="text-dfxBlue-800 text-xl font-bold">
+            {translate('screens/home', 'PDF Download Address Report')}
+          </h2>
 
           <Form control={pdfControl} errors={pdfErrors} onSubmit={handlePdfSubmit(downloadBalancePdf)}>
             <StyledVerticalStack gap={4} full>
@@ -435,12 +429,7 @@ export default function AccountScreen(): JSX.Element {
                 full
               />
 
-              <StyledInput
-                name="date"
-                type="date"
-                label={translate('screens/home', 'Date')}
-                full
-              />
+              <StyledInput name="date" type="date" label={translate('screens/home', 'Date')} full />
 
               {pdfError && <p className="text-dfxRed-100 text-sm">{pdfError}</p>}
 

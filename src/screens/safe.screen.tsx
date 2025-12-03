@@ -9,7 +9,6 @@ import {
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
-  StyledIconButton,
   StyledInput,
   StyledLoadingSpinner,
   StyledVerticalStack,
@@ -146,7 +145,7 @@ export default function SafeScreen(): JSX.Element {
               <div className="p-2 gap-2 flex flex-col items-start">
                 <div className="relative w-full" style={{ height: showChart ? '350px' : '85px' }}>
                   <div className="w-full flex flex-col gap-3 text-left leading-none z-10">
-                  <h2 className="text-dfxBlue-800">{translate('screens/safe', 'Portfolio')}</h2>
+                    <h2 className="text-dfxBlue-800">{translate('screens/safe', 'Portfolio')}</h2>
                     <div className="flex flex-row justify-between items-center">
                       <p className="text-dfxGray-700">{translate('screens/safe', 'Total portfolio value')}</p>
                       <button
@@ -186,26 +185,23 @@ export default function SafeScreen(): JSX.Element {
               </div>
             </div>
           </div>
-          <Portfolio portfolio={portfolio.balances.filter((b) => b.balance > 0)} currency={currency} isLoading={isLoadingPortfolio} />
+          <Portfolio
+            portfolio={portfolio.balances.filter((b) => b.balance > 0)}
+            currency={currency}
+            isLoading={isLoadingPortfolio}
+          />
           <SafeTransactionInterface />
         </StyledVerticalStack>
       )}
 
       <Modal isOpen={isPdfModalOpen} onClose={closePdfModal}>
         <StyledVerticalStack gap={6} full>
-          <div className="flex justify-between items-center">
-            <h2 className="text-dfxBlue-800 text-xl font-bold">{translate('screens/safe', 'Download PDF')}</h2>
-            <StyledIconButton icon={IconVariant.CLOSE} onClick={closePdfModal} />
-          </div>
+          <h2 className="text-dfxBlue-800 text-xl font-bold">{translate('screens/safe', 'Download PDF')}</h2>
+
           <p className="text-dfxGray-700">{translate('screens/safe', 'Select a date for your portfolio report')}</p>
           <Form control={control} errors={errors} onSubmit={handleSubmit(onPdfSubmit)}>
             <StyledVerticalStack gap={4} full>
-              <StyledInput
-                name="date"
-                type="date"
-                label={translate('screens/payment', 'Date')}
-                full
-              />
+              <StyledInput name="date" type="date" label={translate('screens/payment', 'Date')} full />
 
               {pdfError && <p className="text-dfxRed-100 text-sm">{pdfError}</p>}
 
