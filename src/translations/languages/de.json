@@ -519,7 +519,10 @@
     "User count": "Anzahl Benutzer",
     "Active user count": "Anzahl aktiver Benutzer",
 
-    "Please select an address or add a new one to continue.": "Bitte wähle eine Adresse aus oder füge eine neue hinzu, um fortzufahren."
+    "Please select an address or add a new one to continue.": "Bitte wähle eine Adresse aus oder füge eine neue hinzu, um fortzufahren.",
+
+    "PDF Download Address Report": "PDF Adressbericht herunterladen",
+    "Date": "Datum"
   },
   "screens/buy": {
     "You spend": "Du zahlst",
@@ -968,7 +971,9 @@
     "Please verify the address and confirm to send your assets.": "Bitte überprüfe die Adresse und bestätige, um Deine Assets zu senden.",
     "Network fee": "Netzwerkgebühr",
     "Destination address": "Zieladresse",
-    "Your swap will be processed and reflected in your Safe portfolio. We will inform you by email about the progress of your transactions.": "Dein Swap wird verarbeitet und in Deinem Safe-Portfolio angezeigt. Wir werden Dich per E-Mail über den Fortschritt Deiner Transaktionen informieren."
+    "Your swap will be processed and reflected in your Safe portfolio. We will inform you by email about the progress of your transactions.": "Dein Swap wird verarbeitet und in Deinem Safe-Portfolio angezeigt. Wir werden Dich per E-Mail über den Fortschritt Deiner Transaktionen informieren.",
+    "Download PDF": "PDF herunterladen",
+    "Select a date for your portfolio report": "Wähle ein Datum für Deinen Portfolio-Bericht"
   },
   "screens/realunit": {
     "Account Summary": "Kontozusammenfassung",

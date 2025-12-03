@@ -128,6 +128,7 @@
     "@types/browser-lang": "^0.1.1",
     "@types/debounce": "^1.2.1",
     "@types/jest": "^27.5.2",
+    "@types/lodash": "^4.17.21",
     "@types/node": "^16.18.3",
     "@types/react": "^18.0.25",
     "@types/react-dom": "^18.0.9",
