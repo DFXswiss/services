@@ -37,7 +37,7 @@ export default function SafeScreen(): JSX.Element {
   useUserGuard('/login');
 
   const { isInitialized, portfolio, history, isLoadingPortfolio, isLoadingHistory, error, downloadPdf } = useSafe();
-  const { currency: userCurrency, translate } = useSettingsContext();
+  const { currency: userCurrency, translate, language } = useSettingsContext();
   const {
     completionType,
     showPaymentNameForm,
@@ -66,6 +66,7 @@ export default function SafeScreen(): JSX.Element {
       await downloadPdf({
         date: data.date,
         currency: currency.toUpperCase() as 'CHF' | 'EUR' | 'USD',
+        language: (language?.symbol ?? 'EN') as 'DE' | 'EN' | 'FR' | 'IT',
       });
     } catch (error) {
       console.error('Failed to download PDF:', error);

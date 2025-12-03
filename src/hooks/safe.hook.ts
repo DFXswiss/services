@@ -37,6 +37,7 @@ export interface SendOrderFormData {
 export interface PdfDownloadParams {
   date: Date;
   currency: 'CHF' | 'EUR' | 'USD';
+  language: 'DE' | 'EN' | 'FR' | 'IT';
 }
 
 export interface UseSafeResult {
@@ -343,23 +344,22 @@ export function useSafe(): UseSafeResult {
       blockchain: custodyBlockchains[0],
       currency: params.currency,
       date: params.date.toISOString(),
+      language: params.language,
     });
 
-    const response = await fetch(
-      `${process.env.REACT_APP_API_URL}/${process.env.REACT_APP_API_VERSION}/balance/pdf?${queryParams}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/pdf',
-        },
-      },
-    );
+    const response = await call<{ pdfData: string }>({
+      url: `balance/pdf?${queryParams.toString()}`,
+      method: 'GET',
+    });
 
-    if (!response.ok) {
-      throw new Error('Failed to download PDF');
+    const byteCharacters = atob(response.pdfData);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'application/pdf' });
 
-    const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
