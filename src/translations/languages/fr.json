@@ -519,7 +519,10 @@
     "User count": "Nombre d'utilisateurs",
     "Active user count": "Nombre d'utilisateurs actifs",
 
-    "Please select an address or add a new one to continue.": "Veuillez sélectionner une adresse ou en ajouter une nouvelle pour continuer."
+    "Please select an address or add a new one to continue.": "Veuillez sélectionner une adresse ou en ajouter une nouvelle pour continuer.",
+
+    "PDF Download Address Report": "Télécharger le rapport d'adresse PDF",
+    "Date": "Date"
   },
   "screens/buy": {
     "You spend": "Vous dépensez",
