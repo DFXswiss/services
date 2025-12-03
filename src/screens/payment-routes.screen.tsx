@@ -544,20 +544,20 @@ export default function PaymentRoutesScreen(): JSX.Element {
                               {
                                 label: translate('screens/payment', 'Link'),
                                 text: blankedAddress(Lnurl.prependLnurl(link.lnurl), { width }),
-                                icon: IconVariant.COPY,
                                 onClick: () => copy(Lnurl.prependLnurl(link.lnurl)),
+                                isCopy: true,
                               },
                               {
                                 label: 'LNURL',
                                 text: blankedAddress(link.lnurl, { width, scale: 0.8 }),
-                                icon: IconVariant.COPY,
                                 onClick: () => copy(link.lnurl),
+                                isCopy: true,
                               },
                               {
                                 label: translate('screens/payment', 'LNURL decoded'),
                                 text: blankedAddress(link.url, { width }),
-                                icon: IconVariant.COPY,
                                 onClick: () => copy(link.url),
+                                isCopy: true,
                               },
                             ]}
                           >
