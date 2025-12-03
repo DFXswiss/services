@@ -31,6 +31,7 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   wallets: 'string',
   refcode: 'string',
   specialCode: 'string',
+  recommendationCode: 'string',
   session: 'string',
   redirectUri: 'string',
   autoStart: 'string',
