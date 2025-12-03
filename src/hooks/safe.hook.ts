@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
 import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
 import { OrderFormData } from './order.hook';
+import { downloadPdfFromString } from 'src/util/utils';
 
 const DEPOSIT_PAIRS: Record<string, string> = {
   EUR: 'dEURO',
@@ -352,22 +353,9 @@ export function useSafe(): UseSafeResult {
       method: 'GET',
     });
 
-    const byteCharacters = atob(response.pdfData);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'application/pdf' });
-
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `DFX_Balance_${custodyBlockchains[0]}_${params.date.toISOString().split('T')[0]}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    const dateStr = params.date.toISOString().split('T')[0];
+    const filename = `${dateStr}_DFX_Balance_Report_${custodyBlockchains[0]}.pdf`;
+    downloadPdfFromString(response.pdfData, filename);
   }
 
   return useMemo<UseSafeResult>(
