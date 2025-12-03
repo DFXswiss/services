@@ -36,7 +36,7 @@ export interface SendOrderFormData {
 }
 
 export interface PdfDownloadParams {
-  date: Date;
+  date: string;
   currency: 'CHF' | 'EUR' | 'USD';
   language: 'DE' | 'EN' | 'FR' | 'IT';
 }
@@ -340,7 +340,7 @@ export function useSafe(): UseSafeResult {
   async function downloadPdf(params: PdfDownloadParams): Promise<void> {
     const queryParams = new URLSearchParams({
       currency: params.currency,
-      date: params.date.toISOString(),
+      date: params.date,
       language: params.language,
     });
 
@@ -349,8 +349,7 @@ export function useSafe(): UseSafeResult {
       method: 'GET',
     });
 
-    const dateStr = params.date.toISOString().split('T')[0];
-    const filename = `${dateStr}_DFX_Safe_Balance_Report.pdf`;
+    const filename = `${params.date}_DFX_Safe_Balance_Report.pdf`;
     downloadPdfFromString(response.pdfData, filename);
   }
 

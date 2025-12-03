@@ -1,3 +1,4 @@
+import { ApiError } from '@dfx.swiss/react';
 import {
   DfxIcon,
   Form,
@@ -6,8 +7,10 @@ import {
   IconVariant,
   SpinnerSize,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
-  StyledDateAndTimePicker,
+  StyledIconButton,
+  StyledInput,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -30,7 +33,7 @@ import { useSafe } from 'src/hooks/safe.hook';
 import { formatCurrency } from 'src/util/utils';
 
 interface PdfFormData {
-  date: Date;
+  date: string;
 }
 
 export default function SafeScreen(): JSX.Element {
@@ -49,29 +52,45 @@ export default function SafeScreen(): JSX.Element {
 
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string>();
 
   const {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<PdfFormData>({
-    mode: 'onChange',
-    defaultValues: {
-      date: new Date(),
-    },
-  });
+    setValue: setPdfValue,
+    reset: resetPdfForm,
+  } = useForm<PdfFormData>();
+
+  function openPdfModal(): void {
+    setPdfError(undefined);
+    setPdfValue('date', new Date().toISOString().split('T')[0]);
+    setIsPdfModalOpen(true);
+  }
+
+  function closePdfModal(): void {
+    setIsPdfModalOpen(false);
+    resetPdfForm();
+    setPdfError(undefined);
+  }
 
   const onPdfSubmit = async (data: PdfFormData) => {
+    setIsPdfLoading(true);
+    setPdfError(undefined);
+
     try {
       await downloadPdf({
         date: data.date,
         currency: currency.toUpperCase() as 'CHF' | 'EUR' | 'USD',
         language: (language?.symbol ?? 'EN') as 'DE' | 'EN' | 'FR' | 'IT',
       });
-    } catch (error) {
-      console.error('Failed to download PDF:', error);
+      closePdfModal();
+    } catch (e) {
+      setPdfError((e as ApiError).message ?? 'Unknown error');
+    } finally {
+      setIsPdfLoading(false);
     }
-    setIsPdfModalOpen(false);
   };
 
   useEffect(() => {
@@ -133,7 +152,7 @@ export default function SafeScreen(): JSX.Element {
                       <p className="text-dfxGray-700">{translate('screens/safe', 'Total portfolio value')}</p>
                       <button
                         className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer z-20"
-                        onClick={() => setIsPdfModalOpen(true)}
+                        onClick={openPdfModal}
                         title={translate('screens/safe', 'Download PDF')}
                       >
                         <DfxIcon icon={IconVariant.FILE} color={IconColor.BLUE} size={IconSize.MD} />
@@ -173,21 +192,37 @@ export default function SafeScreen(): JSX.Element {
         </StyledVerticalStack>
       )}
 
-      <Modal isOpen={isPdfModalOpen} onClose={() => setIsPdfModalOpen(false)}>
-        <StyledVerticalStack gap={6} full center>
-          <h2 className="text-dfxBlue-800 text-xl font-bold">{translate('screens/safe', 'Download PDF')}</h2>
+      <Modal isOpen={isPdfModalOpen} onClose={closePdfModal}>
+        <StyledVerticalStack gap={6} full>
+          <div className="flex justify-between items-center">
+            <h2 className="text-dfxBlue-800 text-xl font-bold">{translate('screens/safe', 'Download PDF')}</h2>
+            <StyledIconButton icon={IconVariant.CLOSE} onClick={closePdfModal} />
+          </div>
           <p className="text-dfxGray-700">{translate('screens/safe', 'Select a date for your portfolio report')}</p>
           <Form control={control} errors={errors} onSubmit={handleSubmit(onPdfSubmit)}>
-            <StyledVerticalStack gap={6} full>
-              <StyledDateAndTimePicker
+            <StyledVerticalStack gap={4} full>
+              <StyledInput
                 name="date"
+                type="date"
                 label={translate('screens/payment', 'Date')}
-                smallLabel
+                full
               />
+
+              {pdfError && <p className="text-dfxRed-100 text-sm">{pdfError}</p>}
+
               <StyledButton
-                label={translate('screens/safe', 'Generate PDF')}
+                type="submit"
+                label={translate('general/actions', 'Download')}
                 onClick={handleSubmit(onPdfSubmit)}
                 width={StyledButtonWidth.FULL}
+                isLoading={isPdfLoading}
+              />
+
+              <StyledButton
+                label={translate('general/actions', 'Cancel')}
+                onClick={closePdfModal}
+                width={StyledButtonWidth.FULL}
+                color={StyledButtonColor.STURDY_WHITE}
               />
             </StyledVerticalStack>
           </Form>
