@@ -338,23 +338,19 @@ export function useSafe(): UseSafeResult {
   }
 
   async function downloadPdf(params: PdfDownloadParams): Promise<void> {
-    if (!custodyAddress || custodyBlockchains.length === 0) return;
-
     const queryParams = new URLSearchParams({
-      address: custodyAddress,
-      blockchain: custodyBlockchains[0],
       currency: params.currency,
       date: params.date.toISOString(),
       language: params.language,
     });
 
     const response = await call<{ pdfData: string }>({
-      url: `balance/pdf?${queryParams.toString()}`,
+      url: `custody/pdf?${queryParams.toString()}`,
       method: 'GET',
     });
 
     const dateStr = params.date.toISOString().split('T')[0];
-    const filename = `${dateStr}_DFX_Balance_Report_${custodyBlockchains[0]}.pdf`;
+    const filename = `${dateStr}_DFX_Safe_Balance_Report.pdf`;
     downloadPdfFromString(response.pdfData, filename);
   }
 
