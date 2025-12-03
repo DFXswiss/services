@@ -40,6 +40,7 @@ export function useTrezor(): TrezorInterface {
       debug: false,
       lazyLoad: false,
       manifest: {
+        appName: 'DFX Services',
         email: 'support@dfx.swiss',
         appUrl: window.location.origin,
       },
