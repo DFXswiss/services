@@ -38,6 +38,7 @@ const urlParamsToRemove = [
   'wallets',
   'refcode',
   'special-code',
+  'recommendation-code',
   'session',
   'redirect',
   'type',
@@ -86,6 +87,7 @@ export interface AppParams {
   wallets?: string;
   refcode?: string;
   specialCode?: string;
+  recommendationCode?: string;
   session?: string;
   redirect?: string;
   type?: string;
@@ -321,6 +323,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           wallets: getParameter(query, 'wallets'),
           refcode: getParameter(query, 'refcode'),
           specialCode: getParameter(query, 'special-code'),
+          recommendationCode: getParameter(query, 'recommendation-code'),
           session: getParameter(query, 'session'),
           redirect: getParameter(query, 'redirect'),
           type: getParameter(query, 'type'),

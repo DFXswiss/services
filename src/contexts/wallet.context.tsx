@@ -281,6 +281,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       appParams.wallet,
       appParams.refcode,
       authWallet,
+      appParams.recommendationCode,
     );
   }
 
