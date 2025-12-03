@@ -38,7 +38,6 @@ export interface SendOrderFormData {
 export interface PdfDownloadParams {
   date: string;
   currency: 'CHF' | 'EUR' | 'USD';
-  language: 'DE' | 'EN' | 'FR' | 'IT';
 }
 
 export interface UseSafeResult {
@@ -341,7 +340,6 @@ export function useSafe(): UseSafeResult {
     const queryParams = new URLSearchParams({
       currency: params.currency,
       date: params.date,
-      language: params.language,
     });
 
     const response = await call<{ pdfData: string }>({
