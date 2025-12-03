@@ -970,8 +970,7 @@
     "Destination address": "Zieladresse",
     "Your swap will be processed and reflected in your Safe portfolio. We will inform you by email about the progress of your transactions.": "Dein Swap wird verarbeitet und in Deinem Safe-Portfolio angezeigt. Wir werden Dich per E-Mail über den Fortschritt Deiner Transaktionen informieren.",
     "Download PDF": "PDF herunterladen",
-    "Select a date for your portfolio report": "Wähle ein Datum für Deinen Portfolio-Bericht",
-    "Generate PDF": "PDF generieren"
+    "Select a date for your portfolio report": "Wähle ein Datum für Deinen Portfolio-Bericht"
   },
   "screens/realunit": {
     "Account Summary": "Kontozusammenfassung",
