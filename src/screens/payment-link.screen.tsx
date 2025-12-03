@@ -374,8 +374,8 @@ export default function PaymentLinkScreen(): JSX.Element {
                               {
                                 label: translate('screens/payment', 'Callback'),
                                 text: blankedAddress((payRequest as PaymentLinkPayRequest).callback ?? '', { width }),
-                                icon: IconVariant.COPY,
                                 onClick: () => copy((payRequest as PaymentLinkPayRequest).callback),
+                                isCopy: true,
                               },
                             ].filter((item) => item.text) as any
                           }

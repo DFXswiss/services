@@ -9,6 +9,8 @@ import {
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useLocation } from 'react-router-dom';
+import { useAppParams } from 'src/hooks/app-params.hook';
 import { useAppHandlingContext } from '../../../contexts/app-handling.context';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { useNavigation } from '../../../hooks/navigation.hook';
@@ -23,10 +25,14 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
   const { signInWithMail } = useAuth();
   const { navigate } = useNavigation();
   const { redirectPath } = useAppHandlingContext();
+  const { search } = useLocation();
+  const { recommendationCode } = useAppParams();
 
   const [isLoading, setIsLoading] = useState(false);
   const [mailSent, setMailSent] = useState(false);
   const [error, setError] = useState<string>();
+
+  const mail = new URLSearchParams(search).get('user') || undefined;
 
   const win: Window = window;
   const redirectUri = redirectPath && `${win.location.origin}${redirectPath}`;
@@ -37,6 +43,7 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
     formState: { isValid, errors },
   } = useForm<FormData>({
     mode: 'onTouched',
+    defaultValues: { mail },
   });
 
   const rules = Utils.createRules({
@@ -46,7 +53,7 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
   async function submit({ mail }: FormData): Promise<void> {
     setIsLoading(true);
     setError(undefined);
-    signInWithMail(mail, redirectUri)
+    signInWithMail(mail, redirectUri, recommendationCode)
       .then(() => setMailSent(true))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
@@ -54,7 +61,7 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
 
   function goBack() {
     onCancel();
-    navigate('/');
+    navigate({ pathname: '/' }, { clearParams: ['user'] });
   }
 
   return (

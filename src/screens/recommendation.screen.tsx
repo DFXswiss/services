@@ -2,7 +2,6 @@ import { ApiError, Utils, Validations } from '@dfx.swiss/react';
 import {
   AlignContent,
   Form,
-  IconVariant,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
@@ -18,6 +17,7 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
+import { useWindowContext } from 'src/contexts/window.context';
 import {
   CreateRecommendation,
   Recommendation,
@@ -26,7 +26,7 @@ import {
 } from 'src/dto/recommendation.dto';
 import { useKycLevelGuard, useUserGuard } from 'src/hooks/guard.hook';
 import useRecommendation from 'src/hooks/recommendation.hook';
-import { partition } from 'src/util/utils';
+import { blankedAddress, partition, url } from 'src/util/utils';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 
@@ -36,6 +36,7 @@ export default function RecommendationScreen(): JSX.Element {
 
   const { translate, translateError, locale } = useSettingsContext();
   const { getRecommendations, createRecommendation, confirmRecommendation, rejectRecommendation } = useRecommendation();
+  const { width } = useWindowContext();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -112,7 +113,7 @@ export default function RecommendationScreen(): JSX.Element {
 
   const rules = Utils.createRules({
     recommendedAlias: Validations.Required,
-    recommendedMail: [Validations.Required, Validations.Mail],
+    recommendedMail: Validations.Mail,
   });
 
   useLayoutOptions({
@@ -224,30 +225,54 @@ export default function RecommendationScreen(): JSX.Element {
             <h2 className="text-dfxGray-700">{translate('screens/recommendation', 'Your Invitations')}</h2>
             {invitations.length > 0 ? (
               <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                {invitations.map((recommendation) => (
-                  <StyledDataTableExpandableRow
-                    key={recommendation.id}
-                    label={recommendation.name ?? ''}
-                    expansionItems={[
-                      {
-                        label: translate('screens/kyc', 'Email'),
-                        text: recommendation.mail ?? '',
-                      },
-                      {
-                        label: translate('screens/recommendation', 'Code'),
-                        text: recommendation.code,
-                        icon: IconVariant.COPY,
-                        onClick: () => copy(recommendation.code),
-                      },
-                      {
-                        label: translate('screens/payment', 'Expiry date'),
-                        text: new Date(recommendation.expirationDate).toLocaleDateString(locale),
-                      },
-                    ]}
-                  >
-                    <p>{translate('screens/recommendation', recommendation.status)}</p>
-                  </StyledDataTableExpandableRow>
-                ))}
+                {invitations.map((recommendation) => {
+                  const items = [];
+
+                  if (recommendation.mail)
+                    items.push({
+                      label: translate('screens/kyc', 'Email'),
+                      text: recommendation.mail ?? '',
+                    });
+
+                  if (recommendation.code) {
+                    const link = url({
+                      path: 'login',
+                      params: new URLSearchParams({ 'recommendation-code': recommendation.code }),
+                    });
+
+                    items.push(
+                      ...[
+                        {
+                          label: translate('screens/recommendation', 'Code'),
+                          text: recommendation.code,
+                          onClick: () => copy(recommendation.code ?? ''),
+                          isCopy: true,
+                        },
+                        {
+                          label: translate('screens/payment', 'Link'),
+                          text: blankedAddress(link, { width }),
+                          onClick: () => copy(link),
+                          isCopy: true,
+                        },
+                      ],
+                    );
+                  }
+
+                  items.push({
+                    label: translate('screens/payment', 'Expiry date'),
+                    text: new Date(recommendation.expirationDate).toLocaleDateString(locale),
+                  });
+
+                  return (
+                    <StyledDataTableExpandableRow
+                      key={recommendation.id}
+                      label={recommendation.name ?? ''}
+                      expansionItems={items}
+                    >
+                      <p>{translate('screens/recommendation', recommendation.status)}</p>
+                    </StyledDataTableExpandableRow>
+                  );
+                })}
               </StyledDataTable>
             ) : (
               <p className="text-dfxGray-700">{translate('screens/recommendation', 'No invitations yet')}</p>

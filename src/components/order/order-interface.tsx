@@ -121,6 +121,10 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   }, [data.address, hideAddressSelection]);
 
   useEffect(() => {
+    sourceAssets?.length === 1 && setValue('sourceAsset', sourceAssets[0]);
+  }, [sourceAssets, setValue]);
+
+  useEffect(() => {
     availablePaymentMethods?.length && setValue('paymentMethod', availablePaymentMethods[0]);
   }, [availablePaymentMethods, setValue]);
 

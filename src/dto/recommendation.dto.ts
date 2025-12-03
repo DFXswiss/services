@@ -19,7 +19,7 @@ export enum RecommendationMethod {
 
 export interface Recommendation {
   id: number;
-  code: string;
+  code?: string;
   status: RecommendationStatus;
   type: RecommendationType;
   method: RecommendationMethod;
@@ -30,6 +30,6 @@ export interface Recommendation {
 }
 
 export interface CreateRecommendation {
-  recommendedMail: string;
+  recommendedMail?: string;
   recommendedAlias: string;
 }

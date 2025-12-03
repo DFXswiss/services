@@ -130,6 +130,7 @@ export default function BuyInfoScreen(): JSX.Element {
       case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
       case TransactionError.IBAN_CURRENCY_MISMATCH:
+      case TransactionError.TRADING_NOT_ALLOWED:
         setKycError(buy.error);
         return undefined;
     }

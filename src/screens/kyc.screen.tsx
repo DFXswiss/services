@@ -73,11 +73,11 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import SumsubWebSdk from '@sumsub/websdk-react';
-import { FaHandshake } from 'react-icons/fa';
 import { RefObject, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
+import { FaHandshake } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
 import { DefaultFileTypes } from 'src/config/file-types';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
@@ -1122,6 +1122,43 @@ function RecommendationData({ code, isLoading, step, onDone }: EditProps): JSX.E
     key: Validations.Required,
   });
 
+  const faqs = [
+    {
+      question: 'How can I become a DFX customer?',
+      answer:
+        'Opening an account with DFX is only possible through a referral. You need either the ref code, ref link, or email address of an existing customer. This person serves as your point of contact and must additionally confirm their referral. Once this confirmation is received, you can complete your onboarding and use your DFX account.',
+    },
+    {
+      question: 'What is a referral code?',
+      answer:
+        'A referral code is your personal code at DFX. When someone registers using your code or ref link and successfully completes the KYC process, the connection is automatically recognized.',
+    },
+    {
+      question: 'Who can make a referral?',
+      answer: 'Referrals can be made by all customers who already have an account with DFX.',
+    },
+    {
+      question: 'Why does DFX only accept new customers by referral?',
+      answer:
+        'DFX uses a referral system to ensure a safe and trustworthy environment. New customers can only open an account through an existing customer who already uses and trusts DFX. This makes onboarding safer, prevents abuse, and maintains the quality of our community in the long term.',
+    },
+    {
+      question: 'What risks in the crypto space should I know about beforehand?',
+      answer:
+        'The crypto market is very volatile, and losses can occur quickly. Common mistakes include sending coins to the wrong address, losing access credentials, or clicking on phishing links. Additionally, fraudulent projects and a constantly changing legal framework pose additional risks. A basic understanding of the processes helps to avoid these mistakes and navigate the crypto world more safely.',
+    },
+    {
+      question: 'What happens if the referral is not confirmed?',
+      answer:
+        'If your referral is not confirmed by your contact person, your onboarding is considered incomplete and an account cannot be set up.',
+    },
+    {
+      question: 'Can I complete the onboarding without a referral?',
+      answer:
+        'No. Onboarding at DFX is only possible through a referral. You need the ref code, ref link, or email address of an existing customer who confirms your registration.',
+    },
+  ];
+
   return (
     <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
       <StyledVerticalStack gap={6} full center>
@@ -1131,7 +1168,10 @@ function RecommendationData({ code, isLoading, step, onDone }: EditProps): JSX.E
         </p>
 
         <div className="text-dfxGray-700 w-full text-sm text-left">
-          {translate('screens/kyc', 'Please enter the email address or referral code of your contact person. This lets us know you have a trusted contact to guide you into the crypto space.')}
+          {translate(
+            'screens/kyc',
+            'Please enter the email address or referral code of your contact person. This lets us know you have a trusted contact to guide you into the crypto space.',
+          )}
         </div>
 
         <StyledInput
@@ -1159,51 +1199,17 @@ function RecommendationData({ code, isLoading, step, onDone }: EditProps): JSX.E
 
         <StyledVerticalStack gap={2} full>
           <p className="text-base font-bold text-dfxBlue-800">{translate('screens/kyc', 'FAQ')}</p>
-          <StyledCollapsible
-            full
-            titleContent={
-              <p className="text-dfxBlue-800 font-semibold text-left">
-                {translate('screens/kyc', 'How can I become a DFX customer?')}
-              </p>
-            }
-          >
-            <p className="text-dfxGray-700 text-sm">
-              {translate(
-                'screens/kyc',
-                'Opening an account with DFX is only possible through a referral. You need either the ref code, ref link, or email address of an existing customer. This person serves as your point of contact and must additionally confirm their referral. Once this confirmation is received, you can complete your onboarding and use your DFX account.',
-              )}
-            </p>
-          </StyledCollapsible>
-          <StyledCollapsible
-            full
-            titleContent={
-              <p className="text-dfxBlue-800 font-semibold text-left">
-                {translate('screens/kyc', 'What is a referral code?')}
-              </p>
-            }
-          >
-            <p className="text-dfxGray-700 text-sm">
-              {translate(
-                'screens/kyc',
-                'A referral code is your personal code at DFX. When someone registers using your ref link or code and successfully completes the KYC process, you both receive a corresponding reward. In short: You recommend DFX and get rewarded for it.',
-              )}
-            </p>
-          </StyledCollapsible>
-          <StyledCollapsible
-            full
-            titleContent={
-              <p className="text-dfxBlue-800 font-semibold text-left">
-                {translate('screens/kyc', 'Who can make a referral?')}
-              </p>
-            }
-          >
-            <p className="text-dfxGray-700 text-sm">
-              {translate(
-                'screens/kyc',
-                'A referral can be made by any customer who already has a DFX account, has a verified KYC level 50, and is logged in.',
-              )}
-            </p>
-          </StyledCollapsible>
+          {faqs.map((faq) => (
+            <StyledCollapsible
+              key={faq.question}
+              full
+              titleContent={
+                <p className="text-dfxBlue-800 font-semibold text-left">{translate('screens/kyc', faq.question)}</p>
+              }
+            >
+              <p className="text-dfxGray-700 text-sm">{translate('screens/kyc', faq.answer)}</p>
+            </StyledCollapsible>
+          ))}
         </StyledVerticalStack>
       </StyledVerticalStack>
     </Form>

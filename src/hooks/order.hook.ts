@@ -299,6 +299,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
       case TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING:
       case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
+      case TransactionError.TRADING_NOT_ALLOWED:
         setKycError(order.error);
         return;
     }

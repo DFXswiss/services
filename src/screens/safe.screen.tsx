@@ -1,7 +1,23 @@
-import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
+import { ApiError } from '@dfx.swiss/react';
+import {
+  DfxIcon,
+  Form,
+  IconColor,
+  IconSize,
+  IconVariant,
+  SpinnerSize,
+  StyledButton,
+  StyledButtonColor,
+  StyledButtonWidth,
+  StyledInput,
+  StyledLoadingSpinner,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { NameEdit } from 'src/components/edit/name.edit';
 import { ErrorHint } from 'src/components/error-hint';
+import { Modal } from 'src/components/modal';
 import { SafeCompletion } from 'src/components/payment/safe-completion';
 import { ButtonGroup, ButtonGroupSize } from 'src/components/safe/button-group';
 import { PriceChart } from 'src/components/safe/chart';
@@ -15,10 +31,14 @@ import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSafe } from 'src/hooks/safe.hook';
 import { formatCurrency } from 'src/util/utils';
 
+interface PdfFormData {
+  date: string;
+}
+
 export default function SafeScreen(): JSX.Element {
   useUserGuard('/login');
 
-  const { isInitialized, portfolio, history, isLoadingPortfolio, isLoadingHistory, error } = useSafe();
+  const { isInitialized, portfolio, history, isLoadingPortfolio, isLoadingHistory, error, downloadPdf } = useSafe();
   const { currency: userCurrency, translate } = useSettingsContext();
   const {
     completionType,
@@ -30,6 +50,46 @@ export default function SafeScreen(): JSX.Element {
   } = useOrderUIContext();
 
   const [currency, setCurrency] = useState<FiatCurrency>(FiatCurrency.CHF);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setValue: setPdfValue,
+    reset: resetPdfForm,
+  } = useForm<PdfFormData>();
+
+  function openPdfModal(): void {
+    setPdfError(undefined);
+    setPdfValue('date', new Date().toISOString().split('T')[0]);
+    setIsPdfModalOpen(true);
+  }
+
+  function closePdfModal(): void {
+    setIsPdfModalOpen(false);
+    resetPdfForm();
+    setPdfError(undefined);
+  }
+
+  const onPdfSubmit = async (data: PdfFormData) => {
+    setIsPdfLoading(true);
+    setPdfError(undefined);
+
+    try {
+      await downloadPdf({
+        date: data.date,
+        currency: currency.toUpperCase() as 'CHF' | 'EUR' | 'USD',
+      });
+      closePdfModal();
+    } catch (e) {
+      setPdfError((e as ApiError).message ?? 'Unknown error');
+    } finally {
+      setIsPdfLoading(false);
+    }
+  };
 
   useEffect(() => {
     userCurrency && setCurrency(userCurrency?.name.toLowerCase() as FiatCurrency);
@@ -86,7 +146,16 @@ export default function SafeScreen(): JSX.Element {
                 <div className="relative w-full" style={{ height: showChart ? '350px' : '85px' }}>
                   <div className="w-full flex flex-col gap-3 text-left leading-none z-10">
                     <h2 className="text-dfxBlue-800">{translate('screens/safe', 'Portfolio')}</h2>
-                    <p className="text-dfxGray-700">{translate('screens/safe', 'Total portfolio value')}</p>
+                    <div className="flex flex-row justify-between items-center">
+                      <p className="text-dfxGray-700">{translate('screens/safe', 'Total portfolio value')}</p>
+                      <button
+                        className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer z-20"
+                        onClick={openPdfModal}
+                        title={translate('screens/safe', 'Download PDF')}
+                      >
+                        <DfxIcon icon={IconVariant.FILE} color={IconColor.BLUE} size={IconSize.MD} />
+                      </button>
+                    </div>
                     <div className="flex flex-row items-center gap-3 z-10">
                       <ButtonGroup<FiatCurrency>
                         items={Object.values(FiatCurrency)}
@@ -116,10 +185,44 @@ export default function SafeScreen(): JSX.Element {
               </div>
             </div>
           </div>
-          <Portfolio portfolio={portfolio.balances} currency={currency} isLoading={isLoadingPortfolio} />
+          <Portfolio
+            portfolio={portfolio.balances.filter((b) => b.balance > 0)}
+            currency={currency}
+            isLoading={isLoadingPortfolio}
+          />
           <SafeTransactionInterface />
         </StyledVerticalStack>
       )}
+
+      <Modal isOpen={isPdfModalOpen} onClose={closePdfModal}>
+        <StyledVerticalStack gap={6} full>
+          <h2 className="text-dfxBlue-800 text-xl font-bold">{translate('screens/safe', 'Download PDF')}</h2>
+
+          <p className="text-dfxGray-700">{translate('screens/safe', 'Select a date for your portfolio report')}</p>
+          <Form control={control} errors={errors} onSubmit={handleSubmit(onPdfSubmit)}>
+            <StyledVerticalStack gap={4} full>
+              <StyledInput name="date" type="date" label={translate('screens/payment', 'Date')} full />
+
+              {pdfError && <p className="text-dfxRed-100 text-sm">{pdfError}</p>}
+
+              <StyledButton
+                type="submit"
+                label={translate('general/actions', 'Download')}
+                onClick={handleSubmit(onPdfSubmit)}
+                width={StyledButtonWidth.FULL}
+                isLoading={isPdfLoading}
+              />
+
+              <StyledButton
+                label={translate('general/actions', 'Cancel')}
+                onClick={closePdfModal}
+                width={StyledButtonWidth.FULL}
+                color={StyledButtonColor.STURDY_WHITE}
+              />
+            </StyledVerticalStack>
+          </Form>
+        </StyledVerticalStack>
+      </Modal>
     </>
   );
 }

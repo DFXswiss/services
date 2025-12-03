@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
 import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
 import { OrderFormData } from './order.hook';
+import { downloadPdfFromString } from 'src/util/utils';
 
 const DEPOSIT_PAIRS: Record<string, string> = {
   EUR: 'dEURO',
@@ -32,6 +33,11 @@ export interface SendOrderFormData {
   amount?: string;
   targetAmount?: string;
   address: string;
+}
+
+export interface PdfDownloadParams {
+  date: string;
+  currency: 'CHF' | 'EUR' | 'USD';
 }
 
 export interface UseSafeResult {
@@ -63,6 +69,7 @@ export interface UseSafeResult {
   confirmWithdraw: () => Promise<void>;
   confirmSend: () => Promise<void>;
   pairMap: (asset: string) => Asset | Fiat | undefined;
+  downloadPdf: (params: PdfDownloadParams) => Promise<void>;
 }
 
 export function useSafe(): UseSafeResult {
@@ -329,6 +336,21 @@ export function useSafe(): UseSafeResult {
     return confirmPayment();
   }
 
+  async function downloadPdf(params: PdfDownloadParams): Promise<void> {
+    const queryParams = new URLSearchParams({
+      currency: params.currency,
+      date: params.date,
+    });
+
+    const response = await call<{ pdfData: string }>({
+      url: `custody/pdf?${queryParams.toString()}`,
+      method: 'GET',
+    });
+
+    const filename = `${params.date}_DFX_Safe_Balance_Report.pdf`;
+    downloadPdfFromString(response.pdfData, filename);
+  }
+
   return useMemo<UseSafeResult>(
     () => ({
       isInitialized,
@@ -359,6 +381,7 @@ export function useSafe(): UseSafeResult {
       confirmWithdraw,
       confirmSend,
       pairMap,
+      downloadPdf,
     }),
     [
       isInitialized,
