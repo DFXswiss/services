@@ -599,6 +599,9 @@
     "Deposit blockchains": "Blockchains de dépôt",
     "Beneficiary bank account": "Compte bancaire du bénéficiaire",
     "Beneficiary name": "Nom du bénéficiaire",
+    "Generate personal IBAN": "Générer un IBAN personnel",
+    "New: Personal IBAN in your own name!": "Nouveau : IBAN personnel à votre propre nom !",
+    "Personal IBANs are in your own name, which means you make the transfer to yourself instead of DFX AG. Such transactions are often processed faster and more reliably by banks.": "Les IBAN personnels sont à votre propre nom, ce qui signifie que vous effectuez le virement à vous-même au lieu de DFX AG. Ces transactions sont souvent traitées plus rapidement et de manière plus fiable par les banques.",
 
     "Exchange rate": "Taux de change",
     "Base rate": "Taux de base",
