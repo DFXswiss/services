@@ -22,12 +22,14 @@ import {
 import {
   AssetIconVariant,
   Form,
+  IconColor,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
   StyledDropdown,
   StyledHorizontalStack,
+  StyledInfoText,
   StyledInput,
   StyledLink,
   StyledLoadingSpinner,
@@ -618,6 +620,30 @@ export default function BuyScreen(): JSX.Element {
                                 <PaymentInformationContent info={paymentInfo} />
                               </div>
                               <SanctionHint />
+                              {process.env.REACT_APP_PERSONAL_IBAN_ENABLED === 'true' && (
+                                <>
+                                  <h2 className="text-dfxBlue-800 text-center">
+                                    {translate(
+                                      'screens/payment',
+                                      'New: Personal IBAN in your own name!',
+                                    )}
+                                  </h2>
+                                  <StyledInfoText iconColor={IconColor.BLUE}>
+                                    {translate(
+                                      'screens/payment',
+                                      'Personal IBANs are in your own name, which means you make the transfer to yourself instead of DFX AG. Such transactions are often processed faster and more reliably by banks.',
+                                    )}
+                                  </StyledInfoText>
+                                  <StyledButton
+                                    width={StyledButtonWidth.FULL}
+                                    label={translate('screens/payment', 'Generate personal IBAN')}
+                                    onClick={() => {
+                                      // TODO: Implement personal IBAN generation
+                                    }}
+                                    color={StyledButtonColor.STURDY_WHITE}
+                                  />
+                                </>
+                              )}
                               <div className="w-full leading-none">
                                 <StyledLink
                                   label={translate(
