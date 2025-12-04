@@ -32,13 +32,14 @@ import {
 } from 'src/dto/payment-link.dto';
 import { usePolling } from 'src/hooks/polling';
 import { useSessionStore } from 'src/hooks/session-store.hook';
+import { useBrowserExtension } from 'src/hooks/wallets/browser-extension.hook';
 import { Evm } from 'src/util/evm';
 import { Lnurl } from 'src/util/lnurl';
 import { fetchJson, url } from 'src/util/utils';
 import { useAppParams } from '../hooks/app-params.hook';
 import { Timer, useCountdown } from '../hooks/countdown.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { useMetaMask, WalletType } from '../hooks/wallets/metamask.hook';
+import { WalletType } from './wallet.context';
 
 const MERCHANT_INFO_KEY = 'merchant-info';
 
@@ -101,7 +102,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
   const { assignPaymentLink } = usePaymentRoutes();
 
   const { isInstalled, getWalletType, requestAccount, requestBlockchain, createTransaction, readBalance } =
-    useMetaMask();
+    useBrowserExtension();
 
   const { init: initPaymentPolling, stop: stopPaymentPolling } = usePolling();
   const { init: initWaitPolling, stop: stopWaitPolling } = usePolling({ timeInterval: 2000 });
@@ -223,7 +224,12 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
 
   // MetaMask in-app browser
   useEffect(() => {
-    if (hasQuote(payRequest) && isInstalled() && getWalletType() === WalletType.IN_APP_BROWSER && !assetsLoading) {
+    if (
+      hasQuote(payRequest) &&
+      isInstalled(WalletType.META_MASK) &&
+      getWalletType() === WalletType.IN_APP_BROWSER &&
+      !assetsLoading
+    ) {
       loadMetaMaskInfo();
     } else {
       setMetaMaskInfo(undefined);
@@ -434,8 +440,8 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     setIsLoadingMetaMask(true);
 
     try {
-      const address = await requestAccount();
-      const blockchain = await requestBlockchain();
+      const address = await requestAccount(Blockchain.ETHEREUM);
+      const blockchain = requestBlockchain ? await requestBlockchain() : undefined;
       if (!address || !blockchain) throw new Error('Failed to get account');
 
       const hasShortExpiration = new Date(payRequest.quote.expiration) < addMinutes(new Date(), 1);
@@ -477,9 +483,11 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       const asset = assets.get(blockchain)?.find((a) => a.name === transferAmount.asset);
       if (!asset) continue;
 
-      const balance = await readBalance(asset, address, true);
-      if (transferAmount.amount && balance.amount >= transferAmount.amount)
-        return { asset: asset, amount: transferAmount.amount };
+      if (typeof readBalance === 'function') {
+        const balance = await readBalance(asset, address, true);
+        if (transferAmount.amount && balance.amount >= transferAmount.amount)
+          return { asset: asset, amount: transferAmount.amount };
+      }
     }
   }
 
@@ -509,10 +517,18 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       const amount = paymentData?.amount;
       if (!address || !amount) throw new Error('Failed to get payment information');
 
-      const tx = await createTransaction(new BigNumber(amount), asset, metaMaskInfo.accountAddress, address, {
-        isWeiAmount: true,
-        gasPrice: metaMaskInfo.minFee,
-      });
+      const tx = await createTransaction(
+        new BigNumber(amount),
+        asset,
+        metaMaskInfo.accountAddress,
+        address,
+        WalletType.META_MASK,
+        asset.blockchain,
+        {
+          isWeiAmount: true,
+          gasPrice: metaMaskInfo.minFee,
+        },
+      );
       await fetchJson(
         url({
           base: payRequest.callback.replace('/cb', '/tx'),
