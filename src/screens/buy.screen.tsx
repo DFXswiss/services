@@ -60,6 +60,7 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
+import useVirtualIban from '../hooks/virtual-iban.hook';
 
 enum Side {
   SPEND = 'SPEND',
@@ -121,6 +122,7 @@ export default function BuyScreen(): JSX.Element {
   const { width } = useWindowContext();
   const { rootRef } = useLayoutContext();
   const { isEmbedded, isDfxHosted, isInitialized } = useAppHandlingContext();
+  const { createPersonalIban } = useVirtualIban();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
@@ -133,6 +135,7 @@ export default function BuyScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState<Side>();
   const [isContinue, setIsContinue] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isCreatingIban, setIsCreatingIban] = useState(false);
   const [validatedData, setValidatedData] = useState<ValidatedData>();
 
   // form
@@ -457,6 +460,30 @@ export default function BuyScreen(): JSX.Element {
     window.location.href = paymentInfo.paymentLink;
   }
 
+  async function onCreatePersonalIban() {
+    if (!selectedCurrency) return;
+
+    setIsCreatingIban(true);
+    setErrorMessage(undefined);
+
+    try {
+      const virtualIban = await createPersonalIban({ currency: selectedCurrency.name });
+      updateData(Side.GET);
+      alert(
+        translate(
+          'screens/payment',
+          'Personal IBAN created successfully: {{iban}}',
+          { iban: virtualIban.iban },
+        ),
+      );
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      setErrorMessage(apiError.message ?? 'Failed to create personal IBAN');
+    } finally {
+      setIsCreatingIban(false);
+    }
+  }
+
   const rules = Utils.createRules({
     asset: Validations.Required,
     currency: Validations.Required,
@@ -620,7 +647,8 @@ export default function BuyScreen(): JSX.Element {
                                 <PaymentInformationContent info={paymentInfo} />
                               </div>
                               <SanctionHint />
-                              {process.env.REACT_APP_PERSONAL_IBAN_ENABLED === 'true' && (
+                              {process.env.REACT_APP_PERSONAL_IBAN_ENABLED === 'true' &&
+                                !paymentInfo.isPersonalIban && (
                                 <>
                                   <h2 className="text-dfxBlue-800 text-center">
                                     {translate(
@@ -637,9 +665,8 @@ export default function BuyScreen(): JSX.Element {
                                   <StyledButton
                                     width={StyledButtonWidth.FULL}
                                     label={translate('screens/payment', 'Generate personal IBAN')}
-                                    onClick={() => {
-                                      // TODO: Implement personal IBAN generation
-                                    }}
+                                    onClick={onCreatePersonalIban}
+                                    isLoading={isCreatingIban}
                                     color={StyledButtonColor.STURDY_WHITE}
                                   />
                                 </>
