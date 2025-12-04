@@ -1,4 +1,4 @@
-import { ApiError } from '@dfx.swiss/react';
+import { ApiError, useKyc } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -13,7 +13,8 @@ export default function ComplianceUserScreen(): JSX.Element {
 
   const { translate } = useSettingsContext();
   const { id: userDataId } = useParams();
-  const { getUserData, getKycFile } = useCompliance();
+  const { getUserData } = useCompliance();
+  const { getFile } = useKyc();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -22,25 +23,13 @@ export default function ComplianceUserScreen(): JSX.Element {
 
   async function openFile(file: KycFile): Promise<void> {
     try {
-      const response = await getKycFile(file.uid);
-
-      // content is a Buffer object serialized as { type: 'Buffer', data: [...] }
-      const content = response.content as any;
-      const contentType = response.contentType;
-
-      let base64: string;
-      if (typeof content === 'string') {
-        base64 = content;
-      } else if (content?.data && Array.isArray(content.data)) {
-        // Buffer serialized as JSON
-        const uint8Array = new Uint8Array(content.data);
-        base64 = btoa(String.fromCharCode(...uint8Array));
-      } else {
-        throw new Error('Unknown content format');
+      const { content, contentType } = await getFile(file.uid);
+      if (!content || content.type !== 'Buffer' || !Array.isArray(content.data)) {
+        setError('Invalid file type');
+        return;
       }
 
-      const byteArray = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-      const blob = new Blob([byteArray], { type: contentType });
+      const blob = new Blob([new Uint8Array(content.data)], { type: contentType });
       const url = URL.createObjectURL(blob);
 
       setPreview({ url, contentType, name: file.name });
@@ -65,13 +54,8 @@ export default function ComplianceUserScreen(): JSX.Element {
     }
   }, [userDataId]);
 
-  // Cleanup preview URL when preview changes or component unmounts
   useEffect(() => {
-    return () => {
-      if (preview) {
-        URL.revokeObjectURL(preview.url);
-      }
-    };
+    return () => preview && URL.revokeObjectURL(preview.url);
   }, [preview]);
 
   useLayoutOptions({ title: translate('screens/compliance', 'User Data'), backButton: true, noMaxWidth: true });
@@ -165,11 +149,7 @@ export default function ComplianceUserScreen(): JSX.Element {
                 </div>
                 <div className="bg-white rounded-lg shadow-sm p-2 h-[80vh]">
                   {preview.contentType.includes('pdf') ? (
-                    <embed
-                      src={`${preview.url}#navpanes=0`}
-                      type="application/pdf"
-                      className="w-full h-full"
-                    />
+                    <embed src={`${preview.url}#navpanes=0`} type="application/pdf" className="w-full h-full" />
                   ) : (
                     <img
                       src={preview.url}

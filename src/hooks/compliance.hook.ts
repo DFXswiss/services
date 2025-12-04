@@ -83,13 +83,5 @@ export function useCompliance() {
     downloadFile(data, headers, `DFX_export_${filenameDateFormat()}.zip`);
   }
 
-  async function getKycFile(uid: string): Promise<{ content: string; contentType: string }> {
-    return call<{ content: string; contentType: string }>({
-      url: `kyc/file/${uid}`,
-      method: 'GET',
-      version: 'v2',
-    });
-  }
-
-  return useMemo(() => ({ search, getUserData, downloadUserFiles, getKycFile }), [call]);
+  return useMemo(() => ({ search, getUserData, downloadUserFiles }), [call]);
 }
