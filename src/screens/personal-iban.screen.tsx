@@ -86,14 +86,6 @@ export default function PersonalIbanScreen(): JSX.Element {
         {translate('screens/personal-iban', 'Generate Personal IBAN')}
       </h2>
 
-      <StyledInfoText iconColor={IconColor.BLUE}>
-        {translate(
-          'screens/personal-iban',
-          'Personal IBAN for {{currency}} transactions',
-          { currency },
-        )}
-      </StyledInfoText>
-
       {status === Status.LOADING && (
         <StyledVerticalStack gap={2} center>
           <StyledLoadingSpinner size={SpinnerSize.LG} />

@@ -1032,11 +1032,10 @@
   "screens/personal-iban": {
     "Personal IBAN": "Persönliche IBAN",
     "Generate Personal IBAN": "Persönliche IBAN generieren",
-    "Personal IBAN for {{currency}} transactions": "Persönliche IBAN für {{currency}} Transaktionen",
     "Generating your personal IBAN...": "Deine persönliche IBAN wird generiert...",
     "Your personal IBAN for {{currency}}:": "Deine persönliche IBAN für {{currency}}:",
-    "Your personal IBAN for {{currency}} transactions is now available. Future bank transfers will be made to this IBAN in your own name.": "Deine persönliche IBAN für {{currency}} Transaktionen ist jetzt verfügbar. Zukünftige Banküberweisungen werden auf diese IBAN auf deinen Namen getätigt.",
-    "To generate a personal IBAN, we need some additional information from you. Please complete the verification process.": "Um eine persönliche IBAN zu generieren, benötigen wir einige zusätzliche Informationen von dir. Bitte schliesse den Verifizierungsprozess ab.",
+    "Your personal IBAN for {{currency}} transactions is now available. Future bank transfers will be made to this IBAN in your own name.": "Deine persönliche IBAN für {{currency}} Transaktionen ist jetzt verfügbar. Zukünftige Banküberweisungen werden auf diese IBAN auf Deinen Namen getätigt.",
+    "To generate a personal IBAN, we need some additional information from you. Please complete the verification process.": "Um eine persönliche IBAN zu generieren, benötigen wir einige zusätzliche Informationen von Dir. Bitte schliesse den Verifizierungsprozess ab.",
     "Complete verification": "Verifizierung abschliessen"
   }
 }

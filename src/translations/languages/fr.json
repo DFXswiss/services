@@ -1031,7 +1031,6 @@
   "screens/personal-iban": {
     "Personal IBAN": "IBAN personnel",
     "Generate Personal IBAN": "Générer un IBAN personnel",
-    "Personal IBAN for {{currency}} transactions": "IBAN personnel pour les transactions {{currency}}",
     "Generating your personal IBAN...": "Génération de votre IBAN personnel...",
     "Your personal IBAN for {{currency}}:": "Votre IBAN personnel pour {{currency}}:",
     "Your personal IBAN for {{currency}} transactions is now available. Future bank transfers will be made to this IBAN in your own name.": "Votre IBAN personnel pour les transactions {{currency}} est maintenant disponible. Les futurs virements bancaires seront effectués sur cet IBAN à votre nom.",
