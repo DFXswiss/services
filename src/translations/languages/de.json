@@ -599,6 +599,10 @@
     "Deposit blockchains": "Einzahlungs-Blockchains",
     "Beneficiary bank account": "Begünstigten-Bankkonto",
     "Beneficiary name": "Name des Begünstigten",
+    "Generate personal IBAN": "Persönliche IBAN generieren",
+    "New: Personal IBAN in your own name!": "Neu: Persönliche IBAN auf Deinen eigenen Namen!",
+    "Personal IBANs are in your own name, which means you make the transfer to yourself instead of DFX AG. Such transactions are often processed faster and more reliably by banks.": "Persönliche IBAN lauten auf Deinen eigenen Namen, das bedeutet Du machst die Überweisung nicht an DFX AG sondern an Dich selbst. Solche Transaktionen werden oft schneller und zuverlässiger von Banken verarbeitet.",
+    "Personal IBAN created successfully: {{iban}}": "Persönliche IBAN erfolgreich erstellt: {{iban}}",
 
     "Exchange rate": "Wechselkurs",
     "Base rate": "Basiskurs",
@@ -1024,5 +1028,14 @@
     "Terms and conditions": "Geschäftsbedingungen",
     "Privacy policy": "Datenschutzerklärung",
     "Imprint": "Impressum"
+  },
+  "screens/personal-iban": {
+    "Personal IBAN": "Persönliche IBAN",
+    "Generate Personal IBAN": "Persönliche IBAN generieren",
+    "Generating your personal IBAN...": "Deine persönliche IBAN wird generiert...",
+    "Your personal IBAN for {{currency}}:": "Deine persönliche IBAN für {{currency}}:",
+    "Your personal IBAN for {{currency}} transactions is now available. Future bank transfers will be made to this IBAN in your own name.": "Deine persönliche IBAN für {{currency}} Transaktionen ist jetzt verfügbar. Zukünftige Banküberweisungen werden auf diese IBAN auf Deinen Namen getätigt.",
+    "To generate a personal IBAN, we need some additional information from you. Please complete the verification process.": "Um eine persönliche IBAN zu generieren, benötigen wir einige zusätzliche Informationen von Dir. Bitte schliesse den Verifizierungsprozess ab.",
+    "Complete verification": "Verifizierung abschliessen"
   }
 }
