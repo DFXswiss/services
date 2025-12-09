@@ -14,7 +14,17 @@ import {
 } from '@dfx.swiss/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
-import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
+import {
+  CreateSafeAccountDto,
+  CustodyAsset,
+  CustodyBalance,
+  CustodyHistory,
+  CustodyHistoryEntry,
+  SafeAccessLevel,
+  SafeAccount,
+  SafeAccountAccess,
+  UpdateSafeAccountDto,
+} from 'src/dto/safe.dto';
 import { OrderFormData } from './order.hook';
 import { downloadPdfFromString } from 'src/util/utils';
 
@@ -70,6 +80,15 @@ export interface UseSafeResult {
   confirmSend: () => Promise<void>;
   pairMap: (asset: string) => Asset | Fiat | undefined;
   downloadPdf: (params: PdfDownloadParams) => Promise<void>;
+  // SafeAccount
+  safeAccounts: SafeAccount[];
+  selectedSafeAccount?: SafeAccount;
+  isLoadingSafeAccounts: boolean;
+  selectSafeAccount: (safeAccount: SafeAccount) => void;
+  createSafeAccount: (data: CreateSafeAccountDto) => Promise<SafeAccount>;
+  updateSafeAccount: (id: number, data: UpdateSafeAccountDto) => Promise<SafeAccount>;
+  getSafeAccountAccess: (id: number) => Promise<SafeAccountAccess[]>;
+  canWrite: boolean;
 }
 
 export function useSafe(): UseSafeResult {
@@ -92,6 +111,58 @@ export function useSafe(): UseSafeResult {
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [selectedSourceAsset, setSelectedSourceAsset] = useState<string>();
+
+  // SafeAccount state
+  const [safeAccounts, setSafeAccounts] = useState<SafeAccount[]>([]);
+  const [selectedSafeAccount, setSelectedSafeAccount] = useState<SafeAccount>();
+  const [isLoadingSafeAccounts, setIsLoadingSafeAccounts] = useState(true);
+
+  // ---- API Calls (defined early for use in effects) ----
+
+  async function createCustodyUser(): Promise<SignIn> {
+    return call<SignIn>({
+      url: 'custody',
+      method: 'POST',
+      data: { addressType: 'EVM' },
+    });
+  }
+
+  async function getBalances(safeAccount?: SafeAccount): Promise<CustodyBalance> {
+    // Use safe-account endpoint for non-legacy accounts
+    if (safeAccount && !safeAccount.isLegacy && safeAccount.id !== null) {
+      return call<CustodyBalance>({
+        url: `safe-account/${safeAccount.id}/balance`,
+        method: 'GET',
+      });
+    }
+    // Legacy: use old custody endpoint
+    return call<CustodyBalance>({
+      url: `custody`,
+      method: 'GET',
+    });
+  }
+
+  async function getHistory(safeAccount?: SafeAccount): Promise<CustodyHistory> {
+    // Use safe-account endpoint for non-legacy accounts
+    if (safeAccount && !safeAccount.isLegacy && safeAccount.id !== null) {
+      return call<CustodyHistory>({
+        url: `safe-account/${safeAccount.id}/history`,
+        method: 'GET',
+      });
+    }
+    // Legacy: use old custody endpoint
+    return call<CustodyHistory>({
+      url: `custody/history`,
+      method: 'GET',
+    });
+  }
+
+  async function fetchSafeAccounts(): Promise<SafeAccount[]> {
+    return call<SafeAccount[]>({
+      url: 'safe-account',
+      method: 'GET',
+    });
+  }
 
   // ---- Safe Screen Initialization ----
 
@@ -119,23 +190,39 @@ export function useSafe(): UseSafeResult {
     }
   }, [isUserLoading, user, isLoggedIn, session, reloadUser, changeUserAddress, tokenStore]);
 
+  // Load SafeAccounts
   useEffect(() => {
     if (!user || !isLoggedIn) return;
-    setIsLoadingPortfolio(true);
-    getBalances()
-      .then((portfolio) => setPortfolio(portfolio))
+    setIsLoadingSafeAccounts(true);
+    fetchSafeAccounts()
+      .then((accounts: SafeAccount[]) => {
+        setSafeAccounts(accounts);
+        // Auto-select first account if none selected
+        if (accounts.length > 0 && !selectedSafeAccount) {
+          setSelectedSafeAccount(accounts[0]);
+        }
+      })
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
-      .finally(() => setIsLoadingPortfolio(false));
+      .finally(() => setIsLoadingSafeAccounts(false));
   }, [user, isLoggedIn]);
 
   useEffect(() => {
     if (!user || !isLoggedIn) return;
+    setIsLoadingPortfolio(true);
+    getBalances(selectedSafeAccount)
+      .then((portfolio) => setPortfolio(portfolio))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsLoadingPortfolio(false));
+  }, [user, isLoggedIn, selectedSafeAccount]);
+
+  useEffect(() => {
+    if (!user || !isLoggedIn) return;
     setIsLoadingHistory(true);
-    getHistory()
+    getHistory(selectedSafeAccount)
       .then(({ totalValue }) => setHistory(totalValue))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoadingHistory(false));
-  }, [user, isLoggedIn]);
+  }, [user, isLoggedIn, selectedSafeAccount]);
 
   // ---- Available Deposit Pairs ----
 
@@ -194,29 +281,52 @@ export function useSafe(): UseSafeResult {
     [availableAssets, availableCurrencies],
   );
 
-  // ---- API Calls ----
+  // ---- SafeAccount API Calls ----
 
-  async function createCustodyUser(): Promise<SignIn> {
-    return call<SignIn>({
-      url: 'custody',
+  async function createSafeAccountApi(data: CreateSafeAccountDto): Promise<SafeAccount> {
+    const newAccount = await call<SafeAccount>({
+      url: 'safe-account',
       method: 'POST',
-      data: { addressType: 'EVM' },
+      data,
     });
+    // Reload safe accounts after creation
+    const accounts = await fetchSafeAccounts();
+    setSafeAccounts(accounts);
+    return newAccount;
   }
 
-  async function getBalances(): Promise<CustodyBalance> {
-    return call<CustodyBalance>({
-      url: `custody`,
+  async function updateSafeAccountApi(id: number, data: UpdateSafeAccountDto): Promise<SafeAccount> {
+    const updatedAccount = await call<SafeAccount>({
+      url: `safe-account/${id}`,
+      method: 'PUT',
+      data,
+    });
+    // Reload safe accounts after update
+    const accounts = await fetchSafeAccounts();
+    setSafeAccounts(accounts);
+    // Update selected if it was the updated one
+    if (selectedSafeAccount?.id === id) {
+      setSelectedSafeAccount(updatedAccount);
+    }
+    return updatedAccount;
+  }
+
+  async function getSafeAccountAccessApi(id: number): Promise<SafeAccountAccess[]> {
+    return call<SafeAccountAccess[]>({
+      url: `safe-account/${id}/access`,
       method: 'GET',
     });
   }
 
-  async function getHistory(): Promise<CustodyHistory> {
-    return call<CustodyHistory>({
-      url: `custody/history`,
-      method: 'GET',
-    });
+  function selectSafeAccount(safeAccount: SafeAccount): void {
+    setSelectedSafeAccount(safeAccount);
   }
+
+  const canWrite = useMemo(() => {
+    return selectedSafeAccount?.accessLevel === SafeAccessLevel.WRITE;
+  }, [selectedSafeAccount]);
+
+  // ---- Order API Calls ----
 
   async function fetchPaymentInfo(data: OrderFormData): Promise<OrderPaymentInfo> {
     const order = await call<OrderPaymentInfo>({
@@ -382,6 +492,15 @@ export function useSafe(): UseSafeResult {
       confirmSend,
       pairMap,
       downloadPdf,
+      // SafeAccount
+      safeAccounts,
+      selectedSafeAccount,
+      isLoadingSafeAccounts,
+      selectSafeAccount,
+      createSafeAccount: createSafeAccountApi,
+      updateSafeAccount: updateSafeAccountApi,
+      getSafeAccountAccess: getSafeAccountAccessApi,
+      canWrite,
     }),
     [
       isInitialized,
@@ -402,6 +521,10 @@ export function useSafe(): UseSafeResult {
       swappableTargetAssets,
       selectedSourceAsset,
       pairMap,
+      safeAccounts,
+      selectedSafeAccount,
+      isLoadingSafeAccounts,
+      canWrite,
     ],
   );
 }
