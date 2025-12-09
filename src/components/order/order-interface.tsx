@@ -50,6 +50,7 @@ interface OrderInterfaceProps {
   pairMap?: (asset: string) => Asset | Fiat | undefined;
   onFetchPaymentInfo: (data: OrderFormData) => Promise<OrderPaymentInfo>;
   confirmPayment: () => Promise<void>;
+  confirmButtonLabel?: string;
   balanceFunc?: (asset: Asset) => string;
   onSourceAssetChange?: (sourceAsset: string) => void;
 }
@@ -67,6 +68,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
   pairMap,
   onFetchPaymentInfo,
   confirmPayment,
+  confirmButtonLabel,
   balanceFunc,
   onSourceAssetChange,
 }: OrderInterfaceProps) => {
@@ -271,6 +273,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
           kycError={kycError}
           errorMessage={paymentInfoError}
           confirmPayment={confirmPayment}
+          confirmButtonLabel={confirmButtonLabel}
           retry={() => debouncedData && handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue)}
         />
       </StyledVerticalStack>

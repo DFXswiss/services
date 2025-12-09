@@ -10,8 +10,7 @@ import { OrderInterface } from '../order/order-interface';
 
 export const WithdrawInterface = () => {
   const { translate } = useSettingsContext();
-  const { withdrawableAssets, withdrawableCurrencies, pairMap, fetchWithdrawInfo, confirmWithdraw, portfolio } =
-    useSafe();
+  const { withdrawableAssets, pairMap, fetchWithdrawInfo, confirmWithdraw, portfolio } = useSafe();
   const { setCompletionType } = useOrderUIContext();
   const { bankAccounts } = useBankAccountContext();
 
@@ -32,13 +31,12 @@ export const WithdrawInterface = () => {
     <OrderInterface
       orderType={OrderType.SELL}
       header={translate('screens/safe', 'Withdraw')}
-      sourceInputLabel={translate('screens/buy', 'You spend')}
-      targetInputLabel={translate('screens/buy', 'You get about')}
+      sourceInputLabel={translate('screens/payment', 'Amount')}
       sourceAssets={withdrawableAssets}
-      targetAssets={withdrawableCurrencies}
       pairMap={pairMap}
       hideAddressSelection={true}
       confirmPayment={onConfirmWithdraw}
+      confirmButtonLabel={translate('screens/safe', 'Click here to confirm the withdrawal')}
       onFetchPaymentInfo={handleFetchWithdrawInfo}
       balanceFunc={(asset) => findCustodyBalanceString(asset, portfolio.balances)}
       defaultValues={{ bankAccount: defaultBankAccount }}
