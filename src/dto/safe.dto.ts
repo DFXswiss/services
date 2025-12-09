@@ -53,3 +53,39 @@ export interface CustodyHistoryEntry {
 export interface CustodyHistory {
   totalValue: CustodyHistoryEntry[];
 }
+
+// SafeAccount types
+
+export enum SafeAccessLevel {
+  READ = 'Read',
+  WRITE = 'Write',
+}
+
+export interface SafeAccountOwner {
+  id: number;
+}
+
+export interface SafeAccount {
+  id: number | null;
+  title: string;
+  description?: string;
+  isLegacy: boolean;
+  accessLevel: SafeAccessLevel;
+  owner?: SafeAccountOwner;
+}
+
+export interface SafeAccountAccess {
+  id: number;
+  userDataId: number;
+  accessLevel: SafeAccessLevel;
+}
+
+export interface CreateSafeAccountDto {
+  title: string;
+  description?: string;
+}
+
+export interface UpdateSafeAccountDto {
+  title?: string;
+  description?: string;
+}
