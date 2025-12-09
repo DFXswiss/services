@@ -22,12 +22,14 @@ import {
 import {
   AssetIconVariant,
   Form,
+  IconColor,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
   StyledDropdown,
   StyledHorizontalStack,
+  StyledInfoText,
   StyledInput,
   StyledLink,
   StyledLoadingSpinner,
@@ -195,7 +197,7 @@ export default function BuyScreen(): JSX.Element {
 
     setAvailableAssets(activeAssets);
 
-    const asset = getAsset(activeAssets, assetOut) ?? (activeAssets.length === 1 && activeAssets[0]);
+    const asset = getAsset(activeAssets, assetOut) ?? activeAssets[0];
     if (asset) setVal('asset', asset);
   }, [assetOut, assetFilter, getAsset, getAssets, blockchain, walletBlockchain, availableBlockchains]);
 
@@ -455,6 +457,11 @@ export default function BuyScreen(): JSX.Element {
     window.location.href = paymentInfo.paymentLink;
   }
 
+  function onCreatePersonalIban() {
+    if (!selectedCurrency) return;
+    navigate({ pathname: '/buy/personal-iban', search: `?currency=${selectedCurrency.name}` }, { setRedirect: true });
+  }
+
   const rules = Utils.createRules({
     asset: Validations.Required,
     currency: Validations.Required,
@@ -618,6 +625,26 @@ export default function BuyScreen(): JSX.Element {
                                 <PaymentInformationContent info={paymentInfo} />
                               </div>
                               <SanctionHint />
+                              {process.env.REACT_APP_PERSONAL_IBAN_ENABLED === 'true' &&
+                                !paymentInfo.isPersonalIban && (
+                                  <StyledVerticalStack gap={4}>
+                                    <h2 className="text-dfxBlue-800 text-center">
+                                      {translate('screens/payment', 'New: Personal IBAN in your own name!')}
+                                    </h2>
+                                    <StyledInfoText iconColor={IconColor.BLUE}>
+                                      {translate(
+                                        'screens/payment',
+                                        'Personal IBANs are in your own name, which means you make the transfer to yourself instead of DFX AG. Such transactions are often processed faster and more reliably by banks.',
+                                      )}
+                                    </StyledInfoText>
+                                    <StyledButton
+                                      width={StyledButtonWidth.FULL}
+                                      label={translate('screens/payment', 'Generate personal IBAN')}
+                                      onClick={onCreatePersonalIban}
+                                      color={StyledButtonColor.STURDY_WHITE}
+                                    />
+                                  </StyledVerticalStack>
+                                )}
                               <div className="w-full leading-none">
                                 <StyledLink
                                   label={translate(

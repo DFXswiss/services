@@ -57,6 +57,8 @@ const TelegramSupportScreen = lazy(() => import('./screens/telegram-support.scre
 const ComplianceScreen = lazy(() => import('./screens/compliance.screen'));
 const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
 const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
+const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
+const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
 
 setupLanguages();
 
@@ -129,6 +131,10 @@ export const Routes = [
       {
         path: 'buy/failure',
         element: withSuspense(<BuyFailureScreen />),
+      },
+      {
+        path: 'buy/personal-iban',
+        element: withSuspense(<PersonalIbanScreen />),
       },
       {
         path: 'sell',
@@ -229,6 +235,10 @@ export const Routes = [
       {
         path: 'kyc/log',
         element: withSuspense(<KycLogScreen />),
+      },
+      {
+        path: 'buyCrypto/update',
+        element: withSuspense(<BuyCryptoUpdateScreen />),
       },
       {
         path: 'tx',
