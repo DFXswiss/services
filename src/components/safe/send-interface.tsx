@@ -1,5 +1,6 @@
 import { ApiError, Asset, UserAddress, Utils, Validations, useUserContext } from '@dfx.swiss/react';
 import {
+  AlignContent,
   Form,
   StyledButton,
   StyledButtonWidth,
@@ -143,7 +144,7 @@ export const SendInterface = () => {
               {translate('screens/safe', 'Please verify the address and confirm to withdraw your assets.')}
             </StyledInfoText>
 
-            <StyledDataTable showBorder>
+            <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
               <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
                 {quote.paymentInfo.amount} {quote.paymentInfo.sourceAsset}
               </StyledDataTableRow>
