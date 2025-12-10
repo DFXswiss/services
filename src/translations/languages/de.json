@@ -588,6 +588,7 @@
     "Bank Transaction Details": "Angaben zur Banktransaktion",
     "Recipient": "Empfänger",
     "Amount": "Betrag",
+    "Estimated amount": "Geschätzter Betrag",
     "Amount in {{currency}}": "Betrag in {{currency}}",
     "Currency": "Währung",
     "IBAN": "IBAN",
@@ -975,6 +976,8 @@
     "Please verify the address and confirm to send your assets.": "Bitte überprüfe die Adresse und bestätige, um Deine Assets zu senden.",
     "Network fee": "Netzwerkgebühr",
     "Destination address": "Zieladresse",
+    "Please verify the address and confirm to withdraw your assets.": "Bitte überprüfe die Adresse und bestätige, um Deine Assets abzuheben.",
+    "Click here to confirm the withdrawal": "Klicke hier, um die Auszahlung zu bestätigen",
     "Your swap will be processed and reflected in your Safe portfolio. We will inform you by email about the progress of your transactions.": "Dein Swap wird verarbeitet und in Deinem Safe-Portfolio angezeigt. Wir werden Dich per E-Mail über den Fortschritt Deiner Transaktionen informieren.",
     "Download PDF": "PDF herunterladen",
     "Select a date for your portfolio report": "Wähle ein Datum für Deinen Portfolio-Bericht"
