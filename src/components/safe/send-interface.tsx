@@ -1,4 +1,4 @@
-import { ApiError, Asset, Blockchain, UserAddress, Utils, Validations, useUserContext } from '@dfx.swiss/react';
+import { ApiError, Asset, UserAddress, Utils, Validations, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
@@ -31,7 +31,7 @@ interface SendFormData {
 export const SendInterface = () => {
   const { translate, translateError } = useSettingsContext();
   const { width } = useWindowContext();
-  const { sendableAssets, fetchSendInfo, confirmSend, portfolio } = useSafe();
+  const { sendableAssets, fetchSendInfo, confirmSend, portfolio, custodyBlockchains } = useSafe();
   const { setCompletionType } = useOrderUIContext();
 
   const [quote, setQuote] = useState<OrderPaymentInfo>();
@@ -50,8 +50,10 @@ export const SendInterface = () => {
   const data = watch();
   const debouncedData = useDebounce(data, 500);
   const addressItems = useMemo(() => {
-    return user?.addresses?.filter((a) => !a.isCustody && a.blockchains.includes(Blockchain.ETHEREUM)) ?? [];
-  }, [user?.addresses]);
+    return (
+      user?.addresses?.filter((a) => !a.isCustody && a.blockchains.some((b) => custodyBlockchains?.includes(b))) ?? []
+    );
+  }, [user?.addresses, custodyBlockchains]);
 
   useEffect(() => {
     if (sendableAssets?.length && !data.sendAsset) {

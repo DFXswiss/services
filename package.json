@@ -63,7 +63,7 @@
     "webln": "^0.3.2"
   },
   "scripts": {
-    "start": "env-cmd -f .env.dev react-app-rewired start",
+    "start": "env-cmd -f .env.loc react-app-rewired start",
     "build": "env-cmd -f .env.prd react-app-rewired build && cp src/custom-service-worker.js build/",
     "build:dev": "env-cmd -f .env.dev react-app-rewired build && cp src/custom-service-worker.js build/",
     "build:lib": "tsc",
