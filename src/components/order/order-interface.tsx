@@ -257,7 +257,7 @@ export const OrderInterface: React.FC<OrderInterfaceProps> = ({
             label={header ?? translate('general/actions', 'Next')}
             width={StyledButtonWidth.FULL}
             disabled={!paymentInfo || amountError?.hideInfos}
-            hidden={!!paymentInfo && !amountError?.hideInfos}
+            hidden={(!!paymentInfo && !amountError?.hideInfos) || bankAccountSelection}
             onClick={() => debouncedData && handlePaymentInfoFetch(debouncedData, onFetchPaymentInfo, setValue)}
           />
         </div>
