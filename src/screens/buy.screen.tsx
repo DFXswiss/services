@@ -16,7 +16,6 @@ import {
   useFiat,
   useSessionContext,
   useUserContext,
-  UserRole,
   Utils,
   Validations,
 } from '@dfx.swiss/react';
@@ -626,9 +625,7 @@ export default function BuyScreen(): JSX.Element {
                                 <PaymentInformationContent info={paymentInfo} />
                               </div>
                               <SanctionHint />
-                              {(process.env.REACT_APP_PERSONAL_IBAN_ENABLED === 'true' ||
-                                session?.role === UserRole.VIP) &&
-                                !paymentInfo.isPersonalIban && (
+                              {!paymentInfo.isPersonalIban && (
                                   <StyledVerticalStack gap={4}>
                                     <h2 className="text-dfxBlue-800 text-center">
                                       {translate('screens/payment', 'New: Personal IBAN in your own name!')}
