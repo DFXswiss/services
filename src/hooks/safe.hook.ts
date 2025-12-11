@@ -158,7 +158,11 @@ export function useSafe(): UseSafeResult {
   const withdrawableAssets = useMemo(() => {
     const assets =
       custodyBlockchains.length > 0 ? getAssets(custodyBlockchains, { sellable: true, comingSoon: false }) : [];
-    return assets.filter((a) => portfolio.balances.find((b) => b.asset.name === a.name && b.balance > 0));
+    return assets.filter(
+      (a) =>
+        Object.keys(WITHDRAW_PAIRS).includes(a.name) &&
+        portfolio.balances.find((b) => b.asset.name === a.name && b.balance > 0),
+    );
   }, [getAssets, custodyBlockchains, portfolio.balances]);
 
   const withdrawableCurrencies = useMemo(() => {
@@ -278,7 +282,7 @@ export function useSafe(): UseSafeResult {
       data: {
         type: CustodyOrderType.WITHDRAWAL,
         sourceAsset: data.sourceAsset.name,
-        targetAsset: data.targetAsset.name,
+        targetAsset: WITHDRAW_PAIRS[data.sourceAsset.name],
         sourceAmount: data.sourceAmount ? Number(data.sourceAmount) : undefined,
         targetAmount: data.targetAmount ? Number(data.targetAmount) : undefined,
         targetIban: data.bankAccount?.iban,

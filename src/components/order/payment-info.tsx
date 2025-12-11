@@ -45,6 +45,7 @@ export interface PaymentInfoProps {
   errorMessage?: string;
   amountError?: AmountError;
   kycError?: TransactionError;
+  confirmButtonLabel?: string;
   retry: () => void;
   confirmPayment: () => Promise<void>;
 }
@@ -60,6 +61,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
   kycError,
   sourceAsset,
   targetAsset,
+  confirmButtonLabel,
   retry,
   confirmPayment,
 }: PaymentInfoProps): JSX.Element {
@@ -194,7 +196,10 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
                       ) : isBankWire ? (
                         <StyledButton
                           width={StyledButtonWidth.FULL}
-                          label={translate('screens/buy', 'Click here once you have issued the transfer')}
+                          label={
+                            confirmButtonLabel ??
+                            translate('screens/buy', 'Click here once you have issued the transfer')
+                          }
                           onClick={confirmPayment}
                           className="mt-4"
                           caps={false}

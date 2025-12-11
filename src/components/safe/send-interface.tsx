@@ -1,5 +1,6 @@
 import { ApiError, Asset, UserAddress, Utils, Validations, useUserContext } from '@dfx.swiss/react';
 import {
+  AlignContent,
   Form,
   StyledButton,
   StyledButtonWidth,
@@ -31,7 +32,7 @@ interface SendFormData {
 export const SendInterface = () => {
   const { translate, translateError } = useSettingsContext();
   const { width } = useWindowContext();
-  const { sendableAssets, fetchSendInfo, confirmSend, portfolio } = useSafe();
+  const { sendableAssets, fetchSendInfo, confirmSend, portfolio, custodyBlockchains } = useSafe();
   const { setCompletionType } = useOrderUIContext();
 
   const [quote, setQuote] = useState<OrderPaymentInfo>();
@@ -50,16 +51,10 @@ export const SendInterface = () => {
   const data = watch();
   const debouncedData = useDebounce(data, 500);
   const addressItems = useMemo(() => {
-    const walletAddresses = user?.addresses?.filter((a) => !a.isCustody) ?? [];
-    return [
-      ...walletAddresses,
-      {
-        address: translate('screens/buy', 'Switch address'),
-        label: translate('screens/buy', 'Login with a different address'),
-        blockchains: [],
-      } as any,
-    ];
-  }, [user?.addresses, translate]);
+    return (
+      user?.addresses?.filter((a) => !a.isCustody && a.blockchains.some((b) => custodyBlockchains?.includes(b))) ?? []
+    );
+  }, [user?.addresses, custodyBlockchains]);
 
   useEffect(() => {
     if (sendableAssets?.length && !data.sendAsset) {
@@ -135,8 +130,8 @@ export const SendInterface = () => {
           name="address"
           label={translate('screens/sell', 'Destination address')}
           items={addressItems}
-          labelFunc={(item) => (item.blockchains?.length ? blankedAddress(item.address, { width }) : item.address)}
-          descriptionFunc={(item) => (item.blockchains?.length ? item.blockchains[0] : item.label)}
+          labelFunc={(item) => blankedAddress(item.address, { width })}
+          descriptionFunc={(item) => item.blockchains[0]}
           full
           forceEnable
         />
@@ -146,10 +141,10 @@ export const SendInterface = () => {
         {quote?.paymentInfo && (
           <StyledVerticalStack gap={3} full>
             <StyledInfoText>
-              {translate('screens/safe', 'Please verify the address and confirm to send your assets.')}
+              {translate('screens/safe', 'Please verify the address and confirm to withdraw your assets.')}
             </StyledInfoText>
 
-            <StyledDataTable showBorder>
+            <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
               <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
                 {quote.paymentInfo.amount} {quote.paymentInfo.sourceAsset}
               </StyledDataTableRow>
@@ -168,11 +163,12 @@ export const SendInterface = () => {
 
         <StyledButton
           type="button"
-          label={translate('screens/safe', 'Send {{asset}}', { asset: data.sendAsset?.name ?? '' })}
+          label={translate('screens/safe', 'Click here to confirm the withdrawal')}
           width={StyledButtonWidth.FULL}
           disabled={!quote?.paymentInfo || isFetchingQuote}
           isLoading={isFetchingQuote}
           onClick={onConfirmSend}
+          caps={false}
         />
       </StyledVerticalStack>
     </Form>
