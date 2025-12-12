@@ -143,13 +143,14 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
       if (!isBuy) return [];
       if (orderType === OrderType.DEPOSIT) return [FiatPaymentMethod.BANK]; // TODO: Add card deposit later
 
-      const pushCardPayment =
-        (isDfxHosted || !isEmbedded) &&
-        wallet !== EMBEDDED_WALLET &&
-        user?.activeAddress?.wallet !== EMBEDDED_WALLET &&
-        (!targetAsset || targetAsset.cardBuyable);
+      // Credit card payments disabled
+      // const pushCardPayment =
+      //   (isDfxHosted || !isEmbedded) &&
+      //   wallet !== EMBEDDED_WALLET &&
+      //   user?.activeAddress?.wallet !== EMBEDDED_WALLET &&
+      //   (!targetAsset || targetAsset.cardBuyable);
 
-      return [FiatPaymentMethod.BANK, ...(pushCardPayment ? [FiatPaymentMethod.CARD] : [])];
+      return [FiatPaymentMethod.BANK];
     },
     [isBuy, isDfxHosted, isEmbedded, wallet, user],
   );
