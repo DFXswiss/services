@@ -102,13 +102,71 @@ jobs:
         uses: azure/CLI@v2
         with:
           inlineScript: |
-            az storage blob upload-batch --account-name ${{ env.AZURE_ACCOUNT_NAME }} -d '$web' -s ./build --overwrite
+            # Upload static assets with immutable caching (hashed filenames never change)
+            az storage blob upload-batch \
+              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
+              -d '$web' \
+              -s ./build \
+              --pattern "static/*" \
+              --content-cache-control "public, max-age=31536000, immutable" \
+              --overwrite
+
+            # Upload entry points with no-cache (must revalidate on every request)
+            for file in index.html manifest.json asset-manifest.json robots.txt custom-service-worker.js; do
+              if [ -f "./build/$file" ]; then
+                az storage blob upload \
+                  --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
+                  -c '$web' \
+                  -f "./build/$file" \
+                  -n "$file" \
+                  --content-cache-control "no-cache, must-revalidate" \
+                  --overwrite
+              fi
+            done
+
+            # Upload other assets (favicon, logo, wasm)
+            az storage blob upload-batch \
+              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
+              -d '$web' \
+              -s ./build \
+              --pattern "*.ico" \
+              --content-cache-control "public, max-age=86400" \
+              --overwrite
+            az storage blob upload-batch \
+              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
+              -d '$web' \
+              -s ./build \
+              --pattern "*.png" \
+              --content-cache-control "public, max-age=86400" \
+              --overwrite
+            az storage blob upload-batch \
+              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
+              -d '$web' \
+              -s ./build \
+              --pattern "*.wasm" \
+              --content-cache-control "public, max-age=31536000, immutable" \
+              --overwrite
+
+            # Upload widget files
+            az storage blob upload-batch \
+              --account-name ${{ env.AZURE_ACCOUNT_NAME }} \
+              -d '$web' \
+              -s ./build \
+              --pattern "widget/*" \
+              --content-cache-control "public, max-age=3600" \
+              --overwrite
 
       - name: Purge CDN endpoint (DEV)
         uses: azure/CLI@v2
         with:
           inlineScript: |
-            az afd endpoint purge --content-paths "/*" --profile-name ${{ env.AZURE_CDN_PROFILE }} --endpoint-name ${{ env.AZURE_CDN_ENDPOINT }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
+            # Only purge entry points - static assets have hashed names and don't need purging
+            az afd endpoint purge \
+              --content-paths "/index.html" "/manifest.json" "/asset-manifest.json" "/custom-service-worker.js" "/widget/*" \
+              --profile-name ${{ env.AZURE_CDN_PROFILE }} \
+              --endpoint-name ${{ env.AZURE_CDN_ENDPOINT }} \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --no-wait
 
       - name: Logout
         run: |
