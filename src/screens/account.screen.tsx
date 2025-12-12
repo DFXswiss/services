@@ -5,6 +5,7 @@ import {
   PdfDocument,
   Referral,
   UserAddress,
+  UserProfile,
   Utils,
   useApi,
   useAuthContext,
@@ -79,7 +80,7 @@ export default function AccountScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading, userAddresses } = useUserContext();
-  const { getRef } = useUser();
+  const { getRef, getProfile } = useUser();
   const { width } = useWindowContext();
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized, setWallet } = useWalletContext();
@@ -89,6 +90,7 @@ export default function AccountScreen(): JSX.Element {
   const { call } = useApi();
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setRefferal] = useState<Referral | undefined>();
+  const [profile, setProfile] = useState<UserProfile | undefined>();
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string>();
@@ -120,6 +122,7 @@ export default function AccountScreen(): JSX.Element {
   useEffect(() => {
     if (user?.activeAddress && !isUserLoading && isLoggedIn) {
       loadRefferal();
+      loadProfile();
       setValue('address', user.activeAddress);
     }
   }, [user?.activeAddress, isUserLoading, session?.role, isLoggedIn]);
@@ -140,6 +143,10 @@ export default function AccountScreen(): JSX.Element {
 
   async function loadRefferal(): Promise<void> {
     return getRef().then(setRefferal);
+  }
+
+  async function loadProfile(): Promise<void> {
+    return getProfile().then(setProfile);
   }
 
   async function loadTransactions(): Promise<void> {
@@ -267,6 +274,41 @@ export default function AccountScreen(): JSX.Element {
         </div>
       ) : (
         <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
+          {/* Profile Data */}
+          {profile && (profile.firstName || profile.lastName || profile.mail || profile.address) && (
+            <StyledDataTable
+              label={translate('screens/home', 'Profile')}
+              alignContent={AlignContent.RIGHT}
+              showBorder
+              minWidth={false}
+            >
+              {profile.mail && (
+                <StyledDataTableRow label={translate('screens/home', 'Email')}>{profile.mail}</StyledDataTableRow>
+              )}
+              {(profile.firstName || profile.lastName) && (
+                <StyledDataTableRow label={translate('screens/home', 'Name')}>
+                  {[profile.firstName, profile.lastName].filter(Boolean).join(' ')}
+                </StyledDataTableRow>
+              )}
+              {profile.address && (
+                <StyledDataTableRow label={translate('screens/home', 'Address')}>
+                  {[
+                    [profile.address.street, profile.address.houseNumber].filter(Boolean).join(' '),
+                    [profile.address.zip, profile.address.city].filter(Boolean).join(' '),
+                    profile.address.country?.name,
+                  ]
+                    .filter(Boolean)
+                    .join(', ')}
+                </StyledDataTableRow>
+              )}
+              {profile.organizationName && (
+                <StyledDataTableRow label={translate('screens/home', 'Organization')}>
+                  {profile.organizationName}
+                </StyledDataTableRow>
+              )}
+            </StyledDataTable>
+          )}
+
           {/* User Data */}
           <StyledDataTable
             label={translate('screens/home', 'Activity')}
