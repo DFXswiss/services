@@ -165,8 +165,7 @@ jobs:
               --content-paths "/index.html" "/manifest.json" "/asset-manifest.json" "/custom-service-worker.js" "/widget/*" \
               --profile-name ${{ env.AZURE_CDN_PROFILE }} \
               --endpoint-name ${{ env.AZURE_CDN_ENDPOINT }} \
-              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-              --no-wait
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
 
       - name: Logout
         run: |
