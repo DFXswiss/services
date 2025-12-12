@@ -301,9 +301,9 @@ export default function AccountScreen(): JSX.Element {
                     .join(', ')}
                 </StyledDataTableRow>
               )}
-              {profile.organization?.name && (
+              {profile.organizationName && (
                 <StyledDataTableRow label={translate('screens/home', 'Organization')}>
-                  {profile.organization.name}
+                  {profile.organizationName}
                 </StyledDataTableRow>
               )}
             </StyledDataTable>
