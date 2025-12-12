@@ -502,6 +502,11 @@
     "Instructions": "Anleitung",
 
     "Account": "Konto",
+    "Profile": "Profil",
+    "Email": "E-Mail",
+    "Name": "Name",
+    "Address": "Adresse",
+    "Organization": "Organisation",
     "Activity": "Aktivität",
     "Active address": "Aktive Adresse",
     "Total trading volume": "Gesamthandelsvolumen",
