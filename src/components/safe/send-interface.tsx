@@ -151,6 +151,9 @@ export const SendInterface = () => {
               <StyledDataTableRow label={translate('screens/safe', 'Destination address')}>
                 <p className="break-all">{blankedAddress(debouncedData?.address?.address ?? '', { width })}</p>
               </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/safe', 'Blockchain')}>
+                <p>{data.sendAsset?.blockchain}</p>
+              </StyledDataTableRow>
             </StyledDataTable>
           </StyledVerticalStack>
         )}
