@@ -167,12 +167,12 @@ jobs:
         uses: azure/CLI@v2
         with:
           inlineScript: |
-            # Only purge entry points - static assets have hashed names and don't need purging
             az afd endpoint purge \
-              --content-paths "/index.html" "/manifest.json" "/asset-manifest.json" "/custom-service-worker.js" "/widget/*" \
+              --content-paths "/*" \
               --profile-name ${{ env.AZURE_CDN_PROFILE }} \
               --endpoint-name ${{ env.AZURE_CDN_ENDPOINT }} \
-              --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --no-wait
 
       - name: Publish to npm
         continue-on-error: true
