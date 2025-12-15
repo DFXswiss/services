@@ -298,6 +298,7 @@ export default function AccountScreen(): JSX.Element {
               />
             )}
           </StyledDataTable>
+
           <KycStatus />
 
           {referral?.code && (
