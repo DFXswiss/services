@@ -197,7 +197,7 @@ export default function BuyScreen(): JSX.Element {
 
     setAvailableAssets(activeAssets);
 
-    const asset = getAsset(activeAssets, assetOut) ?? activeAssets[0];
+    const asset = getAsset(activeAssets, assetOut) ?? (activeBlockchain && activeAssets[0]);
     if (asset) setVal('asset', asset);
   }, [assetOut, assetFilter, getAsset, getAssets, blockchain, walletBlockchain, availableBlockchains]);
 
