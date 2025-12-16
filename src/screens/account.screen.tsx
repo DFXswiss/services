@@ -47,6 +47,17 @@ import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
 
+function formatAddress(address: UserProfile['address']): string {
+  if (!address) return '';
+  return [
+    [address.street, address.houseNumber].filter(Boolean).join(' '),
+    [address.zip, address.city].filter(Boolean).join(' '),
+    address.country?.name,
+  ]
+    .filter(Boolean)
+    .join(', ');
+}
+
 // Supported EVM blockchains for balance PDF (must match API's SUPPORTED_BLOCKCHAINS)
 const SUPPORTED_PDF_BLOCKCHAINS: Blockchain[] = [
   Blockchain.ETHEREUM,
@@ -296,13 +307,7 @@ export default function AccountScreen(): JSX.Element {
               )}
               {profile.address && (
                 <StyledDataTableRow label={translate('screens/home', 'Address')}>
-                  {[
-                    [profile.address.street, profile.address.houseNumber].filter(Boolean).join(' '),
-                    [profile.address.zip, profile.address.city].filter(Boolean).join(' '),
-                    profile.address.country?.name,
-                  ]
-                    .filter(Boolean)
-                    .join(', ')}
+                  {formatAddress(profile.address)}
                 </StyledDataTableRow>
               )}
               {profile.organizationName && (
