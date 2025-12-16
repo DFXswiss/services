@@ -148,14 +148,11 @@ export const SendInterface = () => {
               <StyledDataTableRow label={translate('screens/payment', 'Amount')}>
                 {quote.paymentInfo.amount} {quote.paymentInfo.sourceAsset}
               </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/payment', 'Estimated amount')}>
-                {quote.paymentInfo.estimatedAmount} {quote.paymentInfo.targetAsset}
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/safe', 'Network fee')}>
-                {quote.paymentInfo.fees.network} {quote.paymentInfo.sourceAsset}
-              </StyledDataTableRow>
               <StyledDataTableRow label={translate('screens/safe', 'Destination address')}>
                 <p className="break-all">{blankedAddress(debouncedData?.address?.address ?? '', { width })}</p>
+              </StyledDataTableRow>
+              <StyledDataTableRow label={translate('screens/safe', 'Blockchain')}>
+                <p>{data.sendAsset?.blockchain}</p>
               </StyledDataTableRow>
             </StyledDataTable>
           </StyledVerticalStack>

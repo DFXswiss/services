@@ -26,7 +26,6 @@ import {
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
-  StyledIconButton,
   StyledInput,
   StyledLoadingSpinner,
   StyledVerticalStack,
@@ -34,12 +33,12 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { KycStatus } from 'src/components/kyc-status';
 import { Modal } from 'src/components/modal';
 import { addressLabel } from 'src/config/labels';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
-import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, downloadPdfFromString, sortAddressesByBlockchain, url } from 'src/util/utils';
@@ -77,7 +76,6 @@ interface PdfFormData {
 export default function AccountScreen(): JSX.Element {
   const { translate, language } = useSettingsContext();
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
-  const { limitToString, levelToString } = useKycHelper();
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
   const { user, isUserLoading, userAddresses } = useUserContext();
@@ -300,31 +298,8 @@ export default function AccountScreen(): JSX.Element {
               />
             )}
           </StyledDataTable>
-          {user && (
-            <StyledDataTable
-              label={translate('screens/home', 'KYC')}
-              alignContent={AlignContent.RIGHT}
-              showBorder
-              minWidth={false}
-            >
-              <StyledDataTableRow label={translate('screens/home', 'Level')}>
-                <p>{levelToString(user.kyc.level)}</p>
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
-                <div className="flex flex-row gap-1 items-center">
-                  <p>{limitToString(user.tradingLimit)}</p>
-                  <StyledIconButton
-                    icon={IconVariant.ARROW_UP}
-                    onClick={() =>
-                      user.kyc.level < 50
-                        ? navigate('/kyc')
-                        : navigate({ pathname: '/support/issue', search: '?issue-type=LimitRequest' })
-                    }
-                  />
-                </div>
-              </StyledDataTableRow>
-            </StyledDataTable>
-          )}
+
+          <KycStatus />
 
           {referral?.code && (
             <StyledDataTable

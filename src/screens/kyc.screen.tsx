@@ -21,7 +21,6 @@ import {
   KycRecommendationData,
   KycSession,
   KycSignatoryPowerData,
-  KycStep,
   KycStepBase,
   KycStepName,
   KycStepReason,
@@ -46,7 +45,6 @@ import {
   useUserContext,
 } from '@dfx.swiss/react';
 import {
-  AlignContent,
   DfxIcon,
   Form,
   IconColor,
@@ -58,9 +56,6 @@ import {
   StyledButtonWidth,
   StyledCheckboxRow,
   StyledCollapsible,
-  StyledDataTable,
-  StyledDataTableExpandableRow,
-  StyledDataTableRow,
   StyledDropdown,
   StyledDropdownMultiChoice,
   StyledFileUpload,
@@ -85,6 +80,7 @@ import { useLayoutContext } from 'src/contexts/layout.context';
 import { SumsubReviewAnswer, SumsubReviewRejectType } from 'src/dto/sumsub.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { ErrorHint } from '../components/error-hint';
+import { KycStatusTable } from '../components/kyc-status';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useGeoLocation } from '../hooks/geo-location.hook';
 import { useUserGuard } from '../hooks/guard.hook';
@@ -110,7 +106,7 @@ export default function KycScreen(): JSX.Element {
   const { translate, changeLanguage, processingKycData } = useSettingsContext();
   const { user, reloadUser } = useUserContext();
   const { getKycInfo, continueKyc, startStep, addTransferClient } = useKyc();
-  const { levelToString, limitToString, nameToString, typeToString } = useKycHelper();
+  const { nameToString } = useKycHelper();
   const { pathname, search } = useLocation();
   const { navigate, goBack } = useNavigation();
   const { logout } = useSessionContext();
@@ -292,34 +288,6 @@ export default function KycScreen(): JSX.Element {
       });
   }
 
-  function stepIcon(step: KycStep): { icon: IconVariant | undefined; label: string; size: IconSize } {
-    switch (step.status) {
-      case KycStepStatus.NOT_STARTED:
-        return { icon: IconVariant.CHECKBOX_EMPTY, label: translate('screens/kyc', 'Not started'), size: IconSize.MD };
-
-      case KycStepStatus.IN_PROGRESS:
-        return { icon: IconVariant.EDIT, label: translate('screens/kyc', 'In progress'), size: IconSize.MD };
-
-      case KycStepStatus.IN_REVIEW:
-        return { icon: IconVariant.REVIEW, label: translate('screens/kyc', 'In review'), size: IconSize.XS };
-
-      case KycStepStatus.COMPLETED:
-        return { icon: IconVariant.CHECKBOX_CHECKED, label: translate('screens/kyc', 'Completed'), size: IconSize.MD };
-
-      case KycStepStatus.FAILED:
-        return { icon: IconVariant.CLOSE, label: translate('screens/kyc', 'Failed'), size: IconSize.MD };
-
-      case KycStepStatus.OUTDATED:
-        return { icon: IconVariant.REPEAT, label: translate('screens/kyc', 'Outdated'), size: IconSize.MD };
-
-      case KycStepStatus.DATA_REQUESTED:
-        return { icon: IconVariant.HELP, label: translate('screens/kyc', 'Data requested'), size: IconSize.MD };
-
-      case KycStepStatus.ON_HOLD:
-        return { icon: IconVariant.CHECKBOX_EMPTY, label: '', size: IconSize.MD };
-    }
-  }
-
   const handleBack = () => {
     if (stepInProgress) {
       setStepInProgress(undefined);
@@ -411,34 +379,13 @@ export default function KycScreen(): JSX.Element {
         <StyledVerticalStack gap={6} full center>
           {info && (
             <>
-              <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-                <StyledDataTableExpandableRow
-                  label={translate('screens/kyc', 'KYC level')}
-                  expansionItems={
-                    info.kycSteps.length
-                      ? info.kycSteps.map((step) => {
-                          const icon = stepIcon(step);
-                          return {
-                            label: `${nameToString(step.name)}${step.type ? ` (${typeToString(step.type)})` : ''}`,
-                            text: icon?.label || '',
-                            icon: icon?.icon,
-                          };
-                        })
-                      : []
-                  }
-                >
-                  <p>{levelToString(info.kycLevel)}</p>
-                </StyledDataTableExpandableRow>
-
-                <StyledDataTableRow label={translate('screens/kyc', 'Trading limit')}>
-                  <div className="flex flex-row gap-1 items-center">
-                    <p>{limitToString(info.tradingLimit)}</p>
-                    {canContinue && (
-                      <StyledIconButton icon={IconVariant.ARROW_UP} onClick={onContinue} isLoading={isSubmitting} />
-                    )}
-                  </div>
-                </StyledDataTableRow>
-              </StyledDataTable>
+              <KycStatusTable
+                kycInfo={info}
+                tradingLimit={info.tradingLimit}
+                showLabel={false}
+                onLimitIncrease={canContinue ? onContinue : undefined}
+                isLoading={isSubmitting}
+              />
 
               {!allStepsCompleted && (
                 <StyledButton
