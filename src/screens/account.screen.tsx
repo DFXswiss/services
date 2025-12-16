@@ -159,9 +159,7 @@ export default function AccountScreen(): JSX.Element {
   async function loadProfile(): Promise<void> {
     return getProfile()
       .then(setProfile)
-      .catch(() => {
-        // ignore errors
-      });
+      .catch((e) => console.error('Failed to load profile:', e));
   }
 
   async function loadTransactions(): Promise<void> {
