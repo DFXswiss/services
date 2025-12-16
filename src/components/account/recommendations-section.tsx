@@ -1,6 +1,7 @@
 import { ApiError, Utils, Validations } from '@dfx.swiss/react';
 import {
   AlignContent,
+  Form,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
@@ -9,17 +10,21 @@ import {
   StyledDataTableRow,
   StyledInput,
   StyledVerticalStack,
-  Form,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { Modal } from 'src/components/modal';
-import { CreateRecommendation, Recommendation, RecommendationStatus, RecommendationType } from 'src/dto/recommendation.dto';
-import useRecommendation from 'src/hooks/recommendation.hook';
-import { useWindowContext } from 'src/contexts/window.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
+import { useWindowContext } from 'src/contexts/window.context';
+import {
+  CreateRecommendation,
+  Recommendation,
+  RecommendationStatus,
+  RecommendationType,
+} from 'src/dto/recommendation.dto';
+import useRecommendation from 'src/hooks/recommendation.hook';
 import { blankedAddress, partition, url } from 'src/util/utils';
 
 interface RecommendationFormData {
@@ -27,13 +32,20 @@ interface RecommendationFormData {
   recommendedMail: string;
 }
 
-export function RecommendationsSection(): JSX.Element {
+interface RecommendationsSectionProps {
+  showRecommendationModal: boolean;
+  setShowRecommendationModal: (show: boolean) => void;
+}
+
+export function RecommendationsSection({
+  showRecommendationModal,
+  setShowRecommendationModal,
+}: RecommendationsSectionProps): JSX.Element {
   const { getRecommendations, createRecommendation, confirmRecommendation, rejectRecommendation } = useRecommendation();
   const { width } = useWindowContext();
   const { translate, translateError, locale } = useSettingsContext();
 
   const [recommendations, setRecommendations] = useState<Recommendation[]>();
-  const [showRecommendationModal, setShowRecommendationModal] = useState(false);
   const [isCreatingRecommendation, setIsCreatingRecommendation] = useState(false);
   const [recommendationError, setRecommendationError] = useState<string>();
   const [processingRecommendationId, setProcessingRecommendationId] = useState<number>();
@@ -128,10 +140,7 @@ export function RecommendationsSection(): JSX.Element {
           minWidth={false}
         >
           {pendingRequests.map((recommendation) => (
-            <StyledDataTableRow
-              key={recommendation.id}
-              label={`${recommendation.name} (${recommendation.mail})`}
-            >
+            <StyledDataTableRow key={recommendation.id} label={`${recommendation.name} (${recommendation.mail})`}>
               <div className="flex justify-end gap-2">
                 <StyledButton
                   width={StyledButtonWidth.MIN}
@@ -222,20 +231,14 @@ export function RecommendationsSection(): JSX.Element {
       <StyledButton
         width={StyledButtonWidth.FULL}
         color={StyledButtonColor.RED}
-        label={translate('screens/recommendation', 'Create invitation')}
+        label={translate('screens/recommendation', 'Create Invitation')}
         onClick={openRecommendationModal}
       />
 
       {/* Create Recommendation Modal */}
       <Modal isOpen={showRecommendationModal} onClose={closeRecommendationModal}>
         <StyledVerticalStack gap={6} full>
-          <h2 className="text-dfxBlue-800 text-xl font-bold">
-            {translate('screens/recommendation', 'Create invitation')}
-          </h2>
-
-          <p className="text-dfxGray-700">
-            {translate('screens/recommendation', 'Who would you like to invite?')}
-          </p>
+          <p className="text-dfxGray-700">{translate('screens/recommendation', 'Who would you like to invite?')}</p>
 
           <Form
             control={recommendationControl}
@@ -264,7 +267,7 @@ export function RecommendationsSection(): JSX.Element {
                 type="submit"
                 width={StyledButtonWidth.FULL}
                 color={StyledButtonColor.BLUE}
-                label={translate('screens/recommendation', 'Create invitation')}
+                label={translate('screens/recommendation', 'Create Invitation')}
                 onClick={handleRecommendationSubmit(onRecommendationSubmit)}
                 disabled={!isRecommendationFormValid}
                 isLoading={isCreatingRecommendation}
