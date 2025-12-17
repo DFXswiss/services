@@ -34,6 +34,7 @@ import {
 import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { RecommendationsSection } from 'src/components/account/recommendations-section';
 import { KycStatus } from 'src/components/kyc-status';
 import { Modal } from 'src/components/modal';
 import { addressLabel } from 'src/config/labels';
@@ -100,11 +101,14 @@ export default function AccountScreen(): JSX.Element {
   const { rootRef } = useLayoutContext();
   const { call } = useApi();
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
-  const [referral, setRefferal] = useState<Referral | undefined>();
+  const [referral, setReferral] = useState<Referral | undefined>();
   const [profile, setProfile] = useState<UserProfile | undefined>();
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string>();
+  const [showRecommendationModal, setShowRecommendationModal] = useState(false);
+
+  const isKycLevel50 = user && user.kyc.level >= 50;
 
   useUserGuard('/login');
 
@@ -132,7 +136,7 @@ export default function AccountScreen(): JSX.Element {
 
   useEffect(() => {
     if (user?.activeAddress && !isUserLoading && isLoggedIn) {
-      loadRefferal();
+      loadReferral();
       loadProfile();
       setValue('address', user.activeAddress);
     }
@@ -152,8 +156,8 @@ export default function AccountScreen(): JSX.Element {
     }
   }, [selectedAddress, user?.activeAddress, !isUserLoading]);
 
-  async function loadRefferal(): Promise<void> {
-    return getRef().then(setRefferal);
+  async function loadReferral(): Promise<void> {
+    return getRef().then(setReferral);
   }
 
   async function loadProfile(): Promise<void> {
@@ -273,11 +277,22 @@ export default function AccountScreen(): JSX.Element {
   const totalVolumeSum = totalVolumeItems?.reduce((acc, item) => acc + item.value, 0);
   const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + item.value, 0);
 
-  const title = isEmbedded ? translate('screens/home', 'DFX services') : translate('screens/home', 'Account');
-  const hasBackButton = canClose && !isEmbedded;
+  const title = showPdfModal
+    ? translate('screens/home', 'PDF Download Address Report')
+    : showRecommendationModal
+    ? translate('screens/recommendation', 'Create Invitation')
+    : isEmbedded
+    ? translate('screens/home', 'DFX services')
+    : translate('screens/home', 'Account');
+  const hasBackButton = (canClose && !isEmbedded) || showPdfModal || showRecommendationModal;
+  const onBack = showPdfModal
+    ? closePdfModal
+    : showRecommendationModal
+    ? () => setShowRecommendationModal(false)
+    : undefined;
   const image = 'https://dfx.swiss/images/app/berge.jpg';
 
-  useLayoutOptions({ title, backButton: hasBackButton });
+  useLayoutOptions({ title, backButton: hasBackButton, onBack });
 
   return (
     <>
@@ -347,59 +362,28 @@ export default function AccountScreen(): JSX.Element {
               />
             )}
           </StyledDataTable>
+
           <KycStatus />
 
-          {referral?.code && (
-            <StyledDataTable
-              label={translate('screens/home', 'Referral')}
-              alignContent={AlignContent.RIGHT}
-              showBorder
-              minWidth={false}
-            >
-              <StyledDataTableRow label={translate('screens/home', 'Referral link')}>
-                {referral.code}
-                <CopyButton
-                  onCopy={() =>
-                    copy(
-                      url({
-                        base: process.env.REACT_APP_REF_URL,
-                        params: new URLSearchParams({ code: referral.code ?? '' }),
-                      }),
-                    )
-                  }
-                />
-              </StyledDataTableRow>
-              <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
-                {(referral.commission * 100).toFixed(2)}%
-              </StyledDataTableRow>
-              <StyledDataTableExpandableRow
-                label={translate('screens/home', 'Your referral stats')}
-                expansionItems={referralItems ?? []}
-              />
-            </StyledDataTable>
-          )}
-
-          {/* Wallet Selector */}
-          {userAddresses.length ? (
+          {userAddresses.length > 0 && (
             <>
               <div className="border-b my-2.5 border-dfxGray-400 w-full"></div>
 
-              <div className="bg-white w-full rounded-md mb-2">
-                <h2 className="text-center text-dfxBlue-800 text-sm font-semibold ml-3.5 mb-1.5">
-                  {translate('screens/home', 'Active address')}
-                </h2>
-                <Form control={control} errors={errors}>
-                  <StyledDropdown
-                    name="address"
-                    rootRef={rootRef}
-                    placeholder={translate('general/actions', 'Select') + '...'}
-                    items={userAddresses.sort(sortAddressesByBlockchain)}
-                    labelFunc={(item) => blankedAddress(addressLabel(item), { width })}
-                    descriptionFunc={(item) => item.label ?? item.wallet}
-                    forceEnable={user?.activeAddress === undefined}
-                  />
-                </Form>
-              </div>
+              <h2 className="text-dfxBlue-800 text-lg font-semibold w-full">
+                {translate('screens/home', 'Active address')}
+              </h2>
+
+              <Form control={control} errors={errors}>
+                <StyledDropdown
+                  name="address"
+                  rootRef={rootRef}
+                  placeholder={translate('general/actions', 'Select') + '...'}
+                  items={userAddresses.sort(sortAddressesByBlockchain)}
+                  labelFunc={(item) => blankedAddress(addressLabel(item), { width })}
+                  descriptionFunc={(item) => item.label ?? item.wallet}
+                  forceEnable={user?.activeAddress === undefined}
+                />
+              </Form>
 
               {canDownloadPdf && (
                 <StyledButton
@@ -409,10 +393,56 @@ export default function AccountScreen(): JSX.Element {
                   color={StyledButtonColor.STURDY_WHITE}
                 />
               )}
+
+              {referral?.code && (
+                <StyledDataTable
+                  label={translate('screens/home', 'Referral')}
+                  alignContent={AlignContent.RIGHT}
+                  showBorder
+                  minWidth={false}
+                >
+                  <StyledDataTableRow label={translate('screens/home', 'Referral link')}>
+                    {referral.code}
+                    <CopyButton
+                      onCopy={() =>
+                        copy(
+                          url({
+                            base: process.env.REACT_APP_REF_URL,
+                            params: new URLSearchParams({ code: referral.code ?? '' }),
+                          }),
+                        )
+                      }
+                    />
+                  </StyledDataTableRow>
+                  <StyledDataTableRow label={translate('screens/home', 'Referral commission')}>
+                    {(referral.commission * 100).toFixed(2)}%
+                  </StyledDataTableRow>
+                  <StyledDataTableExpandableRow
+                    label={translate('screens/home', 'Your referral stats')}
+                    expansionItems={referralItems ?? []}
+                  />
+                </StyledDataTable>
+              )}
             </>
-          ) : (
-            <></>
           )}
+
+          {isKycLevel50 && (
+            <>
+              <div className="border-b my-2.5 border-dfxGray-400 w-full"></div>
+
+              <h2 className="text-dfxBlue-800 text-lg font-semibold w-full">
+                {translate('screens/recommendation', 'Recommendations')}
+              </h2>
+
+              <RecommendationsSection
+                showRecommendationModal={showRecommendationModal}
+                setShowRecommendationModal={setShowRecommendationModal}
+              />
+            </>
+          )}
+
+          {/* Spacer for background image overlap */}
+          <div className="h-32" />
         </StyledVerticalStack>
       )}
       {image && (
@@ -424,10 +454,6 @@ export default function AccountScreen(): JSX.Element {
       {/* PDF Download Modal */}
       <Modal isOpen={showPdfModal} onClose={closePdfModal}>
         <StyledVerticalStack gap={6} full>
-          <h2 className="text-dfxBlue-800 text-xl font-bold">
-            {translate('screens/home', 'PDF Download Address Report')}
-          </h2>
-
           <Form control={pdfControl} errors={pdfErrors} onSubmit={handlePdfSubmit(downloadBalancePdf)}>
             <StyledVerticalStack gap={4} full>
               {supportedBlockchains.length > 1 && (

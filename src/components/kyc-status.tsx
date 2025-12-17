@@ -187,7 +187,7 @@ export function KycStatus({ showStartButton = true }: KycStatusProps): JSX.Eleme
       />
       {showStartButton && !allStepsCompleted && (
         <StyledButton
-          width={StyledButtonWidth.MIN}
+          width={StyledButtonWidth.FULL}
           label={translate('general/actions', kycStarted ? 'Continue' : 'Start')}
           onClick={() => navigate('/kyc')}
           isLoading={isLoading}
