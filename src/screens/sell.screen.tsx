@@ -187,7 +187,7 @@ export default function SellScreen(): JSX.Element {
     const activeAssets = filterAssets(blockchainAssets, assetFilter);
     setAvailableAssets(activeAssets);
 
-    const asset = getAsset(activeAssets, assetIn) ?? (activeAssets.length === 1 && activeAssets[0]);
+    const asset = getAsset(activeAssets, assetIn) ?? (activeBlockchain && activeAssets[0]);
     if (asset) setVal('asset', asset);
   }, [assetIn, getAsset, getAssets, blockchain, walletBlockchain]);
 

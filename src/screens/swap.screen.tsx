@@ -216,11 +216,12 @@ export default function SwapScreen(): JSX.Element {
     setTargetAssets(activeTargetAssets);
 
     const sourceAsset =
-      getAsset(activeSourceAssets, assetIn) ?? (activeSourceAssets.length === 1 && activeSourceAssets[0]);
+      getAsset(activeSourceAssets, assetIn) ??
+      (walletBlockchain && activeSourceAssets.find((a) => a.blockchain === walletBlockchain));
     if (sourceAsset) setVal('sourceAsset', sourceAsset);
 
     const targetAsset =
-      getAsset(activeTargetAssets, assetOut) ?? (activeTargetAssets.length === 1 && activeTargetAssets[0]);
+      getAsset(activeTargetAssets, assetOut) ?? (blockchain && activeTargetAssets[0]);
     if (targetAsset) setVal('targetAsset', targetAsset);
   }, [assetFilter, assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
 
