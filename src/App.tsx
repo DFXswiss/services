@@ -310,6 +310,10 @@ export const Routes = [
         element: withSuspense(<SafeScreen />),
       },
       {
+        path: 'recommendation',
+        element: <Navigate to={`/account${window.location.search}`} />,
+      },
+      {
         path: 'compliance',
         element: withSuspense(<ComplianceScreen />),
       },
