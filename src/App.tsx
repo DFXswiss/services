@@ -2,7 +2,7 @@ import { DfxContextProvider, PaymentRoutesContextProvider, SupportChatContextPro
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Router } from '@remix-run/router';
 import { Suspense, lazy } from 'react';
-import { Navigate, Outlet, RouteObject, RouterProvider } from 'react-router-dom';
+import { LoaderFunctionArgs, Outlet, RouteObject, RouterProvider, redirect } from 'react-router-dom';
 import { LayoutWrapper } from './components/layout-wrapper';
 import { AppHandlingContextProvider, AppParams, CloseMessageData } from './contexts/app-handling.context';
 import { BalanceContextProvider } from './contexts/balance.context';
@@ -187,7 +187,10 @@ export const Routes = [
       },
       {
         path: 'payment-link',
-        element: <Navigate to={`/pl${window.location.search}`} />,
+        loader: ({ request }: LoaderFunctionArgs) => {
+          const url = new URL(request.url);
+          return redirect(`/pl${url.search}`);
+        },
       },
       {
         path: 'invoice',
@@ -311,7 +314,10 @@ export const Routes = [
       },
       {
         path: 'recommendation',
-        element: <Navigate to={`/account${window.location.search}`} />,
+        loader: ({ request }: LoaderFunctionArgs) => {
+          const url = new URL(request.url);
+          return redirect(`/account${url.search}`);
+        },
       },
       {
         path: 'compliance',
