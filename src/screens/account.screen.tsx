@@ -107,6 +107,7 @@ export default function AccountScreen(): JSX.Element {
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string>();
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
   const isKycLevel50 = user && user.kyc.level >= 50;
 
@@ -136,8 +137,7 @@ export default function AccountScreen(): JSX.Element {
 
   useEffect(() => {
     if (user?.activeAddress && !isUserLoading && isLoggedIn) {
-      loadReferral();
-      loadProfile();
+      loadInitialData();
       setValue('address', user.activeAddress);
     }
   }, [user?.activeAddress, isUserLoading, session?.role, isLoggedIn]);
@@ -156,18 +156,35 @@ export default function AccountScreen(): JSX.Element {
     }
   }, [selectedAddress, user?.activeAddress, !isUserLoading]);
 
+  async function loadInitialData(): Promise<void> {
+    setIsDataLoading(true);
+
+    try {
+      await Promise.allSettled([
+        loadReferral(),
+        loadProfile(),
+      ]);
+    } finally {
+      setIsDataLoading(false);
+    }
+  }
+
   async function loadReferral(): Promise<void> {
-    return getRef().then(setReferral);
+    return getRef().then(setReferral).catch(() => {
+      // ignore errors
+    });
   }
 
   async function loadProfile(): Promise<void> {
     return getProfile()
       .then(setProfile)
-      .catch((e) => console.error('Failed to load profile:', e));
+      .catch(() => {
+        // ignore errors
+      });
   }
 
   async function loadTransactions(): Promise<void> {
-    Promise.all([getDetailTransactions(), getUnassignedTransactions()])
+    return Promise.all([getDetailTransactions(), getUnassignedTransactions()])
       .then((txs) => {
         const sorted = txs
           .flat()
@@ -296,7 +313,7 @@ export default function AccountScreen(): JSX.Element {
 
   return (
     <>
-      {!isInitialized || !isLoggedIn || isUserLoading ? (
+      {!isInitialized || !isLoggedIn || isUserLoading || isDataLoading ? (
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
