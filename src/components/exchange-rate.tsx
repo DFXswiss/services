@@ -37,6 +37,7 @@ export function ExchangeRate({
     'blockchain' in from ? Utils.formatAmountCrypto(exchangeRate) : Utils.formatAmount(exchangeRate)
   } ${from.name}/${to.name}`;
   const minFee = `, min. ${fees.min}${feeSymbol}`;
+  const totalFee = `${fees.total}${feeSymbol}`;
   const dfxFee = `${fees.dfx}${feeSymbol} (${(fees.rate * 100).toFixed(2)}%${fees.min ? minFee : ''})`;
   const networkFee = `${fees.network}${feeSymbol}`;
   const bankFee = type !== TransactionType.SWAP && `${fees.bank}${feeSymbol}`;
@@ -86,6 +87,8 @@ export function ExchangeRate({
               </div>
             ))}
           </StyledVerticalStack>
+          <div className="text-dfxGray-800">{translate('screens/payment', 'Total fee')}</div>
+          <div>{totalFee}</div>
           <div className="text-dfxGray-800">{translate('screens/payment', 'DFX fee')}</div>
           <div>{dfxFee}</div>
           {bankFee && (
