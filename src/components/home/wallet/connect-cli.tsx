@@ -99,7 +99,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch, rootRef
     [WalletType.CLI_XMR]: /^[48][0-9AB][1-9A-HJ-NP-Za-km-z]{93}$/,
     [WalletType.CLI_ZANO]: /^(Z[a-zA-Z0-9]{96}|iZ[a-zA-Z0-9]{106})$/,
     [WalletType.CLI_ETH]: /^0x\w{40}$/,
-    [WalletType.CLI_ADA]: /^stake[a-z0-9]{54}$/,
+    [WalletType.CLI_ADA]: /^(stake[a-z0-9]+|addr1[a-z0-9]+)$/,
     [WalletType.CLI_AR]: /^[\w-]{43}$/,
     [WalletType.CLI_SOL]: /^[1-9A-HJ-NP-Za-km-z]{43,44}$/,
     [WalletType.CLI_TRX]: /^T[1-9A-HJ-NP-Za-km-z]{32,34}$/,
