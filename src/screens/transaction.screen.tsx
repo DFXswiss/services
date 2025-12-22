@@ -423,9 +423,34 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
             {refundDetails.refundAmount} {refundDetails.refundAsset.name}
           </p>
         </StyledDataTableRow>
-        {refundDetails.refundTarget && (
-          <StyledDataTableRow label={translate('screens/payment', 'Recipient')}>
-            <p>{blankedAddress(refundDetails.refundTarget, { width })}</p>
+        {refundDetails.name && (
+          <StyledDataTableRow label={translate('screens/payment', 'Name')}>
+            <p>{refundDetails.name}</p>
+          </StyledDataTableRow>
+        )}
+        {(refundDetails.address || refundDetails.houseNumber) && (
+          <StyledDataTableRow label={translate('screens/payment', 'Address')}>
+            <p>{[refundDetails.address, refundDetails.houseNumber].filter(Boolean).join(' ')}</p>
+          </StyledDataTableRow>
+        )}
+        {(refundDetails.zip || refundDetails.city) && (
+          <StyledDataTableRow label={translate('screens/payment', 'City')}>
+            <p>{[refundDetails.zip, refundDetails.city].filter(Boolean).join(' ')}</p>
+          </StyledDataTableRow>
+        )}
+        {refundDetails.country && (
+          <StyledDataTableRow label={translate('screens/payment', 'Country')}>
+            <p>{refundDetails.country}</p>
+          </StyledDataTableRow>
+        )}
+        {refundDetails.iban && (
+          <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
+            <p>{Utils.formatIban(refundDetails.iban) ?? refundDetails.iban}</p>
+          </StyledDataTableRow>
+        )}
+        {refundDetails.bic && (
+          <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
+            <p>{refundDetails.bic}</p>
           </StyledDataTableRow>
         )}
       </StyledDataTable>
