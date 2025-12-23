@@ -545,8 +545,9 @@
     "Click here once you have issued the transfer": "Klicke hier, sobald Du die Überweisung getätigt hast",
 
     "Please transfer the purchase amount using this information via your banking application. The reference is important!": "Bitte überweise den Kaufbetrag mit diesen Angaben über Deine Bankanwendung. Der Verwendungszweck ist wichtig!",
+    "Please transfer the purchase amount using this information via your banking application. This IBAN is unique to this asset, no reference is required.": "Bitte überweise den Kaufbetrag mit diesen Angaben über Deine Bankanwendung. Dieser IBAN ist einzigartig für dieses Asset, kein Verwendungszweck erforderlich.",
 
-    "The reference remains identical for the selected asset and can be used for recurring payments and standing orders": "Der Verwendungszweck bleibt für die ausgewählte Anlage identisch und kann für wiederkehrende Zahlungen und Daueraufträge verwendet werden",
+    "The reference remains identical for the selected asset and can be used for recurring payments and standing orders": "Der Verwendungszweck bleibt für das ausgewählte Asset identisch und kann für wiederkehrende Zahlungen und Daueraufträge verwendet werden",
 
     "Name": "Name",
     "Address": "Adresse",
