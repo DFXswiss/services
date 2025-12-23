@@ -841,6 +841,11 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
       text: `${tx.exchangeRate} ${tx.inputAsset}/${tx.outputAsset}`,
       infoText: baseRateInfo,
     });
+  tx.fees?.total != null &&
+    rateItems.push({
+      label: translate('screens/payment', 'Total fee'),
+      text: `${tx.fees.total} ${tx.inputAsset}`,
+    });
   tx.fees?.dfx != null &&
     rateItems.push({
       label: translate('screens/payment', 'DFX fee'),
