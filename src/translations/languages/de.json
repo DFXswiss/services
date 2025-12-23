@@ -612,6 +612,7 @@
 
     "Exchange rate": "Wechselkurs",
     "Base rate": "Basiskurs",
+    "Total fee": "Gesamtgebühr",
     "DFX fee": "DFX-Gebühr",
     "Network fee": "Netzwerkgebühr",
     "Bank fee": "Bankgebühr",
