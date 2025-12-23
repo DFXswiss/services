@@ -9,7 +9,11 @@ import { useBalanceContext } from './balance.context';
 
 export enum WalletType {
   META_MASK = 'MetaMask',
+  RABBY = 'Rabby',
   ALBY = 'Alby',
+  SAFE_PAL = 'SafePal',
+  COINBASE = 'Coinbase',
+  TRUST = 'Trust',
   LEDGER_BTC = 'LedgerBtc',
   LEDGER_ETH = 'LedgerEth',
   BITBOX_BTC = 'BitBoxBtc',
@@ -33,9 +37,11 @@ export enum WalletType {
   PHANTOM_SOL = 'PhantomSol',
   TRUST_SOL = 'TrustSol',
   TRUST_TRX = 'TrustTrx',
-  TRONLINK_TRX = 'TronLinkTrx',
+  TRON_LINK_TRX = 'TronLinkTrx',
   MAIL = 'Mail',
   ADDRESS = 'Address',
+  IN_APP_BROWSER = 'InAppBrowser',
+  BROWSER_EXTENSION = 'BrowserExtension',
 }
 
 export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
@@ -92,12 +98,25 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
     Blockchain.CITREA_TESTNET,
     Blockchain.SEPOLIA,
   ],
+  [WalletType.BROWSER_EXTENSION]: [
+    Blockchain.ETHEREUM,
+    Blockchain.ARBITRUM,
+    Blockchain.OPTIMISM,
+    Blockchain.POLYGON,
+    Blockchain.BASE,
+    Blockchain.GNOSIS,
+    Blockchain.HAQQ,
+    Blockchain.BINANCE_SMART_CHAIN,
+    Blockchain.CITREA_TESTNET,
+    Blockchain.SEPOLIA,
+    Blockchain.SOLANA,
+  ],
   [WalletType.CAKE]: [Blockchain.MONERO, Blockchain.ZANO],
   [WalletType.MONERO]: [Blockchain.MONERO],
   [WalletType.PHANTOM_SOL]: [Blockchain.SOLANA],
   [WalletType.TRUST_SOL]: [Blockchain.SOLANA],
   [WalletType.TRUST_TRX]: [Blockchain.TRON],
-  [WalletType.TRONLINK_TRX]: [Blockchain.TRON],
+  [WalletType.TRON_LINK_TRX]: [Blockchain.TRON],
 };
 
 export function supportsBlockchain(wallet: WalletType, blockchain: Blockchain): boolean {

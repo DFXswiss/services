@@ -10,12 +10,13 @@ import { InstallHint } from './install-hint';
 import { SignHint } from './sign-hint';
 
 interface Props extends ConnectProps {
-  isSupported: () => boolean | Promise<boolean>;
-  fallback?: WalletType;
+  isSupported: (wallet: WalletType, blockchain: Blockchain) => boolean | Promise<boolean>;
+  fallback?: (wallet: WalletType) => WalletType;
   getAccount: (wallet: WalletType, blockchain: Blockchain, isReconnect: boolean) => Promise<Account>;
   signMessage: (
     msg: string,
     address: string,
+    wallet: WalletType,
     blockchain: Blockchain,
     accountIndex?: number,
     index?: number,
@@ -55,8 +56,8 @@ export function ConnectBase({
   }, []);
 
   async function init() {
-    const supported = await isSupported();
-    if (!supported && fallback) onSwitch(fallback);
+    const supported = await isSupported(wallet, Blockchain.BASE);
+    if (!supported && fallback) onSwitch(fallback(wallet));
 
     setShowInstallHint(!supported);
     setIsLoading(false);
@@ -106,7 +107,15 @@ export function ConnectBase({
                 (a, m) =>
                   account.signature
                     ? Promise.resolve(account.signature)
-                    : onSignMessage(a, account.blockchain, m, account.accountIndex, account.index, account.type),
+                    : onSignMessage(
+                        a,
+                        account.blockchain,
+                        wallet,
+                        m,
+                        account.accountIndex,
+                        account.index,
+                        account.type,
+                      ),
                 account.key,
               ),
         );
@@ -115,13 +124,14 @@ export function ConnectBase({
   async function onSignMessage(
     address: string,
     blockchain: Blockchain,
+    wallet: WalletType,
     message: string,
     accountIndex?: number,
     index?: number,
     addressType?: BitcoinAddressType,
   ): Promise<string> {
     setShowSignHint(true);
-    return signMessage(message, address, blockchain, accountIndex, index, addressType).finally(() =>
+    return signMessage(message, address, wallet, blockchain, accountIndex, index, addressType).finally(() =>
       setShowSignHint(false),
     );
   }

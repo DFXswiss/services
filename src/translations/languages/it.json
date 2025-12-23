@@ -432,11 +432,8 @@
     "Scan with your wallet": "Scansione con il portafoglio",
     "Connect your wallet": "Collegare il portafoglio",
 
-    "Please confirm the connection in your MetaMask.": "Confermare la connessione nella MetaMask.",
     "Please confirm the connection in the Alby browser extension.": "Confermare la connessione nell'estensione del browser Alby.",
-    "Please confirm the connection in your Phantom browser extension.": "Confermare la connessione nell'estensione del browser Phantom.",
-    "Please confirm the connection in your Trust browser extension.": "Confermare la connessione nell'estensione del browser Trust.",
-    "Please confirm the connection in your TronLink browser extension.": "Confermare la connessione nell'estensione del browser TronLink.",
+    "Please confirm the connection in your browser extension.": "Confermare la connessione nell'estensione del browser.",
     "Please confirm the connection in your wallet.": "Confermare la connessione nel portafoglio.",
     "Please confirm the connection with your Ledger.": "Confermare il collegamento con il Ledger.",
     "Connection failed!": "Connessione fallita!",
