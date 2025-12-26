@@ -56,13 +56,6 @@ jobs:
           replace: ${{ secrets.PRD_ALCHEMY_KEY}}
           regex: false
 
-      - name: Update Sift Beacon Key
-        uses: jacobtomlinson/gha-find-replace@v3
-        with:
-          find: '{SIFT_BEACON_KEY}'
-          replace: ${{ secrets.PRD_SIFT_BEACON_KEY}}
-          regex: false
-
       - name: Update Tatum Key
         uses: jacobtomlinson/gha-find-replace@v3
         with:

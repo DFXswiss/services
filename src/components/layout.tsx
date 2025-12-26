@@ -6,14 +6,11 @@ import { useServiceWorker } from 'src/hooks/service-worker.hook';
 import { Routes } from '../App';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { useSift } from '../hooks/sift.hook';
 import { isNode } from '../util/utils';
 import { InfoBannerComponent } from './info-banner';
 import { Navigation } from './navigation';
 
 export function Layout({ children }: PropsWithChildren): JSX.Element {
-  useSift();
-
   const {
     config: { title, backButton, onBack, textStart, noPadding, noMaxWidth, smallMenu },
   } = useLayoutConfigContext();
