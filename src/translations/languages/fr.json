@@ -545,6 +545,7 @@
     "Click here once you have issued the transfer": "Cliquez ici une fois que vous avez émis le virement",
 
     "Please transfer the purchase amount using this information via your banking application. The reference is important!": "Veuillez transférer le montant de l'achat à l'aide de ces informations via votre application bancaire. L'objet du paiement est important !",
+    "Please transfer the purchase amount using this information via your banking application. This IBAN is unique to this asset, no reference is required.": "Veuillez transférer le montant de l'achat à l'aide de ces informations via votre application bancaire. Cet IBAN est unique à cet actif, aucun objet de paiement n'est requis.",
 
     "The reference remains identical for the selected asset and can be used for recurring payments and standing orders": "L'objet du paiement reste identique pour l'immobilisation sélectionnée et peut être utilisé pour les paiements récurrents et les ordres permanents.",
 
