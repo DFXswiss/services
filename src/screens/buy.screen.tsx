@@ -19,6 +19,7 @@ import {
   Utils,
   Validations,
 } from '@dfx.swiss/react';
+import { Urls } from 'src/config/urls';
 import {
   AssetIconVariant,
   Form,
@@ -650,7 +651,7 @@ export default function BuyScreen(): JSX.Element {
                                     'screens/payment',
                                     'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
                                   )}
-                                  url={process.env.REACT_APP_TNC_URL}
+                                  url={Urls.termsAndConditions}
                                   small
                                   dark
                                 />
@@ -673,7 +674,7 @@ export default function BuyScreen(): JSX.Element {
                                     'screens/payment',
                                     'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
                                   )}
-                                  url={process.env.REACT_APP_TNC_URL}
+                                  url={Urls.termsAndConditions}
                                   small
                                   dark
                                 />
