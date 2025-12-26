@@ -6,7 +6,6 @@ import { useLocation } from 'react-router-dom';
 import { CustodyAssets } from 'src/components/home/wallet/connect-address';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
-import { url } from 'src/util/utils';
 import { Service } from '../App';
 import { ConnectWrapper } from '../components/home/connect-wrapper';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
@@ -34,7 +33,6 @@ enum SpecialMode {
   LOGIN_MAIL = 'LoginMail',
   LOGIN_WALLET = 'LoginWallet',
   CONNECT = 'Connect',
-  MY_DFX = 'MyDfx',
 }
 
 const SpecialModes: { [m in SpecialMode]: string } = {
@@ -42,13 +40,10 @@ const SpecialModes: { [m in SpecialMode]: string } = {
   [SpecialMode.LOGIN_MAIL]: 'login',
   [SpecialMode.LOGIN_WALLET]: 'wallets',
   [SpecialMode.CONNECT]: 'wallets',
-  [SpecialMode.MY_DFX]: 'wallets',
 };
 
 function getMode(pathName: string): SpecialMode | undefined {
   switch (pathName) {
-    case '/my-dfx':
-      return SpecialMode.MY_DFX;
     case '/login':
       return SpecialMode.LOGIN;
     case '/login/mail':
@@ -166,14 +161,6 @@ function HomeScreenContent(): JSX.Element {
 
   function start() {
     switch (specialMode) {
-      case SpecialMode.MY_DFX:
-        if (getAuthToken() && session?.address) {
-          const params = new URLSearchParams({ token: getAuthToken() || '' });
-          const urlPath = url({ base: process.env.REACT_APP_PAY_URL, path: 'login', params });
-          window.open(urlPath, '_self');
-        }
-        break;
-
       case SpecialMode.LOGIN:
       case SpecialMode.LOGIN_MAIL:
       // @ts-expect-error fall through to default option
