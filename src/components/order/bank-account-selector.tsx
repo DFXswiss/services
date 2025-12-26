@@ -37,7 +37,10 @@ export const BankAccountSelector: React.FC<BankAccountSelectorProps> = ({
 
   useEffect(() => {
     if (bankAccounts) {
-      const account = getAccount(bankAccounts, bankAccount) ?? bankAccounts.find((a) => a.default);
+      const account =
+        getAccount(bankAccounts, bankAccount) ??
+        bankAccounts.find((a) => a.default) ??
+        (bankAccounts.length === 1 ? bankAccounts[0] : undefined);
       if (account && !value) {
         onChange(account);
       } else if (
