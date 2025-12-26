@@ -1,12 +1,13 @@
 import { Asset, Blockchain } from '@dfx.swiss/react';
+import { Transaction, SignedTransaction } from '@tronweb3/tronwallet-abstract-adapter';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
 import { useBlockchainTransaction } from './blockchain-transaction.hook';
 
 export interface TronInterface {
-  createCoinTransaction(fromAddress: string, toAddress: string, amount: BigNumber): Promise<object>;
-  createTokenTransaction(fromAddress: string, toAddress: string, token: Asset, amount: BigNumber): Promise<object>;
-  broadcastTransaction(signedTransaction: object): Promise<string>;
+  createCoinTransaction(fromAddress: string, toAddress: string, amount: BigNumber): Promise<Transaction>;
+  createTokenTransaction(fromAddress: string, toAddress: string, token: Asset, amount: BigNumber): Promise<Transaction>;
+  broadcastTransaction(signedTransaction: SignedTransaction): Promise<string>;
 }
 
 export function useTron(): TronInterface {
@@ -16,8 +17,8 @@ export function useTron(): TronInterface {
     fromAddress: string,
     toAddress: string,
     amount: BigNumber,
-  ): Promise<object> {
-    return createTronTransaction(fromAddress, toAddress, amount.toNumber());
+  ): Promise<Transaction> {
+    return createTronTransaction(fromAddress, toAddress, amount.toNumber()) as Promise<Transaction>;
   }
 
   async function createTokenTransaction(
@@ -25,11 +26,11 @@ export function useTron(): TronInterface {
     toAddress: string,
     token: Asset,
     amount: BigNumber,
-  ): Promise<object> {
-    return createTronTransaction(fromAddress, toAddress, amount.toNumber(), token);
+  ): Promise<Transaction> {
+    return createTronTransaction(fromAddress, toAddress, amount.toNumber(), token) as Promise<Transaction>;
   }
 
-  async function broadcastSignedTransaction(signedTransaction: object): Promise<string> {
+  async function broadcastSignedTransaction(signedTransaction: SignedTransaction): Promise<string> {
     const serialized = JSON.stringify(signedTransaction);
     return broadcastTransaction(Blockchain.TRON, serialized);
   }
