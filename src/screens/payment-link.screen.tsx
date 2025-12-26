@@ -10,6 +10,7 @@ import {
   Utils,
   Validations,
 } from '@dfx.swiss/react';
+import { Urls } from 'src/config/urls';
 import {
   AlignContent,
   CopyButton,
@@ -753,7 +754,7 @@ export default function PaymentLinkScreen(): JSX.Element {
                 'screens/payment',
                 'By using this service, the outstanding claim of the above-mentioned company against DFX is assigned, and the General Terms and Conditions of DFX AG apply.',
               )}
-              url={process.env.REACT_APP_TNC_URL}
+              url={Urls.termsAndConditions}
               small
               dark
             />

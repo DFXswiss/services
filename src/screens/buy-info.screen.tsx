@@ -24,6 +24,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
+import { Urls } from 'src/config/urls';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
 import { ErrorHint } from '../components/error-hint';
 import { BuyCompletion } from '../components/payment/buy-completion';
@@ -182,7 +183,7 @@ export default function BuyInfoScreen(): JSX.Element {
                   'screens/payment',
                   'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
                 )}
-                url={process.env.REACT_APP_TNC_URL}
+                url={Urls.termsAndConditions}
                 small
                 dark
               />

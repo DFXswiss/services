@@ -14,6 +14,7 @@ import {
   useUser,
   useUserContext,
 } from '@dfx.swiss/react';
+import { Urls } from 'src/config/urls';
 import {
   AlignContent,
   CopyButton,
@@ -424,7 +425,7 @@ export default function AccountScreen(): JSX.Element {
                       onCopy={() =>
                         copy(
                           url({
-                            base: process.env.REACT_APP_REF_URL,
+                            base: Urls.referral,
                             params: new URLSearchParams({ code: referral.code ?? '' }),
                           }),
                         )

@@ -2,6 +2,7 @@ import { Utils, Validations } from '@dfx.swiss/react';
 import { Form, StyledButton, StyledDropdown, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Urls } from 'src/config/urls';
 import { useLayoutContext } from '../contexts/layout.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
@@ -83,9 +84,7 @@ export default function TelegramSupportScreen(): JSX.Element {
           onClick={() => {
             setIsRedirecting(true);
             window.location.href =
-              language?.symbol.toLowerCase() === 'de'
-                ? process.env.REACT_APP_TG_URL_DE ?? ''
-                : process.env.REACT_APP_TG_URL_EN ?? '';
+              language?.symbol.toLowerCase() === 'de' ? Urls.telegramDe : Urls.telegramEn;
           }}
           label={translate('general/actions', 'Continue')}
           disabled={!isValid || !isCorrect || isRedirecting}

@@ -75,6 +75,7 @@ import { Trans } from 'react-i18next';
 import { FaHandshake } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
 import { DefaultFileTypes } from 'src/config/file-types';
+import { Urls } from 'src/config/urls';
 import { useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { SumsubReviewAnswer, SumsubReviewRejectType } from 'src/dto/sumsub.dto';
@@ -1936,7 +1937,7 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
             onChange={(checked) => setValue(checked ? currentOptions[0].key : undefined)}
           >
             {currentQuestion.key === 'tnc' ? (
-              <StyledLink label={currentQuestion.description} url={process.env.REACT_APP_TNC_URL} dark />
+              <StyledLink label={currentQuestion.description} url={Urls.termsAndConditions} dark />
             ) : currentQuestion.key === 'notification_of_changes' ? (
               <div>
                 {currentQuestion.description.split(nocLinkText)[0]}

@@ -19,6 +19,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import React, { useEffect, useMemo, useState } from 'react';
+import { Urls } from 'src/config/urls';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -182,7 +183,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
                           'screens/payment',
                           'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
                         )}
-                        url={process.env.REACT_APP_TNC_URL}
+                        url={Urls.termsAndConditions}
                         small
                         dark
                       />
