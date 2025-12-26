@@ -4,9 +4,7 @@ import { useMemo } from 'react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance, useBalanceContext } from '../contexts/balance.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
-import { useAlchemy } from './alchemy.hook';
-import { useSolana } from './solana.hook';
-import { useTron } from './tron.hook';
+import { useBlockchainBalance } from './blockchain-balance.hook';
 import { useAlby } from './wallets/alby.hook';
 import { useMetaMask } from './wallets/metamask.hook';
 import { usePhantom } from './wallets/phantom.hook';
@@ -37,9 +35,7 @@ export function useTxHelper(): TxHelperInterface {
   const { activeWallet } = useWalletContext();
   const { session } = useAuthContext();
   const { canClose } = useAppHandlingContext();
-  const { getAddressBalances: getEvmBalances } = useAlchemy();
-  const { getAddressBalances: getSolanaBalances } = useSolana();
-  const { getAddressBalances: getTronBalances } = useTron();
+  const { getAddressBalances } = useBlockchainBalance();
 
   async function getBalances(
     assets: Asset[],
@@ -47,26 +43,33 @@ export function useTxHelper(): TxHelperInterface {
     blockchain?: Blockchain,
   ): Promise<AssetBalance[] | undefined> {
     if (!activeWallet || !address || !blockchain) return getParamBalances(assets);
-    switch (activeWallet) {
-      case WalletType.META_MASK:
-      case WalletType.WALLET_CONNECT:
-      case WalletType.LEDGER_ETH:
-      case WalletType.TREZOR_ETH:
-      case WalletType.BITBOX_ETH:
-      case WalletType.CLI_ETH:
-        return getEvmBalances(assets, address, blockchain);
-      case WalletType.PHANTOM_SOL:
-      case WalletType.TRUST_SOL:
-      case WalletType.CLI_SOL:
-        return getSolanaBalances(assets, address);
-      case WalletType.TRUST_TRX:
-      case WalletType.TRONLINK_TRX:
-      case WalletType.CLI_TRX:
-        return getTronBalances(assets, address);
-      default:
-        // no balance available
+
+    const supportedWallets = [
+      WalletType.META_MASK,
+      WalletType.WALLET_CONNECT,
+      WalletType.LEDGER_ETH,
+      WalletType.TREZOR_ETH,
+      WalletType.BITBOX_ETH,
+      WalletType.CLI_ETH,
+      WalletType.PHANTOM_SOL,
+      WalletType.TRUST_SOL,
+      WalletType.CLI_SOL,
+      WalletType.TRUST_TRX,
+      WalletType.TRONLINK_TRX,
+      WalletType.CLI_TRX,
+    ];
+
+    if (supportedWallets.includes(activeWallet)) {
+      try {
+        return await getAddressBalances(assets, address, blockchain);
+      } catch (error) {
+        console.error('Failed to get balances from API:', error);
         return undefined;
+      }
     }
+
+    // no balance available for unsupported wallets
+    return undefined;
   }
 
   async function sendTransaction(tx: Sell | Swap): Promise<string> {
@@ -136,8 +139,7 @@ export function useTxHelper(): TxHelperInterface {
       activeWallet,
       session,
       getParamBalances,
-      getEvmBalances,
-      getSolanaBalances,
+      getAddressBalances,
       requestChangeToBlockchainMetaMask,
       requestChangeToBlockchainWalletConnect,
       canClose,

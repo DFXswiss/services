@@ -12,7 +12,7 @@ export interface TrustInterface {
 }
 
 export function useTrustTrx(): TrustInterface {
-  const { createCoinTransaction, createTokenTransaction } = useTron();
+  const { createCoinTransaction, createTokenTransaction, broadcastTransaction } = useTron();
 
   const wallet = useMemo(() => new TrustAdapter(), []);
 
@@ -49,7 +49,6 @@ export function useTrustTrx(): TrustInterface {
 
   async function createTransaction(amount: BigNumber, asset: Asset, from: string, to: string): Promise<string> {
     const provider = getProvider();
-    const tronWeb = (window as any).trustwallet.tronLink.tronWeb;
 
     try {
       const unsignedTransaction =
@@ -59,7 +58,7 @@ export function useTrustTrx(): TrustInterface {
 
       const signedTransaction = await provider.signTransaction(unsignedTransaction);
 
-      return await tronWeb.trx.sendRawTransaction(signedTransaction);
+      return await broadcastTransaction(signedTransaction);
     } catch (error) {
       handleError(error);
     }

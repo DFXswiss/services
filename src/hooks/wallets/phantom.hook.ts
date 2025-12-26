@@ -1,6 +1,5 @@
 import { Asset, AssetType } from '@dfx.swiss/react';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
-import { clusterApiUrl, Connection } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { encodeBase58 } from 'ethers';
 import { useMemo } from 'react';
@@ -14,10 +13,9 @@ export interface PhantomInterface {
 }
 
 export function usePhantom(): PhantomInterface {
-  const { createCoinTransaction, createTokenTransaction } = useSolana();
+  const { createCoinTransaction, createTokenTransaction, broadcastTransaction } = useSolana();
 
   const wallet = useMemo(() => new PhantomWalletAdapter(), []);
-  const connection = useMemo(() => new Connection(clusterApiUrl('mainnet-beta')), []);
 
   function getProvider() {
     return wallet;
@@ -61,7 +59,7 @@ export function usePhantom(): PhantomInterface {
           : await createTokenTransaction(from, to, asset, amount);
 
       const signedTransaction = await provider.signTransaction(transaction);
-      return await provider.sendTransaction(signedTransaction, connection);
+      return await broadcastTransaction(signedTransaction);
     } catch (error) {
       handleError(error);
     }
