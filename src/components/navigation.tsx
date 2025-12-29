@@ -11,6 +11,7 @@ import {
 import { forwardRef, PropsWithChildren, SetStateAction } from 'react';
 import { useLocation } from 'react-router-dom';
 import { REACT_APP_BUILD_ID } from 'src/version';
+import { Urls } from '../config/urls';
 import { CloseType, useAppHandlingContext } from '../contexts/app-handling.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -220,7 +221,7 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
           <NavigationLink
             icon={IconVariant.HOME}
             label={translate('navigation/links', 'DFX.swiss')}
-            url={process.env.REACT_APP_DFX_URL}
+            url={Urls.dfx}
             onClose={() => setIsNavigationOpen(false)}
           />
           <NavigationLink
@@ -240,19 +241,19 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
           <NavigationLink
             icon={IconVariant.FILE}
             label={translate('navigation/links', 'Terms and conditions')}
-            url={process.env.REACT_APP_TNC_URL}
+            url={Urls.termsAndConditions}
             onClose={() => setIsNavigationOpen(false)}
           />
           <NavigationLink
             icon={IconVariant.OPEN_IN_NEW}
             label={translate('navigation/links', 'Privacy policy')}
-            url={process.env.REACT_APP_PPO_URL}
+            url={Urls.privacyPolicy}
             onClose={() => setIsNavigationOpen(false)}
           />
           <NavigationLink
             icon={IconVariant.OPEN_IN_NEW}
             label={translate('navigation/links', 'Imprint')}
-            url={process.env.REACT_APP_IMP_URL}
+            url={Urls.imprint}
             onClose={() => setIsNavigationOpen(false)}
           />
 
