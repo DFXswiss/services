@@ -140,7 +140,7 @@ export default function AccountScreen(): JSX.Element {
       loadInitialData();
       setValue('address', user.activeAddress);
     }
-  }, [user?.activeAddress, isUserLoading, session?.role, isLoggedIn]);
+  }, [user?.activeAddress, isUserLoading, isLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn) loadTransactions();
