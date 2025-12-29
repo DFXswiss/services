@@ -423,9 +423,36 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
             {refundDetails.refundAmount} {refundDetails.refundAsset.name}
           </p>
         </StyledDataTableRow>
-        {refundDetails.refundTarget && (
-          <StyledDataTableRow label={translate('screens/payment', 'Recipient')}>
-            <p>{blankedAddress(refundDetails.refundTarget, { width })}</p>
+        {refundDetails.bankDetails?.name && (
+          <StyledDataTableRow label={translate('screens/payment', 'Name')}>
+            <p>{refundDetails.bankDetails.name}</p>
+          </StyledDataTableRow>
+        )}
+        {(refundDetails.bankDetails?.address || refundDetails.bankDetails?.houseNumber) && (
+          <StyledDataTableRow label={translate('screens/payment', 'Address')}>
+            <p>
+              {[refundDetails.bankDetails.address, refundDetails.bankDetails.houseNumber].filter(Boolean).join(' ')}
+            </p>
+          </StyledDataTableRow>
+        )}
+        {(refundDetails.bankDetails?.zip || refundDetails.bankDetails?.city) && (
+          <StyledDataTableRow label={translate('screens/payment', 'City')}>
+            <p>{[refundDetails.bankDetails.zip, refundDetails.bankDetails.city].filter(Boolean).join(' ')}</p>
+          </StyledDataTableRow>
+        )}
+        {refundDetails.bankDetails?.country && (
+          <StyledDataTableRow label={translate('screens/payment', 'Country')}>
+            <p>{refundDetails.bankDetails.country}</p>
+          </StyledDataTableRow>
+        )}
+        {refundDetails.bankDetails?.iban && (
+          <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
+            <p>{Utils.formatIban(refundDetails.bankDetails.iban) ?? refundDetails.bankDetails.iban}</p>
+          </StyledDataTableRow>
+        )}
+        {refundDetails.bankDetails?.bic && (
+          <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
+            <p>{refundDetails.bankDetails.bic}</p>
           </StyledDataTableRow>
         )}
       </StyledDataTable>

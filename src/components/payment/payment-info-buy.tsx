@@ -28,10 +28,15 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
         <h2 className="text-dfxBlue-800 text-center">{translate('screens/payment', 'Payment Information')}</h2>
 
         <StyledInfoText iconColor={IconColor.BLUE}>
-          {translate(
-            'screens/buy',
-            'Please transfer the purchase amount using this information via your banking application. The reference is important!',
-          )}
+          {info.remittanceInfo
+            ? translate(
+                'screens/buy',
+                'Please transfer the purchase amount using this information via your banking application. The reference is important!',
+              )
+            : translate(
+                'screens/buy',
+                'Please transfer the purchase amount using this information via your banking application. This IBAN is unique to this asset, no reference is required.',
+              )}
         </StyledInfoText>
 
         {info.paymentRequest ? (
@@ -83,16 +88,18 @@ function PaymentInformationText({ info }: PaymentInformationContentProps): JSX.E
           {info.bic}
           <CopyButton onCopy={() => copy(info.bic)} />
         </StyledDataTableRow>
-        <StyledDataTableRow
-          label={translate('screens/payment', 'Reference')}
-          infoText={translate(
-            'screens/buy',
-            'The reference remains identical for the selected asset and can be used for recurring payments and standing orders',
-          )}
-        >
-          {info.remittanceInfo}
-          <CopyButton onCopy={() => copy(info.remittanceInfo)} />
-        </StyledDataTableRow>
+        {info.remittanceInfo && (
+          <StyledDataTableRow
+            label={translate('screens/payment', 'Reference')}
+            infoText={translate(
+              'screens/buy',
+              'The reference remains identical for the selected asset and can be used for recurring payments and standing orders',
+            )}
+          >
+            {info.remittanceInfo}
+            <CopyButton onCopy={() => copy(info.remittanceInfo)} />
+          </StyledDataTableRow>
+        )}
       </StyledDataTable>
 
       <div className="mt-3">
