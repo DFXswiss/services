@@ -423,34 +423,36 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
             {refundDetails.refundAmount} {refundDetails.refundAsset.name}
           </p>
         </StyledDataTableRow>
-        {refundDetails.name && (
+        {refundDetails.bankDetails?.name && (
           <StyledDataTableRow label={translate('screens/payment', 'Name')}>
-            <p>{refundDetails.name}</p>
+            <p>{refundDetails.bankDetails.name}</p>
           </StyledDataTableRow>
         )}
-        {(refundDetails.address || refundDetails.houseNumber) && (
+        {(refundDetails.bankDetails?.address || refundDetails.bankDetails?.houseNumber) && (
           <StyledDataTableRow label={translate('screens/payment', 'Address')}>
-            <p>{[refundDetails.address, refundDetails.houseNumber].filter(Boolean).join(' ')}</p>
+            <p>
+              {[refundDetails.bankDetails.address, refundDetails.bankDetails.houseNumber].filter(Boolean).join(' ')}
+            </p>
           </StyledDataTableRow>
         )}
-        {(refundDetails.zip || refundDetails.city) && (
+        {(refundDetails.bankDetails?.zip || refundDetails.bankDetails?.city) && (
           <StyledDataTableRow label={translate('screens/payment', 'City')}>
-            <p>{[refundDetails.zip, refundDetails.city].filter(Boolean).join(' ')}</p>
+            <p>{[refundDetails.bankDetails.zip, refundDetails.bankDetails.city].filter(Boolean).join(' ')}</p>
           </StyledDataTableRow>
         )}
-        {refundDetails.country && (
+        {refundDetails.bankDetails?.country && (
           <StyledDataTableRow label={translate('screens/payment', 'Country')}>
-            <p>{refundDetails.country}</p>
+            <p>{refundDetails.bankDetails.country}</p>
           </StyledDataTableRow>
         )}
-        {refundDetails.iban && (
+        {refundDetails.bankDetails?.iban && (
           <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
-            <p>{Utils.formatIban(refundDetails.iban) ?? refundDetails.iban}</p>
+            <p>{Utils.formatIban(refundDetails.bankDetails.iban) ?? refundDetails.bankDetails.iban}</p>
           </StyledDataTableRow>
         )}
-        {refundDetails.bic && (
+        {refundDetails.bankDetails?.bic && (
           <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
-            <p>{refundDetails.bic}</p>
+            <p>{refundDetails.bankDetails.bic}</p>
           </StyledDataTableRow>
         )}
       </StyledDataTable>
