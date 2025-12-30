@@ -28,7 +28,7 @@ export const config = createConfig({
   chains: [mainnet, bsc, arbitrum, optimism, polygon, base, citreaTestnet],
   connectors: [
     walletConnect({
-      projectId: process.env.REACT_APP_WC_PID || 'Missing REACT_APP_WC_PID',
+      projectId: '8c8a3a14d25438a1e1b8f4d91d8d2674',
       metadata: {
         name: document.title,
         description: 'Buy and sell crypto.',
