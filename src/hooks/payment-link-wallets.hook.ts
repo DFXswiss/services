@@ -1,5 +1,6 @@
 import { Blockchain, PaymentLinkMode } from '@dfx.swiss/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Api } from 'src/config/api';
 import { usePaymentLinkContext } from 'src/contexts/payment-link.context';
 import { C2BPaymentMethod, TransferMethod, WalletInfo } from 'src/dto/payment-link.dto';
 import { Wallet } from 'src/util/payment-link-wallet';
@@ -7,8 +8,8 @@ import { fetchJson, url } from 'src/util/utils';
 
 async function fetchWalletApps(): Promise<WalletInfo[]> {
   const apiUrl = url({
-    base: process.env.REACT_APP_API_URL,
-    path: '/v1/paymentLink/walletApp',
+    base: Api.url,
+    path: `/${Api.version}/paymentLink/walletApp`,
   });
 
   const response = await fetch(apiUrl);

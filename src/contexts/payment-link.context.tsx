@@ -19,6 +19,7 @@ import {
   useState,
 } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Api } from 'src/config/api';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { AssetBalance } from 'src/contexts/balance.context';
 import {
@@ -44,8 +45,8 @@ const MERCHANT_INFO_KEY = 'merchant-info';
 
 async function fetchPaymentStandards(): Promise<PaymentStandard[]> {
   const apiUrl = url({
-    base: process.env.REACT_APP_API_URL,
-    path: '/v1/paymentLink/standard',
+    base: Api.url,
+    path: `/${Api.version}/paymentLink/standard`,
   });
 
   const response = await fetch(apiUrl);
@@ -178,8 +179,8 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
 
       // Dummy payment to fetch available payment methods
       const minimalPaymentUrl = url({
-        base: process.env.REACT_APP_API_URL,
-        path: '/v1/paymentLink/payment',
+        base: Api.url,
+        path: `/${Api.version}/paymentLink/payment`,
         params: new URLSearchParams({
           route: merchantUrlParam,
           amount: '0.01',
@@ -199,8 +200,8 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
       apiUrl = Lnurl.decode(lightningUrlParam);
     } else if (isPaymentInvoiceRequest(urlParams)) {
       apiUrl = url({
-        base: process.env.REACT_APP_API_URL,
-        path: '/v1/paymentLink/payment',
+        base: Api.url,
+        path: `/${Api.version}/paymentLink/payment`,
         params: urlParams,
       });
       setUrlParams(new URLSearchParams());
@@ -311,8 +312,8 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
     startTimer(new Date(paymentRequest.quote.expiration));
 
     const lnurlpUrl = url({
-      base: process.env.REACT_APP_API_URL,
-      path: `v1/lnurlp/wait/${paymentRequest.quote.payment}`,
+      base: Api.url,
+      path: `${Api.version}/lnurlp/wait/${paymentRequest.quote.payment}`,
     });
 
     initWaitPolling(lnurlpUrl, (response) => {
@@ -407,7 +408,7 @@ export function PaymentLinkProvider(props: PropsWithChildren): JSX.Element {
 
   function simplifyPaymentLinkUrl(url: string): string {
     const replacementMap: { [key: string]: string } = {
-      '/v1/paymentLink/payment': '/v1/plp',
+      [`/${Api.version}/paymentLink/payment`]: `/${Api.version}/plp`,
       routeId: 'r',
       externalId: 'e',
       message: 'm',
