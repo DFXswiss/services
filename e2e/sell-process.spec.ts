@@ -773,23 +773,19 @@ test.describe('Sell Process - API Integration (Tron)', () => {
 test.describe('Sell Process - UI Flow', () => {
   let credentials: TestCredentials;
   let testIban: string;
+  let token: string;
 
   test.beforeAll(async ({ request }) => {
     const auth = await getCachedAuth(request, 'evm');
     credentials = auth.credentials;
+    token = auth.token;
     testIban = getTestIban();
   });
 
-  async function getToken(request: APIRequestContext): Promise<string> {
-    const auth = await getCachedAuth(request, 'evm');
-    return auth.token;
-  }
-
-  test('should load sell page with session token', async ({ page, request }) => {
-    const token = await getToken(request);
-
+  test('should load sell page with session token', async ({ page }) => {
     await page.goto(`/sell?session=${token}`);
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
 
     const pageContent = await page.textContent('body');
 
@@ -804,13 +800,12 @@ test.describe('Sell Process - UI Flow', () => {
     expect(hasSellContent).toBeTruthy();
 
     await expect(page).toHaveScreenshot('sell-page-loaded.png', {
-      maxDiffPixels: 10000,
+      maxDiffPixels: 1000,
+      fullPage: true,
     });
   });
 
-  test('should display asset selector and amount input', async ({ page, request }) => {
-    const token = await getToken(request);
-
+  test('should display asset selector and amount input', async ({ page }) => {
     await page.goto(`/sell?session=${token}`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
@@ -826,9 +821,7 @@ test.describe('Sell Process - UI Flow', () => {
     expect(hasFormElements).toBeTruthy();
   });
 
-  test('should show bank account selector or IBAN input', async ({ page, request }) => {
-    const token = await getToken(request);
-
+  test('should show bank account selector or IBAN input', async ({ page }) => {
     await page.goto(`/sell?session=${token}`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
@@ -847,9 +840,7 @@ test.describe('Sell Process - UI Flow', () => {
     expect(hasIbanContent).toBeTruthy();
   });
 
-  test('should handle sell flow with pre-filled amount', async ({ page, request }) => {
-    const token = await getToken(request);
-
+  test('should handle sell flow with pre-filled amount', async ({ page }) => {
     await page.goto(`/sell?session=${token}&amountIn=0.1`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
@@ -862,9 +853,7 @@ test.describe('Sell Process - UI Flow', () => {
     });
   });
 
-  test('should show deposit address after form completion', async ({ page, request }) => {
-    const token = await getToken(request);
-
+  test('should show deposit address after form completion', async ({ page }) => {
     await page.goto(`/sell?session=${token}`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
