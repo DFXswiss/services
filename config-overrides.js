@@ -13,7 +13,8 @@ module.exports = function override(config, env) {
     https: require.resolve('https-browserify'),
     'process/browser': require.resolve('process/browser'),
   };
-  config.resolve.extensions = [...config.resolve.extensions, '.ts', '.js'];
+
+  config.resolve.extensions = [...config.resolve.extensions, '.ts', '.js', '.cjs'];
   config.plugins = [
     ...config.plugins,
     new webpack.ProvidePlugin({

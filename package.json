@@ -65,6 +65,7 @@
   },
   "scripts": {
     "start": "env-cmd -f .env.loc react-app-rewired start",
+    "start:e2e": "env-cmd -f .env.e2e react-app-rewired start",
     "build": "node scripts/generate-version.js && env-cmd -f .env.prd react-app-rewired build",
     "build:dev": "node scripts/generate-version.js && env-cmd -f .env.dev react-app-rewired build",
     "build:lib": "tsc",
@@ -84,7 +85,8 @@
     "react-scripts": {
       "typescript": "^5"
     },
-    "react-refresh": "0.14.2"
+    "react-refresh": "0.14.2",
+    "bs58": "5.0.0"
   },
   "eslintConfig": {
     "extends": [
