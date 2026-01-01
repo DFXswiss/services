@@ -8,6 +8,12 @@
 # testing
 /coverage
 dfx.swiss-*.tgz
+/playwright-report/
+/test-results/
+*-snapshots/
+
+# test environment (contains secrets)
+.env.test
 
 # next.js
 /.next/
