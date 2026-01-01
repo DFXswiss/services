@@ -227,8 +227,12 @@ export default function SwapScreen(): JSX.Element {
   }, [assetFilter, assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
-    if (amountIn) setVal('amount', amountIn);
-  }, [amountIn]);
+    if (amountIn) {
+      setVal('amount', amountIn);
+    } else if (selectedSourceAsset?.name === 'ETH' && !enteredAmount) {
+      setVal('amount', '0.1');
+    }
+  }, [amountIn, selectedSourceAsset]);
 
   useEffect(() => setAddress(), [session?.address, translate, blockchain, userAddresses]);
 
