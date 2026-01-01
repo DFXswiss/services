@@ -2,18 +2,27 @@
 jest.mock('@dfx.swiss/react', () => ({}));
 jest.mock('src/dto/safe.dto', () => ({}));
 
-// Set environment variables
-const originalEnv = process.env;
-beforeAll(() => {
-  process.env = {
-    ...originalEnv,
-    REACT_APP_API_URL: 'https://api.dfx.swiss',
-    REACT_APP_API_VERSION: 'v1',
-    REACT_APP_PUBLIC_URL: 'http://localhost:3001',
+// Mock the Api config module
+jest.mock('../config/api', () => ({
+  Api: {
+    url: 'https://api.dfx.swiss',
+    version: 'v1',
+  },
+}));
+
+// Mock the utils url function to avoid env dependency
+jest.mock('../util/utils', () => {
+  const originalModule = jest.requireActual('../util/utils');
+  return {
+    ...originalModule,
+    url: ({ base = 'https://services.dfx.swiss', path = '', params }: { base?: string; path?: string; params?: URLSearchParams }) => {
+      const normalizedBase = base?.replace(/\/+$/, '') + '/';
+      const normalizedPath = path.replace(/^\/+/, '');
+      const absoluteUrl = new URL(normalizedPath, normalizedBase);
+      if (params) absoluteUrl.search = params.toString();
+      return absoluteUrl.href;
+    },
   };
-});
-afterAll(() => {
-  process.env = originalEnv;
 });
 
 import { OpenCryptoPayUtils } from '../util/open-crypto-pay';
@@ -24,19 +33,19 @@ describe('OpenCryptoPayUtils', () => {
     it('should generate valid LNURL for unique ID', () => {
       const uniqueId = 'abc123';
       const result = OpenCryptoPayUtils.getOcpUrlByUniqueId(uniqueId);
-      
-      // Should start with LNURL (after prepending)
+
+      // Should contain lightning=LNURL
       expect(result).toContain('lightning=LNURL');
     });
 
     it('should include the API path in encoded URL', () => {
       const uniqueId = 'test-id-456';
       const result = OpenCryptoPayUtils.getOcpUrlByUniqueId(uniqueId);
-      
+
       // Extract the LNURL from the result
       const lnurlMatch = result.match(/lightning=(LNURL[A-Z0-9]+)/i);
       expect(lnurlMatch).toBeTruthy();
-      
+
       if (lnurlMatch) {
         const decoded = Lnurl.decode(lnurlMatch[1]);
         expect(decoded).toContain('lnurlp/test-id-456');
@@ -47,7 +56,7 @@ describe('OpenCryptoPayUtils', () => {
     it('should use correct API URL from environment', () => {
       const uniqueId = 'env-test';
       const result = OpenCryptoPayUtils.getOcpUrlByUniqueId(uniqueId);
-      
+
       const lnurlMatch = result.match(/lightning=(LNURL[A-Z0-9]+)/i);
       if (lnurlMatch) {
         const decoded = Lnurl.decode(lnurlMatch[1]);
@@ -58,10 +67,10 @@ describe('OpenCryptoPayUtils', () => {
     it('should handle different unique IDs', () => {
       const id1 = 'user-123';
       const id2 = 'user-456';
-      
+
       const result1 = OpenCryptoPayUtils.getOcpUrlByUniqueId(id1);
       const result2 = OpenCryptoPayUtils.getOcpUrlByUniqueId(id2);
-      
+
       // Different IDs should produce different URLs
       expect(result1).not.toBe(result2);
     });
