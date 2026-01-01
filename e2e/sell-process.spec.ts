@@ -1,6 +1,7 @@
 import { test, expect, APIRequestContext } from '@playwright/test';
 import { getCachedAuth, getTestIban, BlockchainType } from './helpers/auth-cache';
-import { TestCredentials } from './test-wallet';
+import { TestCredentials, getTestConfig, getWalletFromMnemonic } from './test-wallet';
+import { JsonRpcProvider, parseEther } from 'ethers';
 
 const API_URL = 'https://dev.api.dfx.swiss/v1';
 
@@ -997,5 +998,78 @@ test.describe('Sell Process - API Integration (Sepolia)', () => {
     console.log(`Created Sepolia ETH sell payment info ID: ${paymentInfo.id}`);
     console.log(`Deposit Address: ${paymentInfo.depositAddress}`);
     console.log(`Amount: ${paymentInfo.estimatedAmount} EUR`);
+  });
+
+  test('should execute real Sepolia ETH sell transaction', async ({ request }) => {
+    const eth = sellableAssets.find((a) => a.name === 'ETH' && a.blockchain === 'Sepolia');
+    const eur = buyableFiats.find((f) => f.name === 'EUR');
+
+    if (!eth || !eur) {
+      console.log('Skipping: Sepolia ETH or EUR not available');
+      test.skip();
+      return;
+    }
+
+    // Create payment info for 0.0001 ETH (minimal amount for testing)
+    const sellAmount = 0.0001;
+    const result = await createSellPaymentInfo(request, token, {
+      asset: { id: eth.id },
+      currency: { id: eur.id },
+      amount: sellAmount,
+      iban: testIban,
+    });
+
+    if (result.error) {
+      console.log(`Payment info creation failed: ${result.error}`);
+      test.skip();
+      return;
+    }
+
+    const paymentInfo = result.data!;
+    const depositAddress = paymentInfo.depositAddress;
+
+    if (!depositAddress) {
+      console.log('No deposit address returned');
+      test.skip();
+      return;
+    }
+
+    console.log(`Selling ${sellAmount} Sepolia ETH to ${depositAddress}`);
+    console.log(`Expected: ~${paymentInfo.estimatedAmount} EUR`);
+
+    // Get wallet from seed
+    const config = getTestConfig();
+    const wallet = getWalletFromMnemonic(config.seed);
+
+    // Connect to Sepolia
+    const provider = new JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
+    const connectedWallet = wallet.connect(provider);
+
+    // Check balance first
+    const balance = await provider.getBalance(wallet.address);
+    const balanceEth = Number(balance) / 1e18;
+    console.log(`Wallet balance: ${balanceEth} Sepolia ETH`);
+
+    if (balanceEth < sellAmount + 0.001) {
+      console.log(`Insufficient balance. Need at least ${sellAmount + 0.001} ETH`);
+      test.skip();
+      return;
+    }
+
+    // Send transaction
+    const tx = await connectedWallet.sendTransaction({
+      to: depositAddress,
+      value: parseEther(sellAmount.toString()),
+    });
+
+    console.log(`Transaction sent: ${tx.hash}`);
+    console.log(`Explorer: https://sepolia.etherscan.io/tx/${tx.hash}`);
+
+    // Wait for confirmation
+    const receipt = await tx.wait();
+    console.log(`Transaction confirmed in block ${receipt?.blockNumber}`);
+
+    expect(receipt?.status).toBe(1);
+    console.log(`Successfully sold ${sellAmount} Sepolia ETH!`);
   });
 });
