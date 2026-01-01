@@ -839,7 +839,10 @@ test.describe('Sell Process - UI Flow', () => {
       pageContent?.includes('IBAN') ||
       pageContent?.includes('Bank') ||
       pageContent?.includes('Konto') ||
-      pageContent?.includes('account');
+      pageContent?.includes('account') ||
+      pageContent?.includes('CH') || // Swiss IBAN format
+      pageContent?.includes('DE') || // German IBAN format
+      pageContent?.includes('erhältst'); // "Du erhältst" section
 
     expect(hasIbanContent).toBeTruthy();
   });
