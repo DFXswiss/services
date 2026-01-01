@@ -1,7 +1,7 @@
 import { test, expect, APIRequestContext } from '@playwright/test';
 import { getCachedAuth, getTestIban, BlockchainType } from './helpers/auth-cache';
 import { TestCredentials, getTestConfig, getWalletFromMnemonic } from './test-wallet';
-import { JsonRpcProvider, parseEther } from 'ethers';
+import { JsonRpcProvider, parseEther, Contract, parseUnits } from 'ethers';
 
 const API_URL = 'https://dev.api.dfx.swiss/v1';
 
@@ -1148,5 +1148,100 @@ test.describe('Sell Process - API Integration (Sepolia)', () => {
     console.log(`Created Sepolia USDT sell payment info ID: ${paymentInfo.id}`);
     console.log(`Deposit Address: ${paymentInfo.depositAddress}`);
     console.log(`Amount: ${paymentInfo.estimatedAmount} EUR`);
+  });
+
+  test('should execute real Sepolia USDT sell transaction', async ({ request }) => {
+    const usdt = sellableAssets.find((a) => a.name === 'USDT' && a.blockchain === 'Sepolia');
+    const eur = buyableFiats.find((f) => f.name === 'EUR');
+
+    if (!usdt || !eur) {
+      console.log('Skipping: Sepolia USDT or EUR not available');
+      test.skip();
+      return;
+    }
+
+    // Create payment info for 1 USDT (minimal amount for testing)
+    const sellAmount = 1;
+    const result = await createSellPaymentInfo(request, token, {
+      asset: { id: usdt.id },
+      currency: { id: eur.id },
+      amount: sellAmount,
+      iban: testIban,
+    });
+
+    if (result.error) {
+      console.log(`Payment info creation failed: ${result.error}`);
+      test.skip();
+      return;
+    }
+
+    const paymentInfo = result.data!;
+    const depositAddress = paymentInfo.depositAddress;
+
+    if (!depositAddress) {
+      console.log('No deposit address returned');
+      test.skip();
+      return;
+    }
+
+    console.log(`Selling ${sellAmount} Sepolia USDT to ${depositAddress}`);
+    console.log(`Expected: ~${paymentInfo.estimatedAmount} EUR`);
+
+    // Get wallet from seed
+    const config = getTestConfig();
+    const wallet = getWalletFromMnemonic(config.seed);
+
+    // Connect to Sepolia
+    const provider = new JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
+    const connectedWallet = wallet.connect(provider);
+
+    // Sepolia USDT contract address
+    const usdtAddress = '0xaa8e23fb1079ea71e0a56f48a2aa51851d8433d0';
+
+    // ERC20 ABI for transfer and balanceOf
+    const erc20Abi = [
+      'function transfer(address to, uint256 amount) returns (bool)',
+      'function balanceOf(address account) view returns (uint256)',
+      'function decimals() view returns (uint8)',
+    ];
+
+    const usdtContract = new Contract(usdtAddress, erc20Abi, connectedWallet);
+
+    // Check USDT balance first
+    const balance = await usdtContract.balanceOf(wallet.address);
+    const decimals = Number(await usdtContract.decimals());
+    const balanceUsdt = Number(balance) / 10 ** decimals;
+    console.log(`Wallet USDT balance: ${balanceUsdt} Sepolia USDT`);
+
+    if (balanceUsdt < sellAmount) {
+      console.log(`Insufficient USDT balance. Need at least ${sellAmount} USDT`);
+      test.skip();
+      return;
+    }
+
+    // Check ETH balance for gas
+    const ethBalance = await provider.getBalance(wallet.address);
+    const ethBalanceEth = Number(ethBalance) / 1e18;
+    console.log(`Wallet ETH balance: ${ethBalanceEth} Sepolia ETH (for gas)`);
+
+    if (ethBalanceEth < 0.001) {
+      console.log('Insufficient ETH for gas');
+      test.skip();
+      return;
+    }
+
+    // Send USDT transaction
+    const amountInUnits = parseUnits(sellAmount.toString(), decimals);
+    const tx = await usdtContract.transfer(depositAddress, amountInUnits);
+
+    console.log(`Transaction sent: ${tx.hash}`);
+    console.log(`Explorer: https://sepolia.etherscan.io/tx/${tx.hash}`);
+
+    // Wait for confirmation
+    const receipt = await tx.wait();
+    console.log(`Transaction confirmed in block ${receipt?.blockNumber}`);
+
+    expect(receipt?.status).toBe(1);
+    console.log(`Successfully sold ${sellAmount} Sepolia USDT!`);
   });
 });
