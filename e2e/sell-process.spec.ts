@@ -1,6 +1,7 @@
 import { test, expect, APIRequestContext } from '@playwright/test';
 import { getCachedAuth, getTestIban, BlockchainType } from './helpers/auth-cache';
-import { TestCredentials } from './test-wallet';
+import { TestCredentials, getTestConfig, getWalletFromMnemonic } from './test-wallet';
+import { JsonRpcProvider, parseEther, Contract, parseUnits } from 'ethers';
 
 const API_URL = 'https://dev.api.dfx.swiss/v1';
 
@@ -773,23 +774,19 @@ test.describe('Sell Process - API Integration (Tron)', () => {
 test.describe('Sell Process - UI Flow', () => {
   let credentials: TestCredentials;
   let testIban: string;
+  let token: string;
 
   test.beforeAll(async ({ request }) => {
     const auth = await getCachedAuth(request, 'evm');
     credentials = auth.credentials;
+    token = auth.token;
     testIban = getTestIban();
   });
 
-  async function getToken(request: APIRequestContext): Promise<string> {
-    const auth = await getCachedAuth(request, 'evm');
-    return auth.token;
-  }
-
-  test('should load sell page with session token', async ({ page, request }) => {
-    const token = await getToken(request);
-
+  test('should load sell page with session token', async ({ page }) => {
     await page.goto(`/sell?session=${token}`);
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
 
     const pageContent = await page.textContent('body');
 
@@ -804,13 +801,12 @@ test.describe('Sell Process - UI Flow', () => {
     expect(hasSellContent).toBeTruthy();
 
     await expect(page).toHaveScreenshot('sell-page-loaded.png', {
-      maxDiffPixels: 10000,
+      maxDiffPixels: 1000,
+      fullPage: true,
     });
   });
 
-  test('should display asset selector and amount input', async ({ page, request }) => {
-    const token = await getToken(request);
-
+  test('should display asset selector and amount input', async ({ page }) => {
     await page.goto(`/sell?session=${token}`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
@@ -826,9 +822,7 @@ test.describe('Sell Process - UI Flow', () => {
     expect(hasFormElements).toBeTruthy();
   });
 
-  test('should show bank account selector or IBAN input', async ({ page, request }) => {
-    const token = await getToken(request);
-
+  test('should show bank account selector or IBAN input', async ({ page }) => {
     await page.goto(`/sell?session=${token}`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
@@ -847,9 +841,7 @@ test.describe('Sell Process - UI Flow', () => {
     expect(hasIbanContent).toBeTruthy();
   });
 
-  test('should handle sell flow with pre-filled amount', async ({ page, request }) => {
-    const token = await getToken(request);
-
+  test('should handle sell flow with pre-filled amount', async ({ page }) => {
     await page.goto(`/sell?session=${token}&amountIn=0.1`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
@@ -862,9 +854,7 @@ test.describe('Sell Process - UI Flow', () => {
     });
   });
 
-  test('should show deposit address after form completion', async ({ page, request }) => {
-    const token = await getToken(request);
-
+  test('should show deposit address after form completion', async ({ page }) => {
     await page.goto(`/sell?session=${token}`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
@@ -885,5 +875,373 @@ test.describe('Sell Process - UI Flow', () => {
       pageContent?.includes('CHF');
 
     expect(hasDepositInfo || hasFormElements).toBeTruthy();
+  });
+});
+
+test.describe('Sell Process - API Integration (Sepolia)', () => {
+  let token: string;
+  let credentials: TestCredentials;
+  let sellableAssets: Asset[];
+  let buyableFiats: Fiat[];
+  let testIban: string;
+
+  test.beforeAll(async ({ request }) => {
+    // Sepolia uses the same EVM credentials
+    const auth = await getCachedAuth(request, 'evm');
+    token = auth.token;
+    credentials = auth.credentials;
+    testIban = getTestIban();
+    console.log(`Using Sepolia test address: ${credentials.address}`);
+
+    const [assets, fiats] = await Promise.all([getAssets(request, token), getFiats(request)]);
+
+    sellableAssets = assets.filter((a) => a.sellable && a.blockchain === 'Sepolia');
+    buyableFiats = fiats.filter((f) => f.buyable);
+
+    console.log(`Found ${sellableAssets.length} sellable Sepolia assets`);
+  });
+
+  test('should find sellable ETH on Sepolia', async () => {
+    const eth = sellableAssets.find((a) => a.name === 'ETH' && a.blockchain === 'Sepolia');
+
+    if (!eth) {
+      console.log('ETH on Sepolia not available for selling');
+      console.log('Available Sepolia assets:', sellableAssets.map((a) => a.name).join(', ') || 'none');
+      test.skip();
+      return;
+    }
+
+    expect(eth.sellable).toBe(true);
+    console.log(`Found sellable ETH on Sepolia: ${eth.uniqueName}`);
+  });
+
+  test('should get sell quote for Sepolia ETH -> EUR', async ({ request }) => {
+    const eth = sellableAssets.find((a) => a.name === 'ETH' && a.blockchain === 'Sepolia');
+    const eur = buyableFiats.find((f) => f.name === 'EUR');
+
+    if (!eth || !eur) {
+      console.log('Skipping: Sepolia ETH or EUR not available');
+      test.skip();
+      return;
+    }
+
+    const quote = await getSellQuote(request, {
+      asset: { id: eth.id },
+      currency: { id: eur.id },
+      amount: 0.1,
+    });
+
+    expect(quote.amount).toBe(0.1);
+    expect(quote.estimatedAmount).toBeGreaterThan(0);
+    expect(quote.rate).toBeGreaterThan(0);
+
+    console.log(`Quote: 0.1 Sepolia ETH -> ${quote.estimatedAmount} EUR (rate: ${quote.rate})`);
+  });
+
+  test('should get sell quote for Sepolia ETH -> CHF', async ({ request }) => {
+    const eth = sellableAssets.find((a) => a.name === 'ETH' && a.blockchain === 'Sepolia');
+    const chf = buyableFiats.find((f) => f.name === 'CHF');
+
+    if (!eth || !chf) {
+      console.log('Skipping: Sepolia ETH or CHF not available');
+      test.skip();
+      return;
+    }
+
+    const quote = await getSellQuote(request, {
+      asset: { id: eth.id },
+      currency: { id: chf.id },
+      amount: 0.1,
+    });
+
+    expect(quote.amount).toBe(0.1);
+    expect(quote.estimatedAmount).toBeGreaterThan(0);
+
+    console.log(`Quote: 0.1 Sepolia ETH -> ${quote.estimatedAmount} CHF (rate: ${quote.rate})`);
+  });
+
+  test('should create sell payment info for Sepolia ETH -> EUR', async ({ request }) => {
+    const eth = sellableAssets.find((a) => a.name === 'ETH' && a.blockchain === 'Sepolia');
+    const eur = buyableFiats.find((f) => f.name === 'EUR');
+
+    if (!eth || !eur) {
+      console.log('Skipping: Sepolia ETH or EUR not available');
+      test.skip();
+      return;
+    }
+
+    const result = await createSellPaymentInfo(request, token, {
+      asset: { id: eth.id },
+      currency: { id: eur.id },
+      amount: 0.1,
+      iban: testIban,
+    });
+
+    if (result.error) {
+      console.log(`Payment info creation returned error: ${result.error} (status: ${result.status})`);
+      const expectedErrors = ['Trading not allowed', 'KYC required', 'User not found', 'Ident data incomplete'];
+      const isExpectedError = expectedErrors.some((e) => result.error?.includes(e));
+      if (isExpectedError) {
+        console.log('Skipping test - account restriction');
+        test.skip();
+        return;
+      }
+      expect(result.data).toBeTruthy();
+      return;
+    }
+
+    const paymentInfo = result.data!;
+    expect(paymentInfo.id).toBeGreaterThan(0);
+    expect(paymentInfo.estimatedAmount).toBeGreaterThan(0);
+    expect(paymentInfo.depositAddress).toBeTruthy();
+
+    console.log(`Created Sepolia ETH sell payment info ID: ${paymentInfo.id}`);
+    console.log(`Deposit Address: ${paymentInfo.depositAddress}`);
+    console.log(`Amount: ${paymentInfo.estimatedAmount} EUR`);
+  });
+
+  test('should execute real Sepolia ETH sell transaction', async ({ request }) => {
+    const eth = sellableAssets.find((a) => a.name === 'ETH' && a.blockchain === 'Sepolia');
+    const eur = buyableFiats.find((f) => f.name === 'EUR');
+
+    if (!eth || !eur) {
+      console.log('Skipping: Sepolia ETH or EUR not available');
+      test.skip();
+      return;
+    }
+
+    // Create payment info for 0.0001 ETH (minimal amount for testing)
+    const sellAmount = 0.0001;
+    const result = await createSellPaymentInfo(request, token, {
+      asset: { id: eth.id },
+      currency: { id: eur.id },
+      amount: sellAmount,
+      iban: testIban,
+    });
+
+    if (result.error) {
+      console.log(`Payment info creation failed: ${result.error}`);
+      test.skip();
+      return;
+    }
+
+    const paymentInfo = result.data!;
+    const depositAddress = paymentInfo.depositAddress;
+
+    if (!depositAddress) {
+      console.log('No deposit address returned');
+      test.skip();
+      return;
+    }
+
+    console.log(`Selling ${sellAmount} Sepolia ETH to ${depositAddress}`);
+    console.log(`Expected: ~${paymentInfo.estimatedAmount} EUR`);
+
+    // Get wallet from seed
+    const config = getTestConfig();
+    const wallet = getWalletFromMnemonic(config.seed);
+
+    // Connect to Sepolia
+    const provider = new JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
+    const connectedWallet = wallet.connect(provider);
+
+    // Check balance first
+    const balance = await provider.getBalance(wallet.address);
+    const balanceEth = Number(balance) / 1e18;
+    console.log(`Wallet balance: ${balanceEth} Sepolia ETH`);
+
+    if (balanceEth < sellAmount + 0.001) {
+      console.log(`Insufficient balance. Need at least ${sellAmount + 0.001} ETH`);
+      test.skip();
+      return;
+    }
+
+    // Send transaction
+    const tx = await connectedWallet.sendTransaction({
+      to: depositAddress,
+      value: parseEther(sellAmount.toString()),
+    });
+
+    console.log(`Transaction sent: ${tx.hash}`);
+    console.log(`Explorer: https://sepolia.etherscan.io/tx/${tx.hash}`);
+
+    // Wait for confirmation
+    const receipt = await tx.wait();
+    console.log(`Transaction confirmed in block ${receipt?.blockNumber}`);
+
+    expect(receipt?.status).toBe(1);
+    console.log(`Successfully sold ${sellAmount} Sepolia ETH!`);
+  });
+
+  test('should find sellable USDT on Sepolia', async () => {
+    const usdt = sellableAssets.find((a) => a.name === 'USDT' && a.blockchain === 'Sepolia');
+
+    if (!usdt) {
+      console.log('USDT on Sepolia not available for selling');
+      console.log('Available Sepolia assets:', sellableAssets.map((a) => a.name).join(', ') || 'none');
+      test.skip();
+      return;
+    }
+
+    expect(usdt.sellable).toBe(true);
+    console.log(`Found sellable USDT on Sepolia: ${usdt.uniqueName}`);
+  });
+
+  test('should get sell quote for Sepolia USDT -> EUR', async ({ request }) => {
+    const usdt = sellableAssets.find((a) => a.name === 'USDT' && a.blockchain === 'Sepolia');
+    const eur = buyableFiats.find((f) => f.name === 'EUR');
+
+    if (!usdt || !eur) {
+      console.log('Skipping: Sepolia USDT or EUR not available');
+      test.skip();
+      return;
+    }
+
+    const quote = await getSellQuote(request, {
+      asset: { id: usdt.id },
+      currency: { id: eur.id },
+      amount: 10,
+    });
+
+    expect(quote.amount).toBe(10);
+    expect(quote.estimatedAmount).toBeGreaterThan(0);
+    expect(quote.rate).toBeGreaterThan(0);
+
+    console.log(`Quote: 10 Sepolia USDT -> ${quote.estimatedAmount} EUR (rate: ${quote.rate})`);
+  });
+
+  test('should create sell payment info for Sepolia USDT -> EUR', async ({ request }) => {
+    const usdt = sellableAssets.find((a) => a.name === 'USDT' && a.blockchain === 'Sepolia');
+    const eur = buyableFiats.find((f) => f.name === 'EUR');
+
+    if (!usdt || !eur) {
+      console.log('Skipping: Sepolia USDT or EUR not available');
+      test.skip();
+      return;
+    }
+
+    const result = await createSellPaymentInfo(request, token, {
+      asset: { id: usdt.id },
+      currency: { id: eur.id },
+      amount: 10,
+      iban: testIban,
+    });
+
+    if (result.error) {
+      console.log(`Payment info creation returned error: ${result.error} (status: ${result.status})`);
+      const expectedErrors = ['Trading not allowed', 'KYC required', 'User not found', 'Ident data incomplete'];
+      const isExpectedError = expectedErrors.some((e) => result.error?.includes(e));
+      if (isExpectedError) {
+        console.log('Skipping test - account restriction');
+        test.skip();
+        return;
+      }
+      expect(result.data).toBeTruthy();
+      return;
+    }
+
+    const paymentInfo = result.data!;
+    expect(paymentInfo.id).toBeGreaterThan(0);
+    expect(paymentInfo.estimatedAmount).toBeGreaterThan(0);
+    expect(paymentInfo.depositAddress).toBeTruthy();
+
+    console.log(`Created Sepolia USDT sell payment info ID: ${paymentInfo.id}`);
+    console.log(`Deposit Address: ${paymentInfo.depositAddress}`);
+    console.log(`Amount: ${paymentInfo.estimatedAmount} EUR`);
+  });
+
+  test('should execute real Sepolia USDT sell transaction', async ({ request }) => {
+    const usdt = sellableAssets.find((a) => a.name === 'USDT' && a.blockchain === 'Sepolia');
+    const eur = buyableFiats.find((f) => f.name === 'EUR');
+
+    if (!usdt || !eur) {
+      console.log('Skipping: Sepolia USDT or EUR not available');
+      test.skip();
+      return;
+    }
+
+    // Create payment info for 1 USDT (minimal amount for testing)
+    const sellAmount = 1;
+    const result = await createSellPaymentInfo(request, token, {
+      asset: { id: usdt.id },
+      currency: { id: eur.id },
+      amount: sellAmount,
+      iban: testIban,
+    });
+
+    if (result.error) {
+      console.log(`Payment info creation failed: ${result.error}`);
+      test.skip();
+      return;
+    }
+
+    const paymentInfo = result.data!;
+    const depositAddress = paymentInfo.depositAddress;
+
+    if (!depositAddress) {
+      console.log('No deposit address returned');
+      test.skip();
+      return;
+    }
+
+    console.log(`Selling ${sellAmount} Sepolia USDT to ${depositAddress}`);
+    console.log(`Expected: ~${paymentInfo.estimatedAmount} EUR`);
+
+    // Get wallet from seed
+    const config = getTestConfig();
+    const wallet = getWalletFromMnemonic(config.seed);
+
+    // Connect to Sepolia
+    const provider = new JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
+    const connectedWallet = wallet.connect(provider);
+
+    // Sepolia USDT contract address
+    const usdtAddress = '0xaa8e23fb1079ea71e0a56f48a2aa51851d8433d0';
+
+    // ERC20 ABI for transfer and balanceOf
+    const erc20Abi = [
+      'function transfer(address to, uint256 amount) returns (bool)',
+      'function balanceOf(address account) view returns (uint256)',
+      'function decimals() view returns (uint8)',
+    ];
+
+    const usdtContract = new Contract(usdtAddress, erc20Abi, connectedWallet);
+
+    // Check USDT balance first
+    const balance = await usdtContract.balanceOf(wallet.address);
+    const decimals = Number(await usdtContract.decimals());
+    const balanceUsdt = Number(balance) / 10 ** decimals;
+    console.log(`Wallet USDT balance: ${balanceUsdt} Sepolia USDT`);
+
+    if (balanceUsdt < sellAmount) {
+      console.log(`Insufficient USDT balance. Need at least ${sellAmount} USDT`);
+      test.skip();
+      return;
+    }
+
+    // Check ETH balance for gas
+    const ethBalance = await provider.getBalance(wallet.address);
+    const ethBalanceEth = Number(ethBalance) / 1e18;
+    console.log(`Wallet ETH balance: ${ethBalanceEth} Sepolia ETH (for gas)`);
+
+    if (ethBalanceEth < 0.001) {
+      console.log('Insufficient ETH for gas');
+      test.skip();
+      return;
+    }
+
+    // Send USDT transaction
+    const amountInUnits = parseUnits(sellAmount.toString(), decimals);
+    const tx = await usdtContract.transfer(depositAddress, amountInUnits);
+
+    console.log(`Transaction sent: ${tx.hash}`);
+    console.log(`Explorer: https://sepolia.etherscan.io/tx/${tx.hash}`);
+
+    // Wait for confirmation
+    const receipt = await tx.wait();
+    console.log(`Transaction confirmed in block ${receipt?.blockNumber}`);
+
+    expect(receipt?.status).toBe(1);
+    console.log(`Successfully sold ${sellAmount} Sepolia USDT!`);
   });
 });

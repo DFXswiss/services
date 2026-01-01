@@ -205,8 +205,10 @@ export default function SellScreen(): JSX.Element {
       setVal('amount', amountIn);
     } else if (amountOut) {
       setVal('targetAmount', amountOut);
+    } else if (selectedAsset?.name === 'ETH' && !enteredAmount) {
+      setVal('amount', '0.1');
     }
-  }, [amountIn, amountOut]);
+  }, [amountIn, amountOut, selectedAsset]);
 
   useEffect(() => setAddress(), [session?.address, translate]);
 

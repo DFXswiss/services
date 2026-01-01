@@ -1,6 +1,13 @@
 import { test, expect } from '@playwright/test';
+import { getCachedAuth } from './helpers/auth-cache';
 
 test.describe('Responsive Design', () => {
+  let token: string;
+
+  test.beforeAll(async ({ request }) => {
+    const auth = await getCachedAuth(request, 'evm');
+    token = auth.token;
+  });
   test('homepage renders correctly on mobile', async ({ browser }) => {
     const context = await browser.newContext({
       viewport: { width: 390, height: 844 }, // iPhone 12
@@ -22,13 +29,13 @@ test.describe('Responsive Design', () => {
       viewport: { width: 390, height: 844 },
     });
     const page = await context.newPage();
-    
-    await page.goto('/buy');
+
+    await page.goto(`/buy?session=${token}`);
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveScreenshot('buy-mobile.png', {
       maxDiffPixels: 1000,
     });
-    
+
     await context.close();
   });
 
@@ -67,13 +74,13 @@ test.describe('Responsive Design', () => {
       viewport: { width: 834, height: 1194 },
     });
     const page = await context.newPage();
-    
-    await page.goto('/buy');
+
+    await page.goto(`/buy?session=${token}`);
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveScreenshot('buy-tablet.png', {
       maxDiffPixels: 1000,
     });
-    
+
     await context.close();
   });
 
@@ -97,13 +104,13 @@ test.describe('Responsive Design', () => {
       viewport: { width: 1920, height: 1080 },
     });
     const page = await context.newPage();
-    
-    await page.goto('/buy');
+
+    await page.goto(`/buy?session=${token}`);
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveScreenshot('buy-desktop.png', {
       maxDiffPixels: 1000,
     });
-    
+
     await context.close();
   });
 });

@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  outputDir: './e2e/test-results',
   // Disable parallel execution to prevent API rate limiting
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
