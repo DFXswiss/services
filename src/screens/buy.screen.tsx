@@ -50,7 +50,7 @@ import { BuyCompletion } from '../components/payment/buy-completion';
 import { PrivateAssetHint } from '../components/private-asset-hint';
 import { QuoteErrorHint } from '../components/quote-error-hint';
 import { SanctionHint } from '../components/sanction-hint';
-import { addressLabel, PaymentMethodDescriptions, PaymentMethodLabels } from '../config/labels';
+import { addressLabel } from '../config/labels';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useLayoutContext } from '../contexts/layout.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -86,8 +86,6 @@ interface ValidatedData extends BuyPaymentInfo {
   sideToUpdate?: Side;
 }
 
-const EmbeddedWallet = 'CakeWallet';
-
 export default function BuyScreen(): JSX.Element {
   useAddressGuard('/login');
 
@@ -107,7 +105,6 @@ export default function BuyScreen(): JSX.Element {
     blockchain,
     paymentMethod,
     externalTransactionId,
-    wallet,
     flags,
     setParams,
     hideTargetSelection,
@@ -121,7 +118,7 @@ export default function BuyScreen(): JSX.Element {
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
   const { rootRef } = useLayoutContext();
-  const { isEmbedded, isDfxHosted, isInitialized } = useAppHandlingContext();
+  const { isInitialized } = useAppHandlingContext();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
@@ -174,11 +171,12 @@ export default function BuyScreen(): JSX.Element {
   // no instant payments ATM
   // (!selectedAsset || selectedAsset.instantBuyable) && availablePaymentMethods.push(FiatPaymentMethod.INSTANT);
 
-  (isDfxHosted || !isEmbedded) &&
-    wallet !== EmbeddedWallet &&
-    user?.activeAddress?.wallet !== EmbeddedWallet &&
-    (!selectedAsset || selectedAsset?.cardBuyable) &&
-    availablePaymentMethods.push(FiatPaymentMethod.CARD);
+  // Credit card payments disabled
+  // (isDfxHosted || !isEmbedded) &&
+  //   wallet !== EmbeddedWallet &&
+  //   user?.activeAddress?.wallet !== EmbeddedWallet &&
+  //   (!selectedAsset || selectedAsset?.cardBuyable) &&
+  //   availablePaymentMethods.push(FiatPaymentMethod.CARD);
 
   const availableCurrencies = currencies?.filter((c) =>
     selectedPaymentMethod === FiatPaymentMethod.CARD
@@ -522,15 +520,6 @@ export default function BuyScreen(): JSX.Element {
                       />
                     </div>
                   </StyledHorizontalStack>
-                  <StyledDropdown<FiatPaymentMethod>
-                    rootRef={rootRef}
-                    name="paymentMethod"
-                    placeholder={translate('general/actions', 'Select') + '...'}
-                    items={availablePaymentMethods}
-                    labelFunc={(item) => translate('screens/payment', PaymentMethodLabels[item])}
-                    descriptionFunc={(item) => translate('screens/payment', PaymentMethodDescriptions[item])}
-                    full
-                  />
                 </StyledVerticalStack>
 
                 <StyledVerticalStack gap={2} full>
