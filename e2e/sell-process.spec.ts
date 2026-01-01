@@ -1072,4 +1072,81 @@ test.describe('Sell Process - API Integration (Sepolia)', () => {
     expect(receipt?.status).toBe(1);
     console.log(`Successfully sold ${sellAmount} Sepolia ETH!`);
   });
+
+  test('should find sellable USDT on Sepolia', async () => {
+    const usdt = sellableAssets.find((a) => a.name === 'USDT' && a.blockchain === 'Sepolia');
+
+    if (!usdt) {
+      console.log('USDT on Sepolia not available for selling');
+      console.log('Available Sepolia assets:', sellableAssets.map((a) => a.name).join(', ') || 'none');
+      test.skip();
+      return;
+    }
+
+    expect(usdt.sellable).toBe(true);
+    console.log(`Found sellable USDT on Sepolia: ${usdt.uniqueName}`);
+  });
+
+  test('should get sell quote for Sepolia USDT -> EUR', async ({ request }) => {
+    const usdt = sellableAssets.find((a) => a.name === 'USDT' && a.blockchain === 'Sepolia');
+    const eur = buyableFiats.find((f) => f.name === 'EUR');
+
+    if (!usdt || !eur) {
+      console.log('Skipping: Sepolia USDT or EUR not available');
+      test.skip();
+      return;
+    }
+
+    const quote = await getSellQuote(request, {
+      asset: { id: usdt.id },
+      currency: { id: eur.id },
+      amount: 10,
+    });
+
+    expect(quote.amount).toBe(10);
+    expect(quote.estimatedAmount).toBeGreaterThan(0);
+    expect(quote.rate).toBeGreaterThan(0);
+
+    console.log(`Quote: 10 Sepolia USDT -> ${quote.estimatedAmount} EUR (rate: ${quote.rate})`);
+  });
+
+  test('should create sell payment info for Sepolia USDT -> EUR', async ({ request }) => {
+    const usdt = sellableAssets.find((a) => a.name === 'USDT' && a.blockchain === 'Sepolia');
+    const eur = buyableFiats.find((f) => f.name === 'EUR');
+
+    if (!usdt || !eur) {
+      console.log('Skipping: Sepolia USDT or EUR not available');
+      test.skip();
+      return;
+    }
+
+    const result = await createSellPaymentInfo(request, token, {
+      asset: { id: usdt.id },
+      currency: { id: eur.id },
+      amount: 10,
+      iban: testIban,
+    });
+
+    if (result.error) {
+      console.log(`Payment info creation returned error: ${result.error} (status: ${result.status})`);
+      const expectedErrors = ['Trading not allowed', 'KYC required', 'User not found', 'Ident data incomplete'];
+      const isExpectedError = expectedErrors.some((e) => result.error?.includes(e));
+      if (isExpectedError) {
+        console.log('Skipping test - account restriction');
+        test.skip();
+        return;
+      }
+      expect(result.data).toBeTruthy();
+      return;
+    }
+
+    const paymentInfo = result.data!;
+    expect(paymentInfo.id).toBeGreaterThan(0);
+    expect(paymentInfo.estimatedAmount).toBeGreaterThan(0);
+    expect(paymentInfo.depositAddress).toBeTruthy();
+
+    console.log(`Created Sepolia USDT sell payment info ID: ${paymentInfo.id}`);
+    console.log(`Deposit Address: ${paymentInfo.depositAddress}`);
+    console.log(`Amount: ${paymentInfo.estimatedAmount} EUR`);
+  });
 });
