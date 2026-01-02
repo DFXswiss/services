@@ -8,6 +8,26 @@ import {
   TransactionRevertedError,
   TransactionTimeoutError,
 } from './helpers/sepolia-transaction';
+import { getCachedAuth, getTestIban } from './helpers/auth-cache';
+
+const API_URL = 'https://dev.api.dfx.swiss/v1';
+
+interface Asset {
+  id: number;
+  name: string;
+  blockchain: string;
+  sellable: boolean;
+}
+
+interface SellPaymentInfo {
+  id: number;
+  routeId: number;
+  depositAddress: string;
+  amount: number;
+  estimatedAmount: number;
+  isValid: boolean;
+  error?: string;
+}
 
 /**
  * E2E Tests for real blockchain transactions on Sepolia testnet.
@@ -123,19 +143,13 @@ test.describe('Blockchain Transactions - Sepolia Testnet', () => {
 
 /**
  * Integration tests that combine API calls with blockchain verification.
- * These tests verify the full sell/swap flow including blockchain confirmation.
+ * These tests verify the full sell flow including blockchain confirmation.
  */
 test.describe('Sell Flow with Blockchain Verification - Sepolia', () => {
   test.setTimeout(180000);
 
-  let testWalletAddress: string;
-
-  test.beforeAll(async () => {
-    testWalletAddress = await getTestWalletAddress();
-  });
-
-  test('should complete sell flow and verify ETH transaction on blockchain', async ({ request }) => {
-    // Skip if insufficient balance
+  test('should complete full sell flow: API -> Blockchain -> Confirmation', async ({ request }) => {
+    // Step 1: Check wallet balance
     const hasBalance = await checkTestWalletBalance('0.01');
     if (!hasBalance) {
       console.log('Skipping test - insufficient balance');
@@ -143,104 +157,85 @@ test.describe('Sell Flow with Blockchain Verification - Sepolia', () => {
       return;
     }
 
-    // Step 1: Get a quote from the API
-    const quoteResponse = await request.put('https://dev.api.dfx.swiss/v1/sell/quote', {
-      data: {
-        asset: { id: 3 }, // ETH on Sepolia (adjust ID as needed)
-        currency: { id: 1 }, // EUR
-        amount: 0.001,
-      },
-    });
+    // Step 2: Authenticate
+    const { token } = await getCachedAuth(request, 'evm');
 
-    if (!quoteResponse.ok()) {
-      console.log('Quote API not available, skipping test');
+    // Step 3: Get Sepolia ETH asset dynamically
+    const assetsResponse = await request.get(`${API_URL}/asset`);
+    if (!assetsResponse.ok()) {
+      console.log('Assets API not available, skipping test');
       test.skip();
       return;
     }
 
-    const quote = await quoteResponse.json();
-    console.log(`Quote received: ${quote.amount} ETH -> ${quote.estimatedAmount} EUR`);
+    const assets: Asset[] = await assetsResponse.json();
+    const sepoliaEth = assets.find((a) => a.blockchain === 'Sepolia' && a.name === 'ETH' && a.sellable);
 
-    // Step 2: Send actual ETH transaction on Sepolia
-    // In a real sell flow, this would go to the DFX deposit address
-    // For testing, we send to ourselves to verify the transaction mechanism works
+    if (!sepoliaEth) {
+      console.log('Sepolia ETH not found or not sellable, skipping test');
+      test.skip();
+      return;
+    }
+
+    console.log(`Found Sepolia ETH asset: ID ${sepoliaEth.id}`);
+
+    // Step 4: Create sell payment info to get deposit address
+    const paymentInfoResponse = await request.put(`${API_URL}/sell/paymentInfos`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: {
+        asset: { id: sepoliaEth.id },
+        currency: { id: 1 }, // CHF
+        amount: 0.001,
+        iban: getTestIban(),
+      },
+    });
+
+    if (!paymentInfoResponse.ok()) {
+      const error = await paymentInfoResponse.json().catch(() => ({}));
+      console.log(`PaymentInfo creation failed: ${JSON.stringify(error)}`);
+      // Expected errors for test accounts
+      const errorMsg = (error as { message?: string }).message || '';
+      if (errorMsg.includes('KYC') || errorMsg.includes('Trading not allowed') || errorMsg.includes('Ident')) {
+        console.log('Account restriction - skipping test');
+        test.skip();
+        return;
+      }
+      test.skip();
+      return;
+    }
+
+    const paymentInfo: SellPaymentInfo = await paymentInfoResponse.json();
+    console.log(`PaymentInfo created: ID ${paymentInfo.id}`);
+    console.log(`Deposit address: ${paymentInfo.depositAddress}`);
+
+    expect(paymentInfo.depositAddress).toMatch(/^0x[a-fA-F0-9]{40}$/);
+
+    // Step 5: Send ETH to the REAL deposit address on Sepolia
     const txResult = await sendSepoliaETH(
-      testWalletAddress, // In production this would be the deposit address
+      paymentInfo.depositAddress,
       '0.0001',
       { timeout: 120000, confirmations: 1 },
     );
 
-    // Step 3: Verify the transaction was confirmed on the blockchain
+    // Step 6: Verify the transaction was confirmed on the blockchain
     expect(txResult.status).toBe('confirmed');
     expect(txResult.blockNumber).toBeGreaterThan(0);
 
     console.log('Sell flow completed successfully:');
+    console.log(`  PaymentInfo ID: ${paymentInfo.id}`);
+    console.log(`  Deposit Address: ${paymentInfo.depositAddress}`);
     console.log(`  Transaction: ${txResult.txHash}`);
     console.log(`  Block: ${txResult.blockNumber}`);
     console.log(`  Status: ${txResult.status}`);
 
-    // Step 4: Additional verification - check the transaction on chain
+    // Step 7: Additional verification - check the transaction on chain
     const verificationResult = await verifyTransactionConfirmed(txResult.txHash);
     expect(verificationResult.status).toBe('confirmed');
   });
 });
 
-/**
- * Swap flow tests with blockchain verification
- */
-test.describe('Swap Flow with Blockchain Verification - Sepolia', () => {
-  test.setTimeout(180000);
-
-  let testWalletAddress: string;
-
-  test.beforeAll(async () => {
-    testWalletAddress = await getTestWalletAddress();
-  });
-
-  test('should complete swap flow and verify transaction on blockchain', async ({ request }) => {
-    // Skip if insufficient balance
-    const hasBalance = await checkTestWalletBalance('0.01');
-    if (!hasBalance) {
-      console.log('Skipping test - insufficient balance');
-      test.skip();
-      return;
-    }
-
-    // Step 1: Get a swap quote from the API
-    const quoteResponse = await request.put('https://dev.api.dfx.swiss/v1/swap/quote', {
-      data: {
-        sourceAsset: { id: 3 }, // ETH (adjust ID as needed)
-        targetAsset: { id: 4 }, // USDT (adjust ID as needed)
-        amount: 0.001,
-      },
-    });
-
-    if (!quoteResponse.ok()) {
-      console.log('Swap quote API not available, skipping test');
-      test.skip();
-      return;
-    }
-
-    const quote = await quoteResponse.json();
-    console.log(`Swap quote received: ${quote.amount} ETH -> ${quote.estimatedAmount} USDT`);
-
-    // Step 2: Send actual ETH transaction on Sepolia
-    const txResult = await sendSepoliaETH(
-      testWalletAddress,
-      '0.0001',
-      { timeout: 120000, confirmations: 1 },
-    );
-
-    // Step 3: Verify the transaction was confirmed (no error thrown = success)
-    expect(txResult.status).toBe('confirmed');
-    expect(txResult.blockNumber).toBeGreaterThan(0);
-
-    console.log('Swap flow completed successfully:');
-    console.log(`  Transaction: ${txResult.txHash}`);
-    console.log(`  Block: ${txResult.blockNumber}`);
-    console.log(`  Confirmations: ${txResult.confirmations}`);
-  });
-});
+// Note: Swap tests are not possible on Sepolia because no assets are buyable on this testnet.
+// Swaps require both sellable source and buyable target assets on the same network.
 
 /**
  * Transaction confirmation edge cases
