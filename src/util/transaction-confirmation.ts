@@ -1,5 +1,3 @@
-import { Blockchain } from '@dfx.swiss/react';
-
 export interface TransactionConfirmationConfig {
   /** Maximum time to wait for confirmation in ms (default: 120000 = 2 minutes) */
   timeout?: number;
@@ -87,65 +85,6 @@ export async function waitForEvmTransactionWeb3(
   }
 
   throw new TransactionTimeoutError(txHash, timeout);
-}
-
-/**
- * Wait for an EVM transaction to be confirmed using viem/wagmi
- */
-export async function waitForEvmTransactionViem(
-  publicClient: any,
-  txHash: string,
-  config?: TransactionConfirmationConfig,
-): Promise<TransactionReceipt> {
-  const timeout = config?.timeout ?? DEFAULT_TIMEOUT;
-  const requiredConfirmations = config?.confirmations ?? DEFAULT_CONFIRMATIONS;
-
-  try {
-    const receipt = await publicClient.waitForTransactionReceipt({
-      hash: txHash,
-      confirmations: requiredConfirmations,
-      timeout,
-    });
-
-    if (receipt.status === 'reverted') {
-      throw new TransactionFailedError(txHash);
-    }
-
-    return {
-      transactionHash: txHash,
-      status: true,
-      blockNumber: Number(receipt.blockNumber),
-      confirmations: requiredConfirmations,
-    };
-  } catch (error: any) {
-    if (error instanceof TransactionFailedError) {
-      throw error;
-    }
-    if (error.name === 'TimeoutError' || error.message?.includes('timed out')) {
-      throw new TransactionTimeoutError(txHash, timeout);
-    }
-    throw error;
-  }
-}
-
-/**
- * Get blockchain-specific timeout based on average block time
- */
-export function getBlockchainTimeout(blockchain: Blockchain): number {
-  switch (blockchain) {
-    case Blockchain.ETHEREUM:
-      return 180000; // 3 minutes (12s blocks)
-    case Blockchain.POLYGON:
-      return 60000; // 1 minute (2s blocks)
-    case Blockchain.ARBITRUM:
-    case Blockchain.OPTIMISM:
-    case Blockchain.BASE:
-      return 60000; // 1 minute (fast L2s)
-    case Blockchain.BINANCE_SMART_CHAIN:
-      return 90000; // 1.5 minutes (3s blocks)
-    default:
-      return DEFAULT_TIMEOUT;
-  }
 }
 
 function sleep(ms: number): Promise<void> {

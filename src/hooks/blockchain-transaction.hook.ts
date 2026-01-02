@@ -127,9 +127,8 @@ export function useBlockchainTransaction(): BlockchainTransactionInterface {
     while (Date.now() - startTime < timeoutMs) {
       try {
         const status = await call<TransactionStatusDto>({
-          url: `blockchain/transaction/${txHash}/status`,
+          url: `blockchain/transaction/${txHash}/status?blockchain=${blockchain}`,
           method: 'GET',
-          data: { blockchain },
         });
 
         if (status.status === 'confirmed') {
