@@ -1,4 +1,10 @@
-import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
+import {
+  Asset,
+  AssetType,
+  Blockchain,
+  Eip7702DelegationData,
+  Eip7702SignedData,
+} from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
 import { useMemo } from 'react';
@@ -41,6 +47,7 @@ export interface MetaMaskInterface {
     to: string,
     config?: { isWeiAmount?: boolean; gasPrice?: number },
   ) => Promise<string>;
+  signEip7702Delegation: (delegationData: Eip7702DelegationData, from: string) => Promise<Eip7702SignedData>;
 }
 
 interface MetaMaskError {
@@ -248,6 +255,88 @@ export function useMetaMask(): MetaMaskInterface {
     return new web3.eth.Contract(ERC20_ABI as any, chainId);
   }
 
+  async function signEip7702Delegation(
+    delegationData: Eip7702DelegationData,
+    from: string,
+  ): Promise<Eip7702SignedData> {
+    try {
+      // Step 1: Sign the delegation using EIP-712
+      const delegationSignature = await ethereum().request({
+        method: 'eth_signTypedData_v4',
+        params: [
+          from,
+          JSON.stringify({
+            domain: delegationData.domain,
+            types: delegationData.types,
+            primaryType: 'Delegation',
+            message: delegationData.message,
+          }),
+        ],
+      });
+
+      // Step 2: Create EIP-7702 authorization signature
+      // The authorization allows the EOA to delegate its code to the delegation manager
+      const authorizationTypes = {
+        Authorization: [
+          { name: 'chainId', type: 'uint256' },
+          { name: 'address', type: 'address' },
+          { name: 'nonce', type: 'uint256' },
+        ],
+      };
+
+      const authorizationMessage = {
+        chainId: delegationData.domain.chainId,
+        address: delegationData.delegationManagerAddress,
+        nonce: 0,
+      };
+
+      // Sign the EIP-7702 authorization using EIP-712
+      const authSignature: string = await ethereum().request({
+        method: 'eth_signTypedData_v4',
+        params: [
+          from,
+          JSON.stringify({
+            domain: {
+              name: 'EIP-7702',
+              version: '1',
+              chainId: delegationData.domain.chainId,
+            },
+            types: authorizationTypes,
+            primaryType: 'Authorization',
+            message: authorizationMessage,
+          }),
+        ],
+      });
+
+      // Parse the signature into r, s, yParity (v)
+      const sig = authSignature.slice(2); // Remove 0x prefix
+      const r = '0x' + sig.slice(0, 64);
+      const s = '0x' + sig.slice(64, 128);
+      const v = parseInt(sig.slice(128, 130), 16);
+      const yParity = v >= 27 ? v - 27 : v; // Normalize v to yParity (0 or 1)
+
+      return {
+        delegation: {
+          delegate: delegationData.message.delegate,
+          delegator: delegationData.message.delegator,
+          authority: delegationData.message.authority,
+          salt: delegationData.message.salt,
+          signature: delegationSignature,
+        },
+        authorization: {
+          chainId: authorizationMessage.chainId,
+          address: authorizationMessage.address,
+          nonce: authorizationMessage.nonce,
+          r,
+          s,
+          yParity,
+        },
+      };
+    } catch (e) {
+      return handleError(e as MetaMaskError);
+    }
+  }
+
   function handleError(e: MetaMaskError): never {
     switch (e.code) {
       case 4001:
@@ -274,6 +363,7 @@ export function useMetaMask(): MetaMaskInterface {
       addContract,
       readBalance,
       createTransaction,
+      signEip7702Delegation,
     }),
     [web3, toBlockchain, toChainHex, toChainObject],
   );

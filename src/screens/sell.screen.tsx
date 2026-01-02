@@ -473,6 +473,7 @@ export default function SellScreen(): JSX.Element {
 
   async function handleNext(paymentInfo: Sell): Promise<void> {
     setIsProcessing(true);
+    setErrorMessage(undefined);
 
     await updateBankAccount();
 
@@ -480,10 +481,25 @@ export default function SellScreen(): JSX.Element {
       return closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo }, false);
 
     try {
-      if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSellTxId);
-
-      setTxDone(true);
+      if (canSendTransaction()) {
+        // Fetch payment info with depositTx for EIP-7702 support
+        const paymentInfoWithTx = await receiveFor(
+          {
+            amount: paymentInfo.amount,
+            currency: paymentInfo.currency,
+            asset: paymentInfo.asset,
+            iban: selectedBankAccount?.iban ?? '',
+            externalTransactionId,
+          },
+          true,
+        );
+        await sendTransaction(paymentInfoWithTx).then(setSellTxId);
+      }
+    } catch (error: any) {
+      console.error('Transaction error:', error);
+      // Don't show error - user can still send manually using the deposit address
     } finally {
+      setTxDone(true);
       setIsProcessing(false);
     }
   }

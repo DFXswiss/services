@@ -1,4 +1,4 @@
-import { Asset, Blockchain, Sell, Swap, useAuthContext } from '@dfx.swiss/react';
+import { Asset, Blockchain, Sell, Swap, useAuthContext, useSell, useSwap } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
@@ -20,8 +20,11 @@ export interface TxHelperInterface {
 
 // CAUTION: This is a helper hook for all blockchain transaction functionalities. Think about lazy loading, as soon as it gets bigger.
 export function useTxHelper(): TxHelperInterface {
-  const { createTransaction: createTransactionMetaMask, requestChangeToBlockchain: requestChangeToBlockchainMetaMask } =
-    useMetaMask();
+  const {
+    createTransaction: createTransactionMetaMask,
+    requestChangeToBlockchain: requestChangeToBlockchainMetaMask,
+    signEip7702Delegation,
+  } = useMetaMask();
   const {
     createTransaction: createTransactionWalletConnect,
     requestChangeToBlockchain: requestChangeToBlockchainWalletConnect,
@@ -36,6 +39,8 @@ export function useTxHelper(): TxHelperInterface {
   const { session } = useAuthContext();
   const { canClose } = useAppHandlingContext();
   const { getAddressBalances } = useBlockchainBalance();
+  const { confirmSell } = useSell();
+  const { confirmSwap } = useSwap();
 
   async function getBalances(
     assets: Asset[],
@@ -82,6 +87,27 @@ export function useTxHelper(): TxHelperInterface {
         if (!session?.address) throw new Error('Address is not defined');
 
         await requestChangeToBlockchainMetaMask(asset.blockchain);
+
+        // Check if transaction has EIP-7702 delegation data (works for BOTH Sell and Swap)
+        if (tx.depositTx?.eip7702) {
+          // User has no ETH, use EIP-7702 delegation
+          const eip7702Data = tx.depositTx.eip7702;
+          const signedData = await signEip7702Delegation(eip7702Data, session.address);
+
+          // Distinguish between Sell and Swap based on asset field
+          if ('asset' in tx) {
+            // Sell transaction
+            const result = await confirmSell(tx.id, { eip7702: signedData });
+            if (result.id == null) throw new Error('Transaction ID not returned');
+            return result.id.toString();
+          } else {
+            // Swap transaction
+            const result = await confirmSwap(tx.id, { eip7702: signedData });
+            if (result.id == null) throw new Error('Transaction ID not returned');
+            return result.id.toString();
+          }
+        }
+
         return createTransactionMetaMask(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
       case WalletType.ALBY:
@@ -143,6 +169,9 @@ export function useTxHelper(): TxHelperInterface {
       requestChangeToBlockchainMetaMask,
       requestChangeToBlockchainWalletConnect,
       canClose,
+      signEip7702Delegation,
+      confirmSell,
+      confirmSwap,
     ],
   );
 }

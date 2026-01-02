@@ -8,6 +8,10 @@ import {
   TransactionError,
   TransactionType,
   useBankAccountContext,
+  UnsignedTx,
+  Eip7702DelegationData,
+  useSell,
+  useSwap,
 } from '@dfx.swiss/react';
 import {
   SpinnerSize,
@@ -28,6 +32,8 @@ import { OrderPaymentData } from 'src/dto/order.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { AmountError, OrderType } from 'src/hooks/order.hook';
 import { useTxHelper } from 'src/hooks/tx-helper.hook';
+import { useEip7702 } from 'src/hooks/eip7702.hook';
+import { useMetaMask, WalletType } from 'src/hooks/wallets/metamask.hook';
 import { isAsset } from 'src/util/utils';
 import { ExchangeRate } from '../exchange-rate';
 import { PrivateAssetHint } from '../private-asset-hint';
@@ -74,6 +80,11 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
   const { translate } = useSettingsContext();
   const { flags } = useAppParams();
   const { setPaymentNameForm } = useOrderUIContext();
+  const { signEip7702Data, isSupported: isEip7702Supported } = useEip7702();
+  const metaMask = useMetaMask();
+  const { getWalletType, getAccount } = metaMask;
+  const { confirmSell } = useSell();
+  const { confirmSwap } = useSwap();
 
   const localRef = React.useRef<HTMLDivElement>(null);
 
@@ -116,12 +127,55 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
     }
 
     try {
-      // TODO (later): Implement for sell and swap transactions
-      // if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSellTxId);
-      // if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSwapTxId);
-      // setTxDone(true);
+      if (canSendTransaction()) {
+        if (orderType === OrderType.SELL) {
+          await sendSellTransaction(paymentInfo as Sell);
+        } else if (orderType === OrderType.SWAP) {
+          await sendSwapTransaction(paymentInfo as Swap);
+        }
+      }
     } finally {
       setIsProcessingTransaction(false);
+    }
+  }
+
+  async function sendSellTransaction(sell: Sell): Promise<void> {
+    const walletType = getWalletType();
+    const userAddress = await getAccount();
+
+    if (!userAddress) {
+      throw new Error('No wallet address found');
+    }
+
+    // Check if depositTx has EIP-7702 delegation data (user has 0 gas)
+    if (walletType === WalletType.META_MASK && sell.depositTx?.eip7702 && isEip7702Supported(sell.blockchain)) {
+      // EIP-7702 flow: Sign delegation and authorization, backend executes
+      const eip7702Data = await signEip7702Data(sell.depositTx.eip7702, userAddress);
+      await confirmSell(sell.id, { eip7702: eip7702Data });
+    } else {
+      // Normal flow: Sign and send transaction via MetaMask
+      // TODO: Implement normal transaction flow with metaMask.createTransaction
+      throw new Error('Normal transaction flow not yet implemented');
+    }
+  }
+
+  async function sendSwapTransaction(swap: Swap): Promise<void> {
+    const walletType = getWalletType();
+    const userAddress = await getAccount();
+
+    if (!userAddress) {
+      throw new Error('No wallet address found');
+    }
+
+    // Check if depositTx has EIP-7702 delegation data (user has 0 gas)
+    if (walletType === WalletType.META_MASK && swap.depositTx?.eip7702 && isEip7702Supported(swap.sourceAsset.blockchain)) {
+      // EIP-7702 flow: Sign delegation and authorization, backend executes
+      const eip7702Data = await signEip7702Data(swap.depositTx.eip7702, userAddress);
+      await confirmSwap(swap.id, { eip7702: eip7702Data });
+    } else {
+      // Normal flow: Sign and send transaction via MetaMask
+      // TODO: Implement normal transaction flow with metaMask.createTransaction
+      throw new Error('Normal transaction flow not yet implemented');
     }
   }
 
