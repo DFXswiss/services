@@ -15,6 +15,11 @@ import { Contract } from 'web3-eth-contract';
 import { AssetBalance } from '../../contexts/balance.context';
 import ERC20_ABI from '../../static/erc20.abi.json';
 import { AbortError } from '../../util/abort-error';
+import {
+  TransactionFailedError,
+  TransactionTimeoutError,
+  waitForEvmTransactionWeb3,
+} from '../../util/transaction-confirmation';
 import { TranslatedError } from '../../util/translated-error';
 import { timeout } from '../../util/utils';
 import { useWeb3 } from '../web3.hook';
@@ -224,6 +229,8 @@ export function useMetaMask(): MetaMaskInterface {
     to: string,
     config?: { isWeiAmount?: boolean; gasPrice?: number },
   ): Promise<string> {
+    let txHash: string;
+
     if (asset.type === AssetType.COIN) {
       const transactionData: TransactionConfig = {
         from,
@@ -234,7 +241,8 @@ export function useMetaMask(): MetaMaskInterface {
         gasPrice: config?.gasPrice,
       };
 
-      return web3.eth.sendTransaction(transactionData).then((value) => value.transactionHash);
+      const result = await web3.eth.sendTransaction(transactionData);
+      txHash = result.transactionHash;
     } else {
       const tokenContract = createContract(asset.chainId);
 
@@ -244,11 +252,29 @@ export function useMetaMask(): MetaMaskInterface {
         adjustedAmount = amount.multipliedBy(Math.pow(10, decimals)).toFixed();
       }
 
-      return tokenContract.methods
+      const result = await tokenContract.methods
         .transfer(to, adjustedAmount)
-        .send({ from, maxPriorityFeePerGas: null, maxFeePerGas: null, gasPrice: config?.gasPrice })
-        .then((value: any) => value.transactionHash);
+        .send({ from, maxPriorityFeePerGas: null, maxFeePerGas: null, gasPrice: config?.gasPrice });
+      txHash = result.transactionHash;
     }
+
+    // Wait for transaction confirmation and verify it succeeded
+    try {
+      await waitForEvmTransactionWeb3(web3, txHash);
+    } catch (error) {
+      if (error instanceof TransactionFailedError) {
+        throw new TranslatedError('Transaction failed on the blockchain. Please try again.');
+      }
+      if (error instanceof TransactionTimeoutError) {
+        // Transaction was sent but confirmation timed out - return hash anyway
+        // The transaction might still succeed, user can check on block explorer
+        console.warn(`Transaction confirmation timed out for ${txHash}, but transaction was sent`);
+      } else {
+        throw error;
+      }
+    }
+
+    return txHash;
   }
 
   function createContract(chainId?: string): Contract {

@@ -8,6 +8,7 @@ import {
   sendTransaction,
   simulateContract,
   switchChain,
+  waitForTransactionReceipt,
   connect as wagmiConnect,
   disconnect as wagmiDiconnect,
   reconnect as wagmiReconnect,
@@ -19,6 +20,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { parseEther, parseUnits } from 'viem';
 import ERC20_ABI from '../../static/erc20.abi.json';
+import { TransactionFailedError, TransactionTimeoutError } from '../../util/transaction-confirmation';
+import { TranslatedError } from '../../util/translated-error';
 import { config, WALLET_CONNECT_PROJECT_ID } from '../../wagmi.config';
 import { useWeb3 } from '../web3.hook';
 
@@ -154,11 +157,14 @@ export function useWalletConnect(): WalletConnectInterface {
 
   async function createTransaction(amount: BigNumber, asset: Asset, from: string, to: string): Promise<string> {
     try {
+      let txHash: string;
+      const chainId = Number(toChainId(asset.blockchain)) as any;
+
       if (asset.type === AssetType.COIN) {
-        return await sendTransaction(config, {
+        txHash = await sendTransaction(config, {
           connector: getWalletConnectConnector(),
           account: from as any,
-          chainId: Number(toChainId(asset.blockchain)) as any,
+          chainId,
           to: to as any,
           value: parseEther(amount.toString()),
           data: '0x', // needed for Trust Wallet
@@ -168,20 +174,46 @@ export function useWalletConnect(): WalletConnectInterface {
           abi: ERC20_ABI,
           address: asset.chainId as any,
           functionName: 'decimals',
-          chainId: Number(toChainId(asset.blockchain)) as any,
+          chainId,
         })) as number;
 
         const { request } = await simulateContract(config, {
           abi: ERC20_ABI,
-          chainId: Number(toChainId(asset.blockchain)) as any,
+          chainId,
           address: asset.chainId as any,
           functionName: 'transfer',
           args: [to as any, parseUnits(amount.toString(), decimals)],
           connector: getWalletConnectConnector(),
         });
 
-        return await writeContract(config, request);
+        txHash = await writeContract(config, request);
       }
+
+      // Wait for transaction confirmation and verify it succeeded
+      try {
+        const receipt = await waitForTransactionReceipt(config, {
+          hash: txHash as `0x${string}`,
+          chainId,
+          confirmations: 1,
+          timeout: 120_000, // 2 minutes
+        });
+
+        if (receipt.status === 'reverted') {
+          throw new TransactionFailedError(txHash);
+        }
+      } catch (error: any) {
+        if (error instanceof TransactionFailedError) {
+          throw new TranslatedError('Transaction failed on the blockchain. Please try again.');
+        }
+        if (error?.name === 'TimeoutError' || error?.message?.includes('timed out')) {
+          // Transaction was sent but confirmation timed out - return hash anyway
+          console.warn(`Transaction confirmation timed out for ${txHash}, but transaction was sent`);
+        } else if (!(error instanceof TranslatedError)) {
+          throw error;
+        }
+      }
+
+      return txHash;
     } catch (error) {
       handleError(error);
     }
