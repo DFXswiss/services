@@ -81,7 +81,7 @@ async function getCachedAuth(): Promise<{ token: string; credentials: TestCreden
   }
 
   const currentMutex = authMutex;
-  let resolve: () => void;
+  let resolve: () => void = () => { /* noop */ };
   authMutex = new Promise((r) => (resolve = r));
 
   try {
@@ -105,7 +105,7 @@ async function getCachedAuth(): Promise<{ token: string; credentials: TestCreden
 
     return { token, credentials };
   } finally {
-    resolve!();
+    resolve();
   }
 }
 

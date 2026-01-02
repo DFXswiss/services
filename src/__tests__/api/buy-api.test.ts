@@ -57,7 +57,7 @@ function delay(ms: number): Promise<void> {
 async function getAssets(client: ApiClient): Promise<Asset[]> {
   const result = await client.get<Asset[]>('/asset');
   expect(result.data).toBeTruthy();
-  return result.data!;
+  return result.data ?? [];
 }
 
 async function getFiats(): Promise<Fiat[]> {
@@ -244,7 +244,8 @@ describe('Buy Process - API Integration', () => {
       return;
     }
 
-    const paymentInfo = result.data!;
+    const paymentInfo = result.data;
+    if (!paymentInfo) return;
     expect(paymentInfo.id).toBeGreaterThan(0);
     expect(paymentInfo.amount).toBe(100);
     expect(paymentInfo.currency.name).toBe('EUR');

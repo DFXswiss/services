@@ -83,13 +83,14 @@ describe('Authentication - API Integration', () => {
     test('should get correct sign info for EVM address', async () => {
       const signInfo = await getSignInfo(evmCredentials.address);
       expect(signInfo).toBeTruthy();
-      expect(signInfo!.blockchains).toContain('Ethereum');
-      expect(signInfo!.blockchains).toContain('Polygon');
-      expect(signInfo!.blockchains).toContain('Arbitrum');
-      expect(signInfo!.blockchains).toContain('Optimism');
-      expect(signInfo!.blockchains).toContain('Base');
-      expect(signInfo!.blockchains).toContain('BinanceSmartChain');
-      console.log(`EVM blockchains: ${signInfo!.blockchains.join(', ')}`);
+      if (!signInfo) return;
+      expect(signInfo.blockchains).toContain('Ethereum');
+      expect(signInfo.blockchains).toContain('Polygon');
+      expect(signInfo.blockchains).toContain('Arbitrum');
+      expect(signInfo.blockchains).toContain('Optimism');
+      expect(signInfo.blockchains).toContain('Base');
+      expect(signInfo.blockchains).toContain('BinanceSmartChain');
+      console.log(`EVM blockchains: ${signInfo.blockchains.join(', ')}`);
     });
 
     test('should reject invalid EVM signature', async () => {
