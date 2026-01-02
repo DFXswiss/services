@@ -1,20 +1,15 @@
 import { test, expect } from '@playwright/test';
-import { getCachedAuth, getTestIban } from './helpers/auth-cache';
-import { TestCredentials } from './test-wallet';
+import { getCachedAuth } from './helpers/auth-cache';
 
 // Note: API Integration tests have been moved to Jest (src/__tests__/api/sell-api.test.ts)
 // This file now contains only UI Flow tests that require browser interaction
 
 test.describe('Sell Process - UI Flow', () => {
-  let credentials: TestCredentials;
-  let testIban: string;
   let token: string;
 
   test.beforeAll(async ({ request }) => {
     const auth = await getCachedAuth(request, 'evm');
-    credentials = auth.credentials;
     token = auth.token;
-    testIban = getTestIban();
   });
 
   test('should load sell page with session token', async ({ page }) => {
@@ -115,17 +110,13 @@ test.describe('Sell Process - UI Flow', () => {
 // UI-based Blockchain Transaction Tests with Full Screenshot Coverage
 test.describe('Sell Process - Blockchain Transaction UI (Sepolia)', () => {
   let token: string;
-  let credentials: TestCredentials;
-  let testIban: string;
 
   test.beforeAll(async ({ request }) => {
     const auth = await getCachedAuth(request, 'evm');
     token = auth.token;
-    credentials = auth.credentials;
-    testIban = getTestIban();
   });
 
-  test('should complete Sepolia ETH sell UI flow', async ({ page, request }) => {
+  test('should complete Sepolia ETH sell UI flow', async ({ page }) => {
     test.setTimeout(60000);
 
     // Step 1: Navigate to sell page with Sepolia blockchain

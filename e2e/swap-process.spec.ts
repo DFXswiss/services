@@ -1,17 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { getCachedAuth } from './helpers/auth-cache';
-import { TestCredentials } from './test-wallet';
 
 // Note: API Integration tests have been moved to Jest (src/__tests__/api/swap-api.test.ts)
 // This file now contains only UI Flow tests that require browser interaction
 
 test.describe('Swap Process - UI Flow', () => {
-  let credentials: TestCredentials;
   let token: string;
 
   test.beforeAll(async ({ request }) => {
     const auth = await getCachedAuth(request, 'evm');
-    credentials = auth.credentials;
     token = auth.token;
   });
 
