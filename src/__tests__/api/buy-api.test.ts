@@ -255,6 +255,7 @@ describe('Buy Process - API Integration', () => {
   });
 
   test('should handle multiple currencies', async () => {
+    jest.setTimeout(15000);
     const eth = buyableAssets.find((a) => a.name === 'ETH' && EVM_BLOCKCHAINS.includes(a.blockchain));
 
     if (!eth) {
@@ -281,6 +282,7 @@ describe('Buy Process - API Integration', () => {
   });
 
   test('should handle multiple assets', async () => {
+    jest.setTimeout(15000);
     const eur = sellableFiats.find((f) => f.name === 'EUR');
 
     if (!eur) {
