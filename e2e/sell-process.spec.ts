@@ -111,3 +111,130 @@ test.describe('Sell Process - UI Flow', () => {
     expect(hasDepositInfo || hasFormElements).toBeTruthy();
   });
 });
+
+// UI-based Blockchain Transaction Tests with Full Screenshot Coverage
+test.describe('Sell Process - Blockchain Transaction UI (Sepolia)', () => {
+  let token: string;
+  let credentials: TestCredentials;
+  let testIban: string;
+
+  test.beforeAll(async ({ request }) => {
+    const auth = await getCachedAuth(request, 'evm');
+    token = auth.token;
+    credentials = auth.credentials;
+    testIban = getTestIban();
+  });
+
+  test('should complete Sepolia ETH sell UI flow', async ({ page, request }) => {
+    test.setTimeout(60000);
+
+    // Step 1: Navigate to sell page with Sepolia blockchain
+    await page.goto(`/sell?session=${token}&blockchain=Sepolia`);
+    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('text=ETH', { timeout: 10000 });
+    await page.waitForSelector('text=Sepolia', { timeout: 10000 });
+    await page.waitForTimeout(1000);
+
+    await expect(page).toHaveScreenshot('sepolia-eth-sell-01-initial-page.png', {
+      maxDiffPixels: 2000,
+    });
+
+    // Step 2: Enter sell amount in the input field
+    const amountInput = page.locator('input[type="number"], input[inputmode="decimal"]').first();
+    await amountInput.fill('0.01');
+    await page.waitForTimeout(1500);
+
+    // Step 3: Wait for quote to load (exchange rate should update)
+    await page.waitForSelector('text=Wechselkurs', { timeout: 10000 });
+    await page.waitForTimeout(500);
+
+    await expect(page).toHaveScreenshot('sepolia-eth-sell-02-form-filled.png', {
+      maxDiffPixels: 2000,
+      fullPage: true,
+    });
+
+    // Step 4: Scroll down to find and click the transaction button
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(500);
+
+    // Look for the wallet transaction button
+    const walletButton = page.locator('button:has-text("Wallet"), button:has-text("Transaktion"), button:has-text("Schliesse")').first();
+    const buttonVisible = await walletButton.isVisible().catch(() => false);
+
+    if (buttonVisible) {
+      await walletButton.click();
+      await page.waitForTimeout(2000);
+    }
+
+    // Step 5: Screenshot showing the full page with transaction info
+    await expect(page).toHaveScreenshot('sepolia-eth-sell-03-transaction-ready.png', {
+      maxDiffPixels: 2000,
+      fullPage: true,
+    });
+
+    console.log('ETH sell UI flow completed');
+  });
+
+  test('should complete Sepolia USDT sell UI flow', async ({ page }) => {
+    test.setTimeout(60000);
+
+    // Step 1: Navigate to sell page with Sepolia blockchain
+    await page.goto(`/sell?session=${token}&blockchain=Sepolia`);
+    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('text=ETH', { timeout: 10000 });
+    await page.waitForSelector('text=Sepolia', { timeout: 10000 });
+    await page.waitForTimeout(1000);
+
+    // Step 2: Click on the asset dropdown (the box showing ETH with chevron)
+    // Find the clickable area with ETH and Sepolia Testnet
+    await page.click('text=Sepolia Testnet');
+    await page.waitForTimeout(1000);
+
+    // Step 3: Select USDT from dropdown
+    const usdtOption = page.locator('text=USDT').first();
+    await usdtOption.waitFor({ state: 'visible', timeout: 5000 });
+    await usdtOption.click();
+    await page.waitForTimeout(1000);
+
+    // Verify USDT is now selected
+    await page.waitForSelector('text=USDT', { timeout: 5000 });
+
+    await expect(page).toHaveScreenshot('sepolia-usdt-sell-01-initial-page.png', {
+      maxDiffPixels: 2000,
+    });
+
+    // Step 4: Enter sell amount
+    const amountInput = page.locator('input[type="number"], input[inputmode="decimal"]').first();
+    await amountInput.fill('10');
+    await page.waitForTimeout(1500);
+
+    // Step 5: Wait for quote to load
+    await page.waitForSelector('text=Wechselkurs', { timeout: 10000 });
+    await page.waitForTimeout(500);
+
+    await expect(page).toHaveScreenshot('sepolia-usdt-sell-02-form-filled.png', {
+      maxDiffPixels: 2000,
+      fullPage: true,
+    });
+
+    // Step 6: Scroll down and click the wallet transaction button
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(500);
+
+    const walletButton = page.locator('button:has-text("Wallet"), button:has-text("Transaktion"), button:has-text("Schliesse")').first();
+    const buttonVisible = await walletButton.isVisible().catch(() => false);
+
+    if (buttonVisible) {
+      await walletButton.click();
+      await page.waitForTimeout(2000);
+    }
+
+    // Step 7: Final screenshot
+    await expect(page).toHaveScreenshot('sepolia-usdt-sell-03-transaction-ready.png', {
+      maxDiffPixels: 2000,
+      fullPage: true,
+    });
+
+    console.log('USDT sell UI flow completed');
+  });
+});

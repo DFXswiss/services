@@ -82,7 +82,11 @@ export function useWalletConnect(): WalletConnectInterface {
           }))
           .filter((w) => w.deepLink);
       },
-    );
+    )
+      .catch((error) => {
+        console.warn('Failed to fetch WalletConnect wallets:', error.message);
+        return []; // Return empty array on error for local development
+      });
   }
 
   async function connect(blockchain: Blockchain, onConnectUri: (uri: string) => void): Promise<string> {

@@ -487,7 +487,19 @@ export default function SwapScreen(): JSX.Element {
     if (canSendTransaction() && !activeWallet) return close(paymentInfo, false);
 
     try {
-      if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSwapTxId);
+      if (canSendTransaction()) {
+        // Fetch payment info with depositTx for EIP-7702 support
+        const paymentInfoWithTx = await receiveFor(
+          {
+            amount: paymentInfo.amount,
+            sourceAsset: paymentInfo.sourceAsset,
+            targetAsset: paymentInfo.targetAsset,
+            externalTransactionId,
+          },
+          true,
+        );
+        await sendTransaction(paymentInfoWithTx).then(setSwapTxId);
+      }
 
       setTxDone(true);
     } finally {
