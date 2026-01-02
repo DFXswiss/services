@@ -78,7 +78,7 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --no-fix",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "react-app-rewired test --watchAll=false --passWithNoTests",
-    "test:api": "react-app-rewired test --watchAll=false --testPathPattern=__tests__/api --testPathIgnorePatterns=helpers",
+    "test:api": "react-app-rewired test --watchAll=false --testPathPattern=__tests__/api",
     "test:e2e": "npx playwright test",
     "test:all": "npm run test:api && npm run test:e2e",
     "eject": "react-scripts eject",
@@ -169,6 +169,10 @@
     ],
     "transformIgnorePatterns": [
       "node_modules/(?!(@dfx.swiss|@scure|@noble|@solana|bitcoinjs-lib|bitcoinjs-message|tronweb|tweetnacl)/)"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "__tests__/api/helpers/"
     ],
     "setupFilesAfterEnv": [
       "<rootDir>/src/setupTests.ts"
