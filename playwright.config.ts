@@ -2,7 +2,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  snapshotDir: './e2e/screenshots',
+  snapshotPathTemplate: '{snapshotDir}/{testFileName}-{arg}-{projectName}-{platform}{ext}',
   outputDir: './e2e/test-results',
+  // Keep test results after test run
+  preserveOutput: 'always',
   // Disable parallel execution to prevent API rate limiting
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
@@ -10,13 +14,16 @@ export default defineConfig({
   // Use single worker to prevent rate limiting
   workers: 1,
   // Use list reporter for real-time progress, html for detailed results
-  reporter: process.env.CI ? 'html' : [['list'], ['html', { open: 'never' }]],
+  // HTML report is saved to playwright-report/ and persists across runs
+  reporter: process.env.CI ? 'html' : [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   // Global timeout for tests
   timeout: 60000,
   use: {
     baseURL: 'http://localhost:3001',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    // Always capture traces and screenshots for debugging
+    trace: 'on',
+    screenshot: 'on',
+    video: 'on-first-retry',
   },
 
   projects: [

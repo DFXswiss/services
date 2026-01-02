@@ -107,6 +107,9 @@ test.describe('Responsive Design', () => {
 
     await page.goto(`/buy?session=${token}`);
     await page.waitForLoadState('networkidle');
+    // Wait for assets to load
+    await page.waitForSelector('text=Du erhältst ungefähr', { timeout: 10000 });
+    await page.waitForTimeout(1000);
     await expect(page).toHaveScreenshot('buy-desktop.png', {
       maxDiffPixels: 1000,
     });
