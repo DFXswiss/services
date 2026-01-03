@@ -29,6 +29,8 @@ test.describe('Buy Flow', () => {
     await page.waitForLoadState('networkidle');
     // Wait for asset data to load (ETH should be visible)
     await page.waitForSelector('text=ETH', { timeout: 10000 });
+    // Wait for exchange rate to load (indicates all data including address is ready)
+    await page.waitForSelector('text=Wechselkurs', { timeout: 30000 });
     await page.waitForTimeout(1000);
 
     await expect(page).toHaveScreenshot('buy-flow-page.png', {
@@ -57,6 +59,8 @@ test.describe('Sell Flow', () => {
     await page.waitForLoadState('networkidle');
     // Wait for asset data to load (ETH should be visible)
     await page.waitForSelector('text=ETH', { timeout: 10000 });
+    // Wait for exchange rate to load (indicates all data including address is ready)
+    await page.waitForSelector('text=Wechselkurs', { timeout: 30000 });
     await page.waitForTimeout(1000);
 
     await expect(page).toHaveScreenshot('sell-flow-page.png', {

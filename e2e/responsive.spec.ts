@@ -32,6 +32,9 @@ test.describe('Responsive Design', () => {
 
     await page.goto(`/buy?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
+    // Wait for exchange rate to load (indicates all data is ready)
+    await page.waitForSelector('text=Wechselkurs', { timeout: 30000 });
+    await page.waitForTimeout(1000);
     await expect(page).toHaveScreenshot('buy-mobile.png', {
       maxDiffPixels: 5000,
     });
@@ -77,6 +80,9 @@ test.describe('Responsive Design', () => {
 
     await page.goto(`/buy?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
+    // Wait for exchange rate to load (indicates all data is ready)
+    await page.waitForSelector('text=Wechselkurs', { timeout: 30000 });
+    await page.waitForTimeout(1000);
     await expect(page).toHaveScreenshot('buy-tablet.png', {
       maxDiffPixels: 5000,
     });
