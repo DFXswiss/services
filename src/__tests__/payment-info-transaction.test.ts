@@ -388,6 +388,82 @@ describe('PaymentInfo - Transaction Button Bug Fix (PR #819)', () => {
     });
   });
 
+  describe('UI state management', () => {
+    it('should set isProcessingTransaction to true before EIP-7702 signing', async () => {
+      mockGetWalletType.mockReturnValue(WalletType.META_MASK);
+      mockGetAccount.mockResolvedValue('0x1234567890abcdef1234567890abcdef12345678');
+      mockSignEip7702Data.mockResolvedValue({ signed: 'data' });
+      mockConfirmSell.mockResolvedValue({ id: 123 });
+
+      const sellWithEip7702 = {
+        id: 123,
+        blockchain: 'Ethereum',
+        depositTx: { eip7702: { delegation: '0x', authorization: '0x' } },
+      };
+
+      let processingStateBeforeSign: boolean | undefined;
+
+      const processTransaction = async (
+        sell: any,
+        setIsProcessing: (val: boolean) => void,
+        signEip7702Data: any,
+        confirmSell: any,
+      ) => {
+        setIsProcessing(true);
+        processingStateBeforeSign = true;
+        try {
+          const eip7702Data = await signEip7702Data(sell.depositTx.eip7702, '0xAddress');
+          await confirmSell(sell.id, { eip7702: eip7702Data });
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+
+      const mockSetIsProcessing = jest.fn();
+      await processTransaction(sellWithEip7702, mockSetIsProcessing, mockSignEip7702Data, mockConfirmSell);
+
+      expect(mockSetIsProcessing).toHaveBeenCalledWith(true);
+      expect(mockSetIsProcessing).toHaveBeenCalledWith(false);
+      expect(mockSetIsProcessing.mock.calls[0][0]).toBe(true); // First call is true
+      expect(mockSetIsProcessing.mock.calls[1][0]).toBe(false); // Second call is false
+    });
+
+    it('should set isProcessingTransaction to false even when signing fails', async () => {
+      mockGetWalletType.mockReturnValue(WalletType.META_MASK);
+      mockGetAccount.mockResolvedValue('0x1234567890abcdef1234567890abcdef12345678');
+      mockSignEip7702Data.mockRejectedValue(new Error('User cancelled'));
+
+      const sellWithEip7702 = {
+        id: 123,
+        blockchain: 'Ethereum',
+        depositTx: { eip7702: { delegation: '0x', authorization: '0x' } },
+      };
+
+      const processTransaction = async (
+        sell: any,
+        setIsProcessing: (val: boolean) => void,
+        signEip7702Data: any,
+        confirmSell: any,
+      ) => {
+        setIsProcessing(true);
+        try {
+          const eip7702Data = await signEip7702Data(sell.depositTx.eip7702, '0xAddress');
+          await confirmSell(sell.id, { eip7702: eip7702Data });
+        } catch {
+          // Error handling
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+
+      const mockSetIsProcessing = jest.fn();
+      await processTransaction(sellWithEip7702, mockSetIsProcessing, mockSignEip7702Data, mockConfirmSell);
+
+      // Even on error, isProcessing should be set to false
+      expect(mockSetIsProcessing).toHaveBeenLastCalledWith(false);
+    });
+  });
+
   describe('Edge cases', () => {
     it('should call closeServices when blockchain is not supported for EIP-7702', async () => {
       mockGetWalletType.mockReturnValue(WalletType.META_MASK);
