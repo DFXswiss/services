@@ -9,6 +9,7 @@ import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
 import { useMemo } from 'react';
 import { isMobile } from 'react-device-detect';
+import { toRlp, keccak256, concat, toHex, Hex } from 'viem';
 import Web3 from 'web3';
 import { TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
@@ -260,7 +261,7 @@ export function useMetaMask(): MetaMaskInterface {
     from: string,
   ): Promise<Eip7702SignedData> {
     try {
-      // Step 1: Sign the delegation using EIP-712
+      // Step 1: Sign the delegation using EIP-712 (for DelegationManager contract)
       const delegationSignature = await ethereum().request({
         method: 'eth_signTypedData_v4',
         params: [
@@ -274,44 +275,46 @@ export function useMetaMask(): MetaMaskInterface {
         ],
       });
 
-      // Step 2: Create EIP-7702 authorization signature
-      // The authorization allows the EOA to delegate its code to the delegation manager
-      const authorizationTypes = {
-        Authorization: [
-          { name: 'chainId', type: 'uint256' },
-          { name: 'address', type: 'address' },
-          { name: 'nonce', type: 'uint256' },
-        ],
-      };
+      // Step 2: Sign EIP-7702 authorization using native format
+      // EIP-7702 requires: sign(keccak256(0x05 || RLP([chainId, address, nonce])))
+      // This is different from EIP-712 which uses 0x1901 prefix
+      const chainId = delegationData.domain.chainId;
+      const contractAddress = delegationData.delegatorAddress as Hex;
+      const nonce = delegationData.userNonce ?? 0;
 
-      const authorizationMessage = {
-        chainId: delegationData.domain.chainId,
-        address: delegationData.delegationManagerAddress,
-        nonce: 0,
-      };
+      // Construct the EIP-7702 authorization message
+      // Format: MAGIC (0x05) + RLP([chainId, address, nonce])
+      const rlpEncoded = toRlp([
+        chainId === 0 ? '0x' : toHex(chainId),
+        contractAddress,
+        nonce === 0 ? '0x' : toHex(nonce),
+      ]);
 
-      // Sign the EIP-7702 authorization using EIP-712
-      const authSignature: string = await ethereum().request({
-        method: 'eth_signTypedData_v4',
-        params: [
-          from,
-          JSON.stringify({
-            domain: {
-              name: 'EIP-7702',
-              version: '1',
-              chainId: delegationData.domain.chainId,
-            },
-            types: authorizationTypes,
-            primaryType: 'Authorization',
-            message: authorizationMessage,
-          }),
-        ],
-      });
+      const authorizationHash = keccak256(concat(['0x05' as Hex, rlpEncoded]));
+
+      // Sign the hash using eth_sign (raw hash signing)
+      // Note: eth_sign must be enabled in MetaMask settings for this to work
+      let authSignature: string;
+      try {
+        authSignature = await ethereum().request({
+          method: 'eth_sign',
+          params: [from, authorizationHash],
+        });
+      } catch (signError: any) {
+        // eth_sign might be disabled - provide helpful error message
+        if (signError?.code === -32601 || signError?.code === -32602 || signError?.code === 4200) {
+          throw new TranslatedError(
+            'EIP-7702 authorization requires eth_sign to be enabled. ' +
+              'Please enable it in MetaMask: Settings > Advanced > Eth_sign requests',
+          );
+        }
+        throw signError;
+      }
 
       // Parse the signature into r, s, yParity (v)
       const sig = authSignature.slice(2); // Remove 0x prefix
-      const r = '0x' + sig.slice(0, 64);
-      const s = '0x' + sig.slice(64, 128);
+      const r = ('0x' + sig.slice(0, 64)) as Hex;
+      const s = ('0x' + sig.slice(64, 128)) as Hex;
       const v = parseInt(sig.slice(128, 130), 16);
       const yParity = v >= 27 ? v - 27 : v; // Normalize v to yParity (0 or 1)
 
@@ -324,9 +327,9 @@ export function useMetaMask(): MetaMaskInterface {
           signature: delegationSignature,
         },
         authorization: {
-          chainId: authorizationMessage.chainId,
-          address: authorizationMessage.address,
-          nonce: authorizationMessage.nonce,
+          chainId,
+          address: contractAddress,
+          nonce,
           r,
           s,
           yParity,
