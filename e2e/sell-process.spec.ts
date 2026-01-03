@@ -187,8 +187,10 @@ test.describe('Sell Process - Blockchain Transaction UI (Sepolia)', () => {
     await usdtOption.click();
     await page.waitForTimeout(1000);
 
-    // Verify USDT is now selected
+    // Verify USDT is now selected and quote is loaded
     await page.waitForSelector('text=USDT', { timeout: 5000 });
+    await page.waitForSelector('text=Wechselkurs', { timeout: 15000 });
+    await page.waitForTimeout(500);
 
     await expect(page).toHaveScreenshot('sepolia-usdt-sell-01-initial-page.png', {
       maxDiffPixels: 2000,
