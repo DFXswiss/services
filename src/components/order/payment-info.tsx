@@ -138,33 +138,17 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
   }
 
   async function sendSellTransaction(sell: Sell): Promise<void> {
-    const walletType = getWalletType();
-    const userAddress = await getAccount();
-
-    // Check if depositTx has EIP-7702 delegation data (user has 0 gas)
-    if (userAddress && walletType === WalletType.META_MASK && sell.depositTx?.eip7702 && isEip7702Supported(sell.blockchain)) {
-      // EIP-7702 flow: Sign delegation and authorization, backend executes
-      const eip7702Data = await signEip7702Data(sell.depositTx.eip7702, userAddress);
-      await confirmSell(sell.id, { eip7702: eip7702Data });
-    } else {
-      // Normal flow: Close services with payment info, user sends transaction manually
-      closeServices({ type: CloseType.SELL, isComplete: false, sell }, false);
-    }
+    // DISABLED: EIP-7702 gasless transactions require Pimlico integration
+    // The manual signing approach doesn't work because eth_sign is disabled in MetaMask
+    // TODO: Re-enable once Pimlico integration is complete
+    closeServices({ type: CloseType.SELL, isComplete: false, sell }, false);
   }
 
   async function sendSwapTransaction(swap: Swap): Promise<void> {
-    const walletType = getWalletType();
-    const userAddress = await getAccount();
-
-    // Check if depositTx has EIP-7702 delegation data (user has 0 gas)
-    if (userAddress && walletType === WalletType.META_MASK && swap.depositTx?.eip7702 && isEip7702Supported(swap.sourceAsset.blockchain)) {
-      // EIP-7702 flow: Sign delegation and authorization, backend executes
-      const eip7702Data = await signEip7702Data(swap.depositTx.eip7702, userAddress);
-      await confirmSwap(swap.id, { eip7702: eip7702Data });
-    } else {
-      // Normal flow: Close services with payment info, user sends transaction manually
-      closeServices({ type: CloseType.SWAP, isComplete: false, swap }, false);
-    }
+    // DISABLED: EIP-7702 gasless transactions require Pimlico integration
+    // The manual signing approach doesn't work because eth_sign is disabled in MetaMask
+    // TODO: Re-enable once Pimlico integration is complete
+    closeServices({ type: CloseType.SWAP, isComplete: false, swap }, false);
   }
 
   const isBankWire = paymentMethod !== FiatPaymentMethod.CARD;
