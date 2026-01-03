@@ -229,12 +229,14 @@ export default function SwapScreen(): JSX.Element {
   useEffect(() => {
     if (amountIn) {
       setVal('amount', amountIn);
-    } else if (selectedSourceAsset?.name === 'ETH' && !enteredAmount) {
-      setVal('amount', '0.1');
+    } else if (selectedSourceAsset && !enteredAmount) {
+      // Set default amount based on asset type
+      const isStablecoin = ['USDT', 'USDC', 'DAI', 'ZCHF', 'dEURO', 'XCHF'].includes(selectedSourceAsset.name);
+      setVal('amount', isStablecoin ? '100' : '0.1');
     }
   }, [amountIn, selectedSourceAsset]);
 
-  useEffect(() => setAddress(), [session?.address, translate, blockchain, userAddresses]);
+  useEffect(() => setAddress(), [session?.address, translate, blockchain, userAddresses, addressItems.length]);
 
   useEffect(() => {
     if (selectedAddress) {

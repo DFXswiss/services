@@ -13,7 +13,7 @@ test.describe('Sell Process - UI Flow', () => {
   });
 
   test('should load sell page with session token', async ({ page }) => {
-    await page.goto(`/sell?session=${token}`);
+    await page.goto(`/sell?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
 
@@ -36,7 +36,7 @@ test.describe('Sell Process - UI Flow', () => {
   });
 
   test('should display asset selector and amount input', async ({ page }) => {
-    await page.goto(`/sell?session=${token}`);
+    await page.goto(`/sell?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -52,7 +52,7 @@ test.describe('Sell Process - UI Flow', () => {
   });
 
   test('should show bank account selector or IBAN input', async ({ page }) => {
-    await page.goto(`/sell?session=${token}`);
+    await page.goto(`/sell?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 
@@ -71,7 +71,7 @@ test.describe('Sell Process - UI Flow', () => {
   });
 
   test('should handle sell flow with pre-filled amount', async ({ page }) => {
-    await page.goto(`/sell?session=${token}&amountIn=0.1`);
+    await page.goto(`/sell?session=${token}&blockchain=Ethereum&amountIn=0.1`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -84,7 +84,7 @@ test.describe('Sell Process - UI Flow', () => {
   });
 
   test('should show deposit address after form completion', async ({ page }) => {
-    await page.goto(`/sell?session=${token}`);
+    await page.goto(`/sell?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 
@@ -187,8 +187,10 @@ test.describe('Sell Process - Blockchain Transaction UI (Sepolia)', () => {
     await usdtOption.click();
     await page.waitForTimeout(1000);
 
-    // Verify USDT is now selected
+    // Verify USDT is now selected and quote is loaded
     await page.waitForSelector('text=USDT', { timeout: 5000 });
+    await page.waitForSelector('text=Wechselkurs', { timeout: 15000 });
+    await page.waitForTimeout(500);
 
     await expect(page).toHaveScreenshot('sepolia-usdt-sell-01-initial-page.png', {
       maxDiffPixels: 2000,

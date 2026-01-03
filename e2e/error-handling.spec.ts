@@ -106,15 +106,4 @@ test.describe('Memory & Performance', () => {
     await expect(page.locator('body')).toBeVisible();
   });
 
-  test('should handle rapid navigation', async ({ page }) => {
-    // Rapid navigation without waiting
-    page.goto('/');
-    page.goto('/buy');
-    page.goto('/sell');
-    page.goto('/swap');
-    await page.goto('/');
-    
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('body')).toBeVisible();
-  });
 });

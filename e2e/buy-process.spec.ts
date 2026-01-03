@@ -13,7 +13,7 @@ test.describe('Buy Process - UI Flow', () => {
   test('should load buy page with session token', async ({ page, request }) => {
     const token = await getToken(request);
 
-    await page.goto(`/buy?session=${token}`);
+    await page.goto(`/buy?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
 
     const pageContent = await page.textContent('body');
@@ -37,7 +37,7 @@ test.describe('Buy Process - UI Flow', () => {
   test('should display amount input and currency selector', async ({ page, request }) => {
     const token = await getToken(request);
 
-    await page.goto(`/buy?session=${token}`);
+    await page.goto(`/buy?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -56,7 +56,7 @@ test.describe('Buy Process - UI Flow', () => {
   test('should show trading restriction message if applicable', async ({ page, request }) => {
     const token = await getToken(request);
 
-    await page.goto(`/buy?session=${token}`);
+    await page.goto(`/buy?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 
@@ -85,7 +85,7 @@ test.describe('Buy Process - UI Flow', () => {
   test('should handle buy flow with pre-filled amount', async ({ page, request }) => {
     const token = await getToken(request);
 
-    await page.goto(`/buy?session=${token}&amountIn=100`);
+    await page.goto(`/buy?session=${token}&blockchain=Ethereum&amountIn=100`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
