@@ -41,14 +41,11 @@ test.describe('Swap Process - UI Flow', () => {
 
     const pageContent = await page.textContent('body');
 
+    // Check for swap page text elements (not input values)
     const hasSwapElements =
-      pageContent?.includes('ETH') ||
-      pageContent?.includes('USDT') ||
-      pageContent?.includes('USDC') ||
-      pageContent?.includes('From') ||
-      pageContent?.includes('To') ||
-      pageContent?.includes('Von') ||
-      pageContent?.includes('Nach');
+      pageContent?.includes('Du zahlst') ||
+      pageContent?.includes('Du erhältst') ||
+      pageContent?.includes('Swap');
 
     expect(hasSwapElements).toBeTruthy();
   });
