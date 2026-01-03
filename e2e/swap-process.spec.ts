@@ -53,6 +53,13 @@ test.describe('Swap Process - UI Flow', () => {
     // Wait for assets to load
     await page.waitForSelector('text=ETH', { timeout: 10000 });
     await page.waitForSelector('text=Tether', { timeout: 10000 }); // USDT shows as "Tether"
+    // Try to wait for exchange rate, but don't fail if API is slow
+    try {
+      await page.waitForSelector('text=Wechselkurs', { timeout: 30000 });
+    } catch {
+      // API might be slow, continue with screenshot anyway
+      console.log('Warning: Exchange rate did not load within timeout');
+    }
     await page.waitForTimeout(1000);
 
     await expect(page).toHaveScreenshot('swap-page-with-amount.png', {
