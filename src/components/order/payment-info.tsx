@@ -8,8 +8,6 @@ import {
   TransactionError,
   TransactionType,
   useBankAccountContext,
-  UnsignedTx,
-  Eip7702DelegationData,
   useSell,
   useSwap,
 } from '@dfx.swiss/react';
@@ -153,9 +151,8 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
       const eip7702Data = await signEip7702Data(sell.depositTx.eip7702, userAddress);
       await confirmSell(sell.id, { eip7702: eip7702Data });
     } else {
-      // Normal flow: Sign and send transaction via MetaMask
-      // TODO: Implement normal transaction flow with metaMask.createTransaction
-      throw new Error('Normal transaction flow not yet implemented');
+      // Normal flow: Close services with payment info, user sends transaction manually
+      closeServices({ type: CloseType.SELL, isComplete: false, sell }, false);
     }
   }
 
@@ -173,9 +170,8 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
       const eip7702Data = await signEip7702Data(swap.depositTx.eip7702, userAddress);
       await confirmSwap(swap.id, { eip7702: eip7702Data });
     } else {
-      // Normal flow: Sign and send transaction via MetaMask
-      // TODO: Implement normal transaction flow with metaMask.createTransaction
-      throw new Error('Normal transaction flow not yet implemented');
+      // Normal flow: Close services with payment info, user sends transaction manually
+      closeServices({ type: CloseType.SWAP, isComplete: false, swap }, false);
     }
   }
 
