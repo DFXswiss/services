@@ -30,7 +30,7 @@ test.describe('Responsive Design', () => {
     });
     const page = await context.newPage();
 
-    await page.goto(`/buy?session=${token}`);
+    await page.goto(`/buy?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveScreenshot('buy-mobile.png', {
       maxDiffPixels: 5000,
@@ -75,7 +75,7 @@ test.describe('Responsive Design', () => {
     });
     const page = await context.newPage();
 
-    await page.goto(`/buy?session=${token}`);
+    await page.goto(`/buy?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveScreenshot('buy-tablet.png', {
       maxDiffPixels: 5000,
@@ -105,7 +105,7 @@ test.describe('Responsive Design', () => {
     });
     const page = await context.newPage();
 
-    await page.goto(`/buy?session=${token}`);
+    await page.goto(`/buy?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     // Wait for assets to load
     await page.waitForSelector('text=Du erhältst ungefähr', { timeout: 10000 });
