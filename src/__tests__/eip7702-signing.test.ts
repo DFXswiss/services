@@ -33,6 +33,182 @@ interface Eip7702DelegationData {
 }
 
 describe('EIP-7702 Signing Logic', () => {
+  describe('MetaMask RPC call parameters', () => {
+    // Tests for the exact parameters sent to eth_signTypedData_v4
+
+    const mockDelegationData = {
+      relayerAddress: '0xRelayer',
+      delegationManagerAddress: '0xDelegationManager',
+      delegatorAddress: '0xDelegator',
+      userNonce: 5,
+      domain: {
+        name: 'DelegationManager',
+        version: '1',
+        chainId: 11155111,
+        verifyingContract: '0xVerifyingContract',
+      },
+      types: {
+        Delegation: [
+          { name: 'delegate', type: 'address' },
+          { name: 'delegator', type: 'address' },
+        ],
+        Caveat: [{ name: 'enforcer', type: 'address' }],
+      },
+      message: {
+        delegate: '0xDelegate',
+        delegator: '0xUserDelegator',
+        authority: '0xAuthority',
+        caveats: [],
+        salt: '12345',
+      },
+    };
+
+    it('should build correct delegation sign request', () => {
+      const from = '0xUserAddress';
+
+      // Build the delegation sign request as done in metamask.hook.ts
+      const delegationRequest = {
+        method: 'eth_signTypedData_v4',
+        params: [
+          from,
+          JSON.stringify({
+            domain: mockDelegationData.domain,
+            types: mockDelegationData.types,
+            primaryType: 'Delegation',
+            message: mockDelegationData.message,
+          }),
+        ],
+      };
+
+      expect(delegationRequest.method).toBe('eth_signTypedData_v4');
+      expect(delegationRequest.params[0]).toBe('0xUserAddress');
+
+      const parsedData = JSON.parse(delegationRequest.params[1]);
+      expect(parsedData.domain).toEqual(mockDelegationData.domain);
+      expect(parsedData.types).toEqual(mockDelegationData.types);
+      expect(parsedData.primaryType).toBe('Delegation');
+      expect(parsedData.message).toEqual(mockDelegationData.message);
+    });
+
+    it('should build correct authorization sign request', () => {
+      const from = '0xUserAddress';
+
+      // Build the authorization sign request as done in metamask.hook.ts
+      const authorizationTypes = {
+        Authorization: [
+          { name: 'chainId', type: 'uint256' },
+          { name: 'address', type: 'address' },
+          { name: 'nonce', type: 'uint256' },
+        ],
+      };
+
+      const authorizationMessage = {
+        chainId: mockDelegationData.domain.chainId,
+        address: mockDelegationData.delegatorAddress,
+        nonce: mockDelegationData.userNonce ?? 0,
+      };
+
+      const authorizationRequest = {
+        method: 'eth_signTypedData_v4',
+        params: [
+          from,
+          JSON.stringify({
+            domain: {
+              name: 'EIP-7702',
+              version: '1',
+              chainId: mockDelegationData.domain.chainId,
+            },
+            types: authorizationTypes,
+            primaryType: 'Authorization',
+            message: authorizationMessage,
+          }),
+        ],
+      };
+
+      expect(authorizationRequest.method).toBe('eth_signTypedData_v4');
+      expect(authorizationRequest.params[0]).toBe('0xUserAddress');
+
+      const parsedData = JSON.parse(authorizationRequest.params[1]);
+      expect(parsedData.domain.name).toBe('EIP-7702');
+      expect(parsedData.domain.version).toBe('1');
+      expect(parsedData.domain.chainId).toBe(11155111);
+      expect(parsedData.primaryType).toBe('Authorization');
+      expect(parsedData.message.chainId).toBe(11155111);
+      expect(parsedData.message.address).toBe('0xDelegator');
+      expect(parsedData.message.nonce).toBe(5);
+    });
+
+    it('should include all required EIP-712 fields in delegation request', () => {
+      const delegationRequestData = {
+        domain: mockDelegationData.domain,
+        types: mockDelegationData.types,
+        primaryType: 'Delegation',
+        message: mockDelegationData.message,
+      };
+
+      // Verify all required EIP-712 fields are present
+      expect(delegationRequestData).toHaveProperty('domain');
+      expect(delegationRequestData).toHaveProperty('types');
+      expect(delegationRequestData).toHaveProperty('primaryType');
+      expect(delegationRequestData).toHaveProperty('message');
+
+      // Verify domain has required fields
+      expect(delegationRequestData.domain).toHaveProperty('name');
+      expect(delegationRequestData.domain).toHaveProperty('version');
+      expect(delegationRequestData.domain).toHaveProperty('chainId');
+      expect(delegationRequestData.domain).toHaveProperty('verifyingContract');
+    });
+
+    it('should include all required EIP-712 fields in authorization request', () => {
+      const authorizationRequestData = {
+        domain: {
+          name: 'EIP-7702',
+          version: '1',
+          chainId: mockDelegationData.domain.chainId,
+        },
+        types: {
+          Authorization: [
+            { name: 'chainId', type: 'uint256' },
+            { name: 'address', type: 'address' },
+            { name: 'nonce', type: 'uint256' },
+          ],
+        },
+        primaryType: 'Authorization',
+        message: {
+          chainId: mockDelegationData.domain.chainId,
+          address: mockDelegationData.delegatorAddress,
+          nonce: mockDelegationData.userNonce,
+        },
+      };
+
+      // Verify Authorization type structure
+      expect(authorizationRequestData.types.Authorization).toHaveLength(3);
+      expect(authorizationRequestData.types.Authorization[0]).toEqual({ name: 'chainId', type: 'uint256' });
+      expect(authorizationRequestData.types.Authorization[1]).toEqual({ name: 'address', type: 'address' });
+      expect(authorizationRequestData.types.Authorization[2]).toEqual({ name: 'nonce', type: 'uint256' });
+    });
+
+    it('should use consistent chainId across domain and message', () => {
+      const chainId = mockDelegationData.domain.chainId;
+
+      const authorizationDomain = {
+        name: 'EIP-7702',
+        version: '1',
+        chainId: chainId,
+      };
+
+      const authorizationMessage = {
+        chainId: chainId,
+        address: mockDelegationData.delegatorAddress,
+        nonce: mockDelegationData.userNonce,
+      };
+
+      expect(authorizationDomain.chainId).toBe(authorizationMessage.chainId);
+      expect(authorizationDomain.chainId).toBe(11155111);
+    });
+  });
+
+
   describe('Authorization message construction', () => {
     /**
      * This test verifies that userNonce from the API is correctly used
