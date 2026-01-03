@@ -284,10 +284,14 @@ export function useMetaMask(): MetaMaskInterface {
         ],
       };
 
+      // Get the current nonce for the user's address (required for EIP-7702 authorization)
+      // The nonce must match the account's current nonce for sponsored transactions
+      const currentNonce = await web3.eth.getTransactionCount(from);
+
       const authorizationMessage = {
         chainId: delegationData.domain.chainId,
         address: delegationData.delegationManagerAddress,
-        nonce: 0,
+        nonce: currentNonce,
       };
 
       // Sign the EIP-7702 authorization using EIP-712
