@@ -8,8 +8,6 @@ import {
   TransactionError,
   TransactionType,
   useBankAccountContext,
-  UnsignedTx,
-  Eip7702DelegationData,
   useSell,
   useSwap,
 } from '@dfx.swiss/react';
@@ -143,19 +141,14 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
     const walletType = getWalletType();
     const userAddress = await getAccount();
 
-    if (!userAddress) {
-      throw new Error('No wallet address found');
-    }
-
     // Check if depositTx has EIP-7702 delegation data (user has 0 gas)
-    if (walletType === WalletType.META_MASK && sell.depositTx?.eip7702 && isEip7702Supported(sell.blockchain)) {
+    if (userAddress && walletType === WalletType.META_MASK && sell.depositTx?.eip7702 && isEip7702Supported(sell.blockchain)) {
       // EIP-7702 flow: Sign delegation and authorization, backend executes
       const eip7702Data = await signEip7702Data(sell.depositTx.eip7702, userAddress);
       await confirmSell(sell.id, { eip7702: eip7702Data });
     } else {
-      // Normal flow: Sign and send transaction via MetaMask
-      // TODO: Implement normal transaction flow with metaMask.createTransaction
-      throw new Error('Normal transaction flow not yet implemented');
+      // Normal flow: Close services with payment info, user sends transaction manually
+      closeServices({ type: CloseType.SELL, isComplete: false, sell }, false);
     }
   }
 
@@ -163,19 +156,14 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
     const walletType = getWalletType();
     const userAddress = await getAccount();
 
-    if (!userAddress) {
-      throw new Error('No wallet address found');
-    }
-
     // Check if depositTx has EIP-7702 delegation data (user has 0 gas)
-    if (walletType === WalletType.META_MASK && swap.depositTx?.eip7702 && isEip7702Supported(swap.sourceAsset.blockchain)) {
+    if (userAddress && walletType === WalletType.META_MASK && swap.depositTx?.eip7702 && isEip7702Supported(swap.sourceAsset.blockchain)) {
       // EIP-7702 flow: Sign delegation and authorization, backend executes
       const eip7702Data = await signEip7702Data(swap.depositTx.eip7702, userAddress);
       await confirmSwap(swap.id, { eip7702: eip7702Data });
     } else {
-      // Normal flow: Sign and send transaction via MetaMask
-      // TODO: Implement normal transaction flow with metaMask.createTransaction
-      throw new Error('Normal transaction flow not yet implemented');
+      // Normal flow: Close services with payment info, user sends transaction manually
+      closeServices({ type: CloseType.SWAP, isComplete: false, swap }, false);
     }
   }
 
