@@ -572,7 +572,7 @@
     "Complete transaction in your wallet": "Transaction complète dans votre portefeuille",
     "Pay with your wallet": "Payer avec son portefeuille",
     "Transaction hash": "Hachage de transaction",
-    "Transaction failed. Please send manually to the address above.": "Échec de la transaction. Veuillez envoyer manuellement à l'adresse ci-dessus.",
+    "Transaction failed. Click Retry to see the deposit address for manual transfer.": "Échec de la transaction. Cliquez sur Réessayer pour voir l'adresse de dépôt pour un transfert manuel.",
 
     "Optional - Account Designation": "Facultatif - Désignation du compte",
     "e.g. Deutsche Bank": "par exemple, la Deutsche Bank",
