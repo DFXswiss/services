@@ -286,8 +286,8 @@ export function useMetaMask(): MetaMaskInterface {
 
       const authorizationMessage = {
         chainId: delegationData.domain.chainId,
-        address: delegationData.delegationManagerAddress,
-        nonce: 0,
+        address: delegationData.delegatorAddress,
+        nonce: delegationData.userNonce ?? 0,
       };
 
       // Sign the EIP-7702 authorization using EIP-712
