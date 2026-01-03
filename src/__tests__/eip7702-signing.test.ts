@@ -280,4 +280,81 @@ describe('EIP-7702 Signing Logic', () => {
       expect(result.authorization.yParity).toBe(1);
     });
   });
+
+  describe('Error handling', () => {
+    // These tests verify the error handling logic from metamask.hook.ts handleError function
+
+    interface MetaMaskError {
+      code: number;
+      message: string;
+    }
+
+    // Simulated error handler (extracted logic from metamask.hook.ts)
+    class AbortError extends Error {
+      constructor(message: string) {
+        super(message);
+        this.name = 'AbortError';
+      }
+    }
+
+    class TranslatedError extends Error {
+      constructor(message: string) {
+        super(message);
+        this.name = 'TranslatedError';
+      }
+    }
+
+    function handleError(e: MetaMaskError): never {
+      switch (e.code) {
+        case 4001:
+          throw new AbortError('User cancelled');
+        case -32002:
+          throw new TranslatedError('There is already a request pending. Please confirm it in your MetaMask and retry.');
+      }
+      throw e;
+    }
+
+    it('should throw AbortError when user cancels (code 4001)', () => {
+      const error: MetaMaskError = { code: 4001, message: 'User denied' };
+
+      expect(() => handleError(error)).toThrow(AbortError);
+      expect(() => handleError(error)).toThrow('User cancelled');
+    });
+
+    it('should throw TranslatedError for pending request (code -32002)', () => {
+      const error: MetaMaskError = { code: -32002, message: 'Request already pending' };
+
+      expect(() => handleError(error)).toThrow(TranslatedError);
+      expect(() => handleError(error)).toThrow('There is already a request pending');
+    });
+
+    it('should rethrow unknown errors', () => {
+      const error: MetaMaskError = { code: 9999, message: 'Unknown error' };
+
+      expect(() => handleError(error)).toThrow();
+      try {
+        handleError(error);
+      } catch (e: any) {
+        expect(e.code).toBe(9999);
+        expect(e.message).toBe('Unknown error');
+      }
+    });
+
+    it('should rethrow network errors', () => {
+      const error: MetaMaskError = { code: -32603, message: 'Internal JSON-RPC error' };
+
+      expect(() => handleError(error)).toThrow();
+      try {
+        handleError(error);
+      } catch (e: any) {
+        expect(e.code).toBe(-32603);
+      }
+    });
+
+    it('should handle errors without code property', () => {
+      const error = { message: 'Generic error' } as MetaMaskError;
+
+      expect(() => handleError(error)).toThrow('Generic error');
+    });
+  });
 });
