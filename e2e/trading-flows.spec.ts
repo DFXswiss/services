@@ -89,6 +89,8 @@ test.describe('Swap Flow', () => {
     await page.waitForSelector('text=Du erhältst ungefähr', { timeout: 10000 });
     await page.waitForSelector('text=ETH', { timeout: 10000 });
     await page.waitForSelector('text=Tether', { timeout: 10000 }); // USDT shows as "Tether"
+    // Wait for exchange rate to load (like sell page)
+    await page.waitForSelector('text=Wechselkurs', { timeout: 30000 });
     await page.waitForTimeout(1000);
 
     await expect(page).toHaveScreenshot('swap-flow-page.png', {
