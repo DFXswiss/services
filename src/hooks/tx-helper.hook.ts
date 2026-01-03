@@ -87,25 +87,22 @@ export function useTxHelper(): TxHelperInterface {
 
         await requestChangeToBlockchainMetaMask(asset.blockchain);
 
-        // Check if transaction has EIP-7702 delegation data (works for BOTH Sell and Swap)
-        if (tx.depositTx?.eip7702) {
-          // User has no ETH, use EIP-7702 delegation
-          const eip7702Data = tx.depositTx.eip7702;
-          const signedData = await signEip7702Delegation(eip7702Data, session.address);
-
-          // Distinguish between Sell and Swap based on asset field
-          if ('asset' in tx) {
-            // Sell transaction
-            const result = await confirmSell(tx.id, { eip7702: signedData });
-            if (result.id == null) throw new Error('Transaction ID not returned');
-            return result.id.toString();
-          } else {
-            // Swap transaction
-            const result = await confirmSwap(tx.id, { eip7702: signedData });
-            if (result.id == null) throw new Error('Transaction ID not returned');
-            return result.id.toString();
-          }
-        }
+        // DISABLED: EIP-7702 gasless transactions require Pimlico integration
+        // The manual signing approach doesn't work because eth_sign is disabled in MetaMask
+        // TODO: Re-enable once Pimlico integration is complete
+        //
+        // Original EIP-7702 flow:
+        // if (tx.depositTx?.eip7702) {
+        //   const eip7702Data = tx.depositTx.eip7702;
+        //   const signedData = await signEip7702Delegation(eip7702Data, session.address);
+        //   if ('asset' in tx) {
+        //     const result = await confirmSell(tx.id, { eip7702: signedData });
+        //     return result.id.toString();
+        //   } else {
+        //     const result = await confirmSwap(tx.id, { eip7702: signedData });
+        //     return result.id.toString();
+        //   }
+        // }
 
         return createTransactionMetaMask(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
