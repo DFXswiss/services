@@ -26,6 +26,18 @@ export enum WalletType {
   IN_APP_BROWSER = 'InAppBrowser',
 }
 
+// Call structure for wallet_sendCalls
+export interface SendCallsCall {
+  to: string;
+  data?: string;
+  value?: string;
+}
+
+// Result from wallet_sendCalls
+export interface SendCallsResult {
+  bundleId: string;
+}
+
 export interface MetaMaskInterface {
   isInstalled: () => boolean;
   getWalletType: () => WalletType | undefined;
@@ -49,6 +61,8 @@ export interface MetaMaskInterface {
     config?: { isWeiAmount?: boolean; gasPrice?: number },
   ) => Promise<string>;
   signEip7702Delegation: (delegationData: Eip7702DelegationData, from: string) => Promise<Eip7702SignedData>;
+  sendCallsWithPaymaster: (calls: SendCallsCall[], chainId: number, paymasterUrl: string) => Promise<string>;
+  supportsWalletSendCalls: () => Promise<boolean>;
 }
 
 interface MetaMaskError {
@@ -256,6 +270,80 @@ export function useMetaMask(): MetaMaskInterface {
     return new web3.eth.Contract(ERC20_ABI as any, chainId);
   }
 
+  /**
+   * Check if wallet supports wallet_sendCalls (ERC-5792)
+   */
+  async function supportsWalletSendCalls(): Promise<boolean> {
+    try {
+      const capabilities = await ethereum().request({
+        method: 'wallet_getCapabilities',
+        params: [],
+      });
+      // Check if any chain supports atomic batch
+      return Object.values(capabilities || {}).some((chainCaps: any) => chainCaps?.atomicBatch?.supported === true);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Send transaction(s) using wallet_sendCalls with Paymaster sponsorship
+   * This allows gasless transactions via EIP-7702 + ERC-5792
+   */
+  async function sendCallsWithPaymaster(
+    calls: { to: string; data?: string; value?: string }[],
+    chainId: number,
+    paymasterUrl: string,
+  ): Promise<string> {
+    const from = await getAccount();
+    if (!from) throw new Error('No account connected');
+
+    try {
+      // Ensure we're on the correct chain
+      const currentChainId = await web3.eth.getChainId();
+      if (currentChainId !== chainId) {
+        throw new TranslatedError('Please switch to the correct network before proceeding');
+      }
+
+      // Call wallet_sendCalls with paymaster service
+      const result = await ethereum().request({
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            version: '2.0.0',
+            from,
+            chainId: toHex(chainId),
+            calls: calls.map((call) => ({
+              to: call.to,
+              data: call.data || '0x',
+              value: call.value || '0x0',
+            })),
+            capabilities: {
+              paymasterService: {
+                url: paymasterUrl,
+              },
+            },
+          },
+        ],
+      });
+
+      // Result is typically the bundle ID
+      return typeof result === 'string' ? result : result?.bundleId || 'pending';
+    } catch (e: any) {
+      // Handle specific wallet_sendCalls errors
+      if (e?.code === 4001) {
+        throw new AbortError('User cancelled');
+      }
+      if (e?.code === -32601) {
+        throw new TranslatedError('Your wallet does not support gasless transactions. Please ensure you have enough ETH for gas.');
+      }
+      if (e?.code === -32602) {
+        throw new TranslatedError('Invalid transaction parameters. Please try again.');
+      }
+      throw e;
+    }
+  }
+
   async function signEip7702Delegation(
     delegationData: Eip7702DelegationData,
     from: string,
@@ -367,6 +455,8 @@ export function useMetaMask(): MetaMaskInterface {
       readBalance,
       createTransaction,
       signEip7702Delegation,
+      sendCallsWithPaymaster,
+      supportsWalletSendCalls,
     }),
     [web3, toBlockchain, toChainHex, toChainObject],
   );

@@ -24,6 +24,7 @@ export function useTxHelper(): TxHelperInterface {
     createTransaction: createTransactionMetaMask,
     requestChangeToBlockchain: requestChangeToBlockchainMetaMask,
     signEip7702Delegation,
+    sendCallsWithPaymaster,
   } = useMetaMask();
   const {
     createTransaction: createTransactionWalletConnect,
@@ -87,20 +88,34 @@ export function useTxHelper(): TxHelperInterface {
 
         await requestChangeToBlockchainMetaMask(asset.blockchain);
 
-        // Check if transaction has EIP-7702 delegation data (works for BOTH Sell and Swap)
+        // Check if transaction should use Paymaster for gasless execution (ERC-5792 wallet_sendCalls)
+        if (tx.depositTx?.usePaymaster && tx.depositTx?.paymasterUrl) {
+          // User has no ETH, use wallet_sendCalls with Paymaster sponsorship
+          const calls = [
+            {
+              to: tx.depositTx.to,
+              data: tx.depositTx.data,
+              value: tx.depositTx.value || '0x0',
+            },
+          ];
+
+          // MetaMask handles everything: EIP-7702 signing + transaction + gas sponsorship
+          await sendCallsWithPaymaster(calls, tx.depositTx.chainId, tx.depositTx.paymasterUrl);
+
+          // Transaction is sent by MetaMask, PayIn will be detected via blockchain monitoring
+          return 'pending';
+        }
+
+        // Legacy EIP-7702 flow (manual signing) - kept for backward compatibility
         if (tx.depositTx?.eip7702) {
-          // User has no ETH, use EIP-7702 delegation
           const eip7702Data = tx.depositTx.eip7702;
           const signedData = await signEip7702Delegation(eip7702Data, session.address);
 
-          // Distinguish between Sell and Swap based on asset field
           if ('asset' in tx) {
-            // Sell transaction
             const result = await confirmSell(tx.id, { eip7702: signedData });
             if (result.id == null) throw new Error('Transaction ID not returned');
             return result.id.toString();
           } else {
-            // Swap transaction
             const result = await confirmSwap(tx.id, { eip7702: signedData });
             if (result.id == null) throw new Error('Transaction ID not returned');
             return result.id.toString();
@@ -169,6 +184,7 @@ export function useTxHelper(): TxHelperInterface {
       requestChangeToBlockchainWalletConnect,
       canClose,
       signEip7702Delegation,
+      sendCallsWithPaymaster,
       confirmSell,
       confirmSwap,
     ],

@@ -79,8 +79,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
   const { flags } = useAppParams();
   const { setPaymentNameForm } = useOrderUIContext();
   const { signEip7702Data, isSupported: isEip7702Supported } = useEip7702();
-  const metaMask = useMetaMask();
-  const { getWalletType, getAccount } = metaMask;
+  const { getWalletType, getAccount, sendCallsWithPaymaster } = useMetaMask();
   const { confirmSell } = useSell();
   const { confirmSwap } = useSwap();
 
@@ -141,30 +140,62 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
     const walletType = getWalletType();
     const userAddress = await getAccount();
 
-    // Check if depositTx has EIP-7702 delegation data (user has 0 gas)
+    // New: Check if Paymaster flow is available (gasless via wallet_sendCalls)
+    if (userAddress && walletType === WalletType.META_MASK && sell.depositTx?.usePaymaster && sell.depositTx?.paymasterUrl) {
+      // Paymaster flow: MetaMask handles EIP-7702 internally
+      const calls = [
+        {
+          to: sell.depositTx.to,
+          data: sell.depositTx.data,
+          value: sell.depositTx.value || '0x0',
+        },
+      ];
+      await sendCallsWithPaymaster(calls, sell.depositTx.chainId, sell.depositTx.paymasterUrl);
+      // Transaction sent via MetaMask, PayIn will be detected via blockchain monitoring
+      return;
+    }
+
+    // Legacy: Check if depositTx has EIP-7702 delegation data (user has 0 gas)
     if (userAddress && walletType === WalletType.META_MASK && sell.depositTx?.eip7702 && isEip7702Supported(sell.blockchain)) {
       // EIP-7702 flow: Sign delegation and authorization, backend executes
       const eip7702Data = await signEip7702Data(sell.depositTx.eip7702, userAddress);
       await confirmSell(sell.id, { eip7702: eip7702Data });
-    } else {
-      // Normal flow: Close services with payment info, user sends transaction manually
-      closeServices({ type: CloseType.SELL, isComplete: false, sell }, false);
+      return;
     }
+
+    // Normal flow: Close services with payment info, user sends transaction manually
+    closeServices({ type: CloseType.SELL, isComplete: false, sell }, false);
   }
 
   async function sendSwapTransaction(swap: Swap): Promise<void> {
     const walletType = getWalletType();
     const userAddress = await getAccount();
 
-    // Check if depositTx has EIP-7702 delegation data (user has 0 gas)
+    // New: Check if Paymaster flow is available (gasless via wallet_sendCalls)
+    if (userAddress && walletType === WalletType.META_MASK && swap.depositTx?.usePaymaster && swap.depositTx?.paymasterUrl) {
+      // Paymaster flow: MetaMask handles EIP-7702 internally
+      const calls = [
+        {
+          to: swap.depositTx.to,
+          data: swap.depositTx.data,
+          value: swap.depositTx.value || '0x0',
+        },
+      ];
+      await sendCallsWithPaymaster(calls, swap.depositTx.chainId, swap.depositTx.paymasterUrl);
+      // Transaction sent via MetaMask, PayIn will be detected via blockchain monitoring
+      return;
+    }
+
+    // Legacy: Check if depositTx has EIP-7702 delegation data (user has 0 gas)
     if (userAddress && walletType === WalletType.META_MASK && swap.depositTx?.eip7702 && isEip7702Supported(swap.sourceAsset.blockchain)) {
       // EIP-7702 flow: Sign delegation and authorization, backend executes
       const eip7702Data = await signEip7702Data(swap.depositTx.eip7702, userAddress);
       await confirmSwap(swap.id, { eip7702: eip7702Data });
-    } else {
-      // Normal flow: Close services with payment info, user sends transaction manually
-      closeServices({ type: CloseType.SWAP, isComplete: false, swap }, false);
+      return;
     }
+
+    // Normal flow: Close services with payment info, user sends transaction manually
+    closeServices({ type: CloseType.SWAP, isComplete: false, swap }, false);
   }
 
   const isBankWire = paymentMethod !== FiatPaymentMethod.CARD;
