@@ -495,11 +495,13 @@ export default function SellScreen(): JSX.Element {
         );
         await sendTransaction(paymentInfoWithTx).then(setSellTxId);
       }
-    } catch (error: any) {
-      console.error('Transaction error:', error);
-      // Don't show error - user can still send manually using the deposit address
-    } finally {
       setTxDone(true);
+    } catch (error: any) {
+      // User rejected in wallet - silently return, user stays on form
+      if (error.code === 4001) return;
+      // Other errors - show message, user can still send manually using the deposit address shown above
+      setErrorMessage(translate('screens/sell', 'Transaction failed. Please send manually to the address above.'));
+    } finally {
       setIsProcessing(false);
     }
   }
