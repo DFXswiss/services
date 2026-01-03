@@ -67,13 +67,13 @@ test.describe('Sell Flow', () => {
 
 test.describe('Swap Flow', () => {
   test('should load swap page', async ({ page }) => {
-    await page.goto(`/swap?session=${token}&blockchain=Ethereum`);
+    await page.goto(`/swap?session=${token}&blockchain=Ethereum&asset-in=USDT&asset-out=ETH`);
     await page.waitForLoadState('networkidle');
     await expect(page.locator('body')).toBeVisible();
   });
 
   test('should display swap interface', async ({ page }) => {
-    await page.goto(`/swap?session=${token}&blockchain=Ethereum`);
+    await page.goto(`/swap?session=${token}&blockchain=Ethereum&asset-in=USDT&asset-out=ETH`);
     await page.waitForLoadState('networkidle');
 
     const title = await page.title();
@@ -81,11 +81,12 @@ test.describe('Swap Flow', () => {
   });
 
   test('visual regression - swap page', async ({ page }) => {
-    await page.goto(`/swap?session=${token}&blockchain=Ethereum`);
+    await page.goto(`/swap?session=${token}&blockchain=Ethereum&asset-in=USDT&asset-out=ETH`);
     await page.waitForLoadState('networkidle');
-    // Wait for page to fully render
+    // Wait for page to fully render with assets selected
     await page.waitForSelector('text=Du zahlst', { timeout: 10000 });
     await page.waitForSelector('text=Du erhältst ungefähr', { timeout: 10000 });
+    await page.waitForSelector('text=USDT', { timeout: 10000 });
     await page.waitForTimeout(1000);
 
     await expect(page).toHaveScreenshot('swap-flow-page.png', {
