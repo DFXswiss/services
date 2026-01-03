@@ -67,8 +67,7 @@ export function useTxHelper(): TxHelperInterface {
     if (supportedWallets.includes(activeWallet)) {
       try {
         return await getAddressBalances(assets, address, blockchain);
-      } catch (error) {
-        console.error('Failed to get balances from API:', error);
+      } catch {
         return undefined;
       }
     }
