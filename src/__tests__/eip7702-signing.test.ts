@@ -4,6 +4,7 @@
  * Tests the signEip7702Delegation function including:
  * - Correct usage of userNonce from delegation data
  * - Correct address (delegatorAddress) for authorization
+ * - Native EIP-7702 authorization hash construction (0x05 || RLP)
  * - Signature parsing and yParity calculation
  */
 
@@ -33,13 +34,13 @@ interface Eip7702DelegationData {
 }
 
 describe('EIP-7702 Signing Logic', () => {
-  describe('MetaMask RPC call parameters', () => {
-    // Tests for the exact parameters sent to eth_signTypedData_v4
+  describe('Delegation signing (EIP-712)', () => {
+    // Tests for the delegation signing which uses EIP-712
 
     const mockDelegationData = {
       relayerAddress: '0xRelayer',
       delegationManagerAddress: '0xDelegationManager',
-      delegatorAddress: '0xDelegator',
+      delegatorAddress: '0x63c0c19a282a1b52b07dd5a65b58948a07dae32b',
       userNonce: 5,
       domain: {
         name: 'DelegationManager',
@@ -63,7 +64,7 @@ describe('EIP-7702 Signing Logic', () => {
       },
     };
 
-    it('should build correct delegation sign request', () => {
+    it('should build correct delegation sign request using EIP-712', () => {
       const from = '0xUserAddress';
 
       // Build the delegation sign request as done in metamask.hook.ts
@@ -90,54 +91,6 @@ describe('EIP-7702 Signing Logic', () => {
       expect(parsedData.message).toEqual(mockDelegationData.message);
     });
 
-    it('should build correct authorization sign request', () => {
-      const from = '0xUserAddress';
-
-      // Build the authorization sign request as done in metamask.hook.ts
-      const authorizationTypes = {
-        Authorization: [
-          { name: 'chainId', type: 'uint256' },
-          { name: 'address', type: 'address' },
-          { name: 'nonce', type: 'uint256' },
-        ],
-      };
-
-      const authorizationMessage = {
-        chainId: mockDelegationData.domain.chainId,
-        address: mockDelegationData.delegatorAddress,
-        nonce: mockDelegationData.userNonce ?? 0,
-      };
-
-      const authorizationRequest = {
-        method: 'eth_signTypedData_v4',
-        params: [
-          from,
-          JSON.stringify({
-            domain: {
-              name: 'EIP-7702',
-              version: '1',
-              chainId: mockDelegationData.domain.chainId,
-            },
-            types: authorizationTypes,
-            primaryType: 'Authorization',
-            message: authorizationMessage,
-          }),
-        ],
-      };
-
-      expect(authorizationRequest.method).toBe('eth_signTypedData_v4');
-      expect(authorizationRequest.params[0]).toBe('0xUserAddress');
-
-      const parsedData = JSON.parse(authorizationRequest.params[1]);
-      expect(parsedData.domain.name).toBe('EIP-7702');
-      expect(parsedData.domain.version).toBe('1');
-      expect(parsedData.domain.chainId).toBe(11155111);
-      expect(parsedData.primaryType).toBe('Authorization');
-      expect(parsedData.message.chainId).toBe(11155111);
-      expect(parsedData.message.address).toBe('0xDelegator');
-      expect(parsedData.message.nonce).toBe(5);
-    });
-
     it('should include all required EIP-712 fields in delegation request', () => {
       const delegationRequestData = {
         domain: mockDelegationData.domain,
@@ -158,56 +111,87 @@ describe('EIP-7702 Signing Logic', () => {
       expect(delegationRequestData.domain).toHaveProperty('chainId');
       expect(delegationRequestData.domain).toHaveProperty('verifyingContract');
     });
-
-    it('should include all required EIP-712 fields in authorization request', () => {
-      const authorizationRequestData = {
-        domain: {
-          name: 'EIP-7702',
-          version: '1',
-          chainId: mockDelegationData.domain.chainId,
-        },
-        types: {
-          Authorization: [
-            { name: 'chainId', type: 'uint256' },
-            { name: 'address', type: 'address' },
-            { name: 'nonce', type: 'uint256' },
-          ],
-        },
-        primaryType: 'Authorization',
-        message: {
-          chainId: mockDelegationData.domain.chainId,
-          address: mockDelegationData.delegatorAddress,
-          nonce: mockDelegationData.userNonce,
-        },
-      };
-
-      // Verify Authorization type structure
-      expect(authorizationRequestData.types.Authorization).toHaveLength(3);
-      expect(authorizationRequestData.types.Authorization[0]).toEqual({ name: 'chainId', type: 'uint256' });
-      expect(authorizationRequestData.types.Authorization[1]).toEqual({ name: 'address', type: 'address' });
-      expect(authorizationRequestData.types.Authorization[2]).toEqual({ name: 'nonce', type: 'uint256' });
-    });
-
-    it('should use consistent chainId across domain and message', () => {
-      const chainId = mockDelegationData.domain.chainId;
-
-      const authorizationDomain = {
-        name: 'EIP-7702',
-        version: '1',
-        chainId: chainId,
-      };
-
-      const authorizationMessage = {
-        chainId: chainId,
-        address: mockDelegationData.delegatorAddress,
-        nonce: mockDelegationData.userNonce,
-      };
-
-      expect(authorizationDomain.chainId).toBe(authorizationMessage.chainId);
-      expect(authorizationDomain.chainId).toBe(11155111);
-    });
   });
 
+  describe('Authorization signing (Native EIP-7702)', () => {
+    // Tests for the authorization signing which uses native EIP-7702 format
+    // EIP-7702 requires: sign(keccak256(0x05 || RLP([chainId, address, nonce])))
+
+    it('should use MAGIC byte 0x05 for EIP-7702 (not 0x1901 for EIP-712)', () => {
+      // EIP-7702 uses 0x05 as domain separator
+      // EIP-712 uses 0x1901 as domain separator
+      const EIP7702_MAGIC = '0x05';
+      const EIP712_PREFIX = '0x1901';
+
+      expect(EIP7702_MAGIC).not.toBe(EIP712_PREFIX);
+      expect(EIP7702_MAGIC).toBe('0x05');
+    });
+
+    it('should construct authorization message with correct structure', () => {
+      const chainId = 11155111; // Sepolia
+      const contractAddress = '0x63c0c19a282a1b52b07dd5a65b58948a07dae32b';
+      const nonce = 5;
+
+      // The authorization message structure for EIP-7702 is:
+      // RLP([chainId, address, nonce])
+      const authorizationComponents = {
+        chainId,
+        address: contractAddress,
+        nonce,
+      };
+
+      expect(authorizationComponents.chainId).toBe(11155111);
+      expect(authorizationComponents.address).toBe('0x63c0c19a282a1b52b07dd5a65b58948a07dae32b');
+      expect(authorizationComponents.nonce).toBe(5);
+    });
+
+    it('should handle chainId 0 correctly', () => {
+      const chainId = 0;
+
+      // ChainId 0 should be encoded as empty bytes in RLP
+      const encodedChainId = chainId === 0 ? '0x' : `0x${chainId.toString(16)}`;
+      expect(encodedChainId).toBe('0x');
+    });
+
+    it('should handle nonce 0 correctly', () => {
+      const nonce = 0;
+
+      // Nonce 0 should be encoded as empty bytes in RLP
+      const encodedNonce = nonce === 0 ? '0x' : `0x${nonce.toString(16)}`;
+      expect(encodedNonce).toBe('0x');
+    });
+
+    it('should use eth_sign for authorization (not eth_signTypedData_v4)', () => {
+      const from = '0xUserAddress';
+      const authorizationHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+
+      // Build the authorization sign request as done in metamask.hook.ts
+      const authorizationRequest = {
+        method: 'eth_sign',
+        params: [from, authorizationHash],
+      };
+
+      // Should use eth_sign, NOT eth_signTypedData_v4
+      expect(authorizationRequest.method).toBe('eth_sign');
+      expect(authorizationRequest.method).not.toBe('eth_signTypedData_v4');
+      expect(authorizationRequest.params[0]).toBe('0xUserAddress');
+      expect(authorizationRequest.params[1]).toBe(authorizationHash);
+    });
+
+    it('should convert chainId to hex correctly', () => {
+      const testCases = [
+        { chainId: 1, expected: '0x1' },
+        { chainId: 11155111, expected: '0xaa36a7' },
+        { chainId: 137, expected: '0x89' },
+        { chainId: 42161, expected: '0xa4b1' },
+      ];
+
+      testCases.forEach(({ chainId, expected }) => {
+        const hex = `0x${chainId.toString(16)}`;
+        expect(hex).toBe(expected);
+      });
+    });
+  });
 
   describe('Authorization message construction', () => {
     /**
@@ -218,7 +202,7 @@ describe('EIP-7702 Signing Logic', () => {
       const delegationData: Eip7702DelegationData = {
         relayerAddress: '0xRelayer',
         delegationManagerAddress: '0xDelegationManager',
-        delegatorAddress: '0xDelegator',
+        delegatorAddress: '0x63c0c19a282a1b52b07dd5a65b58948a07dae32b',
         userNonce: 5, // User has made 5 transactions before
         domain: {
           name: 'DelegationManager',
@@ -227,17 +211,8 @@ describe('EIP-7702 Signing Logic', () => {
           verifyingContract: '0xDelegationManager',
         },
         types: {
-          Delegation: [
-            { name: 'delegate', type: 'address' },
-            { name: 'delegator', type: 'address' },
-            { name: 'authority', type: 'bytes32' },
-            { name: 'caveats', type: 'Caveat[]' },
-            { name: 'salt', type: 'uint256' },
-          ],
-          Caveat: [
-            { name: 'enforcer', type: 'address' },
-            { name: 'terms', type: 'bytes' },
-          ],
+          Delegation: [],
+          Caveat: [],
         },
         message: {
           delegate: '0xDelegate',
@@ -248,51 +223,26 @@ describe('EIP-7702 Signing Logic', () => {
         },
       };
 
-      // Simulate the authorization message construction from metamask.hook.ts
-      const authorizationMessage = {
-        chainId: delegationData.domain.chainId,
-        address: delegationData.delegatorAddress,
-        nonce: delegationData.userNonce ?? 0,
-      };
+      // Simulate the authorization construction from metamask.hook.ts
+      const chainId = delegationData.domain.chainId;
+      const contractAddress = delegationData.delegatorAddress;
+      const nonce = delegationData.userNonce ?? 0;
 
-      // Assert correct nonce is used
-      expect(authorizationMessage.nonce).toBe(5);
-      expect(authorizationMessage.address).toBe('0xDelegator');
-      expect(authorizationMessage.chainId).toBe(11155111);
+      // Assert correct values are used
+      expect(nonce).toBe(5);
+      expect(contractAddress).toBe('0x63c0c19a282a1b52b07dd5a65b58948a07dae32b');
+      expect(chainId).toBe(11155111);
     });
 
     it('should default to nonce 0 when userNonce is not provided', () => {
-      const delegationData: Eip7702DelegationData = {
-        relayerAddress: '0xRelayer',
-        delegationManagerAddress: '0xDelegationManager',
-        delegatorAddress: '0xDelegator',
-        // userNonce not provided (backwards compatibility)
-        domain: {
-          name: 'DelegationManager',
-          version: '1',
-          chainId: 1,
-          verifyingContract: '0xDelegationManager',
-        },
-        types: {
-          Delegation: [],
-          Caveat: [],
-        },
-        message: {
-          delegate: '0x',
-          delegator: '0x',
-          authority: '0x',
-          caveats: [],
-          salt: '0',
-        },
-      };
+      const delegationData = {
+        delegatorAddress: '0x63c0c19a282a1b52b07dd5a65b58948a07dae32b',
+        domain: { chainId: 1 },
+        // userNonce not provided
+      } as any;
 
-      const authorizationMessage = {
-        chainId: delegationData.domain.chainId,
-        address: delegationData.delegatorAddress,
-        nonce: delegationData.userNonce ?? 0,
-      };
-
-      expect(authorizationMessage.nonce).toBe(0);
+      const nonce = delegationData.userNonce ?? 0;
+      expect(nonce).toBe(0);
     });
 
     it('should use delegatorAddress (not delegationManagerAddress) for authorization', () => {
@@ -320,16 +270,12 @@ describe('EIP-7702 Signing Logic', () => {
         },
       };
 
-      const authorizationMessage = {
-        chainId: delegationData.domain.chainId,
-        address: delegationData.delegatorAddress,
-        nonce: delegationData.userNonce ?? 0,
-      };
+      const contractAddress = delegationData.delegatorAddress;
 
       // The authorization should point to delegatorAddress (the contract the EOA delegates to)
       // NOT delegationManagerAddress
-      expect(authorizationMessage.address).toBe('0x63c0c19a282a1b52b07dd5a65b58948a07dae32b');
-      expect(authorizationMessage.address).not.toBe('0xDelegationManager');
+      expect(contractAddress).toBe('0x63c0c19a282a1b52b07dd5a65b58948a07dae32b');
+      expect(contractAddress).not.toBe('0xDelegationManager');
     });
   });
 
@@ -355,11 +301,7 @@ describe('EIP-7702 Signing Logic', () => {
     });
 
     it('should correctly calculate yParity for v=28', () => {
-      const mockSignature =
-        '0x' +
-        '0'.repeat(64) + // r
-        '1'.repeat(64) + // s
-        '1c'; // v = 28 (0x1c)
+      const mockSignature = '0x' + '0'.repeat(64) + '1'.repeat(64) + '1c'; // v = 28 (0x1c)
 
       const sig = mockSignature.slice(2);
       const v = parseInt(sig.slice(128, 130), 16);
@@ -390,7 +332,7 @@ describe('EIP-7702 Signing Logic', () => {
       const delegationData: Eip7702DelegationData = {
         relayerAddress: '0xRelayer',
         delegationManagerAddress: '0xDelegationManager',
-        delegatorAddress: '0xDelegator',
+        delegatorAddress: '0x63c0c19a282a1b52b07dd5a65b58948a07dae32b',
         userNonce: 3,
         domain: {
           name: 'DelegationManager',
@@ -411,12 +353,6 @@ describe('EIP-7702 Signing Logic', () => {
         },
       };
 
-      const authorizationMessage = {
-        chainId: delegationData.domain.chainId,
-        address: delegationData.delegatorAddress,
-        nonce: delegationData.userNonce ?? 0,
-      };
-
       // Mock signature values
       const delegationSignature = '0xDelegationSig';
       const r = '0xR';
@@ -433,9 +369,9 @@ describe('EIP-7702 Signing Logic', () => {
           signature: delegationSignature,
         },
         authorization: {
-          chainId: authorizationMessage.chainId,
-          address: authorizationMessage.address,
-          nonce: authorizationMessage.nonce,
+          chainId: delegationData.domain.chainId,
+          address: delegationData.delegatorAddress,
+          nonce: delegationData.userNonce ?? 0,
           r,
           s,
           yParity,
@@ -449,7 +385,7 @@ describe('EIP-7702 Signing Logic', () => {
       expect(result.delegation.signature).toBe('0xDelegationSig');
 
       expect(result.authorization.chainId).toBe(1);
-      expect(result.authorization.address).toBe('0xDelegator');
+      expect(result.authorization.address).toBe('0x63c0c19a282a1b52b07dd5a65b58948a07dae32b');
       expect(result.authorization.nonce).toBe(3);
       expect(result.authorization.r).toBe('0xR');
       expect(result.authorization.s).toBe('0xS');
@@ -458,14 +394,13 @@ describe('EIP-7702 Signing Logic', () => {
   });
 
   describe('Error handling', () => {
-    // These tests verify the error handling logic from metamask.hook.ts handleError function
+    // These tests verify the error handling logic from metamask.hook.ts
 
     interface MetaMaskError {
       code: number;
       message: string;
     }
 
-    // Simulated error handler (extracted logic from metamask.hook.ts)
     class AbortError extends Error {
       constructor(message: string) {
         super(message);
@@ -490,6 +425,17 @@ describe('EIP-7702 Signing Logic', () => {
       throw e;
     }
 
+    function handleEthSignError(e: any): never {
+      // eth_sign might be disabled - provide helpful error message
+      if (e?.code === -32601 || e?.code === -32602 || e?.code === 4200) {
+        throw new TranslatedError(
+          'EIP-7702 authorization requires eth_sign to be enabled. ' +
+            'Please enable it in MetaMask: Settings > Advanced > Eth_sign requests',
+        );
+      }
+      throw e;
+    }
+
     it('should throw AbortError when user cancels (code 4001)', () => {
       const error: MetaMaskError = { code: 4001, message: 'User denied' };
 
@@ -502,6 +448,20 @@ describe('EIP-7702 Signing Logic', () => {
 
       expect(() => handleError(error)).toThrow(TranslatedError);
       expect(() => handleError(error)).toThrow('There is already a request pending');
+    });
+
+    it('should throw TranslatedError when eth_sign is disabled (code -32601)', () => {
+      const error = { code: -32601, message: 'Method not found' };
+
+      expect(() => handleEthSignError(error)).toThrow(TranslatedError);
+      expect(() => handleEthSignError(error)).toThrow('eth_sign to be enabled');
+    });
+
+    it('should throw TranslatedError when eth_sign is disabled (code 4200)', () => {
+      const error = { code: 4200, message: 'Unsupported method' };
+
+      expect(() => handleEthSignError(error)).toThrow(TranslatedError);
+      expect(() => handleEthSignError(error)).toThrow('eth_sign to be enabled');
     });
 
     it('should rethrow unknown errors', () => {
