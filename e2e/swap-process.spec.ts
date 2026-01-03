@@ -13,9 +13,10 @@ test.describe('Swap Process - UI Flow', () => {
   });
 
   test('should load swap page with session token', async ({ page }) => {
-    await page.goto(`/swap?session=${token}&blockchain=Ethereum&asset-in=USDT&asset-out=ETH`);
+    // Use ETH as source (consistent with sell) - default amount 0.1 will be set automatically
+    await page.goto(`/swap?session=${token}&blockchain=Ethereum&asset-in=ETH&asset-out=USDT`);
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000);
 
     const pageContent = await page.textContent('body');
 
@@ -34,25 +35,25 @@ test.describe('Swap Process - UI Flow', () => {
   });
 
   test('should display source and target asset selectors', async ({ page }) => {
-    await page.goto(`/swap?session=${token}&blockchain=Ethereum&asset-in=USDT&asset-out=ETH`);
+    await page.goto(`/swap?session=${token}&blockchain=Ethereum&asset-in=ETH&asset-out=USDT`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Verify both assets are selected by checking for USDT and ETH in the page
-    const usdtVisible = await page.locator('text=USDT').first().isVisible();
+    // Verify both assets are selected
     const ethVisible = await page.locator('text=ETH').first().isVisible();
+    const usdtVisible = await page.locator('text=USDT').first().isVisible();
 
-    expect(usdtVisible || ethVisible).toBeTruthy();
+    expect(ethVisible || usdtVisible).toBeTruthy();
   });
 
-  test('should handle swap flow with pre-filled amount', async ({ page }) => {
-    await page.goto(`/swap?session=${token}&blockchain=Ethereum&asset-in=USDT&asset-out=ETH&amount-in=100`);
+  test('should handle swap flow with default amount', async ({ page }) => {
+    // ETH source should auto-fill 0.1 as default amount (like sell page)
+    await page.goto(`/swap?session=${token}&blockchain=Ethereum&asset-in=ETH&asset-out=USDT`);
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    // Verify amount and assets are pre-filled
-    await page.waitForSelector('text=USDT', { timeout: 10000 });
+    // Wait for assets to load
     await page.waitForSelector('text=ETH', { timeout: 10000 });
+    await page.waitForSelector('text=Tether', { timeout: 10000 }); // USDT shows as "Tether"
+    await page.waitForTimeout(1000);
 
     await expect(page).toHaveScreenshot('swap-page-with-amount.png', {
       maxDiffPixels: 5000,
@@ -60,7 +61,7 @@ test.describe('Swap Process - UI Flow', () => {
   });
 
   test('should show deposit address after form completion', async ({ page }) => {
-    await page.goto(`/swap?session=${token}&blockchain=Ethereum&asset-in=USDT&asset-out=ETH`);
+    await page.goto(`/swap?session=${token}&blockchain=Ethereum&asset-in=ETH&asset-out=USDT`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 
