@@ -226,7 +226,7 @@ export default function BuyScreen(): JSX.Element {
     }
   }, [amountIn, amountOut]);
 
-  useEffect(() => setAddress(), [session?.address, translate]);
+  useEffect(() => setAddress(), [session?.address, translate, addressItems.length]);
 
   useEffect(() => {
     if (selectedAddress) {

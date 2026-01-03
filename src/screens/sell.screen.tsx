@@ -210,7 +210,7 @@ export default function SellScreen(): JSX.Element {
     }
   }, [amountIn, amountOut, selectedAsset]);
 
-  useEffect(() => setAddress(), [session?.address, translate]);
+  useEffect(() => setAddress(), [session?.address, translate, addressItems.length]);
 
   useEffect(() => {
     if (selectedAddress) {

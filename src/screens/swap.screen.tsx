@@ -236,7 +236,7 @@ export default function SwapScreen(): JSX.Element {
     }
   }, [amountIn, selectedSourceAsset]);
 
-  useEffect(() => setAddress(), [session?.address, translate, blockchain, userAddresses]);
+  useEffect(() => setAddress(), [session?.address, translate, blockchain, userAddresses, addressItems.length]);
 
   useEffect(() => {
     if (selectedAddress) {
