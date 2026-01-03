@@ -35,7 +35,7 @@ test.describe('Login Process - UI Flow', () => {
   });
 
   test('should navigate to buy page with session', async ({ page }) => {
-    await page.goto(`/buy?session=${token}`);
+    await page.goto(`/buy?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
@@ -52,7 +52,7 @@ test.describe('Login Process - UI Flow', () => {
   });
 
   test('should show authenticated state with session token', async ({ page }) => {
-    await page.goto(`/buy?session=${token}`);
+    await page.goto(`/buy?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 

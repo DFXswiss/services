@@ -13,7 +13,7 @@ test.describe('Swap Process - UI Flow', () => {
   });
 
   test('should load swap page with session token', async ({ page }) => {
-    await page.goto(`/swap?session=${token}`);
+    await page.goto(`/swap?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
 
@@ -35,7 +35,7 @@ test.describe('Swap Process - UI Flow', () => {
   });
 
   test('should display source and target asset selectors', async ({ page }) => {
-    await page.goto(`/swap?session=${token}`);
+    await page.goto(`/swap?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -54,7 +54,7 @@ test.describe('Swap Process - UI Flow', () => {
   });
 
   test('should handle swap flow with pre-filled amount', async ({ page }) => {
-    await page.goto(`/swap?session=${token}&amountIn=0.1`);
+    await page.goto(`/swap?session=${token}&blockchain=Ethereum&amountIn=0.1`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -67,7 +67,7 @@ test.describe('Swap Process - UI Flow', () => {
   });
 
   test('should show deposit address after form completion', async ({ page }) => {
-    await page.goto(`/swap?session=${token}`);
+    await page.goto(`/swap?session=${token}&blockchain=Ethereum`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 
