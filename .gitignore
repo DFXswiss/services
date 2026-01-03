@@ -8,8 +8,8 @@
 # testing
 /coverage
 dfx.swiss-*.tgz
-/playwright-report/
-/test-results/
+playwright-report/
+test-results/
 
 # test environment (contains secrets)
 .env.test
