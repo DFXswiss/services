@@ -20,10 +20,10 @@ export default defineConfig({
   timeout: 60000,
   use: {
     baseURL: 'http://localhost:3001',
-    // Only capture traces and screenshots on failure to reduce artifacts
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    // Always capture traces, screenshots and videos
+    trace: 'on',
+    screenshot: 'on',
+    video: 'on',
   },
 
   projects: [
