@@ -30,8 +30,6 @@ import { OrderPaymentData } from 'src/dto/order.dto';
 import { useAppParams } from 'src/hooks/app-params.hook';
 import { AmountError, OrderType } from 'src/hooks/order.hook';
 import { useTxHelper } from 'src/hooks/tx-helper.hook';
-import { useEip7702 } from 'src/hooks/eip7702.hook';
-import { useMetaMask, WalletType } from 'src/hooks/wallets/metamask.hook';
 import { isAsset } from 'src/util/utils';
 import { ExchangeRate } from '../exchange-rate';
 import { PrivateAssetHint } from '../private-asset-hint';
@@ -78,11 +76,6 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
   const { translate } = useSettingsContext();
   const { flags } = useAppParams();
   const { setPaymentNameForm } = useOrderUIContext();
-  const { signEip7702Data, isSupported: isEip7702Supported } = useEip7702();
-  const metaMask = useMetaMask();
-  const { getWalletType, getAccount } = metaMask;
-  const { confirmSell } = useSell();
-  const { confirmSwap } = useSwap();
 
   const localRef = React.useRef<HTMLDivElement>(null);
 

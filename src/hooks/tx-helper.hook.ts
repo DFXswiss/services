@@ -12,6 +12,7 @@ import { useTronLinkTrx } from './wallets/tronlink-trx.hook';
 import { useTrustSol } from './wallets/trust-sol.hook';
 import { useTrustTrx } from './wallets/trust-trx.hook';
 import { useWalletConnect } from './wallets/wallet-connect.hook';
+import { TranslatedError } from '../util/translated-error';
 export interface TxHelperInterface {
   getBalances: (assets: Asset[], address: string, blockchain?: Blockchain) => Promise<AssetBalance[] | undefined>;
   sendTransaction: (tx: Sell | Swap) => Promise<string>;
@@ -23,7 +24,7 @@ export function useTxHelper(): TxHelperInterface {
   const {
     createTransaction: createTransactionMetaMask,
     requestChangeToBlockchain: requestChangeToBlockchainMetaMask,
-    signEip7702Delegation,
+    sendCallsWithPaymaster,
   } = useMetaMask();
   const {
     createTransaction: createTransactionWalletConnect,
@@ -87,18 +88,22 @@ export function useTxHelper(): TxHelperInterface {
 
         await requestChangeToBlockchainMetaMask(asset.blockchain);
 
-        // EIP-7702 gasless transaction flow
-        // Used when user has no ETH for gas - backend provides EIP-7702 delegation data
-        if (tx.depositTx?.eip7702) {
-          const eip7702Data = tx.depositTx.eip7702;
-          const signedData = await signEip7702Delegation(eip7702Data, session.address);
+        // EIP-5792 gasless transaction flow via wallet_sendCalls with paymaster
+        // Used when user has no ETH for gas - backend provides EIP-5792 paymaster data
+        if (tx.depositTx?.eip5792) {
+          const { paymasterUrl, calls, chainId } = tx.depositTx.eip5792;
+
+          // Send transaction via wallet_sendCalls with paymaster sponsorship
+          const txHash = await sendCallsWithPaymaster(calls, paymasterUrl, chainId);
+
+          // Confirm the transaction with the backend using the txHash
           if ('asset' in tx) {
-            const result = await confirmSell(tx.id, { eip7702: signedData });
-            if (!result?.id) throw new Error('Failed to confirm sell transaction');
+            const result = await confirmSell(tx.id, { txHash });
+            if (!result?.id) throw new TranslatedError('Failed to confirm sell transaction');
             return result.id.toString();
           } else {
-            const result = await confirmSwap(tx.id, { eip7702: signedData });
-            if (!result?.id) throw new Error('Failed to confirm swap transaction');
+            const result = await confirmSwap(tx.id, { txHash });
+            if (!result?.id) throw new TranslatedError('Failed to confirm swap transaction');
             return result.id.toString();
           }
         }
@@ -164,7 +169,7 @@ export function useTxHelper(): TxHelperInterface {
       requestChangeToBlockchainMetaMask,
       requestChangeToBlockchainWalletConnect,
       canClose,
-      signEip7702Delegation,
+      sendCallsWithPaymaster,
       confirmSell,
       confirmSwap,
     ],
