@@ -1,15 +1,8 @@
-import {
-  Asset,
-  AssetType,
-  Blockchain,
-  Eip7702DelegationData,
-  Eip7702SignedData,
-} from '@dfx.swiss/react';
+import { Asset, AssetType, Blockchain, Eip5792Call } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
 import { useMemo } from 'react';
 import { isMobile } from 'react-device-detect';
-import { toRlp, keccak256, concat, toHex, Hex } from 'viem';
 import Web3 from 'web3';
 import { TransactionConfig } from 'web3-core';
 import { Contract } from 'web3-eth-contract';
@@ -48,7 +41,8 @@ export interface MetaMaskInterface {
     to: string,
     config?: { isWeiAmount?: boolean; gasPrice?: number },
   ) => Promise<string>;
-  signEip7702Delegation: (delegationData: Eip7702DelegationData, from: string) => Promise<Eip7702SignedData>;
+  sendCallsWithPaymaster: (calls: Eip5792Call[], paymasterUrl: string, chainId: number) => Promise<string>;
+  supportsEip5792Paymaster: (chainId: number) => Promise<boolean>;
 }
 
 interface MetaMaskError {
@@ -256,85 +250,89 @@ export function useMetaMask(): MetaMaskInterface {
     return new web3.eth.Contract(ERC20_ABI as any, chainId);
   }
 
-  async function signEip7702Delegation(
-    delegationData: Eip7702DelegationData,
-    from: string,
-  ): Promise<Eip7702SignedData> {
+  /**
+   * Check if the wallet supports EIP-5792 paymaster service
+   */
+  async function supportsEip5792Paymaster(chainId: number): Promise<boolean> {
     try {
-      // Step 1: Sign the delegation using EIP-712 (for DelegationManager contract)
-      const delegationSignature = await ethereum().request({
-        method: 'eth_signTypedData_v4',
+      const account = await getAccount();
+      if (!account) return false;
+
+      const capabilities = await ethereum().request({
+        method: 'wallet_getCapabilities',
+        params: [account],
+      });
+
+      const chainHex = `0x${chainId.toString(16)}`;
+      return capabilities?.[chainHex]?.paymasterService?.supported === true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Wait for wallet_sendCalls transaction to be confirmed
+   */
+  async function waitForCallsStatus(callsId: string): Promise<string> {
+    const maxAttempts = 120; // 2 minutes
+    for (let i = 0; i < maxAttempts; i++) {
+      const status = await ethereum().request({
+        method: 'wallet_getCallsStatus',
+        params: [callsId],
+      });
+
+      if (status.status === 'CONFIRMED') {
+        return status.receipts[0].transactionHash;
+      }
+      if (status.status === 'FAILED') {
+        throw new TranslatedError('Transaction failed');
+      }
+
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    throw new TranslatedError('Transaction timeout - please check your wallet');
+  }
+
+  /**
+   * Send transaction via EIP-5792 wallet_sendCalls with paymaster sponsorship
+   */
+  async function sendCallsWithPaymaster(calls: Eip5792Call[], paymasterUrl: string, chainId: number): Promise<string> {
+    try {
+      const account = await getAccount();
+      if (!account) throw new Error('No account connected');
+
+      const chainHex = `0x${chainId.toString(16)}`;
+
+      // Check if wallet supports paymaster
+      const supported = await supportsEip5792Paymaster(chainId);
+      if (!supported) {
+        throw new TranslatedError(
+          'Your wallet does not support gasless transactions. Please update MetaMask to v12.20+ and enable Smart Account.',
+        );
+      }
+
+      // Send calls with paymaster capability
+      const result = await ethereum().request({
+        method: 'wallet_sendCalls',
         params: [
-          from,
-          JSON.stringify({
-            domain: delegationData.domain,
-            types: delegationData.types,
-            primaryType: 'Delegation',
-            message: delegationData.message,
-          }),
+          {
+            version: '1.0',
+            chainId: chainHex,
+            from: account,
+            calls: calls.map((c) => ({
+              to: c.to,
+              data: c.data,
+              value: c.value,
+            })),
+            capabilities: {
+              paymasterService: { url: paymasterUrl },
+            },
+          },
         ],
       });
 
-      // Step 2: Sign EIP-7702 authorization using native format
-      // EIP-7702 requires: sign(keccak256(0x05 || RLP([chainId, address, nonce])))
-      // This is different from EIP-712 which uses 0x1901 prefix
-      const chainId = delegationData.domain.chainId;
-      const contractAddress = delegationData.delegatorAddress as Hex;
-      const nonce = delegationData.userNonce ?? 0;
-
-      // Construct the EIP-7702 authorization message
-      // Format: MAGIC (0x05) + RLP([chainId, address, nonce])
-      const rlpEncoded = toRlp([
-        chainId === 0 ? '0x' : toHex(chainId),
-        contractAddress,
-        nonce === 0 ? '0x' : toHex(nonce),
-      ]);
-
-      const authorizationHash = keccak256(concat(['0x05' as Hex, rlpEncoded]));
-
-      // Sign the hash using eth_sign (raw hash signing)
-      // Note: eth_sign must be enabled in MetaMask settings for this to work
-      let authSignature: string;
-      try {
-        authSignature = await ethereum().request({
-          method: 'eth_sign',
-          params: [from, authorizationHash],
-        });
-      } catch (signError: any) {
-        // eth_sign might be disabled - provide helpful error message
-        if (signError?.code === -32601 || signError?.code === -32602 || signError?.code === 4200) {
-          throw new TranslatedError(
-            'EIP-7702 authorization requires eth_sign to be enabled. ' +
-              'Please enable it in MetaMask: Settings > Advanced > Eth_sign requests',
-          );
-        }
-        throw signError;
-      }
-
-      // Parse the signature into r, s, yParity (v)
-      const sig = authSignature.slice(2); // Remove 0x prefix
-      const r = ('0x' + sig.slice(0, 64)) as Hex;
-      const s = ('0x' + sig.slice(64, 128)) as Hex;
-      const v = parseInt(sig.slice(128, 130), 16);
-      const yParity = v >= 27 ? v - 27 : v; // Normalize v to yParity (0 or 1)
-
-      return {
-        delegation: {
-          delegate: delegationData.message.delegate,
-          delegator: delegationData.message.delegator,
-          authority: delegationData.message.authority,
-          salt: delegationData.message.salt,
-          signature: delegationSignature,
-        },
-        authorization: {
-          chainId,
-          address: contractAddress,
-          nonce,
-          r,
-          s,
-          yParity,
-        },
-      };
+      // Wait for transaction confirmation
+      return await waitForCallsStatus(result.id ?? result);
     } catch (e) {
       return handleError(e as MetaMaskError);
     }
@@ -366,7 +364,8 @@ export function useMetaMask(): MetaMaskInterface {
       addContract,
       readBalance,
       createTransaction,
-      signEip7702Delegation,
+      sendCallsWithPaymaster,
+      supportsEip5792Paymaster,
     }),
     [web3, toBlockchain, toChainHex, toChainObject],
   );
