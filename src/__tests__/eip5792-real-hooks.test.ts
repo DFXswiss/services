@@ -152,7 +152,7 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       const { result } = renderHook(() => useMetaMask());
 
-      let supported: boolean = false;
+      let supported = false;
       await act(async () => {
         supported = await result.current.supportsEip5792Paymaster(1);
       });
@@ -177,7 +177,7 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       const { result } = renderHook(() => useMetaMask());
 
-      let supported: boolean = true;
+      let supported = true;
       await act(async () => {
         supported = await result.current.supportsEip5792Paymaster(1);
       });
@@ -196,7 +196,7 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       const { result } = renderHook(() => useMetaMask());
 
-      let supported: boolean = true;
+      let supported = true;
       await act(async () => {
         supported = await result.current.supportsEip5792Paymaster(1);
       });
@@ -212,7 +212,7 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       const { result } = renderHook(() => useMetaMask());
 
-      let supported: boolean = true;
+      let supported = true;
       await act(async () => {
         supported = await result.current.supportsEip5792Paymaster(1);
       });
@@ -233,7 +233,7 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       const { result } = renderHook(() => useMetaMask());
 
-      let supported: boolean = false;
+      let supported = false;
       await act(async () => {
         supported = await result.current.supportsEip5792Paymaster(10);
       });
@@ -254,7 +254,7 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       const { result } = renderHook(() => useMetaMask());
 
-      let supported: boolean = false;
+      let supported = false;
       await act(async () => {
         supported = await result.current.supportsEip5792Paymaster(137);
       });
@@ -300,7 +300,7 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       const { result } = renderHook(() => useMetaMask());
 
-      let txHash: string = '';
+      let txHash = '';
       await act(async () => {
         txHash = await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
       });
@@ -418,7 +418,7 @@ describe('EIP-5792 Real Hook Tests', () => {
 
       const { result } = renderHook(() => useMetaMask());
 
-      let txHash: string = '';
+      let txHash = '';
       await act(async () => {
         txHash = await result.current.sendCallsWithPaymaster(mockCalls, TEST_PAYMASTER_URL, TEST_CHAIN_ID);
       });
