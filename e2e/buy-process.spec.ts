@@ -64,6 +64,8 @@ test.describe('Buy Process - UI Flow', () => {
 
     const hasTradingRestriction =
       pageContent?.includes('Trading not allowed') ||
+      pageContent?.includes('recommendation') ||
+      pageContent?.includes('email address') ||
       pageContent?.includes('nicht erlaubt') ||
       pageContent?.includes('KYC') ||
       pageContent?.includes('verify');

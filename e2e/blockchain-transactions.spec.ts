@@ -195,7 +195,7 @@ test.describe('Sell Flow with Blockchain Verification - Sepolia', () => {
       console.log(`PaymentInfo creation failed: ${JSON.stringify(error)}`);
       // Expected errors for test accounts
       const errorMsg = (error as { message?: string }).message || '';
-      if (errorMsg.includes('KYC') || errorMsg.includes('Trading not allowed') || errorMsg.includes('Ident')) {
+      if (errorMsg.includes('KYC') || errorMsg.includes('Trading not allowed') || errorMsg.includes('RecommendationRequired') || errorMsg.includes('EmailRequired') || errorMsg.includes('Ident')) {
         console.log('Account restriction - skipping test');
         test.skip();
         return;
