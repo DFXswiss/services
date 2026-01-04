@@ -13,10 +13,12 @@ jest.mock('@dfx.swiss/react', () => ({
     POLYGON: 'Polygon',
     ARBITRUM: 'Arbitrum',
     BASE: 'Base',
+    OPTIMISM: 'Optimism',
+    BINANCE_SMART_CHAIN: 'BinanceSmartChain',
+    GNOSIS: 'Gnosis',
     BITCOIN: 'Bitcoin',
     LIGHTNING: 'Lightning',
     SOLANA: 'Solana',
-    OPTIMISM: 'Optimism',
   },
 }));
 
@@ -66,6 +68,21 @@ describe('useEip7702', () => {
         const { result } = renderHook(() => useEip7702());
         expect(result.current.isSupported(Blockchain.BASE)).toBe(true);
       });
+
+      it('should return true for Optimism', () => {
+        const { result } = renderHook(() => useEip7702());
+        expect(result.current.isSupported(Blockchain.OPTIMISM)).toBe(true);
+      });
+
+      it('should return true for BSC', () => {
+        const { result } = renderHook(() => useEip7702());
+        expect(result.current.isSupported(Blockchain.BINANCE_SMART_CHAIN)).toBe(true);
+      });
+
+      it('should return true for Gnosis', () => {
+        const { result } = renderHook(() => useEip7702());
+        expect(result.current.isSupported(Blockchain.GNOSIS)).toBe(true);
+      });
     });
 
     describe('unsupported blockchains', () => {
@@ -84,9 +101,9 @@ describe('useEip7702', () => {
         expect(result.current.isSupported(Blockchain.SOLANA)).toBe(false);
       });
 
-      it('should return false for Optimism (not in supported list)', () => {
+      it('should return false for Bitcoin (not EVM)', () => {
         const { result } = renderHook(() => useEip7702());
-        expect(result.current.isSupported(Blockchain.OPTIMISM)).toBe(false);
+        expect(result.current.isSupported(Blockchain.BITCOIN)).toBe(false);
       });
     });
 

@@ -87,22 +87,21 @@ export function useTxHelper(): TxHelperInterface {
 
         await requestChangeToBlockchainMetaMask(asset.blockchain);
 
-        // DISABLED: EIP-7702 gasless transactions require Pimlico integration
-        // The manual signing approach doesn't work because eth_sign is disabled in MetaMask
-        // TODO: Re-enable once Pimlico integration is complete
-        //
-        // Original EIP-7702 flow:
-        // if (tx.depositTx?.eip7702) {
-        //   const eip7702Data = tx.depositTx.eip7702;
-        //   const signedData = await signEip7702Delegation(eip7702Data, session.address);
-        //   if ('asset' in tx) {
-        //     const result = await confirmSell(tx.id, { eip7702: signedData });
-        //     return result.id.toString();
-        //   } else {
-        //     const result = await confirmSwap(tx.id, { eip7702: signedData });
-        //     return result.id.toString();
-        //   }
-        // }
+        // EIP-7702 gasless transaction flow
+        // Used when user has no ETH for gas - backend provides EIP-7702 delegation data
+        if (tx.depositTx?.eip7702) {
+          const eip7702Data = tx.depositTx.eip7702;
+          const signedData = await signEip7702Delegation(eip7702Data, session.address);
+          if ('asset' in tx) {
+            const result = await confirmSell(tx.id, { eip7702: signedData });
+            if (!result?.id) throw new Error('Failed to confirm sell transaction');
+            return result.id.toString();
+          } else {
+            const result = await confirmSwap(tx.id, { eip7702: signedData });
+            if (!result?.id) throw new Error('Failed to confirm swap transaction');
+            return result.id.toString();
+          }
+        }
 
         return createTransactionMetaMask(new BigNumber(tx.amount), asset, session.address, tx.depositAddress);
 
