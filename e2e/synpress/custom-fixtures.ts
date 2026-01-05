@@ -15,6 +15,11 @@
 import { test as base, chromium, BrowserContext, Page } from '@playwright/test';
 import { MetaMask } from '@synthetixio/synpress/playwright';
 import path from 'path';
+import * as dotenv from 'dotenv';
+import { HDNodeWallet } from 'ethers';
+
+// Load environment variables from .env.test
+dotenv.config({ path: path.join(__dirname, '../../.env.test') });
 
 // Chrome 126 path (installed via @puppeteer/browsers)
 const CHROME_126_PATH = path.join(
@@ -26,12 +31,31 @@ const CHROME_126_PATH = path.join(
 // MetaMask extension path (downloaded separately)
 const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-11.9.1');
 
-// Test wallet credentials
+// Test wallet credentials from environment
 const WALLET_PASSWORD = 'Tester@1234';
-const TEST_SEED_PHRASE = 'test test test test test test test test test test test junk';
+const TEST_SEED_PHRASE = process.env.TEST_SEED || 'test test test test test test test test test test test junk';
 
-// Test wallet address (first account from Hardhat's default seed phrase)
-export const TEST_WALLET_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+// Derivation paths
+export const EVM_DERIVATION_PATH_WALLET1 = ''; // Default (no derivation, direct from seed)
+export const EVM_DERIVATION_PATH_WALLET2 = "m/44'/60'/0'/0/0"; // BIP-44 standard
+
+// Calculate wallet addresses dynamically from seed
+function getWalletAddresses(seedPhrase: string): { WALLET_1: string; WALLET_2: string } {
+  const hdNode = HDNodeWallet.fromPhrase(seedPhrase);
+  const wallet2 = hdNode.derivePath(EVM_DERIVATION_PATH_WALLET2.replace('m/', ''));
+  return {
+    WALLET_1: hdNode.address,
+    WALLET_2: wallet2.address,
+  };
+}
+
+// Test wallet addresses (dynamically calculated)
+const walletAddresses = getWalletAddresses(TEST_SEED_PHRASE);
+export const TEST_WALLET_1_ADDRESS = walletAddresses.WALLET_1; // Has ETH + USDT
+export const TEST_WALLET_2_ADDRESS = walletAddresses.WALLET_2; // Has USDT only (gasless)
+
+// Legacy export for compatibility
+export const TEST_WALLET_ADDRESS = TEST_WALLET_1_ADDRESS;
 
 // Chain configurations for multi-chain testing
 export const SUPPORTED_CHAINS = [
@@ -42,7 +66,20 @@ export const SUPPORTED_CHAINS = [
   { name: 'Base', chainId: 8453, chainHex: '0x2105' },
   { name: 'BinanceSmartChain', chainId: 56, chainHex: '0x38' },
   { name: 'Gnosis', chainId: 100, chainHex: '0x64' },
+  { name: 'Sepolia', chainId: 11155111, chainHex: '0xaa36a7' },
 ];
+
+// Sepolia network configuration for MetaMask
+export const SEPOLIA_NETWORK = {
+  networkName: 'Sepolia',
+  rpcUrl: 'https://sepolia.gateway.tenderly.co',
+  chainId: 11155111,
+  symbol: 'ETH',
+  blockExplorer: 'https://sepolia.etherscan.io',
+};
+
+// Sepolia USDT contract address
+export const SEPOLIA_USDT_CONTRACT = '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06';
 
 interface CustomFixtures {
   context: BrowserContext;
@@ -256,20 +293,127 @@ async function setupMetaMaskWallet(page: Page, seedPhrase: string, password: str
   }
 
   await page.waitForTimeout(1000);
+
+  // Enable test networks to access Sepolia
+  await enableTestNetworks(page);
+}
+
+/**
+ * Enable test networks in MetaMask settings
+ */
+async function enableTestNetworks(page: Page): Promise<void> {
+  try {
+    // Click network selector
+    const networkSelector = page.locator('[data-testid="network-display"], text=Ethereum Mainnet').first();
+    if (await networkSelector.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await networkSelector.click();
+      await page.waitForTimeout(1000);
+
+      // Find and enable "Show test networks" toggle
+      // The toggle in MetaMask 11.x is a div with role="checkbox" or a custom toggle-button
+      const toggleSelectors = [
+        'div[data-testid="network-display-testnet-toggle"]',
+        '[class*="toggle"]',
+        'text=Show test networks >> .. >> [role="checkbox"]',
+        'text=Show test networks >> .. >> button',
+      ];
+
+      for (const selector of toggleSelectors) {
+        try {
+          const toggle = page.locator(selector).first();
+          if (await toggle.isVisible({ timeout: 1000 }).catch(() => false)) {
+            await toggle.click();
+            await page.waitForTimeout(1000);
+            console.log('Clicked test networks toggle');
+            break;
+          }
+        } catch {
+          continue;
+        }
+      }
+
+      // Also try clicking directly on the "Show test networks" text area
+      const showTestText = page.locator('text=Show test networks');
+      if (await showTestText.isVisible({ timeout: 1000 }).catch(() => false)) {
+        // Click on the parent container which should toggle
+        await showTestText.click();
+        await page.waitForTimeout(1000);
+        console.log('Clicked Show test networks text');
+      }
+
+      // Wait and check if Sepolia is now visible
+      await page.waitForTimeout(1000);
+
+      // Click on Sepolia if visible
+      const sepoliaOption = page.locator('text=Sepolia').first();
+      if (await sepoliaOption.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await sepoliaOption.click();
+        await page.waitForTimeout(1000);
+        console.log('Switched to Sepolia network');
+      } else {
+        // Close network selector if Sepolia not found
+        const closeX = page.locator('[aria-label="Close"], button:has-text("×")').first();
+        if (await closeX.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await closeX.click();
+        }
+        console.log('Sepolia not found in network list');
+      }
+    }
+  } catch (e) {
+    console.log('Note: Could not enable test networks:', e);
+  }
 }
 
 /**
  * Helper to connect wallet to the DFX app
+ * DFX uses a custom login flow:
+ * 1. Click on "CRYPTO WALLET" card on login page
+ * 2. MetaMask popup appears for connection approval
+ * 3. MetaMask popup appears for signature (authentication)
+ * 4. User is authenticated and redirected
  */
 export async function connectWallet(page: Page, metamask: MetaMask): Promise<void> {
-  const connectButton = page
-    .locator('button:has-text("Wallet"), button:has-text("Connect"), button:has-text("Verbinden")')
-    .first();
+  // Check if we're on the login page
+  const loginPageVisible = await page.locator('text=Login to DFX').isVisible({ timeout: 3000 }).catch(() => false);
 
-  if (await connectButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await connectButton.click();
-    await metamask.connectToDapp();
-    await page.waitForTimeout(2000);
+  if (loginPageVisible) {
+    console.log('On login page, clicking CRYPTO WALLET card...');
+
+    // Click the CRYPTO WALLET card
+    const walletCard = page.locator('text=WALLET').first();
+    if (await walletCard.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await walletCard.click();
+      await page.waitForTimeout(2000);
+
+      // MetaMask should pop up for connection
+      try {
+        console.log('Connecting to dApp via MetaMask...');
+        await metamask.connectToDapp();
+        await page.waitForTimeout(2000);
+      } catch (e) {
+        console.log('MetaMask connectToDapp note:', e);
+      }
+
+      // MetaMask should pop up for signature (DFX auth message)
+      try {
+        console.log('Signing authentication message...');
+        await metamask.confirmSignature();
+        await page.waitForTimeout(3000);
+      } catch (e) {
+        console.log('MetaMask signature note:', e);
+      }
+    }
+  } else {
+    // Already logged in, try traditional connect button
+    const connectButton = page
+      .locator('button:has-text("Wallet"), button:has-text("Connect"), button:has-text("Verbinden")')
+      .first();
+
+    if (await connectButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await connectButton.click();
+      await metamask.connectToDapp();
+      await page.waitForTimeout(2000);
+    }
   }
 }
 
