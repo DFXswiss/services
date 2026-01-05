@@ -40,6 +40,7 @@ import {
   StyledDataTableRow,
   StyledDropdown,
   StyledIconButton,
+  StyledInput,
   StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
@@ -287,6 +288,12 @@ interface RefundDetails extends TransactionRefundData {
 interface FormData {
   address: UserAddress;
   iban: string;
+  creditorName: string;
+  creditorAddress: string;
+  creditorHouseNumber: string;
+  creditorZip: string;
+  creditorCity: string;
+  creditorCountry: string;
 }
 
 interface TransactionRefundProps {
@@ -307,7 +314,8 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { rootRef } = useLayoutContext();
   const { bankAccounts } = useBankAccountContext();
   const { isLoggedIn } = useSessionContext();
-  const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
+  const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget, setTransactionBankRefund } =
+    useTransaction();
   const refetchTimeout = useRef<NodeJS.Timeout | undefined>();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -368,9 +376,21 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     setIsLoading(true);
 
     try {
-      await setTransactionRefundTarget(transaction.id, {
-        refundTarget: refundDetails?.refundTarget ?? data.address?.address ?? data.iban,
-      });
+      if (isBuy) {
+        await setTransactionBankRefund(transaction.id, {
+          refundTarget: refundDetails?.refundTarget ?? data.iban,
+          name: data.creditorName,
+          address: data.creditorAddress,
+          houseNumber: data.creditorHouseNumber || undefined,
+          zip: data.creditorZip,
+          city: data.creditorCity,
+          country: data.creditorCountry,
+        });
+      } else {
+        await setTransactionRefundTarget(transaction.id, {
+          refundTarget: refundDetails?.refundTarget ?? data.address?.address,
+        });
+      }
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
@@ -382,6 +402,11 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const rules = Utils.createRules({
     address: Validations.Required,
     iban: Validations.Required,
+    creditorName: Validations.Required,
+    creditorAddress: Validations.Required,
+    creditorZip: Validations.Required,
+    creditorCity: Validations.Required,
+    creditorCountry: Validations.Required,
   });
 
   return selectedIban === AddAccount ? (
@@ -473,19 +498,57 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
             transaction.inputPaymentMethod !== FiatPaymentMethod.CARD &&
             bankAccounts &&
             isBuy && (
-              <StyledDropdown<string>
-                rootRef={rootRef}
-                name="iban"
-                label={translate('screens/payment', 'Chargeback IBAN')}
-                items={[...bankAccounts.map((b) => b.iban), AddAccount]}
-                labelFunc={(item) =>
-                  item === AddAccount ? translate('general/actions', item) : Utils.formatIban(item) ?? ''
-                }
-                descriptionFunc={(item) => bankAccounts.find((b) => b.iban === item)?.label ?? ''}
-                placeholder={translate('general/actions', 'Select') + '...'}
-                forceEnable
-                full
-              />
+              <>
+                <StyledDropdown<string>
+                  rootRef={rootRef}
+                  name="iban"
+                  label={translate('screens/payment', 'Chargeback IBAN')}
+                  items={[...bankAccounts.map((b) => b.iban), AddAccount]}
+                  labelFunc={(item) =>
+                    item === AddAccount ? translate('general/actions', item) : Utils.formatIban(item) ?? ''
+                  }
+                  descriptionFunc={(item) => bankAccounts.find((b) => b.iban === item)?.label ?? ''}
+                  placeholder={translate('general/actions', 'Select') + '...'}
+                  forceEnable
+                  full
+                />
+                <StyledInput
+                  name="creditorName"
+                  label={translate('screens/payment', 'Name')}
+                  placeholder={translate('screens/payment', 'Account holder name')}
+                  full
+                />
+                <StyledInput
+                  name="creditorAddress"
+                  label={translate('screens/payment', 'Street')}
+                  placeholder={translate('screens/payment', 'Street name')}
+                  full
+                />
+                <StyledInput
+                  name="creditorHouseNumber"
+                  label={translate('screens/payment', 'House number')}
+                  placeholder={translate('screens/payment', 'House number')}
+                  full
+                />
+                <StyledInput
+                  name="creditorZip"
+                  label={translate('screens/payment', 'ZIP code')}
+                  placeholder={translate('screens/payment', 'ZIP code')}
+                  full
+                />
+                <StyledInput
+                  name="creditorCity"
+                  label={translate('screens/payment', 'City')}
+                  placeholder={translate('screens/payment', 'City')}
+                  full
+                />
+                <StyledInput
+                  name="creditorCountry"
+                  label={translate('screens/payment', 'Country code')}
+                  placeholder={translate('screens/payment', 'e.g. CH, DE, AT')}
+                  full
+                />
+              </>
             )}
           <StyledButton
             type="submit"
