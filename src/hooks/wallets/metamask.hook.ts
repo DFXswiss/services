@@ -19,6 +19,27 @@ export enum WalletType {
   IN_APP_BROWSER = 'InAppBrowser',
 }
 
+export interface Eip7702AuthorizationData {
+  contractAddress: string;
+  chainId: number;
+  nonce: number;
+  typedData: {
+    domain: Record<string, unknown>;
+    types: Record<string, Array<{ name: string; type: string }>>;
+    primaryType: string;
+    message: Record<string, unknown>;
+  };
+}
+
+export interface SignedEip7702Authorization {
+  chainId: number;
+  address: string;
+  nonce: number;
+  r: string;
+  s: string;
+  yParity: number;
+}
+
 export interface MetaMaskInterface {
   isInstalled: () => boolean;
   getWalletType: () => WalletType | undefined;
@@ -43,6 +64,7 @@ export interface MetaMaskInterface {
   ) => Promise<string>;
   sendCallsWithPaymaster: (calls: Eip5792Call[], paymasterUrl: string, chainId: number) => Promise<string>;
   supportsEip5792Paymaster: (chainId: number) => Promise<boolean>;
+  signEip7702Authorization: (authData: Eip7702AuthorizationData) => Promise<SignedEip7702Authorization>;
 }
 
 interface MetaMaskError {
@@ -294,6 +316,42 @@ export function useMetaMask(): MetaMaskInterface {
   }
 
   /**
+   * Sign EIP-7702 authorization for gasless transactions
+   * This allows the user's EOA to temporarily delegate to a smart contract
+   */
+  async function signEip7702Authorization(authData: Eip7702AuthorizationData): Promise<SignedEip7702Authorization> {
+    try {
+      const account = await getAccount();
+      if (!account) throw new Error('No account connected');
+
+      // Sign the typed data using eth_signTypedData_v4
+      const signature = await ethereum().request({
+        method: 'eth_signTypedData_v4',
+        params: [account, JSON.stringify(authData.typedData)],
+      });
+
+      // Parse signature into r, s, v components
+      const r = signature.slice(0, 66);
+      const s = '0x' + signature.slice(66, 130);
+      const v = parseInt(signature.slice(130, 132), 16);
+
+      // Convert v to yParity (EIP-155: v = 27 or 28, yParity = 0 or 1)
+      const yParity = v - 27;
+
+      return {
+        chainId: authData.chainId,
+        address: authData.contractAddress,
+        nonce: authData.nonce,
+        r,
+        s,
+        yParity,
+      };
+    } catch (e) {
+      return handleError(e as MetaMaskError);
+    }
+  }
+
+  /**
    * Send transaction via EIP-5792 wallet_sendCalls with paymaster sponsorship
    */
   async function sendCallsWithPaymaster(calls: Eip5792Call[], paymasterUrl: string, chainId: number): Promise<string> {
@@ -366,6 +424,7 @@ export function useMetaMask(): MetaMaskInterface {
       createTransaction,
       sendCallsWithPaymaster,
       supportsEip5792Paymaster,
+      signEip7702Authorization,
     }),
     [web3, toBlockchain, toChainHex, toChainObject],
   );
