@@ -47,3 +47,7 @@ next-env.d.ts
 # Synpress cache and test results
 .cache-synpress/
 e2e/synpress-results/
+synpress-report/
+
+# Chrome for testing (installed via @puppeteer/browsers)
+/chrome/
