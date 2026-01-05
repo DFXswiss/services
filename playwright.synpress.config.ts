@@ -1,19 +1,28 @@
 /**
- * Playwright Configuration for Synpress E2E Tests
+ * Playwright Configuration for MetaMask E2E Tests
  *
- * This config is specifically for running E2E tests with real MetaMask extension.
+ * This config uses custom fixtures that:
+ * 1. Launch Chrome 126 (last version with Manifest V2 support)
+ * 2. Manually load MetaMask 11.9.1 extension
+ * 3. Use Synpress's MetaMask class for wallet interactions
+ *
  * Run with: npx playwright test --config=playwright.synpress.config.ts
+ *
+ * Prerequisites:
+ * 1. npm run synpress:setup (installs Chrome 126 + downloads MetaMask)
  */
 
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e/synpress',
+  // Only run custom spec file that uses our custom fixtures
+  testMatch: 'eip5792-custom.spec.ts',
   snapshotDir: './e2e/screenshots',
   snapshotPathTemplate: '{snapshotDir}/{testFileName}-{arg}-{projectName}-{platform}{ext}',
   outputDir: './e2e/synpress-results',
 
-  // Synpress tests must run sequentially (wallet state)
+  // Tests must run sequentially (shared wallet state)
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -29,14 +38,17 @@ export default defineConfig({
     trace: 'on',
     screenshot: 'on',
     video: 'on',
-    // Synpress requires headed mode by default
+    // Must be headed mode for extension loading
     headless: false,
   },
 
+  // No projects needed - our custom fixtures handle browser launch
   projects: [
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: 'chromium-metamask',
+      use: {
+        // Custom fixtures override the browser launch
+      },
     },
   ],
 
