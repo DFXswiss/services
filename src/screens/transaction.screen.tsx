@@ -1,5 +1,6 @@
 import {
   ApiError,
+  Country,
   CryptoPaymentMethod,
   DetailTransaction,
   ExportFormat,
@@ -39,10 +40,12 @@ import {
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledHorizontalStack,
   StyledIconButton,
   StyledInput,
   StyledLink,
   StyledLoadingSpinner,
+  StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
@@ -289,11 +292,11 @@ interface FormData {
   address: UserAddress;
   iban: string;
   creditorName: string;
-  creditorAddress: string;
+  creditorStreet: string;
   creditorHouseNumber: string;
   creditorZip: string;
   creditorCity: string;
-  creditorCountry: string;
+  creditorCountry: Country;
 }
 
 interface TransactionRefundProps {
@@ -309,7 +312,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { state } = useLocation();
   const { width } = useWindowContext();
   const { navigate } = useNavigation();
-  const { translate } = useSettingsContext();
+  const { translate, allowedCountries } = useSettingsContext();
   const { user, userAddresses } = useUserContext();
   const { rootRef } = useLayoutContext();
   const { bankAccounts } = useBankAccountContext();
@@ -380,11 +383,11 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
         await setTransactionBankRefund(transaction.id, {
           refundTarget: refundDetails?.refundTarget ?? data.iban,
           name: data.creditorName,
-          address: data.creditorAddress,
+          address: data.creditorStreet,
           houseNumber: data.creditorHouseNumber || undefined,
           zip: data.creditorZip,
           city: data.creditorCity,
-          country: data.creditorCountry,
+          country: data.creditorCountry?.symbol,
         });
       } else {
         await setTransactionRefundTarget(transaction.id, {
@@ -403,7 +406,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     address: Validations.Required,
     iban: Validations.Required,
     creditorName: Validations.Required,
-    creditorAddress: Validations.Required,
+    creditorStreet: Validations.Required,
     creditorZip: Validations.Required,
     creditorCity: Validations.Required,
     creditorCountry: Validations.Required,
@@ -514,39 +517,59 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
                 />
                 <StyledInput
                   name="creditorName"
-                  label={translate('screens/payment', 'Name')}
-                  placeholder={translate('screens/payment', 'Account holder name')}
+                  autocomplete="name"
+                  label={translate('screens/kyc', 'Name')}
+                  placeholder={translate('screens/kyc', 'John Doe')}
                   full
+                  smallLabel
                 />
-                <StyledInput
-                  name="creditorAddress"
-                  label={translate('screens/payment', 'Street')}
-                  placeholder={translate('screens/payment', 'Street name')}
-                  full
-                />
-                <StyledInput
-                  name="creditorHouseNumber"
-                  label={translate('screens/payment', 'House number')}
-                  placeholder={translate('screens/payment', 'House number')}
-                  full
-                />
-                <StyledInput
-                  name="creditorZip"
-                  label={translate('screens/payment', 'ZIP code')}
-                  placeholder={translate('screens/payment', 'ZIP code')}
-                  full
-                />
-                <StyledInput
-                  name="creditorCity"
-                  label={translate('screens/payment', 'City')}
-                  placeholder={translate('screens/payment', 'City')}
-                  full
-                />
-                <StyledInput
+                <StyledHorizontalStack gap={2}>
+                  <StyledInput
+                    name="creditorStreet"
+                    autocomplete="street"
+                    label={translate('screens/kyc', 'Street')}
+                    placeholder={translate('screens/kyc', 'Street')}
+                    full
+                    smallLabel
+                  />
+                  <StyledInput
+                    name="creditorHouseNumber"
+                    autocomplete="house-number"
+                    label={translate('screens/kyc', 'House nr.')}
+                    placeholder="xx"
+                    small
+                    smallLabel
+                  />
+                </StyledHorizontalStack>
+                <StyledHorizontalStack gap={2}>
+                  <StyledInput
+                    name="creditorZip"
+                    autocomplete="zip"
+                    label={translate('screens/kyc', 'ZIP code')}
+                    placeholder="12345"
+                    small
+                    smallLabel
+                  />
+                  <StyledInput
+                    name="creditorCity"
+                    autocomplete="city"
+                    label={translate('screens/kyc', 'City')}
+                    placeholder={translate('screens/kyc', 'City')}
+                    full
+                    smallLabel
+                  />
+                </StyledHorizontalStack>
+                <StyledSearchDropdown<Country>
+                  rootRef={rootRef}
                   name="creditorCountry"
-                  label={translate('screens/payment', 'Country code')}
-                  placeholder={translate('screens/payment', 'e.g. CH, DE, AT')}
-                  full
+                  autocomplete="country"
+                  label={translate('screens/kyc', 'Country')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
+                  items={allowedCountries ?? []}
+                  labelFunc={(item) => item.name}
+                  filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+                  matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+                  smallLabel
                 />
               </>
             )}
