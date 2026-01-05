@@ -13,7 +13,9 @@ import {
 // Load test environment variables
 dotenv.config({ path: path.join(__dirname, '../../.env.test') });
 
-const API_URL = 'https://dev.api.dfx.swiss/v1';
+// API URL is configurable via E2E_API_URL environment variable
+// Default: dev.api.dfx.swiss, but can be set to localhost:3000 for local testing
+const API_URL = process.env.E2E_API_URL || 'https://dev.api.dfx.swiss/v1';
 
 // Global cache for auth tokens to avoid rate limiting
 const tokenCache: Map<string, { token: string; expiry: number }> = new Map();
