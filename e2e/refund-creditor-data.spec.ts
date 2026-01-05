@@ -41,9 +41,9 @@ test.describe('Bank Refund - Creditor Data Flow', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Take screenshot of refund page
+    // Take screenshot of refund page (saved to test-results, which is gitignored)
     await page.screenshot({
-      path: 'e2e/screenshots/refund-page-loaded.png',
+      path: 'e2e/test-results/refund-page-loaded.png',
       fullPage: true,
     });
 
@@ -63,9 +63,9 @@ test.describe('Bank Refund - Creditor Data Flow', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 
-    // Take screenshot showing the form
+    // Take screenshot showing the form (saved to test-results, which is gitignored)
     await page.screenshot({
-      path: 'e2e/screenshots/refund-creditor-form.png',
+      path: 'e2e/test-results/refund-creditor-form.png',
       fullPage: true,
     });
 
@@ -95,7 +95,7 @@ test.describe('Bank Refund - Creditor Data Flow', () => {
 
     // Screenshot before filling form
     await page.screenshot({
-      path: 'e2e/screenshots/refund-before-fill.png',
+      path: 'e2e/test-results/refund-before-fill.png',
       fullPage: true,
     });
 
@@ -131,7 +131,7 @@ test.describe('Bank Refund - Creditor Data Flow', () => {
 
     // Screenshot after filling form
     await page.screenshot({
-      path: 'e2e/screenshots/refund-form-filled.png',
+      path: 'e2e/test-results/refund-form-filled.png',
       fullPage: true,
     });
 
@@ -141,7 +141,7 @@ test.describe('Bank Refund - Creditor Data Flow', () => {
     if (await submitButton.isVisible()) {
       // Take screenshot before clicking submit
       await page.screenshot({
-        path: 'e2e/screenshots/refund-before-submit.png',
+        path: 'e2e/test-results/refund-before-submit.png',
         fullPage: true,
       });
 
@@ -167,7 +167,7 @@ test.describe('Bank Refund - Creditor Data Flow', () => {
 
     // Screenshot of transaction list
     await page.screenshot({
-      path: 'e2e/screenshots/transaction-list.png',
+      path: 'e2e/test-results/transaction-list.png',
       fullPage: true,
     });
 

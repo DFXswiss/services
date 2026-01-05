@@ -9,6 +9,7 @@
 /coverage
 dfx.swiss-*.tgz
 playwright-report/
+playwright-report-local/
 test-results/
 
 # test environment (contains secrets)
