@@ -51,3 +51,4 @@ synpress-report/
 
 # Chrome for testing (installed via @puppeteer/browsers)
 /chrome/
+playwright-report-local/
