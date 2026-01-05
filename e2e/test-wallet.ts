@@ -266,3 +266,69 @@ export function getWalletFromMnemonic(mnemonic: string, derivationPath = ''): HD
 export function generateTestMnemonic(): string {
   return Wallet.createRandom().mnemonic!.phrase;
 }
+
+// =============================================================================
+// DUAL WALLET SUPPORT
+// =============================================================================
+
+/**
+ * Standard BIP-44 derivation path for EVM
+ * Used for Wallet 2 (index 0)
+ */
+export const EVM_DERIVATION_PATH_WALLET2 = "m/44'/60'/0'/0/0";
+
+/**
+ * Get test wallet addresses dynamically from seed
+ * Returns addresses for Wallet 1 (default) and Wallet 2 (BIP-44 derived)
+ */
+export function getTestWalletAddresses(mnemonic: string): { WALLET_1: string; WALLET_2: string } {
+  const hdNode = HDNodeWallet.fromPhrase(mnemonic);
+  const wallet2 = hdNode.derivePath(EVM_DERIVATION_PATH_WALLET2.replace('m/', ''));
+  return {
+    WALLET_1: hdNode.address,
+    WALLET_2: wallet2.address,
+  };
+}
+
+/**
+ * Get test wallet addresses from environment
+ */
+export function getTestWalletAddressesFromEnv(): { WALLET_1: string; WALLET_2: string } {
+  const config = getTestConfig();
+  return getTestWalletAddresses(config.seed);
+}
+
+/**
+ * Expected test wallet addresses (for reference/verification)
+ * These are derived from the default TEST_SEED in .env.test.example
+ * Wallet 1: Default (no derivation)
+ * Wallet 2: m/44'/60'/0'/0/0
+ */
+export const TEST_WALLET_ADDRESSES = {
+  WALLET_1: '0x482c8a499c7ac19925a0D2aA3980E1f3C5F19120',
+  WALLET_2: '0x6aCA95eD0705bAbF3b91fA9212af495510bf8b74',
+} as const;
+
+/**
+ * Creates EVM credentials for Wallet 2 (with BIP-44 derivation path)
+ * Use this for gasless tests where wallet has tokens but no ETH
+ */
+export async function createTestCredentialsWallet2(mnemonic: string): Promise<TestCredentials> {
+  return createTestCredentials(mnemonic, EVM_DERIVATION_PATH_WALLET2);
+}
+
+/**
+ * Creates test credentials for Wallet 2 from environment configuration.
+ * Wallet 2 uses derivation path m/44'/60'/0'/0/0
+ */
+export async function createTestCredentialsWallet2FromEnv(): Promise<TestCredentials> {
+  const config = getTestConfig();
+  return createTestCredentialsWallet2(config.seed);
+}
+
+/**
+ * Gets Wallet 2 instance from mnemonic (with BIP-44 derivation)
+ */
+export function getWallet2FromMnemonic(mnemonic: string): HDNodeWallet {
+  return getWalletFromMnemonic(mnemonic, EVM_DERIVATION_PATH_WALLET2);
+}

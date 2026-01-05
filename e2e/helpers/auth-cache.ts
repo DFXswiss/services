@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 import {
   createTestCredentials,
+  createTestCredentialsWallet2,
   createBitcoinCredentials,
   createSolanaCredentials,
   createTronCredentials,
@@ -13,7 +14,8 @@ import {
 // Load test environment variables
 dotenv.config({ path: path.join(__dirname, '../../.env.test') });
 
-const API_URL = 'https://dev.api.dfx.swiss/v1';
+// Use local API when running against local services, otherwise use dev API
+const API_URL = process.env.API_URL || 'http://localhost:3000/v1';
 
 // Global cache for auth tokens to avoid rate limiting
 const tokenCache: Map<string, { token: string; expiry: number }> = new Map();
@@ -28,7 +30,7 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export type BlockchainType = 'evm' | 'bitcoin' | 'solana' | 'tron';
+export type BlockchainType = 'evm' | 'evm-wallet2' | 'bitcoin' | 'solana' | 'tron';
 
 async function generateCredentials(type: BlockchainType): Promise<TestCredentials> {
   const cacheKey = type;
@@ -42,6 +44,9 @@ async function generateCredentials(type: BlockchainType): Promise<TestCredential
   switch (type) {
     case 'evm':
       credentials = await createTestCredentials(config.seed);
+      break;
+    case 'evm-wallet2':
+      credentials = await createTestCredentialsWallet2(config.seed);
       break;
     case 'bitcoin':
       credentials = await createBitcoinCredentials(config.seed);
