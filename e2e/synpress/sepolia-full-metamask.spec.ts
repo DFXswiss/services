@@ -121,7 +121,7 @@ async function setupMetaMaskWallet(page: Page, seedPhrase: string, password: str
   console.log('Setting up MetaMask 11.x wallet...');
 
   // Take initial screenshot
-  await page.screenshot({ path: 'e2e/screenshots/metamask-setup-00-initial.png' });
+  await page.screenshot({ path: 'e2e/screenshots/debug/metamask-setup-00-initial.png' });
 
   // Navigate to onboarding if needed
   const currentUrl = page.url();
@@ -155,7 +155,7 @@ async function setupMetaMaskWallet(page: Page, seedPhrase: string, password: str
     }
   }
 
-  await page.screenshot({ path: 'e2e/screenshots/metamask-setup-01-terms.png' });
+  await page.screenshot({ path: 'e2e/screenshots/debug/metamask-setup-01-terms.png' });
 
   // Step 2: Click "Import an existing wallet"
   console.log('Step 2: Clicking Import wallet...');
@@ -175,7 +175,7 @@ async function setupMetaMaskWallet(page: Page, seedPhrase: string, password: str
     }
   }
 
-  await page.screenshot({ path: 'e2e/screenshots/metamask-setup-02-import.png' });
+  await page.screenshot({ path: 'e2e/screenshots/debug/metamask-setup-02-import.png' });
 
   // Step 3: Analytics - "No thanks" or "I agree"
   console.log('Step 3: Handling analytics popup...');
@@ -196,7 +196,7 @@ async function setupMetaMaskWallet(page: Page, seedPhrase: string, password: str
     }
   }
 
-  await page.screenshot({ path: 'e2e/screenshots/metamask-setup-03-analytics.png' });
+  await page.screenshot({ path: 'e2e/screenshots/debug/metamask-setup-03-analytics.png' });
 
   // Step 4: Enter seed phrase (12 words)
   console.log('Step 4: Entering seed phrase...');
@@ -228,7 +228,7 @@ async function setupMetaMaskWallet(page: Page, seedPhrase: string, password: str
     console.log('Filled seed phrase in textarea');
   }
 
-  await page.screenshot({ path: 'e2e/screenshots/metamask-setup-04-seedphrase.png' });
+  await page.screenshot({ path: 'e2e/screenshots/debug/metamask-setup-04-seedphrase.png' });
   await page.waitForTimeout(1000);
 
   // Step 5: Confirm seed phrase
@@ -250,7 +250,7 @@ async function setupMetaMaskWallet(page: Page, seedPhrase: string, password: str
     }
   }
 
-  await page.screenshot({ path: 'e2e/screenshots/metamask-setup-05-confirm.png' });
+  await page.screenshot({ path: 'e2e/screenshots/debug/metamask-setup-05-confirm.png' });
 
   // Step 6: Set password
   console.log('Step 6: Setting password...');
@@ -290,7 +290,7 @@ async function setupMetaMaskWallet(page: Page, seedPhrase: string, password: str
     }
   }
 
-  await page.screenshot({ path: 'e2e/screenshots/metamask-setup-06-password.png' });
+  await page.screenshot({ path: 'e2e/screenshots/debug/metamask-setup-06-password.png' });
 
   // Step 7: Complete onboarding - click through any remaining dialogs
   console.log('Step 7: Completing onboarding...');
@@ -333,7 +333,7 @@ async function setupMetaMaskWallet(page: Page, seedPhrase: string, password: str
     }
   }
 
-  await page.screenshot({ path: 'e2e/screenshots/metamask-setup-07-complete.png' });
+  await page.screenshot({ path: 'e2e/screenshots/debug/metamask-setup-07-complete.png' });
   console.log('MetaMask wallet setup complete');
 }
 
@@ -399,7 +399,7 @@ async function handleMetaMaskConnect(context: BrowserContext): Promise<boolean> 
   await popup.waitForTimeout(2000);
 
   // Take screenshot
-  await popup.screenshot({ path: 'e2e/screenshots/metamask-connect-popup.png' });
+  await popup.screenshot({ path: 'e2e/screenshots/debug/metamask-connect-popup.png' });
 
   // Click "Next" button if present (account selection)
   const nextBtn = popup.locator('button:has-text("Next"), button:has-text("Weiter")').first();
@@ -450,7 +450,7 @@ async function handleMetaMaskSign(context: BrowserContext): Promise<boolean> {
   await popup.waitForTimeout(2000);
 
   // Take screenshot
-  await popup.screenshot({ path: 'e2e/screenshots/metamask-sign-popup.png' });
+  await popup.screenshot({ path: 'e2e/screenshots/debug/metamask-sign-popup.png' });
 
   // Scroll down if needed (for long messages)
   await popup.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
@@ -510,7 +510,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
     await appPage.waitForTimeout(2000);
 
     // Screenshot: Login page
-    await appPage.screenshot({ path: 'e2e/screenshots/full-test-01-login-page.png', fullPage: true });
+    await appPage.screenshot({ path: 'e2e/screenshots/debug/full-test-01-login-page.png', fullPage: true });
 
     // Step 2: Click CRYPTO WALLET tile on login page
     console.log('Step 2: Clicking CRYPTO WALLET tile...');
@@ -521,7 +521,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
     }
 
     await appPage.waitForTimeout(2000);
-    await appPage.screenshot({ path: 'e2e/screenshots/full-test-02-wallet-selection.png', fullPage: true });
+    await appPage.screenshot({ path: 'e2e/screenshots/debug/full-test-02-wallet-selection.png', fullPage: true });
 
     // Step 3: Click MetaMask/WALLET on wallet selection page
     console.log('Step 3: Clicking MetaMask tile on wallet selection page...');
@@ -556,7 +556,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
     }
 
     await appPage.waitForTimeout(2000);
-    await appPage.screenshot({ path: 'e2e/screenshots/full-test-03-metamask-loading.png', fullPage: true });
+    await appPage.screenshot({ path: 'e2e/screenshots/debug/full-test-03-metamask-loading.png', fullPage: true });
 
     // Step 4: Handle MetaMask connection popup
     console.log('Step 4: Handling MetaMask connection popup...');
@@ -598,7 +598,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
     }
 
     // Screenshot notification
-    await notificationPage.screenshot({ path: 'e2e/screenshots/full-test-04-notification.png' });
+    await notificationPage.screenshot({ path: 'e2e/screenshots/debug/full-test-04-notification.png' });
     const notificationContent = await notificationPage.textContent('body').catch(() => '');
     console.log(`Notification preview: ${notificationContent?.substring(0, 200)}`);
 
@@ -636,7 +636,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
     }
 
     if (!connectionCompleted && !notificationPage.isClosed()) {
-      await notificationPage.screenshot({ path: 'e2e/screenshots/full-test-04-after-connect.png' }).catch(() => {});
+      await notificationPage.screenshot({ path: 'e2e/screenshots/debug/full-test-04-after-connect.png' }).catch(() => {});
     }
     console.log('Connection flow completed');
 
@@ -673,7 +673,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
       console.log('Found existing signature page');
     }
 
-    await signPage.screenshot({ path: 'e2e/screenshots/full-test-05-sign-notification.png' }).catch(() => {});
+    await signPage.screenshot({ path: 'e2e/screenshots/debug/full-test-05-sign-notification.png' }).catch(() => {});
     const signContent = await signPage.textContent('body').catch(() => '');
     console.log(`Sign notification preview: ${signContent?.substring(0, 200)}`);
 
@@ -707,7 +707,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
       }
     }
 
-    await signPage.screenshot({ path: 'e2e/screenshots/full-test-05-after-sign.png' }).catch(() => {});
+    await signPage.screenshot({ path: 'e2e/screenshots/debug/full-test-05-after-sign.png' }).catch(() => {});
     console.log('Signature flow completed');
 
     // DON'T close sign page - keep all pages alive to preserve context!
@@ -738,7 +738,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
 
     // Wait and check auth status
     await activeAppPage.waitForTimeout(3000);
-    await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-06-initial.png', fullPage: true });
+    await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-06-initial.png', fullPage: true });
 
     let appPageContent = await activeAppPage.textContent('body');
     let isAuthenticated = !appPageContent?.includes('Login to DFX');
@@ -763,7 +763,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
         await activeAppPage.waitForTimeout(3000);
       }
 
-      await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-06-reconnect.png', fullPage: true });
+      await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-06-reconnect.png', fullPage: true });
 
       // MetaMask should auto-connect since site is already approved
       // But we may need to handle sign request again
@@ -789,7 +789,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
     }
 
     // Final auth check
-    await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-06-after-auth.png', fullPage: true });
+    await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-06-after-auth.png', fullPage: true });
     appPageContent = await activeAppPage.textContent('body');
     isAuthenticated = !appPageContent?.includes('Login to DFX');
     console.log(`Final auth result: ${isAuthenticated ? 'SUCCESS' : 'FAILED'}`);
@@ -819,7 +819,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
       }
 
       // Screenshot: Ready to sell
-      await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-07-ready-to-sell.png', fullPage: true });
+      await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-07-ready-to-sell.png', fullPage: true });
 
       // Step 8: Click "I am already verified with DFX" to proceed
       console.log('Step 8: Clicking "I am already verified with DFX"...');
@@ -835,7 +835,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
       }
 
       await activeAppPage.waitForTimeout(3000);
-      await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-08-after-verify-click.png', fullPage: true });
+      await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-08-after-verify-click.png', fullPage: true });
 
       // Step 8b: Handle KYC flow
       console.log('Step 8b: Handling KYC flow...');
@@ -864,7 +864,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
         console.log('No existing account - starting KYC flow');
         await completeKycBtn.click();
         await activeAppPage.waitForTimeout(3000);
-        await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-08b-kyc-start.png', fullPage: true });
+        await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-08b-kyc-start.png', fullPage: true });
 
         // Fill in KYC form fields
         console.log('Filling KYC form...');
@@ -917,7 +917,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
           console.log('Filled phone');
         }
 
-        await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-08c-kyc-filled.png', fullPage: true });
+        await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-08c-kyc-filled.png', fullPage: true });
 
         // Try to progress through KYC - click any available button
         const kycButtons = ['NEXT', 'CONTINUE', 'SUBMIT', 'SAVE'];
@@ -933,12 +933,12 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
           }
         }
 
-        await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-08d-kyc-progress.png', fullPage: true });
+        await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-08d-kyc-progress.png', fullPage: true });
       }
 
       // Step 9: Handle KYC Personal Data form
       console.log('Step 9: Handling KYC Personal Data form...');
-      await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-09-kyc-start.png', fullPage: true });
+      await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-09-kyc-start.png', fullPage: true });
 
       // Check if we're on Personal Data page with Account Type selector
       const accountTypeLabel = activeAppPage.locator('text=ACCOUNT TYPE').first();
@@ -951,7 +951,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
           await dropdown.click();
           console.log('Clicked dropdown');
           await activeAppPage.waitForTimeout(1000);
-          await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-09a-dropdown-open.png', fullPage: true });
+          await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-09a-dropdown-open.png', fullPage: true });
 
           // Select "Personal" option - use exact match to avoid matching "Personal data" title
           // The dropdown options are in a list, not the header
@@ -976,7 +976,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
           }
         }
 
-        await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-09b-after-account-type.png', fullPage: true });
+        await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-09b-after-account-type.png', fullPage: true });
       }
 
       // Now fill in the KYC form fields
@@ -1047,7 +1047,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
         }
       }
 
-      await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-09c-form-filled.png', fullPage: true });
+      await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-09c-form-filled.png', fullPage: true });
 
       // Select Country from dropdown
       console.log('Selecting Country...');
@@ -1079,7 +1079,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
         }
       }
 
-      await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-09c2-country-selected.png', fullPage: true });
+      await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-09c2-country-selected.png', fullPage: true });
 
       // Click NEXT to proceed
       console.log('Attempting to click NEXT...');
@@ -1098,7 +1098,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
         }
       }
 
-      await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-09d-after-next.png', fullPage: true });
+      await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-09d-after-next.png', fullPage: true });
 
       // Continue through additional KYC steps if any
       for (let step = 0; step < 5; step++) {
@@ -1112,7 +1112,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
             await continueBtn.click();
             console.log(`KYC Step ${step}: Clicked continue button`);
             await activeAppPage.waitForTimeout(3000);
-            await activeAppPage.screenshot({ path: `e2e/screenshots/full-test-09e-kyc-step-${step}.png`, fullPage: true });
+            await activeAppPage.screenshot({ path: `e2e/screenshots/debug/full-test-09e-kyc-step-${step}.png`, fullPage: true });
           } else {
             console.log(`KYC Step ${step}: Button disabled, stopping`);
             break;
@@ -1158,7 +1158,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
           }
         }
 
-        await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-09f-amount-entered.png', fullPage: true });
+        await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-09f-amount-entered.png', fullPage: true });
 
         // Look for "Complete transaction in your wallet" button - specifically the RED one (not disabled)
         console.log('Looking for transaction button...');
@@ -1195,7 +1195,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
           const isEnabled = await foundBtn.isEnabled().catch(() => false);
           console.log(`Transaction button enabled: ${isEnabled}`);
 
-          await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-10a-before-tx-click.png', fullPage: true });
+          await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-10a-before-tx-click.png', fullPage: true });
 
           // Capture browser console logs
           const consoleLogs: string[] = [];
@@ -1239,7 +1239,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
             await activeAppPage.waitForTimeout(500);
 
             // Take screenshot to verify button is visible
-            await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-10a2-button-visible.png', fullPage: false });
+            await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-10a2-button-visible.png', fullPage: false });
 
             console.log('Clicking transaction button NOW...');
 
@@ -1425,7 +1425,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
             if (mmTxPage) {
               console.log('=== MetaMask Transaction Popup Found! ===');
               await mmTxPage.bringToFront();
-              await mmTxPage.screenshot({ path: 'e2e/screenshots/full-test-10b-metamask-tx.png' });
+              await mmTxPage.screenshot({ path: 'e2e/screenshots/debug/full-test-10b-metamask-tx.png' });
 
               const txContent = await mmTxPage.textContent('body').catch(() => '');
               console.log(`TX popup content: ${txContent?.substring(0, 500)}`);
@@ -1457,7 +1457,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
           console.log(`Page content: ${pageContent?.substring(0, 800)}`);
         }
 
-        await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-09g-after-sell-click.png', fullPage: true });
+        await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-09g-after-sell-click.png', fullPage: true });
       }
 
       // Step 10: Handle MetaMask transaction approval (USDT approve + transfer)
@@ -1493,7 +1493,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
           const appContent = await activeAppPage.textContent('body').catch(() => '');
           if (appContent?.includes('failed') || appContent?.includes('error') || appContent?.includes('Error')) {
             console.log('Error detected on app page');
-            await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-10-error.png', fullPage: true }).catch(() => {});
+            await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-10-error.png', fullPage: true }).catch(() => {});
             break;
           }
         } catch {
@@ -1525,7 +1525,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
 
       if (txNotificationPage) {
         console.log('Found MetaMask transaction notification');
-        await txNotificationPage.screenshot({ path: 'e2e/screenshots/full-test-10-metamask-tx.png' });
+        await txNotificationPage.screenshot({ path: 'e2e/screenshots/debug/full-test-10-metamask-tx.png' });
 
         const txContent = await txNotificationPage.textContent('body').catch(() => '');
         console.log(`MetaMask TX preview: ${txContent?.substring(0, 300)}`);
@@ -1552,7 +1552,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
           }
         }
 
-        await txNotificationPage.screenshot({ path: 'e2e/screenshots/full-test-10-after-tx-confirm.png' }).catch(() => {});
+        await txNotificationPage.screenshot({ path: 'e2e/screenshots/debug/full-test-10-after-tx-confirm.png' }).catch(() => {});
       } else {
         console.log('No MetaMask transaction notification found');
         // Check if there is an error message on the app page
@@ -1582,7 +1582,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
         await finalAppPage.waitForLoadState('networkidle');
       }
 
-      await finalAppPage.screenshot({ path: 'e2e/screenshots/full-test-11-final-result.png', fullPage: true });
+      await finalAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-11-final-result.png', fullPage: true });
 
       const finalContent = await finalAppPage.textContent('body').catch(() => '');
       console.log(`Final page content preview: ${finalContent?.substring(0, 500)}`);
@@ -1625,13 +1625,13 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
     }
 
     // Final screenshot
-    await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-final.png', fullPage: true });
+    await activeAppPage.screenshot({ path: 'e2e/screenshots/debug/full-test-final.png', fullPage: true });
 
     // Log MetaMask state - find the MetaMask page if available
     const mmFinalPage = context.pages().find((p) => p.url().includes('chrome-extension://'));
     if (mmFinalPage) {
       await mmFinalPage.bringToFront();
-      await mmFinalPage.screenshot({ path: 'e2e/screenshots/full-test-metamask-final.png' });
+      await mmFinalPage.screenshot({ path: 'e2e/screenshots/debug/full-test-metamask-final.png' });
     }
   });
 });
