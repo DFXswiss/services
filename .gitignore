@@ -49,6 +49,12 @@ next-env.d.ts
 e2e/synpress-results/
 synpress-report/
 
+# Debug screenshots (visual regression baselines in e2e/screenshots/ are kept)
+e2e/screenshots/debug/
+
+# Process ID files
+*.pid
+
 # Chrome for testing (installed via @puppeteer/browsers)
 /chrome/
 playwright-report-local/
