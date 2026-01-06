@@ -36,28 +36,7 @@ jobs:
 
       - name: Read version
         id: package_version
-        uses: martinbeentjes/npm-get-version-action@v1.3.1
-
-      - name: Update WalletConnect PID
-        uses: jacobtomlinson/gha-find-replace@v3
-        with:
-          find: '{WC_PID}'
-          replace: ${{ secrets.DEV_WC_PID}}
-          regex: false
-
-      - name: Update Alchemy Key
-        uses: jacobtomlinson/gha-find-replace@v3
-        with:
-          find: '{ALCHEMY_KEY}'
-          replace: ${{ secrets.DEV_ALCHEMY_KEY}}
-          regex: false
-
-      - name: Update Tatum Key
-        uses: jacobtomlinson/gha-find-replace@v3
-        with:
-          find: '{TATUM_KEY}'
-          replace: ${{ secrets.DEV_TATUM_KEY}}
-          regex: false
+        run: echo "current-version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
 
       - name: Build code
         env:
@@ -66,13 +45,11 @@ jobs:
           echo "REACT_APP_BUILD_ID=$REACT_APP_BUILD_ID" >> .env.dev
           npm run build:dev
 
-      - name: Run tests
-        run: |
-          npm run test
-
       - name: Run linter
-        run: |
-          npm run lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test
 
       - name: Build widget
         run: |

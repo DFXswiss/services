@@ -35,10 +35,8 @@ jobs:
           echo "REACT_APP_BUILD_ID=$REACT_APP_BUILD_ID" >> .env.dev
           npm run build:dev
 
-      - name: Run tests
-        run: |
-          npm run test
-
       - name: Run linter
-        run: |
-          npm run lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test
