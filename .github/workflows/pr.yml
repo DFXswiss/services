@@ -23,10 +23,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Install packages
-        run: |
-          npm ci
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test
 
       - name: Build code
         env:
@@ -34,11 +40,3 @@ jobs:
         run: |
           echo "REACT_APP_BUILD_ID=$REACT_APP_BUILD_ID" >> .env.dev
           npm run build:dev
-
-      - name: Run tests
-        run: |
-          npm run test
-
-      - name: Run linter
-        run: |
-          npm run lint

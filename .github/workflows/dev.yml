@@ -29,35 +29,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Install packages
-        run: |
-          npm ci
+        run: npm ci
 
       - name: Read version
         id: package_version
-        uses: martinbeentjes/npm-get-version-action@v1.3.1
+        run: echo "current-version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
 
-      - name: Update WalletConnect PID
-        uses: jacobtomlinson/gha-find-replace@v3
-        with:
-          find: '{WC_PID}'
-          replace: ${{ secrets.DEV_WC_PID}}
-          regex: false
+      - name: Run linter
+        run: npm run lint
 
-      - name: Update Alchemy Key
-        uses: jacobtomlinson/gha-find-replace@v3
-        with:
-          find: '{ALCHEMY_KEY}'
-          replace: ${{ secrets.DEV_ALCHEMY_KEY}}
-          regex: false
-
-      - name: Update Tatum Key
-        uses: jacobtomlinson/gha-find-replace@v3
-        with:
-          find: '{TATUM_KEY}'
-          replace: ${{ secrets.DEV_TATUM_KEY}}
-          regex: false
+      - name: Run tests
+        run: npm run test
 
       - name: Build code
         env:
@@ -65,14 +50,6 @@ jobs:
         run: |
           echo "REACT_APP_BUILD_ID=$REACT_APP_BUILD_ID" >> .env.dev
           npm run build:dev
-
-      - name: Run tests
-        run: |
-          npm run test
-
-      - name: Run linter
-        run: |
-          npm run lint
 
       - name: Build widget
         run: |
