@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  snapshotDir: './e2e/screenshots',
+  snapshotDir: './e2e/screenshots/baseline',
   snapshotPathTemplate: '{snapshotDir}/{testFileName}-{arg}-{projectName}-{platform}{ext}',
   outputDir: './e2e/test-results',
   // Keep test results after test run
