@@ -112,10 +112,6 @@ export const Routes = [
         element: withSuspense(<MailLoginScreen />),
       },
       {
-        path: 'my-dfx',
-        element: <HomeScreen />,
-      },
-      {
         path: 'buy',
         element: withSuspense(<BuyScreen />),
       },

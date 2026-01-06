@@ -12,8 +12,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@dfx.swiss/react": "^1.3.0-beta.215",
-    "@dfx.swiss/react-components": "^1.3.0-beta.215",
+    "@dfx.swiss/react": "^1.3.0-beta.230",
+    "@dfx.swiss/react-components": "^1.3.0-beta.227",
     "@ledgerhq/hw-app-btc": "^6.24.1",
     "@ledgerhq/hw-app-eth": "^6.33.7",
     "@ledgerhq/hw-transport-webhid": "^6.27.19",
@@ -42,7 +42,9 @@
     "https-browserify": "^1.0.0",
     "i18next": "^22.4.13",
     "i18next-browser-languagedetector": "^7.1.0",
+    "jwt-decode": "^4.0.0",
     "ledger-bitcoin": "^0.2.3",
+    "libphonenumber-js": "^1.12.33",
     "process": "^0.11.10",
     "react": "18.2.0",
     "react-apexcharts": "^1.7.0",
@@ -61,12 +63,19 @@
     "viem": "^2.13.3",
     "web-vitals": "^2.1.4",
     "web3": "^1.8.1",
-    "webln": "^0.3.2"
+    "webln": "^0.3.2",
+    "@scure/bip32": "^2.0.1",
+    "@scure/bip39": "^2.0.1",
+    "bitcoinjs-lib": "^7.0.0",
+    "bitcoinjs-message": "^2.2.0",
+    "tronweb": "^6.1.1",
+    "tweetnacl": "^1.0.3"
   },
   "scripts": {
     "start": "env-cmd -f .env.loc react-app-rewired start",
-    "build": "env-cmd -f .env.prd react-app-rewired build && cp src/custom-service-worker.js build/",
-    "build:dev": "env-cmd -f .env.dev react-app-rewired build && cp src/custom-service-worker.js build/",
+    "start:e2e": "env-cmd -f .env.e2e react-app-rewired start",
+    "build": "node scripts/generate-version.js && env-cmd -f .env.prd react-app-rewired build",
+    "build:dev": "node scripts/generate-version.js && env-cmd -f .env.dev react-app-rewired build",
     "build:lib": "tsc",
     "link": "npm run build:lib && npm link",
     "widget": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.prd env-cmd -f .env.widget react-app-rewired build && mv src/index.bak.tsx src/index.tsx",
@@ -75,6 +84,13 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --no-fix",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "react-app-rewired test --watchAll=false --passWithNoTests",
+    "test:api": "react-app-rewired test --watchAll=false --testPathPattern=__tests__/api",
+    "test:e2e": "npx playwright test",
+    "test:e2e:metamask": "npx playwright test --config=playwright.synpress.config.ts",
+    "synpress:install-chrome": "npx @puppeteer/browsers install chrome@126.0.6478.0",
+    "synpress:download-metamask": "mkdir -p .cache-synpress && curl -L https://github.com/MetaMask/metamask-extension/releases/download/v11.9.1/metamask-chrome-11.9.1.zip -o .cache-synpress/metamask.zip && unzip -o .cache-synpress/metamask.zip -d .cache-synpress/metamask-chrome-11.9.1",
+    "synpress:setup": "npm run synpress:install-chrome && npm run synpress:download-metamask",
+    "test:all": "npm run test:api && npm run test:e2e",
     "eject": "react-scripts eject",
     "serve": "serve build -l 4000",
     "analyze": "source-map-explorer 'build/static/js/*.js'",
@@ -84,7 +100,8 @@
     "react-scripts": {
       "typescript": "^5"
     },
-    "react-refresh": "0.14.2"
+    "react-refresh": "0.14.2",
+    "bs58": "5.0.0"
   },
   "eslintConfig": {
     "extends": [
@@ -123,6 +140,8 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@synthetixio/synpress": "^4.1.1",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -136,6 +155,7 @@
     "@types/react-lazy-load-image-component": "^1.6.4",
     "autoprefixer": "^10.4.13",
     "babel-plugin-named-exports-order": "^0.0.2",
+    "dotenv": "^17.2.3",
     "postcss": "^8.4.19",
     "react-app-rewired": "^2.2.1",
     "serve": "^14.2.1",
@@ -146,10 +166,21 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^src/(.*)$": "<rootDir>/$1"
+      "^src/(.*)$": "<rootDir>/src/$1"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "src/**/*.(t|j)s",
+      "!src/**/*.d.ts"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@dfx.swiss|@scure|@noble|@solana|bitcoinjs-lib|bitcoinjs-message|tronweb|tweetnacl)/)"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "__tests__/api/helpers/"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/setupTests.ts"
     ]
   }
 }

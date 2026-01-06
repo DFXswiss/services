@@ -8,6 +8,8 @@ import {
   TransactionError,
   TransactionType,
   useBankAccountContext,
+  useSell,
+  useSwap,
 } from '@dfx.swiss/react';
 import {
   SpinnerSize,
@@ -19,6 +21,7 @@ import {
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import React, { useEffect, useMemo, useState } from 'react';
+import { Urls } from 'src/config/urls';
 import { CloseType, useAppHandlingContext } from 'src/contexts/app-handling.context';
 import { useOrderUIContext } from 'src/contexts/order-ui.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -115,13 +118,30 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
     }
 
     try {
-      // TODO (later): Implement for sell and swap transactions
-      // if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSellTxId);
-      // if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSwapTxId);
-      // setTxDone(true);
+      if (canSendTransaction()) {
+        if (orderType === OrderType.SELL) {
+          await sendSellTransaction(paymentInfo as Sell);
+        } else if (orderType === OrderType.SWAP) {
+          await sendSwapTransaction(paymentInfo as Swap);
+        }
+      }
     } finally {
       setIsProcessingTransaction(false);
     }
+  }
+
+  async function sendSellTransaction(sell: Sell): Promise<void> {
+    // DISABLED: EIP-7702 gasless transactions require Pimlico integration
+    // The manual signing approach doesn't work because eth_sign is disabled in MetaMask
+    // TODO: Re-enable once Pimlico integration is complete
+    closeServices({ type: CloseType.SELL, isComplete: false, sell }, false);
+  }
+
+  async function sendSwapTransaction(swap: Swap): Promise<void> {
+    // DISABLED: EIP-7702 gasless transactions require Pimlico integration
+    // The manual signing approach doesn't work because eth_sign is disabled in MetaMask
+    // TODO: Re-enable once Pimlico integration is complete
+    closeServices({ type: CloseType.SWAP, isComplete: false, swap }, false);
   }
 
   const isBankWire = paymentMethod !== FiatPaymentMethod.CARD;
@@ -182,7 +202,7 @@ export const PaymentInfo = React.memo(function PaymentInfoComponent({
                           'screens/payment',
                           'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
                         )}
-                        url={process.env.REACT_APP_TNC_URL}
+                        url={Urls.termsAndConditions}
                         small
                         dark
                       />

@@ -8,6 +8,11 @@
 # testing
 /coverage
 dfx.swiss-*.tgz
+playwright-report/
+test-results/
+
+# test environment (contains secrets)
+.env.test
 
 # next.js
 /.next/
@@ -21,6 +26,9 @@ dfx.swiss-*.tgz
 # misc
 .DS_Store
 *.pem
+
+# generated at build time
+public/version.json
 
 # debug
 npm-debug.log*
@@ -38,3 +46,18 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .claude/settings.local.json
+
+# Synpress cache and test results
+.cache-synpress/
+e2e/synpress-results/
+synpress-report/
+
+# Debug screenshots (visual regression baselines in e2e/screenshots/ are kept)
+e2e/screenshots/debug/
+
+# Process ID files
+*.pid
+
+# Chrome for testing (installed via @puppeteer/browsers)
+/chrome/
+playwright-report-local/

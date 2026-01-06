@@ -41,6 +41,7 @@ import { AddressSwitch } from 'src/components/payment/address-switch';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
 import { addressLabel } from 'src/config/labels';
+import { Urls } from 'src/config/urls';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
@@ -59,6 +60,7 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useTxHelper } from '../hooks/tx-helper.hook';
+import { getKycErrorFromMessage } from '../util/api-error';
 import { blankedAddress } from '../util/utils';
 
 enum Side {
@@ -204,10 +206,12 @@ export default function SellScreen(): JSX.Element {
       setVal('amount', amountIn);
     } else if (amountOut) {
       setVal('targetAmount', amountOut);
+    } else if (selectedAsset?.name === 'ETH' && !enteredAmount) {
+      setVal('amount', '0.1');
     }
-  }, [amountIn, amountOut]);
+  }, [amountIn, amountOut, selectedAsset]);
 
-  useEffect(() => setAddress(), [session?.address, translate]);
+  useEffect(() => setAddress(), [session?.address, translate, addressItems.length]);
 
   useEffect(() => {
     if (selectedAddress) {
@@ -326,7 +330,12 @@ export default function SellScreen(): JSX.Element {
             navigate('/profile');
           } else {
             setPaymentInfo(undefined);
-            setErrorMessage(error.message ?? 'Unknown error');
+            const kycErrorFromMessage = getKycErrorFromMessage(error.message);
+            if (kycErrorFromMessage) {
+              setKycError(kycErrorFromMessage);
+            } else {
+              setErrorMessage(error.message ?? 'Unknown error');
+            }
           }
         }
       })
@@ -377,6 +386,8 @@ export default function SellScreen(): JSX.Element {
       case TransactionError.NATIONALITY_NOT_ALLOWED:
       case TransactionError.IBAN_CURRENCY_MISMATCH:
       case TransactionError.TRADING_NOT_ALLOWED:
+      case TransactionError.RECOMMENDATION_REQUIRED:
+      case TransactionError.EMAIL_REQUIRED:
         setKycError(sell.error);
         return;
     }
@@ -470,6 +481,7 @@ export default function SellScreen(): JSX.Element {
 
   async function handleNext(paymentInfo: Sell): Promise<void> {
     setIsProcessing(true);
+    setErrorMessage(undefined);
 
     await updateBankAccount();
 
@@ -477,9 +489,15 @@ export default function SellScreen(): JSX.Element {
       return closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo }, false);
 
     try {
-      if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSellTxId);
-
+      if (canSendTransaction()) {
+        await sendTransaction(paymentInfo).then(setSellTxId);
+      }
       setTxDone(true);
+    } catch (error: any) {
+      // User rejected in wallet - silently return, user stays on form
+      if (error.code === 4001) return;
+      // Other errors - show message, user can click Retry to see deposit address for manual transfer
+      setErrorMessage(translate('screens/sell', 'Transaction failed. Click Retry to see the deposit address for manual transfer.'));
     } finally {
       setIsProcessing(false);
     }
@@ -676,7 +694,7 @@ export default function SellScreen(): JSX.Element {
                               'screens/payment',
                               'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
                             )}
-                            url={process.env.REACT_APP_TNC_URL}
+                            url={Urls.termsAndConditions}
                             small
                             dark
                           />

@@ -8,7 +8,6 @@ import {
   UserProfile,
   Utils,
   useApi,
-  useAuthContext,
   useSessionContext,
   useTransaction,
   useUser,
@@ -38,6 +37,7 @@ import { RecommendationsSection } from 'src/components/account/recommendations-s
 import { KycStatus } from 'src/components/kyc-status';
 import { Modal } from 'src/components/modal';
 import { addressLabel } from 'src/config/labels';
+import { Urls } from 'src/config/urls';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useUserGuard } from 'src/hooks/guard.hook';
@@ -97,7 +97,6 @@ export default function AccountScreen(): JSX.Element {
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized, setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
-  const { session } = useAuthContext();
   const { rootRef } = useLayoutContext();
   const { call } = useApi();
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
@@ -136,11 +135,13 @@ export default function AccountScreen(): JSX.Element {
   const canDownloadPdf = supportedBlockchains.length > 0;
 
   useEffect(() => {
-    if (user?.activeAddress && !isUserLoading && isLoggedIn) {
+    if (!isUserLoading && isLoggedIn) {
       loadInitialData();
-      setValue('address', user.activeAddress);
+      if (user?.activeAddress) {
+        setValue('address', user.activeAddress);
+      }
     }
-  }, [user?.activeAddress, isUserLoading, session?.role, isLoggedIn]);
+  }, [user?.activeAddress, isUserLoading, isLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn) loadTransactions();
@@ -160,19 +161,18 @@ export default function AccountScreen(): JSX.Element {
     setIsDataLoading(true);
 
     try {
-      await Promise.allSettled([
-        loadReferral(),
-        loadProfile(),
-      ]);
+      await Promise.allSettled([loadReferral(), loadProfile()]);
     } finally {
       setIsDataLoading(false);
     }
   }
 
   async function loadReferral(): Promise<void> {
-    return getRef().then(setReferral).catch(() => {
-      // ignore errors
-    });
+    return getRef()
+      .then(setReferral)
+      .catch(() => {
+        // ignore errors
+      });
   }
 
   async function loadProfile(): Promise<void> {
@@ -424,7 +424,7 @@ export default function AccountScreen(): JSX.Element {
                       onCopy={() =>
                         copy(
                           url({
-                            base: process.env.REACT_APP_REF_URL,
+                            base: Urls.referral,
                             params: new URLSearchParams({ code: referral.code ?? '' }),
                           }),
                         )

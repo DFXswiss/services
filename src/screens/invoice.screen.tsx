@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
+import { Api } from 'src/config/api';
 import { ErrorHint } from 'src/components/error-hint';
 import { QrBasic } from 'src/components/payment/qr-code';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -32,7 +33,7 @@ interface FormData {
   amount: number;
 }
 
-const baseUrl = url({ base: process.env.REACT_APP_API_URL, path: '/v1/paymentLink/payment' });
+const baseUrl = url({ base: Api.url, path: `/${Api.version}/paymentLink/payment` });
 const relativeBaseUrl = '/pl';
 
 export default function InvoiceScreen(): JSX.Element {

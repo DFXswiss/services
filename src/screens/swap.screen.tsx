@@ -38,10 +38,12 @@ import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
 import { addressLabel } from 'src/config/labels';
+import { Urls } from 'src/config/urls';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import useDebounce from 'src/hooks/debounce.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { getKycErrorFromMessage } from 'src/util/api-error';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
@@ -226,10 +228,16 @@ export default function SwapScreen(): JSX.Element {
   }, [assetFilter, assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
 
   useEffect(() => {
-    if (amountIn) setVal('amount', amountIn);
-  }, [amountIn]);
+    if (amountIn) {
+      setVal('amount', amountIn);
+    } else if (selectedSourceAsset && !enteredAmount) {
+      // Set default amount based on asset type
+      const isStablecoin = ['USDT', 'USDC', 'DAI', 'ZCHF', 'dEURO', 'XCHF'].includes(selectedSourceAsset.name);
+      setVal('amount', isStablecoin ? '100' : '0.1');
+    }
+  }, [amountIn, selectedSourceAsset]);
 
-  useEffect(() => setAddress(), [session?.address, translate, blockchain, userAddresses]);
+  useEffect(() => setAddress(), [session?.address, translate, blockchain, userAddresses, addressItems.length]);
 
   useEffect(() => {
     if (selectedAddress) {
@@ -339,7 +347,12 @@ export default function SwapScreen(): JSX.Element {
             navigate('/profile');
           } else {
             setPaymentInfo(undefined);
-            setErrorMessage(error.message ?? 'Unknown error');
+            const kycErrorFromMessage = getKycErrorFromMessage(error.message);
+            if (kycErrorFromMessage) {
+              setKycError(kycErrorFromMessage);
+            } else {
+              setErrorMessage(error.message ?? 'Unknown error');
+            }
           }
         }
       })
@@ -390,6 +403,8 @@ export default function SwapScreen(): JSX.Element {
       case TransactionError.NATIONALITY_NOT_ALLOWED:
       case TransactionError.IBAN_CURRENCY_MISMATCH:
       case TransactionError.TRADING_NOT_ALLOWED:
+      case TransactionError.RECOMMENDATION_REQUIRED:
+      case TransactionError.EMAIL_REQUIRED:
         setKycError(swap.error);
         return;
     }
@@ -482,7 +497,9 @@ export default function SwapScreen(): JSX.Element {
     if (canSendTransaction() && !activeWallet) return close(paymentInfo, false);
 
     try {
-      if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSwapTxId);
+      if (canSendTransaction()) {
+        await sendTransaction(paymentInfo).then(setSwapTxId);
+      }
 
       setTxDone(true);
     } finally {
@@ -685,7 +702,7 @@ export default function SwapScreen(): JSX.Element {
                               'screens/payment',
                               'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
                             )}
-                            url={process.env.REACT_APP_TNC_URL}
+                            url={Urls.termsAndConditions}
                             small
                             dark
                           />

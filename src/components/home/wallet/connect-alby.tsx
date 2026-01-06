@@ -6,6 +6,7 @@ import {
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
 import { GetInfoResponse } from 'webln';
+import { Api } from '../../../config/api';
 import { useAppHandlingContext } from '../../../contexts/app-handling.context';
 import { useSettingsContext } from '../../../contexts/settings.context';
 import { WalletType } from '../../../contexts/wallet.context';
@@ -42,8 +43,8 @@ export default function ConnectAlby(props: ConnectProps): JSX.Element {
       appParams.refcode && params.set('usedRef', appParams.refcode);
 
       win.location = url({
-        base: process.env.REACT_APP_API_URL,
-        path: `${process.env.REACT_APP_API_VERSION}/auth/alby`,
+        base: Api.url,
+        path: `${Api.version}/auth/alby`,
         params,
       });
 

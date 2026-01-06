@@ -24,8 +24,6 @@ import { useBlockchain } from './blockchain.hook';
 import { useNavigation } from './navigation.hook';
 import { useTxHelper } from './tx-helper.hook';
 
-const EMBEDDED_WALLET = 'CakeWallet';
-
 export enum OrderType {
   BUY = 'buy',
   SELL = 'sell',
@@ -139,17 +137,18 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
   // ---- Fetch available payment methods based on target asset ----
 
   const getAvailablePaymentMethods = useCallback(
-    (targetAsset?: Asset): FiatPaymentMethod[] => {
+    (_targetAsset?: Asset): FiatPaymentMethod[] => {
       if (!isBuy) return [];
       if (orderType === OrderType.DEPOSIT) return [FiatPaymentMethod.BANK]; // TODO: Add card deposit later
 
-      const pushCardPayment =
-        (isDfxHosted || !isEmbedded) &&
-        wallet !== EMBEDDED_WALLET &&
-        user?.activeAddress?.wallet !== EMBEDDED_WALLET &&
-        (!targetAsset || targetAsset.cardBuyable);
+      // Credit card payments disabled
+      // const pushCardPayment =
+      //   (isDfxHosted || !isEmbedded) &&
+      //   wallet !== EMBEDDED_WALLET &&
+      //   user?.activeAddress?.wallet !== EMBEDDED_WALLET &&
+      //   (!targetAsset || targetAsset.cardBuyable);
 
-      return [FiatPaymentMethod.BANK, ...(pushCardPayment ? [FiatPaymentMethod.CARD] : [])];
+      return [FiatPaymentMethod.BANK];
     },
     [isBuy, isDfxHosted, isEmbedded, wallet, user],
   );
@@ -300,6 +299,8 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
       case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
       case TransactionError.TRADING_NOT_ALLOWED:
+      case TransactionError.RECOMMENDATION_REQUIRED:
+      case TransactionError.EMAIL_REQUIRED:
         setKycError(order.error);
         return;
     }

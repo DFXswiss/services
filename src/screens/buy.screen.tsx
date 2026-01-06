@@ -19,6 +19,7 @@ import {
   Utils,
   Validations,
 } from '@dfx.swiss/react';
+import { Urls } from 'src/config/urls';
 import {
   AssetIconVariant,
   Form,
@@ -40,6 +41,7 @@ import { useEffect, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
 import { useWindowContext } from 'src/contexts/window.context';
+import { getKycErrorFromMessage } from 'src/util/api-error';
 import { blankedAddress } from 'src/util/utils';
 import { NameEdit } from '../components/edit/name.edit';
 import { ErrorHint } from '../components/error-hint';
@@ -49,7 +51,7 @@ import { BuyCompletion } from '../components/payment/buy-completion';
 import { PrivateAssetHint } from '../components/private-asset-hint';
 import { QuoteErrorHint } from '../components/quote-error-hint';
 import { SanctionHint } from '../components/sanction-hint';
-import { addressLabel, PaymentMethodDescriptions, PaymentMethodLabels } from '../config/labels';
+import { addressLabel } from '../config/labels';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useLayoutContext } from '../contexts/layout.context';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -85,8 +87,6 @@ interface ValidatedData extends BuyPaymentInfo {
   sideToUpdate?: Side;
 }
 
-const EmbeddedWallet = 'CakeWallet';
-
 export default function BuyScreen(): JSX.Element {
   useAddressGuard('/login');
 
@@ -106,7 +106,6 @@ export default function BuyScreen(): JSX.Element {
     blockchain,
     paymentMethod,
     externalTransactionId,
-    wallet,
     flags,
     setParams,
     hideTargetSelection,
@@ -120,7 +119,7 @@ export default function BuyScreen(): JSX.Element {
   const { toString } = useBlockchain();
   const { width } = useWindowContext();
   const { rootRef } = useLayoutContext();
-  const { isEmbedded, isDfxHosted, isInitialized } = useAppHandlingContext();
+  const { isInitialized } = useAppHandlingContext();
 
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
@@ -173,11 +172,12 @@ export default function BuyScreen(): JSX.Element {
   // no instant payments ATM
   // (!selectedAsset || selectedAsset.instantBuyable) && availablePaymentMethods.push(FiatPaymentMethod.INSTANT);
 
-  (isDfxHosted || !isEmbedded) &&
-    wallet !== EmbeddedWallet &&
-    user?.activeAddress?.wallet !== EmbeddedWallet &&
-    (!selectedAsset || selectedAsset?.cardBuyable) &&
-    availablePaymentMethods.push(FiatPaymentMethod.CARD);
+  // Credit card payments disabled
+  // (isDfxHosted || !isEmbedded) &&
+  //   wallet !== EmbeddedWallet &&
+  //   user?.activeAddress?.wallet !== EmbeddedWallet &&
+  //   (!selectedAsset || selectedAsset?.cardBuyable) &&
+  //   availablePaymentMethods.push(FiatPaymentMethod.CARD);
 
   const availableCurrencies = currencies?.filter((c) =>
     selectedPaymentMethod === FiatPaymentMethod.CARD
@@ -227,7 +227,7 @@ export default function BuyScreen(): JSX.Element {
     }
   }, [amountIn, amountOut]);
 
-  useEffect(() => setAddress(), [session?.address, translate]);
+  useEffect(() => setAddress(), [session?.address, translate, addressItems.length]);
 
   useEffect(() => {
     if (selectedAddress) {
@@ -342,7 +342,12 @@ export default function BuyScreen(): JSX.Element {
       .catch((error: ApiError) => {
         if (isRunning) {
           setPaymentInfo(undefined);
-          setErrorMessage(error.message ?? 'Unknown error');
+          const kycErrorFromMessage = getKycErrorFromMessage(error.message);
+          if (kycErrorFromMessage) {
+            setKycError(kycErrorFromMessage);
+          } else {
+            setErrorMessage(error.message ?? 'Unknown error');
+          }
         }
       })
       .finally(() => isRunning && setIsLoading(undefined));
@@ -385,6 +390,8 @@ export default function BuyScreen(): JSX.Element {
       case TransactionError.NATIONALITY_NOT_ALLOWED:
       case TransactionError.IBAN_CURRENCY_MISMATCH:
       case TransactionError.TRADING_NOT_ALLOWED:
+      case TransactionError.RECOMMENDATION_REQUIRED:
+      case TransactionError.EMAIL_REQUIRED:
         setKycError(buy.error);
         return;
     }
@@ -521,15 +528,6 @@ export default function BuyScreen(): JSX.Element {
                       />
                     </div>
                   </StyledHorizontalStack>
-                  <StyledDropdown<FiatPaymentMethod>
-                    rootRef={rootRef}
-                    name="paymentMethod"
-                    placeholder={translate('general/actions', 'Select') + '...'}
-                    items={availablePaymentMethods}
-                    labelFunc={(item) => translate('screens/payment', PaymentMethodLabels[item])}
-                    descriptionFunc={(item) => translate('screens/payment', PaymentMethodDescriptions[item])}
-                    full
-                  />
                 </StyledVerticalStack>
 
                 <StyledVerticalStack gap={2} full>
@@ -650,7 +648,7 @@ export default function BuyScreen(): JSX.Element {
                                     'screens/payment',
                                     'Please note that by using this service you automatically accept our terms and conditions. The effective exchange rate is fixed when the money is received and processed by DFX.',
                                   )}
-                                  url={process.env.REACT_APP_TNC_URL}
+                                  url={Urls.termsAndConditions}
                                   small
                                   dark
                                 />
@@ -673,7 +671,7 @@ export default function BuyScreen(): JSX.Element {
                                     'screens/payment',
                                     'Please note that by using this service you automatically accept our terms and conditions and authorize DFX.swiss to collect the above amount via your chosen payment method and agree that this amount cannot be canceled, recalled or refunded.',
                                   )}
-                                  url={process.env.REACT_APP_TNC_URL}
+                                  url={Urls.termsAndConditions}
                                   small
                                   dark
                                 />

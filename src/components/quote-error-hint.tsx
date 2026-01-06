@@ -40,6 +40,15 @@ export function QuoteErrorHint({ type, error }: { type: TransactionType; error: 
           'This transaction is only possible with a verified account. Please complete our KYC (Know-Your-Customer) process.',
         );
 
+      case TransactionError.RECOMMENDATION_REQUIRED:
+        return translate(
+          'screens/kyc',
+          'To trade, you need a recommendation from an existing DFX customer.',
+        );
+
+      case TransactionError.EMAIL_REQUIRED:
+        return translate('screens/kyc', 'To trade, please enter your email address.');
+
       case TransactionError.KYC_DATA_REQUIRED:
         return '';
 
@@ -108,6 +117,18 @@ export function QuoteErrorHint({ type, error }: { type: TransactionType; error: 
           width={StyledButtonWidth.FULL}
           label={translate('screens/kyc', 'Start video identification')}
           onClick={() => startStep(KycStepName.IDENT, KycStepType.SUMSUB_VIDEO)}
+        />
+      ) : error === TransactionError.RECOMMENDATION_REQUIRED ? (
+        <StyledButton
+          width={StyledButtonWidth.FULL}
+          label={translate('screens/kyc', 'Enter recommendation')}
+          onClick={() => startStep(KycStepName.RECOMMENDATION)}
+        />
+      ) : error === TransactionError.EMAIL_REQUIRED ? (
+        <StyledButton
+          width={StyledButtonWidth.FULL}
+          label={translate('screens/kyc', 'Enter email')}
+          onClick={() => startStep(KycStepName.CONTACT_DATA)}
         />
       ) : (
         <>

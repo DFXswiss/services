@@ -1,5 +1,6 @@
 import {
   ApiError,
+  Country,
   CryptoPaymentMethod,
   DetailTransaction,
   ExportFormat,
@@ -39,9 +40,12 @@ import {
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledHorizontalStack,
   StyledIconButton,
+  StyledInput,
   StyledLink,
   StyledLoadingSpinner,
+  StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
@@ -287,6 +291,12 @@ interface RefundDetails extends TransactionRefundData {
 interface FormData {
   address: UserAddress;
   iban: string;
+  creditorName: string;
+  creditorStreet: string;
+  creditorHouseNumber: string;
+  creditorZip: string;
+  creditorCity: string;
+  creditorCountry: Country;
 }
 
 interface TransactionRefundProps {
@@ -302,12 +312,13 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { state } = useLocation();
   const { width } = useWindowContext();
   const { navigate } = useNavigation();
-  const { translate } = useSettingsContext();
+  const { translate, allowedCountries } = useSettingsContext();
   const { user, userAddresses } = useUserContext();
   const { rootRef } = useLayoutContext();
   const { bankAccounts } = useBankAccountContext();
   const { isLoggedIn } = useSessionContext();
-  const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
+  const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget, setTransactionBankRefund } =
+    useTransaction();
   const refetchTimeout = useRef<NodeJS.Timeout | undefined>();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -368,20 +379,52 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     setIsLoading(true);
 
     try {
-      await setTransactionRefundTarget(transaction.id, {
-        refundTarget: refundDetails?.refundTarget ?? data.address?.address ?? data.iban,
-      });
+      if (isBuy && transaction.inputPaymentMethod !== FiatPaymentMethod.CARD) {
+        // Bank refund: IBAN and name may be fixed, but address is always required from user
+        await setTransactionBankRefund(transaction.id, {
+          refundTarget: refundDetails?.refundTarget ?? data.iban,
+          name: refundDetails?.bankDetails?.name ?? data.creditorName,
+          address: data.creditorStreet,
+          houseNumber: data.creditorHouseNumber || undefined,
+          zip: data.creditorZip,
+          city: data.creditorCity,
+          country: data.creditorCountry?.symbol,
+        });
+      } else if (isBuy) {
+        // Card refund: simple refund to card
+        await setTransactionRefundTarget(transaction.id, {
+          refundTarget: refundDetails?.refundTarget ?? '',
+        });
+      } else {
+        // Crypto refund: refund to blockchain address
+        await setTransactionRefundTarget(transaction.id, {
+          refundTarget: refundDetails?.refundTarget ?? data.address?.address,
+        });
+      }
+      // Navigate only on success
+      navigate('/tx');
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
       setIsLoading(false);
-      navigate('/tx');
     }
   }
 
+  // Bank refund = BUY transaction with non-card payment method
+  const isBankRefund = isBuy && transaction?.inputPaymentMethod !== FiatPaymentMethod.CARD;
+
+  // Validation rules based on refund type:
+  // - address: only required for crypto refunds (not isBuy)
+  // - iban/creditorName: only required for bank refunds if not already fixed from bankTx
+  // - creditorStreet/zip/city/country: only required for bank refunds
   const rules = Utils.createRules({
-    address: Validations.Required,
-    iban: Validations.Required,
+    address: !isBuy ? Validations.Required : undefined,
+    iban: !isBankRefund || refundDetails?.refundTarget ? undefined : Validations.Required,
+    creditorName: !isBankRefund || refundDetails?.bankDetails?.name?.trim() ? undefined : Validations.Required,
+    creditorStreet: isBankRefund ? Validations.Required : undefined,
+    creditorZip: isBankRefund ? Validations.Required : undefined,
+    creditorCity: isBankRefund ? Validations.Required : undefined,
+    creditorCountry: isBankRefund ? Validations.Required : undefined,
   });
 
   return selectedIban === AddAccount ? (
@@ -423,9 +466,36 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
             {refundDetails.refundAmount} {refundDetails.refundAsset.name}
           </p>
         </StyledDataTableRow>
-        {refundDetails.refundTarget && (
-          <StyledDataTableRow label={translate('screens/payment', 'Recipient')}>
-            <p>{blankedAddress(refundDetails.refundTarget, { width })}</p>
+        {refundDetails.bankDetails?.name && (
+          <StyledDataTableRow label={translate('screens/payment', 'Name')}>
+            <p>{refundDetails.bankDetails.name}</p>
+          </StyledDataTableRow>
+        )}
+        {(refundDetails.bankDetails?.address || refundDetails.bankDetails?.houseNumber) && (
+          <StyledDataTableRow label={translate('screens/payment', 'Address')}>
+            <p>
+              {[refundDetails.bankDetails.address, refundDetails.bankDetails.houseNumber].filter(Boolean).join(' ')}
+            </p>
+          </StyledDataTableRow>
+        )}
+        {(refundDetails.bankDetails?.zip || refundDetails.bankDetails?.city) && (
+          <StyledDataTableRow label={translate('screens/payment', 'City')}>
+            <p>{[refundDetails.bankDetails.zip, refundDetails.bankDetails.city].filter(Boolean).join(' ')}</p>
+          </StyledDataTableRow>
+        )}
+        {refundDetails.bankDetails?.country && (
+          <StyledDataTableRow label={translate('screens/payment', 'Country')}>
+            <p>{refundDetails.bankDetails.country}</p>
+          </StyledDataTableRow>
+        )}
+        {refundDetails.bankDetails?.iban && (
+          <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
+            <p>{Utils.formatIban(refundDetails.bankDetails.iban) ?? refundDetails.bankDetails.iban}</p>
+          </StyledDataTableRow>
+        )}
+        {refundDetails.bankDetails?.bic && (
+          <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
+            <p>{refundDetails.bankDetails.bic}</p>
           </StyledDataTableRow>
         )}
       </StyledDataTable>
@@ -442,23 +512,85 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
               full
             />
           )}
-          {!refundDetails.refundTarget &&
-            transaction.inputPaymentMethod !== FiatPaymentMethod.CARD &&
-            bankAccounts &&
-            isBuy && (
-              <StyledDropdown<string>
-                rootRef={rootRef}
-                name="iban"
-                label={translate('screens/payment', 'Chargeback IBAN')}
-                items={[...bankAccounts.map((b) => b.iban), AddAccount]}
-                labelFunc={(item) =>
-                  item === AddAccount ? translate('general/actions', item) : Utils.formatIban(item) ?? ''
-                }
-                descriptionFunc={(item) => bankAccounts.find((b) => b.iban === item)?.label ?? ''}
-                placeholder={translate('general/actions', 'Select') + '...'}
-                forceEnable
-                full
-              />
+          {transaction.inputPaymentMethod !== FiatPaymentMethod.CARD && isBuy && (
+              <>
+                {/* IBAN selection only when no fixed refundTarget */}
+                {!refundDetails.refundTarget && bankAccounts && (
+                  <StyledDropdown<string>
+                    rootRef={rootRef}
+                    name="iban"
+                    label={translate('screens/payment', 'Chargeback IBAN')}
+                    items={[...bankAccounts.map((b) => b.iban), AddAccount]}
+                    labelFunc={(item) =>
+                      item === AddAccount ? translate('general/actions', item) : Utils.formatIban(item) ?? ''
+                    }
+                    descriptionFunc={(item) => bankAccounts.find((b) => b.iban === item)?.label ?? ''}
+                    placeholder={translate('general/actions', 'Select') + '...'}
+                    forceEnable
+                    full
+                  />
+                )}
+                {/* Name input only when no fixed bankDetails.name */}
+                {!refundDetails.bankDetails?.name && (
+                  <StyledInput
+                    name="creditorName"
+                    autocomplete="name"
+                    label={translate('screens/kyc', 'Name')}
+                    placeholder={translate('screens/kyc', 'John Doe')}
+                    full
+                    smallLabel
+                  />
+                )}
+                {/* Address fields are always required for bank refunds */}
+                <StyledHorizontalStack gap={2}>
+                  <StyledInput
+                    name="creditorStreet"
+                    autocomplete="street"
+                    label={translate('screens/kyc', 'Street')}
+                    placeholder={translate('screens/kyc', 'Street')}
+                    full
+                    smallLabel
+                  />
+                  <StyledInput
+                    name="creditorHouseNumber"
+                    autocomplete="house-number"
+                    label={translate('screens/kyc', 'House nr.')}
+                    placeholder="xx"
+                    small
+                    smallLabel
+                  />
+                </StyledHorizontalStack>
+                <StyledHorizontalStack gap={2}>
+                  <StyledInput
+                    name="creditorZip"
+                    autocomplete="zip"
+                    label={translate('screens/kyc', 'ZIP code')}
+                    placeholder="12345"
+                    small
+                    smallLabel
+                  />
+                  <StyledInput
+                    name="creditorCity"
+                    autocomplete="city"
+                    label={translate('screens/kyc', 'City')}
+                    placeholder={translate('screens/kyc', 'City')}
+                    full
+                    smallLabel
+                  />
+                </StyledHorizontalStack>
+                <StyledSearchDropdown<Country>
+                  rootRef={rootRef}
+                  name="creditorCountry"
+                  autocomplete="country"
+                  label={translate('screens/kyc', 'Country')}
+                  placeholder={translate('general/actions', 'Select') + '...'}
+                  items={allowedCountries ?? []}
+                  labelFunc={(item) => item.name}
+                  filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+                  matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+                  smallLabel
+                />
+              </>
             )}
           <StyledButton
             type="submit"

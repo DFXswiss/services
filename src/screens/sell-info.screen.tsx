@@ -17,6 +17,7 @@ import {
   useSell,
   useTransaction,
 } from '@dfx.swiss/react';
+import { Urls } from 'src/config/urls';
 import {
   AlignContent,
   IconColor,
@@ -210,6 +211,8 @@ export default function SellInfoScreen(): JSX.Element {
       case TransactionError.NATIONALITY_NOT_ALLOWED:
       case TransactionError.IBAN_CURRENCY_MISMATCH:
       case TransactionError.TRADING_NOT_ALLOWED:
+      case TransactionError.RECOMMENDATION_REQUIRED:
+      case TransactionError.EMAIL_REQUIRED:
         setKycError(sell.error);
         return undefined;
     }
@@ -342,7 +345,7 @@ export default function SellInfoScreen(): JSX.Element {
                       'screens/payment',
                       'Please note that by using this service you automatically accept our terms and conditions.',
                     )}
-                    url={process.env.REACT_APP_TNC_URL}
+                    url={Urls.termsAndConditions}
                     small
                     dark
                   />

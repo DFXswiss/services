@@ -1,4 +1,4 @@
-import { Asset, AssetType, Blockchain } from '@dfx.swiss/react';
+import { Asset, AssetType, Blockchain, Eip5792Call } from '@dfx.swiss/react';
 import BigNumber from 'bignumber.js';
 import { Buffer } from 'buffer';
 import { useMemo } from 'react';
@@ -17,6 +17,27 @@ export enum WalletType {
   RABBY = 'Rabby',
   META_MASK = 'MetaMask',
   IN_APP_BROWSER = 'InAppBrowser',
+}
+
+export interface Eip7702AuthorizationData {
+  contractAddress: string;
+  chainId: number;
+  nonce: number;
+  typedData: {
+    domain: Record<string, unknown>;
+    types: Record<string, Array<{ name: string; type: string }>>;
+    primaryType: string;
+    message: Record<string, unknown>;
+  };
+}
+
+export interface SignedEip7702Authorization {
+  chainId: number;
+  address: string;
+  nonce: number;
+  r: string;
+  s: string;
+  yParity: number;
 }
 
 export interface MetaMaskInterface {
@@ -41,6 +62,9 @@ export interface MetaMaskInterface {
     to: string,
     config?: { isWeiAmount?: boolean; gasPrice?: number },
   ) => Promise<string>;
+  sendCallsWithPaymaster: (calls: Eip5792Call[], paymasterUrl: string, chainId: number) => Promise<string>;
+  supportsEip5792Paymaster: (chainId: number) => Promise<boolean>;
+  signEip7702Authorization: (authData: Eip7702AuthorizationData) => Promise<SignedEip7702Authorization>;
 }
 
 interface MetaMaskError {
@@ -248,6 +272,130 @@ export function useMetaMask(): MetaMaskInterface {
     return new web3.eth.Contract(ERC20_ABI as any, chainId);
   }
 
+  /**
+   * Check if the wallet supports EIP-5792 paymaster service
+   */
+  async function supportsEip5792Paymaster(chainId: number): Promise<boolean> {
+    try {
+      const account = await getAccount();
+      if (!account) return false;
+
+      const capabilities = await ethereum().request({
+        method: 'wallet_getCapabilities',
+        params: [account],
+      });
+
+      const chainHex = `0x${chainId.toString(16)}`;
+      return capabilities?.[chainHex]?.paymasterService?.supported === true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Wait for wallet_sendCalls transaction to be confirmed
+   */
+  async function waitForCallsStatus(callsId: string): Promise<string> {
+    const maxAttempts = 120; // 2 minutes
+    for (let i = 0; i < maxAttempts; i++) {
+      const status = await ethereum().request({
+        method: 'wallet_getCallsStatus',
+        params: [callsId],
+      });
+
+      if (status.status === 'CONFIRMED') {
+        return status.receipts[0].transactionHash;
+      }
+      if (status.status === 'FAILED') {
+        throw new TranslatedError('Transaction failed');
+      }
+
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    throw new TranslatedError('Transaction timeout - please check your wallet');
+  }
+
+  /**
+   * Sign EIP-7702 authorization for gasless transactions
+   * This allows the user's EOA to temporarily delegate to a smart contract
+   */
+  async function signEip7702Authorization(authData: Eip7702AuthorizationData): Promise<SignedEip7702Authorization> {
+    try {
+      const account = await getAccount();
+      if (!account) throw new Error('No account connected');
+
+      // Sign the typed data using eth_signTypedData_v4
+      const signature = await ethereum().request({
+        method: 'eth_signTypedData_v4',
+        params: [account, JSON.stringify(authData.typedData)],
+      });
+
+      // Parse signature into r, s, v components
+      const r = signature.slice(0, 66);
+      const s = '0x' + signature.slice(66, 130);
+      const v = parseInt(signature.slice(130, 132), 16);
+
+      // Convert v to yParity (EIP-155: v = 27 or 28, yParity = 0 or 1)
+      const yParity = v - 27;
+
+      return {
+        chainId: authData.chainId,
+        address: authData.contractAddress,
+        nonce: authData.nonce,
+        r,
+        s,
+        yParity,
+      };
+    } catch (e) {
+      return handleError(e as MetaMaskError);
+    }
+  }
+
+  /**
+   * Send transaction via EIP-5792 wallet_sendCalls with paymaster sponsorship
+   */
+  async function sendCallsWithPaymaster(calls: Eip5792Call[], paymasterUrl: string, chainId: number): Promise<string> {
+    try {
+      const account = await getAccount();
+      if (!account) throw new Error('No account connected');
+
+      const chainHex = `0x${chainId.toString(16)}`;
+
+      // Check if wallet supports paymaster
+      const supported = await supportsEip5792Paymaster(chainId);
+      if (!supported) {
+        throw new TranslatedError(
+          'Your wallet does not support gasless transactions. Please update MetaMask to v12.20+ and enable Smart Account.',
+        );
+      }
+
+      // Send calls with paymaster capability
+      const result = await ethereum().request({
+        method: 'wallet_sendCalls',
+        params: [
+          {
+            version: '1.0',
+            chainId: chainHex,
+            from: account,
+            calls: calls.map((c) => ({
+              to: c.to,
+              data: c.data,
+              value: c.value,
+            })),
+            capabilities: {
+              paymasterService: { url: paymasterUrl },
+            },
+          },
+        ],
+      });
+
+      // Wait for transaction confirmation
+      return await waitForCallsStatus(result.id ?? result);
+    } catch (e) {
+      return handleError(e as MetaMaskError);
+    }
+  }
+
   function handleError(e: MetaMaskError): never {
     switch (e.code) {
       case 4001:
@@ -274,6 +422,9 @@ export function useMetaMask(): MetaMaskInterface {
       addContract,
       readBalance,
       createTransaction,
+      sendCallsWithPaymaster,
+      supportsEip5792Paymaster,
+      signEip7702Authorization,
     }),
     [web3, toBlockchain, toChainHex, toChainObject],
   );

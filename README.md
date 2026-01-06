@@ -4,6 +4,45 @@ Reusable web widget to buy, sell and swap crypto assets
 
 ![ ](https://dfx.swiss/images/app/iframe.png)
 
+## Local Development
+
+### Prerequisites
+
+- **Node.js** (LTS version) - [Download](https://nodejs.org)
+- **DFX API** running locally - see [API repository](https://github.com/DFXswiss/api#local-development)
+
+### Quick Start
+
+```bash
+# 1. Start the API first (in the api repository)
+cd ../api
+docker-compose up -d
+npm run start:local
+
+# 2. Then start the services (in this repository)
+cd ../services
+npm install
+npm run start
+```
+
+The services will be available at http://localhost:3001
+
+### Configuration
+
+The `.env.loc` file is used for local development:
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `PORT` | 3001 | Services port |
+| `REACT_APP_API_URL` | http://localhost:3000 | Local API URL |
+
+### NPM Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run start` | Start with local config (`.env.loc`) |
+| `npm run build` | Build for production |
+
 ## Usage
 
 DFX Services can be integrated in three different ways,

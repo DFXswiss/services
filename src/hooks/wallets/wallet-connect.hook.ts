@@ -19,7 +19,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { parseEther, parseUnits } from 'viem';
 import ERC20_ABI from '../../static/erc20.abi.json';
-import { config } from '../../wagmi.config';
+import { config, WALLET_CONNECT_PROJECT_ID } from '../../wagmi.config';
 import { useWeb3 } from '../web3.hook';
 
 export interface WalletConnectInterface {
@@ -65,9 +65,7 @@ export function useWalletConnect(): WalletConnectInterface {
   }
 
   async function getWallets(): Promise<DeepWallet[]> {
-    if (!process.env.REACT_APP_WC_PID) throw new Error('WalletConnect PID not defined');
-
-    return fetch(`https://explorer-api.walletconnect.com/v3/wallets?projectId=${process.env.REACT_APP_WC_PID}`).then(
+    return fetch(`https://explorer-api.walletconnect.com/v3/wallets?projectId=${WALLET_CONNECT_PROJECT_ID}`).then(
       async (response) => {
         if (!response.ok) {
           throw new Error(response.statusText);
@@ -84,7 +82,11 @@ export function useWalletConnect(): WalletConnectInterface {
           }))
           .filter((w) => w.deepLink);
       },
-    );
+    )
+      .catch((error) => {
+        console.warn('Failed to fetch WalletConnect wallets:', error.message);
+        return []; // Return empty array on error for local development
+      });
   }
 
   async function connect(blockchain: Blockchain, onConnectUri: (uri: string) => void): Promise<string> {

@@ -212,6 +212,10 @@
     "Your account needs to get verified once your transaction volume exceeds {{limit}}. If you want to increase your trading limit, please complete our KYC (Know-Your-Customer) process.": "Il conto deve essere verificato quando il volume delle transazioni supera il {{limit}}. Se volete aumentare il vostro limite delle transazioni, completate il nostro processo KYC (Know-Your-Customer).",
     "This transaction exceeds your trading limit of {{limit}}. If you would like to increase your limit, please submit a request using the button below.": "Questa transazione supera il limite delle transazioni di {{limit}}. Se desiderate aumentare il vostro limite, inviate una richiesta utilizzando il pulsante sottostante.",
     "This transaction is only possible with a verified account. Please complete our KYC (Know-Your-Customer) process.": "Questa transazione è possibile solo con un conto verificato. Completare il processo KYC (Know-Your-Customer).",
+    "To trade, please enter your email address.": "Per fare trading, inserisci il tuo indirizzo e-mail.",
+    "To trade, you need a recommendation from an existing DFX customer.": "Per fare trading, hai bisogno di una raccomandazione da un cliente DFX esistente.",
+    "Enter email": "Inserisci e-mail",
+    "Enter recommendation": "Inserisci raccomandazione",
     "Instant bank transactions are only possible with a verified account. If you would like to use SEPA Instant, please complete our KYC (Know-Your-Customer) process.": "Le transazioni bancarie istantanee sono possibili solo con un conto verificato. Se desiderate utilizzare SEPA Instant, completate il nostro processo KYC (Know-Your-Customer).",
     "We are unable to process this transaction due to restrictions based on your nationality.": "Non possiamo elaborare questa transazione a causa di restrizioni basate sulla vostra nazionalità.",
     "This IBAN cannot be used with this currency.": "Questo IBAN non può essere utilizzato con questa valuta.",
@@ -545,6 +549,7 @@
     "Click here once you have issued the transfer": "Fare clic qui una volta emesso il trasferimento",
 
     "Please transfer the purchase amount using this information via your banking application. The reference is important!": "Si prega di trasferire l'importo dell'acquisto utilizzando queste informazioni tramite la propria applicazione bancaria. Lo scopo del pagamento è importante!",
+    "Please transfer the purchase amount using this information via your banking application. This IBAN is unique to this asset, no reference is required.": "Si prega di trasferire l'importo dell'acquisto utilizzando queste informazioni tramite la propria applicazione bancaria. Questo IBAN è unico per questo asset, non è richiesto alcun scopo di pagamento.",
 
     "The reference remains identical for the selected asset and can be used for recurring payments and standing orders": "Lo scopo del pagamento rimane identico per l'attività selezionata e può essere utilizzato per pagamenti ricorrenti e ordini permanenti",
 
@@ -571,6 +576,7 @@
     "Complete transaction in your wallet": "Transazione completa nel portafoglio",
     "Pay with your wallet": "Pagare con il portafoglio",
     "Transaction hash": "Hash di transazione",
+    "Transaction failed. Click Retry to see the deposit address for manual transfer.": "Transazione fallita. Clicca su Riprova per vedere l'indirizzo di deposito per un trasferimento manuale.",
 
     "Optional - Account Designation": "Opzionale - Designazione del conto",
     "e.g. Deutsche Bank": "Ad esempio, Deutsche Bank",
