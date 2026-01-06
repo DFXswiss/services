@@ -240,13 +240,25 @@ async function importWallet(page: Page, seedPhrase: string, password: string): P
   }
   await page.waitForTimeout(3000);
 
-  // Skip dialogs
-  for (let i = 0; i < 5; i++) {
+  // Skip dialogs and popups
+  for (let i = 0; i < 10; i++) {
+    // Close "What's new" modal
+    const closeModal = page.locator('button[aria-label="Close"], .modal-close, [data-testid="popover-close"]').first();
+    if (await closeModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await closeModal.click();
+      await page.waitForTimeout(500);
+      continue;
+    }
+
+    // Skip intro dialogs
     const skipBtn = page.locator('button:has-text("Got it"), button:has-text("Done"), button:has-text("Next")').first();
-    if (await skipBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await skipBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
       await skipBtn.click();
       await page.waitForTimeout(500);
+      continue;
     }
+
+    break;
   }
 }
 
@@ -328,84 +340,43 @@ async function runSellFlow(
 ): Promise<void> {
   console.log(`\n=== Running Sell Flow for ${walletPrefix} ===`);
 
-  // Step 1: Navigate to login page
-  await appPage.goto(CONFIG.FRONTEND_URL);
-  await appPage.waitForLoadState('networkidle');
-  await appPage.evaluate(() => {
-    localStorage.clear();
-    sessionStorage.clear();
-  });
-
-  await appPage.goto(`${CONFIG.FRONTEND_URL}/sell?blockchain=Sepolia`);
-  await appPage.waitForLoadState('networkidle');
-  await appPage.waitForTimeout(2000);
-
-  // Screenshot 01: Login page
-  await expect(appPage).toHaveScreenshot(`${walletPrefix}-01-login-page.png`, SCREENSHOT_OPTIONS);
-  console.log('   01: Login page captured');
-
-  // Step 2: Click WALLET
-  const walletTile = appPage.locator('img[src*="wallet"]').first();
-  if (await walletTile.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await walletTile.click();
-    await appPage.waitForTimeout(1000);
-  }
-
-  // Screenshot 02: Wallet selection
-  await expect(appPage).toHaveScreenshot(`${walletPrefix}-02-wallet-selection.png`, SCREENSHOT_OPTIONS);
-  console.log('   02: Wallet selection captured');
-
-  // Step 3: Click MetaMask and handle login
-  const metamaskImg = appPage.locator('img[src*="metamask"], img[src*="rabby"]').first();
-  if (await metamaskImg.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await metamaskImg.click();
-  }
-
-  for (let i = 0; i < 10; i++) {
-    await appPage.waitForTimeout(2000);
-    const content = await appPage.textContent('body').catch(() => '');
-    if (content?.includes('You spend') || content?.includes('Sell')) break;
-
-    const popup = await waitForPopup(context, 3000);
-    if (popup) await handleMetaMaskPopup(popup);
-  }
-
-  // Step 4: Navigate to USDT sell page
+  // User is already logged in from setupWalletAndLogin
+  // Navigate directly to USDT sell page
   await appPage.goto(`${CONFIG.FRONTEND_URL}/sell?blockchain=Sepolia&assets=USDT`);
   await appPage.waitForLoadState('networkidle');
   await appPage.waitForTimeout(2000);
 
-  // Screenshot 03: Sell page
-  await expect(appPage).toHaveScreenshot(`${walletPrefix}-03-sell-page.png`, {
+  // Screenshot 01: Sell page
+  await expect(appPage).toHaveScreenshot(`${walletPrefix}-01-sell-page.png`, {
     ...SCREENSHOT_OPTIONS,
     mask: getDynamicMasks(appPage),
   });
-  console.log('   03: Sell page captured');
+  console.log('   01: Sell page captured');
 
-  // Step 5: Enter amount
+  // Step 2: Enter amount
   const amountInput = appPage.locator('input[type="number"], input[inputmode="decimal"]').first();
   await amountInput.waitFor({ state: 'visible', timeout: 10000 });
   await amountInput.fill(CONFIG.USDT_AMOUNT);
   await appPage.waitForTimeout(3000);
 
-  // Screenshot 04: Amount entered
-  await expect(appPage).toHaveScreenshot(`${walletPrefix}-04-amount-entered.png`, {
+  // Screenshot 02: Amount entered
+  await expect(appPage).toHaveScreenshot(`${walletPrefix}-02-amount-entered.png`, {
     ...SCREENSHOT_OPTIONS,
     mask: getDynamicMasks(appPage),
   });
-  console.log('   04: Amount entered captured');
+  console.log('   02: Amount entered captured');
 
-  // Step 6: Before transaction
+  // Step 3: Before transaction
   const txBtn = appPage.locator('button:has-text("Complete transaction"), button:has-text("Transaktion")').first();
   await txBtn.waitFor({ state: 'visible', timeout: 10000 });
   expect(await txBtn.isDisabled()).toBe(false);
 
-  // Screenshot 05: Before transaction
-  await expect(appPage).toHaveScreenshot(`${walletPrefix}-05-before-transaction.png`, {
+  // Screenshot 03: Before transaction
+  await expect(appPage).toHaveScreenshot(`${walletPrefix}-03-before-transaction.png`, {
     ...SCREENSHOT_OPTIONS,
     mask: getDynamicMasks(appPage),
   });
-  console.log('   05: Before transaction captured');
+  console.log('   03: Before transaction captured');
 
   // Capture TX hash
   let txHash: string | null = null;
@@ -443,12 +414,12 @@ async function runSellFlow(
     if (popup) await handleMetaMaskPopup(popup);
   }
 
-  // Screenshot 06: Transaction success
-  await expect(appPage).toHaveScreenshot(`${walletPrefix}-06-transaction-success.png`, {
+  // Screenshot 04: Transaction success
+  await expect(appPage).toHaveScreenshot(`${walletPrefix}-04-transaction-success.png`, {
     ...SCREENSHOT_OPTIONS,
     mask: getDynamicMasks(appPage),
   });
-  console.log('   06: Transaction success captured');
+  console.log('   04: Transaction success captured');
 
   const successText = await appPage.textContent('body').catch(() => '');
   expect(successText).toContain('Nice! You are all set');
@@ -461,8 +432,8 @@ async function runSellFlow(
     await etherscanPage.waitForLoadState('networkidle');
     await etherscanPage.waitForTimeout(3000);
 
-    // Screenshot 07: Etherscan TX page
-    await expect(etherscanPage).toHaveScreenshot(`${walletPrefix}-07-etherscan-verification.png`, {
+    // Screenshot 05: Etherscan TX page
+    await expect(etherscanPage).toHaveScreenshot(`${walletPrefix}-05-etherscan-verification.png`, {
       ...SCREENSHOT_OPTIONS,
       mask: [
         etherscanPage.locator('#spanTxHash'),
@@ -474,7 +445,7 @@ async function runSellFlow(
         etherscanPage.locator('text=/\\d+\\.\\d+ Gwei/'),
       ],
     });
-    console.log('   07: Etherscan verification captured');
+    console.log('   05: Etherscan verification captured');
 
     await etherscanPage.close();
   } else {
@@ -484,7 +455,7 @@ async function runSellFlow(
     await etherscanPage.waitForLoadState('networkidle');
     await etherscanPage.waitForTimeout(3000);
 
-    await expect(etherscanPage).toHaveScreenshot(`${walletPrefix}-07-etherscan-verification.png`, {
+    await expect(etherscanPage).toHaveScreenshot(`${walletPrefix}-05-etherscan-verification.png`, {
       ...SCREENSHOT_OPTIONS,
       mask: [
         etherscanPage.locator('a[href*="/tx/0x"]'),
