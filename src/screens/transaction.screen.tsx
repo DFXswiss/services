@@ -401,19 +401,23 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
           refundTarget: refundDetails?.refundTarget ?? data.address?.address,
         });
       }
+      // Navigate only on success
+      navigate('/tx');
     } catch (e) {
       setError((e as ApiError).message ?? 'Unknown error');
     } finally {
       setIsLoading(false);
-      navigate('/tx');
     }
   }
 
-  // IBAN and name only required if not already fixed from bankTx
+  // Validation rules based on refund type
+  // - address: only required for crypto refunds (not isBuy)
+  // - iban/creditorName: only required if not already fixed from bankTx
+  // - creditorStreet/zip/city/country: always required for bank refunds
   const rules = Utils.createRules({
-    address: Validations.Required,
+    address: !isBuy ? Validations.Required : undefined,
     iban: refundDetails?.refundTarget ? undefined : Validations.Required,
-    creditorName: refundDetails?.bankDetails?.name ? undefined : Validations.Required,
+    creditorName: refundDetails?.bankDetails?.name?.trim() ? undefined : Validations.Required,
     creditorStreet: Validations.Required,
     creditorZip: Validations.Required,
     creditorCity: Validations.Required,
