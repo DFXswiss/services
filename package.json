@@ -76,7 +76,7 @@
     "start:e2e": "env-cmd -f .env.e2e react-app-rewired start",
     "build": "node scripts/generate-version.js && env-cmd -f .env.prd react-app-rewired build",
     "build:dev": "node scripts/generate-version.js && env-cmd -f .env.dev react-app-rewired build",
-    "build:lib": "tsc",
+    "build:lib": "tsc -p tsconfig.build.json",
     "link": "npm run build:lib && npm link",
     "widget": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.prd env-cmd -f .env.widget react-app-rewired build && mv src/index.bak.tsx src/index.tsx",
     "widget:dev": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.dev env-cmd -f .env.widget react-app-rewired build && mv src/index.bak.tsx src/index.tsx",
