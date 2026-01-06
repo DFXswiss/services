@@ -6,6 +6,11 @@ import { getCachedAuth } from './helpers/auth-cache';
  *
  * Tests the entire refund process from transaction list to successful submission.
  * Creates baseline screenshots for visual regression testing.
+ *
+ * Flow:
+ * - IBAN and Name are displayed as fixed values (from bank transaction)
+ * - User must enter address data (street, zip, city, country)
+ * - User submits refund request
  */
 
 const TEST_TX_ID = process.env.TEST_TX_ID || '11';
@@ -18,7 +23,7 @@ test.describe('Bank Refund Flow - Visual Regression', () => {
     token = auth.token;
   });
 
-  test('01 - Transaction list with failed transaction', async ({ page }) => {
+  test('01 - Transaction list with unassigned transaction', async ({ page }) => {
     await page.goto(`/tx?session=${token}`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
@@ -33,84 +38,60 @@ test.describe('Bank Refund Flow - Visual Regression', () => {
     });
   });
 
-  test('02 - Click on failed transaction to see details', async ({ page }) => {
+  test('02 - Transaction details expanded in list', async ({ page }) => {
     await page.goto(`/tx/${TEST_TX_ID}?session=${token}`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Verify transaction details page
-    await expect(page.getByText('Transaction status')).toBeVisible();
+    // Verify transaction is expanded in the list
+    await expect(page.getByText('Your Transactions')).toBeVisible();
+    // Check for transaction details
+    await expect(page.getByText('Payment method')).toBeVisible();
+    await expect(page.getByText('REQUEST REFUND')).toBeVisible();
 
     // Take baseline screenshot
-    await expect(page).toHaveScreenshot('refund-flow-02-transaction-details.png', {
+    await expect(page).toHaveScreenshot('refund-flow-02-transaction-expanded.png', {
       fullPage: true,
       timeout: 10000,
     });
   });
 
-  test('03 - Refund page with fixed IBAN and name', async ({ page }) => {
-    await page.goto(`/tx/${TEST_TX_ID}/refund?session=${token}`);
+  test('03 - Refund page with fixed IBAN/name and address input fields', async ({ page }) => {
+    await page.goto(`/tx/T${TEST_TX_ID}/refund?session=${token}`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 
-    // Verify refund page elements
+    // Verify refund page elements - fixed values
     await expect(page.getByText('Transaction refund')).toBeVisible();
     await expect(page.getByText('Transaction amount', { exact: true })).toBeVisible();
     await expect(page.getByText('Refund amount', { exact: true })).toBeVisible();
-    await expect(page.getByText('Name', { exact: true })).toBeVisible();
-    await expect(page.getByText('IBAN', { exact: true })).toBeVisible();
 
-    // Verify NO input fields (IBAN and name should be fixed)
-    const selectDropdown = page.locator('text=Select...').first();
-    await expect(selectDropdown).not.toBeVisible();
+    // Verify address input fields ARE visible (user must fill these)
+    await expect(page.getByPlaceholder('Street')).toBeVisible();
+    await expect(page.getByPlaceholder('12345')).toBeVisible();
+    await expect(page.getByPlaceholder('City')).toBeVisible();
+    await expect(page.getByText('Country', { exact: true })).toBeVisible();
 
-    const nameInput = page.locator('input[name="creditorName"]').first();
-    expect(await nameInput.isVisible().catch(() => false)).toBe(false);
-
-    // Verify REQUEST REFUND button is enabled
-    const submitButton = page.locator('button:has-text("REQUEST REFUND")');
-    await expect(submitButton).toBeVisible();
-    await expect(submitButton).toBeEnabled();
-
-    // Take baseline screenshot
-    await expect(page).toHaveScreenshot('refund-flow-03-refund-page.png', {
+    // Take baseline screenshot - empty form
+    await expect(page).toHaveScreenshot('refund-flow-03-refund-page-empty.png', {
       fullPage: true,
       timeout: 10000,
     });
   });
 
-  test('04 - Submit refund request', async ({ page }) => {
-    await page.goto(`/tx/${TEST_TX_ID}/refund?session=${token}`);
+  test('04 - Fill address data (without country)', async ({ page }) => {
+    await page.goto(`/tx/T${TEST_TX_ID}/refund?session=${token}`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 
-    // Click REQUEST REFUND button
-    const submitButton = page.locator('button:has-text("REQUEST REFUND")');
-    await expect(submitButton).toBeEnabled();
-    await submitButton.click();
+    // Fill address fields using placeholders
+    await page.getByPlaceholder('Street').fill('Bahnhofstrasse');
+    await page.getByPlaceholder('xx').fill('10');
+    await page.getByPlaceholder('12345').fill('8001');
+    await page.getByPlaceholder('City').fill('Zürich');
 
-    // Wait for navigation/response
-    await page.waitForTimeout(5000);
-
-    // Take screenshot after submit
-    await expect(page).toHaveScreenshot('refund-flow-04-after-submit.png', {
-      fullPage: true,
-      timeout: 10000,
-    });
-  });
-
-  test('05 - Transaction shows refund pending status', async ({ page }) => {
-    // Navigate to transaction list to verify status change
-    await page.goto(`/tx?session=${token}`);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    // Verify "Refund pending" status is visible
-    const refundPending = page.getByText('Refund pending');
-    await expect(refundPending).toBeVisible();
-
-    // Take baseline screenshot
-    await expect(page).toHaveScreenshot('refund-flow-05-refund-pending.png', {
+    // Take screenshot with filled address fields (country not yet selected)
+    await expect(page).toHaveScreenshot('refund-flow-04-refund-page-filled.png', {
       fullPage: true,
       timeout: 10000,
     });

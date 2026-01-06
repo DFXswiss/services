@@ -379,25 +379,24 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     setIsLoading(true);
 
     try {
-      if (isBuy) {
-        // If refundTarget is already set (fixed IBAN from bankTx), use simple refund endpoint
-        if (refundDetails?.refundTarget) {
-          await setTransactionRefundTarget(transaction.id, {
-            refundTarget: refundDetails.refundTarget,
-          });
-        } else {
-          // User needs to provide IBAN and creditor data
-          await setTransactionBankRefund(transaction.id, {
-            refundTarget: data.iban,
-            name: data.creditorName,
-            address: data.creditorStreet,
-            houseNumber: data.creditorHouseNumber || undefined,
-            zip: data.creditorZip,
-            city: data.creditorCity,
-            country: data.creditorCountry?.symbol,
-          });
-        }
+      if (isBuy && transaction.inputPaymentMethod !== FiatPaymentMethod.CARD) {
+        // Bank refund: IBAN and name may be fixed, but address is always required from user
+        await setTransactionBankRefund(transaction.id, {
+          refundTarget: refundDetails?.refundTarget ?? data.iban,
+          name: refundDetails?.bankDetails?.name ?? data.creditorName,
+          address: data.creditorStreet,
+          houseNumber: data.creditorHouseNumber || undefined,
+          zip: data.creditorZip,
+          city: data.creditorCity,
+          country: data.creditorCountry?.symbol,
+        });
+      } else if (isBuy) {
+        // Card refund: simple refund to card
+        await setTransactionRefundTarget(transaction.id, {
+          refundTarget: refundDetails?.refundTarget ?? '',
+        });
       } else {
+        // Crypto refund: refund to blockchain address
         await setTransactionRefundTarget(transaction.id, {
           refundTarget: refundDetails?.refundTarget ?? data.address?.address,
         });
@@ -410,10 +409,11 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     }
   }
 
+  // IBAN and name only required if not already fixed from bankTx
   const rules = Utils.createRules({
     address: Validations.Required,
-    iban: Validations.Required,
-    creditorName: Validations.Required,
+    iban: refundDetails?.refundTarget ? undefined : Validations.Required,
+    creditorName: refundDetails?.bankDetails?.name ? undefined : Validations.Required,
     creditorStreet: Validations.Required,
     creditorZip: Validations.Required,
     creditorCity: Validations.Required,
@@ -505,32 +505,36 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
               full
             />
           )}
-          {!refundDetails.refundTarget &&
-            transaction.inputPaymentMethod !== FiatPaymentMethod.CARD &&
-            bankAccounts &&
-            isBuy && (
+          {transaction.inputPaymentMethod !== FiatPaymentMethod.CARD && isBuy && (
               <>
-                <StyledDropdown<string>
-                  rootRef={rootRef}
-                  name="iban"
-                  label={translate('screens/payment', 'Chargeback IBAN')}
-                  items={[...bankAccounts.map((b) => b.iban), AddAccount]}
-                  labelFunc={(item) =>
-                    item === AddAccount ? translate('general/actions', item) : Utils.formatIban(item) ?? ''
-                  }
-                  descriptionFunc={(item) => bankAccounts.find((b) => b.iban === item)?.label ?? ''}
-                  placeholder={translate('general/actions', 'Select') + '...'}
-                  forceEnable
-                  full
-                />
-                <StyledInput
-                  name="creditorName"
-                  autocomplete="name"
-                  label={translate('screens/kyc', 'Name')}
-                  placeholder={translate('screens/kyc', 'John Doe')}
-                  full
-                  smallLabel
-                />
+                {/* IBAN selection only when no fixed refundTarget */}
+                {!refundDetails.refundTarget && bankAccounts && (
+                  <StyledDropdown<string>
+                    rootRef={rootRef}
+                    name="iban"
+                    label={translate('screens/payment', 'Chargeback IBAN')}
+                    items={[...bankAccounts.map((b) => b.iban), AddAccount]}
+                    labelFunc={(item) =>
+                      item === AddAccount ? translate('general/actions', item) : Utils.formatIban(item) ?? ''
+                    }
+                    descriptionFunc={(item) => bankAccounts.find((b) => b.iban === item)?.label ?? ''}
+                    placeholder={translate('general/actions', 'Select') + '...'}
+                    forceEnable
+                    full
+                  />
+                )}
+                {/* Name input only when no fixed bankDetails.name */}
+                {!refundDetails.bankDetails?.name && (
+                  <StyledInput
+                    name="creditorName"
+                    autocomplete="name"
+                    label={translate('screens/kyc', 'Name')}
+                    placeholder={translate('screens/kyc', 'John Doe')}
+                    full
+                    smallLabel
+                  />
+                )}
+                {/* Address fields are always required for bank refunds */}
                 <StyledHorizontalStack gap={2}>
                   <StyledInput
                     name="creditorStreet"
