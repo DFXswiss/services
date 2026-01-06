@@ -1,12 +1,11 @@
 /**
  * Complete E2E Test Suite: Sell USDT on Sepolia with Visual Regression
  *
- * This test uses Playwright's toHaveScreenshot() for visual regression testing.
- * Baseline screenshots are committed to the repo and compared on each run.
+ * Tests both wallets with full screenshot coverage of every process step.
  *
  * Prerequisites:
- * 1. Run setup: npx ts-node e2e/synpress/setup-wallet.ts
- * 2. Ensure test wallet has Sepolia ETH and USDT
+ * 1. .env.test with TEST_SEED and TEST_SEED_2
+ * 2. Both wallets funded with Sepolia ETH and USDT
  * 3. Local frontend running on localhost:3001
  *
  * Run: npx playwright test --config=playwright.synpress.config.ts e2e/synpress/sell-complete.spec.ts
@@ -16,6 +15,10 @@
 import { test as base, chromium, BrowserContext, Page, expect } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config({ path: path.join(process.cwd(), '.env.test') });
 
 // ============================================================================
 // CONFIGURATION
@@ -28,77 +31,42 @@ const CONFIG = {
     'Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing',
   ),
   METAMASK_PATH: path.join(process.cwd(), '.cache-synpress/metamask-chrome-11.9.1'),
-  USER_DATA_DIR: path.join(process.cwd(), '.cache-synpress/user-data-ready'),
+  USER_DATA_DIR: path.join(process.cwd(), '.cache-synpress/user-data-test'),
   WALLET_PASSWORD: 'Tester@1234',
   FRONTEND_URL: 'http://localhost:3001',
   USDT_AMOUNT: '0.01',
   POPUP_TIMEOUT: 10000,
 };
 
+// Wallet configurations
+const WALLETS = {
+  wallet1: {
+    seed: process.env.TEST_SEED || '',
+    address: '0x482c8a499c7ac19925a0D2aA3980E1f3C5F19120',
+    prefix: 'wallet1',
+  },
+  wallet2: {
+    seed: process.env.TEST_SEED_2 || '',
+    address: '0xE988cD504F3F2E5c93fF13Eb8A753D8Bc96f0640',
+    prefix: 'wallet2',
+  },
+};
+
 // ============================================================================
 // VISUAL REGRESSION OPTIONS
 // ============================================================================
 
-// Elements to mask in screenshots (dynamic content)
 const getDynamicMasks = (page: Page) => [
-  // Wallet addresses (0x...)
-  page.locator('text=/0x[a-fA-F0-9]{4,}/')
-    .or(page.locator('[class*="address"]'))
-    .or(page.locator('[class*="hash"]')),
-  // Exchange rates and amounts
-  page.locator('text=/\\d+\\.\\d+ EUR/')
-    .or(page.locator('text=/\\d+\\.\\d+ CHF/'))
-    .or(page.locator('text=/\\d+\\.\\d+ USDT/')),
-  // Transaction hashes
+  page.locator('text=/0x[a-fA-F0-9]{4,}/').or(page.locator('[class*="address"]')).or(page.locator('[class*="hash"]')),
+  page.locator('text=/\\d+\\.\\d+ EUR/').or(page.locator('text=/\\d+\\.\\d+ CHF/')).or(page.locator('text=/\\d+\\.\\d+ USDT/')),
   page.locator('text=/Transaction hash/').locator('..'),
 ];
 
 const SCREENSHOT_OPTIONS = {
   fullPage: true,
-  maxDiffPixelRatio: 0.05, // Allow 5% pixel difference
-  threshold: 0.3, // Color threshold
+  maxDiffPixelRatio: 0.05,
+  threshold: 0.3,
 };
-
-// ============================================================================
-// TEST FIXTURES
-// ============================================================================
-
-interface TestFixtures {
-  context: BrowserContext;
-  appPage: Page;
-}
-
-export const test = base.extend<TestFixtures>({
-  context: async ({}, use) => {
-    const setupMarker = path.join(CONFIG.USER_DATA_DIR, '.setup-complete');
-    if (!fs.existsSync(setupMarker)) {
-      throw new Error('Wallet not set up! Run: npx ts-node e2e/synpress/setup-wallet.ts');
-    }
-
-    const context = await chromium.launchPersistentContext(CONFIG.USER_DATA_DIR, {
-      executablePath: CONFIG.CHROME_PATH,
-      headless: false,
-      args: [
-        `--disable-extensions-except=${CONFIG.METAMASK_PATH}`,
-        `--load-extension=${CONFIG.METAMASK_PATH}`,
-        '--no-first-run',
-        '--disable-default-apps',
-        '--disable-popup-blocking',
-        '--lang=en-US',
-      ],
-      locale: 'en-US',
-      viewport: { width: 1400, height: 900 },
-    });
-
-    await use(context);
-    await context.close();
-  },
-
-  appPage: async ({ context }, use) => {
-    const appPage = await context.newPage();
-    await use(appPage);
-  },
-});
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -147,9 +115,8 @@ async function handleMetaMaskPopup(popup: Page): Promise<string> {
     }
   }
 
-  // Network switch
+  // Network switch - refuse Mainnet, accept others
   if (content?.includes('Switch network') || content?.includes('Allow this site to switch')) {
-    // Refuse Mainnet switch
     if (content?.includes('Ethereum Mainnet') && content?.includes('Sepolia')) {
       const cancelBtn = popup.locator('button:has-text("Cancel")').first();
       if (await cancelBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -176,13 +143,11 @@ async function handleMetaMaskPopup(popup: Page): Promise<string> {
   // Confirm transaction
   const confirmBtn = popup.locator('button:has-text("Confirm"), [data-testid="confirm-footer-button"]').first();
   if (await confirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-    // Handle gas estimation error
     const proceedLink = popup.locator('text=I want to proceed anyway').first();
     if (await proceedLink.isVisible({ timeout: 2000 }).catch(() => false)) {
       await proceedLink.click();
       await popup.waitForTimeout(1000);
     }
-    // Wait for button to enable
     for (let i = 0; i < 15; i++) {
       if (!(await confirmBtn.isDisabled().catch(() => true))) {
         await confirmBtn.click();
@@ -208,190 +173,412 @@ async function clearPendingPopups(context: BrowserContext): Promise<void> {
   }
 }
 
+async function importWallet(page: Page, seedPhrase: string, password: string): Promise<void> {
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(2000);
+
+  // Check if already set up
+  const accountBtn = await page.locator('[data-testid="account-menu-icon"]').isVisible({ timeout: 3000 }).catch(() => false);
+  if (accountBtn) {
+    console.log('   Wallet already imported');
+    return;
+  }
+
+  // Terms checkbox
+  const checkbox = page.locator('input[type="checkbox"]').first();
+  if (await checkbox.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await checkbox.click({ force: true });
+  }
+  await page.waitForTimeout(500);
+
+  // Import existing wallet
+  const importBtn = page.locator('button:has-text("Import an existing wallet")').first();
+  if (await importBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await importBtn.click();
+  }
+  await page.waitForTimeout(1000);
+
+  // No thanks (analytics)
+  const noThanksBtn = page.locator('button:has-text("No thanks")').first();
+  if (await noThanksBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await noThanksBtn.click();
+  }
+  await page.waitForTimeout(1000);
+
+  // Enter seed phrase
+  const words = seedPhrase.split(' ');
+  for (let i = 0; i < words.length; i++) {
+    const input = page.locator(`input[data-testid="import-srp__srp-word-${i}"]`);
+    if (await input.isVisible({ timeout: 500 }).catch(() => false)) {
+      await input.fill(words[i]);
+    }
+  }
+
+  // Confirm seed
+  const confirmBtn = page.locator('button:has-text("Confirm Secret Recovery Phrase")').first();
+  if (await confirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await confirmBtn.click();
+  }
+  await page.waitForTimeout(1000);
+
+  // Set password
+  const pwInputs = await page.locator('input[type="password"]').all();
+  if (pwInputs.length >= 2) {
+    await pwInputs[0].fill(password);
+    await pwInputs[1].fill(password);
+
+    const termsCheckbox = page.locator('input[type="checkbox"]').first();
+    if (await termsCheckbox.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await termsCheckbox.click({ force: true });
+    }
+  }
+
+  // Import wallet
+  const importWalletBtn = page.locator('button:has-text("Import my wallet")').first();
+  if (await importWalletBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await importWalletBtn.click();
+  }
+  await page.waitForTimeout(3000);
+
+  // Skip dialogs
+  for (let i = 0; i < 5; i++) {
+    const skipBtn = page.locator('button:has-text("Got it"), button:has-text("Done"), button:has-text("Next")').first();
+    if (await skipBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await skipBtn.click();
+      await page.waitForTimeout(500);
+    }
+  }
+}
+
+async function setupWalletAndLogin(
+  context: BrowserContext,
+  seedPhrase: string,
+  walletPrefix: string,
+): Promise<Page> {
+  console.log(`\n=== Setting up ${walletPrefix} ===`);
+
+  // Wait for MetaMask to load
+  await new Promise((r) => setTimeout(r, 5000));
+
+  // Find or create MetaMask page
+  let metamaskPage = context.pages().find((p) => p.url().includes('chrome-extension://'));
+  if (!metamaskPage) {
+    const bgPages = context.backgroundPages();
+    if (bgPages.length > 0) {
+      const extensionId = bgPages[0].url().match(/chrome-extension:\/\/([a-z0-9]+)/)?.[1];
+      if (extensionId) {
+        metamaskPage = await context.newPage();
+        await metamaskPage.goto(`chrome-extension://${extensionId}/home.html`);
+      }
+    }
+  }
+
+  if (!metamaskPage) {
+    throw new Error('Could not find MetaMask page');
+  }
+
+  await metamaskPage.waitForLoadState('networkidle');
+  console.log('   MetaMask loaded');
+
+  // Import wallet
+  await importWallet(metamaskPage, seedPhrase, CONFIG.WALLET_PASSWORD);
+  console.log('   Wallet imported');
+
+  // Navigate to DFX and login
+  const appPage = await context.newPage();
+  await appPage.goto(`${CONFIG.FRONTEND_URL}/sell?blockchain=Sepolia`);
+  await appPage.waitForLoadState('networkidle');
+
+  // Click WALLET tile
+  const walletTile = appPage.locator('img[src*="wallet"]').first();
+  if (await walletTile.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await walletTile.click();
+  }
+  await appPage.waitForTimeout(2000);
+
+  // Click MetaMask
+  const metamaskImg = appPage.locator('img[src*="metamask"], img[src*="rabby"]').first();
+  if (await metamaskImg.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await metamaskImg.click();
+  }
+
+  // Handle MetaMask popups for login
+  for (let i = 0; i < 10; i++) {
+    await appPage.waitForTimeout(2000);
+    const content = await appPage.textContent('body').catch(() => '');
+    if (content?.includes('You spend') || content?.includes('Sell')) break;
+
+    const popup = await waitForPopup(context, 3000);
+    if (popup) await handleMetaMaskPopup(popup);
+  }
+
+  console.log('   Login complete');
+  return appPage;
+}
+
+// ============================================================================
+// SELL FLOW FUNCTION
+// ============================================================================
+
+async function runSellFlow(
+  context: BrowserContext,
+  appPage: Page,
+  walletPrefix: string,
+  walletAddress: string,
+): Promise<void> {
+  console.log(`\n=== Running Sell Flow for ${walletPrefix} ===`);
+
+  // Step 1: Navigate to login page
+  await appPage.goto(CONFIG.FRONTEND_URL);
+  await appPage.waitForLoadState('networkidle');
+  await appPage.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  await appPage.goto(`${CONFIG.FRONTEND_URL}/sell?blockchain=Sepolia`);
+  await appPage.waitForLoadState('networkidle');
+  await appPage.waitForTimeout(2000);
+
+  // Screenshot 01: Login page
+  await expect(appPage).toHaveScreenshot(`${walletPrefix}-01-login-page.png`, SCREENSHOT_OPTIONS);
+  console.log('   01: Login page captured');
+
+  // Step 2: Click WALLET
+  const walletTile = appPage.locator('img[src*="wallet"]').first();
+  if (await walletTile.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await walletTile.click();
+    await appPage.waitForTimeout(1000);
+  }
+
+  // Screenshot 02: Wallet selection
+  await expect(appPage).toHaveScreenshot(`${walletPrefix}-02-wallet-selection.png`, SCREENSHOT_OPTIONS);
+  console.log('   02: Wallet selection captured');
+
+  // Step 3: Click MetaMask and handle login
+  const metamaskImg = appPage.locator('img[src*="metamask"], img[src*="rabby"]').first();
+  if (await metamaskImg.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await metamaskImg.click();
+  }
+
+  for (let i = 0; i < 10; i++) {
+    await appPage.waitForTimeout(2000);
+    const content = await appPage.textContent('body').catch(() => '');
+    if (content?.includes('You spend') || content?.includes('Sell')) break;
+
+    const popup = await waitForPopup(context, 3000);
+    if (popup) await handleMetaMaskPopup(popup);
+  }
+
+  // Step 4: Navigate to USDT sell page
+  await appPage.goto(`${CONFIG.FRONTEND_URL}/sell?blockchain=Sepolia&assets=USDT`);
+  await appPage.waitForLoadState('networkidle');
+  await appPage.waitForTimeout(2000);
+
+  // Screenshot 03: Sell page
+  await expect(appPage).toHaveScreenshot(`${walletPrefix}-03-sell-page.png`, {
+    ...SCREENSHOT_OPTIONS,
+    mask: getDynamicMasks(appPage),
+  });
+  console.log('   03: Sell page captured');
+
+  // Step 5: Enter amount
+  const amountInput = appPage.locator('input[type="number"], input[inputmode="decimal"]').first();
+  await amountInput.waitFor({ state: 'visible', timeout: 10000 });
+  await amountInput.fill(CONFIG.USDT_AMOUNT);
+  await appPage.waitForTimeout(3000);
+
+  // Screenshot 04: Amount entered
+  await expect(appPage).toHaveScreenshot(`${walletPrefix}-04-amount-entered.png`, {
+    ...SCREENSHOT_OPTIONS,
+    mask: getDynamicMasks(appPage),
+  });
+  console.log('   04: Amount entered captured');
+
+  // Step 6: Before transaction
+  const txBtn = appPage.locator('button:has-text("Complete transaction"), button:has-text("Transaktion")').first();
+  await txBtn.waitFor({ state: 'visible', timeout: 10000 });
+  expect(await txBtn.isDisabled()).toBe(false);
+
+  // Screenshot 05: Before transaction
+  await expect(appPage).toHaveScreenshot(`${walletPrefix}-05-before-transaction.png`, {
+    ...SCREENSHOT_OPTIONS,
+    mask: getDynamicMasks(appPage),
+  });
+  console.log('   05: Before transaction captured');
+
+  // Capture TX hash
+  let txHash: string | null = null;
+  await appPage.evaluate(() => {
+    const originalRequest = (window as any).ethereum?.request;
+    if (originalRequest) {
+      (window as any).ethereum.request = async function (args: any) {
+        const result = await originalRequest.call(this, args);
+        if (args.method === 'eth_sendTransaction' || args.method === 'eth_sendRawTransaction') {
+          (window as any).__lastTxHash = result;
+        }
+        return result;
+      };
+    }
+  });
+
+  await txBtn.click();
+
+  // Step 7: Handle transaction confirmation
+  for (let i = 0; i < 30; i++) {
+    await appPage.waitForTimeout(2000);
+
+    const content = await appPage.textContent('body').catch(() => '');
+    if (content?.includes('Nice! You are all set')) {
+      txHash = await appPage.evaluate(() => (window as any).__lastTxHash);
+      if (!txHash) {
+        const pageHtml = await appPage.content();
+        const hashMatch = pageHtml.match(/0x[a-fA-F0-9]{64}/);
+        if (hashMatch) txHash = hashMatch[0];
+      }
+      break;
+    }
+
+    const popup = await waitForPopup(context, 3000);
+    if (popup) await handleMetaMaskPopup(popup);
+  }
+
+  // Screenshot 06: Transaction success
+  await expect(appPage).toHaveScreenshot(`${walletPrefix}-06-transaction-success.png`, {
+    ...SCREENSHOT_OPTIONS,
+    mask: getDynamicMasks(appPage),
+  });
+  console.log('   06: Transaction success captured');
+
+  const successText = await appPage.textContent('body').catch(() => '');
+  expect(successText).toContain('Nice! You are all set');
+
+  // Step 8: Etherscan verification
+  if (txHash) {
+    console.log(`   TX Hash: ${txHash}`);
+    const etherscanPage = await context.newPage();
+    await etherscanPage.goto(`https://sepolia.etherscan.io/tx/${txHash}`);
+    await etherscanPage.waitForLoadState('networkidle');
+    await etherscanPage.waitForTimeout(3000);
+
+    // Screenshot 07: Etherscan TX page
+    await expect(etherscanPage).toHaveScreenshot(`${walletPrefix}-07-etherscan-verification.png`, {
+      ...SCREENSHOT_OPTIONS,
+      mask: [
+        etherscanPage.locator('#spanTxHash'),
+        etherscanPage.locator('text=/0x[a-fA-F0-9]{64}/'),
+        etherscanPage.locator('a[href*="/address/0x"]'),
+        etherscanPage.locator('.showAge'),
+        etherscanPage.locator('text=/\\d+ (sec|min|hour|day)s? ago/'),
+        etherscanPage.locator('text=/\\d+\\.\\d+ ETH/'),
+        etherscanPage.locator('text=/\\d+\\.\\d+ Gwei/'),
+      ],
+    });
+    console.log('   07: Etherscan verification captured');
+
+    await etherscanPage.close();
+  } else {
+    console.log('   No TX hash found - using wallet address fallback');
+    const etherscanPage = await context.newPage();
+    await etherscanPage.goto(`https://sepolia.etherscan.io/address/${walletAddress}`);
+    await etherscanPage.waitForLoadState('networkidle');
+    await etherscanPage.waitForTimeout(3000);
+
+    await expect(etherscanPage).toHaveScreenshot(`${walletPrefix}-07-etherscan-verification.png`, {
+      ...SCREENSHOT_OPTIONS,
+      mask: [
+        etherscanPage.locator('a[href*="/tx/0x"]'),
+        etherscanPage.locator('a[href*="/address/0x"]'),
+        etherscanPage.locator('.showAge'),
+      ],
+    });
+
+    await etherscanPage.close();
+  }
+
+  console.log(`=== ${walletPrefix} Sell Flow Complete ===\n`);
+}
+
 // ============================================================================
 // TEST SUITE
 // ============================================================================
 
-test.describe('Sell Flow Visual Regression', () => {
-  test.describe.configure({ mode: 'serial' });
+base.describe('Sell Flow Visual Regression', () => {
+  base.describe.configure({ mode: 'serial' });
 
-  test('sell-usdt-flow', async ({ context, appPage }) => {
-    test.setTimeout(180000);
+  // Test with Wallet 1
+  base('wallet1-sell-usdt-flow', async () => {
+    base.setTimeout(300000);
 
-    // Clear pending popups
-    await clearPendingPopups(context);
-
-    // Step 1: Clear session and navigate to login
-    await appPage.goto(CONFIG.FRONTEND_URL);
-    await appPage.waitForLoadState('networkidle');
-    await appPage.evaluate(() => {
-      localStorage.clear();
-      sessionStorage.clear();
-    });
-
-    await appPage.goto(`${CONFIG.FRONTEND_URL}/sell?blockchain=Sepolia`);
-    await appPage.waitForLoadState('networkidle');
-    await appPage.waitForTimeout(2000);
-
-    // Visual: Login page
-    await expect(appPage).toHaveScreenshot('01-login-page.png', SCREENSHOT_OPTIONS);
-
-    // Step 2: Click WALLET
-    const walletTile = appPage.locator('img[src*="wallet"]').first();
-    if (await walletTile.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await walletTile.click();
-      await appPage.waitForTimeout(1000);
+    if (!WALLETS.wallet1.seed) {
+      throw new Error('TEST_SEED not set in .env.test');
     }
 
-    // Visual: Wallet selection
-    await expect(appPage).toHaveScreenshot('02-wallet-selection.png', SCREENSHOT_OPTIONS);
+    // Clean start - remove old user data
+    if (fs.existsSync(CONFIG.USER_DATA_DIR)) {
+      fs.rmSync(CONFIG.USER_DATA_DIR, { recursive: true });
+    }
+    fs.mkdirSync(CONFIG.USER_DATA_DIR, { recursive: true });
 
-    // Step 3: Click MetaMask and handle login popups
-    const metamaskImg = appPage.locator('img[src*="metamask"], img[src*="rabby"]').first();
-    if (await metamaskImg.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await metamaskImg.click();
+    const context = await chromium.launchPersistentContext(CONFIG.USER_DATA_DIR, {
+      executablePath: CONFIG.CHROME_PATH,
+      headless: false,
+      args: [
+        `--disable-extensions-except=${CONFIG.METAMASK_PATH}`,
+        `--load-extension=${CONFIG.METAMASK_PATH}`,
+        '--no-first-run',
+        '--disable-default-apps',
+        '--disable-popup-blocking',
+        '--lang=en-US',
+      ],
+      locale: 'en-US',
+      viewport: { width: 1400, height: 900 },
+    });
+
+    try {
+      const appPage = await setupWalletAndLogin(context, WALLETS.wallet1.seed, 'wallet1');
+      await clearPendingPopups(context);
+      await runSellFlow(context, appPage, WALLETS.wallet1.prefix, WALLETS.wallet1.address);
+    } finally {
+      await context.close();
+    }
+  });
+
+  // Test with Wallet 2
+  base('wallet2-sell-usdt-flow', async () => {
+    base.setTimeout(300000);
+
+    if (!WALLETS.wallet2.seed) {
+      throw new Error('TEST_SEED_2 not set in .env.test');
     }
 
-    // Handle MetaMask popups
-    for (let i = 0; i < 10; i++) {
-      await appPage.waitForTimeout(2000);
-      const content = await appPage.textContent('body').catch(() => '');
-      if (content?.includes('You spend') || content?.includes('Sell')) break;
-
-      const popup = await waitForPopup(context, 3000);
-      if (popup) await handleMetaMaskPopup(popup);
+    // Clean start - remove old user data
+    if (fs.existsSync(CONFIG.USER_DATA_DIR)) {
+      fs.rmSync(CONFIG.USER_DATA_DIR, { recursive: true });
     }
+    fs.mkdirSync(CONFIG.USER_DATA_DIR, { recursive: true });
 
-    // Step 4: Navigate to USDT sell page
-    await appPage.goto(`${CONFIG.FRONTEND_URL}/sell?blockchain=Sepolia&assets=USDT`);
-    await appPage.waitForLoadState('networkidle');
-    await appPage.waitForTimeout(2000);
-
-    // Visual: Sell page (mask dynamic wallet address)
-    await expect(appPage).toHaveScreenshot('03-sell-page.png', {
-      ...SCREENSHOT_OPTIONS,
-      mask: getDynamicMasks(appPage),
+    const context = await chromium.launchPersistentContext(CONFIG.USER_DATA_DIR, {
+      executablePath: CONFIG.CHROME_PATH,
+      headless: false,
+      args: [
+        `--disable-extensions-except=${CONFIG.METAMASK_PATH}`,
+        `--load-extension=${CONFIG.METAMASK_PATH}`,
+        '--no-first-run',
+        '--disable-default-apps',
+        '--disable-popup-blocking',
+        '--lang=en-US',
+      ],
+      locale: 'en-US',
+      viewport: { width: 1400, height: 900 },
     });
 
-    // Step 5: Enter amount
-    const amountInput = appPage.locator('input[type="number"], input[inputmode="decimal"]').first();
-    await amountInput.waitFor({ state: 'visible', timeout: 10000 });
-    await amountInput.fill(CONFIG.USDT_AMOUNT);
-    await appPage.waitForTimeout(3000); // Wait for exchange rate
-
-    // Visual: Amount entered (mask exchange rate)
-    await expect(appPage).toHaveScreenshot('04-amount-entered.png', {
-      ...SCREENSHOT_OPTIONS,
-      mask: getDynamicMasks(appPage),
-    });
-
-    // Step 6: Click transaction button
-    const txBtn = appPage.locator('button:has-text("Complete transaction"), button:has-text("Transaktion")').first();
-    await txBtn.waitFor({ state: 'visible', timeout: 10000 });
-    expect(await txBtn.isDisabled()).toBe(false);
-
-    // Visual: Before transaction
-    await expect(appPage).toHaveScreenshot('05-before-transaction.png', {
-      ...SCREENSHOT_OPTIONS,
-      mask: getDynamicMasks(appPage),
-    });
-
-    // Capture TX hash from wallet transaction
-    let txHash: string | null = null;
-
-    // Listen for ethereum transaction events
-    await appPage.evaluate(() => {
-      const originalRequest = (window as any).ethereum?.request;
-      if (originalRequest) {
-        (window as any).ethereum.request = async function (args: any) {
-          const result = await originalRequest.call(this, args);
-          if (args.method === 'eth_sendTransaction' || args.method === 'eth_sendRawTransaction') {
-            (window as any).__lastTxHash = result;
-          }
-          return result;
-        };
-      }
-    });
-
-    await txBtn.click();
-
-    // Step 7: Handle transaction confirmation
-    for (let i = 0; i < 30; i++) {
-      await appPage.waitForTimeout(2000);
-
-      const content = await appPage.textContent('body').catch(() => '');
-      if (content?.includes('Nice! You are all set')) {
-        // Get TX hash from our injected variable
-        txHash = await appPage.evaluate(() => (window as any).__lastTxHash);
-        if (!txHash) {
-          // Fallback: try to find in page HTML
-          const pageHtml = await appPage.content();
-          const hashMatch = pageHtml.match(/0x[a-fA-F0-9]{64}/);
-          if (hashMatch) txHash = hashMatch[0];
-        }
-        break;
-      }
-
-      const popup = await waitForPopup(context, 3000);
-      if (popup) await handleMetaMaskPopup(popup);
-    }
-
-    // Visual: Success page (mask TX hash)
-    await expect(appPage).toHaveScreenshot('06-transaction-success.png', {
-      ...SCREENSHOT_OPTIONS,
-      mask: getDynamicMasks(appPage),
-    });
-
-    // Verify transaction was submitted
-    const successText = await appPage.textContent('body').catch(() => '');
-    expect(successText).toContain('Nice! You are all set');
-
-    // Step 8: Verify on Etherscan with actual TX hash
-    if (txHash) {
-      console.log('TX Hash extracted:', txHash);
-      const etherscanPage = await context.newPage();
-      await etherscanPage.goto(`https://sepolia.etherscan.io/tx/${txHash}`);
-      await etherscanPage.waitForLoadState('networkidle');
-      await etherscanPage.waitForTimeout(3000);
-
-      // Visual: Etherscan TX page
-      await expect(etherscanPage).toHaveScreenshot('07-etherscan-verification.png', {
-        ...SCREENSHOT_OPTIONS,
-        mask: [
-          // Mask TX hash
-          etherscanPage.locator('#spanTxHash'),
-          etherscanPage.locator('text=/0x[a-fA-F0-9]{64}/'),
-          // Mask addresses
-          etherscanPage.locator('a[href*="/address/0x"]'),
-          // Mask timestamps
-          etherscanPage.locator('.showAge'),
-          etherscanPage.locator('text=/\\d+ (sec|min|hour|day)s? ago/'),
-          // Mask values
-          etherscanPage.locator('text=/\\d+\\.\\d+ ETH/'),
-          etherscanPage.locator('text=/\\d+\\.\\d+ Gwei/'),
-        ],
-      });
-
-      await etherscanPage.close();
-    } else {
-      console.log('No TX hash found - skipping Etherscan verification');
-      // Fallback: show wallet's transaction list
-      const WALLET_ADDRESS = '0x482c8a499c7ac19925a0D2aA3980E1f3C5F19120';
-      const etherscanPage = await context.newPage();
-      await etherscanPage.goto(`https://sepolia.etherscan.io/address/${WALLET_ADDRESS}`);
-      await etherscanPage.waitForLoadState('networkidle');
-      await etherscanPage.waitForTimeout(3000);
-
-      await expect(etherscanPage).toHaveScreenshot('07-etherscan-verification.png', {
-        ...SCREENSHOT_OPTIONS,
-        mask: [
-          etherscanPage.locator('a[href*="/tx/0x"]'),
-          etherscanPage.locator('a[href*="/address/0x"]'),
-          etherscanPage.locator('.showAge'),
-        ],
-      });
-
-      await etherscanPage.close();
+    try {
+      const appPage = await setupWalletAndLogin(context, WALLETS.wallet2.seed, 'wallet2');
+      await clearPendingPopups(context);
+      await runSellFlow(context, appPage, WALLETS.wallet2.prefix, WALLETS.wallet2.address);
+    } finally {
+      await context.close();
     }
   });
 });
