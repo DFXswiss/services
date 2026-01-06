@@ -37,7 +37,7 @@ const CHROME_126_PATH = path.join(
   'chrome/mac_arm-126.0.6478.0/chrome-mac-arm64',
   'Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing',
 );
-const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-11.9.1');
+const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-13.13.1');
 const USER_DATA_DIR = path.join(process.cwd(), '.cache-synpress/user-data-ready');
 
 // Credentials

@@ -61,3 +61,4 @@ e2e/screenshots/debug/
 # Chrome for testing (installed via @puppeteer/browsers)
 /chrome/
 playwright-report-local/
+e2e/screenshots/*wallet2*
