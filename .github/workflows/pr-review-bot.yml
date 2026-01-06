@@ -30,6 +30,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs');
             const commits = await github.rest.pulls.listCommits({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -43,8 +44,8 @@ jobs:
                 `- \`${c.sha.substring(0,7)}\` ${c.commit.message.split('\n')[0]} (${c.commit.author?.name || 'unknown'})`
               ).join('\n');
 
+              fs.writeFileSync('unverified-commits.txt', list);
               core.setOutput('unverified', 'true');
-              core.setOutput('unverified_list', list);
               core.setOutput('unverified_count', unverified.length);
             } else {
               core.setOutput('unverified', 'false');
@@ -90,6 +91,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs');
             const conventionalPattern = /^(feat|fix|refactor|test|ci|docs|chore|perf|style|build|revert)(\(.+\))?: .+/;
 
             const commits = await github.rest.pulls.listCommits({
@@ -108,8 +110,8 @@ jobs:
                 `- \`${c.sha.substring(0,7)}\` ${c.commit.message.split('\n')[0]}`
               ).join('\n');
 
+              fs.writeFileSync('invalid-commits.txt', list);
               core.setOutput('invalid', 'true');
-              core.setOutput('invalid_list', list);
               core.setOutput('invalid_count', badCommits.length);
             } else {
               core.setOutput('invalid', 'false');
@@ -122,8 +124,9 @@ jobs:
             const fs = require('fs');
 
             const unverified = '${{ steps.verify-commits.outputs.unverified }}' === 'true';
-            const unverifiedList = `${{ steps.verify-commits.outputs.unverified_list }}`;
             const unverifiedCount = '${{ steps.verify-commits.outputs.unverified_count }}';
+            let unverifiedList = '';
+            try { unverifiedList = fs.readFileSync('unverified-commits.txt', 'utf8'); } catch (e) {}
 
             const eslintWarnings = parseInt('${{ steps.eslint.outputs.warnings }}') || 0;
             const eslintErrors = parseInt('${{ steps.eslint.outputs.errors }}') || 0;
@@ -135,8 +138,9 @@ jobs:
             const todoCount = parseInt('${{ steps.todos.outputs.count }}') || 0;
 
             const invalidCommits = '${{ steps.commits-format.outputs.invalid }}' === 'true';
-            const invalidList = `${{ steps.commits-format.outputs.invalid_list }}`;
             const invalidCount = '${{ steps.commits-format.outputs.invalid_count }}';
+            let invalidList = '';
+            try { invalidList = fs.readFileSync('invalid-commits.txt', 'utf8'); } catch (e) {}
 
             let comments = [];
 
