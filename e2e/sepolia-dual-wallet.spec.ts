@@ -14,7 +14,7 @@
  */
 
 import { test, expect, Page } from '@playwright/test';
-import { getCachedAuth } from './helpers/auth-cache';
+import { getCachedAuth, getTestIban } from './helpers/auth-cache';
 import { getTestWalletAddressesFromEnv } from './test-wallet';
 
 // =============================================================================
@@ -62,6 +62,70 @@ async function selectUsdt(page: Page): Promise<void> {
     await page.waitForTimeout(1000);
   } catch {
     console.log('USDT option not found in dropdown');
+  }
+}
+
+/**
+ * Add or select the test IBAN for sell operations.
+ * Opens the IBAN selector and either selects existing IBAN or adds a new one.
+ */
+async function selectOrAddTestIban(page: Page): Promise<void> {
+  const testIban = getTestIban();
+  const formattedIban = testIban.replace(/(.{4})/g, '$1 ').trim(); // CH93 0076 2011 ...
+
+  // Check if IBAN is already selected (button shows the IBAN)
+  const ibanAlreadySelected = await page
+    .locator(`button:has-text("${formattedIban.substring(0, 4)}")`)
+    .isVisible({ timeout: 1000 })
+    .catch(() => false);
+  if (ibanAlreadySelected) {
+    console.log('Test IBAN already selected');
+    return;
+  }
+
+  // Click on IBAN selector button to open the form/list
+  const ibanSelector = page
+    .locator('button:has-text("Deine IBAN hinzufügen"), button:has-text("IBAN hinzufügen"), button:has-text("Add or select")')
+    .first();
+  try {
+    await ibanSelector.waitFor({ state: 'visible', timeout: 5000 });
+    await ibanSelector.click();
+    await page.waitForTimeout(1000);
+
+    // Check if IBAN input form appeared directly (for new users without any IBAN)
+    const ibanInput = page.locator('input[placeholder*="XXXX"], input[placeholder*="IBAN"]').first();
+    if (await ibanInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+      // Fill IBAN input
+      await ibanInput.fill(testIban);
+      await page.waitForTimeout(1000);
+
+      // Wait for button to be enabled after IBAN validation
+      const saveButton = page.locator('button:has-text("Bankverbindung hinzufügen")').first();
+      await saveButton.waitFor({ state: 'visible', timeout: 3000 });
+
+      // Poll until button is enabled (IBAN validation complete)
+      for (let i = 0; i < 20; i++) {
+        if (await saveButton.isEnabled()) {
+          await saveButton.click();
+          await page.waitForTimeout(2000);
+          console.log('Added new test IBAN');
+          return;
+        }
+        await page.waitForTimeout(250);
+      }
+      console.log('Save button never became enabled');
+      return;
+    }
+
+    // If no input form, check if our IBAN is already in a list
+    const existingIban = page.locator(`text=${formattedIban.substring(0, 10)}`).first();
+    if (await existingIban.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await existingIban.click();
+      await page.waitForTimeout(500);
+      console.log('Selected existing test IBAN');
+    }
+  } catch (e) {
+    console.log('Could not select/add IBAN:', e);
   }
 }
 
@@ -195,7 +259,11 @@ test.describe('Wallet 2 - Sepolia Gasless USDT Sell', () => {
     // Verify page loaded
     expect(await verifyPageLoaded(page)).toBeTruthy();
 
-    // Screenshot: Initial page for Wallet 2
+    // Add/select test IBAN for Wallet 2
+    await selectOrAddTestIban(page);
+    await page.waitForTimeout(1000);
+
+    // Screenshot: Initial page for Wallet 2 with IBAN
     await expect(page).toHaveScreenshot('wallet2-sell-01-initial.png', {
       maxDiffPixels: 2000,
     });
@@ -209,6 +277,9 @@ test.describe('Wallet 2 - Sepolia Gasless USDT Sell', () => {
     // Navigate to sell page
     await page.goto(`/sell?session=${token}&blockchain=Sepolia`);
     await waitForPageReady(page);
+
+    // Add/select test IBAN for Wallet 2
+    await selectOrAddTestIban(page);
 
     // Select USDT
     await selectUsdt(page);
