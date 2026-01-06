@@ -78,8 +78,8 @@ export const SEPOLIA_NETWORK = {
   blockExplorer: 'https://sepolia.etherscan.io',
 };
 
-// Sepolia USDT contract address
-export const SEPOLIA_USDT_CONTRACT = '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06';
+// Sepolia USDT contract address (DFX asset ID 407)
+export const SEPOLIA_USDT_CONTRACT = '0xaa8e23fb1079ea71e0a56f48a2aa51851d8433d0';
 
 interface CustomFixtures {
   context: BrowserContext;
