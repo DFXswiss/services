@@ -30,11 +30,12 @@ const CONFIG = {
     'chrome/mac_arm-126.0.6478.0/chrome-mac-arm64',
     'Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing',
   ),
-  METAMASK_PATH: path.join(process.cwd(), '.cache-synpress/metamask-chrome-11.9.1'),
+  METAMASK_PATH: path.join(process.cwd(), '.cache-synpress/metamask-chrome-13.13.1'),
   USER_DATA_DIR: path.join(process.cwd(), '.cache-synpress/user-data-test'),
   WALLET_PASSWORD: 'Tester@1234',
   FRONTEND_URL: 'http://localhost:3001',
-  USDT_AMOUNT: '10',
+  USDT_AMOUNT: '0.01',
+  TEST_IBAN: process.env.TEST_IBAN || 'CH9300762011623852957',
   POPUP_TIMEOUT: 10000,
 };
 
@@ -480,9 +481,40 @@ async function runSellFlow(
 
   // Step 2: Enter amount
   const amountInput = appPage.locator('input[type="number"], input[inputmode="decimal"]').first();
-  await amountInput.waitFor({ state: 'visible', timeout: 10000 });
+  await amountInput.waitFor({ state: 'visible', timeout: 120000 }); // 2 min for manual entry
   await amountInput.fill(CONFIG.USDT_AMOUNT);
-  await appPage.waitForTimeout(3000);
+  await appPage.waitForTimeout(2000);
+
+  // Step 2b: Enter IBAN if not already set
+  const ibanField = appPage.locator('text=Add or select your IBAN').first();
+  if (await ibanField.isVisible({ timeout: 2000 }).catch(() => false)) {
+    console.log('   IBAN not set, adding...');
+    await ibanField.click();
+
+    // Wait for the "Select payment account" page to load
+    await appPage.waitForSelector('text=Select payment account', { timeout: 5000 });
+    await appPage.waitForTimeout(1000);
+
+    // Enter new IBAN - find input after IBAN label (exclude number inputs)
+    const ibanInput = appPage.locator('input:not([type="number"]):not([inputmode="decimal"])').first();
+    await ibanInput.waitFor({ state: 'visible', timeout: 5000 });
+    await ibanInput.fill(CONFIG.TEST_IBAN);
+    console.log('   IBAN entered');
+    await appPage.waitForTimeout(1000);
+
+    // Click ADD BANK ACCOUNT button - wait for it to be enabled
+    const addBtn = appPage.locator('button:has-text("ADD BANK ACCOUNT")').first();
+    await addBtn.waitFor({ state: 'visible', timeout: 5000 });
+    // Wait for button to be enabled
+    for (let i = 0; i < 10; i++) {
+      if (!(await addBtn.isDisabled().catch(() => true))) break;
+      await appPage.waitForTimeout(500);
+    }
+    await addBtn.click();
+    console.log('   Bank account added');
+    await appPage.waitForTimeout(3000);
+  }
+  await appPage.waitForTimeout(2000);
 
   // Screenshot 02: Amount entered
   await expect(appPage).toHaveScreenshot(`${walletPrefix}-02-amount-entered.png`, {
@@ -493,7 +525,7 @@ async function runSellFlow(
 
   // Step 3: Before transaction
   const txBtn = appPage.locator('button:has-text("Complete transaction"), button:has-text("Transaktion")').first();
-  await txBtn.waitFor({ state: 'visible', timeout: 10000 });
+  await txBtn.waitFor({ state: 'visible', timeout: 30000 });
   expect(await txBtn.isDisabled()).toBe(false);
 
   // Screenshot 03: Before transaction
