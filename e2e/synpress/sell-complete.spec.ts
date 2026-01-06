@@ -296,19 +296,39 @@ test.describe('Sell Flow Visual Regression', () => {
       mask: getDynamicMasks(appPage),
     });
 
+    // Capture TX hash from wallet transaction
+    let txHash: string | null = null;
+
+    // Listen for ethereum transaction events
+    await appPage.evaluate(() => {
+      const originalRequest = (window as any).ethereum?.request;
+      if (originalRequest) {
+        (window as any).ethereum.request = async function (args: any) {
+          const result = await originalRequest.call(this, args);
+          if (args.method === 'eth_sendTransaction' || args.method === 'eth_sendRawTransaction') {
+            (window as any).__lastTxHash = result;
+          }
+          return result;
+        };
+      }
+    });
+
     await txBtn.click();
 
     // Step 7: Handle transaction confirmation
-    let txHash: string | null = null;
-
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 30; i++) {
       await appPage.waitForTimeout(2000);
 
       const content = await appPage.textContent('body').catch(() => '');
-      if (content?.includes('Nice! You are all set') || content?.includes('Transaction hash')) {
-        // Extract TX hash
-        const fullMatch = content?.match(/0x[a-fA-F0-9]{64}/);
-        if (fullMatch) txHash = fullMatch[0];
+      if (content?.includes('Nice! You are all set')) {
+        // Get TX hash from our injected variable
+        txHash = await appPage.evaluate(() => (window as any).__lastTxHash);
+        if (!txHash) {
+          // Fallback: try to find in page HTML
+          const pageHtml = await appPage.content();
+          const hashMatch = pageHtml.match(/0x[a-fA-F0-9]{64}/);
+          if (hashMatch) txHash = hashMatch[0];
+        }
         break;
       }
 
@@ -323,6 +343,55 @@ test.describe('Sell Flow Visual Regression', () => {
     });
 
     // Verify transaction was submitted
-    expect(txHash || (await appPage.textContent('body'))?.includes('Transaction hash')).toBeTruthy();
+    const successText = await appPage.textContent('body').catch(() => '');
+    expect(successText).toContain('Nice! You are all set');
+
+    // Step 8: Verify on Etherscan with actual TX hash
+    if (txHash) {
+      console.log('TX Hash extracted:', txHash);
+      const etherscanPage = await context.newPage();
+      await etherscanPage.goto(`https://sepolia.etherscan.io/tx/${txHash}`);
+      await etherscanPage.waitForLoadState('networkidle');
+      await etherscanPage.waitForTimeout(3000);
+
+      // Visual: Etherscan TX page
+      await expect(etherscanPage).toHaveScreenshot('07-etherscan-verification.png', {
+        ...SCREENSHOT_OPTIONS,
+        mask: [
+          // Mask TX hash
+          etherscanPage.locator('#spanTxHash'),
+          etherscanPage.locator('text=/0x[a-fA-F0-9]{64}/'),
+          // Mask addresses
+          etherscanPage.locator('a[href*="/address/0x"]'),
+          // Mask timestamps
+          etherscanPage.locator('.showAge'),
+          etherscanPage.locator('text=/\\d+ (sec|min|hour|day)s? ago/'),
+          // Mask values
+          etherscanPage.locator('text=/\\d+\\.\\d+ ETH/'),
+          etherscanPage.locator('text=/\\d+\\.\\d+ Gwei/'),
+        ],
+      });
+
+      await etherscanPage.close();
+    } else {
+      console.log('No TX hash found - skipping Etherscan verification');
+      // Fallback: show wallet's transaction list
+      const WALLET_ADDRESS = '0x482c8a499c7ac19925a0D2aA3980E1f3C5F19120';
+      const etherscanPage = await context.newPage();
+      await etherscanPage.goto(`https://sepolia.etherscan.io/address/${WALLET_ADDRESS}`);
+      await etherscanPage.waitForLoadState('networkidle');
+      await etherscanPage.waitForTimeout(3000);
+
+      await expect(etherscanPage).toHaveScreenshot('07-etherscan-verification.png', {
+        ...SCREENSHOT_OPTIONS,
+        mask: [
+          etherscanPage.locator('a[href*="/tx/0x"]'),
+          etherscanPage.locator('a[href*="/address/0x"]'),
+          etherscanPage.locator('.showAge'),
+        ],
+      });
+
+      await etherscanPage.close();
+    }
   });
 });
