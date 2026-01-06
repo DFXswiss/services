@@ -38,18 +38,18 @@ jobs:
         id: package_version
         run: echo "current-version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
 
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test
+
       - name: Build code
         env:
           REACT_APP_BUILD_ID: ${{ github.run_number }}-${{ github.run_id }}
         run: |
           echo "REACT_APP_BUILD_ID=$REACT_APP_BUILD_ID" >> .env.dev
           npm run build:dev
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run tests
-        run: npm run test
 
       - name: Build widget
         run: |
