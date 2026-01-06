@@ -12,7 +12,7 @@ const CHROME_126_PATH = path.join(
   'Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing',
 );
 
-const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-11.9.1');
+const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-13.13.1');
 const WALLET_PASSWORD = 'Tester@1234';
 const TEST_SEED_PHRASE = 'test test test test test test test test test test test junk';
 
