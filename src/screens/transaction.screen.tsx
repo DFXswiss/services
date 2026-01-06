@@ -380,15 +380,23 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
 
     try {
       if (isBuy) {
-        await setTransactionBankRefund(transaction.id, {
-          refundTarget: refundDetails?.refundTarget ?? data.iban,
-          name: data.creditorName,
-          address: data.creditorStreet,
-          houseNumber: data.creditorHouseNumber || undefined,
-          zip: data.creditorZip,
-          city: data.creditorCity,
-          country: data.creditorCountry?.symbol,
-        });
+        // If refundTarget is already set (fixed IBAN from bankTx), use simple refund endpoint
+        if (refundDetails?.refundTarget) {
+          await setTransactionRefundTarget(transaction.id, {
+            refundTarget: refundDetails.refundTarget,
+          });
+        } else {
+          // User needs to provide IBAN and creditor data
+          await setTransactionBankRefund(transaction.id, {
+            refundTarget: data.iban,
+            name: data.creditorName,
+            address: data.creditorStreet,
+            houseNumber: data.creditorHouseNumber || undefined,
+            zip: data.creditorZip,
+            city: data.creditorCity,
+            country: data.creditorCountry?.symbol,
+          });
+        }
       } else {
         await setTransactionRefundTarget(transaction.id, {
           refundTarget: refundDetails?.refundTarget ?? data.address?.address,
