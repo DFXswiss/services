@@ -115,15 +115,27 @@ async function handleMetaMaskPopup(popup: Page): Promise<string> {
     }
   }
 
-  // Network switch - refuse Mainnet, accept others
-  if (content?.includes('Switch network') || content?.includes('Allow this site to switch')) {
-    if (content?.includes('Ethereum Mainnet') && content?.includes('Sepolia')) {
+  // Network switch - allow Sepolia, refuse unexpected switches to Mainnet
+  if (content?.includes('Switch network') || content?.includes('Allow this site to switch') || content?.includes('Add network')) {
+    // Always approve switching TO Sepolia or adding Sepolia
+    if (content?.includes('Sepolia')) {
+      const approveBtn = popup.locator('button:has-text("Switch network"), button:has-text("Approve"), button:has-text("Add network")').first();
+      if (await approveBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await approveBtn.click();
+        // Popup may close after click - ignore timeout errors
+        await popup.waitForTimeout(1000).catch(() => {});
+        return 'network_switched_to_sepolia';
+      }
+    }
+    // Refuse switching TO Mainnet (from Sepolia)
+    if (content?.includes('Ethereum Mainnet') && !content?.includes('Sepolia')) {
       const cancelBtn = popup.locator('button:has-text("Cancel")').first();
       if (await cancelBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
         await cancelBtn.click();
-        return 'network_switch_cancelled';
+        return 'mainnet_switch_cancelled';
       }
     }
+    // Approve other network switches
     const switchBtn = popup.locator('button:has-text("Switch network"), button:has-text("Approve")').first();
     if (await switchBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await switchBtn.click();
@@ -173,6 +185,54 @@ async function clearPendingPopups(context: BrowserContext): Promise<void> {
   }
 }
 
+async function switchToSepolia(page: Page): Promise<void> {
+  console.log('   Attempting to switch to Sepolia...');
+
+  // Click network selector
+  const networkBtn = page.locator('[data-testid="network-display"]').first();
+  if (!(await networkBtn.isVisible({ timeout: 3000 }).catch(() => false))) {
+    console.log('   Network button not found');
+    return;
+  }
+
+  await networkBtn.click();
+  await page.waitForTimeout(1500);
+
+  // Check if Sepolia is already visible
+  let sepoliaBtn = page.locator('text=Sepolia').first();
+  if (await sepoliaBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await sepoliaBtn.click();
+    await page.waitForTimeout(1000);
+    console.log('   Switched to Sepolia');
+    return;
+  }
+
+  // Enable test networks using coordinate click (no JS evaluate due to LavaMoat)
+  console.log('   Sepolia not visible, enabling test networks...');
+
+  const testNetworksLabel = page.locator('text=Show test networks');
+  if (await testNetworksLabel.isVisible({ timeout: 2000 }).catch(() => false)) {
+    const box = await testNetworksLabel.boundingBox();
+    if (box) {
+      // Click to the right of the label where the toggle should be (about 80px right)
+      await page.mouse.click(box.x + box.width + 80, box.y + box.height / 2);
+      console.log('   Clicked toggle area via coordinates');
+      await page.waitForTimeout(2000);
+    }
+  }
+
+  // Now try to click Sepolia
+  sepoliaBtn = page.locator('text=Sepolia').first();
+  if (await sepoliaBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await sepoliaBtn.click();
+    await page.waitForTimeout(1000);
+    console.log('   Switched to Sepolia');
+  } else {
+    console.log('   Warning: Sepolia still not found in network list');
+    await page.keyboard.press('Escape');
+  }
+}
+
 async function importWallet(page: Page, seedPhrase: string, password: string): Promise<void> {
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(2000);
@@ -181,6 +241,7 @@ async function importWallet(page: Page, seedPhrase: string, password: string): P
   const accountBtn = await page.locator('[data-testid="account-menu-icon"]').isVisible({ timeout: 3000 }).catch(() => false);
   if (accountBtn) {
     console.log('   Wallet already imported');
+    // Skip manual Sepolia switch - DFX will request network switch during login
     return;
   }
 
@@ -242,17 +303,33 @@ async function importWallet(page: Page, seedPhrase: string, password: string): P
 
   // Skip dialogs and popups
   for (let i = 0; i < 10; i++) {
-    // Close "What's new" modal
-    const closeModal = page.locator('button[aria-label="Close"], .modal-close, [data-testid="popover-close"]').first();
-    if (await closeModal.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await closeModal.click();
-      await page.waitForTimeout(500);
-      continue;
+    // Close any modal with X button (What's new, etc.)
+    const closeButtons = [
+      page.locator('button[aria-label="Close"]'),
+      page.locator('[data-testid="popover-close"]'),
+      page.locator('.mm-modal-header__button'),
+      page.locator('header button').first(),
+      page.locator('button:has(svg[name="Close"])'),
+    ];
+
+    let closed = false;
+    for (const closeBtn of closeButtons) {
+      if (await closeBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+        await closeBtn.click();
+        await page.waitForTimeout(500);
+        closed = true;
+        break;
+      }
     }
+    if (closed) continue;
+
+    // Try pressing Escape to close modals
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
 
     // Skip intro dialogs
     const skipBtn = page.locator('button:has-text("Got it"), button:has-text("Done"), button:has-text("Next")').first();
-    if (await skipBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+    if (await skipBtn.isVisible({ timeout: 500 }).catch(() => false)) {
       await skipBtn.click();
       await page.waitForTimeout(500);
       continue;
@@ -260,6 +337,9 @@ async function importWallet(page: Page, seedPhrase: string, password: string): P
 
     break;
   }
+
+  // Skip manual Sepolia switch - DFX will request network switch during login
+  console.log('   Wallet setup complete (network will be switched by DFX)');
 }
 
 async function setupWalletAndLogin(
@@ -340,11 +420,56 @@ async function runSellFlow(
 ): Promise<void> {
   console.log(`\n=== Running Sell Flow for ${walletPrefix} ===`);
 
-  // User is already logged in from setupWalletAndLogin
-  // Navigate directly to USDT sell page
+  // Navigate to USDT sell page
   await appPage.goto(`${CONFIG.FRONTEND_URL}/sell?blockchain=Sepolia&assets=USDT`);
   await appPage.waitForLoadState('networkidle');
   await appPage.waitForTimeout(2000);
+
+  // Check if we need to login again (session might have expired)
+  const pageContent = await appPage.textContent('body').catch(() => '');
+  if (pageContent?.includes('Login to DFX') || (pageContent?.includes('WALLET') && pageContent?.includes('E-MAIL'))) {
+    console.log('   Session expired, logging in again...');
+
+    // Click WALLET tile (look for text or image)
+    const walletTile = appPage.locator('text=WALLET').first();
+    if (await walletTile.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await walletTile.click();
+      await appPage.waitForTimeout(2000);
+    }
+
+    // Click MetaMask option
+    const metamaskOption = appPage.locator('text=MetaMask, img[alt*="MetaMask"], img[src*="metamask"]').first();
+    if (await metamaskOption.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await metamaskOption.click();
+      await appPage.waitForTimeout(1000);
+    }
+
+    // Handle MetaMask popups for login
+    let loginComplete = false;
+    for (let i = 0; i < 15; i++) {
+      const popup = await waitForPopup(context, 3000);
+      if (popup) {
+        const result = await handleMetaMaskPopup(popup);
+        console.log(`   Popup ${i}: ${result}`);
+      }
+
+      await appPage.waitForTimeout(1000);
+      const content = await appPage.textContent('body').catch(() => '');
+      if (content?.includes('You spend') || content?.includes('Sell') || content?.includes('sell')) {
+        loginComplete = true;
+        break;
+      }
+    }
+
+    if (!loginComplete) {
+      console.log('   Warning: Login may not have completed');
+    }
+
+    // Navigate again to sell page with USDT
+    await appPage.goto(`${CONFIG.FRONTEND_URL}/sell?blockchain=Sepolia&assets=USDT`);
+    await appPage.waitForLoadState('networkidle');
+    await appPage.waitForTimeout(3000);
+  }
 
   // Screenshot 01: Sell page
   await expect(appPage).toHaveScreenshot(`${walletPrefix}-01-sell-page.png`, {
