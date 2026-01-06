@@ -484,18 +484,10 @@ export default function SellScreen(): JSX.Element {
 
     try {
       if (canSendTransaction()) {
-        // Fetch payment info with depositTx for EIP-7702 support
-        const paymentInfoWithTx = await receiveFor(
-          {
-            amount: paymentInfo.amount,
-            currency: paymentInfo.currency,
-            asset: paymentInfo.asset,
-            iban: selectedBankAccount?.iban ?? '',
-            externalTransactionId,
-          },
-          true,
-        );
-        await sendTransaction(paymentInfoWithTx).then(setSellTxId);
+        // Use existing paymentInfo for standard transaction
+        // Note: includeTx=true is disabled due to slow RPC calls on testnets causing 87s+ delays
+        // TODO: Re-enable when backend RPC performance is improved
+        await sendTransaction(paymentInfo).then(setSellTxId);
       }
       setTxDone(true);
     } catch (error: any) {

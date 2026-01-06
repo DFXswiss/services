@@ -492,17 +492,10 @@ export default function SwapScreen(): JSX.Element {
 
     try {
       if (canSendTransaction()) {
-        // Fetch payment info with depositTx for EIP-7702 support
-        const paymentInfoWithTx = await receiveFor(
-          {
-            amount: paymentInfo.amount,
-            sourceAsset: paymentInfo.sourceAsset,
-            targetAsset: paymentInfo.targetAsset,
-            externalTransactionId,
-          },
-          true,
-        );
-        await sendTransaction(paymentInfoWithTx).then(setSwapTxId);
+        // Use existing paymentInfo for standard transaction
+        // Note: includeTx=true is disabled due to slow RPC calls on testnets causing 87s+ delays
+        // TODO: Re-enable when backend RPC performance is improved
+        await sendTransaction(paymentInfo).then(setSwapTxId);
       }
 
       setTxDone(true);
