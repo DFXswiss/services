@@ -19,7 +19,6 @@ import {
   useSell,
   useSessionContext,
 } from '@dfx.swiss/react';
-import { Urls } from 'src/config/urls';
 import {
   AssetIconVariant,
   Form,
@@ -42,6 +41,7 @@ import { AddressSwitch } from 'src/components/payment/address-switch';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
 import { addressLabel } from 'src/config/labels';
+import { Urls } from 'src/config/urls';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
@@ -484,9 +484,6 @@ export default function SellScreen(): JSX.Element {
 
     try {
       if (canSendTransaction()) {
-        // Use existing paymentInfo for standard transaction
-        // Note: includeTx=true is disabled due to slow RPC calls on testnets causing 87s+ delays
-        // TODO: Re-enable when backend RPC performance is improved
         await sendTransaction(paymentInfo).then(setSellTxId);
       }
       setTxDone(true);

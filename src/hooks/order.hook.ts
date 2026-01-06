@@ -24,8 +24,6 @@ import { useBlockchain } from './blockchain.hook';
 import { useNavigation } from './navigation.hook';
 import { useTxHelper } from './tx-helper.hook';
 
-const EMBEDDED_WALLET = 'CakeWallet';
-
 export enum OrderType {
   BUY = 'buy',
   SELL = 'sell',
@@ -139,7 +137,7 @@ export function useOrder({ orderType, sourceAssets, targetAssets }: UseOrderPara
   // ---- Fetch available payment methods based on target asset ----
 
   const getAvailablePaymentMethods = useCallback(
-    (targetAsset?: Asset): FiatPaymentMethod[] => {
+    (_targetAsset?: Asset): FiatPaymentMethod[] => {
       if (!isBuy) return [];
       if (orderType === OrderType.DEPOSIT) return [FiatPaymentMethod.BANK]; // TODO: Add card deposit later
 

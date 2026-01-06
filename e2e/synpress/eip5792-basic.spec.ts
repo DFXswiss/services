@@ -4,8 +4,8 @@
  * Simple test to verify Synpress + MetaMask integration works.
  */
 
-import { testWithSynpress } from '@synthetixio/synpress';
-import { MetaMask, metaMaskFixtures, defineWalletSetup } from '@synthetixio/synpress/playwright';
+import { testWithSynpress, defineWalletSetup } from '@synthetixio/synpress';
+import { MetaMask, metaMaskFixtures } from '@synthetixio/synpress/playwright';
 
 // Define wallet setup inline to ensure hash matches
 const WALLET_PASSWORD = 'Tester@1234';

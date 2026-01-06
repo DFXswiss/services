@@ -18,7 +18,6 @@ import {
   useSwap,
   useUserContext,
 } from '@dfx.swiss/react';
-import { Urls } from 'src/config/urls';
 import {
   AssetIconVariant,
   Form,
@@ -39,6 +38,7 @@ import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-sell';
 import { PrivateAssetHint } from 'src/components/private-asset-hint';
 import { addressLabel } from 'src/config/labels';
+import { Urls } from 'src/config/urls';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import useDebounce from 'src/hooks/debounce.hook';
@@ -492,9 +492,6 @@ export default function SwapScreen(): JSX.Element {
 
     try {
       if (canSendTransaction()) {
-        // Use existing paymentInfo for standard transaction
-        // Note: includeTx=true is disabled due to slow RPC calls on testnets causing 87s+ delays
-        // TODO: Re-enable when backend RPC performance is improved
         await sendTransaction(paymentInfo).then(setSwapTxId);
       }
 
