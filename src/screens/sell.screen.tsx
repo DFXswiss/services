@@ -60,6 +60,7 @@ import useDebounce from '../hooks/debounce.hook';
 import { useAddressGuard } from '../hooks/guard.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 import { useTxHelper } from '../hooks/tx-helper.hook';
+import { getKycErrorFromMessage } from '../util/api-error';
 import { blankedAddress } from '../util/utils';
 
 enum Side {
@@ -329,7 +330,12 @@ export default function SellScreen(): JSX.Element {
             navigate('/profile');
           } else {
             setPaymentInfo(undefined);
-            setErrorMessage(error.message ?? 'Unknown error');
+            const kycErrorFromMessage = getKycErrorFromMessage(error.message);
+            if (kycErrorFromMessage) {
+              setKycError(kycErrorFromMessage);
+            } else {
+              setErrorMessage(error.message ?? 'Unknown error');
+            }
           }
         }
       })
