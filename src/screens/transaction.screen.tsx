@@ -410,18 +410,21 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     }
   }
 
-  // Validation rules based on refund type
+  // Bank refund = BUY transaction with non-card payment method
+  const isBankRefund = isBuy && transaction?.inputPaymentMethod !== FiatPaymentMethod.CARD;
+
+  // Validation rules based on refund type:
   // - address: only required for crypto refunds (not isBuy)
-  // - iban/creditorName: only required if not already fixed from bankTx
-  // - creditorStreet/zip/city/country: always required for bank refunds
+  // - iban/creditorName: only required for bank refunds if not already fixed from bankTx
+  // - creditorStreet/zip/city/country: only required for bank refunds
   const rules = Utils.createRules({
     address: !isBuy ? Validations.Required : undefined,
-    iban: refundDetails?.refundTarget ? undefined : Validations.Required,
-    creditorName: refundDetails?.bankDetails?.name?.trim() ? undefined : Validations.Required,
-    creditorStreet: Validations.Required,
-    creditorZip: Validations.Required,
-    creditorCity: Validations.Required,
-    creditorCountry: Validations.Required,
+    iban: !isBankRefund || refundDetails?.refundTarget ? undefined : Validations.Required,
+    creditorName: !isBankRefund || refundDetails?.bankDetails?.name?.trim() ? undefined : Validations.Required,
+    creditorStreet: isBankRefund ? Validations.Required : undefined,
+    creditorZip: isBankRefund ? Validations.Required : undefined,
+    creditorCity: isBankRefund ? Validations.Required : undefined,
+    creditorCountry: isBankRefund ? Validations.Required : undefined,
   });
 
   return selectedIban === AddAccount ? (
