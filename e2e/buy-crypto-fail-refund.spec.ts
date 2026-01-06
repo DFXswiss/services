@@ -145,8 +145,8 @@ test.describe('BuyCrypto FAIL Refund Flow - Complete E2E Test', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    // Status should now show "Return pending" or similar
-    const pendingStatus = page.getByText(/Return pending|Refund pending/);
+    // Status should now show "Refund pending" - use first() since there may be multiple transactions
+    const pendingStatus = page.getByText(/Return pending|Refund pending/).first();
     await expect(pendingStatus).toBeVisible();
 
     await expect(page).toHaveScreenshot('08-buy-crypto-fail-refund-pending-status.png', {
