@@ -1263,9 +1263,15 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
             console.log(`Total buttons: ${elementInfo.totalButtons}`);
             console.log(`Elements with "Complete transaction": ${JSON.stringify(elementInfo.matchingElements)}`);
 
+            // Set up page event listener BEFORE clicking to catch MetaMask popup
+            console.log('Setting up page event listener before click...');
+            const newPagePromise = context.waitForEvent('page', { timeout: 30000 }).catch(() => null);
+
             // Method 1: Standard Playwright click with force
             await foundBtn.click({ force: true });
-            await activeAppPage.waitForTimeout(1000);
+
+            // Wait briefly for UI to respond
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Check if button state changed
             let btnTextAfter = await foundBtn.textContent().catch(() => '');
@@ -1369,31 +1375,50 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
               console.log(`After Enter key: Button="${btnTextAfter}"`);
             }
 
-            console.log('Click successful! Monitoring for MetaMask popup...');
+            console.log('Click successful! Waiting for MetaMask popup via event listener...');
 
-            // Wait for MetaMask transaction popup - it should appear after API call
-            let mmTxPage = null;
-            for (let i = 0; i < 30; i++) {
+            // First check the newPagePromise we set up before clicking
+            let mmTxPage = await newPagePromise;
+
+            // If we got a page from the event, check if it's MetaMask
+            if (mmTxPage) {
               try {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                const allPages = context.pages();
-                console.log(`Second ${i + 1}: ${allPages.length} pages`);
-
-                for (const p of allPages) {
-                  try {
-                    const url = p.url();
-                    if (url.includes('notification.html') || url.includes('confirm-transaction')) {
-                      mmTxPage = p;
-                      console.log(`Found MetaMask TX popup: ${url}`);
-                      break;
-                    }
-                  } catch { /* page might be closed */ }
+                const url = mmTxPage.url();
+                console.log(`New page detected: ${url}`);
+                if (!url.includes('notification.html') && !url.includes('confirm-transaction') && !url.includes('chrome-extension://')) {
+                  console.log('Not a MetaMask page, continuing to poll...');
+                  mmTxPage = null;
                 }
+              } catch {
+                mmTxPage = null;
+              }
+            }
 
-                if (mmTxPage) break;
-              } catch (e) {
-                console.log(`Monitoring error at second ${i + 1}: ${e}`);
+            // Fallback: poll for MetaMask popup if event didn't catch it
+            if (!mmTxPage) {
+              console.log('Event listener did not catch MetaMask popup, polling...');
+              for (let i = 0; i < 15; i++) {
+                try {
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+
+                  const allPages = context.pages();
+                  console.log(`Poll ${i + 1}: ${allPages.length} pages`);
+
+                  for (const p of allPages) {
+                    try {
+                      const url = p.url();
+                      if (url.includes('notification.html') || url.includes('confirm-transaction')) {
+                        mmTxPage = p;
+                        console.log(`Found MetaMask TX popup: ${url}`);
+                        break;
+                      }
+                    } catch { /* page might be closed */ }
+                  }
+
+                  if (mmTxPage) break;
+                } catch (e) {
+                  console.log(`Monitoring error at poll ${i + 1}: ${e}`);
+                }
               }
             }
 
@@ -1439,9 +1464,10 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
       console.log('Step 10: Handling MetaMask transaction approval...');
 
       // Poll for MetaMask popup - it might take a moment to appear
+      // Note: Use setTimeout instead of page.waitForTimeout to avoid errors when page is closed
       let txNotificationPage = null;
       for (let attempt = 0; attempt < 10; attempt++) {
-        await activeAppPage.waitForTimeout(2000);
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         const allPages = context.pages();
         console.log(`Attempt ${attempt + 1}: Found ${allPages.length} pages`);
@@ -1462,12 +1488,16 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
 
         if (txNotificationPage) break;
 
-        // Check for error message on app page
-        const appContent = await activeAppPage.textContent('body').catch(() => '');
-        if (appContent?.includes('failed') || appContent?.includes('error') || appContent?.includes('Error')) {
-          console.log('Error detected on app page');
-          await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-10-error.png', fullPage: true });
-          break;
+        // Check for error message on app page (only if page still exists)
+        try {
+          const appContent = await activeAppPage.textContent('body').catch(() => '');
+          if (appContent?.includes('failed') || appContent?.includes('error') || appContent?.includes('Error')) {
+            console.log('Error detected on app page');
+            await activeAppPage.screenshot({ path: 'e2e/screenshots/full-test-10-error.png', fullPage: true }).catch(() => {});
+            break;
+          }
+        } catch {
+          // Page might be closed, continue polling for MetaMask popup
         }
       }
 
@@ -1534,7 +1564,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
 
       // Step 11: Check final result
       console.log('Step 11: Checking final result...');
-      await activeAppPage.waitForTimeout(5000);
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
       // Find or recreate app page
       const finalPages = context.pages();
