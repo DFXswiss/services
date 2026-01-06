@@ -43,6 +43,7 @@ import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
 import useDebounce from 'src/hooks/debounce.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { getKycErrorFromMessage } from 'src/util/api-error';
 import { blankedAddress } from 'src/util/utils';
 import { ErrorHint } from '../components/error-hint';
 import { ExchangeRate } from '../components/exchange-rate';
@@ -346,7 +347,12 @@ export default function SwapScreen(): JSX.Element {
             navigate('/profile');
           } else {
             setPaymentInfo(undefined);
-            setErrorMessage(error.message ?? 'Unknown error');
+            const kycErrorFromMessage = getKycErrorFromMessage(error.message);
+            if (kycErrorFromMessage) {
+              setKycError(kycErrorFromMessage);
+            } else {
+              setErrorMessage(error.message ?? 'Unknown error');
+            }
           }
         }
       })

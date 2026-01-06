@@ -41,6 +41,7 @@ import { useEffect, useState } from 'react';
 import { FieldPath, FieldPathValue, useForm, useWatch } from 'react-hook-form';
 import { PaymentInformationContent } from 'src/components/payment/payment-info-buy';
 import { useWindowContext } from 'src/contexts/window.context';
+import { getKycErrorFromMessage } from 'src/util/api-error';
 import { blankedAddress } from 'src/util/utils';
 import { NameEdit } from '../components/edit/name.edit';
 import { ErrorHint } from '../components/error-hint';
@@ -341,7 +342,12 @@ export default function BuyScreen(): JSX.Element {
       .catch((error: ApiError) => {
         if (isRunning) {
           setPaymentInfo(undefined);
-          setErrorMessage(error.message ?? 'Unknown error');
+          const kycErrorFromMessage = getKycErrorFromMessage(error.message);
+          if (kycErrorFromMessage) {
+            setKycError(kycErrorFromMessage);
+          } else {
+            setErrorMessage(error.message ?? 'Unknown error');
+          }
         }
       })
       .finally(() => isRunning && setIsLoading(undefined));
