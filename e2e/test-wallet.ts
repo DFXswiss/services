@@ -43,6 +43,13 @@ const DFX_SIGN_MESSAGE =
   'By_signing_this_message,_you_confirm_that_you_are_the_sole_owner_of_the_provided_Blockchain_address._Your_ID:_';
 
 /**
+ * Lightning.space sign message format
+ * Different from DFX - used for lightning.space custodial service
+ */
+const LIGHTNING_SIGN_MESSAGE =
+  'By_signing_this_message,_you_confirm_to_lightning.space_that_you_are_the_sole_owner_of_the_provided_Blockchain_address._Your_ID:_';
+
+/**
  * Supported blockchain types for login testing
  */
 export type BlockchainType =
@@ -136,6 +143,40 @@ export async function createBitcoinCredentials(mnemonic: string): Promise<TestCr
   if (!address) throw new Error('Failed to generate Bitcoin address');
 
   const message = DFX_SIGN_MESSAGE + address;
+
+  // Sign message using bitcoinjs-message
+  const signature = bitcoinMessage.sign(message, Buffer.from(privateKey), true, { segwitType: 'p2wpkh' });
+
+  return {
+    address,
+    signature: signature.toString('base64'),
+  };
+}
+
+/**
+ * Creates Lightning test credentials from a mnemonic seed phrase.
+ * Uses same Bitcoin address but signs with lightning.space message format.
+ * Uses BIP84 (Native SegWit) derivation path: m/84'/0'/0'/0/0
+ */
+export async function createLightningCredentials(mnemonic: string): Promise<TestCredentials> {
+  const seed = bip39.mnemonicToSeedSync(mnemonic);
+  const hdKey = HDKey.fromMasterSeed(seed);
+
+  // BIP84 for Native SegWit (bc1...)
+  const derivedKey = hdKey.derive("m/84'/0'/0'/0/0");
+  const privateKey = derivedKey.privateKey!;
+  const publicKey = derivedKey.publicKey!;
+
+  // Create P2WPKH address (bc1...)
+  const { address } = bitcoin.payments.p2wpkh({
+    pubkey: Buffer.from(publicKey),
+    network: bitcoin.networks.bitcoin,
+  });
+
+  if (!address) throw new Error('Failed to generate Bitcoin address');
+
+  // Sign with lightning.space message format
+  const message = LIGHTNING_SIGN_MESSAGE + address;
 
   // Sign message using bitcoinjs-message
   const signature = bitcoinMessage.sign(message, Buffer.from(privateKey), true, { segwitType: 'p2wpkh' });
