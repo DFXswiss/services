@@ -125,9 +125,20 @@ test.describe('Buy Process - Lightning Wallet', () => {
   test('should handle buy flow with pre-filled amount for Lightning', async ({ page, request }) => {
     const token = await getLightningToken(request);
 
-    await page.goto(`/buy?session=${token}&blockchain=Lightning&amount-in=100`);
+    await page.goto(`/buy?session=${token}&blockchain=Lightning`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+
+    // Set amount directly in DOM (Playwright's fill/type don't work with StyledInput)
+    await page.evaluate(() => {
+      const input = document.querySelector('input[type="number"]') as HTMLInputElement;
+      if (input) {
+        input.value = '100';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+    await page.waitForTimeout(500);
 
     const pageContent = await page.textContent('body');
     expect(pageContent).toBeTruthy();

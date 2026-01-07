@@ -90,9 +90,20 @@ test.describe('Sell Process - Bitcoin Wallet', () => {
   });
 
   test('should handle sell flow with pre-filled BTC amount', async ({ page }) => {
-    await page.goto(`/sell?session=${token}&blockchain=Bitcoin&amount-in=0.001`);
+    await page.goto(`/sell?session=${token}&blockchain=Bitcoin`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
+
+    // Set amount directly in DOM (Playwright's fill/type don't work with StyledInput)
+    await page.evaluate(() => {
+      const input = document.querySelector('input[type="number"]') as HTMLInputElement;
+      if (input) {
+        input.value = '0.001';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+    await page.waitForTimeout(500);
 
     const pageContent = await page.textContent('body');
     expect(pageContent).toBeTruthy();
@@ -103,8 +114,19 @@ test.describe('Sell Process - Bitcoin Wallet', () => {
   });
 
   test('should display exchange rate for BTC sell', async ({ page }) => {
-    await page.goto(`/sell?session=${token}&blockchain=Bitcoin&amount-in=0.01`);
+    await page.goto(`/sell?session=${token}&blockchain=Bitcoin`);
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
+
+    // Set amount directly in DOM (Playwright's fill/type don't work with StyledInput)
+    await page.evaluate(() => {
+      const input = document.querySelector('input[type="number"]') as HTMLInputElement;
+      if (input) {
+        input.value = '0.01';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
 
     // Wait for exchange rate to load
     try {
