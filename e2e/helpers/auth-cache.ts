@@ -7,6 +7,7 @@ import {
   createTestCredentialsWallet3,
   createBitcoinCredentials,
   createLightningCredentials,
+  createLightningCredentialsWallet2,
   createSolanaCredentials,
   createTronCredentials,
   TestCredentials,
@@ -38,7 +39,7 @@ function delay(ms: number): Promise<void> {
 export type BlockchainType = 'evm' | 'evm-wallet2' | 'bitcoin' | 'lightning' | 'solana' | 'tron';
 
 // Linked address types - these are authenticated using an existing token from another blockchain
-export type LinkedBlockchainType = 'evm-linked' | 'solana-linked' | 'tron-linked';
+export type LinkedBlockchainType = 'evm-linked' | 'solana-linked' | 'tron-linked' | 'lightning-linked';
 
 async function generateCredentials(type: BlockchainType): Promise<TestCredentials> {
   const cacheKey = type;
@@ -335,6 +336,144 @@ export async function getLinkedEvmAuth(
   return {
     token: linkedAuth.token,
     credentials: linkedAuth.credentials,
+    primaryToken: bitcoinAuth.token,
+  };
+}
+
+/**
+ * Authenticate Lightning Wallet 2 at lightning.space and get LNURL + ownershipProof.
+ * Uses Bitcoin derivation path m/84'/0'/0'/0/1 (index 1).
+ */
+async function authenticateLightningWallet2(
+  request: APIRequestContext,
+): Promise<{ lightningAddress: string; lnurl: string; ownershipProof: string; btcAddress: string }> {
+  const config = getTestConfig();
+  const credentials = await createLightningCredentialsWallet2(config.seed);
+
+  console.log(`Authenticating Lightning Wallet 2 (${credentials.address}) at lightning.space...`);
+
+  // Step 1: Authenticate with lightning.space using Bitcoin Wallet 2 credentials
+  const authResponse = await request.post(`${LIGHTNING_API_URL}/auth`, {
+    data: credentials,
+    ignoreHTTPSErrors: true,
+  });
+
+  if (!authResponse.ok()) {
+    const body = await authResponse.text().catch(() => 'unknown');
+    throw new Error(`Lightning Wallet 2 auth failed with status ${authResponse.status()}: ${body}`);
+  }
+
+  const authData = await authResponse.json();
+  const ldsToken = authData.accessToken;
+  const lightningAddress = authData.lightningAddress;
+
+  // Step 2: Get user info with LNURL and ownership proof
+  const userResponse = await request.get(`${LIGHTNING_API_URL}/user`, {
+    headers: {
+      Authorization: `Bearer ${ldsToken}`,
+    },
+    ignoreHTTPSErrors: true,
+  });
+
+  if (!userResponse.ok()) {
+    const body = await userResponse.text().catch(() => 'unknown');
+    throw new Error(`Lightning Wallet 2 user info failed with status ${userResponse.status()}: ${body}`);
+  }
+
+  const userData = await userResponse.json();
+
+  console.log(`Lightning Wallet 2 address: ${lightningAddress}`);
+  console.log(`Lightning Wallet 2 LNURL: ${userData.lightning.addressLnurl.substring(0, 40)}...`);
+
+  return {
+    lightningAddress,
+    lnurl: userData.lightning.addressLnurl,
+    ownershipProof: userData.lightning.addressOwnershipProof,
+    btcAddress: credentials.address,
+  };
+}
+
+/**
+ * Get a linked Lightning address token using Bitcoin as the primary wallet.
+ *
+ * Flow:
+ * 1. Authenticate with Bitcoin Wallet 1 (bc1qq70e...) at DFX → primaryToken
+ * 2. Authenticate Bitcoin Wallet 2 at lightning.space → LNURL + ownershipProof
+ * 3. Link LNURL at DFX using primaryToken → new token for Lightning Wallet 2
+ *
+ * This allows using a second Lightning address under the same account (no second KYC).
+ */
+export async function getLinkedLightningAuth(
+  request: APIRequestContext,
+): Promise<{
+  token: string;
+  lnurl: string;
+  lightningAddress: string;
+  btcAddress: string;
+  primaryToken: string;
+}> {
+  const cacheKey = 'linked:lightning-wallet2';
+
+  // Check cache first
+  const cached = tokenCache.get(cacheKey);
+  if (cached && cached.expiry > Date.now()) {
+    console.log('Using cached linked Lightning token');
+    // Get Bitcoin primary token
+    const bitcoinAuth = await getCachedAuth(request, 'bitcoin');
+    return {
+      token: cached.token,
+      lnurl: cached.lightningAddress!, // We store lnurl in lightningAddress field
+      lightningAddress: cached.lightningAddress!,
+      btcAddress: '', // Not cached, but not critical
+      primaryToken: bitcoinAuth.token,
+    };
+  }
+
+  // Step 1: Authenticate with Bitcoin Wallet 1 to get primary token
+  const bitcoinAuth = await getCachedAuth(request, 'bitcoin');
+  console.log(`Primary Bitcoin token obtained for ${bitcoinAuth.credentials.address}`);
+
+  // Step 2: Authenticate Lightning Wallet 2 at lightning.space
+  const lightningWallet2 = await authenticateLightningWallet2(request);
+
+  // Step 3: Link the new LNURL to the Bitcoin account at DFX
+  console.log(`Linking Lightning Wallet 2 LNURL to Bitcoin account...`);
+
+  const dfxCredentials: TestCredentials = {
+    address: lightningWallet2.lnurl,
+    signature: lightningWallet2.ownershipProof,
+  };
+
+  const response = await request.post(`${API_URL}/auth`, {
+    data: dfxCredentials,
+    headers: {
+      Authorization: `Bearer ${bitcoinAuth.token}`,
+    },
+    ignoreHTTPSErrors: true,
+  });
+
+  if (!response.ok()) {
+    const body = await response.text().catch(() => 'unknown');
+    throw new Error(`Failed to link Lightning Wallet 2: ${response.status()} - ${body}`);
+  }
+
+  const data = await response.json();
+  const token = data.accessToken;
+
+  console.log('Successfully linked Lightning Wallet 2 to Bitcoin account');
+
+  // Cache for 2 hours
+  tokenCache.set(cacheKey, {
+    token,
+    expiry: Date.now() + 2 * 60 * 60 * 1000,
+    lightningAddress: lightningWallet2.lnurl,
+  });
+
+  return {
+    token,
+    lnurl: lightningWallet2.lnurl,
+    lightningAddress: lightningWallet2.lightningAddress,
+    btcAddress: lightningWallet2.btcAddress,
     primaryToken: bitcoinAuth.token,
   };
 }

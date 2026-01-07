@@ -387,3 +387,78 @@ export function getWallet2FromMnemonic(mnemonic: string): HDNodeWallet {
 export async function createTestCredentialsWallet3(mnemonic: string): Promise<TestCredentials> {
   return createTestCredentials(mnemonic, EVM_DERIVATION_PATH_WALLET3);
 }
+
+// =============================================================================
+// BITCOIN WALLET 2 SUPPORT (for linked Lightning tests)
+// =============================================================================
+
+/**
+ * BIP84 derivation path for Bitcoin Wallet 2 (index 1)
+ * Used for linked Lightning address tests
+ */
+export const BTC_DERIVATION_PATH_WALLET2 = "m/84'/0'/0'/0/1";
+
+/**
+ * Creates Bitcoin credentials for Wallet 2 (index 1)
+ * Use this for linked Lightning address tests
+ */
+export async function createBitcoinCredentialsWallet2(mnemonic: string): Promise<TestCredentials> {
+  const seed = bip39.mnemonicToSeedSync(mnemonic);
+  const hdKey = HDKey.fromMasterSeed(seed);
+
+  // BIP84 for Native SegWit (bc1...) - index 1
+  const derivedKey = hdKey.derive(BTC_DERIVATION_PATH_WALLET2);
+  const privateKey = derivedKey.privateKey!;
+  const publicKey = derivedKey.publicKey!;
+
+  // Create P2WPKH address (bc1...)
+  const { address } = bitcoin.payments.p2wpkh({
+    pubkey: Buffer.from(publicKey),
+    network: bitcoin.networks.bitcoin,
+  });
+
+  if (!address) throw new Error('Failed to generate Bitcoin address');
+
+  const message = DFX_SIGN_MESSAGE + address;
+
+  // Sign message using bitcoinjs-message
+  const signature = bitcoinMessage.sign(message, Buffer.from(privateKey), true, { segwitType: 'p2wpkh' });
+
+  return {
+    address,
+    signature: signature.toString('base64'),
+  };
+}
+
+/**
+ * Creates Lightning credentials for Wallet 2 (Bitcoin index 1)
+ * Signs with lightning.space message format
+ */
+export async function createLightningCredentialsWallet2(mnemonic: string): Promise<TestCredentials> {
+  const seed = bip39.mnemonicToSeedSync(mnemonic);
+  const hdKey = HDKey.fromMasterSeed(seed);
+
+  // BIP84 for Native SegWit (bc1...) - index 1
+  const derivedKey = hdKey.derive(BTC_DERIVATION_PATH_WALLET2);
+  const privateKey = derivedKey.privateKey!;
+  const publicKey = derivedKey.publicKey!;
+
+  // Create P2WPKH address (bc1...)
+  const { address } = bitcoin.payments.p2wpkh({
+    pubkey: Buffer.from(publicKey),
+    network: bitcoin.networks.bitcoin,
+  });
+
+  if (!address) throw new Error('Failed to generate Bitcoin address');
+
+  // Sign with lightning.space message format
+  const message = LIGHTNING_SIGN_MESSAGE + address;
+
+  // Sign message using bitcoinjs-message
+  const signature = bitcoinMessage.sign(message, Buffer.from(privateKey), true, { segwitType: 'p2wpkh' });
+
+  return {
+    address,
+    signature: signature.toString('base64'),
+  };
+}
