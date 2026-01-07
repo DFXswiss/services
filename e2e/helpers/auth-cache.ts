@@ -4,6 +4,7 @@ import * as path from 'path';
 import {
   createTestCredentials,
   createTestCredentialsWallet2,
+  createTestCredentialsWallet3,
   createBitcoinCredentials,
   createLightningCredentials,
   createSolanaCredentials,
@@ -35,6 +36,9 @@ function delay(ms: number): Promise<void> {
 }
 
 export type BlockchainType = 'evm' | 'evm-wallet2' | 'bitcoin' | 'lightning' | 'solana' | 'tron';
+
+// Linked address types - these are authenticated using an existing token from another blockchain
+export type LinkedBlockchainType = 'evm-linked' | 'solana-linked' | 'tron-linked';
 
 async function generateCredentials(type: BlockchainType): Promise<TestCredentials> {
   const cacheKey = type;
@@ -231,4 +235,106 @@ async function authenticateLightning(
 
 export function getTestIban(): string {
   return getTestConfig().iban;
+}
+
+/**
+ * Authenticate a new blockchain address using an existing token.
+ * This links the new address to the same account (no new KYC required).
+ *
+ * Flow:
+ * 1. First authenticate with Bitcoin/Lightning to get a token
+ * 2. Use that token to authenticate a new address (e.g., Ethereum)
+ * 3. The new address is automatically linked to the same account
+ *
+ * @param request - Playwright API request context
+ * @param existingToken - Token from an existing authenticated address
+ * @param newType - The new blockchain type to link ('evm-linked', 'solana-linked', 'tron-linked')
+ * @returns Token for the newly linked address
+ */
+export async function authenticateLinkedAddress(
+  request: APIRequestContext,
+  existingToken: string,
+  newType: LinkedBlockchainType,
+): Promise<{ token: string; credentials: TestCredentials }> {
+  const cacheKey = `linked:${newType}`;
+
+  // Check cache first
+  const cached = tokenCache.get(cacheKey);
+  if (cached && cached.expiry > Date.now()) {
+    console.log(`Using cached linked token for ${newType}`);
+    const credentials = credentialsCache.get(newType.replace('-linked', ''))!;
+    return { token: cached.token, credentials };
+  }
+
+  // Generate credentials for the new blockchain type
+  const config = getTestConfig();
+  let credentials: TestCredentials;
+
+  switch (newType) {
+    case 'evm-linked':
+      // Use wallet3 (derivation index 1) for linked addresses
+      // wallet1 and wallet2 are already registered on other accounts
+      credentials = await createTestCredentialsWallet3(config.seed);
+      break;
+    case 'solana-linked':
+      credentials = await createSolanaCredentials(config.seed);
+      break;
+    case 'tron-linked':
+      credentials = await createTronCredentials(config.seed);
+      break;
+  }
+
+  console.log(`Linking ${newType} address ${credentials.address} to existing account...`);
+
+  // Authenticate with the new address, passing the existing token
+  // This tells the API to link this address to the same account
+  const response = await request.post(`${API_URL}/auth`, {
+    data: credentials,
+    headers: {
+      Authorization: `Bearer ${existingToken}`,
+    },
+    ignoreHTTPSErrors: true,
+  });
+
+  if (!response.ok()) {
+    const body = await response.text().catch(() => 'unknown');
+    throw new Error(`Failed to link address: ${response.status()} - ${body}`);
+  }
+
+  const data = await response.json();
+  const token = data.accessToken;
+
+  // Cache for 2 hours
+  tokenCache.set(cacheKey, {
+    token,
+    expiry: Date.now() + 2 * 60 * 60 * 1000,
+  });
+
+  credentialsCache.set(newType.replace('-linked', ''), credentials);
+
+  console.log(`Successfully linked ${newType} address to account`);
+
+  return { token, credentials };
+}
+
+/**
+ * Get a linked EVM address token using Bitcoin as the primary wallet.
+ * This is useful for testing EVM chains with a Bitcoin-authenticated account.
+ *
+ * Uses Wallet 3 (derivation index 1) which is a fresh address not yet registered.
+ */
+export async function getLinkedEvmAuth(
+  request: APIRequestContext,
+): Promise<{ token: string; credentials: TestCredentials; primaryToken: string }> {
+  // First authenticate with Bitcoin to get the primary token
+  const bitcoinAuth = await getCachedAuth(request, 'bitcoin');
+
+  // Link EVM wallet3 address to the Bitcoin account
+  const linkedAuth = await authenticateLinkedAddress(request, bitcoinAuth.token, 'evm-linked');
+
+  return {
+    token: linkedAuth.token,
+    credentials: linkedAuth.credentials,
+    primaryToken: bitcoinAuth.token,
+  };
 }
