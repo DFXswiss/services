@@ -148,7 +148,20 @@ test.describe('Buy Process - Lightning Wallet', () => {
       .locator('text=/E-Mail|Wechselkurs/i')
       .first()
       .waitFor({ timeout: 10000 });
-    await page.waitForTimeout(500);
+
+    // Wait for React to fully initialize the form
+    await page.waitForTimeout(2000);
+
+    // Set amount directly in DOM (Playwright's fill/type don't work with this React input)
+    await page.evaluate(() => {
+      const input = document.querySelector('input[type="number"]') as HTMLInputElement;
+      if (input) {
+        input.value = '100';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+    await page.waitForTimeout(1000);
 
     const pageContent = await page.textContent('body');
 
@@ -166,9 +179,6 @@ test.describe('Buy Process - Lightning Wallet', () => {
 
     expect(hasExchangeInfo || hasKycRequirement).toBeTruthy();
 
-    // Screenshot captures the current state - either with exchange rate or KYC prompt
-    // Note: When KYC is required, the amount input may show placeholder even though
-    // the value is set in the DOM (this is expected behavior for the KYC state)
     await expect(page).toHaveScreenshot('buy-lightning-exchange-rate.png', {
       maxDiffPixels: 10000,
     });
