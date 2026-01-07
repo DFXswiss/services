@@ -1,4 +1,4 @@
-import { Utils, Validations } from '@dfx.swiss/react';
+import { Country, Utils, Validations } from '@dfx.swiss/react';
 import {
   AlignContent,
   Form,
@@ -11,12 +11,14 @@ import {
   StyledHorizontalStack,
   StyledInput,
   StyledLoadingSpinner,
+  StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { TransactionRefundData, useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
@@ -30,16 +32,17 @@ interface FormData {
   creditorHouseNumber: string;
   creditorZip: string;
   creditorCity: string;
-  creditorCountry: string;
+  creditorCountry: Country;
 }
 
 export default function ComplianceBankTxReturnScreen(): JSX.Element {
   useComplianceGuard();
 
   const { id } = useParams<{ id: string }>();
-  const { translate, translateError } = useSettingsContext();
+  const { translate, translateError, allowedCountries } = useSettingsContext();
   const { getTransactionRefundData, processTransactionRefund } = useCompliance();
   const { goBack } = useNavigation();
+  const { rootRef } = useLayoutContext();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,6 +81,10 @@ export default function ComplianceBankTxReturnScreen(): JSX.Element {
         if (data.bankDetails.houseNumber) setValue('creditorHouseNumber', data.bankDetails.houseNumber);
         if (data.bankDetails.zip) setValue('creditorZip', data.bankDetails.zip);
         if (data.bankDetails.city) setValue('creditorCity', data.bankDetails.city);
+        if (data.bankDetails.country) {
+          const country = allowedCountries.find((c) => c.symbol === data.bankDetails?.country);
+          if (country) setValue('creditorCountry', country);
+        }
       }
     } catch (e: any) {
       setError(e.message);
@@ -100,7 +107,7 @@ export default function ComplianceBankTxReturnScreen(): JSX.Element {
         houseNumber: formData.creditorHouseNumber || undefined,
         zip: formData.creditorZip,
         city: formData.creditorCity,
-        country: formData.creditorCountry,
+        country: formData.creditorCountry.symbol,
       });
       setSuccess(true);
     } catch (e: any) {
@@ -272,11 +279,16 @@ export default function ComplianceBankTxReturnScreen(): JSX.Element {
               smallLabel
             />
           </StyledHorizontalStack>
-          <StyledInput
+          <StyledSearchDropdown<Country>
+            rootRef={rootRef}
             name="creditorCountry"
             autocomplete="country"
             label={translate('screens/kyc', 'Country')}
-            placeholder="CH"
+            placeholder={translate('general/actions', 'Select') + '...'}
+            items={allowedCountries}
+            labelFunc={(item) => item.name}
+            filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+            matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
             full
             smallLabel
           />
