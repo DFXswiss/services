@@ -206,8 +206,11 @@ export default function SellScreen(): JSX.Element {
       setVal('amount', amountIn);
     } else if (amountOut) {
       setVal('targetAmount', amountOut);
-    } else if (selectedAsset?.name === 'ETH' && !enteredAmount) {
-      setVal('amount', '0.1');
+    } else if (selectedAsset && !enteredAmount) {
+      // Asset-specific default amounts
+      const defaultAmount =
+        selectedAsset.name === 'BTC' ? '0.001' : selectedAsset.name === 'ETH' ? '0.1' : '300';
+      setVal('amount', defaultAmount);
     }
   }, [amountIn, amountOut, selectedAsset]);
 

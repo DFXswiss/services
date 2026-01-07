@@ -1,6 +1,44 @@
-import { AccountType, KycStatus, ResponseType, useApi } from '@dfx.swiss/react';
+import { AccountType, Asset, Fiat, KycStatus, ResponseType, useApi } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 import { downloadFile, filenameDateFormat } from 'src/util/utils';
+
+export interface RefundFeeData {
+  dfx: number;
+  network: number;
+  bank: number;
+}
+
+export interface RefundBankDetails {
+  name?: string;
+  address?: string;
+  houseNumber?: string;
+  zip?: string;
+  city?: string;
+  country?: string;
+  iban?: string;
+  bic?: string;
+}
+
+export interface TransactionRefundData {
+  expiryDate: Date;
+  fee: RefundFeeData;
+  refundAmount: number;
+  refundAsset: Asset | Fiat;
+  inputAmount: number;
+  inputAsset: Asset | Fiat;
+  refundTarget?: string;
+  bankDetails?: RefundBankDetails;
+}
+
+export interface BankRefundData {
+  refundTarget: string;
+  name: string;
+  address: string;
+  houseNumber?: string;
+  zip: string;
+  city: string;
+  country: string;
+}
 
 export enum ComplianceSearchType {
   REF = 'Ref',
@@ -33,11 +71,13 @@ export interface UserSearchResult {
 
 export interface BankTxSearchResult {
   id: number;
+  transactionId?: number;
   accountServiceRef: string;
   amount: number;
   currency: string;
   type: string;
   name?: string;
+  iban?: string;
 }
 
 export interface ComplianceUserData {
@@ -83,5 +123,23 @@ export function useCompliance() {
     downloadFile(data, headers, `DFX_export_${filenameDateFormat()}.zip`);
   }
 
-  return useMemo(() => ({ search, getUserData, downloadUserFiles }), [call]);
+  async function getTransactionRefundData(transactionId: number): Promise<TransactionRefundData> {
+    return call<TransactionRefundData>({
+      url: `support/transaction/${transactionId}/refund`,
+      method: 'GET',
+    });
+  }
+
+  async function processTransactionRefund(transactionId: number, data: BankRefundData): Promise<void> {
+    return call<void>({
+      url: `support/transaction/${transactionId}/refund`,
+      method: 'PUT',
+      data,
+    });
+  }
+
+  return useMemo(
+    () => ({ search, getUserData, downloadUserFiles, getTransactionRefundData, processTransactionRefund }),
+    [call],
+  );
 }

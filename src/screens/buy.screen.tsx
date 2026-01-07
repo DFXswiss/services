@@ -135,9 +135,7 @@ export default function BuyScreen(): JSX.Element {
   const [validatedData, setValidatedData] = useState<ValidatedData>();
 
   // form
-  const { control, handleSubmit, setValue, resetField } = useForm<FormData>({
-    defaultValues: { amount: !amountOut ? '100' : undefined },
-  });
+  const { control, handleSubmit, setValue, resetField } = useForm<FormData>();
 
   const selectedAmount = useWatch({ control, name: 'amount' });
   const selectedCurrency = useWatch({ control, name: 'currency' });
@@ -224,8 +222,11 @@ export default function BuyScreen(): JSX.Element {
       setVal('amount', amountIn);
     } else if (amountOut) {
       setVal('targetAmount', amountOut);
+    } else if (selectedAsset && !selectedAmount && !selectedTargetAmount) {
+      // Always set amount (input field) - backend calculates targetAmount
+      setVal('amount', '300');
     }
-  }, [amountIn, amountOut]);
+  }, [amountIn, amountOut, selectedAsset]);
 
   useEffect(() => setAddress(), [session?.address, translate, addressItems.length]);
 
