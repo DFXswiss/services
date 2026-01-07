@@ -5,6 +5,7 @@ import {
   createTestCredentials,
   createTestCredentialsWallet2,
   createBitcoinCredentials,
+  createLightningCredentials,
   createSolanaCredentials,
   createTronCredentials,
   TestCredentials,
@@ -17,8 +18,11 @@ dotenv.config({ path: path.join(__dirname, '../../.env.test') });
 // Use local API when running against local services, otherwise use dev API
 const API_URL = process.env.API_URL || 'http://localhost:3000/v1';
 
+// Lightning.space API URL for Lightning authentication (prod works, dev has internal SSL issues)
+const LIGHTNING_API_URL = process.env.LIGHTNING_API_URL || 'https://lightning.space/v1';
+
 // Global cache for auth tokens to avoid rate limiting
-const tokenCache: Map<string, { token: string; expiry: number }> = new Map();
+const tokenCache: Map<string, { token: string; expiry: number; lightningAddress?: string }> = new Map();
 
 // Cache for credentials
 const credentialsCache: Map<string, TestCredentials> = new Map();
@@ -30,7 +34,7 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export type BlockchainType = 'evm' | 'evm-wallet2' | 'bitcoin' | 'solana' | 'tron';
+export type BlockchainType = 'evm' | 'evm-wallet2' | 'bitcoin' | 'lightning' | 'solana' | 'tron';
 
 async function generateCredentials(type: BlockchainType): Promise<TestCredentials> {
   const cacheKey = type;
@@ -51,6 +55,9 @@ async function generateCredentials(type: BlockchainType): Promise<TestCredential
     case 'bitcoin':
       credentials = await createBitcoinCredentials(config.seed);
       break;
+    case 'lightning':
+      credentials = await createLightningCredentials(config.seed);
+      break;
     case 'solana':
       credentials = await createSolanaCredentials(config.seed);
       break;
@@ -66,6 +73,7 @@ async function generateCredentials(type: BlockchainType): Promise<TestCredential
 async function authenticateWithRetry(
   request: APIRequestContext,
   credentials: TestCredentials,
+  apiUrl: string = API_URL,
   maxRetries = 5,
 ): Promise<string> {
   let lastError: Error | null = null;
@@ -79,8 +87,9 @@ async function authenticateWithRetry(
     }
 
     try {
-      const response = await request.post(`${API_URL}/auth`, {
+      const response = await request.post(`${apiUrl}/auth`, {
         data: credentials,
+        ignoreHTTPSErrors: true, // Allow self-signed certificates for dev environments
       });
 
       if (response.ok()) {
@@ -113,7 +122,7 @@ async function authenticateWithRetry(
 export async function getCachedAuth(
   request: APIRequestContext,
   type: BlockchainType,
-): Promise<{ token: string; credentials: TestCredentials }> {
+): Promise<{ token: string; credentials: TestCredentials; lightningAddress?: string }> {
   const credentials = await generateCredentials(type);
   const cacheKey = `${type}:${credentials.address}`;
 
@@ -121,7 +130,7 @@ export async function getCachedAuth(
   const cached = tokenCache.get(cacheKey);
   if (cached && cached.expiry > Date.now()) {
     console.log(`Using cached token for ${type}`);
-    return { token: cached.token, credentials };
+    return { token: cached.token, credentials, lightningAddress: cached.lightningAddress };
   }
 
   // Serialize auth requests using mutex
@@ -136,25 +145,88 @@ export async function getCachedAuth(
     const cachedAgain = tokenCache.get(cacheKey);
     if (cachedAgain && cachedAgain.expiry > Date.now()) {
       console.log(`Using cached token for ${type} (after mutex)`);
-      return { token: cachedAgain.token, credentials };
+      return { token: cachedAgain.token, credentials, lightningAddress: cachedAgain.lightningAddress };
     }
 
     // Add delay between different blockchain auth requests
     await delay(1000);
 
-    console.log(`Authenticating ${type} address: ${credentials.address}`);
-    const token = await authenticateWithRetry(request, credentials);
+    let token: string;
+    let lightningAddress: string | undefined;
+
+    if (type === 'lightning') {
+      // Lightning flow: First authenticate with lightning.space to get LNURL and ownership proof
+      console.log(`Authenticating ${type} address: ${credentials.address} via ${LIGHTNING_API_URL}`);
+      const ldsResult = await authenticateLightning(request, credentials);
+      lightningAddress = ldsResult.lightningAddress;
+
+      // Then authenticate with DFX API using LNURL and ownership proof
+      console.log(`Got Lightning address: ${lightningAddress}, LNURL: ${ldsResult.lnurl.substring(0, 30)}...`);
+      console.log(`Authenticating with DFX API using LNURL...`);
+      const dfxCredentials: TestCredentials = {
+        address: ldsResult.lnurl,
+        signature: ldsResult.ownershipProof,
+      };
+      token = await authenticateWithRetry(request, dfxCredentials, API_URL);
+    } else {
+      const apiUrl = API_URL;
+      console.log(`Authenticating ${type} address: ${credentials.address} via ${apiUrl}`);
+      token = await authenticateWithRetry(request, credentials, apiUrl);
+    }
 
     // Cache for 2 hours
     tokenCache.set(cacheKey, {
       token,
       expiry: Date.now() + 2 * 60 * 60 * 1000,
+      lightningAddress,
     });
 
-    return { token, credentials };
+    return { token, credentials, lightningAddress };
   } finally {
     resolve!();
   }
+}
+
+async function authenticateLightning(
+  request: APIRequestContext,
+  credentials: TestCredentials,
+): Promise<{ accessToken: string; lightningAddress: string; lnurl: string; ownershipProof: string }> {
+  // Step 1: Authenticate with lightning.space using Bitcoin credentials
+  const authResponse = await request.post(`${LIGHTNING_API_URL}/auth`, {
+    data: credentials,
+    ignoreHTTPSErrors: true,
+  });
+
+  if (!authResponse.ok()) {
+    const body = await authResponse.text().catch(() => 'unknown');
+    throw new Error(`Lightning auth failed with status ${authResponse.status()}: ${body}`);
+  }
+
+  const authData = await authResponse.json();
+  const ldsToken = authData.accessToken;
+  const lightningAddress = authData.lightningAddress;
+
+  // Step 2: Get user info with LNURL and ownership proof for DFX login
+  const userResponse = await request.get(`${LIGHTNING_API_URL}/user`, {
+    headers: {
+      Authorization: `Bearer ${ldsToken}`,
+    },
+    ignoreHTTPSErrors: true,
+  });
+
+  if (!userResponse.ok()) {
+    const body = await userResponse.text().catch(() => 'unknown');
+    throw new Error(`Lightning user info failed with status ${userResponse.status()}: ${body}`);
+  }
+
+  const userData = await userResponse.json();
+
+  return {
+    accessToken: ldsToken,
+    lightningAddress,
+    lnurl: userData.lightning.addressLnurl,
+    ownershipProof: userData.lightning.addressOwnershipProof,
+  };
 }
 
 export function getTestIban(): string {
