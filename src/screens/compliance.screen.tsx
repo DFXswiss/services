@@ -141,24 +141,40 @@ export default function ComplianceScreen(): JSX.Element {
       render: (b: BankTxSearchResult) => b.id,
     },
     {
-      key: 'id',
+      key: 'type',
       label: translate('screens/compliance', 'Type'),
       render: (b: BankTxSearchResult) => b.type,
     },
     {
-      key: 'id',
+      key: 'accountServiceRef',
       label: translate('screens/compliance', 'Account Service Ref'),
       render: (b: BankTxSearchResult) => b.accountServiceRef,
     },
     {
-      key: 'id',
+      key: 'amount',
       label: translate('screens/compliance', 'Amount'),
       render: (b: BankTxSearchResult) => `${b.amount} ${b.currency}`,
     },
     {
-      key: 'id',
+      key: 'name',
       label: translate('screens/compliance', 'User name'),
       render: (b: BankTxSearchResult) => b.name ?? '-',
+    },
+    {
+      key: 'actions',
+      label: '',
+      render: (b: BankTxSearchResult) => (
+        <div className="flex gap-2 justify-end items-center">
+          {b.transactionId && (
+            <StyledIconButton
+              icon={IconVariant.BACK}
+              color={IconColor.BLUE}
+              size={IconSize.SM}
+              onClick={() => navigate(`compliance/bank-tx/${b.transactionId}/return`)}
+            />
+          )}
+        </div>
+      ),
     },
   ];
 
