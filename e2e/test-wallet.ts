@@ -319,6 +319,12 @@ export function generateTestMnemonic(): string {
 export const EVM_DERIVATION_PATH_WALLET2 = "m/44'/60'/0'/0/0";
 
 /**
+ * BIP-44 derivation path for EVM Wallet 3 (index 1)
+ * Used for linked address tests
+ */
+export const EVM_DERIVATION_PATH_WALLET3 = "m/44'/60'/0'/0/1";
+
+/**
  * Get test wallet addresses dynamically from seed
  * Returns addresses for Wallet 1 (default) and Wallet 2 (BIP-44 derived)
  */
@@ -372,4 +378,12 @@ export async function createTestCredentialsWallet2FromEnv(): Promise<TestCredent
  */
 export function getWallet2FromMnemonic(mnemonic: string): HDNodeWallet {
   return getWalletFromMnemonic(mnemonic, EVM_DERIVATION_PATH_WALLET2);
+}
+
+/**
+ * Creates EVM credentials for Wallet 3 (with BIP-44 derivation path index 1)
+ * Use this for linked address tests
+ */
+export async function createTestCredentialsWallet3(mnemonic: string): Promise<TestCredentials> {
+  return createTestCredentials(mnemonic, EVM_DERIVATION_PATH_WALLET3);
 }
