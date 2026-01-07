@@ -62,7 +62,7 @@ export interface MetaMaskInterface {
     to: string,
     config?: { isWeiAmount?: boolean; gasPrice?: number },
   ) => Promise<string>;
-  sendCallsWithPaymaster: (calls: Eip5792Call[], paymasterUrl: string, chainId: number) => Promise<string>;
+  sendCallsWithPaymaster: (calls: Eip5792Call[], paymasterUrl: string, chainId: number, requirePaymaster?: boolean) => Promise<string>;
   supportsEip5792Paymaster: (chainId: number) => Promise<boolean>;
   signEip7702Authorization: (authData: Eip7702AuthorizationData) => Promise<SignedEip7702Authorization>;
 }
@@ -353,37 +353,46 @@ export function useMetaMask(): MetaMaskInterface {
 
   /**
    * Send transaction via EIP-5792 wallet_sendCalls with paymaster sponsorship
+   *
+   * @param requirePaymaster - If true, sets optional:false so MetaMask will reject
+   *   the request if paymaster is not supported. Use this when user has 0 native balance.
+   *   If false, MetaMask may fall back to user-paid gas if paymaster fails.
    */
-  async function sendCallsWithPaymaster(calls: Eip5792Call[], paymasterUrl: string, chainId: number): Promise<string> {
+  async function sendCallsWithPaymaster(
+    calls: Eip5792Call[],
+    paymasterUrl: string,
+    chainId: number,
+    requirePaymaster = true,
+  ): Promise<string> {
     try {
       const account = await getAccount();
       if (!account) throw new Error('No account connected');
 
       const chainHex = `0x${chainId.toString(16)}`;
 
-      // Check if wallet supports paymaster
-      const supported = await supportsEip5792Paymaster(chainId);
-      if (!supported) {
-        throw new TranslatedError(
-          'Your wallet does not support gasless transactions. Please update MetaMask to v12.20+ and enable Smart Account.',
-        );
-      }
-
       // Send calls with paymaster capability
+      // When requirePaymaster is true (user has 0 ETH), we set optional:false
+      // so MetaMask will reject with a clear error if paymaster is not supported,
+      // rather than attempting an impossible transaction without gas funds.
       const result = await ethereum().request({
         method: 'wallet_sendCalls',
         params: [
           {
-            version: '1.0',
+            version: '2.0.0',
             chainId: chainHex,
             from: account,
+            atomicRequired: false,
             calls: calls.map((c) => ({
               to: c.to,
               data: c.data,
-              value: c.value,
+              // MetaMask requires value to be hex string (e.g., "0x0" not "0")
+              value: c.value?.startsWith('0x') ? c.value : `0x${BigInt(c.value || 0).toString(16)}`,
             })),
             capabilities: {
-              paymasterService: { url: paymasterUrl },
+              paymasterService: {
+                url: paymasterUrl,
+                optional: !requirePaymaster,
+              },
             },
           },
         ],
