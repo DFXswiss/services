@@ -90,7 +90,7 @@ test.describe('Sell Process - Bitcoin Wallet', () => {
   });
 
   test('should handle sell flow with pre-filled BTC amount', async ({ page }) => {
-    await page.goto(`/sell?session=${token}&blockchain=Bitcoin&amountIn=0.001`);
+    await page.goto(`/sell?session=${token}&blockchain=Bitcoin&amount-in=0.001`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -103,7 +103,7 @@ test.describe('Sell Process - Bitcoin Wallet', () => {
   });
 
   test('should display exchange rate for BTC sell', async ({ page }) => {
-    await page.goto(`/sell?session=${token}&blockchain=Bitcoin&amountIn=0.01`);
+    await page.goto(`/sell?session=${token}&blockchain=Bitcoin&amount-in=0.01`);
     await page.waitForLoadState('networkidle');
 
     // Wait for exchange rate to load

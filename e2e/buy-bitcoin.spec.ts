@@ -108,7 +108,7 @@ test.describe('Buy Process - Bitcoin Wallet', () => {
   test('should handle buy flow with pre-filled amount for Bitcoin', async ({ page, request }) => {
     const token = await getBitcoinToken(request);
 
-    await page.goto(`/buy?session=${token}&blockchain=Bitcoin&amountIn=100`);
+    await page.goto(`/buy?session=${token}&blockchain=Bitcoin&amount-in=100`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -123,7 +123,7 @@ test.describe('Buy Process - Bitcoin Wallet', () => {
   test('should display exchange rate for BTC purchase', async ({ page, request }) => {
     const token = await getBitcoinToken(request);
 
-    await page.goto(`/buy?session=${token}&blockchain=Bitcoin&amountIn=100`);
+    await page.goto(`/buy?session=${token}&blockchain=Bitcoin&amount-in=100`);
     await page.waitForLoadState('networkidle');
 
     // Wait for exchange rate to load

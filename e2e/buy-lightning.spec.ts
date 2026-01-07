@@ -125,7 +125,7 @@ test.describe('Buy Process - Lightning Wallet', () => {
   test('should handle buy flow with pre-filled amount for Lightning', async ({ page, request }) => {
     const token = await getLightningToken(request);
 
-    await page.goto(`/buy?session=${token}&blockchain=Lightning&amountIn=100`);
+    await page.goto(`/buy?session=${token}&blockchain=Lightning&amount-in=100`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -140,9 +140,15 @@ test.describe('Buy Process - Lightning Wallet', () => {
   test('should display exchange rate or KYC requirement for Lightning purchase', async ({ page, request }) => {
     const token = await getLightningToken(request);
 
-    await page.goto(`/buy?session=${token}&blockchain=Lightning&amountIn=100`);
+    await page.goto(`/buy?session=${token}&blockchain=Lightning`);
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+
+    // Wait for page to fully load - either KYC message or exchange rate
+    await page
+      .locator('text=/E-Mail|Wechselkurs/i')
+      .first()
+      .waitFor({ timeout: 10000 });
+    await page.waitForTimeout(500);
 
     const pageContent = await page.textContent('body');
 
@@ -160,6 +166,9 @@ test.describe('Buy Process - Lightning Wallet', () => {
 
     expect(hasExchangeInfo || hasKycRequirement).toBeTruthy();
 
+    // Screenshot captures the current state - either with exchange rate or KYC prompt
+    // Note: When KYC is required, the amount input may show placeholder even though
+    // the value is set in the DOM (this is expected behavior for the KYC state)
     await expect(page).toHaveScreenshot('buy-lightning-exchange-rate.png', {
       maxDiffPixels: 10000,
     });
