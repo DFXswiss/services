@@ -21,6 +21,7 @@ export function getKycErrorFromMessage(message?: string): TransactionError | und
     BankTransactionOrVideoMissing: TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING,
     VideoIdentRequired: TransactionError.VIDEO_IDENT_REQUIRED,
     NationalityNotAllowed: TransactionError.NATIONALITY_NOT_ALLOWED,
+    PaymentMethodNotAllowed: TransactionError.PAYMENT_METHOD_NOT_ALLOWED,
   };
 
   for (const [key, error] of Object.entries(errorMap)) {

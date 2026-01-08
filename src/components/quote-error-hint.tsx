@@ -95,6 +95,9 @@ export function QuoteErrorHint({ type, error }: { type: TransactionType; error: 
 
       case TransactionError.IBAN_CURRENCY_MISMATCH:
         return translate('screens/kyc', 'This IBAN cannot be used with this currency.');
+
+      case TransactionError.PAYMENT_METHOD_NOT_ALLOWED:
+        return translate('screens/kyc', 'This payment method is not allowed for your account.');
     }
   }
 
@@ -108,6 +111,7 @@ export function QuoteErrorHint({ type, error }: { type: TransactionType; error: 
         TransactionError.NATIONALITY_NOT_ALLOWED,
         TransactionError.IBAN_CURRENCY_MISMATCH,
         TransactionError.BANK_TRANSACTION_MISSING,
+        TransactionError.PAYMENT_METHOD_NOT_ALLOWED,
       ].includes(error) ? (
         <></>
       ) : [TransactionError.BANK_TRANSACTION_OR_VIDEO_MISSING, TransactionError.VIDEO_IDENT_REQUIRED].includes(
