@@ -187,7 +187,7 @@ export default function SwapScreen(): JSX.Element {
   const sourceBlockchains = userAddressItems
     .flatMap((a) => a.blockchains)
     .filter((b, i, arr) => arr.indexOf(b) === i)
-    .filter((b) => b !== Blockchain.MONERO && filteredAssets?.some((a) => a.blockchain === b));
+    .filter((b) => filteredAssets?.some((a) => a.blockchain === b));
 
   const targetBlockchains = userAddressItems
     .flatMap((a) => a.blockchains)
