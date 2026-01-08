@@ -147,11 +147,14 @@ export default function SwapScreen(): JSX.Element {
 
   useEffect(() => {
     if (sourceAssets && session?.address) {
-      const assetMap = sourceAssets.reduce<Record<Blockchain, Asset[]>>((acc, asset) => {
-        if (!acc[asset.blockchain]) acc[asset.blockchain] = [];
-        acc[asset.blockchain].push(asset);
-        return acc;
-      }, {} as Record<Blockchain, Asset[]>);
+      const assetMap = sourceAssets.reduce<Record<Blockchain, Asset[]>>(
+        (acc, asset) => {
+          if (!acc[asset.blockchain]) acc[asset.blockchain] = [];
+          acc[asset.blockchain].push(asset);
+          return acc;
+        },
+        {} as Record<Blockchain, Asset[]>,
+      );
 
       Promise.all(
         Object.entries(assetMap).map(
@@ -212,7 +215,7 @@ export default function SwapScreen(): JSX.Element {
     const activeSourceAssets = filterAssets(blockchainSourceAssets, assetFilter);
     setSourceAssets(activeSourceAssets);
 
-    const activeTargetBlockchains = blockchain ? [blockchain as Blockchain] : targetBlockchains ?? [];
+    const activeTargetBlockchains = blockchain ? [blockchain as Blockchain] : (targetBlockchains ?? []);
     const blockchainTargetAssets = getAssets(activeTargetBlockchains ?? [], { buyable: true, comingSoon: false });
     const activeTargetAssets = filterAssets(blockchainTargetAssets, assetFilter);
     setTargetAssets(activeTargetAssets);
@@ -222,10 +225,20 @@ export default function SwapScreen(): JSX.Element {
       (walletBlockchain && activeSourceAssets.find((a) => a.blockchain === walletBlockchain));
     if (sourceAsset) setVal('sourceAsset', sourceAsset);
 
-    const targetAsset =
-      getAsset(activeTargetAssets, assetOut) ?? (blockchain && activeTargetAssets[0]);
+    const targetAsset = getAsset(activeTargetAssets, assetOut) ?? (blockchain && activeTargetAssets[0]);
     if (targetAsset) setVal('targetAsset', targetAsset);
-  }, [assetFilter, assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain, sourceBlockchains?.length, targetBlockchains?.length]);
+  }, [
+    assetFilter,
+    assetIn,
+    assetOut,
+    getAsset,
+    getAssets,
+    blockchain,
+    walletBlockchain,
+    sourceBlockchains?.length,
+    targetBlockchains?.length,
+    userAddresses.length,
+  ]);
 
   useEffect(() => {
     if (amountIn) {
@@ -438,8 +451,8 @@ export default function SwapScreen(): JSX.Element {
       return amount > 0
         ? { amount, sourceAsset, targetAsset, receiverAddress: address.address }
         : targetAmount > 0
-        ? { sourceAsset, targetAsset, targetAmount, receiverAddress: address.address }
-        : undefined;
+          ? { sourceAsset, targetAsset, targetAmount, receiverAddress: address.address }
+          : undefined;
     }
   }
 
