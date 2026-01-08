@@ -116,7 +116,6 @@ export default function SwapScreen(): JSX.Element {
     externalTransactionId,
     flags,
     setParams,
-    availableBlockchains,
   } = useAppParams();
   const { receiveFor } = useSwap();
   const { toString } = useBlockchain();
