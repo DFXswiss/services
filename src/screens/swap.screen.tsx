@@ -252,10 +252,29 @@ export default function SwapScreen(): JSX.Element {
 
   useEffect(() => setAddress(), [session?.address, translate, blockchain, userAddresses, addressItems.length]);
 
+  // When assetOut is set and userAddresses are loaded, ensure the correct blockchain is selected
+  useEffect(() => {
+    if (assetOut && userAddresses.length > 0) {
+      const assetOutBlockchain = assetOut.split('/')[0];
+      const hasAddressForBlockchain = addressItems.some((a) => a.chain === assetOutBlockchain);
+
+      // If we have an address for the assetOut blockchain and blockchain doesn't match, update it
+      if (hasAddressForBlockchain && blockchain !== assetOutBlockchain) {
+        setParams({ blockchain: assetOutBlockchain as Blockchain });
+        switchBlockchain(assetOutBlockchain as Blockchain);
+      }
+    }
+  }, [assetOut, userAddresses.length, addressItems.length]);
+
   useEffect(() => {
     if (selectedAddress) {
       if (selectedAddress.chain) {
-        if (blockchain !== selectedAddress.chain) {
+        // If assetOut is set and points to a different blockchain, don't override it
+        const assetOutBlockchain = assetOut?.split('/')[0];
+        const shouldSkipBlockchainChange =
+          assetOutBlockchain && addressItems.some((a) => a.chain === assetOutBlockchain);
+
+        if (blockchain !== selectedAddress.chain && !shouldSkipBlockchainChange) {
           setParams({ blockchain: selectedAddress.chain });
           switchBlockchain(selectedAddress.chain);
           resetField('targetAsset');
@@ -494,7 +513,16 @@ export default function SwapScreen(): JSX.Element {
 
   function setAddress() {
     if (session?.address && addressItems.length > 0) {
-      const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
+      // Priorität: 1. blockchain URL-Parameter, 2. assetOut Blockchain, 3. erste Adresse
+      let preferredChain = blockchain;
+      if (!preferredChain && assetOut) {
+        // Extract blockchain from assetOut (format: Blockchain/AssetName)
+        const assetOutBlockchain = assetOut.split('/')[0];
+        if (addressItems.some((a) => a.chain === assetOutBlockchain)) {
+          preferredChain = assetOutBlockchain as Blockchain;
+        }
+      }
+      const address = addressItems.find((a) => preferredChain && a.chain === preferredChain) ?? addressItems[0];
       setVal('address', address);
     }
   }
