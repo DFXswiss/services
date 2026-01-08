@@ -172,9 +172,6 @@ export default function SwapScreen(): JSX.Element {
   const availableBalance = selectedSourceAsset && findBalance(selectedSourceAsset);
 
   const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
-  const sourceBlockchains = availableBlockchains?.filter(
-    (b) => b !== Blockchain.MONERO && filteredAssets?.some((a) => a.blockchain === b),
-  );
 
   const userSessions = [session, ...userAddresses].filter(
     (a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i,
@@ -185,6 +182,12 @@ export default function SwapScreen(): JSX.Element {
     addressLabel: addressLabel(a),
     blockchains: a.blockchains,
   }));
+
+  // Source blockchains: all blockchains from user addresses (including linked addresses like Lightning)
+  const sourceBlockchains = userAddressItems
+    .flatMap((a) => a.blockchains)
+    .filter((b, i, arr) => arr.indexOf(b) === i)
+    .filter((b) => b !== Blockchain.MONERO && filteredAssets?.some((a) => a.blockchain === b));
 
   const targetBlockchains = userAddressItems
     .flatMap((a) => a.blockchains)
