@@ -27,7 +27,7 @@ const CHROME_126_PATH = path.join(
 );
 
 // MetaMask extension path
-const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-11.9.1');
+const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-13.13.1');
 
 // Credentials
 const WALLET_PASSWORD = 'Tester@1234';
@@ -115,10 +115,10 @@ export const test = base.extend<TestFixtures>({
 });
 
 /**
- * Setup MetaMask wallet with seed phrase - MetaMask 11.x compatible
+ * Setup MetaMask wallet with seed phrase - MetaMask 13.x compatible
  */
 async function setupMetaMaskWallet(page: Page, seedPhrase: string, password: string): Promise<void> {
-  console.log('Setting up MetaMask 11.x wallet...');
+  console.log('Setting up MetaMask 13.x wallet...');
 
   // Take initial screenshot
   await page.screenshot({ path: 'e2e/screenshots/debug/metamask-setup-00-initial.png' });
@@ -136,7 +136,7 @@ async function setupMetaMaskWallet(page: Page, seedPhrase: string, password: str
 
   // Step 1: Agree to terms - click the checkbox
   console.log('Step 1: Agreeing to terms...');
-  // MetaMask 11.x uses a custom checkbox, try multiple selectors
+  // MetaMask 13.x uses a custom checkbox, try multiple selectors
   const checkboxSelectors = [
     'input[type="checkbox"]',
     '[data-testid="onboarding-terms-checkbox"]',
@@ -485,7 +485,7 @@ async function handleMetaMaskSign(context: BrowserContext): Promise<boolean> {
 test.describe('Full MetaMask Sepolia USDT Sell', () => {
   /**
    * This test verifies the complete MetaMask integration flow:
-   * 1. MetaMask 11.x wallet setup with seed phrase
+   * 1. MetaMask 13.x wallet setup with seed phrase
    * 2. Sepolia testnet network switch
    * 3. DFX app connection via MetaMask (eth_requestAccounts)
    * 4. Message signing for authentication (personal_sign)

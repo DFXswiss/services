@@ -231,7 +231,20 @@ export default function SellInfoScreen(): JSX.Element {
       return closeServices({ type: CloseType.SELL, isComplete: false, sell: paymentInfo }, false);
 
     try {
-      if (canSendTransaction()) await sendTransaction(paymentInfo).then(setSellTxId);
+      if (canSendTransaction()) {
+        // Fetch paymentInfo with depositTx for gasless wallet transaction (EIP-5792)
+        // Note: bankAccount.iban is guaranteed at this point (required for sell)
+        const request: SellPaymentInfo = {
+          asset: paymentInfo.asset,
+          currency: paymentInfo.currency,
+          iban: bankAccount!.iban,
+          amount: paymentInfo.amount,
+          externalTransactionId,
+          exactPrice: true,
+        };
+        const paymentInfoWithTx = await receiveFor(request, true);
+        await sendTransaction(paymentInfoWithTx).then(setSellTxId);
+      }
       setShowsCompletion(true);
     } finally {
       setIsProcessing(false);
