@@ -72,20 +72,20 @@
     "tweetnacl": "^1.0.3"
   },
   "scripts": {
-    "start": "env-cmd -f .env.loc react-app-rewired start",
-    "start:e2e": "env-cmd -f .env.e2e react-app-rewired start",
-    "build": "node scripts/generate-version.js && env-cmd -f .env.prd react-app-rewired build",
-    "build:dev": "node scripts/generate-version.js && env-cmd -f .env.dev react-app-rewired build",
+    "start": "react-app-rewired start",
+    "start:dev": "./scripts/start-dev.sh",
+    "build": "node scripts/generate-version.js && ./scripts/build.sh",
+    "build:dev": "node scripts/generate-version.js && ./scripts/build.sh dev",
     "build:lib": "tsc -p tsconfig.build.json",
     "link": "npm run build:lib && npm link",
-    "widget": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.prd env-cmd -f .env.widget react-app-rewired build && mv src/index.bak.tsx src/index.tsx",
-    "widget:dev": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.dev env-cmd -f .env.widget react-app-rewired build && mv src/index.bak.tsx src/index.tsx",
-    "widget:loc": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.loc env-cmd -f .env.widget react-app-rewired build && mv src/index.bak.tsx src/index.tsx",
+    "widget": "./scripts/build-widget.sh",
+    "widget:dev": "./scripts/build-widget.sh dev",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --no-fix",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "react-app-rewired test --watchAll=false --passWithNoTests",
     "test:api": "react-app-rewired test --watchAll=false --testPathPattern=__tests__/api",
-    "test:e2e": "npx playwright test",
+    "test:e2e": "./scripts/e2e-test.sh",
+    "test:e2e:local": "npx playwright test",
     "test:e2e:metamask": "npx playwright test --config=playwright.synpress.config.ts",
     "synpress:install-chrome": "npx @puppeteer/browsers install chrome@126.0.6478.0",
     "synpress:download-metamask": "mkdir -p .cache-synpress && curl -L https://github.com/MetaMask/metamask-extension/releases/download/v11.9.1/metamask-chrome-11.9.1.zip -o .cache-synpress/metamask.zip && unzip -o .cache-synpress/metamask.zip -d .cache-synpress/metamask-chrome-11.9.1",
@@ -94,7 +94,7 @@
     "eject": "react-scripts eject",
     "serve": "serve build -l 4000",
     "analyze": "source-map-explorer 'build/static/js/*.js'",
-    "start-widget": "env-cmd -f .env.loc node start-widget.js"
+    "start-widget": "node start-widget.js"
   },
   "overrides": {
     "react-scripts": {

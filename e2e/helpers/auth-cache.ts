@@ -15,7 +15,7 @@ import {
 } from '../test-wallet';
 
 // Load test environment variables
-dotenv.config({ path: path.join(__dirname, '../../.env.test') });
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // Use local API when running against local services, otherwise use dev API
 const API_URL = process.env.API_URL || 'http://localhost:3000/v1';
