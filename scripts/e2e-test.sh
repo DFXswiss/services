@@ -7,6 +7,13 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 ENV_FILE="$PROJECT_DIR/.env"
+ENV_SAMPLE="$PROJECT_DIR/.env.sample"
+
+# Create .env from sample if it doesn't exist
+if [ ! -f "$ENV_FILE" ]; then
+    echo "Creating .env from .env.sample..."
+    cp "$ENV_SAMPLE" "$ENV_FILE"
+fi
 
 # Default API for E2E tests
 API_URL="${E2E_API_URL:-https://dev.api.dfx.swiss}"
@@ -24,8 +31,12 @@ echo ""
 # Backup original .env
 cp "$ENV_FILE" "$ENV_FILE.backup"
 
-# Modify .env for E2E tests
-sed -i '' "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$API_URL|" "$ENV_FILE"
+# Modify .env for E2E tests (portable sed for macOS and Linux)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$API_URL|" "$ENV_FILE"
+else
+    sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$API_URL|" "$ENV_FILE"
+fi
 
 # Cleanup function to restore .env
 cleanup() {
