@@ -2,7 +2,6 @@ import { PropsWithChildren, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLayoutConfigContext } from 'src/contexts/layout-config.context';
 import { useLayoutContext } from 'src/contexts/layout.context';
-import { useServiceWorker } from 'src/hooks/service-worker.hook';
 import { Routes } from '../App';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useNavigation } from '../hooks/navigation.hook';
@@ -22,11 +21,6 @@ export function Layout({ children }: PropsWithChildren): JSX.Element {
   const { pathname } = useLocation();
   const { clearParams } = useNavigation();
   const { borderless } = useAppParams();
-  const { showReload, reloadPage } = useServiceWorker();
-
-  useEffect(() => {
-    if (showReload) reloadPage();
-  }, [showReload]);
 
   useEffect(() => {
     const kycRoutes = Routes[0].children?.filter((r) => r.isKycScreen) || [];

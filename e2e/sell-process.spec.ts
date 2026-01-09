@@ -71,7 +71,7 @@ test.describe('Sell Process - UI Flow', () => {
   });
 
   test('should handle sell flow with pre-filled amount', async ({ page }) => {
-    await page.goto(`/sell?session=${token}&blockchain=Ethereum&amountIn=0.1`);
+    await page.goto(`/sell?session=${token}&blockchain=Ethereum&amount-in=0.1`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 

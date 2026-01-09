@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { AssetBalance, useBalanceContext } from '../contexts/balance.context';
 import { WalletType, useWalletContext } from '../contexts/wallet.context';
+import { TranslatedError } from '../util/translated-error';
 import { useBlockchainBalance } from './blockchain-balance.hook';
 import { useAlby } from './wallets/alby.hook';
 import { Eip7702AuthorizationData, useMetaMask } from './wallets/metamask.hook';
@@ -12,7 +13,6 @@ import { useTronLinkTrx } from './wallets/tronlink-trx.hook';
 import { useTrustSol } from './wallets/trust-sol.hook';
 import { useTrustTrx } from './wallets/trust-trx.hook';
 import { useWalletConnect } from './wallets/wallet-connect.hook';
-import { TranslatedError } from '../util/translated-error';
 
 // Extended Sell/Swap interface with gasless fields (from backend)
 interface GaslessPaymentInfo {

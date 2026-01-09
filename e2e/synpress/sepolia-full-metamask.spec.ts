@@ -17,7 +17,7 @@ import path from 'path';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
-dotenv.config({ path: path.join(__dirname, '../../.env.test') });
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // Chrome 126 path
 const CHROME_126_PATH = path.join(

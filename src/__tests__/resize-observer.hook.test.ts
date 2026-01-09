@@ -68,8 +68,8 @@ describe('useResizeObserver', () => {
 
   it('should disconnect observer on unmount', () => {
     const callback = jest.fn();
-    const { result, unmount } = renderHook(() => useResizeObserver<HTMLDivElement>(callback));
-    
+    const { unmount } = renderHook(() => useResizeObserver<HTMLDivElement>(callback));
+
     unmount();
     
     // Observer should be disconnected

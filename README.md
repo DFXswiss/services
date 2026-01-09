@@ -29,19 +29,29 @@ The services will be available at http://localhost:3001
 
 ### Configuration
 
-The `.env.loc` file is used for local development:
+Copy `.env.sample` to `.env` and adjust as needed:
 
-| Variable | Value | Description |
-|----------|-------|-------------|
+```bash
+cp .env.sample .env
+```
+
+| Variable | Default | Description |
+|----------|---------|-------------|
 | `PORT` | 3001 | Services port |
-| `REACT_APP_API_URL` | http://localhost:3000 | Local API URL |
+| `REACT_APP_API_URL` | http://localhost:3000 | API URL |
+| `TEST_SEED` | - | Test wallet mnemonic (E2E tests) |
+| `TEST_EMAIL` | - | Test email (E2E tests) |
 
 ### NPM Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run start` | Start with local config (`.env.loc`) |
+| `npm start` | Start with local API (from `.env`) |
+| `npm run start:dev` | Start with dev API |
 | `npm run build` | Build for production |
+| `npm run build:dev` | Build for dev environment |
+| `npm run test:e2e` | Run E2E tests against dev API |
+| `npm run test:e2e:local` | Run E2E tests against local API |
 
 ## Usage
 

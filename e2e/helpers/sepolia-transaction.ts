@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { getTestConfig } from '../test-wallet';
 
-dotenv.config({ path: path.join(__dirname, '../../.env.test') });
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // Sepolia RPC endpoints (public)
 const SEPOLIA_RPC_URLS = [

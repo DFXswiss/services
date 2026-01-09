@@ -90,7 +90,7 @@ test.describe('Buy Process - UI Flow', () => {
   test('should handle buy flow with pre-filled amount', async ({ page, request }) => {
     const token = await getToken(request);
 
-    await page.goto(`/buy?session=${token}&blockchain=Ethereum&amountIn=100`);
+    await page.goto(`/buy?session=${token}&blockchain=Ethereum&amount-in=100`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -157,7 +157,7 @@ test.describe('Buy Process - Wallet 2 (BIP-44 derived)', () => {
   test('should handle buy flow with pre-filled amount on Wallet 2', async ({ page, request }) => {
     const token = await getTokenWallet2(request);
 
-    await page.goto(`/buy?session=${token}&blockchain=Ethereum&amountIn=100`);
+    await page.goto(`/buy?session=${token}&blockchain=Ethereum&amount-in=100`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 

@@ -11,8 +11,9 @@ dfx.swiss-*.tgz
 playwright-report/
 test-results/
 
-# test environment (contains secrets)
-.env.test
+# environment files (contain secrets)
+.env
+.env.backup
 
 # next.js
 /.next/
@@ -36,8 +37,6 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local env files
-.env*.local
 
 # vercel
 .vercel

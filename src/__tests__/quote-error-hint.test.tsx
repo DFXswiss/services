@@ -29,6 +29,7 @@ jest.mock('@dfx.swiss/react', () => ({
     VIDEO_IDENT_REQUIRED: 'VideoIdentRequired',
     NATIONALITY_NOT_ALLOWED: 'NationalityNotAllowed',
     IBAN_CURRENCY_MISMATCH: 'IbanCurrencyMismatch',
+    PAYMENT_METHOD_NOT_ALLOWED: 'PaymentMethodNotAllowed',
   },
   TransactionType: {
     BUY: 'Buy',

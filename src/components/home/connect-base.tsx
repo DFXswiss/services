@@ -91,25 +91,34 @@ export function ConnectBase({
   }
 
   async function doLogin(account: Account & { blockchain: Blockchain }) {
-    return activeWallet === wallet &&
+    const isSwitchingBlockchain =
+      activeWallet === wallet &&
       'address' in account &&
       account.address.toLowerCase() === session?.address?.toLowerCase() &&
-      !isConnect
-      ? switchBlockchain(account.blockchain)
-      : (isConnect ? Promise.resolve() : logout()).then(() =>
-          'session' in account
-            ? setSession(account.session, wallet, account.blockchain)
-            : login(
-                wallet,
-                account.address,
-                account.blockchain,
-                (a, m) =>
-                  account.signature
-                    ? Promise.resolve(account.signature)
-                    : onSignMessage(a, account.blockchain, m, account.accountIndex, account.index, account.type),
-                account.key,
-              ),
-        );
+      !isConnect;
+
+    if (isSwitchingBlockchain) {
+      return switchBlockchain(account.blockchain);
+    }
+
+    if (!isConnect) {
+      await logout();
+    }
+
+    if ('session' in account) {
+      return setSession(account.session, wallet, account.blockchain);
+    }
+
+    return login(
+      wallet,
+      account.address,
+      account.blockchain,
+      (a, m) =>
+        account.signature
+          ? Promise.resolve(account.signature)
+          : onSignMessage(a, account.blockchain, m, account.accountIndex, account.index, account.type),
+      account.key,
+    );
   }
 
   async function onSignMessage(

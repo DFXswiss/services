@@ -4,7 +4,7 @@ import { fetchJson } from 'src/util/utils';
 export function usePolling({ timeInterval = 3 * 1000 }: { timeInterval?: number } = {}) {
   const [isPolling, setIsPolling] = useState(false);
   const url = useRef<string | URL>();
-  const internalId = useRef<NodeJS.Timeout>();
+  const internalId = useRef<ReturnType<typeof setInterval>>();
   const fetchPromise = useRef<Promise<void>>();
 
   const init = (

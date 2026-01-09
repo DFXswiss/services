@@ -18,8 +18,8 @@ import path from 'path';
 import * as dotenv from 'dotenv';
 import { HDNodeWallet } from 'ethers';
 
-// Load environment variables from .env.test
-dotenv.config({ path: path.join(__dirname, '../../.env.test') });
+// Load environment variables from .env
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // Chrome 126 path (installed via @puppeteer/browsers)
 const CHROME_126_PATH = path.join(

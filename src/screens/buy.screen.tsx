@@ -390,6 +390,7 @@ export default function BuyScreen(): JSX.Element {
       case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
       case TransactionError.IBAN_CURRENCY_MISMATCH:
+      case TransactionError.PAYMENT_METHOD_NOT_ALLOWED:
       case TransactionError.TRADING_NOT_ALLOWED:
       case TransactionError.RECOMMENDATION_REQUIRED:
       case TransactionError.EMAIL_REQUIRED:
