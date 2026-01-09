@@ -317,8 +317,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { rootRef } = useLayoutContext();
   const { bankAccounts } = useBankAccountContext();
   const { isLoggedIn } = useSessionContext();
-  const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget, setTransactionBankRefund } =
-    useTransaction();
+  const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
   const refetchTimeout = useRef<NodeJS.Timeout | undefined>();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -379,28 +378,23 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     setIsLoading(true);
 
     try {
-      if (isBuy && transaction.inputPaymentMethod !== FiatPaymentMethod.CARD) {
-        // Bank refund: IBAN and name may be fixed, but address is always required from user
-        await setTransactionBankRefund(transaction.id, {
-          refundTarget: refundDetails?.refundTarget ?? data.iban,
-          name: refundDetails?.bankDetails?.name ?? data.creditorName,
-          address: data.creditorStreet,
-          houseNumber: data.creditorHouseNumber || undefined,
-          zip: data.creditorZip,
-          city: data.creditorCity,
-          country: data.creditorCountry?.symbol,
-        });
-      } else if (isBuy) {
-        // Card refund: simple refund to card
-        await setTransactionRefundTarget(transaction.id, {
-          refundTarget: refundDetails?.refundTarget ?? '',
-        });
-      } else {
-        // Crypto refund: refund to blockchain address
-        await setTransactionRefundTarget(transaction.id, {
-          refundTarget: refundDetails?.refundTarget ?? data.address?.address,
-        });
-      }
+      const isBankRefund = isBuy && transaction.inputPaymentMethod !== FiatPaymentMethod.CARD;
+      const refundTarget =
+        refundDetails?.refundTarget ?? (isBuy ? data.iban ?? '' : data.address?.address);
+
+      await setTransactionRefundTarget(transaction.id, {
+        refundTarget,
+        creditorData: isBankRefund
+          ? {
+              name: refundDetails?.bankDetails?.name ?? data.creditorName,
+              address: data.creditorStreet,
+              houseNumber: data.creditorHouseNumber || undefined,
+              zip: data.creditorZip,
+              city: data.creditorCity,
+              country: data.creditorCountry?.symbol,
+            }
+          : undefined,
+      });
       // Navigate only on success
       navigate('/tx');
     } catch (e) {
