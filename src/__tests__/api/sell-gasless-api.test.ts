@@ -250,7 +250,7 @@ describe('Sell Gasless API Response', () => {
       expect(eip5792?.paymasterUrl).toBeDefined();
 
       // Each call needs: to, data, value
-      eip5792?.calls?.forEach((call, index) => {
+      eip5792?.calls?.forEach((call) => {
         expect(call.to).toBeDefined();
         expect(call.data).toBeDefined();
         expect(call.value).toBeDefined();
@@ -286,10 +286,12 @@ describe('Gasless Response Variants', () => {
   it('should handle response with only EIP-7702 (no EIP-5792)', () => {
     const responseWithOnlyEip7702: SellPaymentInfoResponse = {
       ...mockApiResponse,
-      depositTx: {
-        ...mockApiResponse.depositTx!,
-        eip5792: undefined,
-      },
+      depositTx: mockApiResponse.depositTx
+        ? {
+            ...mockApiResponse.depositTx,
+            eip5792: undefined,
+          }
+        : undefined,
     };
 
     const hasEip5792 = !!responseWithOnlyEip7702.depositTx?.eip5792;
@@ -305,10 +307,12 @@ describe('Gasless Response Variants', () => {
       ...mockApiResponse,
       gaslessAvailable: false,
       eip7702Authorization: undefined,
-      depositTx: {
-        ...mockApiResponse.depositTx!,
-        eip5792: undefined,
-      },
+      depositTx: mockApiResponse.depositTx
+        ? {
+            ...mockApiResponse.depositTx,
+            eip5792: undefined,
+          }
+        : undefined,
     };
 
     const hasEip5792 = !!responseWithNoGasless.depositTx?.eip5792;
@@ -329,7 +333,7 @@ describe('Pimlico Paymaster URL', () => {
     { name: 'polygon', chainId: 137 },
   ];
 
-  chains.forEach(({ name, chainId }) => {
+  chains.forEach(({ name, chainId: _chainId }) => {
     it(`should have valid URL format for ${name}`, () => {
       const url = `https://api.pimlico.io/v2/${name}/rpc?apikey=test_key`;
 

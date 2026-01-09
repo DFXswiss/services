@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useIframe } from '../hooks/iframe.hook';
 
 describe('useIframe', () => {
-  const originalWindow = global.window;
+  const _originalWindow = global.window;
   
   beforeEach(() => {
     // Reset window mock

@@ -20,8 +20,8 @@ interface GaslessPaymentInfo {
   eip7702Authorization?: Eip7702AuthorizationData;
 }
 
-type SellWithGasless = Sell & GaslessPaymentInfo;
-type SwapWithGasless = Swap & GaslessPaymentInfo;
+type _SellWithGasless = Sell & GaslessPaymentInfo;
+type _SwapWithGasless = Swap & GaslessPaymentInfo;
 
 export interface TxHelperInterface {
   getBalances: (assets: Asset[], address: string, blockchain?: Blockchain) => Promise<AssetBalance[] | undefined>;
