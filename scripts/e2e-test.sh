@@ -40,22 +40,10 @@ cleanup() {
 trap cleanup EXIT
 
 # Modify .env for E2E tests (portable sed for macOS and Linux)
-# Note: REACT_APP_API_URL is for the React app, API_URL is for auth-cache.ts direct API calls
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$API_URL|" "$ENV_FILE"
-    # Also set API_URL for auth-cache.ts (add if not exists, update if exists)
-    if grep -q "^API_URL=" "$ENV_FILE"; then
-        sed -i '' "s|^API_URL=.*|API_URL=$API_URL/v1|" "$ENV_FILE"
-    else
-        echo "API_URL=$API_URL/v1" >> "$ENV_FILE"
-    fi
 else
     sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$API_URL|" "$ENV_FILE"
-    if grep -q "^API_URL=" "$ENV_FILE"; then
-        sed -i "s|^API_URL=.*|API_URL=$API_URL/v1|" "$ENV_FILE"
-    else
-        echo "API_URL=$API_URL/v1" >> "$ENV_FILE"
-    fi
 fi
 
 # Run Playwright tests with all arguments passed through
