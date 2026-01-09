@@ -42,7 +42,7 @@ export const ReceiveInterface = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [receiveAddress, setReceiveAddress] = useState<string>();
-  const [error, setError] = useState<string>();
+  const [_error, setError] = useState<string>();
 
   const {
     watch,
