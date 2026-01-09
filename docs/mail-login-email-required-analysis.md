@@ -81,7 +81,7 @@ const token = this.generateAccountToken(account, ip);
 
 | Aspekt | Wallet-Login (USER Token) | Mail-Login (ACCOUNT Token) |
 |--------|--------------------------|---------------------------|
-| `role` | `User` | `Account` |
+| `role` | `user.role` (meist `User`) | `Account` |
 | `user` | user.id | `undefined` |
 | `address` | wallet-adresse | `undefined` |
 | `account` | userData.id | userData.id |
