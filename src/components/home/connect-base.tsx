@@ -91,25 +91,40 @@ export function ConnectBase({
   }
 
   async function doLogin(account: Account & { blockchain: Blockchain }) {
-    return activeWallet === wallet &&
+    // Check if just switching blockchain on same wallet/address
+    if (
+      activeWallet === wallet &&
       'address' in account &&
       account.address.toLowerCase() === session?.address?.toLowerCase() &&
       !isConnect
-      ? switchBlockchain(account.blockchain)
-      : (isConnect ? Promise.resolve() : logout()).then(() =>
-          'session' in account
-            ? setSession(account.session, wallet, account.blockchain)
-            : login(
-                wallet,
-                account.address,
-                account.blockchain,
-                (a, m) =>
-                  account.signature
-                    ? Promise.resolve(account.signature)
-                    : onSignMessage(a, account.blockchain, m, account.accountIndex, account.index, account.type),
-                account.key,
-              ),
-        );
+    ) {
+      return switchBlockchain(account.blockchain);
+    }
+
+    // Determine if we should logout before login
+    // Don't logout if user has an Account session (email login) without an address
+    // This allows the API to link the new wallet to the existing account
+    const hasAccountSessionWithoutAddress = session && !session.address && session.account;
+    const shouldLogout = !isConnect && !hasAccountSessionWithoutAddress;
+
+    if (shouldLogout) {
+      await logout();
+    }
+
+    if ('session' in account) {
+      return setSession(account.session, wallet, account.blockchain);
+    }
+
+    return login(
+      wallet,
+      account.address,
+      account.blockchain,
+      (a, m) =>
+        account.signature
+          ? Promise.resolve(account.signature)
+          : onSignMessage(a, account.blockchain, m, account.accountIndex, account.index, account.type),
+      account.key,
+    );
   }
 
   async function onSignMessage(
