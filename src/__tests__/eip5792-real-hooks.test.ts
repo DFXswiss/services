@@ -280,11 +280,12 @@ describe('EIP-5792 Real Hook Tests', () => {
         }
         if (method === 'wallet_sendCalls') {
           expect(params?.[0]).toMatchObject({
-            version: '1.0',
+            version: '2.0.0',
             chainId: '0x1',
             from: TEST_ACCOUNT,
+            atomicRequired: false,
             capabilities: {
-              paymasterService: { url: TEST_PAYMASTER_URL },
+              paymasterService: { url: TEST_PAYMASTER_URL, optional: false },
             },
           });
           return { id: 'bundle-123' };
@@ -455,9 +456,10 @@ describe('EIP-5792 Real Hook Tests', () => {
       });
 
       expect(capturedParams[0]).toEqual({
-        version: '1.0',
+        version: '2.0.0',
         chainId: '0x1',
         from: TEST_ACCOUNT,
+        atomicRequired: false,
         calls: [
           {
             to: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
@@ -466,7 +468,7 @@ describe('EIP-5792 Real Hook Tests', () => {
           },
         ],
         capabilities: {
-          paymasterService: { url: TEST_PAYMASTER_URL },
+          paymasterService: { url: TEST_PAYMASTER_URL, optional: false },
         },
       });
     });
