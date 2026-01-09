@@ -27,8 +27,8 @@
     "@trezor/connect-web": "^9.6.4",
     "@tronweb3/tronwallet-adapter-tronlink": "^1.1.12",
     "@tronweb3/tronwallet-adapter-trust": "^1.0.1",
-    "@wagmi/connectors": "^5.0.7",
-    "@wagmi/core": "^2.10.5",
+    "@wagmi/connectors": "5.0.7",
+    "@wagmi/core": "2.10.5",
     "@walletconnect/ethereum-provider": "^2.11.0",
     "alchemy-sdk": "^3.5.6",
     "apexcharts": "^4.7.0",
@@ -101,7 +101,11 @@
       "typescript": "^5"
     },
     "react-refresh": "0.14.2",
-    "bs58": "5.0.0"
+    "bs58": "5.0.0",
+    "request": {
+      "form-data": "^2.5.5"
+    },
+    "@coinbase/wallet-sdk": "3.9.3"
   },
   "eslintConfig": {
     "extends": [
@@ -149,7 +153,7 @@
     "@types/debounce": "^1.2.1",
     "@types/jest": "^27.5.2",
     "@types/lodash": "^4.17.21",
-    "@types/node": "^16.18.3",
+    "@types/node": "^20",
     "@types/react": "^18.0.25",
     "@types/react-dom": "^18.0.9",
     "@types/react-lazy-load-image-component": "^1.6.4",

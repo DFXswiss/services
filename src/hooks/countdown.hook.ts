@@ -14,7 +14,7 @@ interface CountdownInterface {
 export function useCountdown(): CountdownInterface {
   const [timer, setTimer] = useState<Timer>({ minutes: 0, seconds: 0 });
   const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
     return () => {
