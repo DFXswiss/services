@@ -31,9 +31,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      - name: Setup npm
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_ACCESS_TOKEN }}" > .npmrc
-
       - name: Install packages
         run: npm ci
 
@@ -55,9 +52,6 @@ jobs:
       - name: Build widget
         run: |
           npm run widget
-
-      - name: Build library
-        run: npm run build:lib
 
       - name: Copy widget
         run: |
@@ -140,12 +134,6 @@ jobs:
               --endpoint-name ${{ env.AZURE_CDN_ENDPOINT }} \
               --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
               --no-wait
-
-      - name: Publish to npm
-        continue-on-error: true
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
 
       - name: Logout
         run: |
