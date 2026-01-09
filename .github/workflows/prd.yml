@@ -88,7 +88,7 @@ jobs:
               --overwrite
 
             # Upload entry points with no-cache (must revalidate on every request)
-            for file in index.html manifest.json asset-manifest.json robots.txt custom-service-worker.js; do
+            for file in index.html manifest.json asset-manifest.json robots.txt; do
               if [ -f "./build/$file" ]; then
                 az storage blob upload \
                   --account-name ${{ env.AZURE_ACCOUNT_NAME }} \

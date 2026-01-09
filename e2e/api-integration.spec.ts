@@ -105,13 +105,6 @@ test.describe('Static Assets', () => {
     expect(response?.status()).toBe(200);
   });
 
-  test('should load service worker', async ({ page }) => {
-    const response = await page.goto('/custom-service-worker.js');
-    expect(response?.status()).toBe(200);
-    
-    const contentType = response?.headers()['content-type'];
-    expect(contentType).toContain('javascript');
-  });
 });
 
 test.describe('External Resources', () => {
