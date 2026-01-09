@@ -63,6 +63,7 @@ fi
 # Add widget-specific config
 echo "BUILD_PATH=./widget" >> "$ENV_FILE"
 echo "GENERATE_SOURCEMAP=false" >> "$ENV_FILE"
+echo "CUSTOM_CHUNK_PATH=/widget/" >> "$ENV_FILE"
 
 # Build
 react-app-rewired build
