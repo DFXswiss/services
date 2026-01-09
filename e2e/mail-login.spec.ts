@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 import * as dotenv from 'dotenv';
 
 // Load test environment variables
-dotenv.config({ path: '.env.test' });
+dotenv.config({ path: '.env' });
 
 const TEST_EMAIL = process.env.TEST_EMAIL;
 
@@ -17,7 +17,7 @@ async function removeErrorOverlay(page: Page) {
 test.describe('Mail Login Flow', () => {
   test.beforeEach(async () => {
     if (!TEST_EMAIL) {
-      throw new Error('TEST_EMAIL not set in .env.test');
+      throw new Error('TEST_EMAIL not set in .env');
     }
   });
 

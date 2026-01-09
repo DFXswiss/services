@@ -4,7 +4,7 @@
  * Tests both wallets with full screenshot coverage of every process step.
  *
  * Prerequisites:
- * 1. .env.test with TEST_SEED and TEST_SEED_2
+ * 1. .env with TEST_SEED and TEST_SEED_2
  * 2. Both wallets funded with Sepolia ETH and USDT
  * 3. Local frontend running on localhost:3001
  *
@@ -18,7 +18,7 @@ import fs from 'fs';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
-dotenv.config({ path: path.join(process.cwd(), '.env.test') });
+dotenv.config({ path: path.join(process.cwd(), '.env') });
 
 // ============================================================================
 // CONFIGURATION
@@ -607,7 +607,7 @@ base.describe('Sell Flow Visual Regression', () => {
     base.setTimeout(300000);
 
     if (!WALLETS.wallet1.seed) {
-      throw new Error('TEST_SEED not set in .env.test');
+      throw new Error('TEST_SEED not set in .env');
     }
 
     // Clean start - remove old user data
@@ -645,7 +645,7 @@ base.describe('Sell Flow Visual Regression', () => {
     base.setTimeout(300000);
 
     if (!WALLETS.wallet2.seed) {
-      throw new Error('TEST_SEED_2 not set in .env.test');
+      throw new Error('TEST_SEED_2 not set in .env');
     }
 
     // Clean start - remove old user data

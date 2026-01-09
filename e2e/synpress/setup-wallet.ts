@@ -29,7 +29,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables
-dotenv.config({ path: path.join(__dirname, '../../.env.test') });
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // Paths
 const CHROME_126_PATH = path.join(
@@ -48,7 +48,7 @@ async function setupWallet() {
   console.log('=== MetaMask + DFX Setup Script ===\n');
 
   if (!TEST_SEED_PHRASE) {
-    console.error('ERROR: TEST_SEED not set in .env.test');
+    console.error('ERROR: TEST_SEED not set in .env');
     process.exit(1);
   }
 

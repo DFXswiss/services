@@ -94,7 +94,7 @@ export interface TestConfig {
 export function getTestConfig(): TestConfig {
   const seed = process.env.TEST_SEED;
   if (!seed) {
-    throw new Error('TEST_SEED environment variable is required. Set it in .env.test or as environment variable.');
+    throw new Error('TEST_SEED environment variable is required. Set it in .env or as environment variable.');
   }
 
   return {
@@ -347,7 +347,7 @@ export function getTestWalletAddressesFromEnv(): { WALLET_1: string; WALLET_2: s
 
 /**
  * Expected test wallet addresses (for reference/verification)
- * These are derived from the default TEST_SEED in .env.test.example
+ * These are derived from the default TEST_SEED in .env.sample
  * Wallet 1: Default (no derivation)
  * Wallet 2: m/44'/60'/0'/0/0
  */
