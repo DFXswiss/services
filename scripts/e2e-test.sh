@@ -31,22 +31,20 @@ echo ""
 # Backup original .env
 cp "$ENV_FILE" "$ENV_FILE.backup"
 
+# Cleanup function to restore .env on exit (success or failure)
+cleanup() {
+    echo ""
+    echo -e "${YELLOW}Restoring .env...${NC}"
+    mv "$ENV_FILE.backup" "$ENV_FILE"
+}
+trap cleanup EXIT
+
 # Modify .env for E2E tests (portable sed for macOS and Linux)
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$API_URL|" "$ENV_FILE"
 else
     sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$API_URL|" "$ENV_FILE"
 fi
-
-# Cleanup function to restore .env
-cleanup() {
-    echo ""
-    echo -e "${YELLOW}Restoring .env...${NC}"
-    mv "$ENV_FILE.backup" "$ENV_FILE"
-}
-
-# Always restore .env on exit
-trap cleanup EXIT
 
 # Run Playwright tests with all arguments passed through
 echo -e "${GREEN}Running Playwright tests...${NC}"

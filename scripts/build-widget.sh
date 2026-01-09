@@ -41,6 +41,13 @@ echo "API: $API_URL"
 cp "$ENV_FILE" "$ENV_FILE.backup"
 cp "$SRC_DIR/index.tsx" "$SRC_DIR/index.bak.tsx"
 
+# Cleanup function - restore files on exit (success or failure)
+cleanup() {
+    mv "$ENV_FILE.backup" "$ENV_FILE"
+    mv "$SRC_DIR/index.bak.tsx" "$SRC_DIR/index.tsx"
+}
+trap cleanup EXIT
+
 # Swap index for widget
 cp "$SRC_DIR/index-widget.tsx" "$SRC_DIR/index.tsx"
 
@@ -56,14 +63,6 @@ fi
 # Add widget-specific config
 echo "BUILD_PATH=./widget" >> "$ENV_FILE"
 echo "GENERATE_SOURCEMAP=false" >> "$ENV_FILE"
-
-# Cleanup function
-cleanup() {
-    mv "$ENV_FILE.backup" "$ENV_FILE"
-    mv "$SRC_DIR/index.bak.tsx" "$SRC_DIR/index.tsx"
-}
-
-trap cleanup EXIT
 
 # Build
 react-app-rewired build

@@ -39,6 +39,12 @@ echo "API: $API_URL"
 # Backup original .env
 cp "$ENV_FILE" "$ENV_FILE.backup"
 
+# Cleanup function - restore .env on exit (success or failure)
+cleanup() {
+    mv "$ENV_FILE.backup" "$ENV_FILE"
+}
+trap cleanup EXIT
+
 # Modify .env for build (portable sed for macOS and Linux)
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$API_URL|" "$ENV_FILE"
@@ -47,13 +53,6 @@ else
     sed -i "s|^REACT_APP_API_URL=.*|REACT_APP_API_URL=$API_URL|" "$ENV_FILE"
     sed -i "s|^REACT_APP_PUBLIC_URL=.*|REACT_APP_PUBLIC_URL=$PUBLIC_URL|" "$ENV_FILE"
 fi
-
-# Cleanup function
-cleanup() {
-    mv "$ENV_FILE.backup" "$ENV_FILE"
-}
-
-trap cleanup EXIT
 
 # Build
 CI=false react-app-rewired build
