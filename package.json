@@ -101,7 +101,10 @@
       "typescript": "^5"
     },
     "react-refresh": "0.14.2",
-    "bs58": "5.0.0"
+    "bs58": "5.0.0",
+    "request": {
+      "form-data": "^2.5.5"
+    }
   },
   "eslintConfig": {
     "extends": [
