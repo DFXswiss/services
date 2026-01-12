@@ -65,7 +65,7 @@ jobs:
         id: typescript
         continue-on-error: true
         run: |
-          npx tsc --noEmit 2>&1 | tee tsc-output.txt || true
+          npx tsc -p tsconfig.build.json --noEmit 2>&1 | tee tsc-output.txt || true
           ERRORS=$(grep -c "error TS" tsc-output.txt || echo "0")
           echo "errors=$ERRORS" >> $GITHUB_OUTPUT
 
