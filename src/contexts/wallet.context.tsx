@@ -182,6 +182,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   useEffect(() => {
     if (isSessionInitialized && !isLoggedIn) {
       setWallet();
+      lastAppliedCredentials.current = {}; // Reset on logout to allow re-login with same credentials
       if (isInitialized) readBalances(undefined);
     }
 
