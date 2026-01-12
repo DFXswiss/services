@@ -8,17 +8,14 @@ import { test, expect, Page } from '@playwright/test';
  *
  * Test addresses derived from test seed at HD indices 10 and 11.
  * HD Path: m/44'/60'/0'/0/{index}
+ *
+ * Required env vars: TEST_ADDRESS_1, TEST_SIGNATURE_1, TEST_ADDRESS_2, TEST_SIGNATURE_2
  */
 
-// Test Address 1 (Index 10)
-const TEST_ADDRESS_1 = '0xd3AD44Bda0158567461D6FA7eC39E53534e686E9';
-const TEST_SIGNATURE_1 =
-  '0x9f2ab17b008d42b29e085210020962beb0758091866598b7a1a54295d1dec7fa56a6425bd491d31707ef3ee97f6479450a56210ae7408a5c2efde806ac50cf481b';
-
-// Test Address 2 (Index 11)
-const TEST_ADDRESS_2 = '0xB18f08332eD99e0FBee29B2E09Be166B58e6083b';
-const TEST_SIGNATURE_2 =
-  '0x76cc51c74e84ad3eb0ca1cfde3465d0621292bf6e4edfa3cf40d0dc715e111d7304fbeaddcfe4df2426e6f101c2b2509301579e93857076a1b3ad32843e23aa91c';
+const TEST_ADDRESS_1 = process.env.TEST_ADDRESS_1 || '';
+const TEST_SIGNATURE_1 = process.env.TEST_SIGNATURE_1 || '';
+const TEST_ADDRESS_2 = process.env.TEST_ADDRESS_2 || '';
+const TEST_SIGNATURE_2 = process.env.TEST_SIGNATURE_2 || '';
 
 // Helper to remove webpack error overlay
 async function removeErrorOverlay(page: Page) {
