@@ -176,7 +176,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
   const [activeBlockchain, setActiveBlockchain] = useState<Blockchain>();
-  const sessionParamApplied = useRef(false);
+  const lastAppliedCredentials = useRef<{ address?: string; signature?: string; session?: string }>({});
 
   // initialize
   useEffect(() => {
@@ -204,19 +204,26 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   }, [isParamsInitialized, appParams]);
 
   async function handleParamSession(): Promise<boolean> {
-    // only apply session params once (prevent overwriting new tokens)
-    if (sessionParamApplied.current) {
-      return false;
-    }
+    const lastCreds = lastAppliedCredentials.current;
 
     try {
       if (appParams.address && appParams.signature) {
+        // Skip if same credentials were already applied (prevent duplicate login)
+        if (lastCreds.address === appParams.address && lastCreds.signature === appParams.signature) {
+          return false;
+        }
+
         await createSession(appParams.address, appParams.signature);
-        sessionParamApplied.current = true;
+        lastAppliedCredentials.current = { address: appParams.address, signature: appParams.signature };
         return true;
       } else if (appParams.session && Utils.isJwt(appParams.session)) {
+        // Skip if same session was already applied
+        if (lastCreds.session === appParams.session) {
+          return false;
+        }
+
         updateSession(appParams.session);
-        sessionParamApplied.current = true;
+        lastAppliedCredentials.current = { session: appParams.session };
         return true;
       }
     } catch (e) {
