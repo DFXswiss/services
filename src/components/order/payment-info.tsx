@@ -8,8 +8,6 @@ import {
   TransactionError,
   TransactionType,
   useBankAccountContext,
-  useSell,
-  useSwap,
 } from '@dfx.swiss/react';
 import {
   SpinnerSize,

@@ -62,7 +62,7 @@ type Page = { page: string; allowedTiles: string[] | undefined };
 function HomeScreenContent(): JSX.Element {
   const { translate } = useSettingsContext();
   const { isLoggedIn } = useSessionContext();
-  const { session, getAuthToken } = useAuthContext();
+  const { session } = useAuthContext();
   const { user, isUserLoading, hasAddress } = useUserContext();
   const { hasSession, canClose, service, isEmbedded, redirectPath, closeServices } = useAppHandlingContext();
   const { isInitialized, activeWallet } = useWalletContext();

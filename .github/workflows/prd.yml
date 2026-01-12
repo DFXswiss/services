@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '16.x'
+  NODE_VERSION: '20.x'
   AZURE_ACCOUNT_NAME: 'stdfxsrvprd'
   AZURE_CDN_PROFILE: 'cdnp-dfx-srv-prd'
   AZURE_CDN_ENDPOINT: 'cdne-dfx-srv-prd'
@@ -31,9 +31,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      - name: Setup npm
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_ACCESS_TOKEN }}" > .npmrc
-
       - name: Install packages
         run: npm ci
 
@@ -50,16 +47,11 @@ jobs:
       - name: Build code
         env:
           REACT_APP_BUILD_ID: ${{ github.run_number }}-${{ github.run_id }}
-        run: |
-          echo "REACT_APP_BUILD_ID=$REACT_APP_BUILD_ID" >> .env.prd
-          npm run build
+        run: npm run build
 
       - name: Build widget
         run: |
           npm run widget
-
-      - name: Build library
-        run: npm run build:lib
 
       - name: Copy widget
         run: |
@@ -69,8 +61,8 @@ jobs:
           cp ./widget/static/js/main.*.js ./build/widget/$version
           cp ./widget/static/css/main.*.css ./build/widget/$version.css
           cp ./widget/$version-chunks/*.chunk.js ./build/widget/$version-chunks
-          cp ./widget/$version-chunks/*.chunk.css ./build/widget/$version-chunks || true
-          cp ./widget/$version-chunks/*.module.wasm ./build/widget/$version-chunks
+          cp ./widget/$version-chunks/*.chunk.css ./build/widget/$version-chunks
+          cp ./widget/$version-chunks/*.wasm ./build/widget/$version-chunks
 
           sed -i "s|main-widget.css|https://app.dfx.swiss/widget/$version.css|g" "./build/widget/$version"
 
@@ -142,12 +134,6 @@ jobs:
               --endpoint-name ${{ env.AZURE_CDN_ENDPOINT }} \
               --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
               --no-wait
-
-      - name: Publish to npm
-        continue-on-error: true
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
 
       - name: Logout
         run: |

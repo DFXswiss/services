@@ -318,7 +318,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const { bankAccounts } = useBankAccountContext();
   const { isLoggedIn } = useSessionContext();
   const { getTransactionByUid, getTransactionRefund, setTransactionRefundTarget } = useTransaction();
-  const refetchTimeout = useRef<NodeJS.Timeout | undefined>();
+  const refetchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>();
 
   const [isLoading, setIsLoading] = useState(false);
   const [refundDetails, setRefundDetails] = useState<RefundDetails>();
@@ -360,7 +360,9 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
 
     if (transaction?.id) fetchRefund(transaction.id);
 
-    return () => refetchTimeout.current && clearTimeout(refetchTimeout.current);
+    return () => {
+      if (refetchTimeout.current) clearTimeout(refetchTimeout.current);
+    };
   }, [transaction]);
 
   useEffect(() => {

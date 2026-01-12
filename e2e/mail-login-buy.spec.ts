@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test('Access /buy after Mail Login', async ({ page }) => {
   const OTP_CODE = 'f4b05e02-7b55-4e9e-974b-51d979060a0d';

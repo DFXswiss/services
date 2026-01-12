@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '16.x'
+  NODE_VERSION: '20.x'
   AZURE_ACCOUNT_NAME: 'stdfxsrvdev'
   AZURE_CDN_PROFILE: 'cdnp-dfx-srv-dev'
   AZURE_CDN_ENDPOINT: 'cdne-dfx-srv-dev'
@@ -47,9 +47,7 @@ jobs:
       - name: Build code
         env:
           REACT_APP_BUILD_ID: ${{ github.run_number }}-${{ github.run_id }}
-        run: |
-          echo "REACT_APP_BUILD_ID=$REACT_APP_BUILD_ID" >> .env.dev
-          npm run build:dev
+        run: npm run build:dev
 
       - name: Build widget
         run: |
@@ -63,8 +61,8 @@ jobs:
           cp ./widget/static/js/main.*.js ./build/widget/$version
           cp ./widget/static/css/main.*.css ./build/widget/$version.css
           cp ./widget/$version-chunks/*.chunk.js ./build/widget/$version-chunks
-          cp ./widget/$version-chunks/*.chunk.css ./build/widget/$version-chunks || true
-          cp ./widget/$version-chunks/*.module.wasm ./build/widget/$version-chunks
+          cp ./widget/$version-chunks/*.chunk.css ./build/widget/$version-chunks
+          cp ./widget/$version-chunks/*.wasm ./build/widget/$version-chunks
 
           sed -i "s|main-widget.css|https://dev.app.dfx.swiss/widget/$version.css|g" "./build/widget/$version"
 

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test('Manual Mail Login Flow', async ({ page }) => {
   // Step 1: Go to mail login page

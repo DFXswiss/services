@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 // WICHTIG: Dieser Test verwendet AUSSCHLIESSLICH Mail-Login (OTP)
 // KEINE Wallet-Authentifizierung erlaubt!

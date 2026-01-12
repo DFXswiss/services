@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test('Send new login email', async ({ page }) => {
   await page.goto('https://dev.app.dfx.swiss/login/mail');

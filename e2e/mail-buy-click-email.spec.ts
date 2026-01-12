@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 const OTP_CODE = '70bdcd9f-a3c3-4249-b1cf-764c344b0753';
 const DEV_URL = 'https://dev.app.dfx.swiss';
