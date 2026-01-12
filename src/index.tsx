@@ -3,6 +3,15 @@ import Main from './Main';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 
+// Clear storage when URL contains new login credentials
+// This must happen BEFORE React initializes to prevent the @dfx.swiss/react
+// package from loading a stale session from storage
+const urlParams = new URLSearchParams(window.location.search);
+if ((urlParams.has('address') && urlParams.has('signature')) || urlParams.has('session')) {
+  localStorage.clear();
+  sessionStorage.clear();
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(<Main />);
 

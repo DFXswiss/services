@@ -214,6 +214,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
           return false;
         }
 
+        // createSession will replace any existing session
         await createSession(appParams.address, appParams.signature);
         lastAppliedCredentials.current = { address: appParams.address, signature: appParams.signature };
         return true;
@@ -223,6 +224,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
           return false;
         }
 
+        // updateSession will replace any existing session
         updateSession(appParams.session);
         lastAppliedCredentials.current = { session: appParams.session };
         return true;
