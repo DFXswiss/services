@@ -556,9 +556,8 @@ export default function SwapScreen(): JSX.Element {
   }
 
   const rules = Utils.createRules({
-    bankAccount: Validations.Required,
-    asset: Validations.Required,
-    currency: Validations.Required,
+    sourceAsset: Validations.Required,
+    targetAsset: Validations.Required,
     amount: Validations.Required,
   });
 
@@ -652,23 +651,21 @@ export default function SwapScreen(): JSX.Element {
                     />
                   </div>
                   <div className="flex-[1_0_9rem]">
-                    <div className="flex-[1_0_9rem]">
-                      <StyledSearchDropdown<Asset>
-                        rootRef={rootRef}
-                        name="targetAsset"
-                        placeholder={translate('general/actions', 'Select') + '...'}
-                        items={targetAssets}
-                        labelFunc={(item) => item.name}
-                        balanceFunc={findBalanceString}
-                        assetIconFunc={(item) => item.name as AssetIconVariant}
-                        descriptionFunc={(item) => item.description}
-                        filterFunc={(item: Asset, search?: string | undefined) =>
-                          !search || item.name.toLowerCase().includes(search.toLowerCase())
-                        }
-                        hideBalanceWhenClosed
-                        full
-                      />
-                    </div>
+                    <StyledSearchDropdown<Asset>
+                      rootRef={rootRef}
+                      name="targetAsset"
+                      placeholder={translate('general/actions', 'Select') + '...'}
+                      items={targetAssets}
+                      labelFunc={(item) => item.name}
+                      balanceFunc={findBalanceString}
+                      assetIconFunc={(item) => item.name as AssetIconVariant}
+                      descriptionFunc={(item) => item.description}
+                      filterFunc={(item: Asset, search?: string | undefined) =>
+                        !search || item.name.toLowerCase().includes(search.toLowerCase())
+                      }
+                      hideBalanceWhenClosed
+                      full
+                    />
                   </div>
                 </StyledHorizontalStack>
 
