@@ -28,9 +28,6 @@ test('Session switch when logging in with different address', async ({ page, con
 
   await page.screenshot({ path: 'e2e/screenshots/bug-session-1-account1.png', fullPage: true });
 
-  const body1 = (await page.textContent('body')) || '';
-  const hasAddr1 = body1.includes('d3AD44');
-
   // Now login with Account 2
   await page.goto(DEV_BASE_URL + '/account?address=' + TEST_ADDRESS_2 + '&signature=' + TEST_SIGNATURE_2);
   await page.waitForLoadState('networkidle');
