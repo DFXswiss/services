@@ -214,8 +214,9 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
           return false;
         }
 
-        await createSession(appParams.address, appParams.signature);
+        // Set credentials BEFORE async call to prevent race conditions (React StrictMode double-render)
         lastAppliedCredentials.current = { address: appParams.address, signature: appParams.signature };
+        await createSession(appParams.address, appParams.signature);
         return true;
       } else if (appParams.session && Utils.isJwt(appParams.session)) {
         // Skip if same session was already applied
@@ -223,11 +224,14 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
           return false;
         }
 
-        updateSession(appParams.session);
+        // Set session BEFORE call to prevent race conditions
         lastAppliedCredentials.current = { session: appParams.session };
+        updateSession(appParams.session);
         return true;
       }
     } catch (e) {
+      // Reset on error to allow retry
+      lastAppliedCredentials.current = {};
       logout();
     }
 
