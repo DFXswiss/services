@@ -201,11 +201,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   const search = (window as Window).location.search;
   const query = new URLSearchParams(search);
 
-  // Extract session params from current URL
-  const urlAddress = query.get('address') ?? undefined;
-  const urlSignature = query.get('signature') ?? undefined;
-  const urlSession = query.get('session') ?? undefined;
-
   useChange((newVal, oldVal) => {
     if (!newVal && oldVal) {
       storeQueryParams.remove();
@@ -216,29 +211,6 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   useEffect(() => {
     isSessionInitialized && init();
   }, [isSessionInitialized]);
-
-  // Handle URL changes with new session parameters (for SPA navigation)
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    const hasNewSessionParams =
-      (urlAddress && urlSignature && (urlAddress !== params.address || urlSignature !== params.signature)) ||
-      (urlSession && urlSession !== params.session);
-
-    if (hasNewSessionParams) {
-      const newParams = { ...params };
-      if (urlAddress && urlSignature) {
-        newParams.address = urlAddress;
-        newParams.signature = urlSignature;
-      }
-      if (urlSession) {
-        newParams.session = urlSession;
-      }
-      setParams(newParams);
-      setHasSession(true);
-      removeUrlParams(query);
-    }
-  }, [urlAddress, urlSignature, urlSession]);
 
   useEffect(() => {
     if (!redirectUri) setRedirectUri(storeRedirectUri.get());
