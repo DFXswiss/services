@@ -6,9 +6,8 @@ import { test, expect, Page } from '@playwright/test';
  * Tests the login flow using address + signature URL parameters.
  * This is used when users authenticate via wallet signature.
  *
- * Test addresses derived from ADMIN_SEED at indices 10 and 11:
- * - ADMIN_SEED: "alert member distance burst seat exist peace basket wisdom emotion pen six"
- * - HD Path: m/44'/60'/0'/0/{index}
+ * Test addresses derived from test seed at HD indices 10 and 11.
+ * HD Path: m/44'/60'/0'/0/{index}
  */
 
 // Test Address 1 (Index 10)
@@ -84,50 +83,29 @@ async function isLoggedIn(page: Page): Promise<boolean> {
   return hasUserContent;
 }
 
-// Helper to get shortened address display
-function shortenAddress(address: string): string {
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
-
 test.describe('Signature-based Login Flow', () => {
   test.describe('Test Address 1', () => {
     const address = TEST_ADDRESS_1;
     const signature = TEST_SIGNATURE_1;
 
     test('should login via URL parameters and access home page', async ({ page }) => {
-      console.log(`Testing login with address: ${address}`);
-
-      // Navigate with address + signature params
       await page.goto(`/?address=${address}&signature=${signature}`);
       await page.waitForLoadState('networkidle');
       await removeErrorOverlay(page);
-
-      // Wait for app to fully load
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
 
-      // Take screenshot of initial state
       await page.screenshot({ path: 'e2e/screenshots/signature-login-1-home.png' });
 
-      // Verify no error messages
       const bodyText = await page.textContent('body');
-      console.log(`Body text preview: ${bodyText?.substring(0, 200)}...`);
       expect(bodyText).not.toContain('Invalid signature');
       expect(bodyText).not.toContain('Ungültige Signatur');
 
-      // Log the current URL and state
-      console.log(`Current URL: ${page.url()}`);
-      console.log(`Logged in: ${await isLoggedIn(page)}`);
-
-      // Verify we're logged in (should see user content, not login prompts)
       const loggedIn = await isLoggedIn(page);
       expect(loggedIn, 'User should be logged in after signature auth').toBeTruthy();
-
-      console.log('✓ Home page loaded successfully after signature login');
     });
 
     test('should access /account page after login', async ({ page }) => {
-      // Navigate directly to account with auth params
       await page.goto(`/account?address=${address}&signature=${signature}`);
       await page.waitForLoadState('networkidle');
       await removeErrorOverlay(page);
@@ -135,19 +113,15 @@ test.describe('Signature-based Login Flow', () => {
 
       await page.screenshot({ path: 'e2e/screenshots/signature-login-1-account.png' });
 
-      // Verify account page content
-      const bodyText = await page.textContent('body');
-      console.log(`Account body preview: ${bodyText?.substring(0, 200)}...`);
+      const bodyText = (await page.textContent('body'))?.toLowerCase() || '';
       const hasAccountContent =
-        bodyText?.includes('Konto') ||
-        bodyText?.includes('Account') ||
-        bodyText?.includes('E-Mail') ||
-        bodyText?.includes('KYC') ||
-        bodyText?.includes('Profil');
+        bodyText.includes('konto') ||
+        bodyText.includes('account') ||
+        bodyText.includes('e-mail') ||
+        bodyText.includes('kyc') ||
+        bodyText.includes('profil');
 
       expect(hasAccountContent, 'Account page should show account content').toBeTruthy();
-
-      console.log('✓ Account page accessible');
     });
 
     test('should access /buy page after login', async ({ page }) => {
@@ -158,19 +132,15 @@ test.describe('Signature-based Login Flow', () => {
 
       await page.screenshot({ path: 'e2e/screenshots/signature-login-1-buy.png' });
 
-      // Verify buy page or wallet selection
-      const bodyText = await page.textContent('body');
-      console.log(`Buy body preview: ${bodyText?.substring(0, 200)}...`);
+      const bodyText = (await page.textContent('body'))?.toLowerCase() || '';
       const hasBuyContent =
-        bodyText?.includes('Kaufen') ||
-        bodyText?.includes('Buy') ||
-        bodyText?.includes('Du zahlst') ||
-        bodyText?.includes('Wechselkurs') ||
-        bodyText?.includes('Adresse hinzufügen'); // Wallet selection is also valid
+        bodyText.includes('kaufen') ||
+        bodyText.includes('buy') ||
+        bodyText.includes('du zahlst') ||
+        bodyText.includes('wechselkurs') ||
+        bodyText.includes('adresse hinzufügen');
 
       expect(hasBuyContent, 'Buy page should show buy form or wallet selection').toBeTruthy();
-
-      console.log('✓ Buy page accessible');
     });
 
     test('should access /sell page after login', async ({ page }) => {
@@ -181,18 +151,15 @@ test.describe('Signature-based Login Flow', () => {
 
       await page.screenshot({ path: 'e2e/screenshots/signature-login-1-sell.png' });
 
-      const bodyText = await page.textContent('body');
-      console.log(`Sell body preview: ${bodyText?.substring(0, 200)}...`);
+      const bodyText = (await page.textContent('body'))?.toLowerCase() || '';
       const hasSellContent =
-        bodyText?.includes('Verkaufen') ||
-        bodyText?.includes('Sell') ||
-        bodyText?.includes('Du zahlst') ||
-        bodyText?.includes('Wechselkurs') ||
-        bodyText?.includes('Adresse hinzufügen');
+        bodyText.includes('verkaufen') ||
+        bodyText.includes('sell') ||
+        bodyText.includes('du zahlst') ||
+        bodyText.includes('wechselkurs') ||
+        bodyText.includes('adresse hinzufügen');
 
       expect(hasSellContent, 'Sell page should show sell form or wallet selection').toBeTruthy();
-
-      console.log('✓ Sell page accessible');
     });
 
     test('should access /tx (transactions) page after login', async ({ page }) => {
@@ -203,17 +170,14 @@ test.describe('Signature-based Login Flow', () => {
 
       await page.screenshot({ path: 'e2e/screenshots/signature-login-1-transactions.png' });
 
-      const bodyText = await page.textContent('body');
-      console.log(`Transactions body preview: ${bodyText?.substring(0, 200)}...`);
+      const bodyText = (await page.textContent('body'))?.toLowerCase() || '';
       const hasTransactionsContent =
-        bodyText?.includes('Transaktionen') ||
-        bodyText?.includes('Transactions') ||
-        bodyText?.includes('Keine Transaktionen') ||
-        bodyText?.includes('No transactions');
+        bodyText.includes('transaktionen') ||
+        bodyText.includes('transactions') ||
+        bodyText.includes('keine transaktionen') ||
+        bodyText.includes('no transactions');
 
       expect(hasTransactionsContent, 'Transactions page should show transaction list or empty state').toBeTruthy();
-
-      console.log('✓ Transactions page accessible');
     });
 
     test('should access /settings page after login', async ({ page }) => {
@@ -224,17 +188,14 @@ test.describe('Signature-based Login Flow', () => {
 
       await page.screenshot({ path: 'e2e/screenshots/signature-login-1-settings.png' });
 
-      const bodyText = await page.textContent('body');
-      console.log(`Settings body preview: ${bodyText?.substring(0, 200)}...`);
+      const bodyText = (await page.textContent('body'))?.toLowerCase() || '';
       const hasSettingsContent =
-        bodyText?.includes('Einstellungen') ||
-        bodyText?.includes('Settings') ||
-        bodyText?.includes('Sprache') ||
-        bodyText?.includes('Language');
+        bodyText.includes('einstellungen') ||
+        bodyText.includes('settings') ||
+        bodyText.includes('sprache') ||
+        bodyText.includes('language');
 
       expect(hasSettingsContent, 'Settings page should show settings options').toBeTruthy();
-
-      console.log('✓ Settings page accessible');
     });
   });
 
@@ -243,8 +204,6 @@ test.describe('Signature-based Login Flow', () => {
     const signature = TEST_SIGNATURE_2;
 
     test('should login via URL parameters', async ({ page }) => {
-      console.log(`Testing login with address: ${address}`);
-
       await page.goto(`/?address=${address}&signature=${signature}`);
       await page.waitForLoadState('networkidle');
       await removeErrorOverlay(page);
@@ -253,13 +212,10 @@ test.describe('Signature-based Login Flow', () => {
       await page.screenshot({ path: 'e2e/screenshots/signature-login-2-home.png' });
 
       const bodyText = await page.textContent('body');
-      console.log(`Address 2 body preview: ${bodyText?.substring(0, 200)}...`);
       expect(bodyText).not.toContain('Invalid signature');
 
       const loggedIn = await isLoggedIn(page);
       expect(loggedIn, 'User should be logged in').toBeTruthy();
-
-      console.log('✓ Test Address 2 login successful');
     });
 
     test('should access /account page', async ({ page }) => {
@@ -270,43 +226,34 @@ test.describe('Signature-based Login Flow', () => {
 
       await page.screenshot({ path: 'e2e/screenshots/signature-login-2-account.png' });
 
-      const bodyText = await page.textContent('body');
-      console.log(`Address 2 account preview: ${bodyText?.substring(0, 200)}...`);
+      const bodyText = (await page.textContent('body'))?.toLowerCase() || '';
       const hasAccountContent =
-        bodyText?.includes('Konto') ||
-        bodyText?.includes('Account') ||
-        bodyText?.includes('E-Mail') ||
-        bodyText?.includes('Profil');
+        bodyText.includes('konto') ||
+        bodyText.includes('account') ||
+        bodyText.includes('e-mail') ||
+        bodyText.includes('profil');
 
       expect(hasAccountContent, 'Account page should be accessible').toBeTruthy();
-
-      console.log('✓ Test Address 2 account page accessible');
     });
   });
 
   test.describe('Invalid Signature', () => {
-    test('should reject invalid signature', async ({ page }) => {
+    test('should handle invalid signature gracefully', async ({ page }) => {
       const invalidSignature = '0xinvalidsignature123';
 
       await page.goto(`/?address=${TEST_ADDRESS_1}&signature=${invalidSignature}`);
       await page.waitForLoadState('networkidle');
       await removeErrorOverlay(page);
 
-      // Wait a bit but don't fail if loading persists (invalid sig may cause issues)
+      // Wait for app to respond to invalid signature
       await page.waitForTimeout(5000);
 
       await page.screenshot({ path: 'e2e/screenshots/signature-login-invalid.png' });
 
+      // App should not crash - page should still be accessible
       const bodyText = await page.textContent('body');
-      console.log(`Invalid sig body: ${bodyText?.substring(0, 300)}...`);
-
-      // With invalid signature, user should NOT be fully logged in
-      // App may show error, redirect to login, or stay on loading
-      const loggedIn = await isLoggedIn(page);
-      console.log(`Invalid signature test - Logged in: ${loggedIn}`);
-
-      // Test passes - we just document the behavior
-      expect(true).toBeTruthy();
+      expect(bodyText).toBeTruthy();
+      expect(bodyText!.length).toBeGreaterThan(0);
     });
   });
 });
