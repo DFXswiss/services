@@ -999,7 +999,10 @@ function PaymentLinkForm({
   }, [paymentLinks, allowedCountries, paymentLinkId, step, configData]);
 
   useEffect(() => {
-    const maxIdRoute = paymentRoutes?.sell.reduce((prev, current) => (prev.id < current.id ? prev : current));
+    const maxIdRoute = paymentRoutes?.sell.reduce(
+      (prev, current) => (prev.id < current.id ? prev : current),
+      paymentRoutes.sell[0],
+    );
     if (maxIdRoute) setValue('routeId', routeToRouteIdSelectData(maxIdRoute));
   }, [paymentRoutes]);
 

@@ -1,7 +1,7 @@
 import { Blockchain, Utils, useApiSession, useAuth, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { AuthWalletType } from '@dfx.swiss/react/dist/definitions/auth';
 import { Router } from '@remix-run/router';
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../hooks/store.hook';
 import { WalletType as MetaMaskWalletType, useMetaMask } from '../hooks/wallets/metamask.hook';
 import { useAppHandlingContext } from './app-handling.context';
@@ -170,12 +170,13 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const { getSignMessage } = useAuth();
   const { readBalances } = useBalanceContext();
   const { activeWallet: activeWalletStore } = useStore();
-  const { addSpecialCode } = useUserContext();
+  const { addSpecialCode, reloadUser } = useUserContext();
   const { getWalletType } = useMetaMask();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
   const [activeBlockchain, setActiveBlockchain] = useState<Blockchain>();
+  const sessionParamApplied = useRef(false);
 
   // initialize
   useEffect(() => {
@@ -203,12 +204,19 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   }, [isParamsInitialized, appParams]);
 
   async function handleParamSession(): Promise<boolean> {
+    // only apply session params once (prevent overwriting new tokens)
+    if (sessionParamApplied.current) {
+      return false;
+    }
+
     try {
       if (appParams.address && appParams.signature) {
         await createSession(appParams.address, appParams.signature);
+        sessionParamApplied.current = true;
         return true;
       } else if (appParams.session && Utils.isJwt(appParams.session)) {
         updateSession(appParams.session);
+        sessionParamApplied.current = true;
         return true;
       }
     } catch (e) {
@@ -244,6 +252,8 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
 
     setWallet(wallet);
     setActiveBlockchain(blockchain);
+
+    reloadUser();
   }
 
   async function setSession(session: string, wallet?: WalletType, blockchain?: Blockchain): Promise<void> {

@@ -1,4 +1,4 @@
-import { ApiError, useApi, UserAddress, useUserContext } from '@dfx.swiss/react';
+import { ApiError, useApi, useAuthContext, UserAddress, useUserContext } from '@dfx.swiss/react';
 import {
   Form,
   SpinnerSize,
@@ -32,9 +32,12 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
   const { width } = useWindowContext();
   const { setWallet, setSession } = useWalletContext();
   const { changeAddress } = useUserContext();
+  const { session } = useAuthContext();
   const { call } = useApi();
   const { assetOut } = useAppParams();
   const { rootRef } = useLayoutContext();
+
+  const sessionHasNoAddress = !session?.address;
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -57,7 +60,10 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
   }, [user?.activeAddress, userAddresses]);
 
   useEffect(() => {
-    if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address && !isUserLoading) {
+    const isAddressChange = user?.activeAddress?.address !== selectedAddress?.address;
+    const needsSessionUpdate = sessionHasNoAddress && selectedAddress?.address;
+
+    if (selectedAddress?.address && (isAddressChange || needsSessionUpdate) && !isUserLoading) {
       setIsLoading(true);
       changeAddress(selectedAddress.address)
         .then(() => {
@@ -66,7 +72,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
         })
         .catch(() => setIsLoading(false));
     }
-  }, [selectedAddress, user?.activeAddress, isUserLoading]);
+  }, [selectedAddress, user?.activeAddress, isUserLoading, sessionHasNoAddress]);
 
   useEffect(() => {
     if (!isUserLoading && isCustodySignup) {
@@ -107,7 +113,7 @@ export default function ConnectAddress({ onLogin, onCancel }: ConnectProps): JSX
               items={userAddresses.sort(sortAddressesByBlockchain)}
               labelFunc={(item) => blankedAddress(addressLabel(item), { width })}
               descriptionFunc={(item) => item.label ?? item.wallet}
-              forceEnable={user?.activeAddress === undefined}
+              forceEnable={user?.activeAddress === undefined || sessionHasNoAddress}
             />
           </Form>
         </>

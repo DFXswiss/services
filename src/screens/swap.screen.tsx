@@ -116,7 +116,6 @@ export default function SwapScreen(): JSX.Element {
     externalTransactionId,
     flags,
     setParams,
-    availableBlockchains,
   } = useAppParams();
   const { receiveFor } = useSwap();
   const { toString } = useBlockchain();
@@ -147,11 +146,14 @@ export default function SwapScreen(): JSX.Element {
 
   useEffect(() => {
     if (sourceAssets && session?.address) {
-      const assetMap = sourceAssets.reduce<Record<Blockchain, Asset[]>>((acc, asset) => {
-        if (!acc[asset.blockchain]) acc[asset.blockchain] = [];
-        acc[asset.blockchain].push(asset);
-        return acc;
-      }, {} as Record<Blockchain, Asset[]>);
+      const assetMap = sourceAssets.reduce<Record<Blockchain, Asset[]>>(
+        (acc, asset) => {
+          if (!acc[asset.blockchain]) acc[asset.blockchain] = [];
+          acc[asset.blockchain].push(asset);
+          return acc;
+        },
+        {} as Record<Blockchain, Asset[]>,
+      );
 
       Promise.all(
         Object.entries(assetMap).map(
@@ -169,9 +171,6 @@ export default function SwapScreen(): JSX.Element {
   const availableBalance = selectedSourceAsset && findBalance(selectedSourceAsset);
 
   const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
-  const sourceBlockchains = availableBlockchains?.filter(
-    (b) => b !== Blockchain.MONERO && filteredAssets?.some((a) => a.blockchain === b),
-  );
 
   const userSessions = [session, ...userAddresses].filter(
     (a, i, arr) => a && arr.findIndex((b) => b?.address === a.address) === i,
@@ -182,6 +181,12 @@ export default function SwapScreen(): JSX.Element {
     addressLabel: addressLabel(a),
     blockchains: a.blockchains,
   }));
+
+  // Source blockchains: all blockchains from user addresses (including linked addresses like Lightning)
+  const sourceBlockchains = userAddressItems
+    .flatMap((a) => a.blockchains)
+    .filter((b, i, arr) => arr.indexOf(b) === i)
+    .filter((b) => filteredAssets?.some((a) => a.blockchain === b));
 
   const targetBlockchains = userAddressItems
     .flatMap((a) => a.blockchains)
@@ -212,7 +217,7 @@ export default function SwapScreen(): JSX.Element {
     const activeSourceAssets = filterAssets(blockchainSourceAssets, assetFilter);
     setSourceAssets(activeSourceAssets);
 
-    const activeTargetBlockchains = blockchain ? [blockchain as Blockchain] : targetBlockchains ?? [];
+    const activeTargetBlockchains = blockchain ? [blockchain as Blockchain] : (targetBlockchains ?? []);
     const blockchainTargetAssets = getAssets(activeTargetBlockchains ?? [], { buyable: true, comingSoon: false });
     const activeTargetAssets = filterAssets(blockchainTargetAssets, assetFilter);
     setTargetAssets(activeTargetAssets);
@@ -222,10 +227,20 @@ export default function SwapScreen(): JSX.Element {
       (walletBlockchain && activeSourceAssets.find((a) => a.blockchain === walletBlockchain));
     if (sourceAsset) setVal('sourceAsset', sourceAsset);
 
-    const targetAsset =
-      getAsset(activeTargetAssets, assetOut) ?? (blockchain && activeTargetAssets[0]);
+    const targetAsset = getAsset(activeTargetAssets, assetOut) ?? (blockchain && activeTargetAssets[0]);
     if (targetAsset) setVal('targetAsset', targetAsset);
-  }, [assetFilter, assetIn, assetOut, getAsset, getAssets, blockchain, walletBlockchain]);
+  }, [
+    assetFilter,
+    assetIn,
+    assetOut,
+    getAsset,
+    getAssets,
+    blockchain,
+    walletBlockchain,
+    sourceBlockchains?.length,
+    targetBlockchains?.length,
+    userAddresses.length,
+  ]);
 
   useEffect(() => {
     if (amountIn) {
@@ -239,10 +254,29 @@ export default function SwapScreen(): JSX.Element {
 
   useEffect(() => setAddress(), [session?.address, translate, blockchain, userAddresses, addressItems.length]);
 
+  // When assetOut is set and userAddresses are loaded, ensure the correct blockchain is selected
+  useEffect(() => {
+    if (assetOut && userAddresses.length > 0) {
+      const assetOutBlockchain = assetOut.split('/')[0];
+      const hasAddressForBlockchain = addressItems.some((a) => a.chain === assetOutBlockchain);
+
+      // If we have an address for the assetOut blockchain and blockchain doesn't match, update it
+      if (hasAddressForBlockchain && blockchain !== assetOutBlockchain) {
+        setParams({ blockchain: assetOutBlockchain as Blockchain });
+        switchBlockchain(assetOutBlockchain as Blockchain);
+      }
+    }
+  }, [assetOut, userAddresses.length, addressItems.length]);
+
   useEffect(() => {
     if (selectedAddress) {
       if (selectedAddress.chain) {
-        if (blockchain !== selectedAddress.chain) {
+        // If assetOut is set and points to a different blockchain, don't override it
+        const assetOutBlockchain = assetOut?.split('/')[0];
+        const shouldSkipBlockchainChange =
+          assetOutBlockchain && addressItems.some((a) => a.chain === assetOutBlockchain);
+
+        if (blockchain !== selectedAddress.chain && !shouldSkipBlockchainChange) {
           setParams({ blockchain: selectedAddress.chain });
           switchBlockchain(selectedAddress.chain);
           resetField('targetAsset');
@@ -402,6 +436,7 @@ export default function SwapScreen(): JSX.Element {
       case TransactionError.VIDEO_IDENT_REQUIRED:
       case TransactionError.NATIONALITY_NOT_ALLOWED:
       case TransactionError.IBAN_CURRENCY_MISMATCH:
+      case TransactionError.PAYMENT_METHOD_NOT_ALLOWED:
       case TransactionError.TRADING_NOT_ALLOWED:
       case TransactionError.RECOMMENDATION_REQUIRED:
       case TransactionError.EMAIL_REQUIRED:
@@ -438,8 +473,8 @@ export default function SwapScreen(): JSX.Element {
       return amount > 0
         ? { amount, sourceAsset, targetAsset, receiverAddress: address.address }
         : targetAmount > 0
-        ? { sourceAsset, targetAsset, targetAmount, receiverAddress: address.address }
-        : undefined;
+          ? { sourceAsset, targetAsset, targetAmount, receiverAddress: address.address }
+          : undefined;
     }
   }
 
@@ -481,7 +516,16 @@ export default function SwapScreen(): JSX.Element {
 
   function setAddress() {
     if (session?.address && addressItems.length > 0) {
-      const address = addressItems.find((a) => blockchain && a.chain === blockchain) ?? addressItems[0];
+      // Priorität: 1. blockchain URL-Parameter, 2. assetOut Blockchain, 3. erste Adresse
+      let preferredChain = blockchain;
+      if (!preferredChain && assetOut) {
+        // Extract blockchain from assetOut (format: Blockchain/AssetName)
+        const assetOutBlockchain = assetOut.split('/')[0];
+        if (addressItems.some((a) => a.chain === assetOutBlockchain)) {
+          preferredChain = assetOutBlockchain as Blockchain;
+        }
+      }
+      const address = addressItems.find((a) => preferredChain && a.chain === preferredChain) ?? addressItems[0];
       setVal('address', address);
     }
   }

@@ -12,8 +12,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@dfx.swiss/react": "^1.3.0-beta.230",
-    "@dfx.swiss/react-components": "^1.3.0-beta.227",
+    "@dfx.swiss/react": "^1.3.0-beta.232",
+    "@dfx.swiss/react-components": "^1.3.0-beta.232",
     "@ledgerhq/hw-app-btc": "^6.24.1",
     "@ledgerhq/hw-app-eth": "^6.33.7",
     "@ledgerhq/hw-transport-webhid": "^6.27.19",
@@ -27,8 +27,8 @@
     "@trezor/connect-web": "^9.6.4",
     "@tronweb3/tronwallet-adapter-tronlink": "^1.1.12",
     "@tronweb3/tronwallet-adapter-trust": "^1.0.1",
-    "@wagmi/connectors": "^5.0.7",
-    "@wagmi/core": "^2.10.5",
+    "@wagmi/connectors": "5.0.7",
+    "@wagmi/core": "2.10.5",
     "@walletconnect/ethereum-provider": "^2.11.0",
     "alchemy-sdk": "^3.5.6",
     "apexcharts": "^4.7.0",
@@ -37,7 +37,6 @@
     "browser-lang": "^0.2.1",
     "buffer": "^6.0.3",
     "copy-to-clipboard": "^3.3.3",
-    "env-cmd": "^10.1.0",
     "ethers": "^6.13.4",
     "https-browserify": "^1.0.0",
     "i18next": "^22.4.13",
@@ -72,20 +71,21 @@
     "tweetnacl": "^1.0.3"
   },
   "scripts": {
-    "start": "env-cmd -f .env.loc react-app-rewired start",
-    "start:e2e": "env-cmd -f .env.e2e react-app-rewired start",
-    "build": "node scripts/generate-version.js && env-cmd -f .env.prd react-app-rewired build",
-    "build:dev": "node scripts/generate-version.js && env-cmd -f .env.dev react-app-rewired build",
+    "start": "react-app-rewired start",
+    "start:dev": "./scripts/start-dev.sh",
+    "build": "node scripts/generate-version.js && ./scripts/build.sh",
+    "build:dev": "node scripts/generate-version.js && ./scripts/build.sh dev",
     "build:lib": "tsc -p tsconfig.build.json",
     "link": "npm run build:lib && npm link",
-    "widget": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.prd env-cmd -f .env.widget react-app-rewired build && mv src/index.bak.tsx src/index.tsx",
-    "widget:dev": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.dev env-cmd -f .env.widget react-app-rewired build && mv src/index.bak.tsx src/index.tsx",
-    "widget:loc": "cp src/index.tsx src/index.bak.tsx && cp src/index-widget.tsx src/index.tsx && env-cmd -f .env.loc env-cmd -f .env.widget react-app-rewired build && mv src/index.bak.tsx src/index.tsx",
+    "widget": "./scripts/build-widget.sh",
+    "widget:dev": "./scripts/build-widget.sh dev",
+    "widget:loc": "./scripts/build-widget.sh loc",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --no-fix",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "react-app-rewired test --watchAll=false --passWithNoTests",
     "test:api": "react-app-rewired test --watchAll=false --testPathPattern=__tests__/api",
-    "test:e2e": "npx playwright test",
+    "test:e2e": "./scripts/e2e-test.sh",
+    "test:e2e:local": "npx playwright test",
     "test:e2e:metamask": "npx playwright test --config=playwright.synpress.config.ts",
     "synpress:install-chrome": "npx @puppeteer/browsers install chrome@126.0.6478.0",
     "synpress:download-metamask": "mkdir -p .cache-synpress && curl -L https://github.com/MetaMask/metamask-extension/releases/download/v11.9.1/metamask-chrome-11.9.1.zip -o .cache-synpress/metamask.zip && unzip -o .cache-synpress/metamask.zip -d .cache-synpress/metamask-chrome-11.9.1",
@@ -94,14 +94,18 @@
     "eject": "react-scripts eject",
     "serve": "serve build -l 4000",
     "analyze": "source-map-explorer 'build/static/js/*.js'",
-    "start-widget": "env-cmd -f .env.loc node start-widget.js"
+    "start-widget": "node start-widget.js"
   },
   "overrides": {
     "react-scripts": {
       "typescript": "^5"
     },
     "react-refresh": "0.14.2",
-    "bs58": "5.0.0"
+    "bs58": "5.0.0",
+    "request": {
+      "form-data": "^2.5.5"
+    },
+    "@coinbase/wallet-sdk": "3.9.3"
   },
   "eslintConfig": {
     "extends": [
@@ -149,7 +153,7 @@
     "@types/debounce": "^1.2.1",
     "@types/jest": "^27.5.2",
     "@types/lodash": "^4.17.21",
-    "@types/node": "^16.18.3",
+    "@types/node": "^20",
     "@types/react": "^18.0.25",
     "@types/react-dom": "^18.0.9",
     "@types/react-lazy-load-image-component": "^1.6.4",
