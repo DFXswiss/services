@@ -88,7 +88,7 @@ import { useUserGuard } from '../hooks/guard.hook';
 import { useKycHelper } from '../hooks/kyc-helper.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
-import { delay, isSafeRedirectUrl, toBase64, url } from '../util/utils';
+import { delay, toBase64, url } from '../util/utils';
 import { IframeMessageType } from './kyc-redirect.screen';
 
 enum Mode {
@@ -163,7 +163,7 @@ export default function KycScreen(): JSX.Element {
       if (missingClient && (allStepsCompleted || 'currentStep' in info)) {
         setStepInProgress(undefined);
         setConsentClient(missingClient);
-      } else if (allStepsCompleted && redirectUri && isSafeRedirectUrl(redirectUri)) {
+      } else if (allStepsCompleted && redirectUri) {
         setIsLoading(true);
         window.open(redirectUri, '_self');
       }

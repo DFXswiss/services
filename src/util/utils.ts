@@ -68,32 +68,6 @@ export function isAbsoluteUrl(url: string): boolean {
   return /^(?:[a-z]+:)?\/\//.test(url);
 }
 
-export function isSafeRedirectUrl(redirectUrl: string): boolean {
-  // Allow relative URLs
-  if (redirectUrl.startsWith('/') && !redirectUrl.startsWith('//')) {
-    return true;
-  }
-
-  try {
-    const url = new URL(redirectUrl, window.location.origin);
-    const hostname = url.hostname.toLowerCase();
-
-    // Allow same origin
-    if (url.origin === window.location.origin) {
-      return true;
-    }
-
-    // Allow dfx.swiss and subdomains
-    if (hostname === 'dfx.swiss' || hostname.endsWith('.dfx.swiss')) {
-      return true;
-    }
-
-    return false;
-  } catch {
-    return false;
-  }
-}
-
 export function isNode(e: EventTarget | null): e is Node {
   return e != null && 'nodeType' in e;
 }
