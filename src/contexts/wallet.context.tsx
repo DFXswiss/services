@@ -176,12 +176,13 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeWallet, setActiveWallet] = useState<WalletType | undefined>(activeWalletStore.get());
   const [activeBlockchain, setActiveBlockchain] = useState<Blockchain>();
-  const sessionParamApplied = useRef(false);
+  const lastAppliedCredentials = useRef<{ address?: string; signature?: string; session?: string }>({});
 
   // initialize
   useEffect(() => {
     if (isSessionInitialized && !isLoggedIn) {
       setWallet();
+      lastAppliedCredentials.current = {}; // Reset on logout to allow re-login with same credentials
       if (isInitialized) readBalances(undefined);
     }
 
@@ -204,22 +205,33 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
   }, [isParamsInitialized, appParams]);
 
   async function handleParamSession(): Promise<boolean> {
-    // only apply session params once (prevent overwriting new tokens)
-    if (sessionParamApplied.current) {
-      return false;
-    }
+    const lastCreds = lastAppliedCredentials.current;
 
     try {
       if (appParams.address && appParams.signature) {
+        // Skip if same credentials were already applied (prevent duplicate login)
+        if (lastCreds.address === appParams.address && lastCreds.signature === appParams.signature) {
+          return false;
+        }
+
+        // Set credentials BEFORE async call to prevent race conditions (React StrictMode double-render)
+        lastAppliedCredentials.current = { address: appParams.address, signature: appParams.signature };
         await createSession(appParams.address, appParams.signature);
-        sessionParamApplied.current = true;
         return true;
       } else if (appParams.session && Utils.isJwt(appParams.session)) {
+        // Skip if same session was already applied
+        if (lastCreds.session === appParams.session) {
+          return false;
+        }
+
+        // Set session BEFORE call to prevent race conditions
+        lastAppliedCredentials.current = { session: appParams.session };
         updateSession(appParams.session);
-        sessionParamApplied.current = true;
         return true;
       }
     } catch (e) {
+      // Reset on error to allow retry
+      lastAppliedCredentials.current = {};
       logout();
     }
 
