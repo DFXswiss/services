@@ -17,7 +17,7 @@ interface UseAddressItemsParams {
 
 interface UseAddressItemsResult {
   addressItems: AddressItem[];
-  userSessions: (Session | UserAddress)[];
+  availableBlockchains: Blockchain[];
 }
 
 /**
@@ -80,5 +80,5 @@ export function useAddressItems({ availableBlockchains }: UseAddressItemsParams 
     return items;
   }, [userAddressItems, validBlockchains, toString, translate]);
 
-  return { addressItems, userSessions };
+  return { addressItems, availableBlockchains: validBlockchains };
 }
