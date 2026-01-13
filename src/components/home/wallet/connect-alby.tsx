@@ -31,7 +31,7 @@ export default function ConnectAlby(props: ConnectProps): JSX.Element {
     if (account.node?.pubkey) {
       // log in with pub key
       return `LNNID${account.node.pubkey.toUpperCase()}`;
-    } else if (account.node?.alias?.includes('getalby.com')) {
+    } else if (account.node?.alias === 'getalby.com' || account.node?.alias?.endsWith('.getalby.com')) {
       // log in with Alby
       const win: Window = window;
       const redirectUrl = new URL(win.location.href);
