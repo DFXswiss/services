@@ -17,7 +17,14 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e/synpress',
   // Run custom spec files that use our custom fixtures
-  testMatch: ['eip5792-custom.spec.ts', 'sepolia-usdt-sell.spec.ts', 'sepolia-full-metamask.spec.ts', 'sepolia-real-tx.spec.ts', 'sell-complete.spec.ts'],
+  testMatch: [
+    'eip5792-custom.spec.ts',
+    'sepolia-usdt-sell.spec.ts',
+    'sepolia-full-metamask.spec.ts',
+    'sepolia-real-tx.spec.ts',
+    'sell-complete.spec.ts',
+    'sepolia-sell-e2e.spec.ts', // New complete E2E test
+  ],
   snapshotDir: './e2e/screenshots',
   snapshotPathTemplate: '{snapshotDir}/{testFileName}-{arg}-{projectName}-{platform}{ext}',
   outputDir: './e2e/synpress-results',
