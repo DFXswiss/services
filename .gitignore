@@ -60,3 +60,19 @@ e2e/screenshots/debug/
 # Chrome for testing (installed via @puppeteer/browsers)
 /chrome/
 playwright-report-local/
+e2e/screenshots/*wallet2*
+
+# Local development files
+docs/
+CLAUDE.md
+e2e/api/test-gasless-api.ts
+e2e/api/test-metamask-capabilities.ts
+e2e/screenshots/find-smart-*.png
+e2e/screenshots/smart-account-*.png
+e2e/synpress/activate-smart-account.spec.ts
+e2e/synpress/check-capabilities.spec.ts
+e2e/synpress/debug-gasless.spec.ts
+e2e/synpress/debug-sendcalls.spec.ts
+e2e/synpress/enable-smart-account.spec.ts
+e2e/synpress/find-smart-account.spec.ts
+e2e/synpress/verify-gas-station.spec.ts

@@ -5,7 +5,7 @@
  * compatibility issues with Chrome 127+ (Manifest V2 deprecation).
  *
  * Uses Chrome 126 (last version with MV2 support) and manually loads
- * MetaMask 11.9.1 extension via Playwright's launchPersistentContext.
+ * MetaMask 13.13.1 extension via Playwright's launchPersistentContext.
  *
  * The Synpress MetaMask class is still used for wallet interactions,
  * giving us the best of both worlds: reliable extension loading +
@@ -29,7 +29,7 @@ const CHROME_126_PATH = path.join(
 );
 
 // MetaMask extension path (downloaded separately)
-const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-11.9.1');
+const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-13.13.1');
 
 // Test wallet credentials from environment
 const WALLET_PASSWORD = 'Tester@1234';
@@ -174,7 +174,7 @@ export const { expect } = test;
 
 /**
  * Manual MetaMask wallet setup - bilingual (English + German)
- * Works with MetaMask 11.x onboarding flow
+ * Works with MetaMask 13.x onboarding flow
  */
 async function setupMetaMaskWallet(page: Page, seedPhrase: string, password: string): Promise<void> {
   await page.waitForLoadState('networkidle');
@@ -310,7 +310,7 @@ async function enableTestNetworks(page: Page): Promise<void> {
       await page.waitForTimeout(1000);
 
       // Find and enable "Show test networks" toggle
-      // The toggle in MetaMask 11.x is a div with role="checkbox" or a custom toggle-button
+      // The toggle in MetaMask 13.x is a div with role="checkbox" or a custom toggle-button
       const toggleSelectors = [
         'div[data-testid="network-display-testnet-toggle"]',
         '[class*="toggle"]',
