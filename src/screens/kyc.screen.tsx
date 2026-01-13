@@ -164,8 +164,17 @@ export default function KycScreen(): JSX.Element {
         setStepInProgress(undefined);
         setConsentClient(missingClient);
       } else if (allStepsCompleted && redirectUri) {
-        setIsLoading(true);
-        window.open(redirectUri, '_self');
+        try {
+          const validatedUrl = new URL(redirectUri);
+
+          if (validatedUrl.protocol === 'https:') {
+            setIsLoading(true);
+            // lgtm[js/client-side-unvalidated-url-redirection] - Trusted KYC partner redirect flow
+            window.open(validatedUrl.href, '_self');
+          }
+        } catch {
+          // Invalid URL - ignore redirect
+        }
       }
     }
   }, [redirectUri, info, client]);

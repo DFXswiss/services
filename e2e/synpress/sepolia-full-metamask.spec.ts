@@ -32,6 +32,7 @@ const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-
 // Credentials
 const WALLET_PASSWORD = 'Tester@1234';
 const TEST_SEED_PHRASE = process.env.TEST_SEED || '';
+const TEST_EMAIL = process.env.TEST_EMAIL || '';
 
 interface TestFixtures {
   context: BrowserContext;
@@ -844,9 +845,8 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
       const emailInput = activeAppPage.locator('input[type="email"], input[placeholder*="mail"], input[placeholder*="email"]').first();
       if (await emailInput.isVisible({ timeout: 3000 }).catch(() => false)) {
         console.log('KYC email form detected - entering test email');
-        const testEmail = 'test-e2e-wallet@dfx.swiss';
-        await emailInput.fill(testEmail);
-        console.log(`Entered email: ${testEmail}`);
+        await emailInput.fill(TEST_EMAIL);
+        console.log(`Entered email: ${TEST_EMAIL}`);
         await activeAppPage.waitForTimeout(1000);
 
         // Click NEXT
@@ -872,7 +872,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
         // Email (if shown again)
         const kycEmail = activeAppPage.locator('input[type="email"]').first();
         if (await kycEmail.isVisible({ timeout: 2000 }).catch(() => false)) {
-          await kycEmail.fill('test-e2e-wallet@dfx.swiss');
+          await kycEmail.fill(TEST_EMAIL);
         }
 
         // First name
@@ -992,7 +992,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
       // Fill Email
       const kycEmailField = activeAppPage.locator('input[type="email"]').first();
       if (await kycEmailField.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await kycEmailField.fill('test-e2e-wallet@dfx.swiss');
+        await kycEmailField.fill(TEST_EMAIL);
         console.log('Filled email');
       }
 
@@ -1015,7 +1015,7 @@ test.describe('Full MetaMask Sepolia USDT Sell', () => {
 
         // Fill based on input type or position
         if (inputType === 'email') {
-          await input.fill('test-e2e-wallet@dfx.swiss');
+          await input.fill(TEST_EMAIL);
           console.log('Filled email field');
         } else if (inputType === 'tel') {
           await input.fill('+41791234567');

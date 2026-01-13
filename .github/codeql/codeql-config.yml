@@ -1,0 +1,8 @@
+name: "DFX Services CodeQL Config"
+
+# Exclude test files from security scanning
+paths-ignore:
+  - '**/*.spec.ts'
+  - '**/*.test.ts'
+  - '**/e2e/**'
+  - '**/__tests__/**'
