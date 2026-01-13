@@ -34,7 +34,7 @@ const CONFIG = {
   USER_DATA_DIR: path.join(process.cwd(), '.cache-synpress/user-data-test'),
   WALLET_PASSWORD: 'Tester@1234',
   FRONTEND_URL: 'http://localhost:3001',
-  USDT_AMOUNT: '0.01',
+  USDT_AMOUNT: '10',
   POPUP_TIMEOUT: 10000,
 };
 
