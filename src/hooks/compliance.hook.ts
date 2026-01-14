@@ -1,4 +1,5 @@
 import { AccountType, Asset, Fiat, KycStatus, ResponseType, useApi } from '@dfx.swiss/react';
+import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
 import { useMemo } from 'react';
 import { downloadFile, filenameDateFormat } from 'src/util/utils';
 
@@ -95,12 +96,21 @@ export interface KycFile {
   uid: string;
 }
 
+function normalizeSearchKey(key: string): string {
+  const normalized = electronicFormatIBAN(key);
+  if (normalized && isValidIBAN(normalized)) {
+    return normalized;
+  }
+  return key;
+}
+
 export function useCompliance() {
   const { call } = useApi();
 
   async function search(key: string): Promise<ComplianceSearchResult> {
+    const normalizedKey = normalizeSearchKey(key);
     return call<ComplianceSearchResult>({
-      url: `support?key=${encodeURIComponent(key)}`,
+      url: `support?key=${encodeURIComponent(normalizedKey)}`,
       method: 'GET',
     });
   }
