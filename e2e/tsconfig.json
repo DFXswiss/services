@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "node",
     "strict": true,
@@ -11,7 +11,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
-    "lib": ["ES2020", "DOM"],
+    "lib": ["ESNext", "DOM"],
     "types": ["node"]
   },
   "include": ["./**/*.ts"],

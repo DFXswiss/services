@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "declaration": true,
-    "target": "es6",
+    "target": "esnext",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,

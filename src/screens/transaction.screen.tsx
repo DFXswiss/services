@@ -609,11 +609,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
               />
             </>
           )}
-          {localError && (
-            <div className="text-center">
-              <ErrorHint message={localError} />
-            </div>
-          )}
+          {localError && <p className="text-dfxRed-100 text-center">{localError}</p>}
           <StyledButton
             type="submit"
             label={translate(
