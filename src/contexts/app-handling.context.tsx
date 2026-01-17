@@ -204,7 +204,9 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
   useChange((newVal, oldVal) => {
     if (!newVal && oldVal) {
       storeQueryParams.remove();
+      storeRedirectUri.remove();
       setParams({});
+      setRedirectUri(undefined);
     }
   }, isLoggedIn);
 
@@ -290,10 +292,13 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           type: getParameter(query, 'type'),
           ...Object.entries(params)
             .filter(([_, val]) => typeof val === 'string')
-            .reduce((prev, [key, val]) => {
-              prev[key] = val;
-              return prev;
-            }, {} as { [key: string]: string }),
+            .reduce(
+              (prev, [key, val]) => {
+                prev[key] = val;
+                return prev;
+              },
+              {} as { [key: string]: string },
+            ),
         }
       : {
           headless: getParameter(query, 'headless'),
@@ -369,6 +374,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
       if (redirectUri) {
         const uri = getRedirectUri(redirectUri, params);
         storeRedirectUri.remove();
+        setRedirectUri(undefined);
         setTimeout(() => ((window as Window).location = uri), 2000);
       }
     }
