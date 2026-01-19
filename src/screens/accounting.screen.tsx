@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
-import { Bank, BankBalanceSheet, useAccounting } from 'src/hooks/accounting.hook';
+import { Bank, BankBalanceSheet, DetailedBalanceSheet, useAccounting } from 'src/hooks/accounting.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
@@ -12,8 +12,8 @@ import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 type ReportType = 'summary' | 'detailed';
 
 const REPORT_TYPES: { value: ReportType; label: string }[] = [
-  { value: 'summary', label: 'Ein-Ausgaben' },
-  { value: 'detailed', label: 'Detailliert' },
+  { value: 'summary', label: 'Income/Expenses' },
+  { value: 'detailed', label: 'Detailed' },
 ];
 
 // Generate year options from 2021 to current year
@@ -37,7 +37,7 @@ export default function AccountingScreen(): JSX.Element {
 
   const { translate } = useSettingsContext();
   const { isInitialized } = useWalletContext();
-  const { getBanks, getBalanceSheet } = useAccounting();
+  const { getBanks, getBalanceSheet, getDetailedBalanceSheet } = useAccounting();
   const [searchParams] = useSearchParams();
 
   const [error, setError] = useState<string>();
@@ -47,18 +47,29 @@ export default function AccountingScreen(): JSX.Element {
   const bankParam = searchParams.get('bank');
   const typeParam = searchParams.get('type') as ReportType | null;
 
-  // Filter state - use URL params if provided
-  const [selectedYear, setSelectedYear] = useState<number>(
-    yearParam ? parseInt(yearParam, 10) : new Date().getFullYear(),
-  );
-  const [selectedBankIban, setSelectedBankIban] = useState<string>(bankParam ?? '');
-  const [selectedType, setSelectedType] = useState<ReportType>(typeParam ?? 'summary');
+  // Filter state
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedBankIban, setSelectedBankIban] = useState<string>('');
+  const [selectedType, setSelectedType] = useState<ReportType>('summary');
   const [banks, setBanks] = useState<Bank[]>([]);
   const [isBanksLoading, setIsBanksLoading] = useState(true);
+
+  // Sync URL params to state on mount and when searchParams change
+  useEffect(() => {
+    if (yearParam) setSelectedYear(parseInt(yearParam, 10));
+    if (bankParam) setSelectedBankIban(bankParam);
+    if (typeParam && (typeParam === 'summary' || typeParam === 'detailed')) {
+      setSelectedType(typeParam);
+    }
+  }, [yearParam, bankParam, typeParam]);
 
   // Balance sheet state
   const [balanceSheet, setBalanceSheet] = useState<BankBalanceSheet>();
   const [isBalanceSheetLoading, setIsBalanceSheetLoading] = useState(false);
+
+  // Detailed balance sheet state
+  const [detailedBalanceSheet, setDetailedBalanceSheet] = useState<DetailedBalanceSheet>();
+  const [isDetailedLoading, setIsDetailedLoading] = useState(false);
 
   const yearOptions = getYearOptions();
 
@@ -86,7 +97,7 @@ export default function AccountingScreen(): JSX.Element {
   useEffect(() => {
     if (!isInitialized) return;
 
-    if (selectedBankIban && selectedYear) {
+    if (selectedBankIban && selectedYear && selectedType === 'summary') {
       setIsBalanceSheetLoading(true);
       setBalanceSheet(undefined);
       getBalanceSheet(selectedBankIban, selectedYear)
@@ -96,7 +107,23 @@ export default function AccountingScreen(): JSX.Element {
     } else {
       setBalanceSheet(undefined);
     }
-  }, [isInitialized, selectedBankIban, selectedYear]);
+  }, [isInitialized, selectedBankIban, selectedYear, selectedType]);
+
+  // Load detailed balance sheet when type is detailed
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    if (selectedBankIban && selectedYear && selectedType === 'detailed') {
+      setIsDetailedLoading(true);
+      setDetailedBalanceSheet(undefined);
+      getDetailedBalanceSheet(selectedBankIban, selectedYear)
+        .then(setDetailedBalanceSheet)
+        .catch((e) => setError(e.message))
+        .finally(() => setIsDetailedLoading(false));
+    } else {
+      setDetailedBalanceSheet(undefined);
+    }
+  }, [isInitialized, selectedBankIban, selectedYear, selectedType]);
 
   useLayoutOptions({ title: translate('screens/accounting', 'Accounting') });
 
@@ -113,7 +140,6 @@ export default function AccountingScreen(): JSX.Element {
 
       {/* Filter Section */}
       <div className="w-full">
-        <h2 className="text-dfxGray-700 mb-4">{translate('screens/accounting', 'Report Settings')}</h2>
         <div className="flex gap-4 flex-wrap">
           {/* Year Dropdown */}
           <div className="flex-1 min-w-[200px]">
@@ -193,10 +219,10 @@ export default function AccountingScreen(): JSX.Element {
                       <tr className="border-b-2 border-dfxBlue-800">
                         <th className="px-4 py-3 text-left text-sm font-bold text-dfxBlue-800 w-1/3"></th>
                         <th className="px-4 py-3 text-right text-sm font-bold text-dfxBlue-800 w-1/3 border-l border-dfxGray-400">
-                          {translate('screens/accounting', 'Soll')}
+                          {translate('screens/accounting', 'Debit')}
                         </th>
                         <th className="px-4 py-3 text-right text-sm font-bold text-dfxBlue-800 w-1/3 border-l border-dfxGray-400">
-                          {translate('screens/accounting', 'Haben')}
+                          {translate('screens/accounting', 'Credit')}
                         </th>
                       </tr>
                     </thead>
@@ -204,7 +230,7 @@ export default function AccountingScreen(): JSX.Element {
                       {/* Opening Balance */}
                       <tr className="border-b border-dfxGray-300">
                         <td className="px-4 py-2 text-sm text-dfxBlue-800" data-testid="row-opening">
-                          {translate('screens/accounting', 'Anfangsbestand')}
+                          {translate('screens/accounting', 'Opening Balance')}
                         </td>
                         <td className="px-4 py-2 text-right text-sm font-mono text-dfxBlue-800 border-l border-dfxGray-400"></td>
                         <td
@@ -218,7 +244,7 @@ export default function AccountingScreen(): JSX.Element {
                       {/* Total Income */}
                       <tr className="border-b border-dfxGray-300">
                         <td className="px-4 py-2 text-sm text-dfxBlue-800" data-testid="row-income">
-                          {translate('screens/accounting', 'Alle Einnahmen')}
+                          {translate('screens/accounting', 'Total Income')}
                         </td>
                         <td className="px-4 py-2 text-right text-sm font-mono text-dfxBlue-800 border-l border-dfxGray-400"></td>
                         <td
@@ -232,7 +258,7 @@ export default function AccountingScreen(): JSX.Element {
                       {/* Total Expenses */}
                       <tr className="border-b border-dfxGray-300">
                         <td className="px-4 py-2 text-sm text-dfxBlue-800" data-testid="row-expenses">
-                          {translate('screens/accounting', 'Alle Ausgaben')}
+                          {translate('screens/accounting', 'Total Expenses')}
                         </td>
                         <td
                           className="px-4 py-2 text-right text-sm font-mono text-dfxBlue-800 border-l border-dfxGray-400"
@@ -269,10 +295,10 @@ export default function AccountingScreen(): JSX.Element {
                         </td>
                       </tr>
 
-                      {/* Saldo (Closing Balance) */}
+                      {/* Balance (Closing Balance) */}
                       <tr className="bg-dfxGray-300">
                         <td className="px-4 py-2 text-sm font-bold text-dfxBlue-800">
-                          {translate('screens/accounting', 'Saldo')}
+                          {translate('screens/accounting', 'Balance')}
                         </td>
                         <td className="px-4 py-2 text-right text-sm font-mono text-dfxBlue-800 border-l border-dfxGray-400"></td>
                         <td
@@ -298,7 +324,7 @@ export default function AccountingScreen(): JSX.Element {
                         ✓{' '}
                         {translate(
                           'screens/accounting',
-                          'Die Berechnung stimmt mit dem definierten Endbestand überein',
+                          'Calculation matches the defined closing balance',
                         )}{' '}
                         ({formatSwiss(balanceSheet.definedClosingBalance ?? 0, balanceSheet.currency)})
                       </p>
@@ -307,10 +333,10 @@ export default function AccountingScreen(): JSX.Element {
                         ✗{' '}
                         {translate(
                           'screens/accounting',
-                          'Die Berechnung stimmt nicht mit dem definierten Endbestand überein',
+                          'Calculation does not match the defined closing balance',
                         )}{' '}
-                        (Erwartet: {formatSwiss(balanceSheet.definedClosingBalance ?? 0, balanceSheet.currency)},
-                        Berechnet: {formatSwiss(balanceSheet.calculatedClosingBalance, balanceSheet.currency)})
+                        ({translate('screens/accounting', 'Expected')}: {formatSwiss(balanceSheet.definedClosingBalance ?? 0, balanceSheet.currency)},
+                        {translate('screens/accounting', 'Calculated')}: {formatSwiss(balanceSheet.calculatedClosingBalance, balanceSheet.currency)})
                       </p>
                     )}
                   </div>
@@ -321,12 +347,195 @@ export default function AccountingScreen(): JSX.Element {
         </div>
       )}
 
-      {/* Detailed View Placeholder */}
-      {selectedType === 'detailed' && (
+      {/* Detailed View */}
+      {selectedType === 'detailed' && (detailedBalanceSheet || isDetailedLoading) && (
         <div className="w-full bg-dfxGray-300 rounded-lg p-4" data-testid="detailed-view">
-          <p className="text-center text-dfxGray-700">
-            {translate('screens/accounting', 'Detaillierte Ansicht wird implementiert...')}
-          </p>
+          {isDetailedLoading ? (
+            <div className="text-center text-dfxGray-700">Loading...</div>
+          ) : (
+            detailedBalanceSheet && (
+              <>
+                {/* Bank Info Header */}
+                <div className="mb-4 border-b border-dfxGray-400 pb-3">
+                  <table className="w-full">
+                    <tbody>
+                      <tr>
+                        <td className="text-dfxGray-700 py-1 w-32">IBAN:</td>
+                        <td className="text-dfxBlue-800 font-medium font-mono">{detailedBalanceSheet.iban}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Detailed T-Account Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse bg-white rounded-lg">
+                    <thead>
+                      <tr className="border-b-2 border-dfxBlue-800">
+                        <th className="px-4 py-3 text-left text-sm font-bold text-dfxBlue-800 w-1/3"></th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-dfxBlue-800 w-1/6 border-l border-dfxGray-400">
+                          {translate('screens/accounting', 'Count')}
+                        </th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-dfxBlue-800 w-1/4 border-l border-dfxGray-400">
+                          {translate('screens/accounting', 'Debit')}
+                        </th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-dfxBlue-800 w-1/4 border-l border-dfxGray-400">
+                          {translate('screens/accounting', 'Credit')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Opening Balance */}
+                      <tr className="border-b border-dfxGray-300 bg-dfxGray-100">
+                        <td className="px-4 py-2 text-sm font-medium text-dfxBlue-800">
+                          {translate('screens/accounting', 'Opening Balance')}
+                        </td>
+                        <td className="px-4 py-2 text-right text-sm font-mono text-dfxBlue-800 border-l border-dfxGray-400"></td>
+                        <td className="px-4 py-2 text-right text-sm font-mono text-dfxBlue-800 border-l border-dfxGray-400"></td>
+                        <td className="px-4 py-2 text-right text-sm font-mono text-dfxBlue-800 border-l border-dfxGray-400">
+                          {formatSwiss(detailedBalanceSheet.openingBalance)}
+                        </td>
+                      </tr>
+
+                      {/* Income Section Header */}
+                      <tr className="border-b border-dfxGray-300 bg-green-50">
+                        <td colSpan={4} className="px-4 py-2 text-sm font-bold text-green-800">
+                          {translate('screens/accounting', 'Income by Type')}
+                        </td>
+                      </tr>
+
+                      {/* Income by Type */}
+                      {detailedBalanceSheet.incomeByType.map((item) => (
+                        <tr key={`income-${item.type}`} className="border-b border-dfxGray-300">
+                          <td className="px-4 py-2 text-sm text-dfxBlue-800 pl-8">{item.type}</td>
+                          <td className="px-4 py-2 text-right text-sm font-mono text-dfxGray-700 border-l border-dfxGray-400">
+                            {item.count}
+                          </td>
+                          <td className="px-4 py-2 text-right text-sm font-mono text-dfxBlue-800 border-l border-dfxGray-400"></td>
+                          <td className="px-4 py-2 text-right text-sm font-mono text-green-700 border-l border-dfxGray-400">
+                            {formatSwiss(item.amount)}
+                          </td>
+                        </tr>
+                      ))}
+
+                      {/* Income Subtotal */}
+                      <tr className="border-b border-dfxGray-400 bg-green-50">
+                        <td className="px-4 py-2 text-sm font-medium text-green-800">
+                          {translate('screens/accounting', 'Total Income')}
+                        </td>
+                        <td className="px-4 py-2 text-right text-sm font-mono text-dfxGray-700 border-l border-dfxGray-400">
+                          {detailedBalanceSheet.incomeByType.reduce((sum, t) => sum + t.count, 0)}
+                        </td>
+                        <td className="px-4 py-2 text-right text-sm font-mono text-dfxBlue-800 border-l border-dfxGray-400"></td>
+                        <td className="px-4 py-2 text-right text-sm font-mono font-bold text-green-800 border-l border-dfxGray-400">
+                          {formatSwiss(detailedBalanceSheet.totalIncome)}
+                        </td>
+                      </tr>
+
+                      {/* Expenses Section Header */}
+                      <tr className="border-b border-dfxGray-300 bg-red-50">
+                        <td colSpan={4} className="px-4 py-2 text-sm font-bold text-red-800">
+                          {translate('screens/accounting', 'Expenses by Type')}
+                        </td>
+                      </tr>
+
+                      {/* Expenses by Type */}
+                      {detailedBalanceSheet.expensesByType.map((item) => (
+                        <tr key={`expense-${item.type}`} className="border-b border-dfxGray-300">
+                          <td className="px-4 py-2 text-sm text-dfxBlue-800 pl-8">{item.type}</td>
+                          <td className="px-4 py-2 text-right text-sm font-mono text-dfxGray-700 border-l border-dfxGray-400">
+                            {item.count}
+                          </td>
+                          <td className="px-4 py-2 text-right text-sm font-mono text-red-700 border-l border-dfxGray-400">
+                            {formatSwiss(item.amount)}
+                          </td>
+                          <td className="px-4 py-2 text-right text-sm font-mono text-dfxBlue-800 border-l border-dfxGray-400"></td>
+                        </tr>
+                      ))}
+
+                      {/* Expenses Subtotal */}
+                      <tr className="border-b border-dfxGray-400 bg-red-50">
+                        <td className="px-4 py-2 text-sm font-medium text-red-800">
+                          {translate('screens/accounting', 'Total Expenses')}
+                        </td>
+                        <td className="px-4 py-2 text-right text-sm font-mono text-dfxGray-700 border-l border-dfxGray-400">
+                          {detailedBalanceSheet.expensesByType.reduce((sum, t) => sum + t.count, 0)}
+                        </td>
+                        <td className="px-4 py-2 text-right text-sm font-mono font-bold text-red-800 border-l border-dfxGray-400">
+                          {formatSwiss(detailedBalanceSheet.totalExpenses)}
+                        </td>
+                        <td className="px-4 py-2 text-right text-sm font-mono text-dfxBlue-800 border-l border-dfxGray-400"></td>
+                      </tr>
+
+                      {/* Empty row for spacing */}
+                      <tr className="border-b border-dfxGray-300">
+                        <td className="px-4 py-2"></td>
+                        <td className="px-4 py-2 border-l border-dfxGray-400"></td>
+                        <td className="px-4 py-2 border-l border-dfxGray-400"></td>
+                        <td className="px-4 py-2 border-l border-dfxGray-400"></td>
+                      </tr>
+
+                      {/* Total Row */}
+                      <tr className="border-b-2 border-dfxBlue-800 bg-dfxGray-300">
+                        <td className="px-4 py-2 text-sm font-bold text-dfxBlue-800">
+                          {translate('screens/accounting', 'Total')}
+                        </td>
+                        <td className="px-4 py-2 border-l border-dfxGray-400"></td>
+                        <td className="px-4 py-2 text-right text-sm font-mono font-bold text-dfxBlue-800 border-l border-dfxGray-400">
+                          {formatSwiss(detailedBalanceSheet.totalExpenses)}
+                        </td>
+                        <td className="px-4 py-2 text-right text-sm font-mono font-bold text-dfxBlue-800 border-l border-dfxGray-400">
+                          {formatSwiss(detailedBalanceSheet.openingBalance + detailedBalanceSheet.totalIncome)}
+                        </td>
+                      </tr>
+
+                      {/* Balance (Closing Balance) */}
+                      <tr className="bg-dfxGray-300">
+                        <td className="px-4 py-2 text-sm font-bold text-dfxBlue-800">
+                          {translate('screens/accounting', 'Balance')}
+                        </td>
+                        <td className="px-4 py-2 border-l border-dfxGray-400"></td>
+                        <td className="px-4 py-2 text-right text-sm font-mono text-dfxBlue-800 border-l border-dfxGray-400"></td>
+                        <td className="px-4 py-2 text-right text-sm font-mono font-bold text-dfxBlue-800 border-l border-dfxGray-400">
+                          {formatSwiss(detailedBalanceSheet.calculatedClosingBalance)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Validation Message */}
+                {detailedBalanceSheet.hasDefinedClosingBalance && (
+                  <div
+                    className="mt-4 p-3 rounded-lg"
+                    style={{ backgroundColor: detailedBalanceSheet.balanceMatches ? '#d4edda' : '#f8d7da' }}
+                    data-testid="validation-message"
+                  >
+                    {detailedBalanceSheet.balanceMatches ? (
+                      <p className="text-sm font-medium" style={{ color: '#155724' }}>
+                        ✓{' '}
+                        {translate(
+                          'screens/accounting',
+                          'Calculation matches the defined closing balance',
+                        )}{' '}
+                        ({formatSwiss(detailedBalanceSheet.definedClosingBalance ?? 0, detailedBalanceSheet.currency)})
+                      </p>
+                    ) : (
+                      <p className="text-sm font-medium" style={{ color: '#721c24' }}>
+                        ✗{' '}
+                        {translate(
+                          'screens/accounting',
+                          'Calculation does not match the defined closing balance',
+                        )}{' '}
+                        ({translate('screens/accounting', 'Expected')}: {formatSwiss(detailedBalanceSheet.definedClosingBalance ?? 0, detailedBalanceSheet.currency)},
+                        {translate('screens/accounting', 'Calculated')}: {formatSwiss(detailedBalanceSheet.calculatedClosingBalance, detailedBalanceSheet.currency)})
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
+            )
+          )}
         </div>
       )}
 
