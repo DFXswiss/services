@@ -206,6 +206,15 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
                   onClose={() => setIsNavigationOpen(false)}
                 />
               )}
+              {session?.role && [UserRole.ADMIN, UserRole.COMPLIANCE].includes(session.role) && (
+                <NavigationLink
+                  icon={IconVariant.TRANSACTIONS}
+                  label={translate('screens/accounting', 'Accounting')}
+                  url="/accounting"
+                  target="_self"
+                  onClose={() => setIsNavigationOpen(false)}
+                />
+              )}
               {session?.role && [UserRole.ADMIN].includes(session.role) && (
                 <NavigationLink
                   icon={IconVariant.WALLET}
