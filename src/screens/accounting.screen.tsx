@@ -8,6 +8,14 @@ import { Bank, BankBalanceSheet, useAccounting } from 'src/hooks/accounting.hook
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
+// Report type options
+type ReportType = 'summary' | 'detailed';
+
+const REPORT_TYPES: { value: ReportType; label: string }[] = [
+  { value: 'summary', label: 'Ein-Ausgaben' },
+  { value: 'detailed', label: 'Detailliert' },
+];
+
 // Generate year options from 2021 to current year
 function getYearOptions(): number[] {
   const currentYear = new Date().getFullYear();
@@ -37,12 +45,14 @@ export default function AccountingScreen(): JSX.Element {
   // Get URL params for preselection
   const yearParam = searchParams.get('year');
   const bankParam = searchParams.get('bank');
+  const typeParam = searchParams.get('type') as ReportType | null;
 
   // Filter state - use URL params if provided
   const [selectedYear, setSelectedYear] = useState<number>(
     yearParam ? parseInt(yearParam, 10) : new Date().getFullYear(),
   );
   const [selectedBankIban, setSelectedBankIban] = useState<string>(bankParam ?? '');
+  const [selectedType, setSelectedType] = useState<ReportType>(typeParam ?? 'summary');
   const [banks, setBanks] = useState<Bank[]>([]);
   const [isBanksLoading, setIsBanksLoading] = useState(true);
 
@@ -137,11 +147,27 @@ export default function AccountingScreen(): JSX.Element {
               ))}
             </select>
           </div>
+
+          {/* Type Dropdown */}
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-dfxGray-700 text-sm block mb-1">{translate('screens/accounting', 'Type')}</label>
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value as ReportType)}
+              className="w-full px-3 py-2 border border-dfxGray-400 rounded-md text-dfxBlue-800 bg-white focus:outline-none focus:ring-2 focus:ring-primary-blue"
+            >
+              {REPORT_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {translate('screens/accounting', type.label)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* T-Account Balance Sheet */}
-      {(balanceSheet || isBalanceSheetLoading) && (
+      {/* T-Account Balance Sheet (Summary View) */}
+      {selectedType === 'summary' && (balanceSheet || isBalanceSheetLoading) && (
         <div className="w-full bg-dfxGray-300 rounded-lg p-4" data-testid="balance-sheet">
           {isBalanceSheetLoading ? (
             <div className="text-center text-dfxGray-700">Loading...</div>
@@ -292,6 +318,15 @@ export default function AccountingScreen(): JSX.Element {
               </>
             )
           )}
+        </div>
+      )}
+
+      {/* Detailed View Placeholder */}
+      {selectedType === 'detailed' && (
+        <div className="w-full bg-dfxGray-300 rounded-lg p-4" data-testid="detailed-view">
+          <p className="text-center text-dfxGray-700">
+            {translate('screens/accounting', 'Detaillierte Ansicht wird implementiert...')}
+          </p>
         </div>
       )}
 

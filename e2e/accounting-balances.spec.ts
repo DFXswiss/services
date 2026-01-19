@@ -58,7 +58,7 @@ test.describe('Accounting Page - Balance Sheets (Real API)', () => {
   // ========== 2024 ==========
   test.describe('2024 Balance Sheets', () => {
     test('Olkypay EUR 2024', async ({ page }) => {
-      await page.goto(`/accounting?year=2024&bank=${BANKS.OLKYPAY_EUR}&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
+      await page.goto(`/accounting?year=2024&bank=${BANKS.OLKYPAY_EUR}&type=summary&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
       await waitForBalanceSheet(page);
@@ -75,7 +75,7 @@ test.describe('Accounting Page - Balance Sheets (Real API)', () => {
     });
 
     test('Maerki Baumann EUR 2024', async ({ page }) => {
-      await page.goto(`/accounting?year=2024&bank=${BANKS.MAERKI_EUR}&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
+      await page.goto(`/accounting?year=2024&bank=${BANKS.MAERKI_EUR}&type=summary&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
       await waitForBalanceSheet(page);
@@ -92,7 +92,7 @@ test.describe('Accounting Page - Balance Sheets (Real API)', () => {
     });
 
     test('Maerki Baumann CHF 2024', async ({ page }) => {
-      await page.goto(`/accounting?year=2024&bank=${BANKS.MAERKI_CHF}&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
+      await page.goto(`/accounting?year=2024&bank=${BANKS.MAERKI_CHF}&type=summary&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
       await waitForBalanceSheet(page);
@@ -109,7 +109,7 @@ test.describe('Accounting Page - Balance Sheets (Real API)', () => {
     });
 
     test('Raiffeisen CHF 2024', async ({ page }) => {
-      await page.goto(`/accounting?year=2024&bank=${BANKS.RAIFFEISEN_CHF}&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
+      await page.goto(`/accounting?year=2024&bank=${BANKS.RAIFFEISEN_CHF}&type=summary&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
       await waitForBalanceSheet(page);
@@ -126,7 +126,7 @@ test.describe('Accounting Page - Balance Sheets (Real API)', () => {
     });
 
     test('Yapeal CHF 2024', async ({ page }) => {
-      await page.goto(`/accounting?year=2024&bank=${BANKS.YAPEAL_CHF}&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
+      await page.goto(`/accounting?year=2024&bank=${BANKS.YAPEAL_CHF}&type=summary&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
       await waitForBalanceSheet(page);
@@ -143,7 +143,7 @@ test.describe('Accounting Page - Balance Sheets (Real API)', () => {
     });
 
     test('Yapeal EUR 2024', async ({ page }) => {
-      await page.goto(`/accounting?year=2024&bank=${BANKS.YAPEAL_EUR}&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
+      await page.goto(`/accounting?year=2024&bank=${BANKS.YAPEAL_EUR}&type=summary&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
       await waitForBalanceSheet(page);
@@ -163,7 +163,7 @@ test.describe('Accounting Page - Balance Sheets (Real API)', () => {
   // ========== 2025 ==========
   test.describe('2025 Balance Sheets', () => {
     test('Olkypay EUR 2025', async ({ page }) => {
-      await page.goto(`/accounting?year=2025&bank=${BANKS.OLKYPAY_EUR}&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
+      await page.goto(`/accounting?year=2025&bank=${BANKS.OLKYPAY_EUR}&type=summary&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
       await waitForBalanceSheet(page);
@@ -180,7 +180,7 @@ test.describe('Accounting Page - Balance Sheets (Real API)', () => {
     });
 
     test('Maerki Baumann EUR 2025', async ({ page }) => {
-      await page.goto(`/accounting?year=2025&bank=${BANKS.MAERKI_EUR}&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
+      await page.goto(`/accounting?year=2025&bank=${BANKS.MAERKI_EUR}&type=summary&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
       await waitForBalanceSheet(page);
@@ -197,7 +197,7 @@ test.describe('Accounting Page - Balance Sheets (Real API)', () => {
     });
 
     test('Maerki Baumann CHF 2025', async ({ page }) => {
-      await page.goto(`/accounting?year=2025&bank=${BANKS.MAERKI_CHF}&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
+      await page.goto(`/accounting?year=2025&bank=${BANKS.MAERKI_CHF}&type=summary&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
       await waitForBalanceSheet(page);
@@ -214,7 +214,7 @@ test.describe('Accounting Page - Balance Sheets (Real API)', () => {
     });
 
     test('Raiffeisen CHF 2025', async ({ page }) => {
-      await page.goto(`/accounting?year=2025&bank=${BANKS.RAIFFEISEN_CHF}&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
+      await page.goto(`/accounting?year=2025&bank=${BANKS.RAIFFEISEN_CHF}&type=summary&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
       await waitForBalanceSheet(page);
@@ -231,7 +231,7 @@ test.describe('Accounting Page - Balance Sheets (Real API)', () => {
     });
 
     test('Yapeal CHF 2025', async ({ page }) => {
-      await page.goto(`/accounting?year=2025&bank=${BANKS.YAPEAL_CHF}&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
+      await page.goto(`/accounting?year=2025&bank=${BANKS.YAPEAL_CHF}&type=summary&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
       await waitForBalanceSheet(page);
@@ -248,7 +248,7 @@ test.describe('Accounting Page - Balance Sheets (Real API)', () => {
     });
 
     test('Yapeal EUR 2025', async ({ page }) => {
-      await page.goto(`/accounting?year=2025&bank=${BANKS.YAPEAL_EUR}&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
+      await page.goto(`/accounting?year=2025&bank=${BANKS.YAPEAL_EUR}&type=summary&address=${ADMIN_ADDRESS}&signature=${ADMIN_SIGNATURE}`);
       await waitForAppLoaded(page);
       await removeErrorOverlay(page);
       await waitForBalanceSheet(page);
