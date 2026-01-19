@@ -64,7 +64,7 @@ test.describe('Network Requests', () => {
     const apiCalls: string[] = [];
     
     page.on('request', (request) => {
-      if (request.url().includes('api.dfx.swiss')) {
+      if (request.url().includes(process.env.REACT_APP_API_URL || '')) {
         apiCalls.push(request.url());
       }
     });

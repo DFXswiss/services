@@ -29,6 +29,6 @@ test('debug network requests', async ({ page }) => {
   failedRequests.forEach(r => console.log(r));
   
   console.log('\n=== API REQUESTS ===');
-  const apiRequests = allRequests.filter(r => r.includes('api.dfx.swiss') || r.includes('dfx'));
+  const apiRequests = allRequests.filter(r => r.includes(process.env.REACT_APP_API_URL || '') || r.includes('/v1/'));
   apiRequests.forEach(r => console.log(r));
 });

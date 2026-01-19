@@ -17,7 +17,7 @@ test.describe('Bank Refund - Complete Visual Flow', () => {
   test.beforeAll(async ({ request }) => {
     const auth = await getCachedAuth(request, 'evm');
     token = auth.token;
-    console.log(`API: ${process.env.E2E_API_URL || 'dev.api.dfx.swiss'}`);
+    console.log(`API: ${process.env.REACT_APP_API_URL}`);
     console.log(`Transaction: ${TEST_TX_ID}`);
   });
 

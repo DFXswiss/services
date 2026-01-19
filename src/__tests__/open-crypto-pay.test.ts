@@ -5,7 +5,7 @@ jest.mock('src/dto/safe.dto', () => ({}));
 // Mock the Api config module
 jest.mock('../config/api', () => ({
   Api: {
-    url: 'https://api.dfx.swiss',
+    url: process.env.REACT_APP_API_URL,
     version: 'v1',
   },
 }));
@@ -49,7 +49,7 @@ describe('OpenCryptoPayUtils', () => {
       if (lnurlMatch) {
         const decoded = Lnurl.decode(lnurlMatch[1]);
         expect(decoded).toContain('lnurlp/test-id-456');
-        expect(decoded).toContain('api.dfx.swiss');
+        expect(decoded).toContain(process.env.REACT_APP_API_URL);
       }
     });
 
@@ -60,7 +60,7 @@ describe('OpenCryptoPayUtils', () => {
       const lnurlMatch = result.match(/lightning=(LNURL[A-Z0-9]+)/i);
       if (lnurlMatch) {
         const decoded = Lnurl.decode(lnurlMatch[1]);
-        expect(decoded).toContain('https://api.dfx.swiss/v1');
+        expect(decoded).toContain(`${process.env.REACT_APP_API_URL}/v1`);
       }
     });
 
