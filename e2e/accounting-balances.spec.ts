@@ -38,13 +38,13 @@ async function waitForBalanceSheet(page: Page): Promise<void> {
 }
 
 // Dynamic values that change with new transactions - mask in screenshots
+// Note: Saldo (closing-balance) is NOT masked - it should be visible for verification
 function getDynamicValueMasks(page: Page) {
   return [
     page.locator('[data-testid="total-income"]'),
     page.locator('[data-testid="total-expenses"]'),
     page.locator('[data-testid="total-soll"]'),
     page.locator('[data-testid="total-haben"]'),
-    page.locator('[data-testid="closing-balance"]'),
   ];
 }
 
