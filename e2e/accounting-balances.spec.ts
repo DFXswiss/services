@@ -81,10 +81,14 @@ test.describe('Accounting Page - T-Account Balance Sheet (Real API)', () => {
       const balanceSheet = page.locator('[data-testid="balance-sheet"]');
       await expect(balanceSheet).toBeVisible();
 
-      // Capture baseline screenshot
+      // Capture baseline screenshot (mask dynamic values that change with new transactions)
       await expect(page).toHaveScreenshot('01-accounting-page-opened.png', {
         fullPage: true,
         animations: 'disabled',
+        mask: [
+          page.locator('[data-testid="total-income"]'),
+          page.locator('[data-testid="total-expenses"]'),
+        ],
       });
     });
 
@@ -135,10 +139,14 @@ test.describe('Accounting Page - T-Account Balance Sheet (Real API)', () => {
       const closingBalance = page.locator('[data-testid="closing-balance"]');
       await expect(closingBalance).toBeVisible();
 
-      // Capture baseline screenshot with T-account data
+      // Capture baseline screenshot with T-account data (mask dynamic values)
       await expect(page).toHaveScreenshot('02-maerki-chf-t-account-displayed.png', {
         fullPage: true,
         animations: 'disabled',
+        mask: [
+          page.locator('[data-testid="total-income"]'),
+          page.locator('[data-testid="total-expenses"]'),
+        ],
       });
     });
   });
@@ -177,6 +185,10 @@ test.describe('Accounting Page - T-Account Balance Sheet (Real API)', () => {
       await expect(page).toHaveScreenshot('03-maerki-eur-t-account-displayed.png', {
         fullPage: true,
         animations: 'disabled',
+        mask: [
+          page.locator('[data-testid="total-income"]'),
+          page.locator('[data-testid="total-expenses"]'),
+        ],
       });
     });
 
@@ -213,6 +225,10 @@ test.describe('Accounting Page - T-Account Balance Sheet (Real API)', () => {
       await expect(page).toHaveScreenshot('04-raiffeisen-chf-t-account-displayed.png', {
         fullPage: true,
         animations: 'disabled',
+        mask: [
+          page.locator('[data-testid="total-income"]'),
+          page.locator('[data-testid="total-expenses"]'),
+        ],
       });
     });
 
@@ -248,6 +264,10 @@ test.describe('Accounting Page - T-Account Balance Sheet (Real API)', () => {
       await expect(page).toHaveScreenshot('05-year-2024-balance-sheet.png', {
         fullPage: true,
         animations: 'disabled',
+        mask: [
+          page.locator('[data-testid="total-income"]'),
+          page.locator('[data-testid="total-expenses"]'),
+        ],
       });
     });
   });
@@ -298,10 +318,14 @@ test.describe('Accounting Page - T-Account Balance Sheet (Real API)', () => {
       const closingBalance = page.locator('[data-testid="closing-balance"]');
       await expect(closingBalance).toBeVisible();
 
-      // Capture screenshot of direct link result
+      // Capture screenshot of direct link result (mask dynamic values)
       await expect(page).toHaveScreenshot('06-direct-link-maerki-chf-2025.png', {
         fullPage: true,
         animations: 'disabled',
+        mask: [
+          page.locator('[data-testid="total-income"]'),
+          page.locator('[data-testid="total-expenses"]'),
+        ],
       });
     });
   });
