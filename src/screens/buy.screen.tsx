@@ -625,7 +625,7 @@ export default function BuyScreen(): JSX.Element {
                                 <PaymentInformationContent info={paymentInfo} />
                               </div>
                               <SanctionHint />
-                              {!paymentInfo.isPersonalIban && (
+                              {!paymentInfo.isPersonalIban && selectedCurrency?.name !== 'EUR' && (
                                   <StyledVerticalStack gap={4}>
                                     <h2 className="text-dfxBlue-800 text-center">
                                       {translate('screens/payment', 'New: Personal IBAN in your own name!')}
