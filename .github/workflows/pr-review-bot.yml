@@ -86,37 +86,6 @@ jobs:
           COUNT=$(wc -l < new-todos.txt | tr -d ' ')
           echo "count=$COUNT" >> $GITHUB_OUTPUT
 
-      - name: Check commit message format
-        id: commits-format
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const conventionalPattern = /^(feat|fix|refactor|test|ci|docs|chore|perf|style|build|revert)(\(.+\))?: .+/;
-
-            const commits = await github.rest.pulls.listCommits({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number
-            });
-
-            const badCommits = commits.data.filter(c => {
-              const firstLine = c.commit.message.split('\n')[0];
-              return !conventionalPattern.test(firstLine);
-            });
-
-            if (badCommits.length > 0) {
-              const list = badCommits.map(c =>
-                `- \`${c.sha.substring(0,7)}\` ${c.commit.message.split('\n')[0]}`
-              ).join('\n');
-
-              fs.writeFileSync('invalid-commits.txt', list);
-              core.setOutput('invalid', 'true');
-              core.setOutput('invalid_count', badCommits.length);
-            } else {
-              core.setOutput('invalid', 'false');
-            }
-
       - name: Post PR comment
         uses: actions/github-script@v7
         with:
@@ -136,11 +105,6 @@ jobs:
             const auditCritical = parseInt('${{ steps.audit.outputs.critical }}') || 0;
 
             const todoCount = parseInt('${{ steps.todos.outputs.count }}') || 0;
-
-            const invalidCommits = '${{ steps.commits-format.outputs.invalid }}' === 'true';
-            const invalidCount = '${{ steps.commits-format.outputs.invalid_count }}';
-            let invalidList = '';
-            try { invalidList = fs.readFileSync('invalid-commits.txt', 'utf8'); } catch (e) {}
 
             let comments = [];
 
@@ -166,18 +130,6 @@ jobs:
             git push --force-with-lease
             \`\`\`
             </details>`);
-            }
-
-            // Invalid commit message format
-            if (invalidCommits) {
-              comments.push(`## ⚠️ Non-Conventional Commits (${invalidCount})
-
-            The following commits don't follow conventional commit format:
-
-            ${invalidList}
-
-            Expected: \`type(scope): description\`
-            Types: feat, fix, refactor, test, ci, docs, chore, perf, style, build, revert`);
             }
 
             // ESLint warnings

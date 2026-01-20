@@ -84,6 +84,62 @@ export interface BankTxSearchResult {
 export interface ComplianceUserData {
   userData: object;
   kycFiles: KycFile[];
+  kycSteps: KycStepInfo[];
+  transactions: TransactionInfo[];
+  users: UserInfo[];
+  bankDatas: BankDataInfo[];
+  buyRoutes: BuyRouteInfo[];
+  sellRoutes: SellRouteInfo[];
+}
+
+export interface KycStepInfo {
+  id: number;
+  name: string;
+  type?: string;
+  status: string;
+  sequenceNumber: number;
+  created: Date;
+}
+
+export interface UserInfo {
+  id: number;
+  address: string;
+  role: string;
+  status: string;
+  created: Date;
+}
+
+export interface TransactionInfo {
+  id: number;
+  uid: string;
+  type?: string;
+  sourceType: string;
+  amountInChf?: number;
+  amlCheck?: string;
+  created: Date;
+}
+
+export interface BankDataInfo {
+  id: number;
+  iban: string;
+  name: string;
+  approved: boolean;
+}
+
+export interface BuyRouteInfo {
+  id: number;
+  bankUsage: string;
+  assetName: string;
+  blockchain: string;
+  volume: number;
+  active: boolean;
+}
+
+export interface SellRouteInfo {
+  id: number;
+  iban: string;
+  fiatName?: string;
+  volume: number;
 }
 
 export interface KycFile {
