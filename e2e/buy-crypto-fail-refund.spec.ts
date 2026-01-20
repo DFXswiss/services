@@ -18,7 +18,7 @@ import { getCachedAuth } from './helpers/auth-cache';
  * - BUY_CRYPTO_FAIL: Failed buy crypto transaction (e.g., AML check failed)
  */
 
-const TEST_TX_ID = process.env.BUY_CRYPTO_TX_ID || '4';
+const TEST_TX_ID = process.env.BUY_CRYPTO_TX_ID!;
 
 test.describe('BuyCrypto FAIL Refund Flow - Complete E2E Test', () => {
   let token: string;

@@ -12,7 +12,7 @@ test.describe('Swap Lightning to Bitcoin Onchain', () => {
     await getLinkedLightningAuth(apiContext, bitcoinAuth.token);
 
     // Navigate to swap with Lightning as source and Bitcoin Onchain as target
-    const baseUrl = process.env.E2E_BASE_URL ?? 'https://dev.app.dfx.swiss';
+    const baseUrl = process.env.REACT_APP_PUBLIC_URL!;
     const url = `${baseUrl}/swap?session=${bitcoinAuth.token}&asset-in=Lightning/BTC&asset-out=Bitcoin/BTC&amount-in=0.001`;
     await page.goto(url);
 

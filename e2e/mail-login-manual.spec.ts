@@ -1,11 +1,8 @@
 import { test } from '@playwright/test';
 
-const TEST_EMAIL = process.env.TEST_EMAIL || '';
+const TEST_EMAIL = process.env.TEST_EMAIL!;
 
 test('Manual Mail Login Flow', async ({ page }) => {
-  if (!TEST_EMAIL) {
-    throw new Error('TEST_EMAIL environment variable is required');
-  }
 
   // Step 1: Go to mail login page
   await page.goto('/login/mail');

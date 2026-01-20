@@ -13,6 +13,7 @@
  */
 
 import { test as base, chromium, BrowserContext, Page, expect } from '@playwright/test';
+import { HDNodeWallet } from 'ethers';
 import path from 'path';
 import fs from 'fs';
 import * as dotenv from 'dotenv';
@@ -38,16 +39,21 @@ const CONFIG = {
   POPUP_TIMEOUT: 10000,
 };
 
-// Wallet configurations
+// Derive wallet address from seed
+function getAddressFromSeed(seed: string): string {
+  return HDNodeWallet.fromPhrase(seed).address;
+}
+
+// Wallet configurations (addresses derived dynamically from seeds)
 const WALLETS = {
   wallet1: {
-    seed: process.env.TEST_SEED || '',
-    address: '0x482c8a499c7ac19925a0D2aA3980E1f3C5F19120',
+    seed: process.env.TEST_SEED!,
+    get address() { return getAddressFromSeed(this.seed); },
     prefix: 'wallet1',
   },
   wallet2: {
-    seed: process.env.TEST_SEED_2 || '',
-    address: '0xE988cD504F3F2E5c93fF13Eb8A753D8Bc96f0640',
+    seed: process.env.TEST_SEED_2!,
+    get address() { return getAddressFromSeed(this.seed); },
     prefix: 'wallet2',
   },
 };

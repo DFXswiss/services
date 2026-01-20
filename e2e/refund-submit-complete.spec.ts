@@ -8,7 +8,7 @@ import { getCachedAuth } from './helpers/auth-cache';
  * from the original bank transaction, not as input fields.
  */
 
-const TEST_TX_ID = process.env.TEST_TX_ID || '11';
+const TEST_TX_ID = process.env.TEST_TX_ID!;
 const SCREENSHOT_DIR = 'e2e/test-results/refund-fixed-display';
 
 test.describe('Bank Refund - Fixed Display Flow', () => {

@@ -1,11 +1,8 @@
 import { test } from '@playwright/test';
 
-const TEST_EMAIL = process.env.TEST_EMAIL || '';
+const TEST_EMAIL = process.env.TEST_EMAIL!;
 
 test('Send new login email', async ({ page }) => {
-  if (!TEST_EMAIL) {
-    throw new Error('TEST_EMAIL environment variable is required');
-  }
 
   await page.goto('https://dev.app.dfx.swiss/login/mail');
   await page.waitForLoadState('networkidle');

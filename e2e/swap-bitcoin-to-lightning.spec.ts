@@ -12,7 +12,7 @@ test.describe('Swap Bitcoin to Lightning', () => {
     await getLinkedLightningAuth(apiContext, bitcoinAuth.token);
 
     // Navigate to swap with Bitcoin as source and Lightning as target
-    const baseUrl = process.env.E2E_BASE_URL ?? 'https://dev.app.dfx.swiss';
+    const baseUrl = process.env.REACT_APP_PUBLIC_URL!;
     const url = `${baseUrl}/swap?session=${bitcoinAuth.token}&asset-in=Bitcoin/BTC&asset-out=Lightning/BTC&amount-in=0.001`;
     await page.goto(url);
 

@@ -12,10 +12,10 @@ import { test, expect, Page } from '@playwright/test';
  * Required env vars: TEST_ADDRESS_1, TEST_SIGNATURE_1, TEST_ADDRESS_2, TEST_SIGNATURE_2
  */
 
-const TEST_ADDRESS_1 = process.env.TEST_ADDRESS_1 || '';
-const TEST_SIGNATURE_1 = process.env.TEST_SIGNATURE_1 || '';
-const TEST_ADDRESS_2 = process.env.TEST_ADDRESS_2 || '';
-const TEST_SIGNATURE_2 = process.env.TEST_SIGNATURE_2 || '';
+const TEST_ADDRESS_1 = process.env.TEST_ADDRESS_1!;
+const TEST_SIGNATURE_1 = process.env.TEST_SIGNATURE_1!;
+const TEST_ADDRESS_2 = process.env.TEST_ADDRESS_2!;
+const TEST_SIGNATURE_2 = process.env.TEST_SIGNATURE_2!;
 
 // Helper to remove webpack error overlay
 async function removeErrorOverlay(page: Page) {

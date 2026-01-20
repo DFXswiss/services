@@ -18,10 +18,10 @@ import {
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // Use same API URL as the React app (add /v1 path for API calls)
-const API_URL = (process.env.REACT_APP_API_URL || 'http://localhost:3000') + '/v1';
+const API_URL = process.env.REACT_APP_API_URL! + '/v1';
 
 // Lightning.space API URL for Lightning authentication (prod works, dev has internal SSL issues)
-const LIGHTNING_API_URL = process.env.LIGHTNING_API_URL || 'https://lightning.space/v1';
+const LIGHTNING_API_URL = process.env.LIGHTNING_API_URL!;
 
 // Global cache for auth tokens to avoid rate limiting
 const tokenCache: Map<string, { token: string; expiry: number; lightningAddress?: string }> = new Map();

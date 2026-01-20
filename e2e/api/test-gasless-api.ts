@@ -9,14 +9,10 @@ import path from 'path';
 
 dotenv.config({ path: path.join(process.cwd(), '.env.test') });
 
-const API_URL = process.env.API_URL || 'http://localhost:3000';
-const TEST_SEED = process.env.TEST_SEED_2 || '';
+const API_URL = process.env.API_URL!;
+const TEST_SEED = process.env.TEST_SEED_2!;
 
 async function test() {
-  if (!TEST_SEED) {
-    console.error('ERROR: TEST_SEED_2 not set in .env.test');
-    process.exit(1);
-  }
 
   const wallet = ethers.Wallet.fromPhrase(TEST_SEED);
   console.log('=== Test Gasless API Response ===');

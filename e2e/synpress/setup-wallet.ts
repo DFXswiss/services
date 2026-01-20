@@ -42,15 +42,10 @@ const USER_DATA_DIR = path.join(process.cwd(), '.cache-synpress/user-data-ready'
 
 // Credentials
 const WALLET_PASSWORD = 'Tester@1234';
-const TEST_SEED_PHRASE = process.env.TEST_SEED || '';
+const TEST_SEED_PHRASE = process.env.TEST_SEED!;
 
 async function setupWallet() {
   console.log('=== MetaMask + DFX Setup Script ===\n');
-
-  if (!TEST_SEED_PHRASE) {
-    console.error('ERROR: TEST_SEED not set in .env');
-    process.exit(1);
-  }
 
   // Check if already set up
   const setupMarker = path.join(USER_DATA_DIR, '.setup-complete');

@@ -8,7 +8,7 @@ import { getCachedAuth } from './helpers/auth-cache';
  * that the creditor data flow works correctly end-to-end.
  */
 
-const TEST_TX_ID = process.env.TEST_TX_ID || 'T11';
+const TEST_TX_ID = process.env.TEST_TX_ID!;
 const SCREENSHOT_DIR = 'e2e/test-results/full-flow-screenshots';
 
 test.describe('Bank Refund - Complete Visual Flow', () => {
@@ -17,7 +17,7 @@ test.describe('Bank Refund - Complete Visual Flow', () => {
   test.beforeAll(async ({ request }) => {
     const auth = await getCachedAuth(request, 'evm');
     token = auth.token;
-    console.log(`API: ${process.env.E2E_API_URL || 'dev.api.dfx.swiss'}`);
+    console.log(`API: ${process.env.REACT_APP_API_URL}`);
     console.log(`Transaction: ${TEST_TX_ID}`);
   });
 
