@@ -97,6 +97,10 @@ async function waitForDetailedView(page: Page): Promise<void> {
 // Helper: Take screenshot without any overlays
 async function takeCleanScreenshot(page: Page, name: string): Promise<void> {
   await removeErrorOverlay(page);
+  // Scroll to bottom and back to top to ensure all content is rendered
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(300);
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(500); // Let animations settle
   await expect(page).toHaveScreenshot(name, {
     fullPage: true,
