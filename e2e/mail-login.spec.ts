@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 // Load test environment variables
 dotenv.config({ path: '.env' });
 
-const TEST_EMAIL = process.env.TEST_EMAIL;
+const TEST_EMAIL = process.env.TEST_EMAIL!;
 
 // Helper to remove webpack error overlay (appears due to TS errors in dev mode)
 async function removeErrorOverlay(page: Page) {
@@ -15,11 +15,6 @@ async function removeErrorOverlay(page: Page) {
 }
 
 test.describe('Mail Login Flow', () => {
-  test.beforeEach(async () => {
-    if (!TEST_EMAIL) {
-      throw new Error('TEST_EMAIL not set in .env');
-    }
-  });
 
   test('should load mail login page', async ({ page }) => {
     await page.goto('/login/mail');

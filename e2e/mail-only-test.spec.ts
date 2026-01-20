@@ -3,13 +3,10 @@ import { test } from '@playwright/test';
 // WICHTIG: Dieser Test verwendet AUSSCHLIESSLICH Mail-Login (OTP)
 // KEINE Wallet-Authentifizierung erlaubt!
 
-const TEST_EMAIL = process.env.TEST_EMAIL || '';
+const TEST_EMAIL = process.env.TEST_EMAIL!;
 
 test.describe('Mail-Only Login Tests', () => {
   test('Step 1: Send login email', async ({ page }) => {
-    if (!TEST_EMAIL) {
-      throw new Error('TEST_EMAIL environment variable is required');
-    }
 
     await page.goto('https://dev.app.dfx.swiss/login/mail');
     await page.waitForLoadState('networkidle');

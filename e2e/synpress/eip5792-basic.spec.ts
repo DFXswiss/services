@@ -6,10 +6,13 @@
 
 import { testWithSynpress, defineWalletSetup } from '@synthetixio/synpress';
 import { MetaMask, metaMaskFixtures } from '@synthetixio/synpress/playwright';
+import * as dotenv from 'dotenv';
+import path from 'path';
 
-// Define wallet setup inline to ensure hash matches
+dotenv.config({ path: path.join(__dirname, '../../.env') });
+
 const WALLET_PASSWORD = 'Tester@1234';
-const TEST_SEED_PHRASE = 'test test test test test test test test test test test junk';
+const TEST_SEED_PHRASE = process.env.TEST_SEED!;
 
 const walletSetup = defineWalletSetup(WALLET_PASSWORD, async (context, walletPage) => {
   const metamask = new MetaMask(context, walletPage, WALLET_PASSWORD);

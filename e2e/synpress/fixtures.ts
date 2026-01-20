@@ -21,9 +21,6 @@ export const testWithMetaMask = test.extend<{ metamask: MetaMask }>({
 
 export const { expect } = test;
 
-// Test wallet address (first account from Hardhat's default seed phrase)
-export const TEST_WALLET_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
-
 // Chain configurations for multi-chain testing
 export const SUPPORTED_CHAINS = [
   { name: 'Ethereum', chainId: 1, chainHex: '0x1' },

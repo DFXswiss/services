@@ -14,7 +14,7 @@ import { getCachedAuth } from './helpers/auth-cache';
  * 7. Verify status changes to "Return pending"
  */
 
-const TEST_TX_ID = process.env.TEST_TX_ID || '11';
+const TEST_TX_ID = process.env.TEST_TX_ID!;
 
 test.describe('Bank Refund Flow - Complete E2E Test', () => {
   let token: string;
