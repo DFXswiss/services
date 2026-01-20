@@ -873,6 +873,7 @@
   "screens/support": {
     "Support": "Supporto",
     "Support tickets": "Ticket di supporto",
+    "The existing EUR IBAN (CH8583019DFXSWISSEURX) is currently experiencing technical issues. Please use your personal IBAN for EUR transactions instead. You can find your personal IBAN on the Buy page.": "L'IBAN EUR esistente (CH8583019DFXSWISSEURX) sta attualmente riscontrando problemi tecnici. Si prega di utilizzare il proprio IBAN personale per le transazioni in EUR. Puoi trovare il tuo IBAN personale nella pagina Acquista.",
 
     "Support issue": "Problema di supporto",
     "The issue has been successfully submitted. You will be contacted by email.": "Il problema è stato inviato con successo. Sarete contattati via e-mail.",
