@@ -20,7 +20,7 @@ import { createTestCredentials } from './test-wallet';
 const TEST_USER_DATA_ID = '1005';
 const TEST_SEARCH_QUERY = 'max';
 
-const API_URL = (process.env.REACT_APP_API_URL || 'http://localhost:3000') + '/v1';
+const API_URL = process.env.REACT_APP_API_URL! + '/v1';
 
 /**
  * Read ADMIN_SEED from the API .env file

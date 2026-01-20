@@ -1,4 +1,4 @@
-import { DfxIcon, IconColor, IconVariant, StyledVerticalStack } from '@dfx.swiss/react-components';
+import { DfxIcon, IconColor, IconVariant, StyledInfoText, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { FaTelegram } from 'react-icons/fa';
 import { IoMdHelpCircle } from 'react-icons/io';
 import { MdEditSquare } from 'react-icons/md';
@@ -6,14 +6,28 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from '../hooks/navigation.hook';
 
+const EUR_IBAN_NOTICE_EXPIRES = new Date('2026-02-03');
+
 export default function SupportScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { translate, language } = useSettingsContext();
+
+  const showEurIbanNotice = new Date() < EUR_IBAN_NOTICE_EXPIRES;
 
   useLayoutOptions({ title: translate('navigation/links', 'Support'), onBack: undefined });
 
   return (
     <StyledVerticalStack gap={3} full className="text-left">
+      {showEurIbanNotice && (
+        <div className="p-4 border border-dfxGray-400 bg-dfxGray-400/10 rounded-md">
+          <StyledInfoText iconColor={IconColor.BLUE}>
+            {translate(
+              'screens/support',
+              'The existing EUR IBAN (CH8583019DFXSWISSEURX) is currently experiencing technical issues. Please use your personal IBAN for EUR transactions instead. You can find your personal IBAN on the Buy page.',
+            )}
+          </StyledInfoText>
+        </div>
+      )}
       <StyledButtonTile
         title={translate('screens/support', 'FAQ')}
         description={translate('screens/support', 'We have summarized the most common questions for you in our FAQ.')}

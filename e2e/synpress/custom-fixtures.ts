@@ -33,7 +33,7 @@ const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-
 
 // Test wallet credentials from environment
 const WALLET_PASSWORD = 'Tester@1234';
-const TEST_SEED_PHRASE = process.env.TEST_SEED || 'test test test test test test test test test test test junk';
+const TEST_SEED_PHRASE = process.env.TEST_SEED!;
 
 // Derivation paths
 export const EVM_DERIVATION_PATH_WALLET1 = ''; // Default (no derivation, direct from seed)

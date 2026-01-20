@@ -5,6 +5,9 @@
 
 import { test as base, chromium, expect } from '@playwright/test';
 import path from 'path';
+import * as dotenv from 'dotenv';
+
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const CHROME_126_PATH = path.join(
   process.cwd(),
@@ -14,7 +17,7 @@ const CHROME_126_PATH = path.join(
 
 const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-11.9.1');
 const WALLET_PASSWORD = 'Tester@1234';
-const TEST_SEED_PHRASE = 'test test test test test test test test test test test junk';
+const TEST_SEED_PHRASE = process.env.TEST_SEED!;
 
 const test = base.extend({});
 

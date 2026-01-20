@@ -97,9 +97,14 @@ export function getTestConfig(): TestConfig {
     throw new Error('TEST_SEED environment variable is required. Set it in .env or as environment variable.');
   }
 
+  const iban = process.env.TEST_IBAN;
+  if (!iban) {
+    throw new Error('TEST_IBAN environment variable is required. Set it in .env or as environment variable.');
+  }
+
   return {
     seed,
-    iban: process.env.TEST_IBAN || 'CH9300762011623852957',
+    iban,
   };
 }
 
@@ -345,16 +350,6 @@ export function getTestWalletAddressesFromEnv(): { WALLET_1: string; WALLET_2: s
   return getTestWalletAddresses(config.seed);
 }
 
-/**
- * Expected test wallet addresses (for reference/verification)
- * These are derived from the default TEST_SEED in .env.sample
- * Wallet 1: Default (no derivation)
- * Wallet 2: m/44'/60'/0'/0/0
- */
-export const TEST_WALLET_ADDRESSES = {
-  WALLET_1: '0x482c8a499c7ac19925a0D2aA3980E1f3C5F19120',
-  WALLET_2: '0x6aCA95eD0705bAbF3b91fA9212af495510bf8b74',
-} as const;
 
 /**
  * Creates EVM credentials for Wallet 2 (with BIP-44 derivation path)

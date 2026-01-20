@@ -31,8 +31,8 @@ const METAMASK_PATH = path.join(process.cwd(), '.cache-synpress/metamask-chrome-
 
 // Credentials
 const WALLET_PASSWORD = 'Tester@1234';
-const TEST_SEED_PHRASE = process.env.TEST_SEED || '';
-const TEST_EMAIL = process.env.TEST_EMAIL || '';
+const TEST_SEED_PHRASE = process.env.TEST_SEED!;
+const TEST_EMAIL = process.env.TEST_EMAIL!;
 
 interface TestFixtures {
   context: BrowserContext;
