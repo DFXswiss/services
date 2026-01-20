@@ -234,7 +234,7 @@ describe('Buy Process - API Integration', () => {
 
     if (result.error) {
       console.log(`Payment info creation returned error: ${result.error} (status: ${result.status})`);
-      const expectedErrors = ['Trading not allowed', 'RecommendationRequired', 'EmailRequired', 'KYC required', 'User not found', 'Ident data incomplete'];
+      const expectedErrors = ['Trading not allowed', 'RecommendationRequired', 'EmailRequired', 'KYC required', 'KycRequired', 'User not found', 'Ident data incomplete'];
       const isExpectedError = expectedErrors.some((e) => result.error?.includes(e));
       if (isExpectedError) {
         console.log('Skipping test - account restriction');
