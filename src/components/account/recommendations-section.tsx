@@ -78,11 +78,7 @@ export function RecommendationsSection({
 
   async function loadRecommendations(): Promise<void> {
     return getRecommendations()
-      .then((r) =>
-        setRecommendations(
-          r.sort((a, b) => new Date(b.expirationDate).getTime() - new Date(a.expirationDate).getTime()),
-        ),
-      )
+      .then((r) => setRecommendations(r.sort((a, b) => b.id - a.id)))
       .catch(() => {
         // ignore errors
       });
@@ -207,10 +203,12 @@ export function RecommendationsSection({
               );
             }
 
-            items.push({
-              label: translate('screens/payment', 'Expiry date'),
-              text: new Date(recommendation.expirationDate).toLocaleDateString(locale),
-            });
+            if (recommendation.expirationDate) {
+              items.push({
+                label: translate('screens/payment', 'Expiry date'),
+                text: new Date(recommendation.expirationDate).toLocaleDateString(locale),
+              });
+            }
 
             return (
               <StyledDataTableExpandableRow
