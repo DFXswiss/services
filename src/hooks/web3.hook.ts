@@ -28,6 +28,7 @@ const chainIds: { [id: number]: Blockchain } = {
   [8453]: Blockchain.BASE,
   [100]: Blockchain.GNOSIS,
   [11235]: Blockchain.HAQQ,
+  [4114]: Blockchain.CITREA,
   [5115]: Blockchain.CITREA_TESTNET,
 };
 
@@ -169,6 +170,19 @@ export function useWeb3(): Web3Interface {
           blockExplorerUrls: ['https://sepolia.etherscan.io/'],
         };
 
+      case Blockchain.CITREA:
+        return {
+          chainId,
+          chainName: 'Citrea',
+          nativeCurrency: {
+            name: 'Bitcoin',
+            symbol: 'cBTC',
+            decimals: 18,
+          },
+          rpcUrls: ['https://rpc.citreascan.com'],
+          blockExplorerUrls: ['https://citreascan.com/'],
+        };
+
       case Blockchain.CITREA_TESTNET:
         return {
           chainId,
@@ -178,8 +192,8 @@ export function useWeb3(): Web3Interface {
             symbol: 'cBTC',
             decimals: 18,
           },
-          rpcUrls: ['https://rpc.testnet.citrea.xyz'],
-          blockExplorerUrls: ['https://explorer.testnet.citrea.xyz/'],
+          rpcUrls: ['https://rpc.testnet.citreascan.com'],
+          blockExplorerUrls: ['https://testnet.citreascan.com/'],
         };
 
       default:

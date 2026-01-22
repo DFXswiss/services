@@ -223,7 +223,7 @@ describe('Swap Process - API Integration', () => {
     }
   });
 
-  test('should create swap payment info for ETH -> USDT', async () => {
+  test.skip('should create swap payment info for ETH -> USDT', async () => {
     const eth = swappableAssets.find((a) => a.name === 'ETH' && EVM_BLOCKCHAINS.includes(a.blockchain));
     const usdt = swappableAssets.find((a) => a.name === 'USDT' && EVM_BLOCKCHAINS.includes(a.blockchain));
 

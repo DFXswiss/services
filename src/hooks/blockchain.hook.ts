@@ -32,6 +32,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.BASE]: 'Base · ERC-20 token',
       [Blockchain.GNOSIS]: 'Gnosis · ERC-20 token',
       [Blockchain.HAQQ]: 'Haqq · ERC-20 token',
+      [Blockchain.CITREA]: 'Citrea · ERC-20 token',
       [Blockchain.CITREA_TESTNET]: 'Citrea Testnet · ERC-20 token',
     },
     protocols: {
@@ -44,6 +45,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.BASE]: Protocol.ERC_20,
       [Blockchain.GNOSIS]: Protocol.ERC_20,
       [Blockchain.HAQQ]: Protocol.ERC_20,
+      [Blockchain.CITREA]: Protocol.ERC_20,
       [Blockchain.CITREA_TESTNET]: Protocol.ERC_20,
     },
     mainToken: {
@@ -56,6 +58,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.BASE]: 'ETH',
       [Blockchain.GNOSIS]: 'xDAI',
       [Blockchain.HAQQ]: 'ISLM',
+      [Blockchain.CITREA]: 'cBTC',
       [Blockchain.CITREA_TESTNET]: 'cBTC',
     },
     stringValue: {
@@ -78,6 +81,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.SOLANA]: 'Solana',
       [Blockchain.TRON]: 'Tron',
       [Blockchain.SPARK]: 'Spark',
+      [Blockchain.CITREA]: 'Citrea',
       [Blockchain.CITREA_TESTNET]: 'Citrea Testnet',
     },
   };
