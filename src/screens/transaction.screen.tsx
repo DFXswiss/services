@@ -864,8 +864,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               label={translate('general/actions', 'Open invoice')}
                               onClick={() => {
                                 setIsInvoiceLoading(tx.uid);
-                                // TODO: remove cast after @dfx.swiss/react update
-                                getTransactionInvoice(tx.uid as unknown as number)
+                                getTransactionInvoice(tx.uid)
                                   .then((response: PdfDocument) => {
                                     openPdfFromString(response.pdfData);
                                   })
