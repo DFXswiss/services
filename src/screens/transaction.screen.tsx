@@ -656,7 +656,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const [isTargetsLoading, setIsTargetsLoading] = useState(false);
   const [isTransactionLoading, setIsTransactionLoading] = useState(false);
   const [editTransaction, setEditTransaction] = useState<number>();
-  const [isInvoiceLoading, setIsInvoiceLoading] = useState<number>();
+  const [isInvoiceLoading, setIsInvoiceLoading] = useState<string>();
   const [isReceiptLoading, setIsReceiptLoading] = useState<number>();
 
   useEffect(() => {
@@ -863,17 +863,15 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                             <StyledButton
                               label={translate('general/actions', 'Open invoice')}
                               onClick={() => {
-                                if (!tx.id) return;
-
-                                setIsInvoiceLoading(tx.id);
-                                getTransactionInvoice(tx.id)
+                                setIsInvoiceLoading(tx.uid);
+                                // TODO: remove cast after @dfx.swiss/react update
+                                getTransactionInvoice(tx.uid as unknown as number)
                                   .then((response: PdfDocument) => {
                                     openPdfFromString(response.pdfData);
                                   })
                                   .finally(() => setIsInvoiceLoading(undefined));
                               }}
-                              hidden={!tx.id}
-                              isLoading={isInvoiceLoading === tx.id}
+                              isLoading={isInvoiceLoading === tx.uid}
                               color={StyledButtonColor.STURDY_WHITE}
                             />
                             <StyledButton
