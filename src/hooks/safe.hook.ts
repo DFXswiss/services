@@ -15,8 +15,8 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CustodyOrderType, OrderPaymentInfo } from 'src/dto/order.dto';
 import { CustodyAsset, CustodyBalance, CustodyHistory, CustodyHistoryEntry } from 'src/dto/safe.dto';
-import { OrderFormData } from './order.hook';
 import { downloadPdfFromString } from 'src/util/utils';
+import { OrderFormData } from './order.hook';
 
 const DEPOSIT_PAIRS: Record<string, string> = {
   EUR: 'dEURO',
@@ -104,7 +104,7 @@ export function useSafe(): UseSafeResult {
         await reloadUser();
       } else {
         setCustodyAddress(custodyAddr.address);
-        setCustodyBlockchains([Blockchain.ETHEREUM]);
+        setCustodyBlockchains([Blockchain.ETHEREUM, Blockchain.CITREA]);
         if (!tokenStore.get('custody') && session?.address !== custodyAddr.address) {
           const custodyToken = (await changeUserAddress(custodyAddr.address)).accessToken;
           tokenStore.set('custody', custodyToken);
@@ -144,7 +144,7 @@ export function useSafe(): UseSafeResult {
   }, [currencies]);
 
   const availableAssets = useMemo(() => {
-    return getAssets([Blockchain.ETHEREUM], { buyable: true, comingSoon: false }).filter((a) =>
+    return getAssets([Blockchain.ETHEREUM, Blockchain.CITREA], { buyable: true, comingSoon: false }).filter((a) =>
       Object.values(DEPOSIT_PAIRS).includes(a.name),
     );
   }, [getAssets]);
