@@ -872,7 +872,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   })
                                   .finally(() => setIsInvoiceLoading(undefined));
                               }}
-                              hidden={tx.state !== TransactionState.COMPLETED}
+                              hidden={!tx.id}
                               isLoading={isInvoiceLoading === tx.id}
                               color={StyledButtonColor.STURDY_WHITE}
                             />
