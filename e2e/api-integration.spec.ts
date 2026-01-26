@@ -5,7 +5,7 @@ test.describe('API Integration', () => {
     const apiCalls: string[] = [];
     
     page.on('response', (response) => {
-      if (response.url().includes('api.dfx.swiss')) {
+      if (response.url().includes(process.env.REACT_APP_API_URL || '')) {
         apiCalls.push(response.url());
       }
     });
@@ -65,7 +65,7 @@ test.describe('API Integration', () => {
 
   test('should handle API errors gracefully', async ({ page }) => {
     // Intercept and fail an API call
-    await page.route('**/api.dfx.swiss/**/statistic', route => {
+    await page.route('**/statistic', route => {
       route.abort('failed');
     });
 

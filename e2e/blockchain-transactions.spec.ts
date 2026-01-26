@@ -10,7 +10,7 @@ import {
 } from './helpers/sepolia-transaction';
 import { getCachedAuth, getTestIban } from './helpers/auth-cache';
 
-const API_URL = 'https://dev.api.dfx.swiss/v1';
+const API_URL = `${process.env.REACT_APP_API_URL}/v1`;
 
 interface Asset {
   id: number;

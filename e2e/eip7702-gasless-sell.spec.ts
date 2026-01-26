@@ -644,7 +644,7 @@ test.describe('EIP-7702 Integration with Sell API', () => {
 
     // Try to get payment info via API
     try {
-      const response = await request.get('https://dev.api.dfx.swiss/v1/sell', {
+      const response = await request.get(`${process.env.REACT_APP_API_URL}/v1/sell`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
