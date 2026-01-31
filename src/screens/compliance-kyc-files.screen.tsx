@@ -7,7 +7,7 @@ import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 
-export default function ComplianceKycFileListScreen(): JSX.Element {
+export default function ComplianceKycFilesScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate } = useSettingsContext();
