@@ -65,11 +65,11 @@ export default function ComplianceKycStatsScreen(): JSX.Element {
         <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
           <thead>
             <tr className="bg-dfxGray-300">
-              <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800 whitespace-nowrap">
+              <th className="px-2 py-2 text-left text-sm font-semibold text-dfxBlue-800">
                 {translate('screens/compliance', 'As of 31.12.:')}
               </th>
               {years.map((year) => (
-                <th key={year} className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
+                <th key={year} className="px-2 py-2 text-right text-sm font-semibold text-dfxBlue-800">
                   {year}
                 </th>
               ))}
@@ -81,11 +81,11 @@ export default function ComplianceKycStatsScreen(): JSX.Element {
                 key={row.key}
                 className={`border-b border-dfxGray-300 ${index % 2 === 1 ? 'bg-dfxGray-100' : ''}`}
               >
-                <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 whitespace-nowrap">
+                <td className="px-2 py-2 text-left text-sm text-dfxBlue-800">
                   {translate('screens/compliance', row.label)}
                 </td>
                 {years.map((year) => (
-                  <td key={year} className="px-4 py-3 text-right text-sm text-dfxBlue-800">
+                  <td key={year} className="px-2 py-2 text-right text-sm text-dfxBlue-800">
                     {formatNumber(kycData[year][row.key])}
                   </td>
                 ))}
