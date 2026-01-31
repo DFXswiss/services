@@ -152,6 +152,13 @@ export interface KycFile {
   uid: string;
 }
 
+export interface KycFileListEntry {
+  kycFileId: number;
+  id: number;
+  amlAccountType?: string;
+  verifiedName?: string;
+}
+
 function normalizeSearchKey(key: string): string {
   const normalized = electronicFormatIBAN(key);
   if (normalized && isValidIBAN(normalized)) {
@@ -204,8 +211,15 @@ export function useCompliance() {
     });
   }
 
+  async function getKycFileList(): Promise<KycFileListEntry[]> {
+    return call<KycFileListEntry[]>({
+      url: 'support/kycFileList',
+      method: 'GET',
+    });
+  }
+
   return useMemo(
-    () => ({ search, getUserData, downloadUserFiles, getTransactionRefundData, processTransactionRefund }),
+    () => ({ search, getUserData, downloadUserFiles, getTransactionRefundData, processTransactionRefund, getKycFileList }),
     [call],
   );
 }
