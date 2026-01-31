@@ -37,18 +37,15 @@ export default function ComplianceKycFilesScreen(): JSX.Element {
 
   return (
     <StyledVerticalStack gap={6} full>
-      <h2 className="text-dfxGray-700">
-        {translate('screens/compliance', 'UserData with KYC Files')} ({data.length})
-      </h2>
       <div className="w-full overflow-x-auto">
         <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
           <thead>
             <tr className="bg-dfxGray-300">
               <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                {translate('screens/compliance', 'KYC File ID')}
+                {translate('screens/compliance', 'Id')}
               </th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                {translate('screens/compliance', 'ID')}
+                {translate('screens/compliance', 'AccountId')}
               </th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                 {translate('screens/compliance', 'AML Account Type')}
