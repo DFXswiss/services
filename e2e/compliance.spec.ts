@@ -232,4 +232,81 @@ test.describe('Compliance Pages - Visual Regression Tests', () => {
   // NOTE: Bank TX Return tests are skipped - no test transaction data available
   // To add these tests later, create test data and uncomment:
   // test.describe('Compliance Bank TX Return Page (/compliance/bank-tx/:id/return)', () => { ... });
+
+  test.describe('Compliance KYC Stats Page (/compliance/kyc-stats)', () => {
+    test('renders KYC stats table correctly', async ({ page }) => {
+      await page.goto(`/compliance/kyc-stats?session=${token}`);
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1000);
+
+      // Verify page loaded with table
+      await expect(page.getByText('As of 31.12.:')).toBeVisible();
+      await expect(page.getByText('2021')).toBeVisible();
+      await expect(page.getByText('2025')).toBeVisible();
+
+      // Verify row labels
+      await expect(page.getByText('KYC files managed on 01.01.xxxx')).toBeVisible();
+      await expect(page.getByText('KYC files managed on 31.12.20xx')).toBeVisible();
+
+      await expect(page).toHaveScreenshot('compliance-kyc-stats-01-table.png', {
+        fullPage: true,
+        maxDiffPixels: 5000,
+      });
+    });
+
+    test('displays correct data values', async ({ page }) => {
+      await page.goto(`/compliance/kyc-stats?session=${token}`);
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1000);
+
+      // Verify all year columns are present
+      const years = ['2021', '2022', '2023', '2024', '2025', '2026'];
+      for (const year of years) {
+        await expect(page.getByText(year)).toBeVisible();
+      }
+
+      // Verify all row labels
+      const rowLabels = [
+        'KYC files managed on 01.01.xxxx',
+        'Internal: Reopened KYC files',
+        'Internal: New KYC files',
+        'KYC files added between 01.01.20xx and 31.12.20xx',
+        '*KYC files managed during the year',
+        'KYC files closed between 01.01.20xx and 31.12.20xx',
+        'KYC files managed on 31.12.20xx',
+      ];
+      for (const label of rowLabels) {
+        await expect(page.getByText(label)).toBeVisible();
+      }
+
+      // Verify specific data values using regex to handle different apostrophe characters
+      const table = page.locator('table');
+
+      // 2021 values
+      await expect(table.getByText('250').first()).toBeVisible();
+
+      // 2022 values (use regex to match apostrophe variants)
+      await expect(table.getByText(/1.947/).first()).toBeVisible();
+      await expect(table.getByText(/2.192/).first()).toBeVisible();
+      await expect(table.getByText(/2.197/).first()).toBeVisible();
+
+      // 2023 values
+      await expect(table.getByText('509').first()).toBeVisible();
+      await expect(table.getByText(/2.701/).first()).toBeVisible();
+      await expect(table.getByText(/2.127/).first()).toBeVisible();
+      await expect(table.getByText('574').first()).toBeVisible();
+
+      // 2024 values
+      await expect(table.getByText('87').first()).toBeVisible();
+      await expect(table.getByText('611').first()).toBeVisible();
+      await expect(table.getByText('698').first()).toBeVisible();
+      await expect(table.getByText(/1.272/).first()).toBeVisible();
+      await expect(table.getByText('253').first()).toBeVisible();
+      await expect(table.getByText(/1.019/).first()).toBeVisible();
+
+      // 2025 values
+      await expect(table.getByText(/2.006/).first()).toBeVisible();
+      await expect(table.getByText(/3.025/).first()).toBeVisible();
+    });
+  });
 });
