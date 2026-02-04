@@ -20,7 +20,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate } = useSettingsContext();
-  const { getKycFileList, downloadUserFiles } = useCompliance();
+  const { getKycFileList, downloadUserFiles, checkUserFiles } = useCompliance();
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
 
@@ -210,7 +210,17 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                   <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">
                     {formatVolume(entry.totalVolumeChfAuditPeriod)}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right flex gap-1 justify-end">
+                    <button
+                      className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        checkUserFiles([entry.id]);
+                      }}
+                      title={translate('screens/compliance', 'Check Files')}
+                    >
+                      <DfxIcon icon={IconVariant.CHECK} color={IconColor.BLUE} size={IconSize.SM} />
+                    </button>
                     <button
                       className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
                       onClick={(e) => {

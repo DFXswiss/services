@@ -217,6 +217,17 @@ export function useCompliance() {
     downloadFile(data, headers, `DFX_export_${filenameDateFormat()}.zip`);
   }
 
+  async function checkUserFiles(userDataIds: number[]): Promise<void> {
+    const { data, headers } = await call<{ data: Blob; headers: Record<string, string> }>({
+      url: 'userData/download',
+      method: 'POST',
+      data: { userDataIds, checkOnly: true },
+      responseType: ResponseType.BLOB,
+    });
+
+    downloadFile(data, headers, `DFX_check_${filenameDateFormat()}.zip`);
+  }
+
   async function getTransactionRefundData(transactionId: number): Promise<TransactionRefundData> {
     return call<TransactionRefundData>({
       url: `support/transaction/${transactionId}/refund`,
@@ -251,6 +262,7 @@ export function useCompliance() {
       search,
       getUserData,
       downloadUserFiles,
+      checkUserFiles,
       getTransactionRefundData,
       processTransactionRefund,
       getKycFileList,
