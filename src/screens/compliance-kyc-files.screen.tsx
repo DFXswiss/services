@@ -1,4 +1,12 @@
-import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
+import {
+  DfxIcon,
+  IconColor,
+  IconSize,
+  IconVariant,
+  SpinnerSize,
+  StyledLoadingSpinner,
+  StyledVerticalStack,
+} from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -17,6 +25,21 @@ export default function ComplianceKycFilesScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [data, setData] = useState<KycFileListEntry[]>([]);
+
+  function exportCsv() {
+    const headers = ['KycFileId', 'AccountId', 'Type', 'Name'];
+    const rows = data.map((entry) => [entry.kycFileId, entry.id, entry.amlAccountType ?? '', entry.verifiedName ?? '']);
+
+    const csvContent = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `kyc-files-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   useEffect(() => {
     getKycFileList()
@@ -48,10 +71,29 @@ export default function ComplianceKycFilesScreen(): JSX.Element {
                 {translate('screens/compliance', 'AccountId')}
               </th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                {translate('screens/compliance', 'AML Account Type')}
+                {translate('screens/compliance', 'Type')}
               </th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                {translate('screens/compliance', 'Verified Name')}
+                {translate('screens/compliance', 'Name')}
+              </th>
+              <th className="px-4 py-3 text-right">
+                <div className="flex justify-end gap-2">
+                  <button
+                    className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
+                    onClick={() => navigate('compliance/kyc-files/details')}
+                    title={translate('screens/compliance', 'Details')}
+                  >
+                    <DfxIcon icon={IconVariant.INFO} color={IconColor.BLUE} size={IconSize.MD} />
+                  </button>
+                  <button
+                    className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
+                    onClick={exportCsv}
+                    title={translate('screens/compliance', 'Export CSV')}
+                    disabled={data.length === 0}
+                  >
+                    <DfxIcon icon={IconVariant.FILE} color={IconColor.BLUE} size={IconSize.MD} />
+                  </button>
+                </div>
               </th>
             </tr>
           </thead>
@@ -67,11 +109,12 @@ export default function ComplianceKycFilesScreen(): JSX.Element {
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.id}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.amlAccountType ?? '-'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.verifiedName ?? '-'}</td>
+                  <td></td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="px-4 py-3 text-center text-dfxGray-700">
+                <td colSpan={5} className="px-4 py-3 text-center text-dfxGray-700">
                   {translate('screens/compliance', 'No entries found')}
                 </td>
               </tr>

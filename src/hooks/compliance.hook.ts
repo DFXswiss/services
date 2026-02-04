@@ -157,6 +157,15 @@ export interface KycFileListEntry {
   id: number;
   amlAccountType?: string;
   verifiedName?: string;
+  country?: { name: string };
+  allBeneficialOwnersDomicile?: string;
+  amlListAddedDate?: string;
+  amlListExpiredDate?: string;
+  isReopened?: boolean;
+  highRisk?: boolean;
+  pep?: boolean;
+  complexOrgStructure?: boolean;
+  totalVolumeChfAuditPeriod?: number;
 }
 
 export interface KycFileYearlyStats {
