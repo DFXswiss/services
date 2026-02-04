@@ -1,3 +1,4 @@
+import { useSessionContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
   IconColor,
@@ -21,6 +22,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { getKycFileList } = useCompliance();
   const { navigate } = useNavigation();
+  const { isLoggedIn } = useSessionContext();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -63,7 +65,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
       isShellCompany(entry) ? 'Ja' : 'Nein',
       entry.amlListAddedDate ?? '',
       entry.amlListExpiredDate ?? '',
-      entry.isReopened ? 'Ja' : 'Nein',
+      entry.amlListReactivatedDate ? 'Ja' : 'Nein',
       entry.highRisk ? 'Ja' : 'Nein',
       entry.pep ? 'Ja' : 'Nein',
       entry.complexOrgStructure ? 'Ja' : 'Nein',
@@ -82,13 +84,15 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
   }
 
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     getKycFileList()
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [isLoggedIn]);
 
-  useLayoutOptions({ title: translate('screens/compliance', 'KYC File Details') });
+  useLayoutOptions({ title: translate('screens/compliance', 'KYC File Details'), noMaxWidth: true });
 
   if (isLoading) {
     return <StyledLoadingSpinner size={SpinnerSize.LG} />;
@@ -183,7 +187,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                   </td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.amlListAddedDate ?? '-'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.amlListExpiredDate ?? '-'}</td>
-                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.isReopened ? 'Ja' : 'Nein'}</td>
+                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.amlListReactivatedDate ? 'Ja' : 'Nein'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.highRisk ? 'Ja' : 'Nein'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.pep ? 'Ja' : 'Nein'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">

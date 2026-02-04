@@ -1,3 +1,4 @@
+import { useSessionContext } from '@dfx.swiss/react';
 import {
   DfxIcon,
   IconColor,
@@ -21,6 +22,7 @@ export default function ComplianceKycFilesScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { getKycFileList } = useCompliance();
   const { navigate } = useNavigation();
+  const { isLoggedIn } = useSessionContext();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -42,11 +44,13 @@ export default function ComplianceKycFilesScreen(): JSX.Element {
   }
 
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     getKycFileList()
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [isLoggedIn]);
 
   useLayoutOptions({ title: translate('screens/compliance', 'KYC File List') });
 
