@@ -28,6 +28,16 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
   const [error, setError] = useState<string>();
   const [data, setData] = useState<KycFileListEntry[]>([]);
 
+  function formatDate(dateString?: string): string {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('de-CH');
+  }
+
+  function formatVolume(volume?: number): string {
+    if (volume == null) return '-';
+    return volume.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
   function getStatus(entry: KycFileListEntry): string {
     return entry.amlListExpiredDate == null ? 'open' : 'closed';
   }
@@ -63,13 +73,13 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
       entry.country?.name ?? '',
       entry.allBeneficialOwnersDomicile ?? '',
       isShellCompany(entry) ? 'Ja' : 'Nein',
-      entry.amlListAddedDate ?? '',
-      entry.amlListExpiredDate ?? '',
+      formatDate(entry.amlListAddedDate),
+      formatDate(entry.amlListExpiredDate),
       entry.amlListReactivatedDate ? 'Ja' : 'Nein',
       entry.highRisk ? 'Ja' : 'Nein',
       entry.pep ? 'Ja' : 'Nein',
       entry.complexOrgStructure ? 'Ja' : 'Nein',
-      entry.totalVolumeChfAuditPeriod ?? '',
+      formatVolume(entry.totalVolumeChfAuditPeriod),
     ]);
 
     const csvContent = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n');
@@ -185,8 +195,8 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                     {isShellCompany(entry) ? 'Ja' : 'Nein'}
                   </td>
-                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.amlListAddedDate ?? '-'}</td>
-                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.amlListExpiredDate ?? '-'}</td>
+                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatDate(entry.amlListAddedDate)}</td>
+                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatDate(entry.amlListExpiredDate)}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.amlListReactivatedDate ? 'Ja' : 'Nein'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.highRisk ? 'Ja' : 'Nein'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.pep ? 'Ja' : 'Nein'}</td>
@@ -194,7 +204,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                     {entry.complexOrgStructure ? 'Ja' : 'Nein'}
                   </td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                    {entry.totalVolumeChfAuditPeriod ?? '-'}
+                    {formatVolume(entry.totalVolumeChfAuditPeriod)}
                   </td>
                   <td></td>
                 </tr>
