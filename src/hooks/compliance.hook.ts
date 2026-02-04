@@ -161,7 +161,7 @@ export interface KycFileListEntry {
   allBeneficialOwnersDomicile?: string;
   amlListAddedDate?: string;
   amlListExpiredDate?: string;
-  isReopened?: boolean;
+  amlListReactivatedDate?: string;
   highRisk?: boolean;
   pep?: boolean;
   complexOrgStructure?: boolean;
