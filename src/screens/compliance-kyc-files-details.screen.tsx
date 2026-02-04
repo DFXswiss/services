@@ -122,10 +122,10 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
         <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
           <thead>
             <tr className="bg-dfxGray-300">
-              <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+              <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
                 {translate('screens/compliance', 'Id')}
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+              <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
                 {translate('screens/compliance', 'AccountId')}
               </th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
@@ -164,7 +164,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
               <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                 {translate('screens/compliance', 'Komplexe Struktur')}
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+              <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
                 {translate('screens/compliance', 'Volume')}
               </th>
               <th className="px-4 py-3 text-right">
@@ -187,8 +187,8 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                   className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer"
                   onClick={() => navigate(`compliance/user/${entry.id}`)}
                 >
-                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.kycFileId}</td>
-                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.id}</td>
+                  <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">{entry.kycFileId}</td>
+                  <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">{entry.id}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.amlAccountType ?? '-'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.verifiedName ?? '-'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{getStatus(entry)}</td>
@@ -207,7 +207,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                     {entry.complexOrgStructure ? 'Ja' : 'Nein'}
                   </td>
-                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                  <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">
                     {formatVolume(entry.totalVolumeChfAuditPeriod)}
                   </td>
                   <td></td>
