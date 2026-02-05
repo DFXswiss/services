@@ -174,7 +174,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                   title={translate('screens/compliance', 'Check All Files')}
                   disabled={data.length === 0}
                 >
-                  <DfxIcon icon={IconVariant.CHECK} color={IconColor.BLUE} size={IconSize.MD} />
+                  <DfxIcon icon={IconVariant.SEARCH} color={IconColor.BLUE} size={IconSize.MD} />
                 </button>
                 <button
                   className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
@@ -227,7 +227,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                       }}
                       title={translate('screens/compliance', 'Check Files')}
                     >
-                      <DfxIcon icon={IconVariant.CHECK} color={IconColor.BLUE} size={IconSize.SM} />
+                      <DfxIcon icon={IconVariant.SEARCH} color={IconColor.BLUE} size={IconSize.SM} />
                     </button>
                     <button
                       className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
