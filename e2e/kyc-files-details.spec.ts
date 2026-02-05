@@ -70,9 +70,6 @@ test.describe('KYC Files Details Page', () => {
   test('page loads with data and displays correctly', async ({ page }) => {
     await waitForPageLoad(page);
 
-    // Screenshot: Initial page load
-    await page.screenshot({ path: 'e2e/screenshots/kyc-files-details-loaded.png', fullPage: true });
-
     // Check all table headers exist
     const expectedHeaders = [
       'Id',
@@ -95,9 +92,6 @@ test.describe('KYC Files Details Page', () => {
     for (const header of expectedHeaders) {
       await expect(page.getByRole('columnheader', { name: header, exact: true })).toBeVisible({ timeout: 5000 });
     }
-
-    // Screenshot: Headers visible
-    await page.screenshot({ path: 'e2e/screenshots/kyc-files-details-headers.png' });
 
     // Check data rows exist
     const rowCount = await page.locator('tbody tr').count();
@@ -128,9 +122,6 @@ test.describe('KYC Files Details Page', () => {
     // Verify numeric columns are right-aligned
     const idCell = page.locator('tbody tr').first().locator('td').first();
     await expect(idCell).toHaveClass(/text-right/);
-
-    // Screenshot: Data rows
-    await page.screenshot({ path: 'e2e/screenshots/kyc-files-details-data.png' });
   });
 
   test('check and download buttons are visible', async ({ page }) => {
@@ -146,13 +137,6 @@ test.describe('KYC Files Details Page', () => {
     // Download button (arrow down icon)
     const downloadButton = firstRow.locator('button[title="Download Files"]');
     await expect(downloadButton).toBeVisible();
-
-    // Screenshot: Buttons visible
-    await page.screenshot({ path: 'e2e/screenshots/kyc-files-details-buttons.png' });
-
-    // Hover over buttons to verify tooltip
-    await checkButton.hover();
-    await page.screenshot({ path: 'e2e/screenshots/kyc-files-details-check-hover.png' });
   });
 
   test('CSV export button works', async ({ page }) => {
@@ -161,9 +145,6 @@ test.describe('KYC Files Details Page', () => {
     // Find CSV export button in filter bar
     const exportButton = page.locator('button[title="Export CSV"]');
     await expect(exportButton).toBeVisible();
-
-    // Screenshot before export
-    await page.screenshot({ path: 'e2e/screenshots/kyc-files-details-export-button.png' });
 
     // Test that clicking triggers download (we just verify no error)
     const downloadPromise = page.waitForEvent('download', { timeout: 5000 }).catch(() => null);

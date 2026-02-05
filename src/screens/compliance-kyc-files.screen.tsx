@@ -95,7 +95,7 @@ export default function ComplianceKycFilesScreen(): JSX.Element {
                     title={translate('screens/compliance', 'Export CSV')}
                     disabled={data.length === 0}
                   >
-                    <DfxIcon icon={IconVariant.FILE} color={IconColor.BLUE} size={IconSize.MD} />
+                    <DfxIcon icon={IconVariant.ARROW_DOWN} color={IconColor.BLUE} size={IconSize.MD} />
                   </button>
                 </div>
               </th>
