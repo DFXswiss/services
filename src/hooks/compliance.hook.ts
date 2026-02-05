@@ -157,6 +157,15 @@ export interface KycFileListEntry {
   id: number;
   amlAccountType?: string;
   verifiedName?: string;
+  country?: { name: string };
+  allBeneficialOwnersDomicile?: string;
+  amlListAddedDate?: string;
+  amlListExpiredDate?: string;
+  amlListReactivatedDate?: string;
+  highRisk?: boolean;
+  pep?: boolean;
+  complexOrgStructure?: boolean;
+  totalVolumeChfAuditPeriod?: number;
 }
 
 export interface KycFileYearlyStats {
@@ -208,6 +217,17 @@ export function useCompliance() {
     downloadFile(data, headers, `DFX_export_${filenameDateFormat()}.zip`);
   }
 
+  async function checkUserFiles(userDataIds: number[]): Promise<void> {
+    const { data, headers } = await call<{ data: Blob; headers: Record<string, string> }>({
+      url: 'userData/download',
+      method: 'POST',
+      data: { userDataIds, checkOnly: true },
+      responseType: ResponseType.BLOB,
+    });
+
+    downloadFile(data, headers, `DFX_check_${filenameDateFormat()}.zip`);
+  }
+
   async function getTransactionRefundData(transactionId: number): Promise<TransactionRefundData> {
     return call<TransactionRefundData>({
       url: `support/transaction/${transactionId}/refund`,
@@ -242,6 +262,7 @@ export function useCompliance() {
       search,
       getUserData,
       downloadUserFiles,
+      checkUserFiles,
       getTransactionRefundData,
       processTransactionRefund,
       getKycFileList,
