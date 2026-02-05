@@ -178,6 +178,14 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                 </button>
                 <button
                   className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
+                  onClick={() => downloadUserFiles(data.map((e) => e.id))}
+                  title={translate('screens/compliance', 'Download All Files')}
+                  disabled={data.length === 0}
+                >
+                  <DfxIcon icon={IconVariant.ARROW_DOWN} color={IconColor.BLUE} size={IconSize.MD} />
+                </button>
+                <button
+                  className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
                   onClick={exportCsv}
                   title={translate('screens/compliance', 'Export CSV')}
                   disabled={data.length === 0}
