@@ -159,6 +159,18 @@ export interface KycFileListEntry {
   verifiedName?: string;
 }
 
+export interface KycFileYearlyStats {
+  year: number;
+  startCount: number;
+  reopened: number;
+  newFiles: number;
+  addedDuringYear: number;
+  activeDuringYear: number;
+  closedDuringYear: number;
+  endCount: number;
+  highestFileNr: number;
+}
+
 function normalizeSearchKey(key: string): string {
   const normalized = electronicFormatIBAN(key);
   if (normalized && isValidIBAN(normalized)) {
@@ -218,8 +230,23 @@ export function useCompliance() {
     });
   }
 
+  async function getKycFileStats(): Promise<KycFileYearlyStats[]> {
+    return call<KycFileYearlyStats[]>({
+      url: 'support/kycFileStats',
+      method: 'GET',
+    });
+  }
+
   return useMemo(
-    () => ({ search, getUserData, downloadUserFiles, getTransactionRefundData, processTransactionRefund, getKycFileList }),
+    () => ({
+      search,
+      getUserData,
+      downloadUserFiles,
+      getTransactionRefundData,
+      processTransactionRefund,
+      getKycFileList,
+      getKycFileStats,
+    }),
     [call],
   );
 }
