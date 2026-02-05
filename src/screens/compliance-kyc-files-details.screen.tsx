@@ -209,9 +209,27 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
           </button>
         </div>
 
-        <div className="ml-auto text-sm text-dfxGray-700">
-          {translate('screens/compliance', 'Showing')} {filteredData.length} {translate('screens/compliance', 'of')}{' '}
-          {data.length} {translate('screens/compliance', 'entries')}
+        <div className="ml-auto flex items-center gap-4">
+          <span className="text-sm text-dfxGray-700">
+            {translate('screens/compliance', 'Showing')} {filteredData.length} {translate('screens/compliance', 'of')}{' '}
+            {data.length} {translate('screens/compliance', 'entries')}
+          </span>
+          <button
+            className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
+            onClick={() => checkUserFiles(filteredData.map((e) => e.id))}
+            title={translate('screens/compliance', 'Check Filtered Files') + ` (${filteredData.length})`}
+            disabled={filteredData.length === 0}
+          >
+            <DfxIcon icon={IconVariant.SEARCH} color={IconColor.BLUE} size={IconSize.MD} />
+          </button>
+          <button
+            className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
+            onClick={exportCsv}
+            title={translate('screens/compliance', 'Export CSV')}
+            disabled={filteredData.length === 0}
+          >
+            <DfxIcon icon={IconVariant.FILE} color={IconColor.BLUE} size={IconSize.MD} />
+          </button>
         </div>
       </div>
 
@@ -264,24 +282,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
               <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
                 {translate('screens/compliance', 'Volume')}
               </th>
-              <th className="px-4 py-3 text-right flex gap-1 justify-end">
-                <button
-                  className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
-                  onClick={() => checkUserFiles(filteredData.map((e) => e.id))}
-                  title={translate('screens/compliance', 'Check Filtered Files') + ` (${filteredData.length})`}
-                  disabled={filteredData.length === 0}
-                >
-                  <DfxIcon icon={IconVariant.SEARCH} color={IconColor.BLUE} size={IconSize.MD} />
-                </button>
-                <button
-                  className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
-                  onClick={exportCsv}
-                  title={translate('screens/compliance', 'Export CSV')}
-                  disabled={filteredData.length === 0}
-                >
-                  <DfxIcon icon={IconVariant.FILE} color={IconColor.BLUE} size={IconSize.MD} />
-                </button>
-              </th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
@@ -334,7 +335,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                       }}
                       title={translate('screens/compliance', 'Download Files')}
                     >
-                      <DfxIcon icon={IconVariant.ARROW_DOWN} color={IconColor.BLUE} size={IconSize.SM} />
+                      <DfxIcon icon={IconVariant.FILE} color={IconColor.BLUE} size={IconSize.SM} />
                     </button>
                   </td>
                 </tr>
