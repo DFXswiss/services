@@ -1,4 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, APIRequestContext, Page } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
+import { createTestCredentials } from './test-wallet';
 
 /**
  * E2E tests for the KYC Files Details compliance page.
@@ -6,23 +9,62 @@ import { test, expect } from '@playwright/test';
  * Prerequisites:
  * - Frontend running on localhost:3001 (yarn start)
  * - Backend API running on localhost:3000 (yarn start:dev in api folder)
- * - Valid compliance user credentials
+ * - ADMIN_SEED configured in api/.env (run `npm run setup` in API directory)
  *
  * Run with: npx playwright test e2e/kyc-files-details.spec.ts
  *
  * Note: These tests require running services and will fail if the API is not available.
  */
-test.describe('KYC Files Details Page', () => {
-  const address = '0xd3AD44Bda0158567461D6FA7eC39E53534e686E9';
-  const signature =
-    '0x9f2ab17b008d42b29e085210020962beb0758091866598b7a1a54295d1dec7fa56a6425bd491d31707ef3ee97f6479450a56210ae7408a5c2efde806ac50cf481b';
-  const baseUrl = `http://localhost:3001/compliance/kyc-files/details?address=${address}&signature=${signature}`;
 
-  async function waitForPageLoad(page) {
-    await page.goto(baseUrl);
-    await page.waitForTimeout(3000);
+const API_URL = process.env.REACT_APP_API_URL! + '/v1';
+
+/**
+ * Read ADMIN_SEED from the API .env file
+ */
+function getAdminSeed(): string {
+  const apiEnvPath = path.join(__dirname, '../../api/.env');
+  if (!fs.existsSync(apiEnvPath)) {
+    throw new Error(`API .env file not found at ${apiEnvPath}. Run 'npm run setup' in the API directory first.`);
+  }
+  const content = fs.readFileSync(apiEnvPath, 'utf8');
+  const match = content.match(/^ADMIN_SEED=(.*)$/m);
+  if (!match || !match[1]) {
+    throw new Error('ADMIN_SEED not found in API .env file. Run "npm run setup" in the API directory first.');
+  }
+  return match[1];
+}
+
+/**
+ * Authenticate with admin credentials
+ */
+async function getAdminAuth(request: APIRequestContext): Promise<string> {
+  const adminSeed = getAdminSeed();
+  const credentials = await createTestCredentials(adminSeed);
+
+  const response = await request.post(`${API_URL}/auth`, {
+    data: credentials,
+  });
+
+  if (!response.ok()) {
+    const body = await response.text().catch(() => 'unknown');
+    throw new Error(`Admin auth failed: ${response.status()} - ${body}`);
+  }
+
+  const data = await response.json();
+  return data.accessToken;
+}
+
+test.describe('KYC Files Details Page', () => {
+  let token: string;
+
+  test.beforeAll(async ({ request }) => {
+    token = await getAdminAuth(request);
+  });
+
+  async function waitForPageLoad(page: Page) {
+    await page.goto(`/compliance/kyc-files/details?session=${token}`);
+    await page.waitForLoadState('networkidle');
     await expect(page.locator('text=KYC File Details')).toBeVisible({ timeout: 15000 });
-    await page.waitForSelector('[class*="spinner"]', { state: 'hidden', timeout: 10000 }).catch(() => {});
   }
 
   test('page loads with data and displays correctly', async ({ page }) => {
@@ -116,8 +158,8 @@ test.describe('KYC Files Details Page', () => {
   test('CSV export button works', async ({ page }) => {
     await waitForPageLoad(page);
 
-    // Find CSV export button in header
-    const exportButton = page.locator('thead button[title="Export CSV"]');
+    // Find CSV export button in filter bar
+    const exportButton = page.locator('button[title="Export CSV"]');
     await expect(exportButton).toBeVisible();
 
     // Screenshot before export
