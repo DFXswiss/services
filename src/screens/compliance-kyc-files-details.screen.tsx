@@ -50,8 +50,11 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
   }
 
   function getStatus(entry: KycFileListEntry): string {
-    // Active = open, Deactivated = closed
-    return entry.amlListStatus === 'Deactivated' ? 'closed' : 'open';
+    // Use amlListStatus if available, otherwise fallback to amlListExpiredDate
+    if (entry.amlListStatus) {
+      return entry.amlListStatus === 'Deactivated' ? 'closed' : 'open';
+    }
+    return entry.amlListExpiredDate ? 'closed' : 'open';
   }
 
   function isShellCompany(entry: KycFileListEntry): boolean {
