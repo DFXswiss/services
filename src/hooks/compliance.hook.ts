@@ -162,6 +162,7 @@ export interface KycFileListEntry {
   amlListAddedDate?: string;
   amlListExpiredDate?: string;
   amlListReactivatedDate?: string;
+  amlListStatus?: string;
   highRisk?: boolean;
   pep?: boolean;
   complexOrgStructure?: boolean;
