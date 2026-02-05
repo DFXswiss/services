@@ -158,7 +158,9 @@ export interface TransactionListEntry {
   accountId?: number;
   name?: string;
   domicile?: string;
+  created?: string;
   eventDate?: string;
+  outputDate?: string;
   assets?: string;
   amountInChf?: number;
   highRisk?: boolean;

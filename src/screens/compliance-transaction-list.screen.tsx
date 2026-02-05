@@ -8,7 +8,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { TransactionListEntry, useCompliance } from 'src/hooks/compliance.hook';
@@ -28,6 +28,14 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
   const [error, setError] = useState<string>();
   const [data, setData] = useState<TransactionListEntry[]>([]);
 
+  // Filter state
+  const today = new Date().toISOString().split('T')[0];
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const [createdFrom, setCreatedFrom] = useState<string>(threeDaysAgo);
+  const [createdTo, setCreatedTo] = useState<string>(today);
+  const [outputFrom, setOutputFrom] = useState<string>(threeDaysAgo);
+  const [outputTo, setOutputTo] = useState<string>(today);
+
   function formatDate(dateString?: string): string {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('de-CH', {
@@ -42,15 +50,57 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
     return Math.round(value).toLocaleString('de-CH');
   }
 
+  const filteredData = useMemo(() => {
+    const cFrom = createdFrom ? new Date(createdFrom) : null;
+    const cTo = createdTo ? new Date(createdTo) : null;
+    if (cTo) cTo.setHours(23, 59, 59, 999);
+
+    const oFrom = outputFrom ? new Date(outputFrom) : null;
+    const oTo = outputTo ? new Date(outputTo) : null;
+    if (oTo) oTo.setHours(23, 59, 59, 999);
+
+    return data.filter((entry) => {
+      if (cFrom || cTo) {
+        const entryDate = entry.created ? new Date(entry.created) : null;
+        if (!entryDate) return false;
+        if (cFrom && entryDate < cFrom) return false;
+        if (cTo && entryDate > cTo) return false;
+      }
+
+      if (oFrom || oTo) {
+        const entryDate = entry.outputDate ? new Date(entry.outputDate) : null;
+        if (!entryDate) return false;
+        if (oFrom && entryDate < oFrom) return false;
+        if (oTo && entryDate > oTo) return false;
+      }
+
+      return true;
+    });
+  }, [data, createdFrom, createdTo, outputFrom, outputTo]);
+
   function exportCsv() {
-    const headers = ['Id', 'Type', 'AccountId', 'Name', 'Domizil', 'Transaktionsdatum', 'Assets', 'CHF Value', 'TMER'];
-    const rows = data.map((entry) => [
+    const headers = [
+      'Id',
+      'Type',
+      'AccountId',
+      'Name',
+      'Domizil',
+      'Created',
+      'Transaktionsdatum',
+      'Output Datum',
+      'Assets',
+      'CHF Value',
+      'TMER',
+    ];
+    const rows = filteredData.map((entry) => [
       entry.id,
       entry.type ?? '',
       entry.accountId ?? '',
       entry.name ?? '',
       entry.domicile ?? '',
+      formatDate(entry.created),
       formatDate(entry.eventDate),
+      formatDate(entry.outputDate),
       entry.assets ?? '',
       formatChf(entry.amountInChf),
       entry.highRisk ? 'Ja' : 'Nein',
@@ -89,15 +139,79 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
   return (
     <StyledVerticalStack gap={6} full>
       <div className="flex flex-wrap gap-4 items-end bg-white p-4 rounded-lg shadow-sm">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-dfxBlue-800">
+            {translate('screens/compliance', 'Created von')}
+          </label>
+          <input
+            type="date"
+            className="px-3 py-2 border border-dfxGray-400 rounded-lg text-sm text-dfxBlue-800"
+            value={createdFrom}
+            onChange={(e) => setCreatedFrom(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-dfxBlue-800">
+            {translate('screens/compliance', 'Created bis')}
+          </label>
+          <input
+            type="date"
+            className="px-3 py-2 border border-dfxGray-400 rounded-lg text-sm text-dfxBlue-800"
+            value={createdTo}
+            onChange={(e) => setCreatedTo(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-dfxBlue-800">
+            {translate('screens/compliance', 'Output Datum von')}
+          </label>
+          <input
+            type="date"
+            className="px-3 py-2 border border-dfxGray-400 rounded-lg text-sm text-dfxBlue-800"
+            value={outputFrom}
+            onChange={(e) => setOutputFrom(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-dfxBlue-800">
+            {translate('screens/compliance', 'Output Datum bis')}
+          </label>
+          <input
+            type="date"
+            className="px-3 py-2 border border-dfxGray-400 rounded-lg text-sm text-dfxBlue-800"
+            value={outputTo}
+            onChange={(e) => setOutputTo(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-dfxBlue-800">&nbsp;</span>
+          <button
+            className="px-3 py-2 text-sm text-dfxBlue-800 hover:bg-dfxGray-300 rounded-lg transition-colors"
+            onClick={() => {
+              setCreatedFrom('');
+              setCreatedTo('');
+              setOutputFrom('');
+              setOutputTo('');
+            }}
+          >
+            {translate('screens/compliance', 'Reset')}
+          </button>
+        </div>
+
         <div className="ml-auto flex items-center gap-4">
           <span className="text-sm text-dfxGray-700">
+            {translate('screens/compliance', 'Showing')} {filteredData.length} {translate('screens/compliance', 'of')}{' '}
             {data.length} {translate('screens/compliance', 'entries')}
           </span>
           <button
             className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
             onClick={exportCsv}
             title={translate('screens/compliance', 'Export CSV')}
-            disabled={data.length === 0}
+            disabled={filteredData.length === 0}
           >
             <DfxIcon icon={IconVariant.ARROW_DOWN} color={IconColor.BLUE} size={IconSize.MD} />
           </button>
@@ -124,7 +238,13 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
                 {translate('screens/compliance', 'Domizil')}
               </th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                {translate('screens/compliance', 'Created')}
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                 {translate('screens/compliance', 'Transaktionsdatum')}
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                {translate('screens/compliance', 'Output Datum')}
               </th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                 {translate('screens/compliance', 'Assets')}
@@ -138,8 +258,8 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {data.length > 0 ? (
-              data.map((entry) => (
+            {filteredData.length > 0 ? (
+              filteredData.map((entry) => (
                 <tr
                   key={entry.id}
                   className={`border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 ${entry.accountId ? 'cursor-pointer' : ''}`}
@@ -150,7 +270,9 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
                   <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">{entry.accountId ?? '-'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.name ?? '-'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.domicile ?? '-'}</td>
+                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatDate(entry.created)}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatDate(entry.eventDate)}</td>
+                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatDate(entry.outputDate)}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.assets ?? '-'}</td>
                   <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">{formatChf(entry.amountInChf)}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
@@ -160,7 +282,7 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
               ))
             ) : (
               <tr>
-                <td colSpan={9} className="px-4 py-3 text-center text-dfxGray-700">
+                <td colSpan={11} className="px-4 py-3 text-center text-dfxGray-700">
                   {translate('screens/compliance', 'No entries found')}
                 </td>
               </tr>
