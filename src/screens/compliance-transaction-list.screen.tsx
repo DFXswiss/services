@@ -74,7 +74,7 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
-  }, [isLoggedIn]);
+  }, [isLoggedIn, getTransactionList]);
 
   useLayoutOptions({ title: translate('screens/compliance', 'Transaction List'), noMaxWidth: true });
 
@@ -142,7 +142,7 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
               data.map((entry) => (
                 <tr
                   key={entry.id}
-                  className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer"
+                  className={`border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 ${entry.accountId ? 'cursor-pointer' : ''}`}
                   onClick={() => entry.accountId && navigate(`compliance/user/${entry.accountId}`)}
                 >
                   <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">{entry.id}</td>
