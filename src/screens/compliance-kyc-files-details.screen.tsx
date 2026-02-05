@@ -112,7 +112,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
       isShellCompany(entry) ? 'Ja' : 'Nein',
       formatDate(entry.amlListAddedDate),
       formatDate(entry.amlListExpiredDate),
-      entry.amlListReactivatedDate ? 'Ja' : 'Nein',
+      entry.newOpeningInAuditPeriod ? 'Ja' : 'Nein',
       entry.highRisk ? 'Ja' : 'Nein',
       entry.pep ? 'Ja' : 'Nein',
       entry.complexOrgStructure ? 'Ja' : 'Nein',
@@ -315,7 +315,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                     {formatDate(entry.amlListExpiredDate)}
                   </td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                    {entry.amlListReactivatedDate ? 'Ja' : 'Nein'}
+                    {entry.newOpeningInAuditPeriod ? 'Ja' : 'Nein'}
                   </td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.highRisk ? 'Ja' : 'Nein'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.pep ? 'Ja' : 'Nein'}</td>
