@@ -157,9 +157,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
       {/* Filter Bar */}
       <div className="flex flex-wrap gap-4 items-end bg-white p-4 rounded-lg shadow-sm">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-dfxBlue-800">
-            {translate('screens/compliance', 'Status')}
-          </label>
+          <label className="text-xs font-semibold text-dfxBlue-800">{translate('screens/compliance', 'Status')}</label>
           <select
             className="px-3 py-2 border border-dfxGray-400 rounded-lg text-sm text-dfxBlue-800 bg-white"
             value={statusFilter}
@@ -216,7 +214,13 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
           </span>
           <button
             className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
-            onClick={() => checkUserFiles(filteredData.map((e) => e.id))}
+            onClick={async () => {
+              try {
+                await checkUserFiles(filteredData.map((e) => e.id));
+              } catch (e) {
+                setError(e instanceof Error ? e.message : 'Check files failed');
+              }
+            }}
             title={translate('screens/compliance', 'Check Filtered Files') + ` (${filteredData.length})`}
             disabled={filteredData.length === 0}
           >
@@ -306,8 +310,12 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                     {isShellCompany(entry) ? 'Ja' : 'Nein'}
                   </td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatDate(entry.amlListAddedDate)}</td>
-                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatDate(entry.amlListExpiredDate)}</td>
-                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.amlListReactivatedDate ? 'Ja' : 'Nein'}</td>
+                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                    {formatDate(entry.amlListExpiredDate)}
+                  </td>
+                  <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                    {entry.amlListReactivatedDate ? 'Ja' : 'Nein'}
+                  </td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.highRisk ? 'Ja' : 'Nein'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.pep ? 'Ja' : 'Nein'}</td>
                   <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
@@ -319,9 +327,13 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                   <td className="px-4 py-3 text-right flex gap-1 justify-end">
                     <button
                       className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        checkUserFiles([entry.id]);
+                        try {
+                          await checkUserFiles([entry.id]);
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : 'Check files failed');
+                        }
                       }}
                       title={translate('screens/compliance', 'Check Files')}
                     >
@@ -329,9 +341,13 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                     </button>
                     <button
                       className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        downloadUserFiles([entry.id]);
+                        try {
+                          await downloadUserFiles([entry.id]);
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : 'Download failed');
+                        }
                       }}
                       title={translate('screens/compliance', 'Download Files')}
                     >
