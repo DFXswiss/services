@@ -87,6 +87,7 @@ test.describe('KYC Files Details Page', () => {
       'PEP',
       'Komplexe Struktur',
       'Volume',
+      'Custody',
     ];
 
     for (const header of expectedHeaders) {
@@ -106,16 +107,21 @@ test.describe('KYC Files Details Page', () => {
       console.log(`Date format verified: ${dateText}`);
     }
 
-    // Verify volume format (Swiss number format with apostrophe) - check first non-empty volume
-    const volumeCells = page.locator('tbody tr td:nth-child(15)');
-    const volumeCount = await volumeCells.count();
-    for (let i = 0; i < Math.min(volumeCount, 10); i++) {
-      const volumeText = await volumeCells.nth(i).textContent();
-      if (volumeText && volumeText !== '-' && volumeText !== '0') {
-        // Swiss format uses apostrophe (Unicode RIGHT SINGLE QUOTATION MARK U+2019) as thousands separator
-        expect(volumeText).toMatch(/^[\d\u2019']+$/);
-        console.log(`Volume format verified: ${volumeText}`);
-        break;
+    // Verify volume/custody format (Swiss number format with apostrophe) - check first non-empty value
+    for (const { name, col } of [
+      { name: 'Volume', col: 15 },
+      { name: 'Custody', col: 16 },
+    ]) {
+      const cells = page.locator(`tbody tr td:nth-child(${col})`);
+      const cellCount = await cells.count();
+      for (let i = 0; i < Math.min(cellCount, 10); i++) {
+        const text = await cells.nth(i).textContent();
+        if (text && text !== '-' && text !== '0') {
+          // Swiss format uses apostrophe (Unicode RIGHT SINGLE QUOTATION MARK U+2019) as thousands separator
+          expect(text).toMatch(/^[\d\u2019']+$/);
+          console.log(`${name} format verified: ${text}`);
+          break;
+        }
       }
     }
 
