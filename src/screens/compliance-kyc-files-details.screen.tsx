@@ -167,7 +167,15 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
               <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
                 {translate('screens/compliance', 'Volume')}
               </th>
-              <th className="px-4 py-3 text-right">
+              <th className="px-4 py-3 text-right flex gap-1 justify-end">
+                <button
+                  className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
+                  onClick={() => checkUserFiles(data.map((e) => e.id))}
+                  title={translate('screens/compliance', 'Check All Files')}
+                  disabled={data.length === 0}
+                >
+                  <DfxIcon icon={IconVariant.CHECK} color={IconColor.BLUE} size={IconSize.MD} />
+                </button>
                 <button
                   className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
                   onClick={exportCsv}
