@@ -99,6 +99,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
       'PEP',
       'Komplexe Struktur',
       'Volume',
+      'Custody',
     ];
     const rows = filteredData.map((entry) => [
       entry.kycFileId,
@@ -116,6 +117,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
       entry.pep ? 'Ja' : 'Nein',
       entry.complexOrgStructure ? 'Ja' : 'Nein',
       formatVolume(entry.totalVolumeChfAuditPeriod),
+      formatVolume(entry.totalCustodyBalanceChfAuditPeriod),
     ]);
 
     const csvContent = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n');
@@ -282,6 +284,9 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
               <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
                 {translate('screens/compliance', 'Volume')}
               </th>
+              <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">
+                {translate('screens/compliance', 'Custody')}
+              </th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
@@ -320,6 +325,9 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                   <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">
                     {formatVolume(entry.totalVolumeChfAuditPeriod)}
                   </td>
+                  <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">
+                    {formatVolume(entry.totalCustodyBalanceChfAuditPeriod)}
+                  </td>
                   <td className="px-4 py-3 text-right flex gap-1 justify-end">
                     <button
                       className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
@@ -354,7 +362,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
               ))
             ) : (
               <tr>
-                <td colSpan={16} className="px-4 py-3 text-center text-dfxGray-700">
+                <td colSpan={17} className="px-4 py-3 text-center text-dfxGray-700">
                   {translate('screens/compliance', 'No entries found')}
                 </td>
               </tr>
