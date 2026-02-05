@@ -76,8 +76,8 @@ test.describe('KYC Files Details Page', () => {
     for (let i = 0; i < Math.min(volumeCount, 10); i++) {
       const volumeText = await volumeCells.nth(i).textContent();
       if (volumeText && volumeText !== '-' && volumeText !== '0') {
-        // Swiss format uses apostrophe as thousands separator
-        expect(volumeText).toMatch(/^[\d']+$/);
+        // Swiss format uses apostrophe (Unicode RIGHT SINGLE QUOTATION MARK U+2019) as thousands separator
+        expect(volumeText).toMatch(/^[\d\u2019']+$/);
         console.log(`Volume format verified: ${volumeText}`);
         break;
       }
