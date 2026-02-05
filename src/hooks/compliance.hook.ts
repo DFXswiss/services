@@ -281,7 +281,7 @@ export function useCompliance() {
   }): Promise<TransactionListEntry[]> {
     const queryParts = Object.entries(params ?? {})
       .filter(([, v]) => v)
-      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`);
+      .map(([k, v]) => `${k}=${encodeURIComponent(v as string)}`);
     const queryString = queryParts.length ? `?${queryParts.join('&')}` : '';
 
     return call<TransactionListEntry[]>({
