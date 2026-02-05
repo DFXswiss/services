@@ -8,13 +8,15 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { KycFileListEntry, useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+
+type StatusFilter = 'all' | 'open' | 'closed';
 
 export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
   useComplianceGuard();
@@ -27,6 +29,11 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [data, setData] = useState<KycFileListEntry[]>([]);
+
+  // Filter state
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
 
   function formatDate(dateString?: string): string {
     if (!dateString) return '-';
@@ -50,6 +57,35 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
     return entry.amlAccountType === 'Sitzgesellschaft';
   }
 
+  const filteredData = useMemo(() => {
+    return data.filter((entry) => {
+      // Status filter
+      if (statusFilter !== 'all') {
+        const entryStatus = getStatus(entry);
+        if (entryStatus !== statusFilter) return false;
+      }
+
+      // Date range filter (Eröffnungsdatum)
+      if (dateFrom || dateTo) {
+        const entryDate = entry.amlListAddedDate ? new Date(entry.amlListAddedDate) : null;
+        if (!entryDate) return false;
+
+        if (dateFrom) {
+          const fromDate = new Date(dateFrom);
+          if (entryDate < fromDate) return false;
+        }
+
+        if (dateTo) {
+          const toDate = new Date(dateTo);
+          toDate.setHours(23, 59, 59, 999);
+          if (entryDate > toDate) return false;
+        }
+      }
+
+      return true;
+    });
+  }, [data, statusFilter, dateFrom, dateTo]);
+
   function exportCsv() {
     const headers = [
       'KycFileId',
@@ -68,7 +104,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
       'Komplexe Struktur',
       'Volume',
     ];
-    const rows = data.map((entry) => [
+    const rows = filteredData.map((entry) => [
       entry.kycFileId,
       entry.id,
       entry.amlAccountType ?? '',
@@ -118,6 +154,67 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
 
   return (
     <StyledVerticalStack gap={6} full>
+      {/* Filter Bar */}
+      <div className="flex flex-wrap gap-4 items-end bg-white p-4 rounded-lg shadow-sm">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-dfxBlue-800">
+            {translate('screens/compliance', 'Status')}
+          </label>
+          <select
+            className="px-3 py-2 border border-dfxGray-400 rounded-lg text-sm text-dfxBlue-800 bg-white"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+          >
+            <option value="all">{translate('screens/compliance', 'All')}</option>
+            <option value="open">{translate('screens/compliance', 'Open')}</option>
+            <option value="closed">{translate('screens/compliance', 'Closed')}</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-dfxBlue-800">
+            {translate('screens/compliance', 'Eröffnungsdatum von')}
+          </label>
+          <input
+            type="date"
+            className="px-3 py-2 border border-dfxGray-400 rounded-lg text-sm text-dfxBlue-800"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-dfxBlue-800">
+            {translate('screens/compliance', 'Eröffnungsdatum bis')}
+          </label>
+          <input
+            type="date"
+            className="px-3 py-2 border border-dfxGray-400 rounded-lg text-sm text-dfxBlue-800"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-dfxBlue-800">&nbsp;</span>
+          <button
+            className="px-3 py-2 text-sm text-dfxBlue-800 hover:bg-dfxGray-300 rounded-lg transition-colors"
+            onClick={() => {
+              setStatusFilter('all');
+              setDateFrom('');
+              setDateTo('');
+            }}
+          >
+            {translate('screens/compliance', 'Reset')}
+          </button>
+        </div>
+
+        <div className="ml-auto text-sm text-dfxGray-700">
+          {translate('screens/compliance', 'Showing')} {filteredData.length} {translate('screens/compliance', 'of')}{' '}
+          {data.length} {translate('screens/compliance', 'entries')}
+        </div>
+      </div>
+
       <div className="w-full overflow-x-auto">
         <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
           <thead>
@@ -170,9 +267,9 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
               <th className="px-4 py-3 text-right flex gap-1 justify-end">
                 <button
                   className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
-                  onClick={() => checkUserFiles(data.map((e) => e.id))}
-                  title={translate('screens/compliance', 'Check All Files')}
-                  disabled={data.length === 0}
+                  onClick={() => checkUserFiles(filteredData.map((e) => e.id))}
+                  title={translate('screens/compliance', 'Check Filtered Files') + ` (${filteredData.length})`}
+                  disabled={filteredData.length === 0}
                 >
                   <DfxIcon icon={IconVariant.SEARCH} color={IconColor.BLUE} size={IconSize.MD} />
                 </button>
@@ -180,7 +277,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
                   className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
                   onClick={exportCsv}
                   title={translate('screens/compliance', 'Export CSV')}
-                  disabled={data.length === 0}
+                  disabled={filteredData.length === 0}
                 >
                   <DfxIcon icon={IconVariant.FILE} color={IconColor.BLUE} size={IconSize.MD} />
                 </button>
@@ -188,8 +285,8 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {data.length > 0 ? (
-              data.map((entry) => (
+            {filteredData.length > 0 ? (
+              filteredData.map((entry) => (
                 <tr
                   key={entry.id}
                   className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer"
