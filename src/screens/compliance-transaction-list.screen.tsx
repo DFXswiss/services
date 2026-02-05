@@ -120,11 +120,21 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    getTransactionList()
+    setIsLoading(true);
+    setError(undefined);
+
+    const params = {
+      createdFrom: createdFrom || undefined,
+      createdTo: createdTo || undefined,
+      outputFrom: outputFrom || undefined,
+      outputTo: outputTo || undefined,
+    };
+
+    getTransactionList(params)
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
-  }, [isLoggedIn, getTransactionList]);
+  }, [isLoggedIn, getTransactionList, createdFrom, createdTo, outputFrom, outputTo]);
 
   useLayoutOptions({ title: translate('screens/compliance', 'Transaction List'), noMaxWidth: true });
 

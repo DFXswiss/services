@@ -273,9 +273,19 @@ export function useCompliance() {
     });
   }
 
-  async function getTransactionList(): Promise<TransactionListEntry[]> {
+  async function getTransactionList(params?: {
+    createdFrom?: string;
+    createdTo?: string;
+    outputFrom?: string;
+    outputTo?: string;
+  }): Promise<TransactionListEntry[]> {
+    const queryParts = Object.entries(params ?? {})
+      .filter(([, v]) => v)
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`);
+    const queryString = queryParts.length ? `?${queryParts.join('&')}` : '';
+
     return call<TransactionListEntry[]>({
-      url: 'support/transactionList',
+      url: `support/transactionList${queryString}`,
       method: 'GET',
     });
   }
