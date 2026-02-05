@@ -152,6 +152,18 @@ export interface KycFile {
   uid: string;
 }
 
+export interface TransactionListEntry {
+  id: number;
+  type?: string;
+  accountId?: number;
+  name?: string;
+  domicile?: string;
+  eventDate?: string;
+  assets?: string;
+  amountInChf?: number;
+  highRisk?: boolean;
+}
+
 export interface KycFileListEntry {
   kycFileId: number;
   id: number;
@@ -259,6 +271,13 @@ export function useCompliance() {
     });
   }
 
+  async function getTransactionList(): Promise<TransactionListEntry[]> {
+    return call<TransactionListEntry[]>({
+      url: 'support/transactionList',
+      method: 'GET',
+    });
+  }
+
   return useMemo(
     () => ({
       search,
@@ -269,6 +288,7 @@ export function useCompliance() {
       processTransactionRefund,
       getKycFileList,
       getKycFileStats,
+      getTransactionList,
     }),
     [call],
   );

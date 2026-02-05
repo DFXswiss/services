@@ -58,6 +58,7 @@ const ComplianceBankTxReturnScreen = lazy(() => import('./screens/compliance-ban
 const ComplianceKycFilesScreen = lazy(() => import('./screens/compliance-kyc-files.screen'));
 const ComplianceKycFilesDetailsScreen = lazy(() => import('./screens/compliance-kyc-files-details.screen'));
 const ComplianceKycStatsScreen = lazy(() => import('./screens/compliance-kyc-stats.screen'));
+const ComplianceTransactionListScreen = lazy(() => import('./screens/compliance-transaction-list.screen'));
 const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
 const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
 const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
@@ -342,6 +343,10 @@ export const Routes = [
       {
         path: 'compliance/kyc-stats',
         element: withSuspense(<ComplianceKycStatsScreen />),
+      },
+      {
+        path: 'compliance/transactions',
+        element: withSuspense(<ComplianceTransactionListScreen />),
       },
       {
         path: 'realunit',
