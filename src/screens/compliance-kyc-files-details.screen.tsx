@@ -37,11 +37,11 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
 
   function formatDate(dateString?: string): string {
     if (!dateString) return '-';
-    const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}.${month}.${year}`;
+    return new Date(dateString).toLocaleDateString('de-CH', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
   }
 
   function formatVolume(volume?: number): string {
@@ -58,6 +58,10 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
   }
 
   const filteredData = useMemo(() => {
+    const fromDate = dateFrom ? new Date(dateFrom) : null;
+    const toDate = dateTo ? new Date(dateTo) : null;
+    if (toDate) toDate.setHours(23, 59, 59, 999);
+
     return data.filter((entry) => {
       // Status filter
       if (statusFilter !== 'all') {
@@ -66,20 +70,12 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
       }
 
       // Date range filter (Eröffnungsdatum)
-      if (dateFrom || dateTo) {
+      if (fromDate || toDate) {
         const entryDate = entry.amlListAddedDate ? new Date(entry.amlListAddedDate) : null;
         if (!entryDate) return false;
 
-        if (dateFrom) {
-          const fromDate = new Date(dateFrom);
-          if (entryDate < fromDate) return false;
-        }
-
-        if (dateTo) {
-          const toDate = new Date(dateTo);
-          toDate.setHours(23, 59, 59, 999);
-          if (entryDate > toDate) return false;
-        }
+        if (fromDate && entryDate < fromDate) return false;
+        if (toDate && entryDate > toDate) return false;
       }
 
       return true;
