@@ -156,6 +156,7 @@ export interface TransactionListEntry {
   id: number;
   type?: string;
   accountId?: number;
+  kycFileId?: number;
   name?: string;
   domicile?: string;
   created?: string;

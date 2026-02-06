@@ -46,7 +46,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
 
   function formatVolume(volume?: number): string {
     if (volume == null) return '-';
-    return Math.round(volume).toLocaleString('de-CH');
+    return volume.toFixed(2);
   }
 
   function getStatus(entry: KycFileListEntry): string {
