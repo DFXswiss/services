@@ -8,7 +8,7 @@ import {
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { TransactionListEntry, useCompliance } from 'src/hooks/compliance.hook';
@@ -50,34 +50,6 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
     return Math.round(value).toLocaleString('de-CH');
   }
 
-  const filteredData = useMemo(() => {
-    const cFrom = createdFrom ? new Date(createdFrom) : null;
-    const cTo = createdTo ? new Date(createdTo) : null;
-    if (cTo) cTo.setHours(23, 59, 59, 999);
-
-    const oFrom = outputFrom ? new Date(outputFrom) : null;
-    const oTo = outputTo ? new Date(outputTo) : null;
-    if (oTo) oTo.setHours(23, 59, 59, 999);
-
-    return data.filter((entry) => {
-      if (cFrom || cTo) {
-        const entryDate = entry.created ? new Date(entry.created) : null;
-        if (!entryDate) return false;
-        if (cFrom && entryDate < cFrom) return false;
-        if (cTo && entryDate > cTo) return false;
-      }
-
-      if (oFrom || oTo) {
-        const entryDate = entry.outputDate ? new Date(entry.outputDate) : null;
-        if (!entryDate) return false;
-        if (oFrom && entryDate < oFrom) return false;
-        if (oTo && entryDate > oTo) return false;
-      }
-
-      return true;
-    });
-  }, [data, createdFrom, createdTo, outputFrom, outputTo]);
-
   function exportCsv() {
     const headers = [
       'Id',
@@ -92,7 +64,7 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
       'CHF Value',
       'TMER',
     ];
-    const rows = filteredData.map((entry) => [
+    const rows = data.map((entry) => [
       entry.id,
       entry.type ?? '',
       entry.accountId ?? '',
@@ -214,14 +186,13 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
 
         <div className="ml-auto flex items-center gap-4">
           <span className="text-sm text-dfxGray-700">
-            {translate('screens/compliance', 'Showing')} {filteredData.length} {translate('screens/compliance', 'of')}{' '}
             {data.length} {translate('screens/compliance', 'entries')}
           </span>
           <button
             className="p-2 rounded-lg hover:bg-dfxBlue-800/10 transition-colors cursor-pointer"
             onClick={exportCsv}
             title={translate('screens/compliance', 'Export CSV')}
-            disabled={filteredData.length === 0}
+            disabled={data.length === 0}
           >
             <DfxIcon icon={IconVariant.ARROW_DOWN} color={IconColor.BLUE} size={IconSize.MD} />
           </button>
@@ -268,8 +239,8 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {filteredData.length > 0 ? (
-              filteredData.map((entry) => (
+            {data.length > 0 ? (
+              data.map((entry) => (
                 <tr
                   key={entry.id}
                   className={`border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 ${entry.accountId ? 'cursor-pointer' : ''}`}
