@@ -53,9 +53,5 @@ export const Portfolio = ({ portfolio, currency, isLoading }: PortfolioProps) =>
         ))}
       </StyledDataTable>
     </StyledVerticalStack>
-  ) : (
-    <div className="w-full flex flex-col items-center justify-center gap-2 p-4">
-      <p className="text-dfxBlue-300 text-left">{translate('screens/safe', 'No assets found')}</p>
-    </div>
-  );
+  ) : null;
 };
