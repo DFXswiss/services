@@ -991,7 +991,19 @@
     "Click here to confirm the withdrawal": "Clicca qui per confermare il prelievo",
     "Your swap will be processed and reflected in your Safe portfolio. We will inform you by email about the progress of your transactions.": "Il tuo swap verrà elaborato e riflesso nel tuo portafoglio Safe. Ti informeremo via e-mail sui progressi delle tue transazioni.",
     "Download PDF": "Scarica PDF",
-    "Select a date for your portfolio report": "Seleziona una data per il tuo report del portafoglio"
+    "Select a date for your portfolio report": "Seleziona una data per il tuo report del portafoglio",
+    "Recent Activity": "Attività recente",
+    "Fiat Deposit": "Deposito fiat",
+    "Fiat Withdrawal": "Prelievo fiat",
+    "Crypto Deposit": "Deposito crypto",
+    "Crypto Withdrawal": "Prelievo crypto",
+    "Saving Deposit": "Saving deposito",
+    "Saving Withdrawal": "Saving prelievo",
+    "Waiting for payment": "In attesa di pagamento",
+    "Check pending": "Verifica in sospeso",
+    "Processing": "In elaborazione",
+    "Completed": "Completato",
+    "Failed": "Fallito"
   },
   "screens/realunit": {
     "Account Summary": "Riepilogo del conto",

@@ -42,8 +42,8 @@ export const SafeTransactionInterface = () => {
             onClick={setTransactionType}
             buttonLabel={(type) =>
               type === TransactionType.FIAT
-                ? translate('screens/payment', 'Fiat')
-                : translate('screens/payment', 'Crypto')
+                ? translate('screens/safe', 'Fiat')
+                : translate('screens/safe', 'Crypto')
             }
             size={ButtonGroupSize.SM}
           />
