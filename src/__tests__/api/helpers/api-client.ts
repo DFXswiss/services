@@ -1,6 +1,6 @@
 import { createTestCredentials, TestCredentials } from './test-wallet';
 
-const API_URL = 'https://dev.api.dfx.swiss/v1';
+const API_URL = `${process.env.REACT_APP_API_URL}/v1`;
 
 // Global cache for auth tokens to avoid rate limiting
 const tokenCache: Map<string, { token: string; expiry: number }> = new Map();

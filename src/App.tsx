@@ -63,6 +63,7 @@ const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
 const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
 const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
 const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
+const AccountingScreen = lazy(() => import('./screens/accounting.screen'));
 
 setupLanguages();
 
@@ -323,6 +324,10 @@ export const Routes = [
       {
         path: 'compliance',
         element: withSuspense(<ComplianceScreen />),
+      },
+      {
+        path: 'accounting',
+        element: withSuspense(<AccountingScreen />),
       },
       {
         path: 'compliance/user/:id',
