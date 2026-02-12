@@ -10,7 +10,6 @@ import { useEffect } from 'react';
 import { PriceHistoryChart } from 'src/components/realunit/price-history-chart';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { PaginationDirection } from 'src/dto/realunit.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
@@ -23,18 +22,8 @@ export default function RealunitScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { copy } = useClipboard();
 
-  const {
-    holders,
-    totalCount,
-    pageInfo,
-    tokenInfo,
-    isLoading,
-    priceHistory,
-    timeframe,
-    fetchHolders,
-    fetchPriceHistory,
-    fetchTokenInfo,
-  } = useRealunitContext();
+  const { holders, totalCount, tokenInfo, isLoading, priceHistory, timeframe, fetchHolders, fetchPriceHistory, fetchTokenInfo } =
+    useRealunitContext();
 
   useLayoutOptions({ backButton: true });
 
@@ -44,13 +33,12 @@ export default function RealunitScreen(): JSX.Element {
     if (!priceHistory.length) fetchPriceHistory();
   }, [fetchHolders, fetchTokenInfo]);
 
+  const topHolders = holders.slice(0, 3);
+
   const handleAddressClick = (address: string) => {
     const encodedAddress = encodeURIComponent(address);
     navigate(`/realunit/user/${encodedAddress}`);
   };
-
-  const changePage = (dir: PaginationDirection) =>
-    fetchHolders(dir === PaginationDirection.NEXT ? pageInfo.endCursor : pageInfo.startCursor, dir);
 
   return (
     <>
@@ -144,7 +132,7 @@ export default function RealunitScreen(): JSX.Element {
               </thead>
 
               <tbody>
-                {holders.map((holder) => (
+                {topHolders.map((holder) => (
                   <tr
                     key={holder.address}
                     className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300"
@@ -169,25 +157,15 @@ export default function RealunitScreen(): JSX.Element {
             </table>
           </div>
 
-          <div className="flex items-center justify-between gap-2 mt-4">
-            <div className="flex items-center gap-2">
+          {holders.length > 3 && (
+            <div className="flex justify-center mt-4">
               <StyledButton
-                label={translate('general/actions', 'Previous')}
-                onClick={() => changePage(PaginationDirection.PREV)}
-                disabled={!pageInfo.hasPreviousPage}
+                label={translate('general/actions', 'More')}
+                onClick={() => navigate('/realunit/holders')}
                 width={StyledButtonWidth.MIN}
               />
             </div>
-
-            <div className="flex items-center gap-2">
-              <StyledButton
-                label={translate('general/actions', 'Next')}
-                onClick={() => changePage(PaginationDirection.NEXT)}
-                disabled={!pageInfo.hasNextPage}
-                width={StyledButtonWidth.MIN}
-              />
-            </div>
-          </div>
+          )}
         </div>
       )}
     </>
