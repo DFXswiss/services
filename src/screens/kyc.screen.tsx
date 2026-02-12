@@ -190,8 +190,8 @@ export default function KycScreen(): JSX.Element {
             stepType?.toLowerCase() === KycStepType.VIDEO.toLowerCase()
               ? KycStepType.SUMSUB_VIDEO
               : stepType?.toLowerCase() === KycStepType.AUTO.toLowerCase()
-              ? KycStepType.SUMSUB_AUTO
-              : (stepType as KycStepType),
+                ? KycStepType.SUMSUB_AUTO
+                : (stepType as KycStepType),
             stepSequence ? +stepSequence : undefined,
           ),
         )
@@ -1941,22 +1941,32 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
         </div>
 
         {currentQuestion.type === QuestionType.CONFIRMATION ? (
-          <StyledCheckboxRow
-            isChecked={currentSelection === currentOptions[0].key}
-            onChange={(checked) => setValue(checked ? currentOptions[0].key : undefined)}
-          >
-            {currentQuestion.key === 'tnc' ? (
-              <StyledLink label={currentQuestion.description} url={Urls.termsAndConditions} dark />
-            ) : currentQuestion.key === 'notification_of_changes' ? (
-              <div>
-                {currentQuestion.description.split(nocLinkText)[0]}
-                <StyledLink label={nocLinkText} onClick={() => window.open(nocSupportLink, '_blank')} dark />
-                {currentQuestion.description.split(nocLinkText)[1]}
-              </div>
-            ) : (
-              currentQuestion.description
+          <>
+            <StyledCheckboxRow
+              isChecked={currentSelection === currentOptions[0].key}
+              onChange={(checked) => setValue(checked ? currentOptions[0].key : undefined)}
+            >
+              {currentQuestion.key === 'tnc' ? (
+                <StyledLink label={currentQuestion.description} url={Urls.termsAndConditions} dark />
+              ) : currentQuestion.key === 'notification_of_changes' ? (
+                <div>
+                  {currentQuestion.description.split(nocLinkText)[0]}
+                  <StyledLink label={nocLinkText} onClick={() => window.open(nocSupportLink, '_blank')} dark />
+                  {currentQuestion.description.split(nocLinkText)[1]}
+                </div>
+              ) : (
+                currentQuestion.description
+              )}
+            </StyledCheckboxRow>
+            {currentQuestion.key === 'own_funds' && (
+              <p className="text-dfxGray-700 text-xs">
+                <Trans i18nKey="screens/kyc.ownFundsWarning">
+                  The <strong>deliberate</strong> provision of false information in this form is a criminal offense
+                  (forgery of documents pursuant to Article 251 of the Swiss Criminal Code).
+                </Trans>
+              </p>
             )}
-          </StyledCheckboxRow>
+          </>
         ) : currentQuestion.type === QuestionType.SINGLE_CHOICE ? (
           <>
             <StyledDropdown
