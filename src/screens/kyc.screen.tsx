@@ -1847,11 +1847,6 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
   const nocLinkText = 'app.dfx.swiss/support/issue';
   const params = new URLSearchParams({ 'issue-type': SupportIssueType.NOTIFICATION_OF_CHANGES });
   const nocSupportLink = url({ path: '/support/issue', params });
-  const ownFundsWarning = translate(
-    'screens/kyc',
-    'The deliberate provision of false information in this form is a criminal offense (forgery of documents pursuant to Article 251 of the Swiss Criminal Code).',
-  );
-  const ownFundsBoldWord = translate('screens/kyc', 'deliberate');
 
   useEffect(() => {
     if (!step.session) return;
@@ -1965,9 +1960,10 @@ function FinancialData({ rootRef, code, step, onDone, onBack }: EditProps): JSX.
             </StyledCheckboxRow>
             {currentQuestion.key === 'own_funds' && (
               <p className="text-dfxGray-700 text-xs">
-                {ownFundsWarning.split(ownFundsBoldWord)[0]}
-                <strong>{ownFundsBoldWord}</strong>
-                {ownFundsWarning.split(ownFundsBoldWord)[1]}
+                <Trans i18nKey="screens/kyc.ownFundsWarning">
+                  The <strong>deliberate</strong> provision of false information in this form is a criminal offense
+                  (forgery of documents pursuant to Article 251 of the Swiss Criminal Code).
+                </Trans>
               </p>
             )}
           </>

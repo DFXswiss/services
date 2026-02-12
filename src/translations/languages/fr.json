@@ -348,8 +348,7 @@
 
     "Recall agreement": "Contrat de rappel",
 
-    "The deliberate provision of false information in this form is a criminal offense (forgery of documents pursuant to Article 251 of the Swiss Criminal Code).": "L'indication délibérée de fausses informations dans ce formulaire constitue une infraction pénale (faux dans les titres selon l'article 251 du Code pénal suisse).",
-    "deliberate": "délibérée",
+    "ownFundsWarning": "L'indication <1>délibérée</1> de fausses informations dans ce formulaire constitue une infraction pénale (faux dans les titres selon l'article 251 du Code pénal suisse).",
 
     "Recommendation": "Recommandation",
     "Please enter the email address or referral code of your contact person. This lets us know you have a trusted contact to guide you into the crypto space.": "Veuillez saisir l'adresse e-mail ou le code de parrainage de votre personne de contact. Cela nous permet de savoir que vous avez un contact de confiance pour vous accompagner dans l'univers des cryptomonnaies.",
