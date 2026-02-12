@@ -60,6 +60,7 @@ const ComplianceKycFilesDetailsScreen = lazy(() => import('./screens/compliance-
 const ComplianceKycStatsScreen = lazy(() => import('./screens/compliance-kyc-stats.screen'));
 const ComplianceTransactionListScreen = lazy(() => import('./screens/compliance-transaction-list.screen'));
 const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
+const RealunitHoldersScreen = lazy(() => import('./screens/realunit-holders.screen'));
 const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
 const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
 const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
@@ -359,6 +360,10 @@ export const Routes = [
           {
             index: true,
             element: withSuspense(<RealunitScreen />),
+          },
+          {
+            path: 'holders',
+            element: withSuspense(<RealunitHoldersScreen />),
           },
           {
             path: 'user/:address',
