@@ -61,7 +61,7 @@ export default function RealunitUserScreen(): JSX.Element {
 
   return (
     <>
-      {!accountSummary ? (
+      {isLoading && !accountSummary ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : !accountSummary ? (
         <p className="text-dfxGray-700">{translate('screens/realunit', 'No data available')}</p>

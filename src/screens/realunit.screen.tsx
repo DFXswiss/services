@@ -3,6 +3,7 @@ import {
   IconColor,
   SpinnerSize,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
   StyledLoadingSpinner,
 } from '@dfx.swiss/react-components';
@@ -51,6 +52,19 @@ export default function RealunitScreen(): JSX.Element {
   }, [fetchHolders, fetchTokenInfo, fetchQuotes, fetchTransactions]);
 
   const topHolders = holders.slice(0, 3);
+  const topQuotes = quotes.slice(0, 3);
+  const topTransactions = transactions.slice(0, 3);
+
+  const displayType = (type: string): string => {
+    switch (type) {
+      case 'BuyFiat':
+        return 'Sell';
+      case 'BuyCrypto':
+        return 'Buy';
+      default:
+        return type;
+    }
+  };
 
   const handleAddressClick = (address: string) => {
     const encodedAddress = encodeURIComponent(address);
@@ -64,65 +78,6 @@ export default function RealunitScreen(): JSX.Element {
       ) : (
         <div className="w-full">
           <div className="mb-4">
-            {isLoading ? (
-              <div className="shadow-card rounded-xl p-6 flex justify-center mb-6">
-                <StyledLoadingSpinner size={SpinnerSize.MD} />
-              </div>
-            ) : (
-              tokenInfo && (
-                <div className="mb-6">
-                  <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'RealUnit ')}</h2>
-                  <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
-                    <thead>
-                      <tr className="bg-dfxGray-300">
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                          {translate('screens/realunit', 'Overview')}
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                          {translate('screens/realunit', '')}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                          {translate('screens/realunit', 'Holders')}
-                        </td>
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
-                          {totalCount?.toLocaleString() ?? '0'}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                          {translate('screens/realunit', 'Shares')}
-                        </td>
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
-                          {Number(tokenInfo.totalShares.total).toLocaleString()}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                          {translate('screens/realunit', 'Total Supply')}
-                        </td>
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
-                          {Number(tokenInfo.totalSupply.value).toLocaleString()} REALU
-                        </td>
-                      </tr>
-
-                      <tr className="transition-colors hover:bg-dfxGray-300">
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                          {translate('screens/realunit', 'Timestamp')}
-                        </td>
-                        <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
-                          {new Date(tokenInfo.totalSupply.timestamp).toLocaleString()}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              )
-            )}
-
             <h2 className="text-dfxGray-700 justify-center  mb-2">{translate('screens/realunit', 'Price History')}</h2>
             <PriceHistoryChart
               timeframe={timeframe}
@@ -130,6 +85,65 @@ export default function RealunitScreen(): JSX.Element {
               onTimeframeChange={fetchPriceHistory}
             />
           </div>
+
+          {isLoading ? (
+            <div className="shadow-card rounded-xl p-6 flex justify-center mb-6">
+              <StyledLoadingSpinner size={SpinnerSize.MD} />
+            </div>
+          ) : (
+            tokenInfo && (
+              <div className="mb-6">
+                <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'RealUnit ')}</h2>
+                <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
+                  <thead>
+                    <tr className="bg-dfxGray-300">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                        {translate('screens/realunit', 'Overview')}
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                        {translate('screens/realunit', '')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                        {translate('screens/realunit', 'Holders')}
+                      </td>
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
+                        {totalCount?.toLocaleString() ?? '0'}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                        {translate('screens/realunit', 'Shares')}
+                      </td>
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
+                        {Number(tokenInfo.totalShares.total).toLocaleString()}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                        {translate('screens/realunit', 'Total Supply')}
+                      </td>
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
+                        {Number(tokenInfo.totalSupply.value).toLocaleString()} REALU
+                      </td>
+                    </tr>
+
+                    <tr className="transition-colors hover:bg-dfxGray-300">
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                        {translate('screens/realunit', 'Timestamp')}
+                      </td>
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800 font-semibold">
+                        {new Date(tokenInfo.totalSupply.timestamp).toLocaleString()}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )
+          )}
 
           <div className="w-full overflow-x-auto mt-8 mb-4">
             <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'Top Holders')}</h2>
@@ -179,30 +193,22 @@ export default function RealunitScreen(): JSX.Element {
               <StyledButton
                 label={translate('general/actions', 'More')}
                 onClick={() => navigate('/realunit/holders')}
-                width={StyledButtonWidth.MIN}
+                width={StyledButtonWidth.FULL}
+                color={StyledButtonColor.STURDY_WHITE}
               />
             </div>
           )}
 
           <div className="w-full overflow-x-auto mt-8 mb-4">
-            <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'Quotes')}</h2>
+            <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'Pending Transactions')}</h2>
             <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
               <thead>
                 <tr className="bg-dfxGray-300">
                   <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                    {translate('screens/realunit', 'UID')}
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                     {translate('screens/realunit', 'Type')}
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                    {translate('screens/realunit', 'Status')}
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                     {translate('screens/realunit', 'Amount')}
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                    {translate('screens/realunit', 'Est. Amount')}
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                     {translate('screens/realunit', 'User')}
@@ -213,15 +219,14 @@ export default function RealunitScreen(): JSX.Element {
                 </tr>
               </thead>
               <tbody>
-                {quotes.map((quote) => (
-                  <tr key={quote.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{quote.uid}</td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{quote.type}</td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{quote.status}</td>
+                {topQuotes.map((quote) => (
+                  <tr
+                    key={quote.id}
+                    className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer"
+                    onClick={() => navigate(`/realunit/quotes/${quote.id}`)}
+                  >
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{displayType(quote.type)}</td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{quote.amount?.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
-                      {quote.estimatedAmount?.toLocaleString()}
-                    </td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                       {quote.userAddress ? blankedAddress(quote.userAddress, { displayLength: 12 }) : '-'}
                     </td>
@@ -232,43 +237,38 @@ export default function RealunitScreen(): JSX.Element {
                 ))}
                 {!quotes.length && !quotesLoading && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-3 text-center text-sm text-dfxGray-700">
-                      {translate('screens/realunit', 'No quotes found')}
+                    <td colSpan={4} className="px-4 py-3 text-center text-sm text-dfxGray-700">
+                      {translate('screens/realunit', 'No pending transactions found')}
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
-            {quotesLoading ? (
+            {quotesLoading && !quotes.length && (
               <div className="flex justify-center mt-4">
                 <StyledLoadingSpinner size={SpinnerSize.SM} />
               </div>
-            ) : (
-              quotes.length > 0 && (
-                <div className="flex justify-center mt-4">
-                  <StyledButton
-                    label={translate('general/actions', 'More')}
-                    onClick={fetchQuotes}
-                    width={StyledButtonWidth.MIN}
-                  />
-                </div>
-              )
             )}
           </div>
 
+          {quotes.length > 3 && (
+            <div className="flex justify-center mt-4">
+              <StyledButton
+                label={translate('general/actions', 'More')}
+                onClick={() => navigate('/realunit/quotes')}
+                width={StyledButtonWidth.FULL}
+                color={StyledButtonColor.STURDY_WHITE}
+              />
+            </div>
+          )}
+
           <div className="w-full overflow-x-auto mt-8 mb-4">
-            <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'Transactions')}</h2>
+            <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'Received Transactions')}</h2>
             <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
               <thead>
                 <tr className="bg-dfxGray-300">
                   <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                    {translate('screens/realunit', 'UID')}
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                     {translate('screens/realunit', 'Type')}
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
-                    {translate('screens/realunit', 'Assets')}
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                     {translate('screens/realunit', 'Amount CHF')}
@@ -282,11 +282,13 @@ export default function RealunitScreen(): JSX.Element {
                 </tr>
               </thead>
               <tbody>
-                {transactions.map((tx) => (
-                  <tr key={tx.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{tx.uid}</td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{tx.type}</td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{tx.assets}</td>
+                {topTransactions.map((tx) => (
+                  <tr
+                    key={tx.id}
+                    className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer"
+                    onClick={() => navigate(`/realunit/transactions/${tx.id}`)}
+                  >
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{displayType(tx.type)}</td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                       {tx.amountInChf?.toLocaleString()}
                     </td>
@@ -300,29 +302,30 @@ export default function RealunitScreen(): JSX.Element {
                 ))}
                 {!transactions.length && !transactionsLoading && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-3 text-center text-sm text-dfxGray-700">
-                      {translate('screens/realunit', 'No transactions found')}
+                    <td colSpan={4} className="px-4 py-3 text-center text-sm text-dfxGray-700">
+                      {translate('screens/realunit', 'No received transactions found')}
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
-            {transactionsLoading ? (
+            {transactionsLoading && !transactions.length && (
               <div className="flex justify-center mt-4">
                 <StyledLoadingSpinner size={SpinnerSize.SM} />
               </div>
-            ) : (
-              transactions.length > 0 && (
-                <div className="flex justify-center mt-4">
-                  <StyledButton
-                    label={translate('general/actions', 'More')}
-                    onClick={fetchTransactions}
-                    width={StyledButtonWidth.MIN}
-                  />
-                </div>
-              )
             )}
           </div>
+
+          {transactions.length > 3 && (
+            <div className="flex justify-center mt-4">
+              <StyledButton
+                label={translate('general/actions', 'More')}
+                onClick={() => navigate('/realunit/transactions')}
+                width={StyledButtonWidth.FULL}
+                color={StyledButtonColor.STURDY_WHITE}
+              />
+            </div>
+          )}
         </div>
       )}
     </>

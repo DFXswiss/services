@@ -60,6 +60,9 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
         .then((accountData) => {
           setAccountSummary(accountData);
         })
+        .catch(() => {
+          setAccountSummary(undefined);
+        })
         .finally(() => setIsLoading(false));
     },
     [setAccountSummary, setIsLoading],
