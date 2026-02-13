@@ -1032,7 +1032,10 @@
     "User": "Utente",
     "Created": "Creato",
     "Amount CHF": "Importo CHF",
-    "Date": "Data"
+    "Date": "Data",
+    "Confirm Payment Received": "Conferma ricezione pagamento",
+    "Are you sure you want to confirm the payment receipt?": "Sei sicuro di voler confermare la ricezione del pagamento?",
+    "Payment confirmed successfully": "Ricezione del pagamento confermata con successo"
   },
   "screens/blockchain": {
     "Transaction signing": "Firma della transazione",

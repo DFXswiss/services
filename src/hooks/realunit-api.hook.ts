@@ -94,6 +94,13 @@ export function useRealunitApi() {
     });
   }
 
+  async function confirmPayment(id: number): Promise<void> {
+    return call<void>({
+      url: `realunit/admin/quotes/${id}/confirm-payment`,
+      method: 'PUT',
+    });
+  }
+
   return useMemo(
     () => ({
       getAccountSummary,
@@ -104,6 +111,7 @@ export function useRealunitApi() {
       getPriceHistory,
       getAdminQuotes,
       getAdminTransactions,
+      confirmPayment,
     }),
     [call],
   );
