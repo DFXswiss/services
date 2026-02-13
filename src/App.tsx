@@ -60,6 +60,11 @@ const ComplianceKycFilesDetailsScreen = lazy(() => import('./screens/compliance-
 const ComplianceKycStatsScreen = lazy(() => import('./screens/compliance-kyc-stats.screen'));
 const ComplianceTransactionListScreen = lazy(() => import('./screens/compliance-transaction-list.screen'));
 const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
+const RealunitHoldersScreen = lazy(() => import('./screens/realunit-holders.screen'));
+const RealunitQuotesScreen = lazy(() => import('./screens/realunit-quotes.screen'));
+const RealunitTransactionsScreen = lazy(() => import('./screens/realunit-transactions.screen'));
+const RealunitQuoteDetailScreen = lazy(() => import('./screens/realunit-quote-detail.screen'));
+const RealunitTransactionDetailScreen = lazy(() => import('./screens/realunit-transaction-detail.screen'));
 const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
 const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
 const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
@@ -359,6 +364,26 @@ export const Routes = [
           {
             index: true,
             element: withSuspense(<RealunitScreen />),
+          },
+          {
+            path: 'holders',
+            element: withSuspense(<RealunitHoldersScreen />),
+          },
+          {
+            path: 'quotes',
+            element: withSuspense(<RealunitQuotesScreen />),
+          },
+          {
+            path: 'quotes/:id',
+            element: withSuspense(<RealunitQuoteDetailScreen />),
+          },
+          {
+            path: 'transactions',
+            element: withSuspense(<RealunitTransactionsScreen />),
+          },
+          {
+            path: 'transactions/:id',
+            element: withSuspense(<RealunitTransactionDetailScreen />),
           },
           {
             path: 'user/:address',

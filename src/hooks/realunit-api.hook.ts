@@ -6,6 +6,8 @@ import {
   HoldersResponse,
   PaginationDirection,
   PriceHistoryEntry,
+  RealUnitQuote,
+  RealUnitTransaction,
   TokenInfo,
   TokenPrice,
 } from 'src/dto/realunit.dto';
@@ -70,6 +72,28 @@ export function useRealunitApi() {
     });
   }
 
+  async function getAdminQuotes(limit?: number, offset?: number): Promise<RealUnitQuote[]> {
+    const params = new URLSearchParams();
+    if (limit != null) params.set('limit', String(limit));
+    if (offset != null) params.set('offset', String(offset));
+
+    return call<RealUnitQuote[]>({
+      url: relativeUrl({ path: 'realunit/admin/quotes', params }),
+      method: 'GET',
+    });
+  }
+
+  async function getAdminTransactions(limit?: number, offset?: number): Promise<RealUnitTransaction[]> {
+    const params = new URLSearchParams();
+    if (limit != null) params.set('limit', String(limit));
+    if (offset != null) params.set('offset', String(offset));
+
+    return call<RealUnitTransaction[]>({
+      url: relativeUrl({ path: 'realunit/admin/transactions', params }),
+      method: 'GET',
+    });
+  }
+
   return useMemo(
     () => ({
       getAccountSummary,
@@ -78,6 +102,8 @@ export function useRealunitApi() {
       getTokenInfo,
       getTokenPrice,
       getPriceHistory,
+      getAdminQuotes,
+      getAdminTransactions,
     }),
     [call],
   );
