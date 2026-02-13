@@ -15,7 +15,7 @@ export default function RealunitQuoteDetailScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { id } = useParams<{ id: string }>();
-  const { quotes, quotesLoading, fetchQuotes, confirmPayment } = useRealunitContext();
+  const { quotes, quotesLoading, fetchQuotes, resetQuotes, confirmPayment } = useRealunitContext();
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   useLayoutOptions({ title: translate('screens/realunit', 'Quote Detail'), backButton: true });
@@ -136,6 +136,7 @@ export default function RealunitQuoteDetailScreen(): JSX.Element {
           onCancel={() => setShowConfirmation(false)}
           onConfirm={async () => {
             await confirmPayment(quote.id);
+            resetQuotes();
             setShowConfirmation(false);
             navigate(-1);
           }}
