@@ -139,4 +139,5 @@ export interface RealunitContextInterface {
   fetchTokenPrice: () => void;
   fetchQuotes: () => void;
   fetchTransactions: () => void;
+  confirmPayment: (id: number) => Promise<void>;
 }

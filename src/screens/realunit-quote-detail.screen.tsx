@@ -1,6 +1,7 @@
-import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { useEffect } from 'react';
+import { SpinnerSize, StyledButton, StyledButtonWidth, StyledLoadingSpinner } from '@dfx.swiss/react-components';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useAdminGuard } from 'src/hooks/guard.hook';
@@ -14,7 +15,8 @@ export default function RealunitQuoteDetailScreen(): JSX.Element {
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
   const { id } = useParams<{ id: string }>();
-  const { quotes, quotesLoading, fetchQuotes } = useRealunitContext();
+  const { quotes, quotesLoading, fetchQuotes, confirmPayment } = useRealunitContext();
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useLayoutOptions({ title: translate('screens/realunit', 'Quote Detail'), backButton: true });
 
@@ -112,6 +114,33 @@ export default function RealunitQuoteDetailScreen(): JSX.Element {
           </tr>
         </tbody>
       </table>
+
+      {quote.status === 'WaitingForPayment' && (
+        <div className="mt-6">
+          <StyledButton
+            label={translate('screens/realunit', 'Confirm Payment Received')}
+            onClick={() => setShowConfirmation(true)}
+            width={StyledButtonWidth.FULL}
+          />
+        </div>
+      )}
+
+      {showConfirmation && (
+        <ConfirmationOverlay
+          message={translate(
+            'screens/realunit',
+            'Are you sure you want to confirm the payment receipt?',
+          )}
+          cancelLabel={translate('general/actions', 'Cancel')}
+          confirmLabel={translate('general/actions', 'Confirm')}
+          onCancel={() => setShowConfirmation(false)}
+          onConfirm={async () => {
+            await confirmPayment(quote.id);
+            setShowConfirmation(false);
+            navigate(-1);
+          }}
+        />
+      )}
     </div>
   );
 }
