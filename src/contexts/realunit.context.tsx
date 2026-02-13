@@ -6,6 +6,8 @@ import {
   PageInfo,
   PaginationDirection,
   PriceHistoryEntry,
+  RealUnitQuote,
+  RealUnitTransaction,
   RealunitContextInterface,
   TokenInfo,
   TokenPrice,
@@ -35,9 +37,21 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
   const [tokenPrice, setTokenPrice] = useState<TokenPrice | undefined>();
   const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
   const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.ALL);
+  const [quotes, setQuotes] = useState<RealUnitQuote[]>([]);
+  const [transactions, setTransactions] = useState<RealUnitTransaction[]>([]);
+  const [quotesLoading, setQuotesLoading] = useState(false);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
 
-  const { getAccountSummary, getAccountHistory, getHolders, getPriceHistory, getTokenInfo, getTokenPrice } =
-    useRealunitApi();
+  const {
+    getAccountSummary,
+    getAccountHistory,
+    getHolders,
+    getPriceHistory,
+    getTokenInfo,
+    getTokenPrice,
+    getAdminQuotes,
+    getAdminTransactions,
+  } = useRealunitApi();
 
   const fetchAccountSummary = useCallback(
     (address: string) => {
@@ -98,6 +112,24 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
     });
   }, [setTokenPrice]);
 
+  const fetchQuotes = useCallback(() => {
+    setQuotesLoading(true);
+    getAdminQuotes(50, quotes.length)
+      .then((data) => {
+        setQuotes((prev) => [...prev, ...data]);
+      })
+      .finally(() => setQuotesLoading(false));
+  }, [quotes.length]);
+
+  const fetchTransactions = useCallback(() => {
+    setTransactionsLoading(true);
+    getAdminTransactions(50, transactions.length)
+      .then((data) => {
+        setTransactions((prev) => [...prev, ...data]);
+      })
+      .finally(() => setTransactionsLoading(false));
+  }, [transactions.length]);
+
   const context = useMemo(
     () => ({
       accountSummary,
@@ -110,12 +142,18 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       tokenPrice,
       priceHistory,
       timeframe,
+      quotes,
+      transactions,
+      quotesLoading,
+      transactionsLoading,
       fetchAccountSummary,
       fetchAccountHistory,
       fetchHolders,
       fetchTokenInfo,
       fetchPriceHistory,
       fetchTokenPrice,
+      fetchQuotes,
+      fetchTransactions,
     }),
     [
       accountSummary,
@@ -128,12 +166,18 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       tokenPrice,
       priceHistory,
       timeframe,
+      quotes,
+      transactions,
+      quotesLoading,
+      transactionsLoading,
       fetchAccountSummary,
       fetchAccountHistory,
       fetchHolders,
       fetchTokenInfo,
       fetchTokenPrice,
       fetchPriceHistory,
+      fetchQuotes,
+      fetchTransactions,
     ],
   );
 

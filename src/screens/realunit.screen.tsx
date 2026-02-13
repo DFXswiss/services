@@ -22,8 +22,23 @@ export default function RealunitScreen(): JSX.Element {
   const { navigate } = useNavigation();
   const { copy } = useClipboard();
 
-  const { holders, totalCount, tokenInfo, isLoading, priceHistory, timeframe, fetchHolders, fetchPriceHistory, fetchTokenInfo } =
-    useRealunitContext();
+  const {
+    holders,
+    totalCount,
+    tokenInfo,
+    isLoading,
+    priceHistory,
+    timeframe,
+    quotes,
+    transactions,
+    quotesLoading,
+    transactionsLoading,
+    fetchHolders,
+    fetchPriceHistory,
+    fetchTokenInfo,
+    fetchQuotes,
+    fetchTransactions,
+  } = useRealunitContext();
 
   useLayoutOptions({ backButton: true });
 
@@ -31,7 +46,9 @@ export default function RealunitScreen(): JSX.Element {
     if (!holders.length) fetchHolders();
     if (!tokenInfo) fetchTokenInfo();
     if (!priceHistory.length) fetchPriceHistory();
-  }, [fetchHolders, fetchTokenInfo]);
+    if (!quotes.length) fetchQuotes();
+    if (!transactions.length) fetchTransactions();
+  }, [fetchHolders, fetchTokenInfo, fetchQuotes, fetchTransactions]);
 
   const topHolders = holders.slice(0, 3);
 
@@ -166,6 +183,146 @@ export default function RealunitScreen(): JSX.Element {
               />
             </div>
           )}
+
+          <div className="w-full overflow-x-auto mt-8 mb-4">
+            <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'Quotes')}</h2>
+            <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
+              <thead>
+                <tr className="bg-dfxGray-300">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'UID')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'Type')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'Status')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'Amount')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'Est. Amount')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'User')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'Created')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {quotes.map((quote) => (
+                  <tr key={quote.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{quote.uid}</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{quote.type}</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{quote.status}</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{quote.amount?.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                      {quote.estimatedAmount?.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                      {quote.userAddress ? blankedAddress(quote.userAddress, { displayLength: 12 }) : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                      {new Date(quote.created).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+                {!quotes.length && !quotesLoading && (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-3 text-center text-sm text-dfxGray-700">
+                      {translate('screens/realunit', 'No quotes found')}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            {quotesLoading ? (
+              <div className="flex justify-center mt-4">
+                <StyledLoadingSpinner size={SpinnerSize.SM} />
+              </div>
+            ) : (
+              quotes.length > 0 && (
+                <div className="flex justify-center mt-4">
+                  <StyledButton
+                    label={translate('general/actions', 'More')}
+                    onClick={fetchQuotes}
+                    width={StyledButtonWidth.MIN}
+                  />
+                </div>
+              )
+            )}
+          </div>
+
+          <div className="w-full overflow-x-auto mt-8 mb-4">
+            <h2 className="text-dfxGray-700 mb-4">{translate('screens/realunit', 'Transactions')}</h2>
+            <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
+              <thead>
+                <tr className="bg-dfxGray-300">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'UID')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'Type')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'Assets')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'Amount CHF')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'User')}
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                    {translate('screens/realunit', 'Date')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((tx) => (
+                  <tr key={tx.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{tx.uid}</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{tx.type}</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{tx.assets}</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                      {tx.amountInChf?.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                      {tx.userAddress ? blankedAddress(tx.userAddress, { displayLength: 12 }) : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                      {new Date(tx.outputDate ?? tx.created).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+                {!transactions.length && !transactionsLoading && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-3 text-center text-sm text-dfxGray-700">
+                      {translate('screens/realunit', 'No transactions found')}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            {transactionsLoading ? (
+              <div className="flex justify-center mt-4">
+                <StyledLoadingSpinner size={SpinnerSize.SM} />
+              </div>
+            ) : (
+              transactions.length > 0 && (
+                <div className="flex justify-center mt-4">
+                  <StyledButton
+                    label={translate('general/actions', 'More')}
+                    onClick={fetchTransactions}
+                    width={StyledButtonWidth.MIN}
+                  />
+                </div>
+              )
+            )}
+          </div>
         </div>
       )}
     </>

@@ -94,6 +94,28 @@ export enum PaginationDirection {
   PREV = 'prev',
 }
 
+export interface RealUnitQuote {
+  id: number;
+  uid: string;
+  type: string;
+  status: string;
+  amount: number;
+  estimatedAmount: number;
+  created: string;
+  userAddress?: string;
+}
+
+export interface RealUnitTransaction {
+  id: number;
+  uid: string;
+  type: string;
+  amountInChf: number;
+  assets: string;
+  created: string;
+  outputDate?: string;
+  userAddress?: string;
+}
+
 export interface RealunitContextInterface {
   accountSummary?: AccountSummary;
   history?: AccountHistory;
@@ -105,10 +127,16 @@ export interface RealunitContextInterface {
   tokenPrice?: TokenPrice;
   priceHistory: PriceHistoryEntry[];
   timeframe: Timeframe;
+  quotes: RealUnitQuote[];
+  transactions: RealUnitTransaction[];
+  quotesLoading: boolean;
+  transactionsLoading: boolean;
   fetchAccountSummary: (address: string) => void;
   fetchAccountHistory: (address: string, cursor?: string, direction?: PaginationDirection) => void;
   fetchHolders: (cursor?: string, direction?: PaginationDirection) => void;
   fetchTokenInfo: () => void;
   fetchPriceHistory: (timeframe?: Timeframe) => void;
   fetchTokenPrice: () => void;
+  fetchQuotes: () => void;
+  fetchTransactions: () => void;
 }
