@@ -1033,7 +1033,10 @@
     "User": "Benutzer",
     "Created": "Erstellt",
     "Amount CHF": "Betrag CHF",
-    "Date": "Datum"
+    "Date": "Datum",
+    "Confirm Payment Received": "Zahlungseingang bestätigen",
+    "Are you sure you want to confirm the payment receipt?": "Möchten Sie den Zahlungseingang wirklich bestätigen?",
+    "Payment confirmed successfully": "Zahlungseingang erfolgreich bestätigt"
   },
   "screens/blockchain": {
     "Transaction signing": "Transaktionssignierung",

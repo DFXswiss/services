@@ -51,6 +51,7 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
     getTokenPrice,
     getAdminQuotes,
     getAdminTransactions,
+    confirmPayment,
   } = useRealunitApi();
 
   const fetchAccountSummary = useCallback(
@@ -124,6 +125,10 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       .finally(() => setQuotesLoading(false));
   }, [quotes.length]);
 
+  const resetQuotes = useCallback(() => {
+    setQuotes([]);
+  }, []);
+
   const fetchTransactions = useCallback(() => {
     setTransactionsLoading(true);
     getAdminTransactions(50, transactions.length)
@@ -156,7 +161,9 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       fetchPriceHistory,
       fetchTokenPrice,
       fetchQuotes,
+      resetQuotes,
       fetchTransactions,
+      confirmPayment,
     }),
     [
       accountSummary,
@@ -180,7 +187,9 @@ export function RealunitContextProvider({ children }: PropsWithChildren): JSX.El
       fetchTokenPrice,
       fetchPriceHistory,
       fetchQuotes,
+      resetQuotes,
       fetchTransactions,
+      confirmPayment,
     ],
   );
 
