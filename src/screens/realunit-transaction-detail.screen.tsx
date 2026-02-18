@@ -87,7 +87,7 @@ export default function RealunitTransactionDetailScreen(): JSX.Element {
                 <button
                   type="button"
                   className="text-left text-sm text-dfxBlue-800 cursor-pointer hover:text-dfxBlue-600 hover:underline break-all bg-transparent border-0 p-0"
-                  onClick={() => navigate(`/realunit/user/${encodeURIComponent(transaction.userAddress!)}`)}
+                  onClick={() => navigate(`/realunit/user/${encodeURIComponent(transaction.userAddress ?? '')}`)}
                 >
                   {blankedAddress(transaction.userAddress, { displayLength: 22 })}
                 </button>
