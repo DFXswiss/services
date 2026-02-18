@@ -15,6 +15,10 @@ export function useAdminGuard(redirectPath = '/', isActive = true) {
   useUserRoleGuard([UserRole.ADMIN], redirectPath, isActive);
 }
 
+export function useRealunitGuard(redirectPath = '/', isActive = true) {
+  useUserRoleGuard([UserRole.ADMIN, UserRole.REALUNIT], redirectPath, isActive);
+}
+
 export function useComplianceGuard(redirectPath = '/', isActive = true) {
   useUserRoleGuard([UserRole.ADMIN, UserRole.COMPLIANCE], redirectPath, isActive);
 }

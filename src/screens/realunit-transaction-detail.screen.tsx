@@ -3,13 +3,13 @@ import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { useAdminGuard } from 'src/hooks/guard.hook';
+import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress } from 'src/util/utils';
 
 export default function RealunitTransactionDetailScreen(): JSX.Element {
-  useAdminGuard();
+  useRealunitGuard();
 
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
