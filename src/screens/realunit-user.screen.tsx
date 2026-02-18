@@ -14,12 +14,12 @@ import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PaginationDirection } from 'src/dto/realunit.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
-import { useAdminGuard } from 'src/hooks/guard.hook';
+import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { blankedAddress, formatCurrency } from 'src/util/utils';
 
 export default function RealunitUserScreen(): JSX.Element {
-  useAdminGuard();
+  useRealunitGuard();
 
   const { translate } = useSettingsContext();
   const { copy } = useClipboard();
@@ -61,7 +61,7 @@ export default function RealunitUserScreen(): JSX.Element {
 
   return (
     <>
-      {!accountSummary ? (
+      {isLoading && !accountSummary ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : !accountSummary ? (
         <p className="text-dfxGray-700">{translate('screens/realunit', 'No data available')}</p>
