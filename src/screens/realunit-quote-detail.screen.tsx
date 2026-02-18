@@ -4,13 +4,13 @@ import { useParams } from 'react-router-dom';
 import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay';
 import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { useAdminGuard } from 'src/hooks/guard.hook';
+import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress } from 'src/util/utils';
 
 export default function RealunitQuoteDetailScreen(): JSX.Element {
-  useAdminGuard();
+  useRealunitGuard();
 
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();

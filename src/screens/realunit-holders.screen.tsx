@@ -11,13 +11,13 @@ import { useRealunitContext } from 'src/contexts/realunit.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { PaginationDirection } from 'src/dto/realunit.dto';
 import { useClipboard } from 'src/hooks/clipboard.hook';
-import { useAdminGuard } from 'src/hooks/guard.hook';
+import { useRealunitGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress } from 'src/util/utils';
 
 export default function RealunitHoldersScreen(): JSX.Element {
-  useAdminGuard();
+  useRealunitGuard();
 
   const { translate } = useSettingsContext();
   const { navigate } = useNavigation();
