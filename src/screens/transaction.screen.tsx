@@ -824,7 +824,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   onSubmit={handleSubmit(submitAssignment)}
                                 >
                                   <StyledVerticalStack gap={3} full>
-                                    <p className="text-dfxGray-700 mt-4">{translate('screens/payment', 'Reference')}</p>
+                                    <p className="text-dfxGray-700 mt-4">{translate('screens/payment', 'Remittance info')}</p>
                                     <StyledDropdown<TransactionTarget>
                                       rootRef={rootRef}
                                       items={transactionTargets ?? []}
