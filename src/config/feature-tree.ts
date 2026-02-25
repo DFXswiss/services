@@ -1487,6 +1487,8 @@ export const FeatureTree: Page[] = [
           switch (params.blockchain) {
             case Blockchain.BITCOIN:
               return { type: WalletType.CLI_BTC };
+            case Blockchain.FIRO:
+              return { type: WalletType.CLI_FIRO };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
             case Blockchain.ZANO:
@@ -1625,6 +1627,8 @@ export const FeatureTree: Page[] = [
           switch (params.blockchain) {
             case Blockchain.BITCOIN:
               return { type: WalletType.CLI_BTC };
+            case Blockchain.FIRO:
+              return { type: WalletType.CLI_FIRO };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
             case Blockchain.ZANO:

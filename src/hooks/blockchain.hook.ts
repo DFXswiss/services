@@ -76,6 +76,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.DEFICHAIN]: 'DeFiChain',
       [Blockchain.ARWEAVE]: 'Arweave',
       [Blockchain.CARDANO]: 'Cardano',
+      [Blockchain.FIRO]: 'Firo',
       [Blockchain.MONERO]: 'Monero',
       [Blockchain.ZANO]: 'Zano',
       [Blockchain.SOLANA]: 'Solana',

@@ -32,6 +32,7 @@ const Wallets = [
   WalletType.CLI_BTC,
   WalletType.CLI_LN,
   WalletType.CLI_ETH,
+  WalletType.CLI_FIRO,
   WalletType.CLI_XMR,
   WalletType.CLI_ZANO,
   WalletType.CLI_ADA,
@@ -96,6 +97,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch, rootRef
   const addressRegex: { [wallet in WalletType]?: RegExp } = {
     [WalletType.CLI_BTC]: /^([13]|bc1)[a-zA-HJ-NP-Z0-9]{25,62}$/,
     [WalletType.CLI_LN]: /^((LNURL|LNDHUB)[A-Z0-9]{25,250}|LNNID[A-Z0-9]{66}|\S+@\S+\.\S+)$/,
+    [WalletType.CLI_FIRO]: /^a[a-zA-HJ-NP-Z0-9]{33}$/,
     [WalletType.CLI_XMR]: /^[48][0-9AB][1-9A-HJ-NP-Za-km-z]{93}$/,
     [WalletType.CLI_ZANO]: /^(Z[a-zA-Z0-9]{96}|iZ[a-zA-Z0-9]{106})$/,
     [WalletType.CLI_ETH]: /^0x\w{40}$/,
