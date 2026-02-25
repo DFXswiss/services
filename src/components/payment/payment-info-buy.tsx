@@ -31,11 +31,11 @@ export function PaymentInformationContent({ info }: PaymentInformationContentPro
           {info.remittanceInfo
             ? translate(
                 'screens/buy',
-                'Please transfer the purchase amount using this information via your banking application. The reference is important!',
+                'Please transfer the purchase amount using this information via your banking application. The remittance info is important!',
               )
             : translate(
                 'screens/buy',
-                'Please transfer the purchase amount using this information via your banking application. This IBAN is unique to this asset, no reference is required.',
+                'Please transfer the purchase amount using this information via your banking application. This IBAN is unique to this asset, no remittance info is required.',
               )}
         </StyledInfoText>
 
@@ -90,10 +90,10 @@ function PaymentInformationText({ info }: PaymentInformationContentProps): JSX.E
         </StyledDataTableRow>
         {info.remittanceInfo && (
           <StyledDataTableRow
-            label={translate('screens/payment', 'Reference')}
+            label={translate('screens/payment', 'Remittance info')}
             infoText={translate(
               'screens/buy',
-              'The reference remains identical for the selected asset and can be used for recurring payments and standing orders',
+              'The remittance info remains identical for the selected asset and can be used for recurring payments and standing orders',
             )}
           >
             {info.remittanceInfo}
