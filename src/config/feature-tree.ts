@@ -151,6 +151,13 @@ export const FeatureTree: Page[] = [
           page: 'buy-gnosis',
         },
       },
+      {
+        id: 'citrea',
+        img: 'citrea',
+        next: {
+          page: 'buy-citrea',
+        },
+      },
     ],
   },
   {
@@ -745,6 +752,48 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
+    id: 'buy-citrea',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'cbtc',
+        img: 'cbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'cBTC' },
+          },
+        },
+      },
+      {
+        id: 'jusd',
+        img: 'jusd',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'JUSD' },
+          },
+        },
+      },
+      {
+        id: 'ctusd',
+        img: 'ctusd',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'ctUSD' },
+          },
+        },
+      },
+    ],
+  },
+  {
     id: 'sell',
     dfxStyle: true,
     tiles: [
@@ -858,6 +907,13 @@ export const FeatureTree: Page[] = [
         img: 'gnosis',
         next: {
           page: 'sell-gnosis',
+        },
+      },
+      {
+        id: 'citrea',
+        img: 'citrea',
+        next: {
+          page: 'sell-citrea',
         },
       },
     ],
@@ -1405,6 +1461,48 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.GNOSIS, assetIn: 'xDAI' },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'sell-citrea',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'cbtc',
+        img: 'cbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'cBTC' },
+          },
+        },
+      },
+      {
+        id: 'jusd',
+        img: 'jusd',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'JUSD' },
+          },
+        },
+      },
+      {
+        id: 'ctusd',
+        img: 'ctusd',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'ctUSD' },
           },
         },
       },
