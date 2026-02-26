@@ -9,6 +9,8 @@ jest.mock('@dfx.swiss/react', () => ({
     GNOSIS: 'Gnosis',
     BINANCE_SMART_CHAIN: 'BinanceSmartChain',
     HAQQ: 'Haqq',
+    CITREA: 'Citrea',
+    CITREA_TESTNET: 'CitreaTestnet',
     BITCOIN: 'Bitcoin',
     LIGHTNING: 'Lightning',
     SOLANA: 'Solana',
@@ -83,6 +85,8 @@ describe('Evm', () => {
         Blockchain.GNOSIS,
         Blockchain.BINANCE_SMART_CHAIN,
         Blockchain.HAQQ,
+        Blockchain.CITREA,
+        Blockchain.CITREA_TESTNET,
       ];
       
       evmChains.forEach(chain => {

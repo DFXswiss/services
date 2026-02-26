@@ -31,6 +31,7 @@ const availableBlockchains = [
   Blockchain.ARBITRUM,
   Blockchain.OPTIMISM,
   Blockchain.BASE,
+  Blockchain.CITREA,
 ];
 
 const availableSigners = ['0x9229e0179a436CD0b77F731992307AC765Bc4b17'];
