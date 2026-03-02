@@ -21,6 +21,7 @@ export enum WalletType {
   CLI_FIRO = 'CliFiro',
   CLI_XMR = 'CliXmr',
   CLI_ZANO = 'CliZano',
+  CLI_ICP = 'CliIcp',
   CLI_ETH = 'CliEth',
   CLI_ADA = 'CliAda',
   CLI_AR = 'CliAr',
@@ -66,6 +67,7 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
   [WalletType.CLI_LN]: [Blockchain.LIGHTNING],
   [WalletType.CLI_XMR]: [Blockchain.MONERO],
   [WalletType.CLI_ZANO]: [Blockchain.ZANO],
+  [WalletType.CLI_ICP]: [Blockchain.INTERNET_COMPUTER],
   [WalletType.CLI_ETH]: [
     Blockchain.ETHEREUM,
     Blockchain.ARBITRUM,
@@ -125,6 +127,7 @@ const WalletTypeMap: { [k in WalletType]: AuthWalletType | undefined } = {
   [WalletType.CLI_LN]: AuthWalletType.CLI,
   [WalletType.CLI_XMR]: AuthWalletType.CLI,
   [WalletType.CLI_ZANO]: AuthWalletType.CLI,
+  [WalletType.CLI_ICP]: AuthWalletType.CLI,
   [WalletType.CLI_ETH]: AuthWalletType.CLI,
   [WalletType.CLI_ADA]: AuthWalletType.CLI,
   [WalletType.CLI_AR]: AuthWalletType.CLI,
