@@ -791,6 +791,54 @@ export const FeatureTree: Page[] = [
           },
         },
       },
+      {
+        id: 'wbtce',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'WBTC.e' },
+          },
+        },
+      },
+      {
+        id: 'usdte',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'USDT.e' },
+          },
+        },
+      },
+      {
+        id: 'usdce',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'USDC.e' },
+          },
+        },
+      },
+      {
+        id: 'juice',
+        img: 'juice',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'JUICE' },
+          },
+        },
+      },
     ],
   },
   {
@@ -1503,6 +1551,54 @@ export const FeatureTree: Page[] = [
           options: {
             service: 'sell',
             query: { blockchain: Blockchain.CITREA, assetIn: 'ctUSD' },
+          },
+        },
+      },
+      {
+        id: 'wbtce',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'WBTC.e' },
+          },
+        },
+      },
+      {
+        id: 'usdte',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'USDT.e' },
+          },
+        },
+      },
+      {
+        id: 'usdce',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'USDC.e' },
+          },
+        },
+      },
+      {
+        id: 'juice',
+        img: 'juice',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'JUICE' },
           },
         },
       },
