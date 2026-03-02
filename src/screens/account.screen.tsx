@@ -156,7 +156,9 @@ export default function AccountScreen(): JSX.Element {
         loadProfile(),
         call<Blockchain[]>({ url: 'balance/pdf/blockchains', method: 'GET' })
           .then(setSupportedPdfBlockchains)
-          .catch(() => {}),
+          .catch(() => {
+            // ignore errors
+          }),
       ]);
     } finally {
       setIsDataLoading(false);
