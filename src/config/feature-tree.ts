@@ -1493,6 +1493,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_XMR };
             case Blockchain.ZANO:
               return { type: WalletType.CLI_ZANO };
+            case Blockchain.INTERNET_COMPUTER:
+              return { type: WalletType.CLI_ICP };
             case Blockchain.SOLANA:
               return { type: WalletType.CLI_SOL };
             case Blockchain.TRON:
@@ -1633,6 +1635,8 @@ export const FeatureTree: Page[] = [
               return { type: WalletType.CLI_XMR };
             case Blockchain.ZANO:
               return { type: WalletType.CLI_ZANO };
+            case Blockchain.INTERNET_COMPUTER:
+              return { type: WalletType.CLI_ICP };
             case Blockchain.SOLANA:
               return { type: WalletType.CLI_SOL };
             case Blockchain.TRON:

@@ -79,6 +79,7 @@ export function useBlockchain(): BlockchainInterface {
       [Blockchain.FIRO]: 'Firo',
       [Blockchain.MONERO]: 'Monero',
       [Blockchain.ZANO]: 'Zano',
+      [Blockchain.INTERNET_COMPUTER]: 'Internet Computer',
       [Blockchain.SOLANA]: 'Solana',
       [Blockchain.TRON]: 'Tron',
       [Blockchain.SPARK]: 'Spark',
