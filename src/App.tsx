@@ -68,6 +68,7 @@ const RealunitTransactionDetailScreen = lazy(() => import('./screens/realunit-tr
 const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
 const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
 const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
+const DashboardFinancialLogScreen = lazy(() => import('./screens/dashboard-financial-log.screen'));
 
 setupLanguages();
 
@@ -388,6 +389,20 @@ export const Routes = [
           {
             path: 'user/:address',
             element: withSuspense(<RealunitUserScreen />),
+          },
+        ],
+      },
+      {
+        path: 'dashboard',
+        children: [
+          {
+            path: 'financial',
+            children: [
+              {
+                path: 'log',
+                element: withSuspense(<DashboardFinancialLogScreen />),
+              },
+            ],
           },
         ],
       },
