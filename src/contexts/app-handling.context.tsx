@@ -67,6 +67,7 @@ export interface AppParams {
   lang?: string;
   address?: string;
   signature?: string;
+  key?: string;
   mail?: string;
   accountType?: string;
   firstName?: string;
@@ -244,6 +245,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
     delete copy.address;
     delete copy.signature;
+    delete copy.key;
     delete copy.session;
     delete copy.autoStart;
 
