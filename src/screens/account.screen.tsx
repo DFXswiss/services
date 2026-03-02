@@ -68,7 +68,6 @@ const SUPPORTED_PDF_BLOCKCHAINS: Blockchain[] = [
   Blockchain.OPTIMISM,
   Blockchain.BASE,
   Blockchain.GNOSIS,
-  Blockchain.CITREA,
 ];
 
 enum FiatCurrency {
