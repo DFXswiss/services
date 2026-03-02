@@ -59,17 +59,6 @@ function formatAddress(address: UserProfile['address']): string {
     .join(', ');
 }
 
-// Supported EVM blockchains for balance PDF (must match API's SUPPORTED_BLOCKCHAINS)
-const SUPPORTED_PDF_BLOCKCHAINS: Blockchain[] = [
-  Blockchain.ETHEREUM,
-  Blockchain.BINANCE_SMART_CHAIN,
-  Blockchain.POLYGON,
-  Blockchain.ARBITRUM,
-  Blockchain.OPTIMISM,
-  Blockchain.BASE,
-  Blockchain.GNOSIS,
-];
-
 enum FiatCurrency {
   CHF = 'CHF',
   EUR = 'EUR',
@@ -99,6 +88,7 @@ export default function AccountScreen(): JSX.Element {
   const { changeAddress } = useUserContext();
   const { rootRef } = useLayoutContext();
   const { call } = useApi();
+  const [supportedPdfBlockchains, setSupportedPdfBlockchains] = useState<Blockchain[]>([]);
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
   const [referral, setReferral] = useState<Referral | undefined>();
   const [profile, setProfile] = useState<UserProfile | undefined>();
@@ -131,7 +121,7 @@ export default function AccountScreen(): JSX.Element {
   const selectedPdfCurrency = useWatch({ control: pdfControl, name: 'currency' });
   const selectedPdfDate = useWatch({ control: pdfControl, name: 'date' });
 
-  const supportedBlockchains = selectedAddress?.blockchains.filter((b) => SUPPORTED_PDF_BLOCKCHAINS.includes(b)) ?? [];
+  const supportedBlockchains = selectedAddress?.blockchains.filter((b) => supportedPdfBlockchains.includes(b)) ?? [];
   const canDownloadPdf = supportedBlockchains.length > 0;
 
   useEffect(() => {
@@ -161,7 +151,13 @@ export default function AccountScreen(): JSX.Element {
     setIsDataLoading(true);
 
     try {
-      await Promise.allSettled([loadReferral(), loadProfile()]);
+      await Promise.allSettled([
+        loadReferral(),
+        loadProfile(),
+        call<Blockchain[]>({ url: 'balance/pdf/blockchains', method: 'GET' })
+          .then(setSupportedPdfBlockchains)
+          .catch(() => {}),
+      ]);
     } finally {
       setIsDataLoading(false);
     }
