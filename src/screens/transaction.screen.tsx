@@ -210,6 +210,9 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
   const { getTransactionByUid } = useTransaction();
   const { isLoggedIn } = useSessionContext();
   const { setRedirectPath } = useAppHandlingContext();
+  const { user } = useUserContext();
+
+  const isRealUnit = user?.activeAddress?.wallet?.startsWith('RealUnit') ?? false;
 
   const [transaction, setTransaction] = useState<Transaction>();
 
@@ -261,7 +264,8 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
           ![TransactionFailureReason.BANK_RELEASE_PENDING, TransactionFailureReason.INPUT_NOT_CONFIRMED].includes(
             transaction.reason,
           ) &&
-          !transaction.chargebackAmount && (
+          !transaction.chargebackAmount &&
+          !isRealUnit && (
             <>
               <StyledButton
                 label={translate(
@@ -642,11 +646,14 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const { getDetailTransactions, getUnassignedTransactions, getTransactionTargets, setTransactionTarget } =
     useTransaction();
   const { isLoggedIn } = useSessionContext();
+  const { user } = useUserContext();
   const { id } = useParams();
   const { toString } = useBlockchain();
   const { pathname } = useLocation();
   const { rootRef } = useLayoutContext();
   const { getTransactionInvoice, getTransactionReceipt } = useTransaction();
+
+  const isRealUnit = user?.activeAddress?.wallet?.startsWith('RealUnit') ?? false;
 
   const { width } = useWindowContext();
   const txRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -908,7 +915,8 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   TransactionFailureReason.BANK_RELEASE_PENDING,
                                   TransactionFailureReason.INPUT_NOT_CONFIRMED,
                                 ].includes(tx.reason) ||
-                                !!tx.chargebackAmount
+                                !!tx.chargebackAmount ||
+                                isRealUnit
                               }
                             />
                             <StyledButton
