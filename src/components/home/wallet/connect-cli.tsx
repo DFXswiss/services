@@ -130,7 +130,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch, rootRef
   const [signMessage, setSignMessage] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
 
-  const requiresKey = [Blockchain.CARDANO, Blockchain.ARWEAVE].includes(blockchain);
+  const requiresKey = [Blockchain.CARDANO, Blockchain.ARWEAVE, Blockchain.INTERNET_COMPUTER].includes(blockchain);
   const hasKey = !requiresKey || key;
 
   useEffect(() => {
