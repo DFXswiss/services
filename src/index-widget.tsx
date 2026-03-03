@@ -11,6 +11,7 @@ const props: { [k in keyof WidgetParams]: 'string' | 'number' | 'boolean' | 'fun
   lang: 'string',
   address: 'string',
   signature: 'string',
+  key: 'string',
   mail: 'string',
   accountType: 'string',
   firstName: 'string',
