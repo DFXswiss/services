@@ -59,17 +59,6 @@ function formatAddress(address: UserProfile['address']): string {
     .join(', ');
 }
 
-// Supported EVM blockchains for balance PDF (must match API's SUPPORTED_BLOCKCHAINS)
-const SUPPORTED_PDF_BLOCKCHAINS: Blockchain[] = [
-  Blockchain.ETHEREUM,
-  Blockchain.BINANCE_SMART_CHAIN,
-  Blockchain.POLYGON,
-  Blockchain.ARBITRUM,
-  Blockchain.OPTIMISM,
-  Blockchain.BASE,
-  Blockchain.GNOSIS,
-];
-
 enum FiatCurrency {
   CHF = 'CHF',
   EUR = 'EUR',
@@ -107,6 +96,7 @@ export default function AccountScreen(): JSX.Element {
   const [pdfError, setPdfError] = useState<string>();
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [pdfBlockchains, setPdfBlockchains] = useState<Blockchain[]>([]);
 
   const isKycLevel50 = user && user.kyc.level >= 50;
 
@@ -131,7 +121,7 @@ export default function AccountScreen(): JSX.Element {
   const selectedPdfCurrency = useWatch({ control: pdfControl, name: 'currency' });
   const selectedPdfDate = useWatch({ control: pdfControl, name: 'date' });
 
-  const supportedBlockchains = selectedAddress?.blockchains.filter((b) => SUPPORTED_PDF_BLOCKCHAINS.includes(b)) ?? [];
+  const supportedBlockchains = selectedAddress?.blockchains.filter((b) => pdfBlockchains.includes(b)) ?? [];
   const canDownloadPdf = supportedBlockchains.length > 0;
 
   useEffect(() => {
@@ -148,6 +138,10 @@ export default function AccountScreen(): JSX.Element {
   }, [isLoggedIn]);
 
   useEffect(() => {
+    loadPdfBlockchains();
+  }, []);
+
+  useEffect(() => {
     if (selectedAddress?.address && user?.activeAddress?.address !== selectedAddress?.address && !isUserLoading) {
       changeAddress(selectedAddress.address)
         .then(() => setWallet())
@@ -156,6 +150,14 @@ export default function AccountScreen(): JSX.Element {
         });
     }
   }, [selectedAddress, user?.activeAddress, !isUserLoading]);
+
+  async function loadPdfBlockchains(): Promise<void> {
+    return call<Blockchain[]>({ url: 'balance/pdf/blockchains', method: 'GET' })
+      .then(setPdfBlockchains)
+      .catch(() => {
+        // ignore errors
+      });
+  }
 
   async function loadInitialData(): Promise<void> {
     setIsDataLoading(true);
