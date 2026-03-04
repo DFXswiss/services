@@ -107,7 +107,7 @@ function Content({ wallet, isConnecting, connect, error, form, onSwitch, rootRef
     [WalletType.CLI_AR]: /^[\w-]{43}$/,
     [WalletType.CLI_SOL]: /^[1-9A-HJ-NP-Za-km-z]{43,44}$/,
     [WalletType.CLI_TRX]: /^T[1-9A-HJ-NP-Za-km-z]{32,34}$/,
-    [WalletType.CLI_SPARK]: /^sp1[a-z0-9]{6,87}$/,
+    [WalletType.CLI_SPARK]: /^spark1[a-z0-9]{6,250}$/,
   };
 
   function validateAddress(address: string): true | string {
