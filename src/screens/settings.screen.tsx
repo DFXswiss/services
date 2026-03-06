@@ -7,20 +7,12 @@ import {
   UserAddress,
   useUserContext,
   Utils,
-  Validations,
 } from '@dfx.swiss/react';
 import {
-  AlignContent,
-  DfxIcon,
   Form,
-  IconColor,
-  IconSize,
-  IconVariant,
   SpinnerSize,
   StyledButton,
   StyledButtonWidth,
-  StyledDataTable,
-  StyledDataTableRow,
   StyledDropdown,
   StyledLoadingSpinner,
   StyledVerticalStack,
@@ -54,8 +46,6 @@ enum OverlayType {
   DELETE_ADDRESS,
   DELETE_ACCOUNT,
   RENAME_ADDRESS,
-  EDIT_EMAIL,
-  EDIT_PHONE,
   EDIT_BANK_ACCOUNT,
   ADD_BANK_ACCOUNT,
   DELETE_BANK_ACCOUNT,
@@ -66,8 +56,6 @@ const OverlayHeader: { [key in OverlayType]: string } = {
   [OverlayType.DELETE_ADDRESS]: 'Delete address',
   [OverlayType.DELETE_ACCOUNT]: 'Delete account',
   [OverlayType.RENAME_ADDRESS]: 'Rename address',
-  [OverlayType.EDIT_EMAIL]: 'Edit email',
-  [OverlayType.EDIT_PHONE]: 'Edit phone number',
   [OverlayType.EDIT_BANK_ACCOUNT]: 'Edit bank account',
   [OverlayType.ADD_BANK_ACCOUNT]: 'Add bank account',
   [OverlayType.DELETE_BANK_ACCOUNT]: 'Delete bank account',
@@ -114,10 +102,6 @@ export default function SettingsScreen(): JSX.Element {
       changeCurrency(selectedCurrency);
     }
   }, [selectedCurrency]);
-
-  useEffect(() => {
-    if (overlayType === OverlayType.EDIT_EMAIL) navigate('/settings/mail', { setRedirect: true });
-  }, [overlayType]);
 
   function onCloseOverlay(): void {
     setOverlayType(OverlayType.NONE);
@@ -166,46 +150,6 @@ export default function SettingsScreen(): JSX.Element {
               />
             </Form>
           </StyledVerticalStack>
-
-          {!!(user?.mail || user?.phone) && (
-            <StyledVerticalStack full gap={2}>
-              <h1 className="text-dfxGray-800 font-semibold text-base flex justify-center">
-                {translate('screens/kyc', 'Personal Information')}
-              </h1>
-              <StyledDataTable alignContent={AlignContent.BETWEEN}>
-                {user?.mail && (
-                  <StyledDataTableRow>
-                    <div className="flex flex-col items-start gap-1">
-                      <div className="flex flex-row gap-2 font-semibold">
-                        {translate('screens/kyc', 'Email address')}
-                      </div>
-                      <div className="text-xs text-dfxGray-700">{user?.mail}</div>
-                    </div>
-                    <div className="relative flex items-center">
-                      <button onClick={() => setOverlayType(OverlayType.EDIT_EMAIL)}>
-                        <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
-                      </button>
-                    </div>
-                  </StyledDataTableRow>
-                )}
-                {user?.phone && (
-                  <StyledDataTableRow>
-                    <div className="flex flex-col items-start gap-1">
-                      <div className="flex flex-row gap-2 font-semibold">
-                        {translate('screens/kyc', 'Phone number')}
-                      </div>
-                      <div className="text-xs text-dfxGray-700">{user?.phone}</div>
-                    </div>
-                    <div className="relative flex items-center">
-                      <button onClick={() => setOverlayType(OverlayType.EDIT_PHONE)}>
-                        <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
-                      </button>
-                    </div>
-                  </StyledDataTableRow>
-                )}
-              </StyledDataTable>
-            </StyledVerticalStack>
-          )}
 
           {isLoadingBankAccounts ? (
             <div className="flex mt-4 w-full justify-center items-center">
@@ -339,7 +283,7 @@ function SettingsOverlay({ type, data, onClose }: SettingsOverlayProps): JSX.Ele
   const { width } = useWindowContext();
   const { translate } = useSettingsContext();
   const { setWallet } = useWalletContext();
-  const { deleteAddress, deleteAccount, renameAddress, updatePhone } = useUserContext();
+  const { deleteAddress, deleteAccount, renameAddress } = useUserContext();
   const { updateAccount } = useBankAccountContext();
 
   switch (type) {
@@ -397,21 +341,6 @@ function SettingsOverlay({ type, data, onClose }: SettingsOverlayProps): JSX.Ele
           onCancel={onClose}
           onEdit={async (result) => {
             if (userAddress) await renameAddress(userAddress.address, result);
-            onClose();
-          }}
-        />
-      );
-    case OverlayType.EDIT_PHONE:
-      return (
-        <EditOverlay
-          label={translate('screens/kyc', 'Phone number')}
-          autocomplete="phone"
-          prefill={user?.phone}
-          placeholder={translate('screens/kyc', 'Phone number')}
-          validation={Validations.Phone}
-          onCancel={onClose}
-          onEdit={async (result) => {
-            await updatePhone(result);
             onClose();
           }}
         />
