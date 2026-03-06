@@ -890,12 +890,18 @@
     "Partnership request": "Anfrage zu einer Partnerschaft",
     "Notification of changes": "Mitteilung von Änderungen",
     "Bug report": "Fehlermeldung",
+    "Verification call": "Verifizierungsanruf",
 
     "Reason": "Grund",
     "Other": "Andere",
     "Data request": "Datenanfrage",
     "Funds not received": "Zahlung nicht erhalten",
     "Transaction missing": "Transaktion fehlt",
+    "Reject call": "Anruf ablehnen",
+    "Repeat call": "Anruf wiederholen",
+    "Name changed": "Name geändert",
+    "Address changed": "Adresse geändert",
+    "Civil status changed": "Zivilstand geändert",
 
     "Transaction ID": "Transaktions-ID",
     "Select a transaction to proceed with": "Wähle eine Transaktion aus, um fortzufahren",

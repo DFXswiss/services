@@ -889,12 +889,18 @@
     "Partnership request": "Richiesta di partnership",
     "Notification of changes": "Notifica di cambiamenti",
     "Bug report": "Segnalazione di un errore",
+    "Verification call": "Chiamata di verifica",
 
     "Reason": "Motivo",
     "Other": "Altro",
     "Data request": "Richiesta di dati",
     "Funds not received": "Fondi non ricevuti",
     "Transaction missing": "Transazione mancante",
+    "Reject call": "Rifiuta chiamata",
+    "Repeat call": "Ripeti chiamata",
+    "Name changed": "Nome cambiato",
+    "Address changed": "Indirizzo cambiato",
+    "Civil status changed": "Stato civile cambiato",
 
     "Transaction ID": "ID della transazione",
     "Select a transaction to proceed with": "Selezionare una transazione per procedere",
