@@ -67,7 +67,7 @@ export default function EditMailScreen(): JSX.Element {
     setIsSubmitting(true);
 
     verifyMail(data.token)
-      .then(() => navigate('/settings'))
+      .then(() => navigate('/account'))
       .catch((e: ApiError) =>
         e.statusCode === 403
           ? setTokenInvalid(true)
@@ -112,7 +112,7 @@ export default function EditMailScreen(): JSX.Element {
           prefill={user?.mail}
           placeholder={translate('screens/kyc', 'Email address')}
           validation={Validations.Mail}
-          onCancel={() => navigate('/settings')}
+          onCancel={() => navigate('/account')}
           onEdit={onSubmit}
         />
       ) : (

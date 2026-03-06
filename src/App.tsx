@@ -94,12 +94,12 @@ export const Routes = [
         element: withSuspense(<AccountScreen />),
       },
       {
-        path: 'settings',
-        element: withSuspense(<SettingsScreen />),
+        path: 'account/mail',
+        element: withSuspense(<EditMailScreen />),
       },
       {
-        path: 'settings/mail',
-        element: withSuspense(<EditMailScreen />),
+        path: 'settings',
+        element: withSuspense(<SettingsScreen />),
       },
       {
         path: 'login',

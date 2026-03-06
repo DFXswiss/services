@@ -338,7 +338,20 @@ export default function AccountScreen(): JSX.Element {
               minWidth={false}
             >
               {profile.mail && (
-                <StyledDataTableRow label={translate('screens/home', 'Email')}>{profile.mail}</StyledDataTableRow>
+                <StyledDataTableRow label={translate('screens/home', 'Email')}>
+                  <div className="flex items-center gap-2">
+                    {profile.mail}
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => navigate('/account/mail', { setRedirect: true })} inline />
+                  </div>
+                </StyledDataTableRow>
+              )}
+              {profile.phone && (
+                <StyledDataTableRow label={translate('screens/kyc', 'Phone number')}>
+                  <div className="flex items-center gap-2">
+                    {profile.phone}
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => setShowPhoneModal(true)} inline />
+                  </div>
+                </StyledDataTableRow>
               )}
               {(profile.firstName || profile.lastName) && (
                 <StyledDataTableRow label={translate('screens/home', 'Name')}>
@@ -348,14 +361,6 @@ export default function AccountScreen(): JSX.Element {
               {profile.address && (
                 <StyledDataTableRow label={translate('screens/home', 'Address')}>
                   {formatAddress(profile.address)}
-                </StyledDataTableRow>
-              )}
-              {profile.phone && (
-                <StyledDataTableRow label={translate('screens/home', 'Phone')}>
-                  <div className="flex items-center gap-2">
-                    {profile.phone}
-                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => setShowPhoneModal(true)} inline />
-                  </div>
                 </StyledDataTableRow>
               )}
               {profile.organizationName && (
