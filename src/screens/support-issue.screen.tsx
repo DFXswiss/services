@@ -59,9 +59,18 @@ const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.KYC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.LIMIT_REQUEST]: [SupportIssueReason.OTHER],
   [SupportIssueType.PARTNERSHIP_REQUEST]: [SupportIssueReason.OTHER],
-  [SupportIssueType.NOTIFICATION_OF_CHANGES]: [SupportIssueReason.OTHER],
+  [SupportIssueType.NOTIFICATION_OF_CHANGES]: [
+    SupportIssueReason.NAME_CHANGED,
+    SupportIssueReason.ADDRESS_CHANGED,
+    SupportIssueReason.CIVIL_STATUS_CHANGED,
+    SupportIssueReason.OTHER,
+  ],
   [SupportIssueType.BUG_REPORT]: [SupportIssueReason.OTHER],
-  [SupportIssueType.VERIFICATION_CALL]: [SupportIssueReason.OTHER],
+  [SupportIssueType.VERIFICATION_CALL]: [
+    SupportIssueReason.REJECT_CALL,
+    SupportIssueReason.REPEAT_CALL,
+    SupportIssueReason.OTHER,
+  ],
 };
 
 interface FormData {
@@ -399,8 +408,8 @@ export default function SupportIssueScreen(): JSX.Element {
                           item === AddAccount
                             ? translate('general/actions', item)
                             : item === NoIban
-                            ? translate('screens/iban', item)
-                            : Utils.formatIban(item) ?? '',
+                              ? translate('screens/iban', item)
+                              : (Utils.formatIban(item) ?? ''),
                           { displayLength: 30 },
                         )
                       }
