@@ -86,7 +86,7 @@ export default function TransactionScreen(): JSX.Element {
   const [isCsvLoading, setIsCsvLoading] = useState<ExportType>();
   const [error, setError] = useState<string>();
 
-  const isTransaction = id && id.startsWith('T');
+  const isTransaction = id && (id.startsWith('T') || id.startsWith('Q'));
   const isRefund = isTransaction && pathname.includes('/refund');
 
   async function exportCsv(type: ExportType) {
