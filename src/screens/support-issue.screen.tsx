@@ -24,11 +24,13 @@ import {
   StyledDropdown,
   StyledFileUpload,
   StyledInput,
+  StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { Trans } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { DefaultFileTypes } from 'src/config/file-types';
@@ -310,7 +312,10 @@ export default function SupportIssueScreen(): JSX.Element {
     limit: Validations.Required,
     investmentDate: Validations.Required,
     fundOrigin: Validations.Required,
-    file: Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
+    file: [
+      selectedType === SupportIssueType.NOTIFICATION_OF_CHANGES && Validations.Required,
+      Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
+    ],
   });
 
   useLayoutOptions({
@@ -366,15 +371,25 @@ export default function SupportIssueScreen(): JSX.Element {
             />
 
             {reasons.length > 1 && (
-              <StyledDropdown<SupportIssueReason>
-                rootRef={rootRef}
-                label={translate('screens/support', 'Reason')}
-                items={reasons.filter((r) => r !== SupportIssueReason.FUNDS_NOT_RECEIVED || !orderParam)}
-                labelFunc={(item) => translate('screens/support', IssueReasonLabels[item])}
-                name="reason"
-                placeholder={translate('general/actions', 'Select') + '...'}
-                full
-              />
+              <StyledVerticalStack gap={2} full center>
+                <StyledDropdown<SupportIssueReason>
+                  rootRef={rootRef}
+                  label={translate('screens/support', 'Reason')}
+                  items={reasons.filter((r) => r !== SupportIssueReason.FUNDS_NOT_RECEIVED || !orderParam)}
+                  labelFunc={(item) => translate('screens/support', IssueReasonLabels[item])}
+                  name="reason"
+                  placeholder={translate('general/actions', 'Select') + '...'}
+                  full
+                />
+                {selectedType === SupportIssueType.NOTIFICATION_OF_CHANGES && (
+                  <p className="text-dfxGray-700 text-sm">
+                    <Trans i18nKey="screens/support.phoneMailChangeHint">
+                      Phone number and email address can be changed directly in your{' '}
+                      <StyledLink label={translate('screens/home', 'Account')} url="/account" target="_self" dark />.
+                    </Trans>
+                  </p>
+                )}
+              </StyledVerticalStack>
             )}
 
             {selectedType === SupportIssueType.TRANSACTION_ISSUE &&

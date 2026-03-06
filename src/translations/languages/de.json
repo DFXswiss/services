@@ -903,6 +903,8 @@
     "Address changed": "Adresse geändert",
     "Civil status changed": "Zivilstand geändert",
 
+    "phoneMailChangeHint": "Telefonnummer und E-Mail-Adresse können direkt in Deinem <2></2> geändert werden.",
+
     "Transaction ID": "Transaktions-ID",
     "Select a transaction to proceed with": "Wähle eine Transaktion aus, um fortzufahren",
 

@@ -902,6 +902,8 @@
     "Address changed": "Adresse modifiée",
     "Civil status changed": "État civil modifié",
 
+    "phoneMailChangeHint": "Le numéro de téléphone et l'adresse e-mail peuvent être modifiés directement dans votre <2></2>.",
+
     "Transaction ID": "ID de transaction",
     "Select a transaction to proceed with": "Sélectionnez une transaction pour continuer",
 
