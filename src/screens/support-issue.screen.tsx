@@ -61,6 +61,7 @@ const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.PARTNERSHIP_REQUEST]: [SupportIssueReason.OTHER],
   [SupportIssueType.NOTIFICATION_OF_CHANGES]: [SupportIssueReason.OTHER],
   [SupportIssueType.BUG_REPORT]: [SupportIssueReason.OTHER],
+  [SupportIssueType.VERIFICATION_CALL]: [SupportIssueReason.OTHER],
 };
 
 interface FormData {
