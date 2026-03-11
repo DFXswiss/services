@@ -521,6 +521,14 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.RECALL_AGREEMENT:
       return <RecallAgreement {...props} />;
+
+    case KycStepName.PHONE_CHANGE:
+    case KycStepName.ADDRESS_CHANGE:
+    case KycStepName.NAME_CHANGE:
+      return <></>;
+
+    default:
+      return <></>;
   }
 }
 
