@@ -79,6 +79,9 @@ export function useKycHelper(): KycHelperInterface {
     [KycStepName.DFX_APPROVAL]: 'DFX approval',
     [KycStepName.PAYMENT_AGREEMENT]: 'Assignment agreement',
     [KycStepName.RECALL_AGREEMENT]: 'Recall agreement',
+    [KycStepName.PHONE_CHANGE]: 'Phone number change',
+    [KycStepName.ADDRESS_CHANGE]: 'Address change',
+    [KycStepName.NAME_CHANGE]: 'Name change',
   };
 
   const typeMap: Record<KycStepType, string> = {
