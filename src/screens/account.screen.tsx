@@ -352,12 +352,18 @@ export default function AccountScreen(): JSX.Element {
               )}
               {(profile.firstName || profile.lastName) && (
                 <StyledDataTableRow label={translate('screens/home', 'Name')}>
-                  {[profile.firstName, profile.lastName].filter(Boolean).join(' ')}
+                  <div className="flex items-center gap-2">
+                    {[profile.firstName, profile.lastName].filter(Boolean).join(' ')}
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => startStep(KycStepName.NAME_CHANGE)} inline />
+                  </div>
                 </StyledDataTableRow>
               )}
               {profile.address && (
                 <StyledDataTableRow label={translate('screens/home', 'Address')}>
-                  {formatAddress(profile.address)}
+                  <div className="flex items-center gap-2">
+                    {formatAddress(profile.address)}
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => startStep(KycStepName.ADDRESS_CHANGE)} inline />
+                  </div>
                 </StyledDataTableRow>
               )}
               {profile.organizationName && (
