@@ -2268,6 +2268,7 @@ function PhoneChangeData({ code, isLoading, step, onDone }: EditProps): JSX.Elem
           type="tel"
           label={translate('screens/kyc', 'Phone number')}
           placeholder="+49 12345678"
+          full
           smallLabel
         />
 
