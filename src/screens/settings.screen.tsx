@@ -76,7 +76,7 @@ export default function SettingsScreen(): JSX.Element {
   const { rootRef } = useLayoutContext();
   const { bankAccounts, updateAccount, isLoading: isLoadingBankAccounts } = useBankAccountContext();
 
-  const verificationCallRef = useRef<HTMLDivElement>(null);
+  const verificationCallRef = useRef<HTMLHeadingElement>(null);
   useAnchor('call', verificationCallRef, !isUserLoading);
 
   const [overlayData, setOverlayData] = useState<UserAddress | BankAccount>();
@@ -303,11 +303,10 @@ export default function SettingsScreen(): JSX.Element {
 
           {(!user?.phoneCallStatus ||
             ![PhoneCallStatus.COMPLETED, PhoneCallStatus.FAILED].includes(user.phoneCallStatus)) && (
-            <div ref={verificationCallRef}>
-              <StyledVerticalStack full gap={2}>
-                <h1 className="text-dfxGray-800 font-semibold text-base flex justify-center items-center">
-                  {translate('screens/settings', 'Verification Call')}
-                </h1>
+            <StyledVerticalStack full gap={2}>
+              <h1 ref={verificationCallRef} className="text-dfxGray-800 font-semibold text-base flex justify-center items-center">
+                {translate('screens/settings', 'Verification Call')}
+              </h1>
 
                 <StyledVerticalStack full gap={4}>
                   <p className="text-dfxGray-700 text-sm text-center">
@@ -343,9 +342,8 @@ export default function SettingsScreen(): JSX.Element {
                       />
                     </Form>
                   )}
-                </StyledVerticalStack>
               </StyledVerticalStack>
-            </div>
+            </StyledVerticalStack>
           )}
 
           <StyledButton
