@@ -161,6 +161,8 @@ export const FileTypeLabels = {
   [FileType.RESIDENCE_PERMIT]: 'Residence permit',
   [FileType.ADDITIONAL_DOCUMENTS]: 'Additional documents',
   [FileType.AUTHORITY]: 'Power of Attorney',
+  [FileType.ADDRESS_CHANGE]: 'Address change',
+  [FileType.NAME_CHANGE]: 'Name change',
 };
 
 // --- ADDRESSES --- //

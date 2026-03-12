@@ -2,12 +2,12 @@ import {
   ApiError,
   Blockchain,
   DetailTransaction,
+  KycStepName,
   PdfDocument,
   Referral,
   UserAddress,
   UserProfile,
   Utils,
-  Validations,
   useApi,
   useSessionContext,
   useTransaction,
@@ -36,13 +36,13 @@ import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { RecommendationsSection } from 'src/components/account/recommendations-section';
-import { EditOverlay } from 'src/components/overlay/edit-overlay';
 import { KycStatus } from 'src/components/kyc-status';
 import { Modal } from 'src/components/modal';
 import { addressLabel } from 'src/config/labels';
 import { Urls } from 'src/config/urls';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -83,12 +83,13 @@ export default function AccountScreen(): JSX.Element {
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
-  const { user, isUserLoading, userAddresses, updatePhone } = useUserContext();
+  const { user, isUserLoading, userAddresses } = useUserContext();
   const { getRef, getProfile } = useUser();
   const { width } = useWindowContext();
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized, setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
+  const { startStep } = useKycHelper();
   const { rootRef } = useLayoutContext();
   const { call } = useApi();
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
@@ -98,7 +99,7 @@ export default function AccountScreen(): JSX.Element {
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string>();
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
+
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [pdfBlockchains, setPdfBlockchains] = useState<Blockchain[]>([]);
 
@@ -300,19 +301,15 @@ export default function AccountScreen(): JSX.Element {
   const totalVolumeSum = totalVolumeItems?.reduce((acc, item) => acc + item.value, 0);
   const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + item.value, 0);
 
-  const title = showPhoneModal
-    ? translate('screens/settings', 'Edit phone number')
-    : showPdfModal
+  const title = showPdfModal
       ? translate('screens/home', 'PDF Download Address Report')
       : showRecommendationModal
         ? translate('screens/recommendation', 'Create Invitation')
         : isEmbedded
           ? translate('screens/home', 'DFX services')
           : translate('screens/home', 'Account');
-  const hasBackButton = (canClose && !isEmbedded) || showPdfModal || showRecommendationModal || showPhoneModal;
-  const onBack = showPhoneModal
-    ? () => setShowPhoneModal(false)
-    : showPdfModal
+  const hasBackButton = (canClose && !isEmbedded) || showPdfModal || showRecommendationModal;
+  const onBack = showPdfModal
       ? closePdfModal
       : showRecommendationModal
         ? () => setShowRecommendationModal(false)
@@ -349,18 +346,24 @@ export default function AccountScreen(): JSX.Element {
                 <StyledDataTableRow label={translate('screens/kyc', 'Phone number')}>
                   <div className="flex items-center gap-2">
                     {profile.phone}
-                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => setShowPhoneModal(true)} inline />
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => startStep(KycStepName.PHONE_CHANGE)} inline />
                   </div>
                 </StyledDataTableRow>
               )}
               {(profile.firstName || profile.lastName) && (
                 <StyledDataTableRow label={translate('screens/home', 'Name')}>
-                  {[profile.firstName, profile.lastName].filter(Boolean).join(' ')}
+                  <div className="flex items-center gap-2">
+                    {[profile.firstName, profile.lastName].filter(Boolean).join(' ')}
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => startStep(KycStepName.NAME_CHANGE)} inline />
+                  </div>
                 </StyledDataTableRow>
               )}
               {profile.address && (
                 <StyledDataTableRow label={translate('screens/home', 'Address')}>
-                  {formatAddress(profile.address)}
+                  <div className="flex items-center gap-2">
+                    {formatAddress(profile.address)}
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => startStep(KycStepName.ADDRESS_CHANGE)} inline />
+                  </div>
                 </StyledDataTableRow>
               )}
               {profile.organizationName && (
@@ -490,23 +493,6 @@ export default function AccountScreen(): JSX.Element {
           <img src={image} className="w-full" />
         </div>
       )}
-
-      {/* Edit Phone Modal */}
-      <Modal isOpen={showPhoneModal} onClose={() => setShowPhoneModal(false)}>
-        <EditOverlay
-          label={translate('screens/kyc', 'Phone number')}
-          autocomplete="phone"
-          prefill={user?.phone}
-          placeholder={translate('screens/kyc', 'Phone number')}
-          validation={Validations.Phone}
-          onCancel={() => setShowPhoneModal(false)}
-          onEdit={async (result) => {
-            await updatePhone(result);
-            await loadProfile();
-            setShowPhoneModal(false);
-          }}
-        />
-      </Modal>
 
       {/* PDF Download Modal */}
       <Modal isOpen={showPdfModal} onClose={closePdfModal}>
