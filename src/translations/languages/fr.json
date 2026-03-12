@@ -975,7 +975,17 @@
 
     "delete": "Êtes-vous sûr de vouloir supprimer l'adresse <1>{{address}}</1> de votre compte DFX ? Cette action est irréversible.",
     "delete_iban": "Êtes-vous sûr de vouloir supprimer le compte bancaire <1>{{address}}</1> de votre compte DFX ?",
-    "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support."
+    "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support.",
+
+    "Verification Call": "Appel de vérification",
+    "Preferred call time": "Heure d'appel préférée",
+    "Morning": "Matin",
+    "Afternoon": "Après-midi",
+    "Evening": "Soir",
+    "Yes, call me": "Oui, appelez-moi",
+    "No, don't call me": "Non, ne m'appelez pas",
+    "Verification may require a phone call. Should we call you?": "La vérification peut nécessiter un appel téléphonique. Devons-nous vous appeler?",
+    "Phone verification": "Vérification téléphonique"
   },
   "screens/safe": {
     "My DFX Safe": "Mon DFX Safe",

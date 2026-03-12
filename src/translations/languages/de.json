@@ -976,7 +976,17 @@
 
     "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen.",
     "delete_iban": "Bist Du sicher, dass Du das Bankkonto <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest?",
-    "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team."
+    "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team.",
+
+    "Verification Call": "Verifizierungsanruf",
+    "Preferred call time": "Bevorzugte Anrufzeit",
+    "Morning": "Vormittag",
+    "Afternoon": "Nachmittag",
+    "Evening": "Abend",
+    "Yes, call me": "Ja, ruft mich an",
+    "No, don't call me": "Nein, ruft mich nicht an",
+    "Verification may require a phone call. Should we call you?": "Die Verifizierung kann einen Anruf erfordern. Sollen wir Dich anrufen?",
+    "Phone verification": "Telefonische Verifizierung"
   },
   "screens/safe": {
     "My DFX Safe": "Mein DFX Safe",

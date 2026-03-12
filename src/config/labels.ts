@@ -5,6 +5,7 @@ import {
   InvestmentDate,
   Limit,
   PaymentQuoteStatus,
+  PhoneCallTime,
   Session,
   SupportIssueReason,
   SupportIssueType,
@@ -172,3 +173,16 @@ export function addressLabel(wallet: UserAddress | Session): string {
     ? custodyLabel
     : wallet.address ?? '';
 }
+
+// --- VERIFICATION CALL --- //
+export const PhoneCallTimeLabels = {
+  [PhoneCallTime.H_9_TO_10]: '09:00 - 10:00',
+  [PhoneCallTime.H_10_TO_11]: '10:00 - 11:00',
+  [PhoneCallTime.H_11_TO_12]: '11:00 - 12:00',
+  [PhoneCallTime.H_12_TO_13]: '12:00 - 13:00',
+  [PhoneCallTime.H_13_TO_14]: '13:00 - 14:00',
+  [PhoneCallTime.H_14_TO_15]: '14:00 - 15:00',
+  [PhoneCallTime.H_15_TO_16]: '15:00 - 16:00',
+  [PhoneCallTime.H_9_TO_16]: '09:00 - 16:00',
+};
+
