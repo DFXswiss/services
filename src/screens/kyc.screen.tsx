@@ -9,8 +9,6 @@ import {
   GoodsType,
   KycAddress,
   KycBeneficialData,
-  KycChangeAddressData,
-  KycChangeNameData,
   KycContactData,
   KycFinancialOption,
   KycFinancialQuestion,
