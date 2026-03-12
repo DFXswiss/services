@@ -908,7 +908,7 @@
     "Address changed": "Indirizzo cambiato",
     "Civil status changed": "Stato civile cambiato",
 
-    "phoneMailChangeHint": "Il numero di telefono e l'indirizzo e-mail possono essere modificati direttamente nel tuo <2></2>.",
+    "contactDataChangeHint": "Nome, indirizzo, numero di telefono e indirizzo e-mail possono essere modificati direttamente nel tuo <2></2>.",
 
     "Transaction ID": "ID della transazione",
     "Select a transaction to proceed with": "Selezionare una transazione per procedere",

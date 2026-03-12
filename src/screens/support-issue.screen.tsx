@@ -61,12 +61,7 @@ const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.KYC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.LIMIT_REQUEST]: [SupportIssueReason.OTHER],
   [SupportIssueType.PARTNERSHIP_REQUEST]: [SupportIssueReason.OTHER],
-  [SupportIssueType.NOTIFICATION_OF_CHANGES]: [
-    SupportIssueReason.NAME_CHANGED,
-    SupportIssueReason.ADDRESS_CHANGED,
-    SupportIssueReason.CIVIL_STATUS_CHANGED,
-    SupportIssueReason.OTHER,
-  ],
+  [SupportIssueType.NOTIFICATION_OF_CHANGES]: [SupportIssueReason.CIVIL_STATUS_CHANGED, SupportIssueReason.OTHER],
   [SupportIssueType.BUG_REPORT]: [SupportIssueReason.OTHER],
   [SupportIssueType.VERIFICATION_CALL]: [
     SupportIssueReason.REJECT_CALL,
@@ -383,8 +378,8 @@ export default function SupportIssueScreen(): JSX.Element {
                 />
                 {selectedType === SupportIssueType.NOTIFICATION_OF_CHANGES && (
                   <p className="text-dfxGray-700 text-sm">
-                    <Trans i18nKey="screens/support.phoneMailChangeHint">
-                      Phone number and email address can be changed directly in your{' '}
+                    <Trans i18nKey="screens/support.contactDataChangeHint">
+                      Name, address, phone number and email address can be changed directly in your{' '}
                       <StyledLink label={translate('screens/home', 'Account')} url="/account" target="_self" dark />.
                     </Trans>
                   </p>
