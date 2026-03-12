@@ -24,11 +24,13 @@ import {
   StyledDropdown,
   StyledFileUpload,
   StyledInput,
+  StyledLink,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { Trans } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { AddBankAccount } from 'src/components/payment/add-bank-account';
 import { DefaultFileTypes } from 'src/config/file-types';
@@ -59,12 +61,7 @@ const IssueReasons: { [t in SupportIssueType]: SupportIssueReason[] } = {
   [SupportIssueType.KYC_ISSUE]: [SupportIssueReason.OTHER],
   [SupportIssueType.LIMIT_REQUEST]: [SupportIssueReason.OTHER],
   [SupportIssueType.PARTNERSHIP_REQUEST]: [SupportIssueReason.OTHER],
-  [SupportIssueType.NOTIFICATION_OF_CHANGES]: [
-    SupportIssueReason.NAME_CHANGED,
-    SupportIssueReason.ADDRESS_CHANGED,
-    SupportIssueReason.CIVIL_STATUS_CHANGED,
-    SupportIssueReason.OTHER,
-  ],
+  [SupportIssueType.NOTIFICATION_OF_CHANGES]: [SupportIssueReason.CIVIL_STATUS_CHANGED, SupportIssueReason.OTHER],
   [SupportIssueType.BUG_REPORT]: [SupportIssueReason.OTHER],
   [SupportIssueType.VERIFICATION_CALL]: [
     SupportIssueReason.REJECT_CALL,
@@ -310,7 +307,10 @@ export default function SupportIssueScreen(): JSX.Element {
     limit: Validations.Required,
     investmentDate: Validations.Required,
     fundOrigin: Validations.Required,
-    file: Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
+    file: [
+      selectedType === SupportIssueType.NOTIFICATION_OF_CHANGES && Validations.Required,
+      Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
+    ],
   });
 
   useLayoutOptions({
@@ -366,15 +366,25 @@ export default function SupportIssueScreen(): JSX.Element {
             />
 
             {reasons.length > 1 && (
-              <StyledDropdown<SupportIssueReason>
-                rootRef={rootRef}
-                label={translate('screens/support', 'Reason')}
-                items={reasons.filter((r) => r !== SupportIssueReason.FUNDS_NOT_RECEIVED || !orderParam)}
-                labelFunc={(item) => translate('screens/support', IssueReasonLabels[item])}
-                name="reason"
-                placeholder={translate('general/actions', 'Select') + '...'}
-                full
-              />
+              <StyledVerticalStack gap={2} full center>
+                <StyledDropdown<SupportIssueReason>
+                  rootRef={rootRef}
+                  label={translate('screens/support', 'Reason')}
+                  items={reasons.filter((r) => r !== SupportIssueReason.FUNDS_NOT_RECEIVED || !orderParam)}
+                  labelFunc={(item) => translate('screens/support', IssueReasonLabels[item])}
+                  name="reason"
+                  placeholder={translate('general/actions', 'Select') + '...'}
+                  full
+                />
+                {selectedType === SupportIssueType.NOTIFICATION_OF_CHANGES && (
+                  <p className="text-dfxGray-700 text-sm">
+                    <Trans i18nKey="screens/support.contactDataChangeHint">
+                      Name, address, phone number and email address can be changed directly in your{' '}
+                      <StyledLink label={translate('screens/home', 'Account')} url="/account" target="_self" dark />.
+                    </Trans>
+                  </p>
+                )}
+              </StyledVerticalStack>
             )}
 
             {selectedType === SupportIssueType.TRANSACTION_ISSUE &&

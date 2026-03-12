@@ -2,6 +2,8 @@ import {
   BankAccount,
   Fiat,
   Language,
+  PhoneCallStatus,
+  PhoneCallTime,
   useBankAccountContext,
   useFiatContext,
   UserAddress,
@@ -14,11 +16,12 @@ import {
   StyledButton,
   StyledButtonWidth,
   StyledDropdown,
+  StyledDropdownMultiChoice,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import ActionableList from 'src/components/actionable-list';
@@ -26,11 +29,12 @@ import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay
 import { EditBankAccount } from 'src/components/overlay/edit-bank-overlay';
 import { EditOverlay } from 'src/components/overlay/edit-overlay';
 import { AddBankAccount } from 'src/components/payment/add-bank-account';
-import { addressLabel } from 'src/config/labels';
+import { addressLabel, PhoneCallTimeLabels } from 'src/config/labels';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useAnchor } from 'src/hooks/anchor.hook';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -39,6 +43,8 @@ import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 interface FormData {
   language: Language;
   currency: Fiat;
+  preferredPhoneTimes: PhoneCallTime[];
+  acceptCall: boolean;
 }
 
 enum OverlayType {
@@ -64,11 +70,14 @@ const OverlayHeader: { [key in OverlayType]: string } = {
 export default function SettingsScreen(): JSX.Element {
   const { translate, language, currency, availableLanguages, changeLanguage, changeCurrency } = useSettingsContext();
   const { currencies } = useFiatContext();
-  const { user, isUserLoading, userAddresses } = useUserContext();
+  const { user, isUserLoading, userAddresses, updateCallSettings } = useUserContext();
   const { width } = useWindowContext();
   const { navigate } = useNavigation();
   const { rootRef } = useLayoutContext();
   const { bankAccounts, updateAccount, isLoading: isLoadingBankAccounts } = useBankAccountContext();
+
+  const verificationCallRef = useRef<HTMLHeadingElement>(null);
+  useAnchor('call', verificationCallRef, !isUserLoading);
 
   const [overlayData, setOverlayData] = useState<UserAddress | BankAccount>();
   const [overlayType, setOverlayType] = useState<OverlayType>(OverlayType.NONE);
@@ -82,6 +91,8 @@ export default function SettingsScreen(): JSX.Element {
   } = useForm<FormData>();
   const selectedLanguage = useWatch({ control, name: 'language' });
   const selectedCurrency = useWatch({ control, name: 'currency' });
+  const selectedPreferredPhoneTimes = useWatch({ control, name: 'preferredPhoneTimes' });
+  const acceptCall = useWatch({ control, name: 'acceptCall' });
 
   useEffect(() => {
     if (language && !selectedLanguage) setValue('language', language);
@@ -90,6 +101,22 @@ export default function SettingsScreen(): JSX.Element {
   useEffect(() => {
     if (currency && !selectedCurrency) setValue('currency', currency);
   }, [currency]);
+
+  useEffect(() => {
+    if (user?.preferredPhoneTimes && !selectedPreferredPhoneTimes) {
+      setValue('preferredPhoneTimes', user.preferredPhoneTimes);
+    }
+  }, [user?.preferredPhoneTimes]);
+
+  useEffect(() => {
+    if (user?.phoneCallStatus && acceptCall === undefined) {
+      if (user.phoneCallStatus === PhoneCallStatus.ACCEPTED) {
+        setValue('acceptCall', true);
+      } else if (user.phoneCallStatus === PhoneCallStatus.REJECTED) {
+        setValue('acceptCall', false);
+      }
+    }
+  }, [user?.phoneCallStatus]);
 
   useEffect(() => {
     if (selectedLanguage && selectedLanguage?.id !== language?.id) {
@@ -102,6 +129,18 @@ export default function SettingsScreen(): JSX.Element {
       changeCurrency(selectedCurrency);
     }
   }, [selectedCurrency]);
+
+  useEffect(() => {
+    if (selectedPreferredPhoneTimes) {
+      updateCallSettings(selectedPreferredPhoneTimes);
+    }
+  }, [selectedPreferredPhoneTimes]);
+
+  useEffect(() => {
+    if (acceptCall !== undefined) {
+      updateCallSettings(undefined, acceptCall);
+    }
+  }, [acceptCall]);
 
   function onCloseOverlay(): void {
     setOverlayType(OverlayType.NONE);
@@ -261,6 +300,52 @@ export default function SettingsScreen(): JSX.Element {
               })}
             />
           )}
+
+          {(!user?.phoneCallStatus ||
+            ![PhoneCallStatus.COMPLETED, PhoneCallStatus.FAILED].includes(user.phoneCallStatus)) && (
+            <StyledVerticalStack full gap={2}>
+              <h1 ref={verificationCallRef} className="text-dfxGray-800 font-semibold text-base flex justify-center items-center">
+                {translate('screens/settings', 'Verification Call')}
+              </h1>
+
+                <StyledVerticalStack full gap={4}>
+                  <p className="text-dfxGray-700 text-sm text-center">
+                    {translate('screens/settings', 'Verification may require a phone call. Should we call you?')}
+                  </p>
+
+                  <Form control={control} errors={errors}>
+                    <StyledDropdown<boolean>
+                      rootRef={rootRef}
+                      name="acceptCall"
+                      label={translate('screens/settings', 'Phone verification')}
+                      smallLabel={true}
+                      placeholder={translate('general/actions', 'Select') + '...'}
+                      items={[true, false]}
+                      labelFunc={(item) =>
+                        item
+                          ? translate('screens/settings', 'Yes, call me')
+                          : translate('screens/settings', "No, don't call me")
+                      }
+                    />
+                  </Form>
+
+                  {acceptCall && (
+                    <Form control={control} errors={errors}>
+                      <StyledDropdownMultiChoice<PhoneCallTime>
+                        rootRef={rootRef}
+                        name="preferredPhoneTimes"
+                        label={translate('screens/settings', 'Preferred call time')}
+                        smallLabel={true}
+                        placeholder={translate('general/actions', 'Select') + '...'}
+                        items={Object.values(PhoneCallTime)}
+                        labelFunc={(item) => translate('screens/settings', PhoneCallTimeLabels[item])}
+                      />
+                    </Form>
+                  )}
+              </StyledVerticalStack>
+            </StyledVerticalStack>
+          )}
+
           <StyledButton
             width={StyledButtonWidth.FULL}
             label={translate('general/actions', 'Delete account')}
