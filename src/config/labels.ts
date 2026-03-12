@@ -135,6 +135,7 @@ export const IssueTypeLabels = {
   [SupportIssueType.PARTNERSHIP_REQUEST]: 'Partnership request',
   [SupportIssueType.NOTIFICATION_OF_CHANGES]: 'Notification of changes',
   [SupportIssueType.BUG_REPORT]: 'Bug report',
+  [SupportIssueType.VERIFICATION_CALL]: 'Verification call',
 };
 
 export const IssueReasonLabels = {
@@ -142,6 +143,11 @@ export const IssueReasonLabels = {
   [SupportIssueReason.DATA_REQUEST]: 'Data request',
   [SupportIssueReason.FUNDS_NOT_RECEIVED]: 'Funds not received',
   [SupportIssueReason.TRANSACTION_MISSING]: 'Transaction missing',
+  [SupportIssueReason.REJECT_CALL]: 'Reject call',
+  [SupportIssueReason.REPEAT_CALL]: 'Repeat call',
+  [SupportIssueReason.NAME_CHANGED]: 'Name changed',
+  [SupportIssueReason.ADDRESS_CHANGED]: 'Address changed',
+  [SupportIssueReason.CIVIL_STATUS_CHANGED]: 'Civil status changed',
 };
 
 export const FileTypeLabels = {
@@ -155,6 +161,8 @@ export const FileTypeLabels = {
   [FileType.RESIDENCE_PERMIT]: 'Residence permit',
   [FileType.ADDITIONAL_DOCUMENTS]: 'Additional documents',
   [FileType.AUTHORITY]: 'Power of Attorney',
+  [FileType.ADDRESS_CHANGE]: 'Address change',
+  [FileType.NAME_CHANGE]: 'Name change',
 };
 
 // --- ADDRESSES --- //

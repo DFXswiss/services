@@ -7,6 +7,7 @@ import {
   GenderType,
   GoodsCategory,
   GoodsType,
+  KycAddress,
   KycBeneficialData,
   KycContactData,
   KycFinancialOption,
@@ -521,6 +522,18 @@ function KycEdit(props: EditProps): JSX.Element {
 
     case KycStepName.RECALL_AGREEMENT:
       return <RecallAgreement {...props} />;
+
+    case KycStepName.PHONE_CHANGE:
+      return <PhoneChangeData {...props} />;
+
+    case KycStepName.ADDRESS_CHANGE:
+      return <AddressChangeData {...props} />;
+
+    case KycStepName.NAME_CHANGE:
+      return <NameChangeData {...props} />;
+
+    default:
+      return <></>;
   }
 }
 
@@ -2206,6 +2219,323 @@ function ManualIdent({ rootRef, code, step, onDone }: EditProps): JSX.Element {
           width={StyledButtonWidth.FULL}
           disabled={!isValid}
           isLoading={isUpdating}
+        />
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+// --- Change Steps ---
+
+interface PhoneChangeFormData {
+  phone: string;
+}
+
+function PhoneChangeData({ code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { setPhoneChangeData } = useKyc();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<PhoneChangeFormData>({ mode: 'onTouched' });
+
+  function onSubmit(data: PhoneChangeFormData) {
+    if (!step.session) return;
+
+    setIsUpdating(true);
+    setError(undefined);
+    setPhoneChangeData(code, step.session.url, { phone: data.phone })
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    phone: [Validations.Required, Validations.Phone],
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledInput
+          name="phone"
+          autocomplete="phone"
+          type="tel"
+          label={translate('screens/kyc', 'Phone number')}
+          placeholder="+49 12345678"
+          full
+          smallLabel
+        />
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUpdating || isLoading}
+        />
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+interface AddressChangeFormData {
+  file: File;
+  address: KycAddress;
+}
+
+function AddressChangeData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { allowedCountries, translate, translateError } = useSettingsContext();
+  const { setAddressChangeData } = useKyc();
+  const { countryCode } = useGeoLocation();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const ipCountry = allowedCountries.find((c) => c.symbol === countryCode);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<AddressChangeFormData>({ mode: 'onTouched', defaultValues: { address: { country: ipCountry } } });
+
+  async function onSubmit(data: AddressChangeFormData) {
+    if (!step.session) return;
+
+    const file = data.file && (await toBase64(data.file));
+    if (!file) {
+      setError('No file selected');
+      return;
+    }
+
+    setIsUpdating(true);
+    setError(undefined);
+    setAddressChangeData(code, step.session.url, {
+      file,
+      fileName: data.file.name,
+      address: data.address,
+    })
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    ['address.street']: Validations.Required,
+    ['address.zip']: Validations.Required,
+    ['address.city']: Validations.Required,
+    ['address.country']: Validations.Required,
+    file: [
+      Validations.Required,
+      Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
+    ],
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'New address')}
+          </p>
+          <StyledHorizontalStack gap={2}>
+            <StyledInput
+              name="address.street"
+              autocomplete="street"
+              label={translate('screens/kyc', 'Street')}
+              placeholder={translate('screens/kyc', 'Street')}
+              full
+              smallLabel
+            />
+            <StyledInput
+              name="address.houseNumber"
+              autocomplete="house-number"
+              label={translate('screens/kyc', 'House nr.')}
+              placeholder="xx"
+              small
+              smallLabel
+            />
+          </StyledHorizontalStack>
+          <StyledHorizontalStack gap={2}>
+            <StyledInput
+              name="address.zip"
+              autocomplete="zip"
+              label={translate('screens/kyc', 'ZIP code')}
+              placeholder="12345"
+              small
+              smallLabel
+            />
+            <StyledInput
+              name="address.city"
+              autocomplete="city"
+              label={translate('screens/kyc', 'City')}
+              placeholder="Berlin"
+              full
+              smallLabel
+            />
+          </StyledHorizontalStack>
+          <StyledSearchDropdown<Country>
+            rootRef={rootRef}
+            name="address.country"
+            autocomplete="country"
+            label={translate('screens/kyc', 'Country')}
+            placeholder={translate('general/actions', 'Select') + '...'}
+            items={allowedCountries}
+            labelFunc={(item) => item.name}
+            filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+            matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+            smallLabel
+          />
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Proof document')}
+          </p>
+          <StyledFileUpload
+            name="file"
+            label=""
+            placeholder={translate('general/actions', 'Drop files here')}
+            buttonLabel={translate('general/actions', 'Browse')}
+            full
+          />
+        </StyledVerticalStack>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUpdating || isLoading}
+        />
+      </StyledVerticalStack>
+    </Form>
+  );
+}
+
+interface NameChangeFormData {
+  file: File;
+  firstName: string;
+  lastName: string;
+}
+
+function NameChangeData({ code, isLoading, step, onDone }: EditProps): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { setNameChangeData } = useKyc();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid, errors },
+  } = useForm<NameChangeFormData>({ mode: 'onTouched' });
+
+  async function onSubmit(data: NameChangeFormData) {
+    if (!step.session) return;
+
+    const file = data.file && (await toBase64(data.file));
+    if (!file) {
+      setError('No file selected');
+      return;
+    }
+
+    setIsUpdating(true);
+    setError(undefined);
+    setNameChangeData(code, step.session.url, {
+      file,
+      fileName: data.file.name,
+      firstName: data.firstName,
+      lastName: data.lastName,
+    })
+      .then(onDone)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsUpdating(false));
+  }
+
+  const rules = Utils.createRules({
+    firstName: Validations.Required,
+    lastName: Validations.Required,
+    file: [
+      Validations.Required,
+      Validations.Custom((file) => (!file || DefaultFileTypes.includes(file.type) ? true : 'file_type')),
+    ],
+  });
+
+  return (
+    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
+      <StyledVerticalStack gap={6} full center>
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'New name')}
+          </p>
+          <StyledHorizontalStack gap={2}>
+            <StyledInput
+              name="firstName"
+              autocomplete="firstname"
+              label={translate('screens/kyc', 'First name')}
+              placeholder={translate('screens/kyc', 'John')}
+              full
+              smallLabel
+            />
+            <StyledInput
+              name="lastName"
+              autocomplete="lastname"
+              label={translate('screens/kyc', 'Last name')}
+              placeholder={translate('screens/kyc', 'Doe')}
+              full
+              smallLabel
+            />
+          </StyledHorizontalStack>
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full>
+          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
+            {translate('screens/kyc', 'Proof document')}
+          </p>
+          <StyledFileUpload
+            name="file"
+            label=""
+            placeholder={translate('general/actions', 'Drop files here')}
+            buttonLabel={translate('general/actions', 'Browse')}
+            full
+          />
+        </StyledVerticalStack>
+
+        {error && (
+          <div>
+            <ErrorHint message={error} />
+          </div>
+        )}
+
+        <StyledButton
+          type="submit"
+          label={translate('general/actions', 'Next')}
+          onClick={handleSubmit(onSubmit)}
+          width={StyledButtonWidth.FULL}
+          disabled={!isValid}
+          isLoading={isUpdating || isLoading}
         />
       </StyledVerticalStack>
     </Form>

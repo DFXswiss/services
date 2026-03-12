@@ -2,6 +2,7 @@ import {
   ApiError,
   Blockchain,
   DetailTransaction,
+  KycStepName,
   PdfDocument,
   Referral,
   UserAddress,
@@ -28,6 +29,7 @@ import {
   StyledDropdown,
   StyledInput,
   StyledLoadingSpinner,
+  StyledIconButton,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
@@ -40,6 +42,7 @@ import { addressLabel } from 'src/config/labels';
 import { Urls } from 'src/config/urls';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -86,6 +89,7 @@ export default function AccountScreen(): JSX.Element {
   const { canClose, isEmbedded } = useAppHandlingContext();
   const { isInitialized, setWallet } = useWalletContext();
   const { changeAddress } = useUserContext();
+  const { startStep } = useKycHelper();
   const { rootRef } = useLayoutContext();
   const { call } = useApi();
   const [transactions, setTransactions] = useState<Partial<DetailTransaction>[]>();
@@ -95,6 +99,7 @@ export default function AccountScreen(): JSX.Element {
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string>();
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
+
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [pdfBlockchains, setPdfBlockchains] = useState<Blockchain[]>([]);
 
@@ -297,18 +302,18 @@ export default function AccountScreen(): JSX.Element {
   const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + item.value, 0);
 
   const title = showPdfModal
-    ? translate('screens/home', 'PDF Download Address Report')
-    : showRecommendationModal
-    ? translate('screens/recommendation', 'Create Invitation')
-    : isEmbedded
-    ? translate('screens/home', 'DFX services')
-    : translate('screens/home', 'Account');
+      ? translate('screens/home', 'PDF Download Address Report')
+      : showRecommendationModal
+        ? translate('screens/recommendation', 'Create Invitation')
+        : isEmbedded
+          ? translate('screens/home', 'DFX services')
+          : translate('screens/home', 'Account');
   const hasBackButton = (canClose && !isEmbedded) || showPdfModal || showRecommendationModal;
   const onBack = showPdfModal
-    ? closePdfModal
-    : showRecommendationModal
-    ? () => setShowRecommendationModal(false)
-    : undefined;
+      ? closePdfModal
+      : showRecommendationModal
+        ? () => setShowRecommendationModal(false)
+        : undefined;
   const image = 'https://dfx.swiss/images/app/berge.jpg';
 
   useLayoutOptions({ title, backButton: hasBackButton, onBack });
@@ -330,16 +335,35 @@ export default function AccountScreen(): JSX.Element {
               minWidth={false}
             >
               {profile.mail && (
-                <StyledDataTableRow label={translate('screens/home', 'Email')}>{profile.mail}</StyledDataTableRow>
+                <StyledDataTableRow label={translate('screens/home', 'Email')}>
+                  <div className="flex items-center gap-2">
+                    {profile.mail}
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => navigate('/account/mail', { setRedirect: true })} inline />
+                  </div>
+                </StyledDataTableRow>
+              )}
+              {profile.phone && (
+                <StyledDataTableRow label={translate('screens/kyc', 'Phone number')}>
+                  <div className="flex items-center gap-2">
+                    {profile.phone}
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => startStep(KycStepName.PHONE_CHANGE)} inline />
+                  </div>
+                </StyledDataTableRow>
               )}
               {(profile.firstName || profile.lastName) && (
                 <StyledDataTableRow label={translate('screens/home', 'Name')}>
-                  {[profile.firstName, profile.lastName].filter(Boolean).join(' ')}
+                  <div className="flex items-center gap-2">
+                    {[profile.firstName, profile.lastName].filter(Boolean).join(' ')}
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => startStep(KycStepName.NAME_CHANGE)} inline />
+                  </div>
                 </StyledDataTableRow>
               )}
               {profile.address && (
                 <StyledDataTableRow label={translate('screens/home', 'Address')}>
-                  {formatAddress(profile.address)}
+                  <div className="flex items-center gap-2">
+                    {formatAddress(profile.address)}
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => startStep(KycStepName.ADDRESS_CHANGE)} inline />
+                  </div>
                 </StyledDataTableRow>
               )}
               {profile.organizationName && (

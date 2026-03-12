@@ -140,7 +140,7 @@ test.describe('Account & Settings', () => {
   });
 
   test('should load mail settings page', async ({ page }) => {
-    await page.goto(`/settings/mail?session=${token}`);
+    await page.goto(`/account/mail?session=${token}`);
     await page.waitForLoadState('networkidle');
     await expect(page.locator('body')).toBeVisible();
   });
