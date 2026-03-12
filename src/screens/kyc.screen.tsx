@@ -2264,19 +2264,14 @@ function PhoneChangeData({ code, isLoading, step, onDone }: EditProps): JSX.Elem
   return (
     <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(onSubmit)} translate={translateError}>
       <StyledVerticalStack gap={6} full center>
-        <StyledVerticalStack gap={2} full>
-          <p className="text-dfxGray-700 text-xs font-semibold uppercase text-start ml-3">
-            {translate('screens/kyc', 'Phone number')}
-          </p>
-          <StyledInput
-            name="phone"
-            autocomplete="phone"
-            type="tel"
-            label={translate('screens/kyc', 'Mobile number')}
-            placeholder="+49 12345678"
-            smallLabel
-          />
-        </StyledVerticalStack>
+        <StyledInput
+          name="phone"
+          autocomplete="phone"
+          type="tel"
+          label={translate('screens/kyc', 'Phone number')}
+          placeholder="+49 12345678"
+          smallLabel
+        />
 
         {error && (
           <div>
