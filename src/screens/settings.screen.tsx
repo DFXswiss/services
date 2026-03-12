@@ -103,20 +103,20 @@ export default function SettingsScreen(): JSX.Element {
   }, [currency]);
 
   useEffect(() => {
-    if (user?.preferredPhoneTimes && !selectedPreferredPhoneTimes) {
-      setValue('preferredPhoneTimes', user.preferredPhoneTimes);
+    if (user?.kyc.preferredPhoneTimes && !selectedPreferredPhoneTimes) {
+      setValue('preferredPhoneTimes', user.kyc.preferredPhoneTimes);
     }
-  }, [user?.preferredPhoneTimes]);
+  }, [user?.kyc.preferredPhoneTimes]);
 
   useEffect(() => {
-    if (user?.phoneCallStatus && acceptCall === undefined) {
-      if (user.phoneCallStatus === PhoneCallStatus.ACCEPTED) {
+    if (user?.kyc.phoneCallStatus && acceptCall === undefined) {
+      if (user.kyc.phoneCallStatus === PhoneCallStatus.ACCEPTED) {
         setValue('acceptCall', true);
-      } else if (user.phoneCallStatus === PhoneCallStatus.REJECTED) {
+      } else if (user.kyc.phoneCallStatus === PhoneCallStatus.REJECTED) {
         setValue('acceptCall', false);
       }
     }
-  }, [user?.phoneCallStatus]);
+  }, [user?.kyc.phoneCallStatus]);
 
   useEffect(() => {
     if (selectedLanguage && selectedLanguage?.id !== language?.id) {
@@ -301,47 +301,50 @@ export default function SettingsScreen(): JSX.Element {
             />
           )}
 
-          {(!user?.phoneCallStatus ||
-            ![PhoneCallStatus.COMPLETED, PhoneCallStatus.FAILED].includes(user.phoneCallStatus)) && (
+          {(!user?.kyc.phoneCallStatus ||
+            ![PhoneCallStatus.COMPLETED, PhoneCallStatus.FAILED].includes(user.kyc.phoneCallStatus)) && (
             <StyledVerticalStack full gap={2}>
-              <h1 ref={verificationCallRef} className="text-dfxGray-800 font-semibold text-base flex justify-center items-center">
+              <h1
+                ref={verificationCallRef}
+                className="text-dfxGray-800 font-semibold text-base flex justify-center items-center"
+              >
                 {translate('screens/settings', 'Verification Call')}
               </h1>
 
-                <StyledVerticalStack full gap={4}>
-                  <p className="text-dfxGray-700 text-sm text-center">
-                    {translate('screens/settings', 'Verification may require a phone call. Should we call you?')}
-                  </p>
+              <StyledVerticalStack full gap={4}>
+                <p className="text-dfxGray-700 text-sm text-center">
+                  {translate('screens/settings', 'Verification may require a phone call. Should we call you?')}
+                </p>
 
+                <Form control={control} errors={errors}>
+                  <StyledDropdown<boolean>
+                    rootRef={rootRef}
+                    name="acceptCall"
+                    label={translate('screens/settings', 'Phone verification')}
+                    smallLabel={true}
+                    placeholder={translate('general/actions', 'Select') + '...'}
+                    items={[true, false]}
+                    labelFunc={(item) =>
+                      item
+                        ? translate('screens/settings', 'Yes, call me')
+                        : translate('screens/settings', "No, don't call me")
+                    }
+                  />
+                </Form>
+
+                {acceptCall && (
                   <Form control={control} errors={errors}>
-                    <StyledDropdown<boolean>
+                    <StyledDropdownMultiChoice<PhoneCallTime>
                       rootRef={rootRef}
-                      name="acceptCall"
-                      label={translate('screens/settings', 'Phone verification')}
+                      name="preferredPhoneTimes"
+                      label={translate('screens/settings', 'Preferred call time')}
                       smallLabel={true}
                       placeholder={translate('general/actions', 'Select') + '...'}
-                      items={[true, false]}
-                      labelFunc={(item) =>
-                        item
-                          ? translate('screens/settings', 'Yes, call me')
-                          : translate('screens/settings', "No, don't call me")
-                      }
+                      items={Object.values(PhoneCallTime)}
+                      labelFunc={(item) => translate('screens/settings', PhoneCallTimeLabels[item])}
                     />
                   </Form>
-
-                  {acceptCall && (
-                    <Form control={control} errors={errors}>
-                      <StyledDropdownMultiChoice<PhoneCallTime>
-                        rootRef={rootRef}
-                        name="preferredPhoneTimes"
-                        label={translate('screens/settings', 'Preferred call time')}
-                        smallLabel={true}
-                        placeholder={translate('general/actions', 'Select') + '...'}
-                        items={Object.values(PhoneCallTime)}
-                        labelFunc={(item) => translate('screens/settings', PhoneCallTimeLabels[item])}
-                      />
-                    </Form>
-                  )}
+                )}
               </StyledVerticalStack>
             </StyledVerticalStack>
           )}
