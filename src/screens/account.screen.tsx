@@ -7,6 +7,7 @@ import {
   UserAddress,
   UserProfile,
   Utils,
+  Validations,
   useApi,
   useSessionContext,
   useTransaction,
@@ -28,12 +29,14 @@ import {
   StyledDropdown,
   StyledInput,
   StyledLoadingSpinner,
+  StyledIconButton,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { RecommendationsSection } from 'src/components/account/recommendations-section';
+import { EditOverlay } from 'src/components/overlay/edit-overlay';
 import { KycStatus } from 'src/components/kyc-status';
 import { Modal } from 'src/components/modal';
 import { addressLabel } from 'src/config/labels';
@@ -80,7 +83,7 @@ export default function AccountScreen(): JSX.Element {
   const { getDetailTransactions, getUnassignedTransactions } = useTransaction();
   const { navigate } = useNavigation();
   const { isLoggedIn } = useSessionContext();
-  const { user, isUserLoading, userAddresses } = useUserContext();
+  const { user, isUserLoading, userAddresses, updatePhone } = useUserContext();
   const { getRef, getProfile } = useUser();
   const { width } = useWindowContext();
   const { canClose, isEmbedded } = useAppHandlingContext();
@@ -95,6 +98,7 @@ export default function AccountScreen(): JSX.Element {
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string>();
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [pdfBlockchains, setPdfBlockchains] = useState<Blockchain[]>([]);
 
@@ -296,19 +300,23 @@ export default function AccountScreen(): JSX.Element {
   const totalVolumeSum = totalVolumeItems?.reduce((acc, item) => acc + item.value, 0);
   const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + item.value, 0);
 
-  const title = showPdfModal
-    ? translate('screens/home', 'PDF Download Address Report')
-    : showRecommendationModal
-    ? translate('screens/recommendation', 'Create Invitation')
-    : isEmbedded
-    ? translate('screens/home', 'DFX services')
-    : translate('screens/home', 'Account');
-  const hasBackButton = (canClose && !isEmbedded) || showPdfModal || showRecommendationModal;
-  const onBack = showPdfModal
-    ? closePdfModal
-    : showRecommendationModal
-    ? () => setShowRecommendationModal(false)
-    : undefined;
+  const title = showPhoneModal
+    ? translate('screens/settings', 'Edit phone number')
+    : showPdfModal
+      ? translate('screens/home', 'PDF Download Address Report')
+      : showRecommendationModal
+        ? translate('screens/recommendation', 'Create Invitation')
+        : isEmbedded
+          ? translate('screens/home', 'DFX services')
+          : translate('screens/home', 'Account');
+  const hasBackButton = (canClose && !isEmbedded) || showPdfModal || showRecommendationModal || showPhoneModal;
+  const onBack = showPhoneModal
+    ? () => setShowPhoneModal(false)
+    : showPdfModal
+      ? closePdfModal
+      : showRecommendationModal
+        ? () => setShowRecommendationModal(false)
+        : undefined;
   const image = 'https://dfx.swiss/images/app/berge.jpg';
 
   useLayoutOptions({ title, backButton: hasBackButton, onBack });
@@ -330,7 +338,20 @@ export default function AccountScreen(): JSX.Element {
               minWidth={false}
             >
               {profile.mail && (
-                <StyledDataTableRow label={translate('screens/home', 'Email')}>{profile.mail}</StyledDataTableRow>
+                <StyledDataTableRow label={translate('screens/home', 'Email')}>
+                  <div className="flex items-center gap-2">
+                    {profile.mail}
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => navigate('/account/mail', { setRedirect: true })} inline />
+                  </div>
+                </StyledDataTableRow>
+              )}
+              {profile.phone && (
+                <StyledDataTableRow label={translate('screens/kyc', 'Phone number')}>
+                  <div className="flex items-center gap-2">
+                    {profile.phone}
+                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => setShowPhoneModal(true)} inline />
+                  </div>
+                </StyledDataTableRow>
               )}
               {(profile.firstName || profile.lastName) && (
                 <StyledDataTableRow label={translate('screens/home', 'Name')}>
@@ -469,6 +490,23 @@ export default function AccountScreen(): JSX.Element {
           <img src={image} className="w-full" />
         </div>
       )}
+
+      {/* Edit Phone Modal */}
+      <Modal isOpen={showPhoneModal} onClose={() => setShowPhoneModal(false)}>
+        <EditOverlay
+          label={translate('screens/kyc', 'Phone number')}
+          autocomplete="phone"
+          prefill={user?.phone}
+          placeholder={translate('screens/kyc', 'Phone number')}
+          validation={Validations.Phone}
+          onCancel={() => setShowPhoneModal(false)}
+          onEdit={async (result) => {
+            await updatePhone(result);
+            await loadProfile();
+            setShowPhoneModal(false);
+          }}
+        />
+      </Modal>
 
       {/* PDF Download Modal */}
       <Modal isOpen={showPdfModal} onClose={closePdfModal}>
