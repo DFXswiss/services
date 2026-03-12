@@ -2233,9 +2233,9 @@ interface PhoneChangeFormData {
   phone: string;
 }
 
-function PhoneChangeData({ isLoading, onDone }: EditProps): JSX.Element {
+function PhoneChangeData({ code, isLoading, step, onDone }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
-  const { updatePhone } = useUserContext();
+  const { setPhoneChangeData } = useKyc();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>();
@@ -2247,9 +2247,11 @@ function PhoneChangeData({ isLoading, onDone }: EditProps): JSX.Element {
   } = useForm<PhoneChangeFormData>({ mode: 'onTouched' });
 
   function onSubmit(data: PhoneChangeFormData) {
+    if (!step.session) return;
+
     setIsUpdating(true);
     setError(undefined);
-    updatePhone(data.phone)
+    setPhoneChangeData(code, step.session.url, { phone: data.phone })
       .then(onDone)
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsUpdating(false));
