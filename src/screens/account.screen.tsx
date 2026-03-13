@@ -27,13 +27,13 @@ import {
   StyledDataTableExpandableRow,
   StyledDataTableRow,
   StyledDropdown,
+  StyledIconButton,
   StyledInput,
   StyledLoadingSpinner,
-  StyledIconButton,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { RecommendationsSection } from 'src/components/account/recommendations-section';
 import { KycStatus } from 'src/components/kyc-status';
@@ -42,8 +42,9 @@ import { addressLabel } from 'src/config/labels';
 import { Urls } from 'src/config/urls';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useWindowContext } from 'src/contexts/window.context';
-import { useKycHelper } from 'src/hooks/kyc-helper.hook';
+import { useAnchor } from 'src/hooks/anchor.hook';
 import { useUserGuard } from 'src/hooks/guard.hook';
+import { useKycHelper } from 'src/hooks/kyc-helper.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, downloadPdfFromString, sortAddressesByBlockchain, url } from 'src/util/utils';
@@ -99,9 +100,11 @@ export default function AccountScreen(): JSX.Element {
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string>();
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
-
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [pdfBlockchains, setPdfBlockchains] = useState<Blockchain[]>([]);
+
+  const recommendationsRef = useRef<HTMLHeadingElement>(null);
+  useAnchor('recommendation', recommendationsRef, !isUserLoading && !isDataLoading);
 
   const isKycLevel50 = user && user.kyc.level >= 50;
 
@@ -302,18 +305,18 @@ export default function AccountScreen(): JSX.Element {
   const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + item.value, 0);
 
   const title = showPdfModal
-      ? translate('screens/home', 'PDF Download Address Report')
-      : showRecommendationModal
-        ? translate('screens/recommendation', 'Create Invitation')
-        : isEmbedded
-          ? translate('screens/home', 'DFX services')
-          : translate('screens/home', 'Account');
+    ? translate('screens/home', 'PDF Download Address Report')
+    : showRecommendationModal
+      ? translate('screens/recommendation', 'Create Invitation')
+      : isEmbedded
+        ? translate('screens/home', 'DFX services')
+        : translate('screens/home', 'Account');
   const hasBackButton = (canClose && !isEmbedded) || showPdfModal || showRecommendationModal;
   const onBack = showPdfModal
-      ? closePdfModal
-      : showRecommendationModal
-        ? () => setShowRecommendationModal(false)
-        : undefined;
+    ? closePdfModal
+    : showRecommendationModal
+      ? () => setShowRecommendationModal(false)
+      : undefined;
   const image = 'https://dfx.swiss/images/app/berge.jpg';
 
   useLayoutOptions({ title, backButton: hasBackButton, onBack });
@@ -338,7 +341,11 @@ export default function AccountScreen(): JSX.Element {
                 <StyledDataTableRow label={translate('screens/home', 'Email')}>
                   <div className="flex items-center gap-2">
                     {profile.mail}
-                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => navigate('/account/mail', { setRedirect: true })} inline />
+                    <StyledIconButton
+                      icon={IconVariant.EDIT}
+                      onClick={() => navigate('/account/mail', { setRedirect: true })}
+                      inline
+                    />
                   </div>
                 </StyledDataTableRow>
               )}
@@ -346,7 +353,11 @@ export default function AccountScreen(): JSX.Element {
                 <StyledDataTableRow label={translate('screens/kyc', 'Phone number')}>
                   <div className="flex items-center gap-2">
                     {profile.phone}
-                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => startStep(KycStepName.PHONE_CHANGE)} inline />
+                    <StyledIconButton
+                      icon={IconVariant.EDIT}
+                      onClick={() => startStep(KycStepName.PHONE_CHANGE)}
+                      inline
+                    />
                   </div>
                 </StyledDataTableRow>
               )}
@@ -354,7 +365,11 @@ export default function AccountScreen(): JSX.Element {
                 <StyledDataTableRow label={translate('screens/home', 'Name')}>
                   <div className="flex items-center gap-2">
                     {[profile.firstName, profile.lastName].filter(Boolean).join(' ')}
-                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => startStep(KycStepName.NAME_CHANGE)} inline />
+                    <StyledIconButton
+                      icon={IconVariant.EDIT}
+                      onClick={() => startStep(KycStepName.NAME_CHANGE)}
+                      inline
+                    />
                   </div>
                 </StyledDataTableRow>
               )}
@@ -362,7 +377,11 @@ export default function AccountScreen(): JSX.Element {
                 <StyledDataTableRow label={translate('screens/home', 'Address')}>
                   <div className="flex items-center gap-2">
                     {formatAddress(profile.address)}
-                    <StyledIconButton icon={IconVariant.EDIT} onClick={() => startStep(KycStepName.ADDRESS_CHANGE)} inline />
+                    <StyledIconButton
+                      icon={IconVariant.EDIT}
+                      onClick={() => startStep(KycStepName.ADDRESS_CHANGE)}
+                      inline
+                    />
                   </div>
                 </StyledDataTableRow>
               )}
@@ -473,7 +492,7 @@ export default function AccountScreen(): JSX.Element {
             <>
               <div className="border-b my-2.5 border-dfxGray-400 w-full"></div>
 
-              <h2 className="text-dfxBlue-800 text-lg font-semibold w-full">
+              <h2 ref={recommendationsRef} className="text-dfxBlue-800 text-lg font-semibold w-full">
                 {translate('screens/recommendation', 'Recommendations')}
               </h2>
 

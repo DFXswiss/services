@@ -896,12 +896,20 @@
     "Partnership request": "Anfrage zu einer Partnerschaft",
     "Notification of changes": "Mitteilung von Änderungen",
     "Bug report": "Fehlermeldung",
+    "Verification call": "Verifizierungsanruf",
 
     "Reason": "Grund",
     "Other": "Andere",
     "Data request": "Datenanfrage",
     "Funds not received": "Zahlung nicht erhalten",
     "Transaction missing": "Transaktion fehlt",
+    "Reject call": "Anruf ablehnen",
+    "Repeat call": "Anruf wiederholen",
+    "Name changed": "Name geändert",
+    "Address changed": "Adresse geändert",
+    "Civil status changed": "Zivilstand geändert",
+
+    "contactDataChangeHint": "Name, Adresse, Telefonnummer und E-Mail-Adresse können direkt in Deinem <2></2> geändert werden.",
 
     "Transaction ID": "Transaktions-ID",
     "Select a transaction to proceed with": "Wähle eine Transaktion aus, um fortzufahren",
@@ -968,7 +976,17 @@
 
     "delete": "Bist Du sicher, dass Du die Adresse <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest? Diese Aktion ist nicht rückgängig zu machen.",
     "delete_iban": "Bist Du sicher, dass Du das Bankkonto <1>{{address}}</1> von Deinem DFX-Konto löschen möchtest?",
-    "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team."
+    "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Deine Daten verbleiben vorübergehend auf unseren Servern, bevor sie dauerhaft gelöscht werden. Wenn Du Fragen hast, wende Dich bitte an unser Support-Team.",
+
+    "Verification Call": "Verifizierungsanruf",
+    "Preferred call time": "Bevorzugte Anrufzeit",
+    "Morning": "Vormittag",
+    "Afternoon": "Nachmittag",
+    "Evening": "Abend",
+    "Yes, call me": "Ja, ruft mich an",
+    "No, don't call me": "Nein, ruft mich nicht an",
+    "Verification may require a phone call. Should we call you?": "Die Verifizierung kann einen Anruf erfordern. Sollen wir Dich anrufen?",
+    "Phone verification": "Telefonische Verifizierung"
   },
   "screens/safe": {
     "My DFX Safe": "Mein DFX Safe",
