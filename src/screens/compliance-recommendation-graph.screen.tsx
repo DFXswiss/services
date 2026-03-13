@@ -1,6 +1,6 @@
 import { ApiError } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ReactFlow, {
   Background,
@@ -64,10 +64,12 @@ function layoutGraph(graph: RecommendationGraph): { nodes: Node[]; edges: Edge[]
   const parents = new Map<number, number[]>();
 
   for (const edge of graph.edges) {
-    if (!children.has(edge.recommenderId)) children.set(edge.recommenderId, []);
-    children.get(edge.recommenderId)!.push(edge.recommendedId);
-    if (!parents.has(edge.recommendedId)) parents.set(edge.recommendedId, []);
-    parents.get(edge.recommendedId)!.push(edge.recommenderId);
+    const cList = children.get(edge.recommenderId) ?? [];
+    cList.push(edge.recommendedId);
+    children.set(edge.recommenderId, cList);
+    const pList = parents.get(edge.recommendedId) ?? [];
+    pList.push(edge.recommenderId);
+    parents.set(edge.recommendedId, pList);
   }
 
   // Find root nodes (no parent) or use the provided rootId's top ancestor
@@ -90,7 +92,7 @@ function layoutGraph(graph: RecommendationGraph): { nodes: Node[]; edges: Edge[]
   const visited = new Set<number>();
 
   while (queue.length > 0) {
-    const current = queue.shift()!;
+    const current = queue.shift() as number;
     if (visited.has(current)) continue;
     visited.add(current);
     ordered.push(current);
@@ -115,8 +117,9 @@ function layoutGraph(graph: RecommendationGraph): { nodes: Node[]; edges: Edge[]
   const byLevel = new Map<number, number[]>();
   for (const id of ordered) {
     const level = levels.get(id) || 0;
-    if (!byLevel.has(level)) byLevel.set(level, []);
-    byLevel.get(level)!.push(id);
+    const lvl = byLevel.get(level) ?? [];
+    lvl.push(id);
+    byLevel.set(level, lvl);
   }
 
   const NODE_WIDTH = 220;
