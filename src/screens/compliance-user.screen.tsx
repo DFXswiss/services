@@ -99,15 +99,17 @@ export default function ComplianceUserScreen(): JSX.Element {
   }
 
   useEffect(() => {
+    let cancelled = false;
     if (userDataId) {
       setIsLoading(true);
       getUserData(+userDataId)
-        .then(setData)
-        .catch((e: ApiError) => setError(e.message ?? 'Unknown error'))
-        .finally(() => setIsLoading(false));
+        .then((d) => !cancelled && setData(d))
+        .catch((e: ApiError) => !cancelled && setError(e.message ?? 'Unknown error'))
+        .finally(() => !cancelled && setIsLoading(false));
     } else {
       setError('No ID provided');
     }
+    return () => { cancelled = true; };
   }, [userDataId]);
 
   useEffect(() => {

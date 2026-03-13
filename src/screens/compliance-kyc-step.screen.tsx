@@ -35,20 +35,23 @@ export default function ComplianceKycStepScreen(): JSX.Element {
   useLayoutOptions({ title: translate('screens/compliance', 'KYC Step'), backButton: true, noMaxWidth: true });
 
   useEffect(() => {
+    let cancelled = false;
     if (userDataId && stepId) {
       setIsLoading(true);
       getUserData(+userDataId)
         .then((data) => {
+          if (cancelled) return;
           const found = data.kycSteps?.find((s) => s.id === +stepId);
           if (found) setStep(found);
           else setError('KYC Step not found');
         })
-        .catch((e: ApiError) => setError(e.message ?? 'Unknown error'))
-        .finally(() => setIsLoading(false));
+        .catch((e: ApiError) => !cancelled && setError(e.message ?? 'Unknown error'))
+        .finally(() => !cancelled && setIsLoading(false));
     } else {
       setError('Missing parameters');
       setIsLoading(false);
     }
+    return () => { cancelled = true; };
   }, [userDataId, stepId]);
 
   if (error) return <ErrorHint message={error} />;

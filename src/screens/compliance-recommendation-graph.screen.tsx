@@ -1,6 +1,6 @@
 import { ApiError } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ReactFlow, {
   Background,
@@ -87,10 +87,12 @@ function layoutGraph(graph: RecommendationGraph): { nodes: Node[]; edges: Edge[]
   const queue: number[] = [topRoot];
   levels.set(topRoot, 0);
   const ordered: number[] = [];
+  const visited = new Set<number>();
 
   while (queue.length > 0) {
     const current = queue.shift()!;
-    if (ordered.includes(current)) continue;
+    if (visited.has(current)) continue;
+    visited.add(current);
     ordered.push(current);
     const childList = children.get(current) || [];
     for (const child of childList) {
@@ -176,18 +178,21 @@ export default function ComplianceRecommendationGraphScreen(): JSX.Element {
   });
 
   useEffect(() => {
+    let cancelled = false;
     if (userDataId) {
       setIsLoading(true);
       getRecommendationGraph(+userDataId)
         .then((data) => {
+          if (cancelled) return;
           setGraph(data);
           const layout = layoutGraph(data);
           setNodes(layout.nodes);
           setEdges(layout.edges);
         })
-        .catch((e: ApiError) => setError(e.message ?? 'Unknown error'))
-        .finally(() => setIsLoading(false));
+        .catch((e: ApiError) => !cancelled && setError(e.message ?? 'Unknown error'))
+        .finally(() => !cancelled && setIsLoading(false));
     }
+    return () => { cancelled = true; };
   }, [userDataId]);
 
   const memoNodeTypes = useMemo(() => nodeTypes, []);
