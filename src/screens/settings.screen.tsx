@@ -40,6 +40,12 @@ import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 
+function toAcceptCall(status?: PhoneCallStatus): boolean | undefined {
+  if (status === PhoneCallStatus.ACCEPTED) return true;
+  if (status === PhoneCallStatus.REJECTED) return false;
+  return undefined;
+}
+
 interface FormData {
   language: Language;
   currency: Fiat;
@@ -109,12 +115,9 @@ export default function SettingsScreen(): JSX.Element {
   }, [user?.kyc.preferredPhoneTimes]);
 
   useEffect(() => {
-    if (user?.kyc.phoneCallStatus && acceptCall === undefined) {
-      if (user.kyc.phoneCallStatus === PhoneCallStatus.ACCEPTED) {
-        setValue('acceptCall', true);
-      } else if (user.kyc.phoneCallStatus === PhoneCallStatus.REJECTED) {
-        setValue('acceptCall', false);
-      }
+    const value = toAcceptCall(user?.kyc.phoneCallStatus);
+    if (value !== undefined && acceptCall === undefined) {
+      setValue('acceptCall', value);
     }
   }, [user?.kyc.phoneCallStatus]);
 
@@ -131,13 +134,16 @@ export default function SettingsScreen(): JSX.Element {
   }, [selectedCurrency]);
 
   useEffect(() => {
-    if (selectedPreferredPhoneTimes) {
+    if (
+      selectedPreferredPhoneTimes &&
+      JSON.stringify(selectedPreferredPhoneTimes) !== JSON.stringify(user?.kyc.preferredPhoneTimes)
+    ) {
       updateCallSettings(selectedPreferredPhoneTimes);
     }
   }, [selectedPreferredPhoneTimes]);
 
   useEffect(() => {
-    if (acceptCall !== undefined) {
+    if (acceptCall !== undefined && acceptCall !== toAcceptCall(user?.kyc.phoneCallStatus)) {
       updateCallSettings(undefined, acceptCall);
     }
   }, [acceptCall]);
@@ -245,11 +251,7 @@ export default function SettingsScreen(): JSX.Element {
             )
           )}
 
-          {isUserLoading && !isLoadingBankAccounts ? (
-            <div className="flex mt-4 w-full justify-center items-center">
-              <StyledLoadingSpinner size={SpinnerSize.LG} />
-            </div>
-          ) : (
+          {!isUserLoading && (
             <ActionableList
               label={translate('screens/settings', 'Your Addresses')}
               addButtonOnClick={() => navigate('/connect')}
@@ -301,8 +303,9 @@ export default function SettingsScreen(): JSX.Element {
             />
           )}
 
-          {(!user?.kyc.phoneCallStatus ||
-            ![PhoneCallStatus.COMPLETED, PhoneCallStatus.FAILED].includes(user.kyc.phoneCallStatus)) && (
+          {!isUserLoading &&
+            (!user?.kyc.phoneCallStatus ||
+              ![PhoneCallStatus.COMPLETED, PhoneCallStatus.FAILED].includes(user.kyc.phoneCallStatus)) && (
             <StyledVerticalStack full gap={2}>
               <h1
                 ref={verificationCallRef}
