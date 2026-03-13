@@ -59,6 +59,8 @@ const ComplianceKycFilesScreen = lazy(() => import('./screens/compliance-kyc-fil
 const ComplianceKycFilesDetailsScreen = lazy(() => import('./screens/compliance-kyc-files-details.screen'));
 const ComplianceKycStatsScreen = lazy(() => import('./screens/compliance-kyc-stats.screen'));
 const ComplianceTransactionListScreen = lazy(() => import('./screens/compliance-transaction-list.screen'));
+const ComplianceKycStepScreen = lazy(() => import('./screens/compliance-kyc-step.screen'));
+const ComplianceRecommendationGraphScreen = lazy(() => import('./screens/compliance-recommendation-graph.screen'));
 const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
 const RealunitHoldersScreen = lazy(() => import('./screens/realunit-holders.screen'));
 const RealunitQuotesScreen = lazy(() => import('./screens/realunit-quotes.screen'));
@@ -332,6 +334,14 @@ export const Routes = [
       {
         path: 'compliance/user/:id',
         element: withSuspense(<ComplianceUserScreen />),
+      },
+      {
+        path: 'compliance/user/:id/kyc-step/:stepId',
+        element: withSuspense(<ComplianceKycStepScreen />),
+      },
+      {
+        path: 'compliance/recommendations/:id',
+        element: withSuspense(<ComplianceRecommendationGraphScreen />),
       },
       {
         path: 'compliance/bank-tx/:id/return',
