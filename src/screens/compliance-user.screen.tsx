@@ -1,7 +1,7 @@
 import { ApiError, useKyc } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import {
@@ -69,6 +69,7 @@ export default function ComplianceUserScreen(): JSX.Element {
   const { id: userDataId } = useParams();
   const { getUserData } = useCompliance();
   const { getFile } = useKyc();
+  const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -98,15 +99,17 @@ export default function ComplianceUserScreen(): JSX.Element {
   }
 
   useEffect(() => {
+    let cancelled = false;
     if (userDataId) {
       setIsLoading(true);
       getUserData(+userDataId)
-        .then(setData)
-        .catch((e: ApiError) => setError(e.message ?? 'Unknown error'))
-        .finally(() => setIsLoading(false));
+        .then((d) => !cancelled && setData(d))
+        .catch((e: ApiError) => !cancelled && setError(e.message ?? 'Unknown error'))
+        .finally(() => !cancelled && setIsLoading(false));
     } else {
       setError('No ID provided');
     }
+    return () => { cancelled = true; };
   }, [userDataId]);
 
   useEffect(() => {
@@ -205,12 +208,66 @@ export default function ComplianceUserScreen(): JSX.Element {
               </div>
             </div>
 
-            {/* Middle: KYC Files */}
-            <div className="w-1/4 min-w-[200px]">
+            {/* Middle: KYC Steps + KYC Files */}
+            <div className="w-1/4 min-w-[200px] flex flex-col gap-4">
+              {/* Recommendation Steps */}
+              {(() => {
+                const recommendations = data.kycSteps?.filter((s) => s.name === 'Recommendation') || [];
+                return (
+                  <div>
+                    <h2 className="text-dfxGray-700 mb-2">
+                      Recommendation ({recommendations.length})
+                    </h2>
+                    <div className="bg-white rounded-lg shadow-sm max-h-[35vh] overflow-auto">
+                      {recommendations.length > 0 ? (
+                        <table className="w-full border-collapse">
+                          <thead className="sticky top-0 bg-dfxGray-300">
+                            <tr>
+                              <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Status</th>
+                              <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Created</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {recommendations.map((step: KycStepInfo) => (
+                              <tr
+                                key={step.id}
+                                className="border-b border-dfxGray-300 transition-colors hover:bg-dfxBlue-400 cursor-pointer group"
+                                onClick={() => navigate(`/compliance/user/${userDataId}/kyc-step/${step.id}`, { state: { step } })}
+                              >
+                                <td className="px-3 py-2 text-sm">
+                                  <span
+                                    className={`px-2 py-1 rounded text-xs ${
+                                      step.status === 'Completed'
+                                        ? 'bg-green-100 text-green-800'
+                                        : step.status === 'Failed'
+                                          ? 'bg-red-100 text-red-800'
+                                          : 'bg-yellow-100 text-yellow-800'
+                                    }`}
+                                  >
+                                    {step.status}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-2 text-sm text-dfxBlue-800 group-hover:text-white">
+                                  {new Date(step.created).toLocaleDateString()}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      ) : (
+                        <div className="p-4 text-dfxGray-700 text-sm">No recommendation</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* KYC Files */}
+              <div>
               <h2 className="text-dfxGray-700 mb-2">
                 {translate('screens/compliance', 'KYC Files')} ({data.kycFiles?.length || 0})
               </h2>
-              <div className="bg-white rounded-lg shadow-sm max-h-[70vh] overflow-auto">
+              <div className="bg-white rounded-lg shadow-sm max-h-[35vh] overflow-auto">
                 {data.kycFiles?.length > 0 ? (
                   <table className="w-full border-collapse">
                     <thead className="sticky top-0 bg-dfxGray-300">
@@ -239,6 +296,7 @@ export default function ComplianceUserScreen(): JSX.Element {
                 ) : (
                   <div className="p-4 text-dfxGray-700 text-sm">No KYC files</div>
                 )}
+              </div>
               </div>
             </div>
 

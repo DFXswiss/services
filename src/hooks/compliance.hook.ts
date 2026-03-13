@@ -92,12 +92,57 @@ export interface ComplianceUserData {
   sellRoutes: SellRouteInfo[];
 }
 
+export interface RecommendationGraphNode {
+  id: number;
+  firstname?: string;
+  surname?: string;
+  kycStatus?: string;
+  kycLevel?: number;
+  tradeApprovalDate?: Date;
+}
+
+export interface RecommendationGraphEdge {
+  id: number;
+  recommenderId: number;
+  recommendedId: number;
+  method: string;
+  type: string;
+  isConfirmed?: boolean;
+  confirmationDate?: Date;
+  created: Date;
+}
+
+export interface RecommendationGraph {
+  nodes: RecommendationGraphNode[];
+  edges: RecommendationGraphEdge[];
+  rootId: number;
+}
+
+export interface RecommendationUserInfo {
+  id: number;
+  firstname?: string;
+  surname?: string;
+}
+
+export interface RecommendationEntry {
+  id: number;
+  recommended: RecommendationUserInfo;
+  isConfirmed?: boolean;
+  confirmationDate?: Date;
+  created: Date;
+}
+
 export interface KycStepInfo {
   id: number;
   name: string;
   type?: string;
   status: string;
   sequenceNumber: number;
+  result?: string;
+  comment?: string;
+  recommender?: RecommendationUserInfo;
+  recommended?: RecommendationUserInfo;
+  allRecommendations?: RecommendationEntry[];
   created: Date;
 }
 
@@ -291,6 +336,13 @@ export function useCompliance() {
     });
   }
 
+  async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
+    return call<RecommendationGraph>({
+      url: `support/recommendation-graph/${userDataId}`,
+      method: 'GET',
+    });
+  }
+
   return useMemo(
     () => ({
       search,
@@ -302,6 +354,7 @@ export function useCompliance() {
       getKycFileList,
       getKycFileStats,
       getTransactionList,
+      getRecommendationGraph,
     }),
     [call],
   );
