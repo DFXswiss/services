@@ -1,6 +1,6 @@
 import { useApi } from '@dfx.swiss/react';
 import { useMemo } from 'react';
-import { FinancialLogResponse } from 'src/dto/dashboard.dto';
+import { FinancialChangesEntry, FinancialChangesResponse, FinancialLogResponse, LatestBalanceResponse } from 'src/dto/dashboard.dto';
 
 export function useDashboard() {
   const { call } = useApi();
@@ -17,5 +17,31 @@ export function useDashboard() {
     });
   }
 
-  return useMemo(() => ({ getFinancialLog }), [call]);
+  async function getFinancialChanges(from?: string, dailySample?: boolean): Promise<FinancialChangesResponse> {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (dailySample !== undefined) params.set('dailySample', String(dailySample));
+    const query = params.toString();
+
+    return call<FinancialChangesResponse>({
+      url: `dashboard/financial/changes${query ? `?${query}` : ''}`,
+      method: 'GET',
+    });
+  }
+
+  async function getLatestBalance(): Promise<LatestBalanceResponse> {
+    return call<LatestBalanceResponse>({
+      url: 'dashboard/financial/latest',
+      method: 'GET',
+    });
+  }
+
+  async function getLatestChanges(): Promise<FinancialChangesEntry> {
+    return call<FinancialChangesEntry>({
+      url: 'dashboard/financial/changes/latest',
+      method: 'GET',
+    });
+  }
+
+  return useMemo(() => ({ getFinancialLog, getFinancialChanges, getLatestBalance, getLatestChanges }), [call]);
 }

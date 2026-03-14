@@ -68,7 +68,10 @@ const RealunitTransactionDetailScreen = lazy(() => import('./screens/realunit-tr
 const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
 const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
 const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
-const DashboardFinancialLogScreen = lazy(() => import('./screens/dashboard-financial-log.screen'));
+const DashboardFinancialHistoryScreen = lazy(() => import('./screens/dashboard-financial-history.screen'));
+const DashboardFinancialLiveScreen = lazy(() => import('./screens/dashboard-financial-live.screen'));
+const DashboardFinancialExpensesScreen = lazy(() => import('./screens/dashboard-financial-expenses.screen'));
+const DashboardFinancialLiquidityScreen = lazy(() => import('./screens/dashboard-financial-liquidity.screen'));
 
 setupLanguages();
 
@@ -399,8 +402,20 @@ export const Routes = [
             path: 'financial',
             children: [
               {
-                path: 'log',
-                element: withSuspense(<DashboardFinancialLogScreen />),
+                path: 'live',
+                element: withSuspense(<DashboardFinancialLiveScreen />),
+              },
+              {
+                path: 'history',
+                element: withSuspense(<DashboardFinancialHistoryScreen />),
+              },
+              {
+                path: 'liquidity',
+                element: withSuspense(<DashboardFinancialLiquidityScreen />),
+              },
+              {
+                path: 'expenses',
+                element: withSuspense(<DashboardFinancialExpensesScreen />),
               },
             ],
           },

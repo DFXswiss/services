@@ -12,7 +12,7 @@ export function TotalBalanceLongChart({ entries }: TotalBalanceLongChartProps) {
     return {
       chart: {
         type: 'line',
-        toolbar: { show: true },
+        toolbar: { show: true, offsetY: -5 },
         zoom: { enabled: true },
         background: '0',
       },
@@ -43,7 +43,7 @@ export function TotalBalanceLongChart({ entries }: TotalBalanceLongChartProps) {
         x: { format: 'dd MMM yyyy HH:mm' },
         y: { formatter: (val: number) => `${val.toLocaleString('de-CH')} CHF` },
       },
-      legend: { position: 'top' },
+      legend: { position: 'bottom' },
     };
   }, []);
 
