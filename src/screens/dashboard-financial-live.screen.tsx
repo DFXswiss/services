@@ -2,7 +2,7 @@ import { useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { BalanceBarChart } from 'src/components/dashboard/latest-balance-bar-chart';
-import { FinancialChangesEntry, LatestBalanceResponse } from 'src/dto/dashboard.dto';
+import { LatestBalanceResponse } from 'src/dto/dashboard.dto';
 import { useDashboard } from 'src/hooks/dashboard.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
@@ -20,8 +20,12 @@ interface SummaryCardProps {
 function SummaryCard({ label, value, color }: SummaryCardProps) {
   return (
     <div className="bg-white rounded-lg shadow p-4">
-      <div className="text-xs font-medium" style={{ color: '#6b7280' }}>{label}</div>
-      <div className="text-xl font-bold mt-1" style={{ color: color ?? '#111827' }}>{value}</div>
+      <div className="text-xs font-medium" style={{ color: '#6b7280' }}>
+        {label}
+      </div>
+      <div className="text-xl font-bold mt-1" style={{ color: color ?? '#111827' }}>
+        {value}
+      </div>
     </div>
   );
 }
@@ -34,19 +38,14 @@ export default function DashboardFinancialLiveScreen(): JSX.Element {
   const { getLatestChanges, getLatestBalance } = useDashboard();
 
   const [latestBalance, setLatestBalance] = useState<LatestBalanceResponse>();
-  const [latestChanges, setLatestChanges] = useState<FinancialChangesEntry>();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    Promise.all([
-      getLatestBalance(),
-      getLatestChanges(),
-    ])
-      .then(([balanceData, changesData]) => {
+    Promise.all([getLatestBalance(), getLatestChanges()])
+      .then(([balanceData]) => {
         setLatestBalance(balanceData);
-        setLatestChanges(changesData);
       })
       .finally(() => setIsLoading(false));
   }, [isLoggedIn]);
@@ -69,7 +68,10 @@ export default function DashboardFinancialLiveScreen(): JSX.Element {
         <SummaryCard label="Total Balance" value={`${formatChf(totalPlus - totalMinus)} CHF`} />
         <SummaryCard label="Plus Balance" value={`${formatChf(totalPlus)} CHF`} color="#22c55e" />
         <SummaryCard label="Minus Balance" value={`${formatChf(totalMinus)} CHF`} color="#ef4444" />
-        <SummaryCard label="Timestamp" value={latestBalance ? new Date(latestBalance.timestamp).toLocaleString('de-CH') : '-'} />
+        <SummaryCard
+          label="Timestamp"
+          value={latestBalance ? new Date(latestBalance.timestamp).toLocaleString('de-CH') : '-'}
+        />
       </div>
 
       <div className="bg-white rounded-lg shadow p-4">
