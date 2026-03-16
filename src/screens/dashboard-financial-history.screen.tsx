@@ -19,7 +19,7 @@ export interface TimeRange {
 
 const TIMEFRAME_OPTIONS = [Timeframe.DAY, Timeframe.THREE_DAYS, Timeframe.WEEK, Timeframe.MONTH] as const;
 
-function useDailySample(timeframe: Timeframe): boolean {
+function isDailySample(timeframe: Timeframe): boolean {
   return timeframe === Timeframe.WEEK || timeframe === Timeframe.MONTH;
 }
 
@@ -43,7 +43,7 @@ export default function DashboardFinancialLogScreen(): JSX.Element {
 
     const fromTimestamp = getFromDateByTimeframe(timeframe);
     const from = fromTimestamp > 0 ? new Date(fromTimestamp).toISOString() : undefined;
-    const dailySample = useDailySample(timeframe);
+    const dailySample = isDailySample(timeframe);
 
     Promise.all([getFinancialLog(from, dailySample), getFinancialChanges(from, dailySample)])
       .then(([logData, changesData]) => {
