@@ -41,6 +41,12 @@ export interface BalanceByGroup {
   assets?: Record<string, number>;
 }
 
+export interface RefRewardRecipient {
+  userDataId: number;
+  count: number;
+  totalChf: number;
+}
+
 export interface LatestBalanceResponse {
   timestamp: string;
   byType: BalanceByGroup[];

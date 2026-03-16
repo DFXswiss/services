@@ -1,6 +1,12 @@
 import { useApi } from '@dfx.swiss/react';
 import { useMemo } from 'react';
-import { FinancialChangesEntry, FinancialChangesResponse, FinancialLogResponse, LatestBalanceResponse } from 'src/dto/dashboard.dto';
+import {
+  FinancialChangesEntry,
+  FinancialChangesResponse,
+  FinancialLogResponse,
+  LatestBalanceResponse,
+  RefRewardRecipient,
+} from 'src/dto/dashboard.dto';
 
 export function useDashboard() {
   const { call } = useApi();
@@ -43,5 +49,16 @@ export function useDashboard() {
     });
   }
 
-  return useMemo(() => ({ getFinancialLog, getFinancialChanges, getLatestBalance, getLatestChanges }), [call]);
+  async function getRefRecipients(from?: string): Promise<RefRewardRecipient[]> {
+    const query = from ? `?from=${from}` : '';
+    return call<RefRewardRecipient[]>({
+      url: `dashboard/financial/ref-recipients${query}`,
+      method: 'GET',
+    });
+  }
+
+  return useMemo(
+    () => ({ getFinancialLog, getFinancialChanges, getLatestBalance, getLatestChanges, getRefRecipients }),
+    [call],
+  );
 }
