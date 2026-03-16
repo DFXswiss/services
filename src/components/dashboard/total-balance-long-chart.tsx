@@ -2,12 +2,14 @@ import { ApexOptions } from 'apexcharts';
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import { FinancialLogEntry } from 'src/dto/dashboard.dto';
+import { TimeRange } from 'src/screens/dashboard-financial-history.screen';
 
 interface TotalBalanceLongChartProps {
   entries: FinancialLogEntry[];
+  timeRange?: TimeRange;
 }
 
-export function TotalBalanceLongChart({ entries }: TotalBalanceLongChartProps) {
+export function TotalBalanceLongChart({ entries, timeRange }: TotalBalanceLongChartProps) {
   const chartOptions = useMemo((): ApexOptions => {
     return {
       chart: {
@@ -23,6 +25,7 @@ export function TotalBalanceLongChart({ entries }: TotalBalanceLongChartProps) {
       xaxis: {
         type: 'datetime',
         labels: { datetimeUTC: false, format: 'dd MMM yy' },
+        ...(timeRange && { min: timeRange.min, max: timeRange.max }),
       },
       yaxis: [
         {
@@ -45,7 +48,7 @@ export function TotalBalanceLongChart({ entries }: TotalBalanceLongChartProps) {
       },
       legend: { position: 'bottom' },
     };
-  }, []);
+  }, [timeRange]);
 
   const chartSeries = useMemo(() => {
     return [
@@ -62,7 +65,7 @@ export function TotalBalanceLongChart({ entries }: TotalBalanceLongChartProps) {
 
   return (
     <div>
-      <h3 className="text-sm font-semibold mb-2">Total Balance vs BTC Price (Long-term)</h3>
+      <h3 className="text-sm font-semibold mb-2">Total Balance vs BTC Price</h3>
       <Chart type="line" height={300} options={chartOptions} series={chartSeries} />
     </div>
   );

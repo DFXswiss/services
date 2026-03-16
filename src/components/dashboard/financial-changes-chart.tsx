@@ -2,41 +2,46 @@ import { ApexOptions } from 'apexcharts';
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import { FinancialChangesEntry } from 'src/dto/dashboard.dto';
+import { TimeRange } from 'src/screens/dashboard-financial-history.screen';
 
 interface FinancialChangesChartProps {
   entries: FinancialChangesEntry[];
+  timeRange?: TimeRange;
 }
 
-const baseOptions: ApexOptions = {
-  chart: {
-    type: 'area',
-    toolbar: { show: true, offsetY: -5 },
-    zoom: { enabled: true },
-    background: '0',
-  },
-  stroke: { width: 2, curve: 'smooth' },
-  dataLabels: { enabled: false },
-  fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.05 } },
-  grid: { borderColor: '#e5e7eb' },
-  xaxis: {
-    type: 'datetime',
-    labels: { datetimeUTC: false, format: 'dd MMM yy' },
-  },
-  yaxis: {
-    title: { text: 'CHF (cumulative)' },
-    labels: {
-      formatter: (val: number) => val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val.toFixed(0),
+function makeBaseOptions(timeRange?: TimeRange): ApexOptions {
+  return {
+    chart: {
+      type: 'area',
+      toolbar: { show: true, offsetY: -5 },
+      zoom: { enabled: true },
+      background: '0',
     },
-  },
-  tooltip: {
-    x: { format: 'dd MMM yyyy HH:mm' },
-    y: { formatter: (val: number) => `${val.toLocaleString('de-CH', { maximumFractionDigits: 0 })} CHF` },
-  },
-  legend: { position: 'bottom' },
-};
+    stroke: { width: 2, curve: 'smooth' },
+    dataLabels: { enabled: false },
+    fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.05 } },
+    grid: { borderColor: '#e5e7eb' },
+    xaxis: {
+      type: 'datetime',
+      labels: { datetimeUTC: false, format: 'dd MMM yy' },
+      ...(timeRange && { min: timeRange.min, max: timeRange.max }),
+    },
+    yaxis: {
+      title: { text: 'CHF (cumulative)' },
+      labels: {
+        formatter: (val: number) => val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val.toFixed(0),
+      },
+    },
+    tooltip: {
+      x: { format: 'dd MMM yyyy HH:mm' },
+      y: { formatter: (val: number) => `${val.toLocaleString('de-CH', { maximumFractionDigits: 0 })} CHF` },
+    },
+    legend: { position: 'bottom' },
+  };
+}
 
-export function FinancialChangesTotalChart({ entries }: FinancialChangesChartProps) {
-  const options = useMemo((): ApexOptions => ({ ...baseOptions, colors: ['#22c55e'] }), []);
+export function FinancialChangesTotalChart({ entries, timeRange }: FinancialChangesChartProps) {
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange), colors: ['#22c55e'] }), [timeRange]);
 
   const series = useMemo(() => [
     { name: 'Net Total', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.total)]) },
@@ -50,8 +55,8 @@ export function FinancialChangesTotalChart({ entries }: FinancialChangesChartPro
   );
 }
 
-export function FinancialChangesPlusChart({ entries }: FinancialChangesChartProps) {
-  const options = useMemo((): ApexOptions => ({ ...baseOptions, colors: ['#3b82f6', '#f97316', '#8b5cf6', '#64748b'] }), []);
+export function FinancialChangesPlusChart({ entries, timeRange }: FinancialChangesChartProps) {
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange), colors: ['#3b82f6', '#f97316', '#8b5cf6', '#64748b'] }), [timeRange]);
 
   const series = useMemo(() => [
     { name: 'BuyCrypto', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.plus.buyCrypto)]) },
@@ -72,8 +77,8 @@ interface FinancialChangesMinusChartProps extends FinancialChangesChartProps {
   onDetails?: () => void;
 }
 
-export function FinancialChangesMinusChart({ entries, onDetails }: FinancialChangesMinusChartProps) {
-  const options = useMemo((): ApexOptions => ({ ...baseOptions, colors: ['#ef4444', '#f97316', '#64748b'] }), []);
+export function FinancialChangesMinusChart({ entries, timeRange, onDetails }: FinancialChangesMinusChartProps) {
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange), colors: ['#ef4444', '#f97316', '#64748b'] }), [timeRange]);
 
   const series = useMemo(() => [
     { name: 'Referral', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.ref.total)]) },

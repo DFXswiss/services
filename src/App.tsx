@@ -417,15 +417,20 @@ export const Routes = [
               },
               {
                 path: 'history',
-                element: withSuspense(<DashboardFinancialHistoryScreen />),
+                children: [
+                  {
+                    index: true,
+                    element: withSuspense(<DashboardFinancialHistoryScreen />),
+                  },
+                  {
+                    path: 'expenses',
+                    element: withSuspense(<DashboardFinancialExpensesScreen />),
+                  },
+                ],
               },
               {
                 path: 'liquidity',
                 element: withSuspense(<DashboardFinancialLiquidityScreen />),
-              },
-              {
-                path: 'expenses',
-                element: withSuspense(<DashboardFinancialExpensesScreen />),
               },
             ],
           },
