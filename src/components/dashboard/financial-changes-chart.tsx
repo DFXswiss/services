@@ -88,8 +88,8 @@ export function FinancialChangesMinusChart({ entries, timeRange, onDetails }: Fi
     { name: 'Referral', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.ref.total)]) },
     { name: 'Binance', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.binance.total)]) },
     { name: 'Blockchain', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.blockchain.total)]) },
-    { name: 'Bank', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.bank)]) },
-    { name: 'Kraken', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.kraken.total)]) },
+    { name: 'Bank', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.bank ?? 0)]) },
+    { name: 'Kraken', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.kraken?.total ?? 0)]) },
   ], [entries]);
 
   return (
