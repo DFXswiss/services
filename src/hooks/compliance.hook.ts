@@ -1,4 +1,5 @@
 import { AccountType, Asset, Fiat, KycStatus, ResponseType, useApi } from '@dfx.swiss/react';
+import { CustodyOrderListEntry } from 'src/dto/order.dto';
 import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
 import { useMemo } from 'react';
 import { downloadFile, filenameDateFormat } from 'src/util/utils';
@@ -336,6 +337,20 @@ export function useCompliance() {
     });
   }
 
+  async function getCustodyOrders(): Promise<CustodyOrderListEntry[]> {
+    return call<CustodyOrderListEntry[]>({
+      url: 'custody/admin/orders',
+      method: 'GET',
+    });
+  }
+
+  async function approveCustodyOrder(id: number): Promise<void> {
+    return call<void>({
+      url: `custody/admin/order/${id}/approve`,
+      method: 'POST',
+    });
+  }
+
   async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
     return call<RecommendationGraph>({
       url: `support/recommendation-graph/${userDataId}`,
@@ -355,6 +370,8 @@ export function useCompliance() {
       getKycFileStats,
       getTransactionList,
       getRecommendationGraph,
+      getCustodyOrders,
+      approveCustodyOrder,
     }),
     [call],
   );
