@@ -390,7 +390,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       const isBankRefund = isBuy && transaction.inputPaymentMethod !== FiatPaymentMethod.CARD;
 
       const formTarget = isBuy ? (data.iban ?? '') : data.address?.address;
-      const refundTarget = showIbanOverride ? formTarget : (refundDetails?.refundTarget ?? formTarget);
+      const refundTarget = showIbanOverride ? formTarget : undefined;
 
       const refundName = showIbanOverride ? data.creditorName : (refundDetails?.bankDetails?.name ?? data.creditorName);
 
