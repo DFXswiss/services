@@ -8,25 +8,18 @@ import { useCompliance } from 'src/hooks/compliance.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
-const statusStyles: Record<CustodyOrderStatus, { background: string; color: string }> = {
-  [CustodyOrderStatus.CREATED]: { background: '#e5e7eb', color: '#1f2937' },
-  [CustodyOrderStatus.CONFIRMED]: { background: '#fef3c7', color: '#92400e' },
-  [CustodyOrderStatus.APPROVED]: { background: '#dbeafe', color: '#1e40af' },
-  [CustodyOrderStatus.IN_PROGRESS]: { background: '#ffedd5', color: '#9a3412' },
-  [CustodyOrderStatus.COMPLETED]: { background: '#dcfce7', color: '#166534' },
+const statusClasses: Record<CustodyOrderStatus, string> = {
+  [CustodyOrderStatus.CREATED]: 'bg-dfxGray-400 text-dfxBlue-800',
+  [CustodyOrderStatus.CONFIRMED]: 'bg-dfxRed-100/20 text-dfxRed-100',
+  [CustodyOrderStatus.APPROVED]: 'bg-dfxBlue-300/20 text-dfxBlue-400',
+  [CustodyOrderStatus.IN_PROGRESS]: 'bg-dfxRedBlue-300/20 text-dfxRedBlue-200',
+  [CustodyOrderStatus.COMPLETED]: 'bg-dfxGreen-100/20 text-dfxGreen-300',
 };
 
 function statusBadge(status: CustodyOrderStatus): JSX.Element {
-  const style = statusStyles[status] ?? { background: '#e5e7eb', color: '#1f2937' };
+  const classes = statusClasses[status] ?? 'bg-dfxGray-400 text-dfxBlue-800';
 
-  return (
-    <span
-      className="px-2 py-1 rounded-full text-xs font-semibold"
-      style={{ backgroundColor: style.background, color: style.color }}
-    >
-      {status}
-    </span>
-  );
+  return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${classes}`}>{status}</span>;
 }
 
 function canApprove(entry: CustodyOrderListEntry): boolean {
