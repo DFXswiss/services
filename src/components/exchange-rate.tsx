@@ -40,7 +40,11 @@ export function ExchangeRate({
   const totalFee = `${fees.total}${feeSymbol}`;
   const dfxFee = `${fees.dfx}${feeSymbol} (${(fees.rate * 100).toFixed(2)}%${fees.min ? minFee : ''})`;
   const networkFee = `${fees.network}${feeSymbol}`;
-  const bankFee = type !== TransactionType.SWAP && `${fees.bank}${feeSymbol}`;
+  const bankFixedFee = type !== TransactionType.SWAP && fees.bankFixed ? `${fees.bankFixed}${feeSymbol}` : undefined;
+  const bankPercentFee =
+    type !== TransactionType.SWAP && fees.bankPercent ? `${fees.bankPercent}${feeSymbol}` : undefined;
+  const bankFee =
+    type !== TransactionType.SWAP && !bankFixedFee && !bankPercentFee && fees.bank ? `${fees.bank}${feeSymbol}` : false;
   const networkStartFee = fees?.networkStart ? `${fees?.networkStart}${feeSymbol}` : undefined;
 
   const l1Replacement =
@@ -48,15 +52,15 @@ export function ExchangeRate({
     (to.blockchain === Blockchain.BITCOIN
       ? 'Lightning'
       : to.blockchain === Blockchain.ETHEREUM
-      ? 'Arbitrum / Optimism'
-      : undefined);
+        ? 'Arbitrum / Optimism'
+        : undefined);
 
   const outputInfo =
     type === TransactionType.BUY
       ? 'The output amount is computed as the input amount minus the DFX fee, bank fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.'
       : type === TransactionType.SWAP
-      ? 'The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.'
-      : 'The output amount is computed as the input amount times the base rate minus the DFX fee, bank fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.';
+        ? 'The output amount is computed as the input amount minus the DFX fee and the network fee over the base rate. That is, {{output}} {{outputSymbol}} = ({{input}} {{inputSymbol}} - {{dfxFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}) ÷ {{baseRate}}.'
+        : 'The output amount is computed as the input amount times the base rate minus the DFX fee, bank fee and the network fee. That is, {{output}} {{inputSymbol}} = {{input}} {{outputSymbol}} × {{baseRate}} - {{dfxFee}} {{feeSymbol}} - {{bankFee}} {{feeSymbol}} - {{networkFee}} {{feeSymbol}}.';
 
   return (
     <StyledCollapsible
@@ -66,8 +70,8 @@ export function ExchangeRate({
         rate === Number.MAX_VALUE
           ? '∞'
           : 'blockchain' in from
-          ? Utils.formatAmountCrypto(rate)
-          : Utils.formatAmount(rate)
+            ? Utils.formatAmountCrypto(rate)
+            : Utils.formatAmount(rate)
       } ${from.name}/${to.name}`}
     >
       <StyledVerticalStack gap={2}>
@@ -91,6 +95,18 @@ export function ExchangeRate({
           <div>{totalFee}</div>
           <div className="text-dfxGray-800">{translate('screens/payment', 'DFX fee')}</div>
           <div>{dfxFee}</div>
+          {bankFixedFee && (
+            <>
+              <div className="text-dfxGray-800">{translate('screens/payment', 'Bank fee (fixed)')}</div>
+              <div>{bankFixedFee}</div>
+            </>
+          )}
+          {bankPercentFee && (
+            <>
+              <div className="text-dfxGray-800">{translate('screens/payment', 'Bank fee (percent)')}</div>
+              <div>{bankPercentFee}</div>
+            </>
+          )}
           {bankFee && (
             <>
               <div className="text-dfxGray-800">{translate('screens/payment', 'Bank fee')}</div>
