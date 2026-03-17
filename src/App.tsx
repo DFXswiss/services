@@ -70,6 +70,7 @@ const RealunitTransactionDetailScreen = lazy(() => import('./screens/realunit-tr
 const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
 const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
 const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
+const BuyCryptoResetAmlScreen = lazy(() => import('./screens/buy-crypto-reset-aml.screen'));
 
 setupLanguages();
 
@@ -249,6 +250,10 @@ export const Routes = [
       {
         path: 'buyCrypto/update',
         element: withSuspense(<BuyCryptoUpdateScreen />),
+      },
+      {
+        path: 'buyCrypto/resetAml',
+        element: withSuspense(<BuyCryptoResetAmlScreen />),
       },
       {
         path: 'tx',
