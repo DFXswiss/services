@@ -86,6 +86,7 @@ export interface ComplianceUserData {
   userData: object;
   kycFiles: KycFile[];
   kycSteps: KycStepInfo[];
+  kycLogs: KycLogInfo[];
   transactions: TransactionInfo[];
   users: UserInfo[];
   bankDatas: BankDataInfo[];
@@ -144,6 +145,13 @@ export interface KycStepInfo {
   recommender?: RecommendationUserInfo;
   recommended?: RecommendationUserInfo;
   allRecommendations?: RecommendationEntry[];
+  created: Date;
+}
+
+export interface KycLogInfo {
+  id: number;
+  type: string;
+  comment?: string;
   created: Date;
 }
 

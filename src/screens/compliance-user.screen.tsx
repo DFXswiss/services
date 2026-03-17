@@ -9,6 +9,7 @@ import {
   BuyRouteInfo,
   ComplianceUserData,
   KycFile,
+  KycLogInfo,
   KycStepInfo,
   SellRouteInfo,
   TransactionInfo,
@@ -18,7 +19,7 @@ import {
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
-type TabType = 'transactions' | 'users' | 'kycSteps' | 'bankDatas' | 'buyRoutes' | 'sellRoutes';
+type TabType = 'transactions' | 'users' | 'kycSteps' | 'kycLogs' | 'bankDatas' | 'buyRoutes' | 'sellRoutes';
 
 interface TabConfig {
   id: TabType;
@@ -109,7 +110,9 @@ export default function ComplianceUserScreen(): JSX.Element {
     } else {
       setError('No ID provided');
     }
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [userDataId]);
 
   useEffect(() => {
@@ -123,6 +126,7 @@ export default function ComplianceUserScreen(): JSX.Element {
         { id: 'transactions', label: 'Transactions', count: data.transactions?.length || 0 },
         { id: 'users', label: 'Users', count: data.users?.length || 0 },
         { id: 'kycSteps', label: 'KYC Steps', count: data.kycSteps?.length || 0 },
+        { id: 'kycLogs', label: 'KYC Log', count: data.kycLogs?.length || 0 },
         { id: 'bankDatas', label: 'Bank Data', count: data.bankDatas?.length || 0 },
         { id: 'buyRoutes', label: 'Buy Routes', count: data.buyRoutes?.length || 0 },
         { id: 'sellRoutes', label: 'Sell Routes', count: data.sellRoutes?.length || 0 },
@@ -215,9 +219,7 @@ export default function ComplianceUserScreen(): JSX.Element {
                 const recommendations = data.kycSteps?.filter((s) => s.name === 'Recommendation') || [];
                 return (
                   <div>
-                    <h2 className="text-dfxGray-700 mb-2">
-                      Recommendation ({recommendations.length})
-                    </h2>
+                    <h2 className="text-dfxGray-700 mb-2">Recommendation ({recommendations.length})</h2>
                     <div className="bg-white rounded-lg shadow-sm max-h-[35vh] overflow-auto">
                       {recommendations.length > 0 ? (
                         <table className="w-full border-collapse">
@@ -232,7 +234,9 @@ export default function ComplianceUserScreen(): JSX.Element {
                               <tr
                                 key={step.id}
                                 className="border-b border-dfxGray-300 transition-colors hover:bg-dfxBlue-400 cursor-pointer group"
-                                onClick={() => navigate(`/compliance/user/${userDataId}/kyc-step/${step.id}`, { state: { step } })}
+                                onClick={() =>
+                                  navigate(`/compliance/user/${userDataId}/kyc-step/${step.id}`, { state: { step } })
+                                }
                               >
                                 <td className="px-3 py-2 text-sm">
                                   <span
@@ -264,39 +268,39 @@ export default function ComplianceUserScreen(): JSX.Element {
 
               {/* KYC Files */}
               <div>
-              <h2 className="text-dfxGray-700 mb-2">
-                {translate('screens/compliance', 'KYC Files')} ({data.kycFiles?.length || 0})
-              </h2>
-              <div className="bg-white rounded-lg shadow-sm max-h-[35vh] overflow-auto">
-                {data.kycFiles?.length > 0 ? (
-                  <table className="w-full border-collapse">
-                    <thead className="sticky top-0 bg-dfxGray-300">
-                      <tr>
-                        <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">ID</th>
-                        <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Name</th>
-                        <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Type</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.kycFiles.map((file: KycFile) => (
-                        <tr
-                          key={file.id}
-                          className="group border-b border-dfxGray-300 transition-colors hover:bg-dfxBlue-400 cursor-pointer"
-                          onClick={() => openFile(file)}
-                        >
-                          <td className="px-3 py-2 text-sm text-dfxBlue-800 group-hover:text-white">{file.id}</td>
-                          <td className="px-3 py-2 text-sm text-dfxBlue-800 group-hover:text-white underline">
-                            {file.name}
-                          </td>
-                          <td className="px-3 py-2 text-sm text-dfxBlue-800 group-hover:text-white">{file.type}</td>
+                <h2 className="text-dfxGray-700 mb-2">
+                  {translate('screens/compliance', 'KYC Files')} ({data.kycFiles?.length || 0})
+                </h2>
+                <div className="bg-white rounded-lg shadow-sm max-h-[35vh] overflow-auto">
+                  {data.kycFiles?.length > 0 ? (
+                    <table className="w-full border-collapse">
+                      <thead className="sticky top-0 bg-dfxGray-300">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">ID</th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Name</th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Type</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <div className="p-4 text-dfxGray-700 text-sm">No KYC files</div>
-                )}
-              </div>
+                      </thead>
+                      <tbody>
+                        {data.kycFiles.map((file: KycFile) => (
+                          <tr
+                            key={file.id}
+                            className="group border-b border-dfxGray-300 transition-colors hover:bg-dfxBlue-400 cursor-pointer"
+                            onClick={() => openFile(file)}
+                          >
+                            <td className="px-3 py-2 text-sm text-dfxBlue-800 group-hover:text-white">{file.id}</td>
+                            <td className="px-3 py-2 text-sm text-dfxBlue-800 group-hover:text-white underline">
+                              {file.name}
+                            </td>
+                            <td className="px-3 py-2 text-sm text-dfxBlue-800 group-hover:text-white">{file.type}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="p-4 text-dfxGray-700 text-sm">No KYC files</div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -435,6 +439,38 @@ export default function ComplianceUserScreen(): JSX.Element {
                       <tr>
                         <td colSpan={6} className="px-3 py-4 text-center text-dfxGray-700">
                           No KYC steps
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
+
+              {/* KYC Log Tab */}
+              {activeTab === 'kycLogs' && (
+                <table className="w-full border-collapse">
+                  <thead className="sticky top-0 bg-dfxGray-300">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Date</th>
+                      <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Type</th>
+                      <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Comment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.kycLogs?.length > 0 ? (
+                      data.kycLogs.map((log: KycLogInfo) => (
+                        <tr key={log.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
+                          <td className="px-3 py-2 text-sm text-dfxBlue-800">
+                            {new Date(log.created).toLocaleDateString()}
+                          </td>
+                          <td className="px-3 py-2 text-sm text-dfxBlue-800">{log.type}</td>
+                          <td className="px-3 py-2 text-sm text-dfxBlue-800">{log.comment || '-'}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={3} className="px-3 py-4 text-center text-dfxGray-700">
+                          No KYC logs
                         </td>
                       </tr>
                     )}
