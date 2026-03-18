@@ -40,12 +40,6 @@ import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 
-function toAcceptCall(status?: PhoneCallStatus): boolean | undefined {
-  if (status === PhoneCallStatus.ACCEPTED) return true;
-  if (status === PhoneCallStatus.REJECTED) return false;
-  return undefined;
-}
-
 interface FormData {
   language: Language;
   currency: Fiat;
@@ -115,11 +109,11 @@ export default function SettingsScreen(): JSX.Element {
   }, [user?.kyc.preferredPhoneTimes]);
 
   useEffect(() => {
-    const value = toAcceptCall(user?.kyc.phoneCallStatus);
+    const value = user?.kyc.phoneCallAccepted;
     if (value !== undefined && acceptCall === undefined) {
       setValue('acceptCall', value);
     }
-  }, [user?.kyc.phoneCallStatus]);
+  }, [user?.kyc.phoneCallAccepted]);
 
   useEffect(() => {
     if (selectedLanguage && selectedLanguage?.id !== language?.id) {
@@ -143,7 +137,7 @@ export default function SettingsScreen(): JSX.Element {
   }, [selectedPreferredPhoneTimes]);
 
   useEffect(() => {
-    if (acceptCall !== undefined && acceptCall !== toAcceptCall(user?.kyc.phoneCallStatus)) {
+    if (acceptCall !== undefined && acceptCall !== user?.kyc.phoneCallAccepted) {
       updateCallSettings(undefined, acceptCall);
     }
   }, [acceptCall]);
