@@ -46,6 +46,7 @@ export function ExchangeRate({
   const bankFee =
     type !== TransactionType.SWAP && !bankFixedFee && !bankPercentFee && fees.bank ? `${fees.bank}${feeSymbol}` : false;
   const networkStartFee = fees?.networkStart ? `${fees?.networkStart}${feeSymbol}` : undefined;
+  const platformFee = fees.platform ? `${fees.platform}${feeSymbol}` : undefined;
 
   const l1Replacement =
     'blockchain' in to &&
@@ -95,6 +96,12 @@ export function ExchangeRate({
           <div>{totalFee}</div>
           <div className="text-dfxGray-800">{translate('screens/payment', 'DFX fee')}</div>
           <div>{dfxFee}</div>
+          {platformFee && (
+            <>
+              <div className="text-dfxGray-800">{translate('screens/payment', 'Platform fee')}</div>
+              <div>{platformFee}</div>
+            </>
+          )}
           {bankFixedFee && (
             <>
               <div className="text-dfxGray-800">{translate('screens/payment', 'Bank fee (fixed)')}</div>

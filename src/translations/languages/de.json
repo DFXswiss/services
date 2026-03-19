@@ -630,8 +630,11 @@
     "Base rate": "Basiskurs",
     "Total fee": "Gesamtgebühr",
     "DFX fee": "DFX-Gebühr",
+    "Platform fee": "Plattformgebühr",
     "Network fee": "Netzwerkgebühr",
     "Bank fee": "Bankgebühr",
+    "Bank fee (fixed)": "Bankgebühr (fix)",
+    "Bank fee (percent)": "Bankgebühr (prozentual)",
     "Network start fee": "Netzwerk-Startgebühr",
 
     "Your payment has failed. Please try again.": "Deine Zahlung ist fehlgeschlagen. Bitte versuche es erneut.",

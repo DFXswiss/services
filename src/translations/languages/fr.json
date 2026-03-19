@@ -630,8 +630,11 @@
     "Base rate": "Taux de base",
     "Total fee": "Frais totaux",
     "DFX fee": "Frais DFX",
+    "Platform fee": "Frais de plateforme",
     "Network fee": "Frais de réseau",
     "Bank fee": "Frais bancaires",
+    "Bank fee (fixed)": "Frais bancaires (fixe)",
+    "Bank fee (percent)": "Frais bancaires (pourcentage)",
     "Network start fee": "Frais de démarrage du réseau",
 
     "Your payment has failed. Please try again.": "Votre paiement a échoué. Veuillez réessayer.",
