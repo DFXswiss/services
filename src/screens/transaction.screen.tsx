@@ -389,13 +389,12 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     try {
       const isBankRefund = isBuy && transaction.inputPaymentMethod !== FiatPaymentMethod.CARD;
 
-      const formTarget = isBuy ? data.iban ?? '' : data.address?.address;
-      const refundTarget = showIbanOverride ? formTarget : refundDetails?.refundTarget ?? formTarget;
+      const formTarget = isBuy ? (data.iban ?? '') : data.address?.address;
 
-      const refundName = showIbanOverride ? data.creditorName : refundDetails?.bankDetails?.name ?? data.creditorName;
+      const refundName = showIbanOverride ? data.creditorName : (refundDetails?.bankDetails?.name ?? data.creditorName);
 
       await setTransactionRefundTarget(transaction.id, {
-        refundTarget,
+        refundTarget: showIbanOverride ? formTarget : undefined,
         creditorData: isBankRefund
           ? {
               name: refundName,
@@ -831,7 +830,9 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   onSubmit={handleSubmit(submitAssignment)}
                                 >
                                   <StyledVerticalStack gap={3} full>
-                                    <p className="text-dfxGray-700 mt-4">{translate('screens/payment', 'Remittance info')}</p>
+                                    <p className="text-dfxGray-700 mt-4">
+                                      {translate('screens/payment', 'Remittance info')}
+                                    </p>
                                     <StyledDropdown<TransactionTarget>
                                       rootRef={rootRef}
                                       items={transactionTargets ?? []}
@@ -1009,12 +1010,30 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
       label: translate('screens/payment', 'DFX fee'),
       text: `${tx.fees.dfx} ${tx.inputAsset} (${(tx.fees.rate * 100).toFixed(2)}%)`,
     });
+  tx.fees?.platform != null &&
+    tx.fees.platform > 0 &&
+    rateItems.push({
+      label: translate('screens/payment', 'Platform fee'),
+      text: `${tx.fees.platform} ${tx.inputAsset}`,
+    });
   tx.fees?.network != null &&
     rateItems.push({
       label: translate('screens/payment', 'Network fee'),
       text: `${tx.fees.network} ${tx.inputAsset}`,
     });
+  tx.fees?.bankFixed != null &&
+    rateItems.push({
+      label: translate('screens/payment', 'Bank fee (fixed)'),
+      text: `${tx.fees.bankFixed} ${tx.inputAsset}`,
+    });
+  tx.fees?.bankPercent != null &&
+    rateItems.push({
+      label: translate('screens/payment', 'Bank fee (percent)'),
+      text: `${tx.fees.bankPercent} ${tx.inputAsset}`,
+    });
   tx.fees?.bank != null &&
+    tx.fees?.bankFixed == null &&
+    tx.fees?.bankPercent == null &&
     rateItems.push({
       label: translate('screens/payment', 'Bank fee'),
       text: `${tx.fees.bank} ${tx.inputAsset}`,

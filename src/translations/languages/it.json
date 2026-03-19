@@ -630,8 +630,11 @@
     "Base rate": "Tasso base",
     "Total fee": "Commissione totale",
     "DFX fee": "Commissioni DFX",
+    "Platform fee": "Commissione piattaforma",
     "Network fee": "Commissione di rete",
     "Bank fee": "Commissione bancaria",
+    "Bank fee (fixed)": "Commissione bancaria (fissa)",
+    "Bank fee (percent)": "Commissione bancaria (percentuale)",
     "Network start fee": "Commissione di avvio della rete",
 
     "Your payment has failed. Please try again.": "Il tuo pagamento non è andato a buon fine. Per favore, riprova.",

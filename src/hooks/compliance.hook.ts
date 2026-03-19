@@ -1,4 +1,5 @@
 import { AccountType, Asset, Fiat, KycStatus, ResponseType, useApi } from '@dfx.swiss/react';
+import { CustodyOrderListEntry } from 'src/dto/order.dto';
 import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
 import { useMemo } from 'react';
 import { downloadFile, filenameDateFormat } from 'src/util/utils';
@@ -85,6 +86,7 @@ export interface ComplianceUserData {
   userData: object;
   kycFiles: KycFile[];
   kycSteps: KycStepInfo[];
+  kycLogs: KycLogInfo[];
   transactions: TransactionInfo[];
   users: UserInfo[];
   bankDatas: BankDataInfo[];
@@ -143,6 +145,13 @@ export interface KycStepInfo {
   recommender?: RecommendationUserInfo;
   recommended?: RecommendationUserInfo;
   allRecommendations?: RecommendationEntry[];
+  created: Date;
+}
+
+export interface KycLogInfo {
+  id: number;
+  type: string;
+  comment?: string;
   created: Date;
 }
 
@@ -336,6 +345,20 @@ export function useCompliance() {
     });
   }
 
+  async function getCustodyOrders(): Promise<CustodyOrderListEntry[]> {
+    return call<CustodyOrderListEntry[]>({
+      url: 'custody/admin/orders',
+      method: 'GET',
+    });
+  }
+
+  async function approveCustodyOrder(id: number): Promise<void> {
+    return call<void>({
+      url: `custody/admin/order/${id}/approve`,
+      method: 'POST',
+    });
+  }
+
   async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
     return call<RecommendationGraph>({
       url: `support/recommendation-graph/${userDataId}`,
@@ -355,6 +378,8 @@ export function useCompliance() {
       getKycFileStats,
       getTransactionList,
       getRecommendationGraph,
+      getCustodyOrders,
+      approveCustodyOrder,
     }),
     [call],
   );
