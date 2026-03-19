@@ -71,6 +71,12 @@ const RealunitTransactionDetailScreen = lazy(() => import('./screens/realunit-tr
 const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
 const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
 const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
+const DashboardScreen = lazy(() => import('./screens/dashboard.screen'));
+const DashboardFinancialScreen = lazy(() => import('./screens/dashboard-financial.screen'));
+const DashboardFinancialHistoryScreen = lazy(() => import('./screens/dashboard-financial-history.screen'));
+const DashboardFinancialLiveScreen = lazy(() => import('./screens/dashboard-financial-live.screen'));
+const DashboardFinancialExpensesScreen = lazy(() => import('./screens/dashboard-financial-expenses.screen'));
+const DashboardFinancialLiquidityScreen = lazy(() => import('./screens/dashboard-financial-liquidity.screen'));
 
 setupLanguages();
 
@@ -403,6 +409,45 @@ export const Routes = [
           {
             path: 'user/:address',
             element: withSuspense(<RealunitUserScreen />),
+          },
+        ],
+      },
+      {
+        path: 'dashboard',
+        children: [
+          {
+            index: true,
+            element: withSuspense(<DashboardScreen />),
+          },
+          {
+            path: 'financial',
+            children: [
+              {
+                index: true,
+                element: withSuspense(<DashboardFinancialScreen />),
+              },
+              {
+                path: 'live',
+                element: withSuspense(<DashboardFinancialLiveScreen />),
+              },
+              {
+                path: 'history',
+                children: [
+                  {
+                    index: true,
+                    element: withSuspense(<DashboardFinancialHistoryScreen />),
+                  },
+                  {
+                    path: 'expenses',
+                    element: withSuspense(<DashboardFinancialExpensesScreen />),
+                  },
+                ],
+              },
+              {
+                path: 'liquidity',
+                element: withSuspense(<DashboardFinancialLiquidityScreen />),
+              },
+            ],
           },
         ],
       },
