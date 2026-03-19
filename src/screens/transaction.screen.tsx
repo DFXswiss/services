@@ -1010,6 +1010,12 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
       label: translate('screens/payment', 'DFX fee'),
       text: `${tx.fees.dfx} ${tx.inputAsset} (${(tx.fees.rate * 100).toFixed(2)}%)`,
     });
+  tx.fees?.platform != null &&
+    tx.fees.platform > 0 &&
+    rateItems.push({
+      label: translate('screens/payment', 'Platform fee'),
+      text: `${tx.fees.platform} ${tx.inputAsset}`,
+    });
   tx.fees?.network != null &&
     rateItems.push({
       label: translate('screens/payment', 'Network fee'),
