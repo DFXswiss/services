@@ -9,7 +9,11 @@ interface FinancialChangesChartProps {
   timeRange?: TimeRange;
 }
 
+const FOUR_DAYS_MS = 4 * 24 * 60 * 60 * 1000;
+
 function makeBaseOptions(timeRange?: TimeRange): ApexOptions {
+  const isShortRange = timeRange && (timeRange.max - timeRange.min) < FOUR_DAYS_MS;
+
   return {
     chart: {
       type: 'area',
@@ -23,7 +27,7 @@ function makeBaseOptions(timeRange?: TimeRange): ApexOptions {
     grid: { borderColor: '#e5e7eb' },
     xaxis: {
       type: 'datetime',
-      labels: { datetimeUTC: false, format: 'dd MMM yy' },
+      labels: { datetimeUTC: false, format: isShortRange ? 'dd MMM HH:mm' : 'dd MMM yy' },
       ...(timeRange && { min: timeRange.min, max: timeRange.max }),
     },
     yaxis: {
@@ -78,12 +82,14 @@ interface FinancialChangesMinusChartProps extends FinancialChangesChartProps {
 }
 
 export function FinancialChangesMinusChart({ entries, timeRange, onDetails }: FinancialChangesMinusChartProps) {
-  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange), colors: ['#ef4444', '#f97316', '#64748b'] }), [timeRange]);
+  const options = useMemo((): ApexOptions => ({ ...makeBaseOptions(timeRange), colors: ['#ef4444', '#f97316', '#64748b', '#6366f1', '#14b8a6'] }), [timeRange]);
 
   const series = useMemo(() => [
     { name: 'Referral', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.ref.total)]) },
     { name: 'Binance', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.binance.total)]) },
     { name: 'Blockchain', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.blockchain.total)]) },
+    { name: 'Bank', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.bank ?? 0)]) },
+    { name: 'Kraken', data: entries.map((e) => [new Date(e.timestamp).getTime(), Math.round(e.minus.kraken?.total ?? 0)]) },
   ], [entries]);
 
   return (
