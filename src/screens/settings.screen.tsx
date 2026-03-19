@@ -110,7 +110,7 @@ export default function SettingsScreen(): JSX.Element {
 
   useEffect(() => {
     const value = user?.kyc.phoneCallAccepted;
-    if (value !== undefined && acceptCall === undefined) {
+    if (value != null && acceptCall == null) {
       setValue('acceptCall', value);
     }
   }, [user?.kyc.phoneCallAccepted]);
