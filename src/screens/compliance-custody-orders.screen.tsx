@@ -13,7 +13,7 @@ function formatTransfer(entry: CustodyOrderListEntry): string {
   const output =
     entry.outputAmount != null && entry.outputAsset ? `${entry.outputAmount} ${entry.outputAsset}` : undefined;
 
-  if (input && output) return `${input} → ${output}`;
+  if (input && output) return `${output} → ${input}`;
   return input ?? output ?? '-';
 }
 
