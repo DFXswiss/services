@@ -394,7 +394,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       const refundName = showIbanOverride ? data.creditorName : (refundDetails?.bankDetails?.name ?? data.creditorName);
 
       await setTransactionRefundTarget(transaction.id, {
-        refundTarget: showIbanOverride ? formTarget : undefined,
+        refundTarget: showIbanOverride || !isBuy ? formTarget : undefined,
         creditorData: isBankRefund
           ? {
               name: refundName,
