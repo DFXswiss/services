@@ -346,11 +346,16 @@ export default function SettingsScreen(): JSX.Element {
             </StyledVerticalStack>
           )}
 
-          <StyledButton
-            width={StyledButtonWidth.FULL}
-            label={translate('general/actions', 'Delete account')}
-            onClick={() => setOverlayType(OverlayType.DELETE_ACCOUNT)}
-          />
+          <StyledVerticalStack full gap={2}>
+            <h1 className="text-dfxGray-800 font-semibold text-base flex justify-center items-center">
+              {translate('screens/settings', 'Danger Zone')}
+            </h1>
+            <StyledButton
+              width={StyledButtonWidth.FULL}
+              label={translate('general/actions', 'Delete account')}
+              onClick={() => setOverlayType(OverlayType.DELETE_ACCOUNT)}
+            />
+          </StyledVerticalStack>
         </StyledVerticalStack>
       )}
     </>
