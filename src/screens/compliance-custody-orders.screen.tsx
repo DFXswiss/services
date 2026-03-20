@@ -8,6 +8,15 @@ import { useCompliance } from 'src/hooks/compliance.hook';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 
+function formatTransfer(entry: CustodyOrderListEntry): string {
+  const input = entry.inputAmount != null && entry.inputAsset ? `${entry.inputAmount} ${entry.inputAsset}` : undefined;
+  const output =
+    entry.outputAmount != null && entry.outputAsset ? `${entry.outputAmount} ${entry.outputAsset}` : undefined;
+
+  if (input && output) return `${input} → ${output}`;
+  return input ?? output ?? '-';
+}
+
 const statusClasses: Record<CustodyOrderStatus, string> = {
   [CustodyOrderStatus.CREATED]: 'bg-dfxGray-400 text-dfxBlue-800',
   [CustodyOrderStatus.CONFIRMED]: 'bg-dfxRed-100/20 text-dfxRed-100',
@@ -95,13 +104,10 @@ export default function ComplianceCustodyOrdersScreen(): JSX.Element {
               <tr className="bg-dfxGray-300">
                 <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">Type</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">Status</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">Input Amount</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">Input Asset</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">Output Amount</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">Output Asset</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">User ID</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">Transfer</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-dfxBlue-800">UserData ID</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">User Name</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">Created</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">Updated</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">Actions</th>
               </tr>
             </thead>
@@ -111,13 +117,10 @@ export default function ComplianceCustodyOrdersScreen(): JSX.Element {
                   <tr key={entry.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.type}</td>
                     <td className="px-4 py-3 text-left text-sm">{statusBadge(entry.status)}</td>
-                    <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">{entry.inputAmount}</td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.inputAsset}</td>
-                    <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">{entry.outputAmount}</td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.outputAsset}</td>
-                    <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">{entry.userId}</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatTransfer(entry)}</td>
+                    <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">{entry.userDataId}</td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.userName}</td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatDate(entry.created)}</td>
+                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatDate(entry.updated)}</td>
                     <td className="px-4 py-3 text-left text-sm">
                       {canApprove(entry) && (
                         <button
@@ -133,7 +136,7 @@ export default function ComplianceCustodyOrdersScreen(): JSX.Element {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={10} className="px-4 py-3 text-center text-dfxGray-700">
+                  <td colSpan={7} className="px-4 py-3 text-center text-dfxGray-700">
                     No orders found
                   </td>
                 </tr>
