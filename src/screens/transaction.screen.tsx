@@ -634,7 +634,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
 
 interface TransactionListProps extends TransactionStatusProps {
   isSupport: boolean;
-  onSelectTransaction?: (txUid: string) => void;
+  onSelectTransaction?: (txUid: string, state: TransactionState) => void;
 }
 
 export function TransactionList({ isSupport, setError, onSelectTransaction }: TransactionListProps): JSX.Element {
@@ -880,6 +880,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               }}
                               isLoading={isInvoiceLoading === tx.uid}
                               color={StyledButtonColor.STURDY_WHITE}
+                              hidden={isSupport}
                             />
                             <StyledButton
                               label={translate('general/actions', 'Open receipt')}
@@ -893,7 +894,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   })
                                   .finally(() => setIsReceiptLoading(undefined));
                               }}
-                              hidden={tx.state !== TransactionState.COMPLETED}
+                              hidden={isSupport || tx.state !== TransactionState.COMPLETED}
                               isLoading={isReceiptLoading === tx.id}
                               color={StyledButtonColor.STURDY_WHITE}
                             />
@@ -936,7 +937,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               <StyledButton
                                 color={StyledButtonColor.STURDY_WHITE}
                                 label={translate('general/actions', 'Select')}
-                                onClick={() => onSelectTransaction && onSelectTransaction(tx.uid)}
+                                onClick={() => onSelectTransaction && onSelectTransaction(tx.uid, tx.state)}
                               />
                             )}
                           </StyledVerticalStack>

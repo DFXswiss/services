@@ -8,6 +8,7 @@ import {
   Limit,
   SupportIssueReason,
   SupportIssueType,
+  TransactionState,
   Utils,
   Validations,
   useBank,
@@ -76,7 +77,7 @@ interface FormData {
   receiverIban: string;
   date: string;
   name: string;
-  transaction: SelectTransactionFormData;
+  transaction?: SelectTransactionFormData;
   reason: SupportIssueReason;
   message: string;
   limit: Limit;
@@ -130,7 +131,7 @@ export default function SupportIssueScreen(): JSX.Element {
   const [selectTransaction, setSelectTransaction] = useState(false);
   const [isKycComplete, setIsKycComplete] = useState<boolean>();
   const [banks, setBanks] = useState<Bank[]>();
-  const [supportIssue, setSupportIssue] = useState<Partial<CreateSupportIssue>>();
+  const [selectedTxState, setSelectedTxState] = useState<TransactionState>();
 
   const {
     control,
@@ -147,6 +148,7 @@ export default function SupportIssueScreen(): JSX.Element {
 
   const issues = Object.values(SupportIssueType);
   const reasons = IssueReasons[selectedType] ?? [];
+  const isRequestOnly = selectedTxState === TransactionState.WAITING_FOR_PAYMENT;
 
   const orderParam = urlParams.get('quote') ?? urlParams.get('order');
   const issueTypeParam = urlParams.get('issue-type');
@@ -165,16 +167,14 @@ export default function SupportIssueScreen(): JSX.Element {
   useEffect(() => {
     const issueType = issueTypeParam && issues.find((t) => t === issueTypeParam);
     if (issueType) {
-      setSupportIssue((prev) => ({ ...prev, type: issueType }));
       setValue('type', issueType);
     }
 
     const reasonEnum = issueType && reasonParam && IssueReasons[issueType].find((r) => r === reasonParam);
     if (reasonEnum) {
-      setSupportIssue((prev) => ({ ...prev, reason: reasonEnum }));
       setValue('reason', reasonEnum);
     }
-  }, [issueTypeParam, reasonParam, issues]);
+  }, [issueTypeParam, reasonParam]);
 
   useUserGuard('/login', !orderParam);
   useKycLevelGuard(KycLevel.Link, '/contact');
@@ -183,11 +183,6 @@ export default function SupportIssueScreen(): JSX.Element {
     navigate({ pathname: `/support/chat/${issueUid}` });
   }
 
-  useEffect(() => {
-    getBanks()
-      .then(setBanks)
-      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
-  }, []);
 
   useEffect(() => {
     const kycCompleted = user && user.kyc.level >= KycLevel.Completed;
@@ -203,7 +198,6 @@ export default function SupportIssueScreen(): JSX.Element {
   useEffect(() => {
     if (orderParam) {
       const issueType = SupportIssueType.TRANSACTION_ISSUE;
-      setSupportIssue((prev) => ({ ...prev, type: issueType }));
       setValue('type', issueType);
 
       loadSupportIssue(orderParam).catch(() => undefined); // ignore error
@@ -221,29 +215,28 @@ export default function SupportIssueScreen(): JSX.Element {
   }, [isIssueLoading, existingIssue]);
 
   useEffect(() => {
-    if (selectedTransaction?.uid === selectTxButtonLabel) setSelectTransaction(true);
-  }, [selectedTransaction]);
-
-  useEffect(() => {
-    if (selectedReason && selectedReason !== supportIssue?.reason) {
-      setSupportIssue((prev) => ({ ...prev, reason: selectedReason }));
-      reset({ ...formDefaultValues, type: selectedType, reason: selectedReason });
+    if (selectedTransaction?.uid === selectTxButtonLabel) {
+      setSelectTransaction(true);
     }
-  }, [selectedReason, supportIssue]);
+  }, [selectedTransaction?.uid]);
 
   useEffect(() => {
-    if (selectedType && selectedType !== supportIssue?.type) {
-      setSupportIssue((prev) => ({ ...prev, type: selectedType }));
-      reset({ ...formDefaultValues, type: selectedType });
+    if (selectTransaction && selectedReason === SupportIssueReason.TRANSACTION_MISSING) {
+      setSelectTransaction(false);
     }
-  }, [selectedType, supportIssue]);
+  }, [selectedReason, selectTransaction]);
 
   useEffect(() => {
-    if (isLoggedIn)
-      getBanks()
-        .then(setBanks)
-        .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
-  }, [isLoggedIn]);
+    setSelectedTxState(undefined);
+    setValue('transaction', undefined);
+  }, [selectedReason]);
+
+
+  useEffect(() => {
+    getBanks()
+      .then(setBanks)
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'));
+  }, []);
 
   async function onSubmit(data: FormData) {
     setIsLoading(true);
@@ -259,14 +252,20 @@ export default function SupportIssueScreen(): JSX.Element {
       };
 
       if (data.type === SupportIssueType.TRANSACTION_ISSUE) {
-        if (data.reason !== SupportIssueReason.TRANSACTION_MISSING) {
-          request.transaction = { uid: data.transaction?.uid };
-        } else {
+        if (data.reason === SupportIssueReason.TRANSACTION_MISSING) {
           request.transaction = {
             senderIban: data.senderIban,
             receiverIban: data.receiverIban,
             date: new Date(data.date),
           };
+        } else if (data.reason === SupportIssueReason.FUNDS_NOT_RECEIVED && isRequestOnly) {
+          request.transaction = {
+            uid: data.transaction?.uid,
+            senderIban: data.senderIban,
+            date: new Date(data.date),
+          };
+        } else {
+          request.transaction = { uid: data.transaction?.uid };
         }
         orderParam && (request.transaction.orderUid = orderParam);
       }
@@ -290,16 +289,26 @@ export default function SupportIssueScreen(): JSX.Element {
     }
   }
 
-  function onSelectTransaction(uid: string) {
+  function onSelectTransaction(uid: string, state: TransactionState) {
     setValue('transaction', { uid, description: 'Transaction ID' });
+    setSelectedTxState(state);
     setSelectTransaction(false);
   }
 
+  const isFundsNotReceivedRequest =
+    selectedReason === SupportIssueReason.FUNDS_NOT_RECEIVED && isRequestOnly === true;
+
   const rules = Utils.createRules({
     type: Validations.Required,
-    senderIban: [Validations.Required, !!orderParam && Validations.Iban(allowedCountries)],
-    receiverIban: Validations.Required,
-    date: [Validations.Required, Validations.Custom((date) => (/\d{4}-\d{2}-\d{2}/g.test(date) ? true : 'pattern'))],
+    senderIban: [
+      (selectedReason === SupportIssueReason.TRANSACTION_MISSING || isFundsNotReceivedRequest) && Validations.Required,
+      !!orderParam && Validations.Iban(allowedCountries),
+    ],
+    receiverIban: selectedReason === SupportIssueReason.TRANSACTION_MISSING && Validations.Required,
+    date: [
+      (selectedReason === SupportIssueReason.TRANSACTION_MISSING || isFundsNotReceivedRequest) && Validations.Required,
+      Validations.Custom((date) => (!date || /\d{4}-\d{2}-\d{2}/g.test(date) ? true : 'pattern')),
+    ],
     name: Validations.Required,
     transaction: Validations.Required,
     reason: Validations.Required,
@@ -338,7 +347,6 @@ export default function SupportIssueScreen(): JSX.Element {
         <AddBankAccount
           onSubmit={(account) => {
             setValue('senderIban', account.iban);
-            setSupportIssue((prev) => ({ ...prev, senderIban: account.iban }));
           }}
           confirmationText={translate(
             'screens/iban',
@@ -387,10 +395,9 @@ export default function SupportIssueScreen(): JSX.Element {
               </StyledVerticalStack>
             )}
 
-            {selectedType === SupportIssueType.TRANSACTION_ISSUE &&
-              selectedReason &&
-              (selectedReason !== SupportIssueReason.TRANSACTION_MISSING ? (
-                !orderParam && (
+            {selectedType === SupportIssueType.TRANSACTION_ISSUE && selectedReason && (
+              <>
+                {selectedReason !== SupportIssueReason.TRANSACTION_MISSING && !orderParam && (
                   <StyledVerticalStack gap={3.5} full center>
                     <p className="w-full text-left text-dfxBlue-800 text-base font-semibold pl-3.5 -mb-1">
                       {translate('screens/payment', 'Transaction')}
@@ -405,59 +412,62 @@ export default function SupportIssueScreen(): JSX.Element {
                       forceEnable
                     />
                   </StyledVerticalStack>
-                )
-              ) : (
-                <>
-                  {bankAccounts && isLoggedIn ? (
-                    <StyledDropdown<string>
-                      rootRef={rootRef}
-                      label={translate('screens/support', 'Sender IBAN')}
-                      items={[...bankAccounts.map((a) => a.iban), AddAccount, NoIban]}
-                      labelFunc={(item) =>
-                        blankedAddress(
-                          item === AddAccount
-                            ? translate('general/actions', item)
-                            : item === NoIban
-                              ? translate('screens/iban', item)
-                              : (Utils.formatIban(item) ?? ''),
-                          { displayLength: 30 },
-                        )
-                      }
-                      descriptionFunc={(item) => bankAccounts.find((a) => a.iban === item)?.label ?? ''}
-                      name="senderIban"
-                      placeholder={translate('general/actions', 'Select') + '...'}
-                      full
-                    />
-                  ) : (
+                )}
+
+                {(selectedReason === SupportIssueReason.TRANSACTION_MISSING || isFundsNotReceivedRequest) && (
+                  <>
+                    {bankAccounts && isLoggedIn ? (
+                      <StyledDropdown<string>
+                        rootRef={rootRef}
+                        label={translate('screens/support', 'Sender IBAN')}
+                        items={[...bankAccounts.map((a) => a.iban), AddAccount, NoIban]}
+                        labelFunc={(item) =>
+                          blankedAddress(
+                            item === AddAccount
+                              ? translate('general/actions', item)
+                              : item === NoIban
+                                ? translate('screens/iban', item)
+                                : (Utils.formatIban(item) ?? ''),
+                            { displayLength: 30 },
+                          )
+                        }
+                        descriptionFunc={(item) => bankAccounts.find((a) => a.iban === item)?.label ?? ''}
+                        name="senderIban"
+                        placeholder={translate('general/actions', 'Select') + '...'}
+                        full
+                      />
+                    ) : (
+                      <StyledInput
+                        name="senderIban"
+                        autocomplete="iban"
+                        label={translate('screens/support', 'Sender IBAN')}
+                        placeholder="XX XXXX XXXX XXXX XXXX X"
+                        full
+                      />
+                    )}
+
+                    {selectedReason === SupportIssueReason.TRANSACTION_MISSING && banks && (
+                      <StyledDropdown<string>
+                        rootRef={rootRef}
+                        label={translate('screens/support', 'Receiver IBAN')}
+                        items={banks.map((b) => b.iban)}
+                        labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
+                        name="receiverIban"
+                        placeholder={translate('general/actions', 'Select') + '...'}
+                        full
+                      />
+                    )}
+
                     <StyledInput
-                      name="senderIban"
-                      autocomplete="iban"
-                      label={translate('screens/support', 'Sender IBAN')}
-                      placeholder="XX XXXX XXXX XXXX XXXX X"
+                      name="date"
+                      label={translate('screens/support', 'Date of the transaction')}
+                      placeholder={new Date().toISOString().split('T')[0]}
                       full
                     />
-                  )}
-
-                  {banks && (
-                    <StyledDropdown<string>
-                      rootRef={rootRef}
-                      label={translate('screens/support', 'Receiver IBAN')}
-                      items={banks.map((b) => b.iban)}
-                      labelFunc={(item) => blankedAddress(Utils.formatIban(item) ?? '', { displayLength: 30 })}
-                      name="receiverIban"
-                      placeholder={translate('general/actions', 'Select') + '...'}
-                      full
-                    />
-                  )}
-
-                  <StyledInput
-                    name="date"
-                    label={translate('screens/support', 'Date of the transaction')}
-                    placeholder={new Date().toISOString().split('T')[0]}
-                    full
-                  />
-                </>
-              ))}
+                  </>
+                )}
+              </>
+            )}
 
             <StyledInput
               name="name"
