@@ -1,4 +1,6 @@
 export enum Timeframe {
+  DAY = '24h',
+  THREE_DAYS = '3D',
   WEEK = '1W',
   MONTH = '1M',
   QUARTER = '1Q',
@@ -12,6 +14,10 @@ export function getFromDateByTimeframe(timeframe: Timeframe): number {
   switch (timeframe) {
     case Timeframe.ALL:
       return 0;
+    case Timeframe.DAY:
+      return Date.now() - 1 * MILLISECONDS_PER_DAY;
+    case Timeframe.THREE_DAYS:
+      return Date.now() - 3 * MILLISECONDS_PER_DAY;
     case Timeframe.WEEK:
       return Date.now() - 7 * MILLISECONDS_PER_DAY;
     case Timeframe.MONTH:

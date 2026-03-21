@@ -988,7 +988,9 @@
     "Yes, call me": "Oui, appelez-moi",
     "No, don't call me": "Non, ne m'appelez pas",
     "Verification may require a phone call. Should we call you?": "La vérification peut nécessiter un appel téléphonique. Devons-nous vous appeler?",
-    "Phone verification": "Vérification téléphonique"
+    "Phone verification": "Vérification téléphonique",
+
+    "Danger Zone": "Zone de danger"
   },
   "screens/safe": {
     "My DFX Safe": "Mon DFX Safe",

@@ -394,7 +394,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
       const refundName = showIbanOverride ? data.creditorName : (refundDetails?.bankDetails?.name ?? data.creditorName);
 
       await setTransactionRefundTarget(transaction.id, {
-        refundTarget: showIbanOverride ? formTarget : undefined,
+        refundTarget: showIbanOverride || !isBuy ? formTarget : undefined,
         creditorData: isBankRefund
           ? {
               name: refundName,
@@ -1026,14 +1026,14 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
       label: translate('screens/payment', 'Bank fee (fixed)'),
       text: `${tx.fees.bankFixed} ${tx.inputAsset}`,
     });
-  tx.fees?.bankPercent != null &&
+  tx.fees?.bankVariable != null &&
     rateItems.push({
       label: translate('screens/payment', 'Bank fee (percent)'),
-      text: `${tx.fees.bankPercent} ${tx.inputAsset}`,
+      text: `${tx.fees.bankVariable} ${tx.inputAsset}`,
     });
   tx.fees?.bank != null &&
     tx.fees?.bankFixed == null &&
-    tx.fees?.bankPercent == null &&
+    tx.fees?.bankVariable == null &&
     rateItems.push({
       label: translate('screens/payment', 'Bank fee'),
       text: `${tx.fees.bank} ${tx.inputAsset}`,

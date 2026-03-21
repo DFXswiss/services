@@ -71,13 +71,13 @@ export interface CustodyOrderListEntry {
   id: number;
   type: CustodyOrderType;
   status: CustodyOrderStatus;
-  inputAmount: number;
-  inputAsset: string;
-  outputAmount: number;
-  outputAsset: string;
-  userId: number;
-  userName: string;
-  created: Date;
+  inputAmount?: number;
+  inputAsset?: string;
+  outputAmount?: number;
+  outputAsset?: string;
+  userDataId?: number;
+  userName?: string;
+  updated: Date;
 }
 
 export interface ExchangeRate {
