@@ -1,6 +1,6 @@
 import { useApi } from '@dfx.swiss/react';
 import { useMemo } from 'react';
-import { ReconciliationResult } from 'src/dto/reconciliation.dto';
+import { ReconciliationOverview, ReconciliationResult } from 'src/dto/reconciliation.dto';
 
 export function useReconciliation() {
   const { call } = useApi();
@@ -13,5 +13,13 @@ export function useReconciliation() {
     });
   }
 
-  return useMemo(() => ({ getReconciliation }), [call]);
+  async function getOverview(from: string, to: string): Promise<ReconciliationOverview> {
+    const params = new URLSearchParams({ from, to });
+    return call<ReconciliationOverview>({
+      url: `balance/reconciliation/overview?${params}`,
+      method: 'GET',
+    });
+  }
+
+  return useMemo(() => ({ getReconciliation, getOverview }), [call]);
 }

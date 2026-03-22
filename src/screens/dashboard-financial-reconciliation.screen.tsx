@@ -1,7 +1,7 @@
 import { useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Fragment, useEffect, useState } from 'react';
-import { FlowGroup, ReconciliationResult } from 'src/dto/reconciliation.dto';
+import { FlowGroup, Position, ReconciliationOverview, ReconciliationResult } from 'src/dto/reconciliation.dto';
 import { useAdminGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useReconciliation } from 'src/hooks/reconciliation.hook';
@@ -299,60 +299,137 @@ function ReconciliationTable({
   );
 }
 
+const CATEGORY_LABELS: Record<string, string> = { blockchain: 'Blockchain', exchange: 'Exchange', bank: 'Bank' };
+
+function OverviewTable({ overview, onSelect }: { overview: ReconciliationOverview; onSelect: (id: number) => void }) {
+  let lastCategory = '';
+  const ok = overview.positions.filter((p) => Math.abs(p.difference) < 0.01).length;
+  const warn = overview.positions.length - ok;
+
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="text-center text-sm font-semibold p-3 border-b" style={{ backgroundColor: '#f8fafc' }}>
+        Saldenliste — {ok} abgestimmt, {warn} mit Differenz
+      </div>
+      <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ borderBottom: '2px solid #111827' }}>
+            <th className="py-2 pl-4 text-left font-medium">Konto</th>
+            <th className="py-2 pr-4 text-right font-medium">Anfang</th>
+            <th className="py-2 pr-4 text-right font-medium" style={{ color: '#166534' }}>
+              Zugänge
+            </th>
+            <th className="py-2 pr-4 text-right font-medium" style={{ color: '#991b1b' }}>
+              Abgänge
+            </th>
+            <th className="py-2 pr-4 text-right font-medium">Ende</th>
+            <th className="py-2 pr-4 text-right font-medium">Diff</th>
+          </tr>
+        </thead>
+        <tbody>
+          {overview.positions.map((p) => {
+            const showHeader = p.category !== lastCategory;
+            lastCategory = p.category;
+            const dec = BANK_BLOCKCHAINS.has(p.asset.blockchain) ? 2 : 8;
+            const diffOk = Math.abs(p.difference) < 0.01;
+            const diffColor = diffOk ? '#22c55e' : '#ef4444';
+
+            return (
+              <Fragment key={p.asset.id}>
+                {showHeader && (
+                  <tr style={{ backgroundColor: '#f8fafc' }}>
+                    <td colSpan={6} className="py-2 pl-4 text-xs font-bold uppercase" style={{ color: '#6b7280' }}>
+                      {CATEGORY_LABELS[p.category] ?? p.category}
+                    </td>
+                  </tr>
+                )}
+                <tr className="border-b cursor-pointer hover:bg-gray-50" onClick={() => onSelect(p.asset.id)}>
+                  <td className="py-1.5 pl-8" style={{ color: '#2563eb' }}>
+                    {p.asset.uniqueName}
+                  </td>
+                  <td className="py-1.5 pr-4 text-right font-mono">{formatAmount(p.startBalance, dec)}</td>
+                  <td className="py-1.5 pr-4 text-right font-mono" style={{ color: '#166534' }}>
+                    {p.totalInflows ? formatAmount(p.totalInflows, dec) : ''}
+                  </td>
+                  <td className="py-1.5 pr-4 text-right font-mono" style={{ color: '#991b1b' }}>
+                    {p.totalOutflows ? formatAmount(p.totalOutflows, dec) : ''}
+                  </td>
+                  <td className="py-1.5 pr-4 text-right font-mono">{formatAmount(p.endBalance, dec)}</td>
+                  <td className="py-1.5 pr-4 text-right font-mono font-bold" style={{ color: diffColor }}>
+                    {formatAmount(p.difference, dec)}
+                  </td>
+                </tr>
+              </Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+      <div className="p-3 text-xs text-center" style={{ backgroundColor: '#f8fafc', color: '#9ca3af' }}>
+        {overview.positions.length} Konten &middot; Zeitraum: {formatDate(overview.period.actualFrom)} —{' '}
+        {formatDate(overview.period.actualTo)}
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardFinancialReconciliationScreen(): JSX.Element {
   useAdminGuard();
   useLayoutOptions({ title: 'Reconciliation', noMaxWidth: true });
 
   const { isLoggedIn } = useSessionContext();
-  const { getReconciliation } = useReconciliation();
+  const { getReconciliation, getOverview } = useReconciliation();
 
-  const [assetId, setAssetId] = useState('113');
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
 
-  const [data, setData] = useState<ReconciliationResult>();
+  const [overview, setOverview] = useState<ReconciliationOverview>();
+  const [detail, setDetail] = useState<ReconciliationResult>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const [history, setHistory] = useState<string[]>([]);
+  const [history, setHistory] = useState<number[]>([]);
 
-  function runQuery(overrideAssetId?: number, pushHistory = true) {
-    const id = overrideAssetId ?? Number(assetId);
-    if (!isLoggedIn || !id) return;
-
-    if (overrideAssetId) {
-      if (pushHistory) setHistory((h) => [...h, assetId]);
-      setAssetId(String(overrideAssetId));
-    }
+  function loadOverview() {
+    if (!isLoggedIn) return;
     setIsLoading(true);
     setError(undefined);
-    getReconciliation(id, from, to)
-      .then(setData)
+    setDetail(undefined);
+    setHistory([]);
+    getOverview(from, to)
+      .then(setOverview)
       .catch((e) => setError(e.message ?? 'Request failed'))
       .finally(() => setIsLoading(false));
   }
 
-  useEffect(() => {
-    if (isLoggedIn) runQuery();
-  }, [isLoggedIn]);
+  function loadDetail(assetId: number, pushHistory = true) {
+    if (!isLoggedIn) return;
+    if (pushHistory && detail) setHistory((h) => [...h, detail.asset.id]);
+    setIsLoading(true);
+    setError(undefined);
+    getReconciliation(assetId, from, to)
+      .then(setDetail)
+      .catch((e) => setError(e.message ?? 'Request failed'))
+      .finally(() => setIsLoading(false));
+  }
 
-  const dec = data ? getDecimals(data.asset.blockchain) : 8;
+  function goBack() {
+    if (history.length > 0) {
+      const prev = history[history.length - 1];
+      setHistory((h) => h.slice(0, -1));
+      loadDetail(prev, false);
+    } else {
+      setDetail(undefined);
+    }
+  }
+
+  useEffect(() => {
+    if (isLoggedIn) loadOverview();
+  }, [isLoggedIn]);
 
   return (
     <div className="space-y-4 p-4 w-full self-stretch" style={{ color: '#111827' }}>
       {/* Query Form */}
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex flex-wrap gap-4 items-end">
-          <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#6b7280' }}>
-              Asset ID
-            </label>
-            <input
-              type="number"
-              value={assetId}
-              onChange={(e) => setAssetId(e.target.value)}
-              className="border rounded px-3 py-2 w-24 text-sm"
-            />
-          </div>
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#6b7280' }}>
               From
@@ -376,7 +453,7 @@ export default function DashboardFinancialReconciliationScreen(): JSX.Element {
             />
           </div>
           <button
-            onClick={() => runQuery()}
+            onClick={loadOverview}
             disabled={isLoading}
             className="px-4 py-2 rounded text-sm font-medium text-white"
             style={{ backgroundColor: '#2563eb' }}
@@ -394,36 +471,30 @@ export default function DashboardFinancialReconciliationScreen(): JSX.Element {
         </div>
       )}
 
-      {data && !isLoading && (
+      {!isLoading && !detail && overview && <OverviewTable overview={overview} onSelect={(id) => loadDetail(id)} />}
+
+      {!isLoading && detail && (
         <>
-          {/* Asset & Period */}
           <div className="bg-white rounded-lg shadow p-4">
             <div className="flex items-center gap-3">
-              {history.length > 0 && (
-                <button
-                  className="text-sm px-2 py-1 rounded hover:bg-gray-100"
-                  style={{ color: '#2563eb' }}
-                  onClick={() => {
-                    const prev = history[history.length - 1];
-                    setHistory((h) => h.slice(0, -1));
-                    runQuery(Number(prev), false);
-                  }}
-                >
-                  ← Zurück
-                </button>
-              )}
-              <div className="text-lg font-semibold">{data.asset.uniqueName}</div>
+              <button
+                className="text-sm px-2 py-1 rounded hover:bg-gray-100"
+                style={{ color: '#2563eb' }}
+                onClick={goBack}
+              >
+                ← {history.length > 0 ? 'Zurück' : 'Übersicht'}
+              </button>
+              <div className="text-lg font-semibold">{detail.asset.uniqueName}</div>
             </div>
             <div className="text-sm mt-1" style={{ color: '#6b7280' }}>
-              {data.asset.blockchain} &middot; {data.asset.type} &middot; ID {data.asset.id}
+              {detail.asset.blockchain} &middot; {detail.asset.type} &middot; ID {detail.asset.id}
             </div>
             <div className="text-xs mt-2" style={{ color: '#9ca3af' }}>
-              Effektiver Zeitraum: {formatDate(data.period.actualFrom)} — {formatDate(data.period.actualTo)}
+              Effektiver Zeitraum: {formatDate(detail.period.actualFrom)} — {formatDate(detail.period.actualTo)}
             </div>
           </div>
 
-          {/* Reconciliation Table */}
-          <ReconciliationTable data={data} onAssetChange={(id) => runQuery(id)} />
+          <ReconciliationTable data={detail} onAssetChange={(id) => loadDetail(id)} />
         </>
       )}
     </div>

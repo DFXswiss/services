@@ -14,6 +14,22 @@ export interface FlowGroup {
   items: FlowItem[];
 }
 
+export interface Position {
+  asset: { id: number; uniqueName: string; blockchain: string; type: string };
+  category: 'blockchain' | 'exchange' | 'bank';
+  startBalance: number;
+  endBalance: number;
+  totalInflows: number;
+  totalOutflows: number;
+  expectedEndBalance: number;
+  difference: number;
+}
+
+export interface ReconciliationOverview {
+  period: { from: string; to: string; actualFrom: string; actualTo: string };
+  positions: Position[];
+}
+
 export interface ReconciliationResult {
   asset: { id: number; uniqueName: string; blockchain: string; type: string };
   period: { from: string; to: string; actualFrom: string; actualTo: string };
