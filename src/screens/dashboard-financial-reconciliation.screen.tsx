@@ -313,12 +313,16 @@ export default function DashboardFinancialReconciliationScreen(): JSX.Element {
   const [data, setData] = useState<ReconciliationResult>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
+  const [history, setHistory] = useState<string[]>([]);
 
-  function runQuery(overrideAssetId?: number) {
+  function runQuery(overrideAssetId?: number, pushHistory = true) {
     const id = overrideAssetId ?? Number(assetId);
     if (!isLoggedIn || !id) return;
 
-    if (overrideAssetId) setAssetId(String(overrideAssetId));
+    if (overrideAssetId) {
+      if (pushHistory) setHistory((h) => [...h, assetId]);
+      setAssetId(String(overrideAssetId));
+    }
     setIsLoading(true);
     setError(undefined);
     getReconciliation(id, from, to)
@@ -394,7 +398,22 @@ export default function DashboardFinancialReconciliationScreen(): JSX.Element {
         <>
           {/* Asset & Period */}
           <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-lg font-semibold">{data.asset.uniqueName}</div>
+            <div className="flex items-center gap-3">
+              {history.length > 0 && (
+                <button
+                  className="text-sm px-2 py-1 rounded hover:bg-gray-100"
+                  style={{ color: '#2563eb' }}
+                  onClick={() => {
+                    const prev = history[history.length - 1];
+                    setHistory((h) => h.slice(0, -1));
+                    runQuery(Number(prev), false);
+                  }}
+                >
+                  ← Zurück
+                </button>
+              )}
+              <div className="text-lg font-semibold">{data.asset.uniqueName}</div>
+            </div>
             <div className="text-sm mt-1" style={{ color: '#6b7280' }}>
               {data.asset.blockchain} &middot; {data.asset.type} &middot; ID {data.asset.id}
             </div>
