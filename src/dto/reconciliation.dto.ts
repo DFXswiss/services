@@ -8,6 +8,7 @@ export interface FlowItem {
 export interface FlowGroup {
   type: string;
   counterAccount?: string;
+  counterAssetId?: number;
   count: number;
   totalAmount: number;
   items: FlowItem[];

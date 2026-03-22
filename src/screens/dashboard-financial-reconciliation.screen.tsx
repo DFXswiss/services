@@ -74,6 +74,7 @@ function flowLabel(type: string, counterAccount?: string): string {
 interface FlowEntry {
   key: string;
   label: string;
+  counterAssetId?: number;
   count: number;
   amount: number;
   side: 'soll' | 'haben';
@@ -81,7 +82,13 @@ interface FlowEntry {
   items: FlowGroup['items'];
 }
 
-function ReconciliationTable({ data }: { data: ReconciliationResult }) {
+function ReconciliationTable({
+  data,
+  onAssetChange,
+}: {
+  data: ReconciliationResult;
+  onAssetChange: (id: number) => void;
+}) {
   const [expanded, setExpanded] = useState<string>();
   const dec = getDecimals(data.asset.blockchain);
   const unit = data.asset.uniqueName.split('/')[1] ?? '';
@@ -102,6 +109,7 @@ function ReconciliationTable({ data }: { data: ReconciliationResult }) {
         merged.set(key, {
           key,
           label: ca,
+          counterAssetId: g.counterAssetId,
           count: g.count,
           amount: g.totalAmount,
           side,
@@ -176,7 +184,20 @@ function ReconciliationTable({ data }: { data: ReconciliationResult }) {
               >
                 <td className="py-1.5 pl-4" style={e.isDiff ? { fontStyle: 'italic', color: '#9ca3af' } : undefined}>
                   {!e.isDiff && <span className="mr-1 text-xs">{expanded === e.key ? '▼' : '▶'}</span>}
-                  {e.label}
+                  {e.counterAssetId ? (
+                    <span
+                      className="cursor-pointer hover:underline"
+                      style={{ color: '#2563eb' }}
+                      onClick={(ev) => {
+                        ev.stopPropagation();
+                        onAssetChange(e.counterAssetId!);
+                      }}
+                    >
+                      {e.label}
+                    </span>
+                  ) : (
+                    e.label
+                  )}
                 </td>
                 <td className="py-1.5 text-right" style={e.isDiff ? { color: '#9ca3af' } : undefined}>
                   {e.count > 0 ? e.count : ''}
@@ -293,12 +314,14 @@ export default function DashboardFinancialReconciliationScreen(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
-  function runQuery() {
-    if (!isLoggedIn || !assetId) return;
+  function runQuery(overrideAssetId?: number) {
+    const id = overrideAssetId ?? Number(assetId);
+    if (!isLoggedIn || !id) return;
 
+    if (overrideAssetId) setAssetId(String(overrideAssetId));
     setIsLoading(true);
     setError(undefined);
-    getReconciliation(Number(assetId), from, to)
+    getReconciliation(id, from, to)
       .then(setData)
       .catch((e) => setError(e.message ?? 'Request failed'))
       .finally(() => setIsLoading(false));
@@ -349,7 +372,7 @@ export default function DashboardFinancialReconciliationScreen(): JSX.Element {
             />
           </div>
           <button
-            onClick={runQuery}
+            onClick={() => runQuery()}
             disabled={isLoading}
             className="px-4 py-2 rounded text-sm font-medium text-white"
             style={{ backgroundColor: '#2563eb' }}
@@ -381,7 +404,7 @@ export default function DashboardFinancialReconciliationScreen(): JSX.Element {
           </div>
 
           {/* Reconciliation Table */}
-          <ReconciliationTable data={data} />
+          <ReconciliationTable data={data} onAssetChange={(id) => runQuery(id)} />
         </>
       )}
     </div>
