@@ -7,6 +7,7 @@ const pages = [
   { path: '/dashboard/financial/history', title: 'History', description: 'Balance history over time' },
   { path: '/dashboard/financial/liquidity', title: 'Liquidity', description: 'Balance breakdown by type' },
   { path: '/dashboard/financial/history/expenses', title: 'Expenses', description: 'Revenue and cost details' },
+  { path: '/dashboard/financial/reconciliation', title: 'Reconciliation', description: 'Asset balance audit tool' },
 ];
 
 export default function DashboardFinancialScreen(): JSX.Element {
