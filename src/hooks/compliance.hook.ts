@@ -2,7 +2,7 @@ import { AccountType, Asset, Fiat, KycStatus, ResponseType, useApi } from '@dfx.
 import { CustodyOrderListEntry } from 'src/dto/order.dto';
 import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
 import { useMemo } from 'react';
-import { downloadFile, filenameDateFormat } from 'src/util/utils';
+import { downloadFile, downloadPdfFromString, filenameDateFormat } from 'src/util/utils';
 
 export interface RefundFeeData {
   dfx: number;
@@ -227,6 +227,7 @@ export interface KycLogInfo {
 export interface UserInfo {
   id: number;
   address: string;
+  ref?: string;
   role: string;
   status: string;
   created: string;
@@ -237,7 +238,10 @@ export interface TransactionInfo {
   uid: string;
   type?: string;
   sourceType: string;
+  inputAmount?: number;
+  inputAsset?: string;
   amountInChf?: number;
+  amountInEur?: number;
   amlCheck?: string;
   chargebackDate?: string;
   amlReason?: string;
@@ -440,6 +444,14 @@ export function useCompliance() {
     });
   }
 
+  async function downloadIpLogPdf(userDataId: number): Promise<void> {
+    const response = await call<{ pdfData: string }>({
+      url: `support/${userDataId}/ip-log-pdf`,
+      method: 'GET',
+    });
+    downloadPdfFromString(response.pdfData, `DFX_IP_Logs_${userDataId}_${filenameDateFormat()}.pdf`);
+  }
+
   async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
     return call<RecommendationGraph>({
       url: `support/recommendation-graph/${userDataId}`,
@@ -459,6 +471,7 @@ export function useCompliance() {
       getKycFileStats,
       getTransactionList,
       getRecommendationGraph,
+      downloadIpLogPdf,
       getCustodyOrders,
       approveCustodyOrder,
     }),
