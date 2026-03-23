@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import {
   BankDataInfo,
   BuyRouteInfo,
@@ -8,33 +9,54 @@ import {
 } from 'src/hooks/compliance.hook';
 import { boolBadge, formatDate, statusBadge } from 'src/util/compliance-helpers';
 
-export function UsersTable({ users }: { users: UserInfo[] }): JSX.Element {
+interface ColumnDef<T> {
+  header: string;
+  align?: 'left' | 'center' | 'right';
+  render: (item: T) => ReactNode;
+  className?: string;
+}
+
+function DataTable<T extends { id: number }>({
+  data,
+  columns,
+  emptyLabel,
+}: {
+  data: T[];
+  columns: ColumnDef<T>[];
+  emptyLabel: string;
+}): JSX.Element {
   return (
     <table className="w-full border-collapse">
       <thead className="sticky top-0 bg-dfxGray-300">
         <tr>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">ID</th>
-          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Address</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Role</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Status</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Created</th>
+          {columns.map((col) => (
+            <th
+              key={col.header}
+              className={`px-3 py-2 text-sm font-semibold text-dfxBlue-800 text-${col.align ?? 'center'}`}
+            >
+              {col.header}
+            </th>
+          ))}
         </tr>
       </thead>
       <tbody>
-        {users?.length > 0 ? (
-          users.map((user) => (
-            <tr key={user.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{user.id}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 font-mono text-left">{user.address}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{user.role}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{user.status}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{formatDate(user.created)}</td>
+        {data?.length > 0 ? (
+          data.map((item) => (
+            <tr key={item.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
+              {columns.map((col) => (
+                <td
+                  key={col.header}
+                  className={`px-3 py-2 text-sm text-dfxBlue-800 text-${col.align ?? 'center'} ${col.className ?? ''}`}
+                >
+                  {col.render(item)}
+                </td>
+              ))}
             </tr>
           ))
         ) : (
           <tr>
-            <td colSpan={5} className="px-3 py-4 text-center text-dfxGray-700">
-              No users
+            <td colSpan={columns.length} className="px-3 py-4 text-center text-dfxGray-700">
+              {emptyLabel}
             </td>
           </tr>
         )}
@@ -42,204 +64,94 @@ export function UsersTable({ users }: { users: UserInfo[] }): JSX.Element {
     </table>
   );
 }
+
+const usersColumns: ColumnDef<UserInfo>[] = [
+  { header: 'ID', render: (u) => u.id },
+  { header: 'Address', align: 'left', render: (u) => u.address, className: 'font-mono' },
+  { header: 'Role', render: (u) => u.role },
+  { header: 'Status', render: (u) => u.status },
+  { header: 'Created', render: (u) => formatDate(u.created) },
+];
+
+export function UsersTable({ users }: { users: UserInfo[] }): JSX.Element {
+  return <DataTable data={users} columns={usersColumns} emptyLabel="No users" />;
+}
+
+const kycStepsColumns: ColumnDef<KycStepInfo>[] = [
+  { header: 'ID', render: (s) => s.id },
+  { header: 'Name', align: 'left', render: (s) => s.name },
+  { header: 'Type', align: 'left', render: (s) => s.type || '-' },
+  { header: 'Status', render: (s) => statusBadge(s.status) },
+  { header: 'Sequence', render: (s) => s.sequenceNumber },
+  {
+    header: 'Comment',
+    align: 'left',
+    render: (s) => <span title={s.comment}>{s.comment || '-'}</span>,
+    className: 'max-w-xs truncate',
+  },
+  { header: 'Created', render: (s) => formatDate(s.created) },
+];
 
 export function KycStepsTable({ kycSteps }: { kycSteps: KycStepInfo[] }): JSX.Element {
-  return (
-    <table className="w-full border-collapse">
-      <thead className="sticky top-0 bg-dfxGray-300">
-        <tr>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">ID</th>
-          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Name</th>
-          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Type</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Status</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Sequence</th>
-          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Comment</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Created</th>
-        </tr>
-      </thead>
-      <tbody>
-        {kycSteps?.length > 0 ? (
-          kycSteps.map((step) => (
-            <tr key={step.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{step.id}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 text-left">{step.name}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 text-left">{step.type || '-'}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{statusBadge(step.status)}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{step.sequenceNumber}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 text-left max-w-xs truncate" title={step.comment}>
-                {step.comment || '-'}
-              </td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{formatDate(step.created)}</td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan={7} className="px-3 py-4 text-center text-dfxGray-700">
-              No KYC steps
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  );
+  return <DataTable data={kycSteps} columns={kycStepsColumns} emptyLabel="No KYC steps" />;
 }
+
+const kycLogsColumns: ColumnDef<KycLogInfo>[] = [
+  { header: 'Date', render: (l) => formatDate(l.created) },
+  { header: 'Type', align: 'left', render: (l) => l.type },
+  { header: 'Comment', align: 'left', render: (l) => l.comment || '-' },
+];
 
 export function KycLogsTable({ kycLogs }: { kycLogs: KycLogInfo[] }): JSX.Element {
-  return (
-    <table className="w-full border-collapse">
-      <thead className="sticky top-0 bg-dfxGray-300">
-        <tr>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Date</th>
-          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Type</th>
-          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Comment</th>
-        </tr>
-      </thead>
-      <tbody>
-        {kycLogs?.length > 0 ? (
-          kycLogs.map((log) => (
-            <tr key={log.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{formatDate(log.created)}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 text-left">{log.type}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 text-left">{log.comment || '-'}</td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan={3} className="px-3 py-4 text-center text-dfxGray-700">
-              No KYC logs
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  );
+  return <DataTable data={kycLogs} columns={kycLogsColumns} emptyLabel="No KYC logs" />;
 }
+
+const bankDatasColumns: ColumnDef<BankDataInfo>[] = [
+  { header: 'ID', render: (b) => b.id },
+  { header: 'IBAN', align: 'left', render: (b) => b.iban, className: 'font-mono' },
+  { header: 'Name', align: 'left', render: (b) => b.name },
+  { header: 'Type', render: (b) => b.type || '-' },
+  { header: 'Status', render: (b) => (b.status ? statusBadge(b.status) : '-') },
+  { header: 'Approved', render: (b) => boolBadge(b.approved) },
+  { header: 'Manual', render: (b) => (b.manualApproved == null ? '-' : boolBadge(b.manualApproved)) },
+  { header: 'Active', render: (b) => boolBadge(b.active) },
+  {
+    header: 'Comment',
+    align: 'left',
+    render: (b) => <span title={b.comment}>{b.comment || '-'}</span>,
+    className: 'max-w-xs truncate',
+  },
+  { header: 'Created', render: (b) => formatDate(b.created) },
+];
 
 export function BankDatasTable({ bankDatas }: { bankDatas: BankDataInfo[] }): JSX.Element {
-  return (
-    <table className="w-full border-collapse">
-      <thead className="sticky top-0 bg-dfxGray-300">
-        <tr>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">ID</th>
-          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">IBAN</th>
-          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Name</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Type</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Status</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Approved</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Manual</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Active</th>
-          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Comment</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Created</th>
-        </tr>
-      </thead>
-      <tbody>
-        {bankDatas?.length > 0 ? (
-          bankDatas.map((bankData) => (
-            <tr key={bankData.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{bankData.id}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 font-mono text-left">{bankData.iban}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 text-left">{bankData.name}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{bankData.type || '-'}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">
-                {bankData.status ? statusBadge(bankData.status) : '-'}
-              </td>
-              <td className="px-3 py-2 text-sm">{boolBadge(bankData.approved)}</td>
-              <td className="px-3 py-2 text-sm">
-                {bankData.manualApproved != null ? boolBadge(bankData.manualApproved) : '-'}
-              </td>
-              <td className="px-3 py-2 text-sm">{boolBadge(bankData.active)}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 text-left max-w-xs truncate" title={bankData.comment}>
-                {bankData.comment || '-'}
-              </td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{formatDate(bankData.created)}</td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan={10} className="px-3 py-4 text-center text-dfxGray-700">
-              No bank data
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  );
+  return <DataTable data={bankDatas} columns={bankDatasColumns} emptyLabel="No bank data" />;
 }
+
+const buyRoutesColumns: ColumnDef<BuyRouteInfo>[] = [
+  { header: 'ID', render: (b) => b.id },
+  { header: 'IBAN', align: 'left', render: (b) => b.iban || '-', className: 'font-mono' },
+  { header: 'Bank Usage', render: (b) => b.bankUsage, className: 'font-mono' },
+  { header: 'Asset', render: (b) => b.assetName },
+  { header: 'Blockchain', align: 'left', render: (b) => b.blockchain },
+  { header: 'Volume', align: 'right', render: (b) => b.volume?.toFixed(2) },
+  { header: 'Active', render: (b) => boolBadge(b.active) },
+  { header: 'Created', render: (b) => formatDate(b.created) },
+];
 
 export function BuyRoutesTable({ buyRoutes }: { buyRoutes: BuyRouteInfo[] }): JSX.Element {
-  return (
-    <table className="w-full border-collapse">
-      <thead className="sticky top-0 bg-dfxGray-300">
-        <tr>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">ID</th>
-          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">IBAN</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Bank Usage</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Asset</th>
-          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">Blockchain</th>
-          <th className="px-3 py-2 text-right text-sm font-semibold text-dfxBlue-800">Volume</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Active</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Created</th>
-        </tr>
-      </thead>
-      <tbody>
-        {buyRoutes?.length > 0 ? (
-          buyRoutes.map((buy) => (
-            <tr key={buy.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{buy.id}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 font-mono text-left">{buy.iban || '-'}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 font-mono">{buy.bankUsage}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{buy.assetName}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 text-left">{buy.blockchain}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 text-right">{buy.volume?.toFixed(2)}</td>
-              <td className="px-3 py-2 text-sm">{boolBadge(buy.active)}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{formatDate(buy.created)}</td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan={8} className="px-3 py-4 text-center text-dfxGray-700">
-              No buy routes
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  );
+  return <DataTable data={buyRoutes} columns={buyRoutesColumns} emptyLabel="No buy routes" />;
 }
 
+const sellRoutesColumns: ColumnDef<SellRouteInfo>[] = [
+  { header: 'ID', render: (s) => s.id },
+  { header: 'IBAN', align: 'left', render: (s) => s.iban, className: 'font-mono' },
+  { header: 'Fiat', render: (s) => s.fiatName || '-' },
+  { header: 'Volume', align: 'right', render: (s) => s.volume?.toFixed(2) },
+  { header: 'Active', render: (s) => boolBadge(s.active) },
+  { header: 'Created', render: (s) => formatDate(s.created) },
+];
+
 export function SellRoutesTable({ sellRoutes }: { sellRoutes: SellRouteInfo[] }): JSX.Element {
-  return (
-    <table className="w-full border-collapse">
-      <thead className="sticky top-0 bg-dfxGray-300">
-        <tr>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">ID</th>
-          <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">IBAN</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Fiat</th>
-          <th className="px-3 py-2 text-right text-sm font-semibold text-dfxBlue-800">Volume</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Active</th>
-          <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Created</th>
-        </tr>
-      </thead>
-      <tbody>
-        {sellRoutes?.length > 0 ? (
-          sellRoutes.map((sell) => (
-            <tr key={sell.id} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{sell.id}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 font-mono text-left">{sell.iban}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{sell.fiatName || '-'}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800 text-right">{sell.volume?.toFixed(2)}</td>
-              <td className="px-3 py-2 text-sm">{boolBadge(sell.active)}</td>
-              <td className="px-3 py-2 text-sm text-dfxBlue-800">{formatDate(sell.created)}</td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan={6} className="px-3 py-4 text-center text-dfxGray-700">
-              No sell routes
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  );
+  return <DataTable data={sellRoutes} columns={sellRoutesColumns} emptyLabel="No sell routes" />;
 }
