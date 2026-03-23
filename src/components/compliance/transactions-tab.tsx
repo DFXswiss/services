@@ -92,7 +92,12 @@ export function TransactionsTable({
               <Fragment key={tx.id}>
                 <tr className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
                   <td className="px-3 py-2 text-sm text-dfxBlue-800">{tx.id}</td>
-                  <td className="px-3 py-2 text-sm text-dfxBlue-800 font-mono text-xs">{tx.uid}</td>
+                  <td
+                    className="px-3 py-2 text-sm text-dfxBlue-800 font-mono text-xs cursor-pointer text-dfxBlue-300 underline hover:text-dfxBlue-800"
+                    onClick={() => handleUidClick(tx.uid)}
+                  >
+                    {tx.uid}
+                  </td>
                   <td className="px-3 py-2 text-sm text-dfxBlue-800 text-left">{tx.type || '-'}</td>
                   <td className="px-3 py-2 text-sm text-dfxBlue-800 text-left">{tx.sourceType}</td>
                   <td className="px-3 py-2 text-sm text-dfxBlue-800 text-right">{tx.amountInChf?.toFixed(2) || '-'}</td>
@@ -192,7 +197,7 @@ export function TransactionsTable({
                       ) : txDetailError && !txDetailCache.has(tx.uid) ? (
                         <p className="text-primary-red text-sm">{txDetailError}</p>
                       ) : txDetailCache.has(tx.uid) ? (
-                        <TransactionDetailRows tx={txDetailCache.get(tx.uid)!} />
+                        <TransactionDetailRows tx={txDetailCache.get(tx.uid) as Transaction} />
                       ) : null}
                     </td>
                   </tr>

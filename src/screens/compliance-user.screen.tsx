@@ -136,14 +136,18 @@ export default function ComplianceUserScreen(): JSX.Element {
             />
 
             <div className="w-1/3 min-w-[300px] flex flex-col gap-4">
-              <RecommendationPanel kycSteps={data.kycSteps} userDataId={userDataId!} navigate={navigate} />
+              <RecommendationPanel kycSteps={data.kycSteps} userDataId={userDataId ?? ''} navigate={navigate} />
               <KycFilesPanel
                 kycFiles={data.kycFiles}
                 label={translate('screens/compliance', 'KYC Files')}
                 onOpenFile={openFile}
               />
               <IpLogsPanel ipLogs={data.ipLogs} />
-              <SupportIssuesPanel supportIssues={data.supportIssues} userDataId={userDataId!} navigate={navigate} />
+              <SupportIssuesPanel
+                supportIssues={data.supportIssues}
+                userDataId={userDataId ?? ''}
+                navigate={navigate}
+              />
             </div>
 
             <FilePreviewPanel
