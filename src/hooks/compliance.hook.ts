@@ -22,7 +22,7 @@ export interface RefundBankDetails {
 }
 
 export interface TransactionRefundData {
-  expiryDate: Date;
+  expiryDate: string;
   fee: RefundFeeData;
   refundAmount: number;
   refundAsset: Asset | Fiat;
@@ -82,12 +82,81 @@ export interface BankTxSearchResult {
   iban?: string;
 }
 
+export interface BankTxInfo {
+  id: number;
+  transactionId?: number;
+  accountServiceRef: string;
+  amount: number;
+  currency: string;
+  type: string;
+  name?: string;
+  iban?: string;
+  remittanceInfo?: string;
+}
+
+export interface IpLogInfo {
+  id: number;
+  ip: string;
+  country?: string;
+  url: string;
+  result: boolean;
+  created: string;
+}
+
+export interface SupportMessageInfo {
+  author: string;
+  message?: string;
+  created: string;
+}
+
+export interface LimitRequestInfo {
+  limit: number;
+  acceptedLimit?: number;
+  decision?: string;
+  fundOrigin: string;
+}
+
+export interface SupportIssueInfo {
+  id: number;
+  uid: string;
+  type: string;
+  state: string;
+  reason: string;
+  name: string;
+  clerk?: string;
+  department?: string;
+  information?: string;
+  messages: SupportMessageInfo[];
+  transaction?: Pick<TransactionInfo, 'id' | 'uid' | 'type' | 'sourceType' | 'amountInChf' | 'amlCheck'>;
+  limitRequest?: LimitRequestInfo;
+  created: string;
+}
+
+export interface CryptoInputInfo {
+  id: number;
+  transactionId?: number;
+  inTxId: string;
+  inTxExplorerUrl?: string;
+  status?: string;
+  amount: number;
+  assetName?: string;
+  blockchain?: string;
+  senderAddresses?: string;
+  returnTxId?: string;
+  returnTxExplorerUrl?: string;
+  purpose?: string;
+}
+
 export interface ComplianceUserData {
-  userData: object;
+  userData: Record<string, unknown>;
   kycFiles: KycFile[];
   kycSteps: KycStepInfo[];
   kycLogs: KycLogInfo[];
   transactions: TransactionInfo[];
+  bankTxs: BankTxInfo[];
+  cryptoInputs: CryptoInputInfo[];
+  ipLogs: IpLogInfo[];
+  supportIssues: SupportIssueInfo[];
   users: UserInfo[];
   bankDatas: BankDataInfo[];
   buyRoutes: BuyRouteInfo[];
@@ -100,7 +169,7 @@ export interface RecommendationGraphNode {
   surname?: string;
   kycStatus?: string;
   kycLevel?: number;
-  tradeApprovalDate?: Date;
+  tradeApprovalDate?: string;
 }
 
 export interface RecommendationGraphEdge {
@@ -110,8 +179,8 @@ export interface RecommendationGraphEdge {
   method: string;
   type: string;
   isConfirmed?: boolean;
-  confirmationDate?: Date;
-  created: Date;
+  confirmationDate?: string;
+  created: string;
 }
 
 export interface RecommendationGraph {
@@ -130,8 +199,8 @@ export interface RecommendationEntry {
   id: number;
   recommended: RecommendationUserInfo;
   isConfirmed?: boolean;
-  confirmationDate?: Date;
-  created: Date;
+  confirmationDate?: string;
+  created: string;
 }
 
 export interface KycStepInfo {
@@ -145,14 +214,14 @@ export interface KycStepInfo {
   recommender?: RecommendationUserInfo;
   recommended?: RecommendationUserInfo;
   allRecommendations?: RecommendationEntry[];
-  created: Date;
+  created: string;
 }
 
 export interface KycLogInfo {
   id: number;
   type: string;
   comment?: string;
-  created: Date;
+  created: string;
 }
 
 export interface UserInfo {
@@ -160,7 +229,7 @@ export interface UserInfo {
   address: string;
   role: string;
   status: string;
-  created: Date;
+  created: string;
 }
 
 export interface TransactionInfo {
@@ -170,23 +239,33 @@ export interface TransactionInfo {
   sourceType: string;
   amountInChf?: number;
   amlCheck?: string;
-  created: Date;
+  chargebackDate?: string;
+  amlReason?: string;
+  created: string;
 }
 
 export interface BankDataInfo {
   id: number;
   iban: string;
   name: string;
+  type?: string;
+  status?: string;
   approved: boolean;
+  manualApproved?: boolean;
+  active: boolean;
+  comment?: string;
+  created: string;
 }
 
 export interface BuyRouteInfo {
   id: number;
+  iban?: string;
   bankUsage: string;
   assetName: string;
   blockchain: string;
   volume: number;
   active: boolean;
+  created: string;
 }
 
 export interface SellRouteInfo {
@@ -194,6 +273,8 @@ export interface SellRouteInfo {
   iban: string;
   fiatName?: string;
   volume: number;
+  active: boolean;
+  created: string;
 }
 
 export interface KycFile {
