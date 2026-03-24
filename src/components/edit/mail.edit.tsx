@@ -71,9 +71,9 @@ export function MailEdit({
 
   if (showConfirmation && pendingEmail) {
     return (
-      <StyledVerticalStack gap={6}>
-        <p className="text-dfxGray-700">{translate('screens/kyc', 'Is this email address correct?')}</p>
-        <p className="text-lg font-bold text-dfxBlue-800 break-all">{pendingEmail}</p>
+      <StyledVerticalStack gap={6} center>
+        <p className="text-dfxGray-700 text-center">{translate('screens/kyc', 'Is this email address correct?')}</p>
+        <p className="text-lg font-bold text-dfxBlue-800 break-all text-center">{pendingEmail}</p>
 
         <StyledHorizontalStack gap={4}>
           <StyledButton
