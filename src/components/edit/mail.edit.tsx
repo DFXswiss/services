@@ -10,6 +10,7 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSettingsContext } from '../../contexts/settings.context';
 
@@ -51,8 +52,16 @@ export function MailEdit({
   const { updateMail, isUserUpdating } = useUserContext();
   const { translate, translateError } = useSettingsContext();
 
-  async function saveUser({ email }: FormData): Promise<void> {
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string>();
+
+  function showMailConfirmation({ email }: FormData): void {
     if (!email || email.length === 0) return onSubmit(email);
+    setPendingEmail(email);
+    setShowConfirmation(true);
+  }
+
+  async function saveUser(email: string): Promise<void> {
     return updateMail(email).then(() => onSubmit(email));
   }
 
@@ -60,8 +69,40 @@ export function MailEdit({
     email: [!isOptional && Validations.Required, Validations.Mail],
   });
 
+  if (showConfirmation && pendingEmail) {
+    return (
+      <StyledVerticalStack gap={6}>
+        <p className="text-dfxGray-700">{translate('screens/kyc', 'Is this email address correct?')}</p>
+        <p className="text-lg font-bold text-dfxBlue-800 break-all">{pendingEmail}</p>
+
+        <StyledHorizontalStack gap={4}>
+          <StyledButton
+            label={translate('general/actions', 'Change')}
+            onClick={() => setShowConfirmation(false)}
+            color={StyledButtonColor.STURDY_WHITE}
+            width={StyledButtonWidth.FULL}
+            caps
+          />
+          <StyledButton
+            label={translate('general/actions', 'Confirm')}
+            onClick={() => saveUser(pendingEmail)}
+            isLoading={isUserUpdating}
+            width={StyledButtonWidth.FULL}
+            caps
+          />
+        </StyledHorizontalStack>
+      </StyledVerticalStack>
+    );
+  }
+
   return (
-    <Form control={control} errors={errors} rules={rules} onSubmit={handleSubmit(saveUser)} translate={translateError}>
+    <Form
+      control={control}
+      errors={errors}
+      rules={rules}
+      onSubmit={handleSubmit(showMailConfirmation)}
+      translate={translateError}
+    >
       <StyledVerticalStack gap={6}>
         {infoText && infoTextPlacement === MailEditInfoTextPlacement.ABOVE_INPUT && (
           <InfoTextElement text={infoText} iconColor={infoTextIconColor} />
@@ -90,7 +131,7 @@ export function MailEdit({
             type="submit"
             disabled={!isValid}
             label={isOptional ? translate('general/actions', 'Finish') : translate('general/actions', 'Save')}
-            onClick={handleSubmit(saveUser)}
+            onClick={handleSubmit(showMailConfirmation)}
             isLoading={isUserUpdating}
             width={StyledButtonWidth.FULL}
             caps
