@@ -68,6 +68,7 @@ function DataTable<T extends { id: number }>({
 const usersColumns: ColumnDef<UserInfo>[] = [
   { header: 'ID', render: (u) => u.id },
   { header: 'Address', align: 'left', render: (u) => u.address, className: 'font-mono' },
+  { header: 'Ref', render: (u) => u.ref || '-' },
   { header: 'Role', render: (u) => u.role },
   { header: 'Status', render: (u) => u.status },
   { header: 'Created', render: (u) => formatDate(u.created) },

@@ -142,7 +142,20 @@ export function UserDataPanel({ userData, keyLabel, valueLabel, titleLabel }: Us
               return (
                 <tr key={key} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
                   <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 font-medium">{key}</td>
-                  <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 break-all">{valueString}</td>
+                  <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 break-all">
+                    {key === 'kycHash' && valueString !== '-' ? (
+                      <a
+                        href={`/kyc?code=${valueString}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-dfxBlue-300 underline hover:text-dfxBlue-800"
+                      >
+                        {valueString}
+                      </a>
+                    ) : (
+                      valueString
+                    )}
+                  </td>
                 </tr>
               );
             })}
