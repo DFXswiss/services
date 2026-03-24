@@ -1,14 +1,44 @@
-import { IpLogInfo } from 'src/hooks/compliance.hook';
+import { useState } from 'react';
+import { IpLogInfo, useCompliance } from 'src/hooks/compliance.hook';
 import { boolBadge, formatDateTimeShort } from 'src/util/compliance-helpers';
 
 interface IpLogsPanelProps {
   ipLogs: IpLogInfo[];
+  userDataId: number;
 }
 
-export function IpLogsPanel({ ipLogs }: IpLogsPanelProps): JSX.Element {
+export function IpLogsPanel({ ipLogs, userDataId }: IpLogsPanelProps): JSX.Element {
+  const { downloadIpLogPdf } = useCompliance();
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [error, setError] = useState<string>();
+
+  async function handleDownloadPdf(): Promise<void> {
+    setIsDownloading(true);
+    setError(undefined);
+    try {
+      await downloadIpLogPdf(userDataId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'PDF download failed');
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
   return (
     <div className="border-t border-dfxGray-500 pt-4">
-      <h2 className="text-dfxGray-700 mb-2">IP Logs ({ipLogs?.length || 0})</h2>
+      <div className="relative mb-2">
+        <h2 className="text-dfxGray-700 text-center">IP Logs ({ipLogs?.length || 0})</h2>
+        {ipLogs?.length > 0 && (
+          <button
+            className="absolute right-0 top-0 text-xs text-dfxBlue-300 underline hover:text-dfxBlue-800 disabled:opacity-50 disabled:no-underline"
+            onClick={handleDownloadPdf}
+            disabled={isDownloading}
+          >
+            {isDownloading ? 'Downloading...' : 'PDF'}
+          </button>
+        )}
+      </div>
+      {error && <p className="text-xs text-primary-red mb-1">{error}</p>}
       <div className="bg-white rounded-lg shadow-sm max-h-[35vh] overflow-auto scroll-shadow">
         {ipLogs?.length > 0 ? (
           <table className="w-full border-collapse">

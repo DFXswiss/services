@@ -142,7 +142,7 @@ export default function ComplianceUserScreen(): JSX.Element {
                 label={translate('screens/compliance', 'KYC Files')}
                 onOpenFile={openFile}
               />
-              <IpLogsPanel ipLogs={data.ipLogs} />
+              <IpLogsPanel ipLogs={data.ipLogs} userDataId={+(userDataId ?? '0')} />
               <SupportIssuesPanel
                 supportIssues={data.supportIssues}
                 userDataId={userDataId ?? ''}
