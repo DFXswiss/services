@@ -4,6 +4,7 @@ import {
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
+  StyledHorizontalStack,
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
@@ -30,6 +31,8 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
 
   const [isLoading, setIsLoading] = useState(false);
   const [mailSent, setMailSent] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingMail, setPendingMail] = useState<string>();
   const [error, setError] = useState<string>();
 
   const mail = new URLSearchParams(search).get('user') || undefined;
@@ -50,7 +53,12 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
     mail: [Validations.Required, Validations.Mail],
   });
 
-  async function submit({ mail }: FormData): Promise<void> {
+  function showMailConfirmation({ mail }: FormData): void {
+    setPendingMail(mail);
+    setShowConfirmation(true);
+  }
+
+  async function submit(mail: string): Promise<void> {
     setIsLoading(true);
     setError(undefined);
     signInWithMail(mail, redirectUri, recommendationCode)
@@ -65,7 +73,13 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
   }
 
   return (
-    <Form control={control} rules={rules} errors={errors} onSubmit={handleSubmit(submit)} translate={translateError}>
+    <Form
+      control={control}
+      rules={rules}
+      errors={errors}
+      onSubmit={handleSubmit(showMailConfirmation)}
+      translate={translateError}
+    >
       <StyledVerticalStack gap={6} full center>
         {mailSent ? (
           <>
@@ -79,6 +93,28 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
               width={StyledButtonWidth.MIN}
               color={StyledButtonColor.STURDY_WHITE}
             />
+          </>
+        ) : showConfirmation && pendingMail ? (
+          <>
+            <p className="text-dfxGray-700">{translate('screens/kyc', 'Is this email address correct?')}</p>
+            <p className="text-lg font-bold text-dfxBlue-800 break-all">{pendingMail}</p>
+
+            <StyledHorizontalStack gap={4} spanAcross>
+              <StyledButton
+                label={translate('general/actions', 'Change')}
+                onClick={() => setShowConfirmation(false)}
+                color={StyledButtonColor.STURDY_WHITE}
+                width={StyledButtonWidth.FULL}
+              />
+              <StyledButton
+                label={translate('general/actions', 'Confirm')}
+                onClick={() => submit(pendingMail)}
+                width={StyledButtonWidth.FULL}
+                isLoading={isLoading}
+              />
+            </StyledHorizontalStack>
+
+            {error && <ConnectError error={error} />}
           </>
         ) : (
           <>
@@ -97,10 +133,9 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
               type="submit"
               disabled={!isValid}
               label={translate('general/actions', 'Next')}
-              onClick={handleSubmit(submit)}
+              onClick={handleSubmit(showMailConfirmation)}
               width={StyledButtonWidth.MIN}
               className="self-center"
-              isLoading={isLoading}
             />
 
             {error && <ConnectError error={error} />}

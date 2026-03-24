@@ -542,6 +542,8 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack, showLinkHint
   const { setContactData } = useKyc();
 
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingData, setPendingData] = useState<KycContactData>();
   const [error, setError] = useState<string>();
 
   const {
@@ -550,7 +552,12 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack, showLinkHint
     formState: { isValid, errors },
   } = useForm<KycContactData>({ mode: 'onTouched' });
 
-  function onSubmit(data: KycContactData) {
+  function showMailConfirmation(data: KycContactData): void {
+    setPendingData(data);
+    setShowConfirmation(true);
+  }
+
+  function onSubmit(data: KycContactData): void {
     if (!step.session) return;
 
     setIsUpdating(true);
@@ -576,12 +583,32 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack, showLinkHint
         <div>
           <ErrorHint message={error} onBack={onBack} />
         </div>
+      ) : showConfirmation && pendingData ? (
+        <StyledVerticalStack gap={6} full center>
+          <p className="text-dfxGray-700">{translate('screens/kyc', 'Is this email address correct?')}</p>
+          <p className="text-lg font-bold text-dfxBlue-800 break-all">{pendingData.mail}</p>
+
+          <StyledHorizontalStack gap={4} spanAcross>
+            <StyledButton
+              label={translate('general/actions', 'Change')}
+              onClick={() => setShowConfirmation(false)}
+              color={StyledButtonColor.STURDY_WHITE}
+              width={StyledButtonWidth.FULL}
+            />
+            <StyledButton
+              label={translate('general/actions', 'Confirm')}
+              onClick={() => onSubmit(pendingData)}
+              width={StyledButtonWidth.FULL}
+              isLoading={isUpdating || isLoading}
+            />
+          </StyledHorizontalStack>
+        </StyledVerticalStack>
       ) : (
         <Form
           control={control}
           rules={rules}
           errors={errors}
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(showMailConfirmation)}
           translate={translateError}
         >
           <StyledVerticalStack gap={6} full center>
@@ -606,7 +633,7 @@ function ContactData({ code, mode, isLoading, step, onDone, onBack, showLinkHint
             <StyledButton
               type="submit"
               label={translate('general/actions', 'Next')}
-              onClick={handleSubmit(onSubmit)}
+              onClick={handleSubmit(showMailConfirmation)}
               width={StyledButtonWidth.FULL}
               disabled={!isValid}
               isLoading={isUpdating || isLoading}
