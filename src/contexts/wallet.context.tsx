@@ -228,7 +228,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
 
         // Set credentials BEFORE async call to prevent race conditions (React StrictMode double-render)
         lastAppliedCredentials.current = { address: appParams.address, signature: appParams.signature };
-        await createSession(appParams.address, appParams.signature, appParams.key);
+        await createSession(appParams.address, appParams.signature, appParams.pubkey);
         return true;
       } else if (appParams.session && Utils.isJwt(appParams.session)) {
         // Skip if same session was already applied
