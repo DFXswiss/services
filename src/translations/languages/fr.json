@@ -672,6 +672,7 @@
     "Refund amount": "Montant du remboursement",
     "Fee": "Frais",
     "Refund amount is the transaction amount minus the fee.": "Le montant du remboursement correspond au montant de la transaction moins les frais.",
+    "This IBAN cannot be used for refunds. Please select a personal bank account.": "Cet IBAN ne peut pas être utilisé pour les remboursements. Veuillez sélectionner un compte bancaire personnel.",
 
     "Type": "Type",
     "Buy": "Achat",

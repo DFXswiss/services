@@ -672,6 +672,7 @@
     "Refund amount": "Rückerstattungsbetrag",
     "Fee": "Gebühr",
     "Refund amount is the transaction amount minus the fee.": "Der Rückerstattungsbetrag ist der Transaktionsbetrag minus der Gebühr.",
+    "This IBAN cannot be used for refunds. Please select a personal bank account.": "Diese IBAN kann nicht für Rückerstattungen verwendet werden. Bitte wähle ein persönliches Bankkonto.",
 
     "Type": "Typ",
     "Buy": "Kauf",
