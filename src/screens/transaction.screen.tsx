@@ -390,7 +390,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
 
       const formTarget = isBuy ? (data.iban ?? '') : data.address?.address;
 
-      const refundName = refundDetails?.bankDetails?.name ?? data.creditorName;
+      const refundName = !refundDetails?.refundTarget ? data.creditorName : (refundDetails?.bankDetails?.name ?? data.creditorName);
 
       await setTransactionRefundTarget(transaction.id, {
         refundTarget: !isBuy || (isBankRefund && !refundDetails?.refundTarget) ? formTarget : undefined,
@@ -435,7 +435,10 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const rules = Utils.createRules({
     address: !isBuy ? Validations.Required : undefined,
     iban: !isBankRefund || refundDetails?.refundTarget ? undefined : Validations.Required,
-    creditorName: !isBankRefund || refundDetails?.bankDetails?.name?.trim() ? undefined : Validations.Required,
+    creditorName:
+      !isBankRefund || (refundDetails?.bankDetails?.name?.trim() && refundDetails?.refundTarget)
+        ? undefined
+        : Validations.Required,
     creditorStreet: isBankRefund ? Validations.Required : undefined,
     creditorZip: isBankRefund ? Validations.Required : undefined,
     creditorCity: isBankRefund ? Validations.Required : undefined,
@@ -545,8 +548,8 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
                   full
                 />
               )}
-              {/* Name input only when no fixed bankDetails.name */}
-              {!refundDetails.bankDetails?.name && (
+              {/* Name input only when no fixed bankDetails.name OR when IBAN override needed */}
+              {(!refundDetails.bankDetails?.name || !refundDetails.refundTarget) && (
                 <StyledInput
                   name="creditorName"
                   autocomplete="name"
