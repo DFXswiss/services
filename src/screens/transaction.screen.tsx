@@ -328,7 +328,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const [refundDetails, setRefundDetails] = useState<RefundDetails>();
   const [transaction, setTransaction] = useState<Transaction>();
   const [addresses, setAddresses] = useState<UserAddress[]>();
-  const [showIbanOverride, setShowIbanOverride] = useState(false);
   const [localError, setLocalError] = useState<string>();
 
   const isBuy = transaction?.type === TransactionType.BUY;
@@ -391,10 +390,10 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
 
       const formTarget = isBuy ? (data.iban ?? '') : data.address?.address;
 
-      const refundName = showIbanOverride ? data.creditorName : (refundDetails?.bankDetails?.name ?? data.creditorName);
+      const refundName = !refundDetails?.refundTarget ? data.creditorName : (refundDetails?.bankDetails?.name ?? data.creditorName);
 
       await setTransactionRefundTarget(transaction.id, {
-        refundTarget: showIbanOverride || !isBuy ? formTarget : undefined,
+        refundTarget: !isBuy || (isBankRefund && !refundDetails?.refundTarget) ? formTarget : undefined,
         creditorData: isBankRefund
           ? {
               name: refundName,
@@ -411,12 +410,11 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     } catch (e) {
       const error = e as ApiError;
       if (error.message?.includes('MultiAccountIban')) {
-        setShowIbanOverride(true);
         // Use local error to keep the form visible (setError would replace the entire form)
         setLocalError(
           translate(
             'screens/payment',
-            'The original IBAN cannot be used for refunds. Please select a personal bank account.',
+            'This IBAN cannot be used for refunds. Please select a personal bank account.',
           ),
         );
       } else {
@@ -436,9 +434,9 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   // - creditorStreet/zip/city/country: only required for bank refunds
   const rules = Utils.createRules({
     address: !isBuy ? Validations.Required : undefined,
-    iban: !isBankRefund || (refundDetails?.refundTarget && !showIbanOverride) ? undefined : Validations.Required,
+    iban: !isBankRefund || refundDetails?.refundTarget ? undefined : Validations.Required,
     creditorName:
-      !isBankRefund || (refundDetails?.bankDetails?.name?.trim() && !showIbanOverride)
+      !isBankRefund || (refundDetails?.bankDetails?.name?.trim() && refundDetails?.refundTarget)
         ? undefined
         : Validations.Required,
     creditorStreet: isBankRefund ? Validations.Required : undefined,
@@ -534,8 +532,8 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
           )}
           {transaction.inputPaymentMethod !== FiatPaymentMethod.CARD && isBuy && (
             <>
-              {/* IBAN selection only when no fixed refundTarget OR when override needed (MultiAccountIban error) */}
-              {(!refundDetails.refundTarget || showIbanOverride) && bankAccounts && (
+              {/* IBAN selection only when no fixed refundTarget */}
+              {!refundDetails.refundTarget && bankAccounts && (
                 <StyledDropdown<string>
                   rootRef={rootRef}
                   name="iban"
@@ -550,8 +548,8 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
                   full
                 />
               )}
-              {/* Name input only when no fixed bankDetails.name OR when override needed (MultiAccountIban error) */}
-              {(!refundDetails.bankDetails?.name || showIbanOverride) && (
+              {/* Name input only when no fixed bankDetails.name OR when IBAN override needed */}
+              {(!refundDetails.bankDetails?.name || !refundDetails.refundTarget) && (
                 <StyledInput
                   name="creditorName"
                   autocomplete="name"

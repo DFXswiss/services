@@ -57,7 +57,8 @@
     "Download sticker": "Aufkleber herunterladen",
     "Authenticate": "Authentifizieren",
     "Confirm": "Bestätigen",
-    "Reject": "Ablehnen"
+    "Reject": "Ablehnen",
+    "Change": "Ändern"
   },
   "general/errors": {
     "Mandatory field": "Pflichtfeld",
@@ -78,6 +79,7 @@
     "iban": "Dies ist eine Multi-Account-IBAN und kann nicht als persönliches Konto hinzugefügt werden. Bitte öffne ein Support-Ticket auf <1></1> und füge die Bestätigung der Banktransaktion als PDF bei."
   },
   "screens/kyc": {
+    "Is this email address correct?": "Ist diese E-Mail-Adresse korrekt?",
     "DFX KYC": "DFX KYC",
     "KYC level": "KYC-Level",
     "Trading limit": "Trading-Limit",
@@ -670,6 +672,7 @@
     "Refund amount": "Rückerstattungsbetrag",
     "Fee": "Gebühr",
     "Refund amount is the transaction amount minus the fee.": "Der Rückerstattungsbetrag ist der Transaktionsbetrag minus der Gebühr.",
+    "This IBAN cannot be used for refunds. Please select a personal bank account.": "Diese IBAN kann nicht für Rückerstattungen verwendet werden. Bitte wähle ein persönliches Bankkonto.",
 
     "Type": "Typ",
     "Buy": "Kauf",

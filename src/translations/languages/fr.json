@@ -57,7 +57,8 @@
     "Download sticker": "Télécharger l'autocollant",
     "Authenticate": "Authentifier",
     "Confirm": "Confirmer",
-    "Reject": "Rejeter"
+    "Reject": "Rejeter",
+    "Change": "Modifier"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -78,6 +79,7 @@
     "iban": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez ouvrir un ticket de support sur <1></1> et joindre la confirmation de la transaction bancaire au format PDF."
   },
   "screens/kyc": {
+    "Is this email address correct?": "Cette adresse e-mail est-elle correcte ?",
     "DFX KYC": "DFX KYC",
     "KYC level": "KYC level",
     "Trading limit": "Limite de transactions",
@@ -670,6 +672,7 @@
     "Refund amount": "Montant du remboursement",
     "Fee": "Frais",
     "Refund amount is the transaction amount minus the fee.": "Le montant du remboursement correspond au montant de la transaction moins les frais.",
+    "This IBAN cannot be used for refunds. Please select a personal bank account.": "Cet IBAN ne peut pas être utilisé pour les remboursements. Veuillez sélectionner un compte bancaire personnel.",
 
     "Type": "Type",
     "Buy": "Achat",
