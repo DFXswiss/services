@@ -1,4 +1,5 @@
 import { useSessionContext } from '@dfx.swiss/react';
+import { todayAsString } from 'src/util/compliance-helpers';
 import {
   DfxIcon,
   IconColor,
@@ -29,7 +30,7 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
   const [data, setData] = useState<TransactionListEntry[]>([]);
 
   // Filter state
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayAsString();
   const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const [createdFrom, setCreatedFrom] = useState<string>(threeDaysAgo);
   const [createdTo, setCreatedTo] = useState<string>(today);
@@ -94,7 +95,7 @@ export default function ComplianceTransactionListScreen(): JSX.Element {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `transaction-list-${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `transaction-list-${todayAsString()}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   }

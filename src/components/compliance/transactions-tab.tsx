@@ -1,13 +1,14 @@
 import { Transaction, useTransaction } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Fragment, useState } from 'react';
-import { BankTxInfo, CryptoInputInfo, TransactionInfo } from 'src/hooks/compliance.hook';
+import { BankTxInfo, CryptoInputInfo, TransactionInfo, useCompliance } from 'src/hooks/compliance.hook';
 import { DetailRow, TransactionDetailRows, formatDate, statusBadge } from 'src/util/compliance-helpers';
 
 interface TransactionsTableProps {
   transactions: TransactionInfo[];
   bankTxs: BankTxInfo[];
   cryptoInputs: CryptoInputInfo[];
+  userDataId: number;
   expandedBankTxId?: number;
   expandedCryptoInputId?: number;
   expandedTxUid?: string;
@@ -20,6 +21,7 @@ export function TransactionsTable({
   transactions,
   bankTxs,
   cryptoInputs,
+  userDataId,
   expandedBankTxId,
   expandedCryptoInputId,
   expandedTxUid,
@@ -28,9 +30,24 @@ export function TransactionsTable({
   onExpandTxUid,
 }: TransactionsTableProps): JSX.Element {
   const { getTransactionByUid } = useTransaction();
+  const { downloadTransactionPdf } = useCompliance();
   const [txDetailCache, setTxDetailCache] = useState<Map<string, Transaction>>(new Map());
   const [txDetailLoading, setTxDetailLoading] = useState<string>();
   const [txDetailError, setTxDetailError] = useState<string>();
+  const [isPdfDownloading, setIsPdfDownloading] = useState(false);
+  const [pdfError, setPdfError] = useState<string>();
+
+  async function handleDownloadPdf(): Promise<void> {
+    setIsPdfDownloading(true);
+    setPdfError(undefined);
+    try {
+      await downloadTransactionPdf(userDataId);
+    } catch (e) {
+      setPdfError(e instanceof Error ? e.message : 'PDF download failed');
+    } finally {
+      setIsPdfDownloading(false);
+    }
+  }
 
   function handleUidClick(uid: string): void {
     if (expandedTxUid === uid) {
@@ -65,6 +82,19 @@ export function TransactionsTable({
   );
 
   return (
+    <div>
+      <div className="flex justify-end mb-1">
+        {transactions?.length > 0 && (
+          <button
+            className="text-xs text-dfxBlue-300 underline hover:text-dfxBlue-800 disabled:opacity-50 disabled:no-underline"
+            onClick={handleDownloadPdf}
+            disabled={isPdfDownloading}
+          >
+            {isPdfDownloading ? 'Downloading...' : 'PDF'}
+          </button>
+        )}
+      </div>
+      {pdfError && <p className="text-xs text-primary-red mb-1">{pdfError}</p>}
     <table className="w-full border-collapse">
       <thead className="sticky top-0 bg-dfxGray-300">
         <tr>
@@ -220,5 +250,6 @@ export function TransactionsTable({
         )}
       </tbody>
     </table>
+    </div>
   );
 }

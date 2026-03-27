@@ -118,6 +118,10 @@ export function boolBadge(value: boolean, trueLabel = 'Yes', falseLabel = 'No'):
   return statusBadge(value ? trueLabel : falseLabel);
 }
 
+export function todayAsString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
 export function formatDate(value: string): string {
   return new Date(value).toLocaleDateString();
 }
@@ -134,4 +138,19 @@ export function formatDateTimeShort(value: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+export function formatValue(value: unknown): string {
+  if (value === null || value === undefined) return '-';
+
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  try {
+    return JSON.stringify(value);
+  } catch (e) {
+    console.error('formatValue failed:', e, value);
+    return 'Fehler: Wert kann nicht ermittelt werden';
+  }
 }

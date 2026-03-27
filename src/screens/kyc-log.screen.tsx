@@ -12,6 +12,7 @@ import {
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useLocation } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { DefaultFileTypes } from 'src/config/file-types';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -31,6 +32,8 @@ export default function KycLogScreen(): JSX.Element {
 
   const { translate, translateError } = useSettingsContext();
   const { call } = useApi();
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
 
   const [isLoading, setIsLoading] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
@@ -41,7 +44,13 @@ export default function KycLogScreen(): JSX.Element {
     handleSubmit,
     formState: { isValid, errors },
     reset,
-  } = useForm<FormData>({ mode: 'onChange' });
+  } = useForm<FormData>({
+    mode: 'onChange',
+    defaultValues: {
+      userDataId: params.get('userDataId') ?? undefined,
+      eventDate: params.get('eventDate') ?? undefined,
+    },
+  });
 
   async function onSubmit(data: FormData) {
     setIsLoading(true);
