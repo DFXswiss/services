@@ -307,6 +307,9 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       }
     }
 
+    // Extract language code from browser locale (e.g., "en-US" -> "EN")
+    const browserLanguage = navigator.language?.split('-')[0]?.toUpperCase();
+
     return api.authenticate(
       address,
       signature,
@@ -316,6 +319,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       appParams.refcode,
       authWallet,
       appParams.recommendationCode,
+      browserLanguage,
     );
   }
 
