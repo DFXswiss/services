@@ -16,7 +16,14 @@ import { useForm } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
-import { BankTxSearchResult, ComplianceSearchResult, UserSearchResult, useCompliance } from 'src/hooks/compliance.hook';
+import {
+  BankTxSearchResult,
+  ComplianceSearchResult,
+  OnboardingStatus,
+  PendingOnboardingInfo,
+  UserSearchResult,
+  useCompliance,
+} from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -29,7 +36,7 @@ export default function ComplianceScreen(): JSX.Element {
   useComplianceGuard();
 
   const { translate, translateError } = useSettingsContext();
-  const { search, downloadUserFiles } = useCompliance();
+  const { search, downloadUserFiles, getPendingOnboardings } = useCompliance();
   const { navigate } = useNavigation();
   const { search: query } = useLocation();
 
@@ -38,8 +45,15 @@ export default function ComplianceScreen(): JSX.Element {
   const [searchResult, setSearchResult] = useState<ComplianceSearchResult>();
   const [showInfo, setShowInfo] = useState(false);
   const [downloadingUserId, setDownloadingUserId] = useState<number>();
+  const [pendingOnboardings, setPendingOnboardings] = useState<PendingOnboardingInfo[]>([]);
 
   const paramSearch = new URLSearchParams(query).get('search') || undefined;
+
+  useEffect(() => {
+    getPendingOnboardings()
+      .then(setPendingOnboardings)
+      .catch(() => setPendingOnboardings([]));
+  }, []);
 
   useEffect(() => {
     if (paramSearch) onSubmit({ key: paramSearch });
@@ -123,12 +137,26 @@ export default function ComplianceScreen(): JSX.Element {
             onClick={() => handleDownloadUserData(u.id)}
             isLoading={downloadingUserId === u.id}
           />
-          <StyledIconButton
-            icon={IconVariant.CHEV_RIGHT}
-            color={IconColor.BLUE}
-            size={IconSize.XL}
+          {u.accountType === 'Organization' && u.onboardingStatus && (
+            <button
+              className={`px-2 py-1 text-xs font-medium text-white rounded transition-colors ${
+                u.onboardingStatus === OnboardingStatus.COMPLETED
+                  ? 'bg-dfxGreen-100 hover:bg-dfxGreen-150'
+                  : u.onboardingStatus === OnboardingStatus.REJECTED
+                    ? 'bg-dfxRed-100 hover:bg-dfxRed-150'
+                    : 'bg-dfxBlue-800 hover:bg-dfxBlue-800/80'
+              }`}
+              onClick={() => navigate(`compliance/user/${u.id}/company-onboarding`)}
+            >
+              Onboarding
+            </button>
+          )}
+          <button
+            className="px-2 py-1 text-xs font-medium bg-dfxBlue-800 text-white rounded hover:bg-dfxBlue-800/80 transition-colors"
             onClick={() => navigate(`compliance/user/${u.id}`)}
-          />
+          >
+            Details
+          </button>
         </div>
       ),
     },
@@ -322,6 +350,55 @@ export default function ComplianceScreen(): JSX.Element {
           ) : (
             <p className="text-dfxGray-700">{translate('screens/compliance', 'No entries found')}</p>
           ))}
+
+        {pendingOnboardings.length > 0 && (
+          <div className="w-full">
+            <h2 className="text-dfxGray-700">
+              {translate('screens/compliance', 'Pending Onboardings')} ({pendingOnboardings.length})
+            </h2>
+            <div className="w-full overflow-x-auto">
+              <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
+                <thead>
+                  <tr className="bg-dfxGray-300">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                      {translate('screens/compliance', 'ID')}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                      {translate('screens/kyc', 'Name')}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                      {translate('screens/compliance', 'Date')}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingOnboardings.map((o) => (
+                    <tr
+                      key={o.id}
+                      className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer"
+                      onClick={() => navigate(`compliance/user/${o.id}/company-onboarding`)}
+                    >
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{o.id}</td>
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{o.name ?? '-'}</td>
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                        {new Date(o.date).toLocaleDateString('de-CH')}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          className="px-2 py-1 text-xs font-medium bg-dfxBlue-800 text-white rounded hover:bg-dfxBlue-800/80 transition-colors"
+                          onClick={() => navigate(`compliance/user/${o.id}/company-onboarding`)}
+                        >
+                          Onboarding
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </StyledVerticalStack>
     </Form>
   );

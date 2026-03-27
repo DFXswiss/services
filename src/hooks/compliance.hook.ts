@@ -63,12 +63,25 @@ export interface ComplianceSearchResult {
   bankTx: BankTxSearchResult[];
 }
 
+export enum OnboardingStatus {
+  OPEN = 'Open',
+  COMPLETED = 'Completed',
+  REJECTED = 'Rejected',
+}
+
 export interface UserSearchResult {
   id: number;
   kycStatus: KycStatus;
   accountType?: AccountType;
   mail?: string;
   name?: string;
+  onboardingStatus?: OnboardingStatus;
+}
+
+export interface PendingOnboardingInfo {
+  id: number;
+  name?: string;
+  date: string;
 }
 
 export interface BankTxSearchResult {
@@ -220,6 +233,7 @@ export interface KycStepInfo {
 export interface KycLogInfo {
   id: number;
   type: string;
+  result?: string;
   comment?: string;
   created: string;
 }
@@ -289,6 +303,7 @@ export interface KycFile {
   protected: boolean;
   valid: boolean;
   uid: string;
+  created?: string;
 }
 
 export interface TransactionListEntry {
@@ -452,6 +467,42 @@ export function useCompliance() {
     downloadPdfFromString(response.pdfData, `DFX_IP_Logs_${userDataId}_${filenameDateFormat()}.pdf`);
   }
 
+  async function downloadTransactionPdf(userDataId: number): Promise<void> {
+    const response = await call<{ pdfData: string }>({
+      url: `support/${userDataId}/transaction-pdf`,
+      method: 'GET',
+    });
+    downloadPdfFromString(response.pdfData, `DFX_Transactions_${userDataId}_${filenameDateFormat()}.pdf`);
+  }
+
+  async function generateOnboardingPdf(
+    userDataId: number,
+    data: {
+      finalDecision: string;
+      processedBy: string;
+      complexOrgStructure?: string;
+      highRisk?: string;
+      depositLimit?: string;
+      amlAccountType?: string;
+      commentGmeR?: string;
+      reasonSeatingCompany?: string;
+      businessActivities?: string;
+    },
+  ): Promise<{ pdfData: string; fileName: string }> {
+    return call<{ pdfData: string; fileName: string }>({
+      url: `support/${userDataId}/onboarding-pdf`,
+      method: 'POST',
+      data,
+    });
+  }
+
+  async function getPendingOnboardings(): Promise<PendingOnboardingInfo[]> {
+    return call<PendingOnboardingInfo[]>({
+      url: 'support/pending-onboardings',
+      method: 'GET',
+    });
+  }
+
   async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
     return call<RecommendationGraph>({
       url: `support/recommendation-graph/${userDataId}`,
@@ -459,10 +510,30 @@ export function useCompliance() {
     });
   }
 
+  async function updateKycStep(
+    stepId: number,
+    data: { status: string; result?: string; comment?: string },
+  ): Promise<void> {
+    return call<void>({
+      url: `kyc/admin/step/${stepId}`,
+      method: 'PUT',
+      data,
+    });
+  }
+
+  async function updateUserData(userDataId: number, data: Record<string, unknown>): Promise<void> {
+    return call<void>({
+      url: `userData/${userDataId}`,
+      method: 'PUT',
+      data,
+    });
+  }
+
   return useMemo(
     () => ({
       search,
       getUserData,
+      getPendingOnboardings,
       downloadUserFiles,
       checkUserFiles,
       getTransactionRefundData,
@@ -472,8 +543,12 @@ export function useCompliance() {
       getTransactionList,
       getRecommendationGraph,
       downloadIpLogPdf,
+      downloadTransactionPdf,
+      generateOnboardingPdf,
       getCustodyOrders,
       approveCustodyOrder,
+      updateKycStep,
+      updateUserData,
     }),
     [call],
   );

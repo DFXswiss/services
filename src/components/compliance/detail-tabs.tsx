@@ -100,6 +100,12 @@ export function KycStepsTable({ kycSteps }: { kycSteps: KycStepInfo[] }): JSX.El
 const kycLogsColumns: ColumnDef<KycLogInfo>[] = [
   { header: 'Date', render: (l) => formatDate(l.created) },
   { header: 'Type', align: 'left', render: (l) => l.type },
+  {
+    header: 'Result',
+    align: 'left',
+    render: (l) => <span title={l.result}>{l.result || '-'}</span>,
+    className: 'max-w-xs truncate',
+  },
   { header: 'Comment', align: 'left', render: (l) => l.comment || '-' },
 ];
 

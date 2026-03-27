@@ -63,6 +63,7 @@ const ComplianceKycStepScreen = lazy(() => import('./screens/compliance-kyc-step
 const ComplianceSupportIssueScreen = lazy(() => import('./screens/compliance-support-issue.screen'));
 const ComplianceRecommendationGraphScreen = lazy(() => import('./screens/compliance-recommendation-graph.screen'));
 const ComplianceCustodyOrdersScreen = lazy(() => import('./screens/compliance-custody-orders.screen'));
+const ComplianceCompanyOnboardingScreen = lazy(() => import('./screens/compliance-company-onboarding.screen'));
 const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
 const RealunitHoldersScreen = lazy(() => import('./screens/realunit-holders.screen'));
 const RealunitQuotesScreen = lazy(() => import('./screens/realunit-quotes.screen'));
@@ -378,6 +379,10 @@ export const Routes = [
       {
         path: 'compliance/custody-orders',
         element: withSuspense(<ComplianceCustodyOrdersScreen />),
+      },
+      {
+        path: 'compliance/user/:id/company-onboarding',
+        element: withSuspense(<ComplianceCompanyOnboardingScreen />),
       },
       {
         path: 'realunit',
