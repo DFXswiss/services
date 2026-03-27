@@ -1,6 +1,7 @@
 import { Blockchain, Utils, useApiSession, useAuth, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { AuthWalletType } from '@dfx.swiss/react/dist/definitions/auth';
 import { Router } from '@remix-run/router';
+import browserLang from 'browser-lang';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../hooks/store.hook';
 import { WalletType as MetaMaskWalletType, useMetaMask } from '../hooks/wallets/metamask.hook';
@@ -307,6 +308,9 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       }
     }
 
+    // Detect browser language (consistent with settings.context)
+    const browserLanguage = browserLang({ languages: ['de', 'en', 'fr', 'it'], fallback: 'en' })?.toUpperCase();
+
     return api.authenticate(
       address,
       signature,
@@ -316,6 +320,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       appParams.refcode,
       authWallet,
       appParams.recommendationCode,
+      browserLanguage,
     );
   }
 
