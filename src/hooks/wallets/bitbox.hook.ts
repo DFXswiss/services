@@ -81,14 +81,20 @@ export function useBitbox(): BitboxInterface {
         put<PairedBitBox>(storageKey, bitBox);
       }
 
-      // verify product
-      if (wallet !== WalletType.BITBOX_BTC && !bitBox.ethSupported())
-        throw new WalletSwitchError(WalletType.BITBOX_BTC, 'Your BitBox only supports Bitcoin');
-
       // fetch address
-      return wallet === WalletType.BITBOX_BTC
-        ? (await getBtcAddress(0, addressType, 0, 1))[0]
-        : (await getEthAddress(blockchain, 0, 0, 1))[0];
+      if (wallet === WalletType.BITBOX_BTC) {
+        return (await getBtcAddress(0, addressType, 0, 1))[0];
+      }
+
+      // NOTE: bitbox-api has a bug where ethSupported() incorrectly calls the cardano WASM binding,
+      // returning false even for Multi editions. We attempt ETH regardless and only fall back to BTC
+      // if the device actually rejects the ETH request.
+      try {
+        return (await getEthAddress(blockchain, 0, 0, 1))[0];
+      } catch (ethError) {
+        if (bitBox.ethSupported()) throw ethError;
+        throw new WalletSwitchError(WalletType.BITBOX_BTC, 'Your BitBox only supports Bitcoin');
+      }
     } catch (e) {
       const { code, message } = e as BitboxError;
       if (code && message) {
