@@ -1,8 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { getCachedAuth } from './helpers/auth-cache';
 
-// Note: API Integration tests for authentication have been moved to Jest (src/__tests__/api/auth-api.test.ts)
-// This file now contains only UI Flow tests that require browser interaction
 
 test.describe('Login Process - UI Flow', () => {
   let token: string;

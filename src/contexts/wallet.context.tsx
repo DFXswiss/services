@@ -1,6 +1,7 @@
 import { Blockchain, Utils, useApiSession, useAuth, useSessionContext, useUserContext } from '@dfx.swiss/react';
 import { AuthWalletType } from '@dfx.swiss/react/dist/definitions/auth';
 import { Router } from '@remix-run/router';
+import browserLang from 'browser-lang';
 import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../hooks/store.hook';
 import { WalletType as MetaMaskWalletType, useMetaMask } from '../hooks/wallets/metamask.hook';
@@ -18,8 +19,11 @@ export enum WalletType {
   TREZOR_ETH = 'TrezorEth',
   CLI_BTC = 'CliBtc',
   CLI_SPARK = 'CliSpark',
+  CLI_ARK = 'CliArk',
+  CLI_FIRO = 'CliFiro',
   CLI_XMR = 'CliXmr',
   CLI_ZANO = 'CliZano',
+  CLI_ICP = 'CliIcp',
   CLI_ETH = 'CliEth',
   CLI_ADA = 'CliAda',
   CLI_AR = 'CliAr',
@@ -61,9 +65,12 @@ export const WalletBlockchains: { [w in WalletType]?: Blockchain[] } = {
   [WalletType.TREZOR_ETH]: [Blockchain.ETHEREUM, Blockchain.ARBITRUM, Blockchain.OPTIMISM, Blockchain.POLYGON],
   [WalletType.CLI_BTC]: [Blockchain.BITCOIN],
   [WalletType.CLI_SPARK]: [Blockchain.SPARK],
+  [WalletType.CLI_ARK]: [Blockchain.ARK],
+  [WalletType.CLI_FIRO]: [Blockchain.FIRO],
   [WalletType.CLI_LN]: [Blockchain.LIGHTNING],
   [WalletType.CLI_XMR]: [Blockchain.MONERO],
   [WalletType.CLI_ZANO]: [Blockchain.ZANO],
+  [WalletType.CLI_ICP]: [Blockchain.INTERNET_COMPUTER],
   [WalletType.CLI_ETH]: [
     Blockchain.ETHEREUM,
     Blockchain.ARBITRUM,
@@ -119,9 +126,12 @@ const WalletTypeMap: { [k in WalletType]: AuthWalletType | undefined } = {
   [WalletType.TREZOR_ETH]: AuthWalletType.TREZOR,
   [WalletType.CLI_BTC]: AuthWalletType.CLI,
   [WalletType.CLI_SPARK]: AuthWalletType.CLI,
+  [WalletType.CLI_ARK]: AuthWalletType.CLI,
+  [WalletType.CLI_FIRO]: AuthWalletType.CLI,
   [WalletType.CLI_LN]: AuthWalletType.CLI,
   [WalletType.CLI_XMR]: AuthWalletType.CLI,
   [WalletType.CLI_ZANO]: AuthWalletType.CLI,
+  [WalletType.CLI_ICP]: AuthWalletType.CLI,
   [WalletType.CLI_ETH]: AuthWalletType.CLI,
   [WalletType.CLI_ADA]: AuthWalletType.CLI,
   [WalletType.CLI_AR]: AuthWalletType.CLI,
@@ -219,7 +229,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
 
         // Set credentials BEFORE async call to prevent race conditions (React StrictMode double-render)
         lastAppliedCredentials.current = { address: appParams.address, signature: appParams.signature };
-        await createSession(appParams.address, appParams.signature);
+        await createSession(appParams.address, appParams.signature, appParams.pubkey);
         return true;
       } else if (appParams.session && Utils.isJwt(appParams.session)) {
         // Skip if same session was already applied
@@ -298,6 +308,9 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       }
     }
 
+    // Detect browser language (consistent with settings.context)
+    const browserLanguage = browserLang({ languages: ['de', 'en', 'fr', 'it'], fallback: 'en' })?.toUpperCase();
+
     return api.authenticate(
       address,
       signature,
@@ -307,6 +320,7 @@ export function WalletContextProvider(props: WalletContextProps): JSX.Element {
       appParams.refcode,
       authWallet,
       appParams.recommendationCode,
+      browserLanguage,
     );
   }
 

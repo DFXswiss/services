@@ -18,6 +18,7 @@ const urlParamsToRemove = [
   'lang',
   'address',
   'signature',
+  'pubkey',
   'mail',
   'account-type',
   'first-name',
@@ -67,6 +68,7 @@ export interface AppParams {
   lang?: string;
   address?: string;
   signature?: string;
+  pubkey?: string;
   mail?: string;
   accountType?: string;
   firstName?: string;
@@ -244,6 +246,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
 
     delete copy.address;
     delete copy.signature;
+    delete copy.pubkey;
     delete copy.session;
     delete copy.autoStart;
 
@@ -308,6 +311,7 @@ export function AppHandlingContextProvider(props: AppHandlingContextProps): JSX.
           lang: getParameter(query, 'lang'),
           address: getParameter(query, 'address'),
           signature: getParameter(query, 'signature'),
+          pubkey: getParameter(query, 'pubkey'),
           mail: getParameter(query, 'mail'),
           accountType: getParameter(query, 'account-type'),
           firstName: getParameter(query, 'first-name'),

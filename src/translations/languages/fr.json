@@ -5,6 +5,7 @@
     "Start": "Lancer",
     "Previous": "Précédent",
     "Next": "Suivant",
+    "More": "Plus",
     "Continue": "Continuer",
     "Close": "Fermer",
     "Ok": "Ok",
@@ -56,7 +57,8 @@
     "Download sticker": "Télécharger l'autocollant",
     "Authenticate": "Authentifier",
     "Confirm": "Confirmer",
-    "Reject": "Rejeter"
+    "Reject": "Rejeter",
+    "Change": "Modifier"
   },
   "general/errors": {
     "Mandatory field": "Champ obligatoire",
@@ -77,6 +79,7 @@
     "iban": "Il s'agit d'un IBAN multi-comptes qui ne peut pas être ajouté en tant que compte personnel. Veuillez ouvrir un ticket de support sur <1></1> et joindre la confirmation de la transaction bancaire au format PDF."
   },
   "screens/kyc": {
+    "Is this email address correct?": "Cette adresse e-mail est-elle correcte ?",
     "DFX KYC": "DFX KYC",
     "KYC level": "KYC level",
     "Trading limit": "Limite de transactions",
@@ -182,6 +185,12 @@
     "https://example.com": "https://exemple.fr",
     "Mobile number": "Numéro de portable",
     "Phone number": "Numéro de téléphone",
+    "New address": "Nouvelle adresse",
+    "New name": "Nouveau nom",
+    "Proof document": "Document justificatif",
+    "Phone number change": "Changement de numéro de téléphone",
+    "Address change": "Changement d'adresse",
+    "Name change": "Changement de nom",
     "Organization Information": "Organisation",
     "Organization name": "Nom de l'organisation",
     "Example inc.": "Exempel SARL & Co. KG",
@@ -347,6 +356,8 @@
     "Industry & science": "Industrie & science",
 
     "Recall agreement": "Contrat de rappel",
+
+    "ownFundsWarning": "L'indication <1>délibérée</1> de fausses informations dans ce formulaire constitue une infraction pénale (faux dans les titres selon l'article 251 du Code pénal suisse).",
 
     "Recommendation": "Recommandation",
     "Please enter the email address or referral code of your contact person. This lets us know you have a trusted contact to guide you into the crypto space.": "Veuillez saisir l'adresse e-mail ou le code de parrainage de votre personne de contact. Cela nous permet de savoir que vous avez un contact de confiance pour vous accompagner dans l'univers des cryptomonnaies.",
@@ -549,10 +560,10 @@
     "Done!": "Fait!",
     "Click here once you have issued the transfer": "Cliquez ici une fois que vous avez émis le virement",
 
-    "Please transfer the purchase amount using this information via your banking application. The reference is important!": "Veuillez transférer le montant de l'achat à l'aide de ces informations via votre application bancaire. L'objet du paiement est important !",
-    "Please transfer the purchase amount using this information via your banking application. This IBAN is unique to this asset, no reference is required.": "Veuillez transférer le montant de l'achat à l'aide de ces informations via votre application bancaire. Cet IBAN est unique à cet actif, aucun objet de paiement n'est requis.",
+    "Please transfer the purchase amount using this information via your banking application. The remittance info is important!": "Veuillez transférer le montant de l'achat à l'aide de ces informations via votre application bancaire. L'objet du paiement est important !",
+    "Please transfer the purchase amount using this information via your banking application. This IBAN is unique to this asset, no remittance info is required.": "Veuillez transférer le montant de l'achat à l'aide de ces informations via votre application bancaire. Cet IBAN est unique à cet actif, aucun objet de paiement n'est requis.",
 
-    "The reference remains identical for the selected asset and can be used for recurring payments and standing orders": "L'objet du paiement reste identique pour l'immobilisation sélectionnée et peut être utilisé pour les paiements récurrents et les ordres permanents.",
+    "The remittance info remains identical for the selected asset and can be used for recurring payments and standing orders": "L'objet du paiement reste identique pour l'immobilisation sélectionnée et peut être utilisé pour les paiements récurrents et les ordres permanents.",
 
     "Name": "Nom",
     "Address": "Adresse",
@@ -605,7 +616,7 @@
     "Currency": "Devise",
     "IBAN": "IBAN",
     "BIC": "BIC",
-    "Reference": "Objet du paiement",
+    "Remittance info": "Objet du paiement",
     "Transaction Details": "Détails de la transaction",
     "Asset": "Actif",
     "Deposit address": "Adresse de dépôt",
@@ -621,8 +632,11 @@
     "Base rate": "Taux de base",
     "Total fee": "Frais totaux",
     "DFX fee": "Frais DFX",
+    "Platform fee": "Frais de plateforme",
     "Network fee": "Frais de réseau",
     "Bank fee": "Frais bancaires",
+    "Bank fee (fixed)": "Frais bancaires (fixe)",
+    "Bank fee (percent)": "Frais bancaires (pourcentage)",
     "Network start fee": "Frais de démarrage du réseau",
 
     "Your payment has failed. Please try again.": "Votre paiement a échoué. Veuillez réessayer.",
@@ -658,6 +672,7 @@
     "Refund amount": "Montant du remboursement",
     "Fee": "Frais",
     "Refund amount is the transaction amount minus the fee.": "Le montant du remboursement correspond au montant de la transaction moins les frais.",
+    "This IBAN cannot be used for refunds. Please select a personal bank account.": "Cet IBAN ne peut pas être utilisé pour les remboursements. Veuillez sélectionner un compte bancaire personnel.",
 
     "Type": "Type",
     "Buy": "Achat",
@@ -886,12 +901,20 @@
     "Partnership request": "Demande de partenariat",
     "Notification of changes": "Notification de changements",
     "Bug report": "Rapport de bug",
+    "Verification call": "Appel de vérification",
 
     "Reason": "Motif",
     "Other": "Autres",
     "Data request": "Demande de données",
     "Funds not received": "Fonds non reçus",
     "Transaction missing": "Transaction manquante",
+    "Reject call": "Refuser l'appel",
+    "Repeat call": "Répéter l'appel",
+    "Name changed": "Nom modifié",
+    "Address changed": "Adresse modifiée",
+    "Civil status changed": "État civil modifié",
+
+    "contactDataChangeHint": "Le nom, l'adresse, le numéro de téléphone et l'adresse e-mail peuvent être modifiés directement dans votre <2></2>.",
 
     "Transaction ID": "ID de transaction",
     "Select a transaction to proceed with": "Sélectionnez une transaction pour continuer",
@@ -958,7 +981,19 @@
 
     "delete": "Êtes-vous sûr de vouloir supprimer l'adresse <1>{{address}}</1> de votre compte DFX ? Cette action est irréversible.",
     "delete_iban": "Êtes-vous sûr de vouloir supprimer le compte bancaire <1>{{address}}</1> de votre compte DFX ?",
-    "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support."
+    "Your data will remain on our servers temporarily before permanent deletion. If you have any questions, please contact our support team.": "Vos données resteront temporairement sur nos serveurs avant la suppression définitive. Si vous avez des questions, veuillez contacter notre équipe de support.",
+
+    "Verification Call": "Appel de vérification",
+    "Preferred call time": "Heure d'appel préférée",
+    "Morning": "Matin",
+    "Afternoon": "Après-midi",
+    "Evening": "Soir",
+    "Yes, call me": "Oui, appelez-moi",
+    "No, don't call me": "Non, ne m'appelez pas",
+    "Verification may require a phone call. Should we call you?": "La vérification peut nécessiter un appel téléphonique. Devons-nous vous appeler?",
+    "Phone verification": "Vérification téléphonique",
+
+    "Danger Zone": "Zone de danger"
   },
   "screens/safe": {
     "My DFX Safe": "Mon DFX Safe",
@@ -1023,7 +1058,28 @@
     "Details": "Détails",
     "Tx Hash": "Tx Hash",
     "No transactions found": "Aucune transaction trouvée",
-    "Percentage": "Pourcentage"
+    "Percentage": "Pourcentage",
+    "RealUnit ": "RealUnit ",
+    "Overview": "Aperçu",
+    "Holders": "Détenteurs",
+    "Shares": "Actions",
+    "Total Supply": "Offre totale",
+    "Price History": "Historique des prix",
+    "Top Holders": "Principaux détenteurs",
+    "All Holders": "Tous les détenteurs",
+    "Pending Transactions": "Transactions en attente",
+    "No pending transactions found": "Aucune transaction en attente trouvée",
+    "Received Transactions": "Transactions reçues",
+    "No received transactions found": "Aucune transaction reçue trouvée",
+    "Type": "Type",
+    "Amount": "Montant",
+    "User": "Utilisateur",
+    "Created": "Créé",
+    "Amount CHF": "Montant CHF",
+    "Date": "Date",
+    "Confirm Payment Received": "Confirmer la réception du paiement",
+    "Are you sure you want to confirm the payment receipt?": "Êtes-vous sûr de vouloir confirmer la réception du paiement?",
+    "Payment confirmed successfully": "Réception du paiement confirmée avec succès"
   },
   "screens/blockchain": {
     "Transaction signing": "Signature de la transaction",

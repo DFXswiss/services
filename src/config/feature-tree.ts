@@ -151,6 +151,13 @@ export const FeatureTree: Page[] = [
           page: 'buy-gnosis',
         },
       },
+      {
+        id: 'citrea',
+        img: 'citrea',
+        next: {
+          page: 'buy-citrea',
+        },
+      },
     ],
   },
   {
@@ -745,6 +752,96 @@ export const FeatureTree: Page[] = [
     ],
   },
   {
+    id: 'buy-citrea',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'cbtc',
+        img: 'cbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'cBTC' },
+          },
+        },
+      },
+      {
+        id: 'jusd',
+        img: 'jusd',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'JUSD' },
+          },
+        },
+      },
+      {
+        id: 'ctusd',
+        img: 'ctusd',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'ctUSD' },
+          },
+        },
+      },
+      {
+        id: 'wbtce',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'WBTC.e' },
+          },
+        },
+      },
+      {
+        id: 'usdte',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'USDT.e' },
+          },
+        },
+      },
+      {
+        id: 'usdce',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'USDC.e' },
+          },
+        },
+      },
+      {
+        id: 'juice',
+        img: 'juice',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'buy',
+            query: { blockchain: Blockchain.CITREA, assetOut: 'JUICE' },
+          },
+        },
+      },
+    ],
+  },
+  {
     id: 'sell',
     dfxStyle: true,
     tiles: [
@@ -858,6 +955,13 @@ export const FeatureTree: Page[] = [
         img: 'gnosis',
         next: {
           page: 'sell-gnosis',
+        },
+      },
+      {
+        id: 'citrea',
+        img: 'citrea',
+        next: {
+          page: 'sell-citrea',
         },
       },
     ],
@@ -1410,6 +1514,96 @@ export const FeatureTree: Page[] = [
       },
     ],
   },
+  {
+    id: 'sell-citrea',
+    dfxStyle: true,
+    tiles: [
+      {
+        id: 'cbtc',
+        img: 'cbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'cBTC' },
+          },
+        },
+      },
+      {
+        id: 'jusd',
+        img: 'jusd',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'JUSD' },
+          },
+        },
+      },
+      {
+        id: 'ctusd',
+        img: 'ctusd',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'ctUSD' },
+          },
+        },
+      },
+      {
+        id: 'wbtce',
+        img: 'wbtc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'WBTC.e' },
+          },
+        },
+      },
+      {
+        id: 'usdte',
+        img: 'usdt',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'USDT.e' },
+          },
+        },
+      },
+      {
+        id: 'usdce',
+        img: 'usdc',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'USDC.e' },
+          },
+        },
+      },
+      {
+        id: 'juice',
+        img: 'juice',
+        next: {
+          page: 'wallets',
+          tiles: ['hw-wallet', 'metamask', 'walletconnect', 'cli'],
+          options: {
+            service: 'sell',
+            query: { blockchain: Blockchain.CITREA, assetIn: 'JUICE' },
+          },
+        },
+      },
+    ],
+  },
 
   // --- LOGIN  --- //
   {
@@ -1487,10 +1681,14 @@ export const FeatureTree: Page[] = [
           switch (params.blockchain) {
             case Blockchain.BITCOIN:
               return { type: WalletType.CLI_BTC };
+            case Blockchain.FIRO:
+              return { type: WalletType.CLI_FIRO };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
             case Blockchain.ZANO:
               return { type: WalletType.CLI_ZANO };
+            case Blockchain.INTERNET_COMPUTER:
+              return { type: WalletType.CLI_ICP };
             case Blockchain.SOLANA:
               return { type: WalletType.CLI_SOL };
             case Blockchain.TRON:
@@ -1625,10 +1823,14 @@ export const FeatureTree: Page[] = [
           switch (params.blockchain) {
             case Blockchain.BITCOIN:
               return { type: WalletType.CLI_BTC };
+            case Blockchain.FIRO:
+              return { type: WalletType.CLI_FIRO };
             case Blockchain.MONERO:
               return { type: WalletType.CLI_XMR };
             case Blockchain.ZANO:
               return { type: WalletType.CLI_ZANO };
+            case Blockchain.INTERNET_COMPUTER:
+              return { type: WalletType.CLI_ICP };
             case Blockchain.SOLANA:
               return { type: WalletType.CLI_SOL };
             case Blockchain.TRON:

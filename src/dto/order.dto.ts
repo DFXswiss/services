@@ -85,6 +85,19 @@ export interface OrderPaymentInfo {
   paymentInfo: OrderPaymentData;
 }
 
+export interface CustodyOrderListEntry {
+  id: number;
+  type: CustodyOrderType;
+  status: CustodyOrderStatus;
+  inputAmount?: number;
+  inputAsset?: string;
+  outputAmount?: number;
+  outputAsset?: string;
+  userDataId?: number;
+  userName?: string;
+  updated: Date;
+}
+
 export interface ExchangeRate {
   rate: number;
   currency: string;

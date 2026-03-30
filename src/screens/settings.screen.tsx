@@ -2,31 +2,26 @@ import {
   BankAccount,
   Fiat,
   Language,
+  PhoneCallStatus,
+  PhoneCallTime,
   useBankAccountContext,
   useFiatContext,
   UserAddress,
   useUserContext,
   Utils,
-  Validations,
 } from '@dfx.swiss/react';
 import {
-  AlignContent,
-  DfxIcon,
   Form,
-  IconColor,
-  IconSize,
-  IconVariant,
   SpinnerSize,
   StyledButton,
   StyledButtonWidth,
-  StyledDataTable,
-  StyledDataTableRow,
   StyledDropdown,
+  StyledDropdownMultiChoice,
   StyledLoadingSpinner,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import copy from 'copy-to-clipboard';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import ActionableList from 'src/components/actionable-list';
@@ -34,11 +29,12 @@ import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay
 import { EditBankAccount } from 'src/components/overlay/edit-bank-overlay';
 import { EditOverlay } from 'src/components/overlay/edit-overlay';
 import { AddBankAccount } from 'src/components/payment/add-bank-account';
-import { addressLabel } from 'src/config/labels';
+import { addressLabel, PhoneCallTimeLabels } from 'src/config/labels';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { useWalletContext } from 'src/contexts/wallet.context';
 import { useWindowContext } from 'src/contexts/window.context';
+import { useAnchor } from 'src/hooks/anchor.hook';
 import { useUserGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
@@ -47,6 +43,8 @@ import { blankedAddress, sortAddressesByBlockchain } from 'src/util/utils';
 interface FormData {
   language: Language;
   currency: Fiat;
+  preferredPhoneTimes: PhoneCallTime[];
+  acceptCall: boolean;
 }
 
 enum OverlayType {
@@ -54,8 +52,6 @@ enum OverlayType {
   DELETE_ADDRESS,
   DELETE_ACCOUNT,
   RENAME_ADDRESS,
-  EDIT_EMAIL,
-  EDIT_PHONE,
   EDIT_BANK_ACCOUNT,
   ADD_BANK_ACCOUNT,
   DELETE_BANK_ACCOUNT,
@@ -66,8 +62,6 @@ const OverlayHeader: { [key in OverlayType]: string } = {
   [OverlayType.DELETE_ADDRESS]: 'Delete address',
   [OverlayType.DELETE_ACCOUNT]: 'Delete account',
   [OverlayType.RENAME_ADDRESS]: 'Rename address',
-  [OverlayType.EDIT_EMAIL]: 'Edit email',
-  [OverlayType.EDIT_PHONE]: 'Edit phone number',
   [OverlayType.EDIT_BANK_ACCOUNT]: 'Edit bank account',
   [OverlayType.ADD_BANK_ACCOUNT]: 'Add bank account',
   [OverlayType.DELETE_BANK_ACCOUNT]: 'Delete bank account',
@@ -76,11 +70,14 @@ const OverlayHeader: { [key in OverlayType]: string } = {
 export default function SettingsScreen(): JSX.Element {
   const { translate, language, currency, availableLanguages, changeLanguage, changeCurrency } = useSettingsContext();
   const { currencies } = useFiatContext();
-  const { user, isUserLoading, userAddresses } = useUserContext();
+  const { user, isUserLoading, userAddresses, updateCallSettings } = useUserContext();
   const { width } = useWindowContext();
   const { navigate } = useNavigation();
   const { rootRef } = useLayoutContext();
   const { bankAccounts, updateAccount, isLoading: isLoadingBankAccounts } = useBankAccountContext();
+
+  const verificationCallRef = useRef<HTMLHeadingElement>(null);
+  useAnchor('call', verificationCallRef, !isUserLoading);
 
   const [overlayData, setOverlayData] = useState<UserAddress | BankAccount>();
   const [overlayType, setOverlayType] = useState<OverlayType>(OverlayType.NONE);
@@ -94,6 +91,8 @@ export default function SettingsScreen(): JSX.Element {
   } = useForm<FormData>();
   const selectedLanguage = useWatch({ control, name: 'language' });
   const selectedCurrency = useWatch({ control, name: 'currency' });
+  const selectedPreferredPhoneTimes = useWatch({ control, name: 'preferredPhoneTimes' });
+  const acceptCall = useWatch({ control, name: 'acceptCall' });
 
   useEffect(() => {
     if (language && !selectedLanguage) setValue('language', language);
@@ -102,6 +101,19 @@ export default function SettingsScreen(): JSX.Element {
   useEffect(() => {
     if (currency && !selectedCurrency) setValue('currency', currency);
   }, [currency]);
+
+  useEffect(() => {
+    if (user?.kyc.preferredPhoneTimes && !selectedPreferredPhoneTimes) {
+      setValue('preferredPhoneTimes', user.kyc.preferredPhoneTimes);
+    }
+  }, [user?.kyc.preferredPhoneTimes]);
+
+  useEffect(() => {
+    const value = user?.kyc.phoneCallAccepted;
+    if (value != null && acceptCall == null) {
+      setValue('acceptCall', value);
+    }
+  }, [user?.kyc.phoneCallAccepted]);
 
   useEffect(() => {
     if (selectedLanguage && selectedLanguage?.id !== language?.id) {
@@ -116,8 +128,19 @@ export default function SettingsScreen(): JSX.Element {
   }, [selectedCurrency]);
 
   useEffect(() => {
-    if (overlayType === OverlayType.EDIT_EMAIL) navigate('/settings/mail', { setRedirect: true });
-  }, [overlayType]);
+    if (
+      selectedPreferredPhoneTimes &&
+      JSON.stringify(selectedPreferredPhoneTimes) !== JSON.stringify(user?.kyc.preferredPhoneTimes)
+    ) {
+      updateCallSettings(selectedPreferredPhoneTimes);
+    }
+  }, [selectedPreferredPhoneTimes]);
+
+  useEffect(() => {
+    if (acceptCall !== undefined && acceptCall !== user?.kyc.phoneCallAccepted) {
+      updateCallSettings(undefined, acceptCall);
+    }
+  }, [acceptCall]);
 
   function onCloseOverlay(): void {
     setOverlayType(OverlayType.NONE);
@@ -166,46 +189,6 @@ export default function SettingsScreen(): JSX.Element {
               />
             </Form>
           </StyledVerticalStack>
-
-          {!!(user?.mail || user?.phone) && (
-            <StyledVerticalStack full gap={2}>
-              <h1 className="text-dfxGray-800 font-semibold text-base flex justify-center">
-                {translate('screens/kyc', 'Personal Information')}
-              </h1>
-              <StyledDataTable alignContent={AlignContent.BETWEEN}>
-                {user?.mail && (
-                  <StyledDataTableRow>
-                    <div className="flex flex-col items-start gap-1">
-                      <div className="flex flex-row gap-2 font-semibold">
-                        {translate('screens/kyc', 'Email address')}
-                      </div>
-                      <div className="text-xs text-dfxGray-700">{user?.mail}</div>
-                    </div>
-                    <div className="relative flex items-center">
-                      <button onClick={() => setOverlayType(OverlayType.EDIT_EMAIL)}>
-                        <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
-                      </button>
-                    </div>
-                  </StyledDataTableRow>
-                )}
-                {user?.phone && (
-                  <StyledDataTableRow>
-                    <div className="flex flex-col items-start gap-1">
-                      <div className="flex flex-row gap-2 font-semibold">
-                        {translate('screens/kyc', 'Phone number')}
-                      </div>
-                      <div className="text-xs text-dfxGray-700">{user?.phone}</div>
-                    </div>
-                    <div className="relative flex items-center">
-                      <button onClick={() => setOverlayType(OverlayType.EDIT_PHONE)}>
-                        <DfxIcon icon={IconVariant.EDIT} size={IconSize.SM} color={IconColor.BLACK} />
-                      </button>
-                    </div>
-                  </StyledDataTableRow>
-                )}
-              </StyledDataTable>
-            </StyledVerticalStack>
-          )}
 
           {isLoadingBankAccounts ? (
             <div className="flex mt-4 w-full justify-center items-center">
@@ -262,11 +245,7 @@ export default function SettingsScreen(): JSX.Element {
             )
           )}
 
-          {isUserLoading && !isLoadingBankAccounts ? (
-            <div className="flex mt-4 w-full justify-center items-center">
-              <StyledLoadingSpinner size={SpinnerSize.LG} />
-            </div>
-          ) : (
+          {!isUserLoading && (
             <ActionableList
               label={translate('screens/settings', 'Your Addresses')}
               addButtonOnClick={() => navigate('/connect')}
@@ -317,11 +296,66 @@ export default function SettingsScreen(): JSX.Element {
               })}
             />
           )}
-          <StyledButton
-            width={StyledButtonWidth.FULL}
-            label={translate('general/actions', 'Delete account')}
-            onClick={() => setOverlayType(OverlayType.DELETE_ACCOUNT)}
-          />
+
+          {!isUserLoading &&
+            (!user?.kyc.phoneCallStatus ||
+              ![PhoneCallStatus.COMPLETED, PhoneCallStatus.FAILED].includes(user.kyc.phoneCallStatus)) && (
+            <StyledVerticalStack full gap={2}>
+              <h1
+                ref={verificationCallRef}
+                className="text-dfxGray-800 font-semibold text-base flex justify-center items-center"
+              >
+                {translate('screens/settings', 'Verification Call')}
+              </h1>
+
+              <StyledVerticalStack full gap={4}>
+                <p className="text-dfxGray-700 text-sm text-center">
+                  {translate('screens/settings', 'Verification may require a phone call. Should we call you?')}
+                </p>
+
+                <Form control={control} errors={errors}>
+                  <StyledDropdown<boolean>
+                    rootRef={rootRef}
+                    name="acceptCall"
+                    label={translate('screens/settings', 'Phone verification')}
+                    smallLabel={true}
+                    placeholder={translate('general/actions', 'Select') + '...'}
+                    items={[true, false]}
+                    labelFunc={(item) =>
+                      item
+                        ? translate('screens/settings', 'Yes, call me')
+                        : translate('screens/settings', "No, don't call me")
+                    }
+                  />
+                </Form>
+
+                {acceptCall && (
+                  <Form control={control} errors={errors}>
+                    <StyledDropdownMultiChoice<PhoneCallTime>
+                      rootRef={rootRef}
+                      name="preferredPhoneTimes"
+                      label={translate('screens/settings', 'Preferred call time')}
+                      smallLabel={true}
+                      placeholder={translate('general/actions', 'Select') + '...'}
+                      items={Object.values(PhoneCallTime)}
+                      labelFunc={(item) => translate('screens/settings', PhoneCallTimeLabels[item])}
+                    />
+                  </Form>
+                )}
+              </StyledVerticalStack>
+            </StyledVerticalStack>
+          )}
+
+          <StyledVerticalStack full gap={2}>
+            <h1 className="text-dfxGray-800 font-semibold text-base flex justify-center items-center">
+              {translate('screens/settings', 'Danger Zone')}
+            </h1>
+            <StyledButton
+              width={StyledButtonWidth.FULL}
+              label={translate('general/actions', 'Delete account')}
+              onClick={() => setOverlayType(OverlayType.DELETE_ACCOUNT)}
+            />
+          </StyledVerticalStack>
         </StyledVerticalStack>
       )}
     </>
@@ -339,7 +373,7 @@ function SettingsOverlay({ type, data, onClose }: SettingsOverlayProps): JSX.Ele
   const { width } = useWindowContext();
   const { translate } = useSettingsContext();
   const { setWallet } = useWalletContext();
-  const { deleteAddress, deleteAccount, renameAddress, updatePhone } = useUserContext();
+  const { deleteAddress, deleteAccount, renameAddress } = useUserContext();
   const { updateAccount } = useBankAccountContext();
 
   switch (type) {
@@ -397,21 +431,6 @@ function SettingsOverlay({ type, data, onClose }: SettingsOverlayProps): JSX.Ele
           onCancel={onClose}
           onEdit={async (result) => {
             if (userAddress) await renameAddress(userAddress.address, result);
-            onClose();
-          }}
-        />
-      );
-    case OverlayType.EDIT_PHONE:
-      return (
-        <EditOverlay
-          label={translate('screens/kyc', 'Phone number')}
-          autocomplete="phone"
-          prefill={user?.phone}
-          placeholder={translate('screens/kyc', 'Phone number')}
-          validation={Validations.Phone}
-          onCancel={onClose}
-          onEdit={async (result) => {
-            await updatePhone(result);
             onClose();
           }}
         />

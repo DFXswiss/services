@@ -1,7 +1,8 @@
 import { AccountType, Asset, Fiat, KycStatus, ResponseType, useApi } from '@dfx.swiss/react';
+import { CustodyOrderListEntry } from 'src/dto/order.dto';
 import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
 import { useMemo } from 'react';
-import { downloadFile, filenameDateFormat } from 'src/util/utils';
+import { downloadFile, downloadPdfFromString, filenameDateFormat } from 'src/util/utils';
 
 export interface RefundFeeData {
   dfx: number;
@@ -21,7 +22,7 @@ export interface RefundBankDetails {
 }
 
 export interface TransactionRefundData {
-  expiryDate: Date;
+  expiryDate: string;
   fee: RefundFeeData;
   refundAmount: number;
   refundAsset: Asset | Fiat;
@@ -81,15 +82,125 @@ export interface BankTxSearchResult {
   iban?: string;
 }
 
+export interface BankTxInfo {
+  id: number;
+  transactionId?: number;
+  accountServiceRef: string;
+  amount: number;
+  currency: string;
+  type: string;
+  name?: string;
+  iban?: string;
+  remittanceInfo?: string;
+}
+
+export interface IpLogInfo {
+  id: number;
+  ip: string;
+  country?: string;
+  url: string;
+  result: boolean;
+  created: string;
+}
+
+export interface SupportMessageInfo {
+  author: string;
+  message?: string;
+  created: string;
+}
+
+export interface LimitRequestInfo {
+  limit: number;
+  acceptedLimit?: number;
+  decision?: string;
+  fundOrigin: string;
+}
+
+export interface SupportIssueInfo {
+  id: number;
+  uid: string;
+  type: string;
+  state: string;
+  reason: string;
+  name: string;
+  clerk?: string;
+  department?: string;
+  information?: string;
+  messages: SupportMessageInfo[];
+  transaction?: Pick<TransactionInfo, 'id' | 'uid' | 'type' | 'sourceType' | 'amountInChf' | 'amlCheck'>;
+  limitRequest?: LimitRequestInfo;
+  created: string;
+}
+
+export interface CryptoInputInfo {
+  id: number;
+  transactionId?: number;
+  inTxId: string;
+  inTxExplorerUrl?: string;
+  status?: string;
+  amount: number;
+  assetName?: string;
+  blockchain?: string;
+  senderAddresses?: string;
+  returnTxId?: string;
+  returnTxExplorerUrl?: string;
+  purpose?: string;
+}
+
 export interface ComplianceUserData {
-  userData: object;
+  userData: Record<string, unknown>;
   kycFiles: KycFile[];
   kycSteps: KycStepInfo[];
+  kycLogs: KycLogInfo[];
   transactions: TransactionInfo[];
+  bankTxs: BankTxInfo[];
+  cryptoInputs: CryptoInputInfo[];
+  ipLogs: IpLogInfo[];
+  supportIssues: SupportIssueInfo[];
   users: UserInfo[];
   bankDatas: BankDataInfo[];
   buyRoutes: BuyRouteInfo[];
   sellRoutes: SellRouteInfo[];
+}
+
+export interface RecommendationGraphNode {
+  id: number;
+  firstname?: string;
+  surname?: string;
+  kycStatus?: string;
+  kycLevel?: number;
+  tradeApprovalDate?: string;
+}
+
+export interface RecommendationGraphEdge {
+  id: number;
+  recommenderId: number;
+  recommendedId: number;
+  method: string;
+  type: string;
+  isConfirmed?: boolean;
+  confirmationDate?: string;
+  created: string;
+}
+
+export interface RecommendationGraph {
+  nodes: RecommendationGraphNode[];
+  edges: RecommendationGraphEdge[];
+  rootId: number;
+}
+
+export interface RecommendationUserInfo {
+  id: number;
+  firstname?: string;
+  surname?: string;
+}
+
+export interface RecommendationEntry {
+  id: number;
+  recommended: RecommendationUserInfo;
+  isConfirmed?: boolean;
+  confirmationDate?: string;
+  created: string;
 }
 
 export interface KycStepInfo {
@@ -98,15 +209,28 @@ export interface KycStepInfo {
   type?: string;
   status: string;
   sequenceNumber: number;
-  created: Date;
+  result?: string;
+  comment?: string;
+  recommender?: RecommendationUserInfo;
+  recommended?: RecommendationUserInfo;
+  allRecommendations?: RecommendationEntry[];
+  created: string;
+}
+
+export interface KycLogInfo {
+  id: number;
+  type: string;
+  comment?: string;
+  created: string;
 }
 
 export interface UserInfo {
   id: number;
   address: string;
+  ref?: string;
   role: string;
   status: string;
-  created: Date;
+  created: string;
 }
 
 export interface TransactionInfo {
@@ -114,25 +238,38 @@ export interface TransactionInfo {
   uid: string;
   type?: string;
   sourceType: string;
+  inputAmount?: number;
+  inputAsset?: string;
   amountInChf?: number;
+  amountInEur?: number;
   amlCheck?: string;
-  created: Date;
+  chargebackDate?: string;
+  amlReason?: string;
+  created: string;
 }
 
 export interface BankDataInfo {
   id: number;
   iban: string;
   name: string;
+  type?: string;
+  status?: string;
   approved: boolean;
+  manualApproved?: boolean;
+  active: boolean;
+  comment?: string;
+  created: string;
 }
 
 export interface BuyRouteInfo {
   id: number;
+  iban?: string;
   bankUsage: string;
   assetName: string;
   blockchain: string;
   volume: number;
   active: boolean;
+  created: string;
 }
 
 export interface SellRouteInfo {
@@ -140,6 +277,8 @@ export interface SellRouteInfo {
   iban: string;
   fiatName?: string;
   volume: number;
+  active: boolean;
+  created: string;
 }
 
 export interface KycFile {
@@ -291,6 +430,35 @@ export function useCompliance() {
     });
   }
 
+  async function getCustodyOrders(): Promise<CustodyOrderListEntry[]> {
+    return call<CustodyOrderListEntry[]>({
+      url: 'custody/admin/orders',
+      method: 'GET',
+    });
+  }
+
+  async function approveCustodyOrder(id: number): Promise<void> {
+    return call<void>({
+      url: `custody/admin/order/${id}/approve`,
+      method: 'POST',
+    });
+  }
+
+  async function downloadIpLogPdf(userDataId: number): Promise<void> {
+    const response = await call<{ pdfData: string }>({
+      url: `support/${userDataId}/ip-log-pdf`,
+      method: 'GET',
+    });
+    downloadPdfFromString(response.pdfData, `DFX_IP_Logs_${userDataId}_${filenameDateFormat()}.pdf`);
+  }
+
+  async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
+    return call<RecommendationGraph>({
+      url: `support/recommendation-graph/${userDataId}`,
+      method: 'GET',
+    });
+  }
+
   return useMemo(
     () => ({
       search,
@@ -302,6 +470,10 @@ export function useCompliance() {
       getKycFileList,
       getKycFileStats,
       getTransactionList,
+      getRecommendationGraph,
+      downloadIpLogPdf,
+      getCustodyOrders,
+      approveCustodyOrder,
     }),
     [call],
   );

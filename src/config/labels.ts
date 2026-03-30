@@ -5,6 +5,7 @@ import {
   InvestmentDate,
   Limit,
   PaymentQuoteStatus,
+  PhoneCallTime,
   Session,
   SupportIssueReason,
   SupportIssueType,
@@ -135,6 +136,7 @@ export const IssueTypeLabels = {
   [SupportIssueType.PARTNERSHIP_REQUEST]: 'Partnership request',
   [SupportIssueType.NOTIFICATION_OF_CHANGES]: 'Notification of changes',
   [SupportIssueType.BUG_REPORT]: 'Bug report',
+  [SupportIssueType.VERIFICATION_CALL]: 'Verification call',
 };
 
 export const IssueReasonLabels = {
@@ -142,6 +144,11 @@ export const IssueReasonLabels = {
   [SupportIssueReason.DATA_REQUEST]: 'Data request',
   [SupportIssueReason.FUNDS_NOT_RECEIVED]: 'Funds not received',
   [SupportIssueReason.TRANSACTION_MISSING]: 'Transaction missing',
+  [SupportIssueReason.REJECT_CALL]: 'Reject call',
+  [SupportIssueReason.REPEAT_CALL]: 'Repeat call',
+  [SupportIssueReason.NAME_CHANGED]: 'Name changed',
+  [SupportIssueReason.ADDRESS_CHANGED]: 'Address changed',
+  [SupportIssueReason.CIVIL_STATUS_CHANGED]: 'Civil status changed',
 };
 
 export const FileTypeLabels = {
@@ -155,6 +162,8 @@ export const FileTypeLabels = {
   [FileType.RESIDENCE_PERMIT]: 'Residence permit',
   [FileType.ADDITIONAL_DOCUMENTS]: 'Additional documents',
   [FileType.AUTHORITY]: 'Power of Attorney',
+  [FileType.ADDRESS_CHANGE]: 'Address change',
+  [FileType.NAME_CHANGE]: 'Name change',
 };
 
 // --- ADDRESSES --- //
@@ -164,3 +173,16 @@ export function addressLabel(wallet: UserAddress | Session): string {
     ? custodyLabel
     : wallet.address ?? '';
 }
+
+// --- VERIFICATION CALL --- //
+export const PhoneCallTimeLabels = {
+  [PhoneCallTime.H_9_TO_10]: '09:00 - 10:00',
+  [PhoneCallTime.H_10_TO_11]: '10:00 - 11:00',
+  [PhoneCallTime.H_11_TO_12]: '11:00 - 12:00',
+  [PhoneCallTime.H_12_TO_13]: '12:00 - 13:00',
+  [PhoneCallTime.H_13_TO_14]: '13:00 - 14:00',
+  [PhoneCallTime.H_14_TO_15]: '14:00 - 15:00',
+  [PhoneCallTime.H_15_TO_16]: '15:00 - 16:00',
+  [PhoneCallTime.H_9_TO_16]: '09:00 - 16:00',
+};
+

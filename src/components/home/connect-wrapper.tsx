@@ -40,9 +40,12 @@ export function ConnectWrapper(props: ConnectProps): JSX.Element {
 
     case WalletType.CLI_BTC:
     case WalletType.CLI_SPARK:
+    case WalletType.CLI_ARK:
     case WalletType.CLI_LN:
+    case WalletType.CLI_FIRO:
     case WalletType.CLI_XMR:
     case WalletType.CLI_ZANO:
+    case WalletType.CLI_ICP:
     case WalletType.CLI_ETH:
     case WalletType.CLI_ADA:
     case WalletType.CLI_AR:

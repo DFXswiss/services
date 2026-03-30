@@ -1,8 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { BlockchainType, getCachedAuth } from './helpers/auth-cache';
 
-// Note: API Integration tests have been moved to Jest (src/__tests__/api/buy-api.test.ts)
-// This file now contains only UI Flow tests that require browser interaction
 
 test.describe('Buy Process - UI Flow', () => {
   async function getToken(

@@ -86,7 +86,7 @@ export default function TransactionScreen(): JSX.Element {
   const [isCsvLoading, setIsCsvLoading] = useState<ExportType>();
   const [error, setError] = useState<string>();
 
-  const isTransaction = id && id.startsWith('T');
+  const isTransaction = id && (id.startsWith('T') || id.startsWith('Q'));
   const isRefund = isTransaction && pathname.includes('/refund');
 
   async function exportCsv(type: ExportType) {
@@ -210,6 +210,9 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
   const { getTransactionByUid } = useTransaction();
   const { isLoggedIn } = useSessionContext();
   const { setRedirectPath } = useAppHandlingContext();
+  const { user } = useUserContext();
+
+  const isRealUnit = user?.activeAddress?.wallet?.startsWith('RealUnit') ?? false;
 
   const [transaction, setTransaction] = useState<Transaction>();
 
@@ -261,7 +264,8 @@ function TransactionStatus({ setError }: TransactionStatusProps): JSX.Element {
           ![TransactionFailureReason.BANK_RELEASE_PENDING, TransactionFailureReason.INPUT_NOT_CONFIRMED].includes(
             transaction.reason,
           ) &&
-          !transaction.chargebackAmount && (
+          !transaction.chargebackAmount &&
+          !isRealUnit && (
             <>
               <StyledButton
                 label={translate(
@@ -324,7 +328,6 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   const [refundDetails, setRefundDetails] = useState<RefundDetails>();
   const [transaction, setTransaction] = useState<Transaction>();
   const [addresses, setAddresses] = useState<UserAddress[]>();
-  const [showIbanOverride, setShowIbanOverride] = useState(false);
   const [localError, setLocalError] = useState<string>();
 
   const isBuy = transaction?.type === TransactionType.BUY;
@@ -385,13 +388,12 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     try {
       const isBankRefund = isBuy && transaction.inputPaymentMethod !== FiatPaymentMethod.CARD;
 
-      const formTarget = isBuy ? data.iban ?? '' : data.address?.address;
-      const refundTarget = showIbanOverride ? formTarget : refundDetails?.refundTarget ?? formTarget;
+      const formTarget = isBuy ? (data.iban ?? '') : data.address?.address;
 
-      const refundName = showIbanOverride ? data.creditorName : refundDetails?.bankDetails?.name ?? data.creditorName;
+      const refundName = !refundDetails?.refundTarget ? data.creditorName : (refundDetails?.bankDetails?.name ?? data.creditorName);
 
       await setTransactionRefundTarget(transaction.id, {
-        refundTarget,
+        refundTarget: !isBuy || (isBankRefund && !refundDetails?.refundTarget) ? formTarget : undefined,
         creditorData: isBankRefund
           ? {
               name: refundName,
@@ -408,12 +410,11 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
     } catch (e) {
       const error = e as ApiError;
       if (error.message?.includes('MultiAccountIban')) {
-        setShowIbanOverride(true);
         // Use local error to keep the form visible (setError would replace the entire form)
         setLocalError(
           translate(
             'screens/payment',
-            'The original IBAN cannot be used for refunds. Please select a personal bank account.',
+            'This IBAN cannot be used for refunds. Please select a personal bank account.',
           ),
         );
       } else {
@@ -433,9 +434,9 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
   // - creditorStreet/zip/city/country: only required for bank refunds
   const rules = Utils.createRules({
     address: !isBuy ? Validations.Required : undefined,
-    iban: !isBankRefund || (refundDetails?.refundTarget && !showIbanOverride) ? undefined : Validations.Required,
+    iban: !isBankRefund || refundDetails?.refundTarget ? undefined : Validations.Required,
     creditorName:
-      !isBankRefund || (refundDetails?.bankDetails?.name?.trim() && !showIbanOverride)
+      !isBankRefund || (refundDetails?.bankDetails?.name?.trim() && refundDetails?.refundTarget)
         ? undefined
         : Validations.Required,
     creditorStreet: isBankRefund ? Validations.Required : undefined,
@@ -531,8 +532,8 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
           )}
           {transaction.inputPaymentMethod !== FiatPaymentMethod.CARD && isBuy && (
             <>
-              {/* IBAN selection only when no fixed refundTarget OR when override needed (MultiAccountIban error) */}
-              {(!refundDetails.refundTarget || showIbanOverride) && bankAccounts && (
+              {/* IBAN selection only when no fixed refundTarget */}
+              {!refundDetails.refundTarget && bankAccounts && (
                 <StyledDropdown<string>
                   rootRef={rootRef}
                   name="iban"
@@ -547,8 +548,8 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
                   full
                 />
               )}
-              {/* Name input only when no fixed bankDetails.name OR when override needed (MultiAccountIban error) */}
-              {(!refundDetails.bankDetails?.name || showIbanOverride) && (
+              {/* Name input only when no fixed bankDetails.name OR when IBAN override needed */}
+              {(!refundDetails.bankDetails?.name || !refundDetails.refundTarget) && (
                 <StyledInput
                   name="creditorName"
                   autocomplete="name"
@@ -631,7 +632,7 @@ function TransactionRefund({ setError }: TransactionRefundProps): JSX.Element {
 
 interface TransactionListProps extends TransactionStatusProps {
   isSupport: boolean;
-  onSelectTransaction?: (txUid: string) => void;
+  onSelectTransaction?: (txUid: string, state: TransactionState) => void;
 }
 
 export function TransactionList({ isSupport, setError, onSelectTransaction }: TransactionListProps): JSX.Element {
@@ -642,11 +643,14 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
   const { getDetailTransactions, getUnassignedTransactions, getTransactionTargets, setTransactionTarget } =
     useTransaction();
   const { isLoggedIn } = useSessionContext();
+  const { user } = useUserContext();
   const { id } = useParams();
   const { toString } = useBlockchain();
   const { pathname } = useLocation();
   const { rootRef } = useLayoutContext();
   const { getTransactionInvoice, getTransactionReceipt } = useTransaction();
+
+  const isRealUnit = user?.activeAddress?.wallet?.startsWith('RealUnit') ?? false;
 
   const { width } = useWindowContext();
   const txRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -824,7 +828,9 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   onSubmit={handleSubmit(submitAssignment)}
                                 >
                                   <StyledVerticalStack gap={3} full>
-                                    <p className="text-dfxGray-700 mt-4">{translate('screens/payment', 'Reference')}</p>
+                                    <p className="text-dfxGray-700 mt-4">
+                                      {translate('screens/payment', 'Remittance info')}
+                                    </p>
                                     <StyledDropdown<TransactionTarget>
                                       rootRef={rootRef}
                                       items={transactionTargets ?? []}
@@ -872,6 +878,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               }}
                               isLoading={isInvoiceLoading === tx.uid}
                               color={StyledButtonColor.STURDY_WHITE}
+                              hidden={isSupport}
                             />
                             <StyledButton
                               label={translate('general/actions', 'Open receipt')}
@@ -885,7 +892,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   })
                                   .finally(() => setIsReceiptLoading(undefined));
                               }}
-                              hidden={tx.state !== TransactionState.COMPLETED}
+                              hidden={isSupport || tx.state !== TransactionState.COMPLETED}
                               isLoading={isReceiptLoading === tx.id}
                               color={StyledButtonColor.STURDY_WHITE}
                             />
@@ -908,7 +915,8 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                                   TransactionFailureReason.BANK_RELEASE_PENDING,
                                   TransactionFailureReason.INPUT_NOT_CONFIRMED,
                                 ].includes(tx.reason) ||
-                                !!tx.chargebackAmount
+                                !!tx.chargebackAmount ||
+                                isRealUnit
                               }
                             />
                             <StyledButton
@@ -927,7 +935,7 @@ export function TransactionList({ isSupport, setError, onSelectTransaction }: Tr
                               <StyledButton
                                 color={StyledButtonColor.STURDY_WHITE}
                                 label={translate('general/actions', 'Select')}
-                                onClick={() => onSelectTransaction && onSelectTransaction(tx.uid)}
+                                onClick={() => onSelectTransaction && onSelectTransaction(tx.uid, tx.state)}
                               />
                             )}
                           </StyledVerticalStack>
@@ -1001,12 +1009,30 @@ export function TxInfo({ tx, showUserDetails }: TxInfoProps): JSX.Element {
       label: translate('screens/payment', 'DFX fee'),
       text: `${tx.fees.dfx} ${tx.inputAsset} (${(tx.fees.rate * 100).toFixed(2)}%)`,
     });
+  tx.fees?.platform != null &&
+    tx.fees.platform > 0 &&
+    rateItems.push({
+      label: translate('screens/payment', 'Platform fee'),
+      text: `${tx.fees.platform} ${tx.inputAsset}`,
+    });
   tx.fees?.network != null &&
     rateItems.push({
       label: translate('screens/payment', 'Network fee'),
       text: `${tx.fees.network} ${tx.inputAsset}`,
     });
+  tx.fees?.bankFixed != null &&
+    rateItems.push({
+      label: translate('screens/payment', 'Bank fee (fixed)'),
+      text: `${tx.fees.bankFixed} ${tx.inputAsset}`,
+    });
+  tx.fees?.bankVariable != null &&
+    rateItems.push({
+      label: translate('screens/payment', 'Bank fee (percent)'),
+      text: `${tx.fees.bankVariable} ${tx.inputAsset}`,
+    });
   tx.fees?.bank != null &&
+    tx.fees?.bankFixed == null &&
+    tx.fees?.bankVariable == null &&
     rateItems.push({
       label: translate('screens/payment', 'Bank fee'),
       text: `${tx.fees.bank} ${tx.inputAsset}`,

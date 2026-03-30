@@ -59,10 +59,25 @@ const ComplianceKycFilesScreen = lazy(() => import('./screens/compliance-kyc-fil
 const ComplianceKycFilesDetailsScreen = lazy(() => import('./screens/compliance-kyc-files-details.screen'));
 const ComplianceKycStatsScreen = lazy(() => import('./screens/compliance-kyc-stats.screen'));
 const ComplianceTransactionListScreen = lazy(() => import('./screens/compliance-transaction-list.screen'));
+const ComplianceKycStepScreen = lazy(() => import('./screens/compliance-kyc-step.screen'));
+const ComplianceSupportIssueScreen = lazy(() => import('./screens/compliance-support-issue.screen'));
+const ComplianceRecommendationGraphScreen = lazy(() => import('./screens/compliance-recommendation-graph.screen'));
+const ComplianceCustodyOrdersScreen = lazy(() => import('./screens/compliance-custody-orders.screen'));
 const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
+const RealunitHoldersScreen = lazy(() => import('./screens/realunit-holders.screen'));
+const RealunitQuotesScreen = lazy(() => import('./screens/realunit-quotes.screen'));
+const RealunitTransactionsScreen = lazy(() => import('./screens/realunit-transactions.screen'));
+const RealunitQuoteDetailScreen = lazy(() => import('./screens/realunit-quote-detail.screen'));
+const RealunitTransactionDetailScreen = lazy(() => import('./screens/realunit-transaction-detail.screen'));
 const RealunitUserScreen = lazy(() => import('./screens/realunit-user.screen'));
 const PersonalIbanScreen = lazy(() => import('./screens/personal-iban.screen'));
 const BuyCryptoUpdateScreen = lazy(() => import('./screens/buy-crypto-update.screen'));
+const DashboardScreen = lazy(() => import('./screens/dashboard.screen'));
+const DashboardFinancialScreen = lazy(() => import('./screens/dashboard-financial.screen'));
+const DashboardFinancialHistoryScreen = lazy(() => import('./screens/dashboard-financial-history.screen'));
+const DashboardFinancialLiveScreen = lazy(() => import('./screens/dashboard-financial-live.screen'));
+const DashboardFinancialExpensesScreen = lazy(() => import('./screens/dashboard-financial-expenses.screen'));
+const DashboardFinancialLiquidityScreen = lazy(() => import('./screens/dashboard-financial-liquidity.screen'));
 
 setupLanguages();
 
@@ -89,12 +104,12 @@ export const Routes = [
         element: withSuspense(<AccountScreen />),
       },
       {
-        path: 'settings',
-        element: withSuspense(<SettingsScreen />),
+        path: 'account/mail',
+        element: withSuspense(<EditMailScreen />),
       },
       {
-        path: 'settings/mail',
-        element: withSuspense(<EditMailScreen />),
+        path: 'settings',
+        element: withSuspense(<SettingsScreen />),
       },
       {
         path: 'login',
@@ -329,6 +344,18 @@ export const Routes = [
         element: withSuspense(<ComplianceUserScreen />),
       },
       {
+        path: 'compliance/user/:id/kyc-step/:stepId',
+        element: withSuspense(<ComplianceKycStepScreen />),
+      },
+      {
+        path: 'compliance/user/:id/support-issue/:issueId',
+        element: withSuspense(<ComplianceSupportIssueScreen />),
+      },
+      {
+        path: 'compliance/recommendations/:id',
+        element: withSuspense(<ComplianceRecommendationGraphScreen />),
+      },
+      {
         path: 'compliance/bank-tx/:id/return',
         element: withSuspense(<ComplianceBankTxReturnScreen />),
       },
@@ -349,6 +376,10 @@ export const Routes = [
         element: withSuspense(<ComplianceTransactionListScreen />),
       },
       {
+        path: 'compliance/custody-orders',
+        element: withSuspense(<ComplianceCustodyOrdersScreen />),
+      },
+      {
         path: 'realunit',
         element: (
           <RealunitContextProvider>
@@ -361,8 +392,67 @@ export const Routes = [
             element: withSuspense(<RealunitScreen />),
           },
           {
+            path: 'holders',
+            element: withSuspense(<RealunitHoldersScreen />),
+          },
+          {
+            path: 'quotes',
+            element: withSuspense(<RealunitQuotesScreen />),
+          },
+          {
+            path: 'quotes/:id',
+            element: withSuspense(<RealunitQuoteDetailScreen />),
+          },
+          {
+            path: 'transactions',
+            element: withSuspense(<RealunitTransactionsScreen />),
+          },
+          {
+            path: 'transactions/:id',
+            element: withSuspense(<RealunitTransactionDetailScreen />),
+          },
+          {
             path: 'user/:address',
             element: withSuspense(<RealunitUserScreen />),
+          },
+        ],
+      },
+      {
+        path: 'dashboard',
+        children: [
+          {
+            index: true,
+            element: withSuspense(<DashboardScreen />),
+          },
+          {
+            path: 'financial',
+            children: [
+              {
+                index: true,
+                element: withSuspense(<DashboardFinancialScreen />),
+              },
+              {
+                path: 'live',
+                element: withSuspense(<DashboardFinancialLiveScreen />),
+              },
+              {
+                path: 'history',
+                children: [
+                  {
+                    index: true,
+                    element: withSuspense(<DashboardFinancialHistoryScreen />),
+                  },
+                  {
+                    path: 'expenses',
+                    element: withSuspense(<DashboardFinancialExpensesScreen />),
+                  },
+                ],
+              },
+              {
+                path: 'liquidity',
+                element: withSuspense(<DashboardFinancialLiquidityScreen />),
+              },
+            ],
           },
         ],
       },
