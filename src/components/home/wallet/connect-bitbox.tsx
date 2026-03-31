@@ -11,7 +11,8 @@ import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { BitcoinAddressType } from '../../../config/key-path';
 import { useSettingsContext } from '../../../contexts/settings.context';
-import { WalletType, useWalletContext } from '../../../contexts/wallet.context';
+import { WalletBlockchains, WalletType, useWalletContext } from '../../../contexts/wallet.context';
+import { useBlockchain } from '../../../hooks/blockchain.hook';
 import { useDeferredPromise } from '../../../hooks/deferred-promise.hook';
 import { BitboxWallet, useBitbox } from '../../../hooks/wallets/bitbox.hook';
 import { ConnectBase } from '../connect-base';
@@ -100,6 +101,7 @@ export default function ConnectBitbox(props: Props): JSX.Element {
           onAddressSelect={onAddressSelect}
           addressLoading={addressLoading}
           wallet={props.wallet}
+          blockchain={props.blockchain}
           {...p}
         />
       )}
@@ -112,6 +114,7 @@ export default function ConnectBitbox(props: Props): JSX.Element {
 interface ContentProps extends ConnectContentProps {
   pairingCode?: string;
   wallet: WalletType;
+  blockchain?: Blockchain;
   addressLoading: boolean;
   addresses?: string[];
   onAddressSelect: (accountIndex: number, type: BitcoinAddressType, address: Address) => void;
@@ -126,17 +129,35 @@ function Content({
   error,
   pairingCode,
   wallet,
+  blockchain,
   onAddressSelect,
   onLoadAddresses,
   addressLoading,
+  onSwitch,
 }: ContentProps): JSX.Element {
   const { translate } = useSettingsContext();
   const { addressTypes, defaultAddressType } = useBitbox();
+  const { toString } = useBlockchain();
+
+  const blockchainOptions = [
+    ...(WalletBlockchains[WalletType.BITBOX_BTC] ?? []),
+    ...(WalletBlockchains[WalletType.BITBOX_ETH] ?? []),
+  ];
+  const defaultBlockchain =
+    blockchainOptions.find((b) => b === blockchain) ??
+    (wallet === WalletType.BITBOX_BTC ? blockchainOptions[0] : blockchainOptions[1]);
 
   // form
-  const { control, setValue } = useForm<{ type: BitcoinAddressType; address?: Address; accountIndex: number }>({
-    defaultValues: { type: defaultAddressType, accountIndex: 0 },
+  const { control, setValue } = useForm<{
+    type: BitcoinAddressType;
+    address?: Address;
+    accountIndex: number;
+    blockchain: Blockchain;
+  }>({
+    defaultValues: { type: defaultAddressType, accountIndex: 0, blockchain: defaultBlockchain },
   });
+
+  const selectedBlockchain = useWatch({ control, name: 'blockchain' });
 
   const selectedType = useWatch({ control, name: 'type' });
   const selectedAddress = useWatch({ control, name: 'address' });
@@ -173,6 +194,18 @@ function Content({
     <>
       <Form control={control} errors={{}}>
         <StyledVerticalStack gap={5} center full>
+          {!addresses && (
+            <StyledDropdown<Blockchain>
+              rootRef={rootRef}
+              name="blockchain"
+              items={blockchainOptions}
+              labelFunc={(item) => toString(item)}
+              full
+              disabled={isConnecting}
+              label={translate('screens/home', 'Blockchain')}
+            />
+          )}
+
           {addresses ? (
             <>
               {wallet === WalletType.BITBOX_BTC && (
@@ -243,7 +276,17 @@ function Content({
                     ? selectedAddress
                       ? () => onAddressSelect(selectedAccountIndex, selectedType, selectedAddress)
                       : () => undefined
-                    : () => connect()
+                    : () => {
+                        const targetWallet =
+                          selectedBlockchain === Blockchain.BITCOIN
+                            ? WalletType.BITBOX_BTC
+                            : WalletType.BITBOX_ETH;
+                        if (targetWallet !== wallet) {
+                          onSwitch(targetWallet);
+                        } else {
+                          connect();
+                        }
+                      }
                 }
                 width={StyledButtonWidth.MIN}
                 className="self-center"
