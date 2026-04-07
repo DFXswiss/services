@@ -14,6 +14,7 @@ import {
   useUser,
   useUserContext,
 } from '@dfx.swiss/react';
+import { ConfirmationOverlay } from 'src/components/overlay/confirmation-overlay';
 import {
   AlignContent,
   CopyButton,
@@ -102,6 +103,7 @@ export default function AccountScreen(): JSX.Element {
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [pdfBlockchains, setPdfBlockchains] = useState<Blockchain[]>([]);
+  const [confirmEditStep, setConfirmEditStep] = useState<KycStepName>();
 
   const recommendationsRef = useRef<HTMLHeadingElement>(null);
   useAnchor('recommendation', recommendationsRef, !isUserLoading && !isDataLoading);
@@ -304,22 +306,38 @@ export default function AccountScreen(): JSX.Element {
   const totalVolumeSum = totalVolumeItems?.reduce((acc, item) => acc + item.value, 0);
   const annualVolumeSum = annualVolumeItems?.reduce((acc, item) => acc + item.value, 0);
 
-  const title = showPdfModal
-    ? translate('screens/home', 'PDF Download Address Report')
-    : showRecommendationModal
-      ? translate('screens/recommendation', 'Create Invitation')
-      : isEmbedded
-        ? translate('screens/home', 'DFX services')
-        : translate('screens/home', 'Account');
-  const hasBackButton = (canClose && !isEmbedded) || showPdfModal || showRecommendationModal;
-  const onBack = showPdfModal
-    ? closePdfModal
-    : showRecommendationModal
-      ? () => setShowRecommendationModal(false)
-      : undefined;
+  const confirmEditStepLabels: Record<string, string> = {
+    [KycStepName.PHONE_CHANGE]: translate('screens/home', 'Change phone number'),
+    [KycStepName.ADDRESS_CHANGE]: translate('screens/home', 'Change address'),
+    [KycStepName.NAME_CHANGE]: translate('screens/home', 'Change name'),
+  };
+
+  const title = confirmEditStep
+    ? confirmEditStepLabels[confirmEditStep]
+    : showPdfModal
+      ? translate('screens/home', 'PDF Download Address Report')
+      : showRecommendationModal
+        ? translate('screens/recommendation', 'Create Invitation')
+        : isEmbedded
+          ? translate('screens/home', 'DFX services')
+          : translate('screens/home', 'Account');
+  const hasBackButton = (canClose && !isEmbedded) || showPdfModal || showRecommendationModal || !!confirmEditStep;
+  const onBack = confirmEditStep
+    ? () => setConfirmEditStep(undefined)
+    : showPdfModal
+      ? closePdfModal
+      : showRecommendationModal
+        ? () => setShowRecommendationModal(false)
+        : undefined;
   const image = 'https://dfx.swiss/images/app/berge.jpg';
 
   useLayoutOptions({ title, backButton: hasBackButton, onBack });
+
+  const confirmEditStepMessages: Record<string, string> = {
+    [KycStepName.PHONE_CHANGE]: translate('screens/home', 'Do you really want to change your phone number?'),
+    [KycStepName.ADDRESS_CHANGE]: translate('screens/home', 'Do you really want to change your address?'),
+    [KycStepName.NAME_CHANGE]: translate('screens/home', 'Do you really want to change your name?'),
+  };
 
   return (
     <>
@@ -327,6 +345,17 @@ export default function AccountScreen(): JSX.Element {
         <div className="mt-4">
           <StyledLoadingSpinner size={SpinnerSize.LG} />
         </div>
+      ) : confirmEditStep ? (
+        <ConfirmationOverlay
+          message={confirmEditStepMessages[confirmEditStep]}
+          cancelLabel={translate('general/actions', 'Cancel')}
+          confirmLabel={translate('general/actions', 'Continue')}
+          onCancel={() => setConfirmEditStep(undefined)}
+          onConfirm={async () => {
+            startStep(confirmEditStep);
+            setConfirmEditStep(undefined);
+          }}
+        />
       ) : (
         <StyledVerticalStack gap={4} center full marginY={4} className="z-10">
           {/* Profile Data */}
@@ -355,7 +384,7 @@ export default function AccountScreen(): JSX.Element {
                     {profile.phone}
                     <StyledIconButton
                       icon={IconVariant.EDIT}
-                      onClick={() => startStep(KycStepName.PHONE_CHANGE)}
+                      onClick={() => setConfirmEditStep(KycStepName.PHONE_CHANGE)}
                       inline
                     />
                   </div>
@@ -367,7 +396,7 @@ export default function AccountScreen(): JSX.Element {
                     {[profile.firstName, profile.lastName].filter(Boolean).join(' ')}
                     <StyledIconButton
                       icon={IconVariant.EDIT}
-                      onClick={() => startStep(KycStepName.NAME_CHANGE)}
+                      onClick={() => setConfirmEditStep(KycStepName.NAME_CHANGE)}
                       inline
                     />
                   </div>
@@ -379,7 +408,7 @@ export default function AccountScreen(): JSX.Element {
                     {formatAddress(profile.address)}
                     <StyledIconButton
                       icon={IconVariant.EDIT}
-                      onClick={() => startStep(KycStepName.ADDRESS_CHANGE)}
+                      onClick={() => setConfirmEditStep(KycStepName.ADDRESS_CHANGE)}
                       inline
                     />
                   </div>
