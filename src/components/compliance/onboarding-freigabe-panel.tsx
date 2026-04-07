@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { KycFile, KycStepInfo } from 'src/hooks/compliance.hook';
-import { formatDate, formatValue, statusBadge } from 'src/util/compliance-helpers';
+import { formatDate, formatDateTime, formatValue, statusBadge } from 'src/util/compliance-helpers';
 
 type DecisionValue = '' | 'Akzeptiert' | 'Abgelehnt';
 
@@ -393,7 +393,7 @@ export function OnboardingFreigabePanel({
       depositLimit: depositLimit || undefined,
       amlAccountType: amlAccountType || undefined,
       processedBy: processedBy || undefined,
-      finalDecision: finalDecision || undefined,
+      finalDecision,
     } as SavedComment;
 
     const result = JSON.stringify(existingResult);
@@ -669,9 +669,9 @@ Beschreibung der Geschäftlichen Aktivitäten"
 
           {/* UTC Date + Processed by */}
           <tr>
-            <td className="py-1 pr-4 text-left text-sm text-dfxBlue-800">UTC Datum:</td>
+            <td className="py-1 pr-4 text-left text-sm text-dfxBlue-800">Datum:</td>
             <td className="py-1 text-left text-sm text-dfxBlue-800" colSpan={2}>
-              {new Date().toLocaleDateString('de-CH')} {new Date().toLocaleTimeString('de-CH')}
+              {formatDateTime(new Date().toISOString())}
             </td>
           </tr>
           <DropdownField
