@@ -150,11 +150,13 @@ export default function ComplianceUserScreen(): JSX.Element {
               />
             </div>
 
-            <FilePreviewPanel
-              preview={preview}
-              label={translate('screens/compliance', 'File Preview')}
-              onClose={() => setPreview(undefined)}
-            />
+            <div className="sticky top-4 self-start">
+              <FilePreviewPanel
+                preview={preview}
+                label={translate('screens/compliance', 'File Preview')}
+                onClose={() => setPreview(undefined)}
+              />
+            </div>
           </div>
 
           {/* Bottom Section: Tabs */}
@@ -181,6 +183,7 @@ export default function ComplianceUserScreen(): JSX.Element {
                   transactions={data.transactions}
                   bankTxs={data.bankTxs}
                   cryptoInputs={data.cryptoInputs}
+                  userDataId={+(userDataId ?? '0')}
                   expandedBankTxId={expandedBankTxId}
                   expandedCryptoInputId={expandedCryptoInputId}
                   expandedTxUid={expandedTxUid}
@@ -192,9 +195,7 @@ export default function ComplianceUserScreen(): JSX.Element {
 
               {activeTab === 'users' && <UsersTable users={data.users} />}
               {activeTab === 'kycSteps' && <KycStepsTable kycSteps={data.kycSteps} />}
-              {activeTab === 'kycLogs' && (
-                <KycLogsTable kycLogs={data.kycLogs.filter((l) => l.type !== 'KycFileLog')} />
-              )}
+              {activeTab === 'kycLogs' && <KycLogsTable kycLogs={data.kycLogs} />}
               {activeTab === 'bankDatas' && <BankDatasTable bankDatas={data.bankDatas} />}
               {activeTab === 'buyRoutes' && <BuyRoutesTable buyRoutes={data.buyRoutes} />}
               {activeTab === 'sellRoutes' && <SellRoutesTable sellRoutes={data.sellRoutes} />}

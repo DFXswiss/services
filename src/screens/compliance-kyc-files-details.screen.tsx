@@ -1,4 +1,5 @@
 import { useSessionContext } from '@dfx.swiss/react';
+import { todayAsString } from 'src/util/compliance-helpers';
 import {
   DfxIcon,
   IconColor,
@@ -126,7 +127,7 @@ export default function ComplianceKycFilesDetailsScreen(): JSX.Element {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `kyc-files-details-${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `kyc-files-details-${todayAsString()}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   }
