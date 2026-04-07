@@ -13,7 +13,15 @@ export function RecommendationPanel({ kycSteps, userDataId, navigate }: Recommen
 
   return (
     <div>
-      <h2 className="text-dfxGray-700 mb-2">Recommendation ({recommendations.length})</h2>
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-dfxGray-700">Recommendation ({recommendations.length})</h2>
+        <button
+          className="text-xs text-dfxBlue-800 hover:underline"
+          onClick={() => navigate(`/compliance/recommendations/${userDataId}`)}
+        >
+          View Network
+        </button>
+      </div>
       <div className="bg-white rounded-lg shadow-sm max-h-[35vh] overflow-auto scroll-shadow">
         {recommendations.length > 0 ? (
           <table className="w-full border-collapse">
