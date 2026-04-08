@@ -51,11 +51,11 @@ import { BuyCompletion } from '../components/payment/buy-completion';
 import { PrivateAssetHint } from '../components/private-asset-hint';
 import { QuoteErrorHint } from '../components/quote-error-hint';
 import { SanctionHint } from '../components/sanction-hint';
-import { addressLabel } from '../config/labels';
 import { useAppHandlingContext } from '../contexts/app-handling.context';
 import { useLayoutContext } from '../contexts/layout.context';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useWalletContext } from '../contexts/wallet.context';
+import { AddressItem, useAddressItems } from '../hooks/address-items.hook';
 import { useAppParams } from '../hooks/app-params.hook';
 import { useBlockchain } from '../hooks/blockchain.hook';
 import useDebounce from '../hooks/debounce.hook';
@@ -68,19 +68,13 @@ enum Side {
   GET = 'GET',
 }
 
-interface Address {
-  address: string;
-  label: string;
-  chain?: Blockchain;
-}
-
 interface FormData {
   amount: string;
   currency: Fiat;
   paymentMethod: FiatPaymentMethod;
   asset: Asset;
   targetAmount: string;
-  address: Address;
+  address: AddressItem;
 }
 
 interface ValidatedData extends BuyPaymentInfo {
@@ -121,6 +115,11 @@ export default function BuyScreen(): JSX.Element {
   const { rootRef } = useLayoutContext();
   const { isInitialized } = useAppHandlingContext();
 
+  const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
+  const targetBlockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
+
+  const { addressItems } = useAddressItems({ availableBlockchains: targetBlockchains });
+
   const [availableAssets, setAvailableAssets] = useState<Asset[]>();
   const [paymentInfo, setPaymentInfo] = useState<Buy>();
   const [customAmountError, setCustomAmountError] = useState<string>();
@@ -148,23 +147,6 @@ export default function BuyScreen(): JSX.Element {
     setValue(field, value, { shouldValidate: true });
   }
 
-  const filteredAssets = assets && filterAssets(Array.from(assets.values()).flat(), assetFilter);
-  const blockchains = availableBlockchains?.filter((b) => filteredAssets?.some((a) => a.blockchain === b));
-
-  const addressItems: Address[] =
-    session?.address && blockchains?.length
-      ? [
-          ...blockchains.map((b) => ({
-            address: addressLabel(session),
-            label: toString(b),
-            chain: b,
-          })),
-          {
-            address: translate('screens/buy', 'Switch address'),
-            label: translate('screens/buy', 'Login with a different address'),
-          },
-        ]
-      : [];
   const availablePaymentMethods = [FiatPaymentMethod.BANK];
 
   // no instant payments ATM
@@ -564,11 +546,11 @@ export default function BuyScreen(): JSX.Element {
                   </StyledHorizontalStack>
 
                   {!hideTargetSelection && (
-                    <StyledDropdown<Address>
+                    <StyledDropdown<AddressItem>
                       rootRef={rootRef}
                       name="address"
                       items={addressItems}
-                      labelFunc={(item) => blankedAddress(item.address, { width })}
+                      labelFunc={(item) => blankedAddress(item.addressLabel, { width })}
                       descriptionFunc={(item) => item.label}
                       full
                       forceEnable
