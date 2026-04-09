@@ -419,7 +419,6 @@ export default function SepaManualScreen(): JSX.Element {
         )}
 
         <StyledButton
-          type="submit"
           label={translate('general/actions', 'Next')}
           onClick={handleSubmit(onSubmit)}
           width={StyledButtonWidth.FULL}
