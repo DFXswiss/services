@@ -54,7 +54,7 @@ function escapeXml(str?: string): string {
     .replace(/'/g, '&apos;');
 }
 
-function buildPartyXml(name: string, iban: string, address?: { street?: string; buildingNumber?: string; postalCode?: string; city?: string; country?: string }): string {
+function buildPartyXml(name: string, address?: { street?: string; buildingNumber?: string; postalCode?: string; city?: string; country?: string }): string {
   const hasAddress = address?.street || address?.buildingNumber || address?.postalCode || address?.city || address?.country;
 
   const addressXml = hasAddress
@@ -92,7 +92,7 @@ function buildCamt053Xml(data: ManualBankTxForm): string {
   const cleanIban = data.iban.replace(/\s/g, '');
 
   const debtorXml = isCredit
-    ? `<Dbtr>${buildPartyXml(data.name, cleanIban, counterpartyAddress)}</Dbtr>
+    ? `<Dbtr>${buildPartyXml(data.name, counterpartyAddress)}</Dbtr>
                             <DbtrAcct><Id><IBAN>${escapeXml(cleanIban)}</IBAN></Id></DbtrAcct>`
     : `<Dbtr><Nm>${ACCOUNT_OWNER}</Nm></Dbtr>
                             <DbtrAcct><Id><IBAN>${ACCOUNT_IBAN}</IBAN></Id></DbtrAcct>`;
@@ -100,7 +100,7 @@ function buildCamt053Xml(data: ManualBankTxForm): string {
   const creditorXml = isCredit
     ? `<Cdtr><Nm>${ACCOUNT_OWNER}</Nm></Cdtr>
                             <CdtrAcct><Id><IBAN>${ACCOUNT_IBAN}</IBAN></Id></CdtrAcct>`
-    : `<Cdtr>${buildPartyXml(data.name, cleanIban, counterpartyAddress)}</Cdtr>
+    : `<Cdtr>${buildPartyXml(data.name, counterpartyAddress)}</Cdtr>
                             <CdtrAcct><Id><IBAN>${escapeXml(cleanIban)}</IBAN></Id></CdtrAcct>`;
 
   const txCode = isCredit
