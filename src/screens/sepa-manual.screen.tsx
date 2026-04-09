@@ -44,51 +44,70 @@ const ACCOUNT_IBAN = 'CH7780808002608614092';
 const ACCOUNT_OWNER = 'DFX AG';
 const ACCOUNT_BANK = 'Raiffeisenbank Waldkirch';
 
-export default function SepaManualScreen(): JSX.Element {
-  const { translate, translateError } = useSettingsContext();
-  const { call } = useApi();
+function escapeXml(str?: string): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
 
-  const [isUploading, setIsUploading] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
-  const [error, setError] = useState<string>();
+function buildPartyXml(name: string, iban: string, address?: { street?: string; buildingNumber?: string; postalCode?: string; city?: string; country?: string }): string {
+  const hasAddress = address?.street || address?.buildingNumber || address?.postalCode || address?.city || address?.country;
 
-  useAdminGuard();
+  const addressXml = hasAddress
+    ? [
+        '<PstlAdr>',
+        address?.street ? `<StrtNm>${escapeXml(address.street)}</StrtNm>` : '',
+        address?.buildingNumber ? `<BldgNb>${escapeXml(address.buildingNumber)}</BldgNb>` : '',
+        address?.postalCode ? `<PstCd>${escapeXml(address.postalCode)}</PstCd>` : '',
+        address?.city ? `<TwnNm>${escapeXml(address.city)}</TwnNm>` : '',
+        address?.country ? `<Ctry>${escapeXml(address.country)}</Ctry>` : '',
+        '</PstlAdr>',
+      ]
+        .filter(Boolean)
+        .join('')
+    : '';
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { isValid, errors },
-  } = useForm<ManualBankTxForm>({
-    mode: 'onChange',
-    defaultValues: {
-      currency: 'EUR',
-      direction: CreditDebitIndicator.CRDT,
-      country: 'DE',
-    },
-  });
+  return `<Nm>${escapeXml(name)}</Nm>${addressXml}`;
+}
 
-  function buildCamt053Xml(data: ManualBankTxForm): string {
-    const now = new Date();
-    const timestamp = now.toISOString().replace(/[-:T]/g, '').slice(0, 14);
-    const isoTimestamp = now.toISOString().replace('Z', '+00:00');
-    const ref = `${Date.now()}`;
+function buildCamt053Xml(data: ManualBankTxForm): string {
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[-:T]/g, '').slice(0, 14);
+  const isoTimestamp = now.toISOString().replace('Z', '+00:00');
+  const ref = `${Date.now()}`;
+  const amount = parseFloat(data.amount);
+  const isCredit = data.direction === CreditDebitIndicator.CRDT;
 
-    const isCredit = data.direction === CreditDebitIndicator.CRDT;
+  const counterpartyAddress = {
+    street: data.street,
+    buildingNumber: data.buildingNumber,
+    postalCode: data.postalCode,
+    city: data.city,
+    country: data.country,
+  };
+  const cleanIban = data.iban.replace(/\s/g, '');
 
-    const debtor = isCredit
-      ? `<Dbtr><Nm>${escapeXml(data.name)}</Nm><PstlAdr><StrtNm>${escapeXml(data.street)}</StrtNm><BldgNb>${escapeXml(data.buildingNumber)}</BldgNb><PstCd>${escapeXml(data.postalCode)}</PstCd><TwnNm>${escapeXml(data.city)}</TwnNm><Ctry>${escapeXml(data.country)}</Ctry></PstlAdr></Dbtr><DbtrAcct><Id><IBAN>${escapeXml(data.iban.replace(/\s/g, ''))}</IBAN></Id></DbtrAcct>`
-      : `<Dbtr><Nm>${ACCOUNT_OWNER}</Nm></Dbtr><DbtrAcct><Id><IBAN>${ACCOUNT_IBAN}</IBAN></Id></DbtrAcct>`;
+  const debtorXml = isCredit
+    ? `<Dbtr>${buildPartyXml(data.name, cleanIban, counterpartyAddress)}</Dbtr>
+                            <DbtrAcct><Id><IBAN>${escapeXml(cleanIban)}</IBAN></Id></DbtrAcct>`
+    : `<Dbtr><Nm>${ACCOUNT_OWNER}</Nm></Dbtr>
+                            <DbtrAcct><Id><IBAN>${ACCOUNT_IBAN}</IBAN></Id></DbtrAcct>`;
 
-    const creditor = isCredit
-      ? `<Cdtr><Nm>${ACCOUNT_OWNER}</Nm></Cdtr><CdtrAcct><Id><IBAN>${ACCOUNT_IBAN}</IBAN></Id></CdtrAcct>`
-      : `<Cdtr><Nm>${escapeXml(data.name)}</Nm><PstlAdr><StrtNm>${escapeXml(data.street)}</StrtNm><BldgNb>${escapeXml(data.buildingNumber)}</BldgNb><PstCd>${escapeXml(data.postalCode)}</PstCd><TwnNm>${escapeXml(data.city)}</TwnNm><Ctry>${escapeXml(data.country)}</Ctry></PstlAdr></Cdtr><CdtrAcct><Id><IBAN>${escapeXml(data.iban.replace(/\s/g, ''))}</IBAN></Id></CdtrAcct>`;
+  const creditorXml = isCredit
+    ? `<Cdtr><Nm>${ACCOUNT_OWNER}</Nm></Cdtr>
+                            <CdtrAcct><Id><IBAN>${ACCOUNT_IBAN}</IBAN></Id></CdtrAcct>`
+    : `<Cdtr>${buildPartyXml(data.name, cleanIban, counterpartyAddress)}</Cdtr>
+                            <CdtrAcct><Id><IBAN>${escapeXml(cleanIban)}</IBAN></Id></CdtrAcct>`;
 
-    const txCode = isCredit ? '<Cd>RCDT</Cd><SubFmlyCd>XBCT</SubFmlyCd>' : '<Cd>ICDT</Cd><SubFmlyCd>DMCT</SubFmlyCd>';
+  const txCode = isCredit
+    ? '<Cd>RCDT</Cd><SubFmlyCd>XBCT</SubFmlyCd>'
+    : '<Cd>ICDT</Cd><SubFmlyCd>DMCT</SubFmlyCd>';
 
-    const amount = parseFloat(data.amount);
-
-    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Document xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:camt.053.001.04 camt.053.001.04.xsd" xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.04" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <BkToCstmrStmt>
         <GrpHdr>
@@ -182,8 +201,8 @@ export default function SepaManualScreen(): JSX.Element {
                             </Domn>
                         </BkTxCd>
                         <RltdPties>
-                            ${debtor}
-                            ${creditor}
+                            ${debtorXml}
+                            ${creditorXml}
                         </RltdPties>
                         <RmtInf>
                             <Ustrd>${escapeXml(data.remittanceInfo)}</Ustrd>
@@ -195,16 +214,31 @@ export default function SepaManualScreen(): JSX.Element {
         </Stmt>
     </BkToCstmrStmt>
 </Document>`;
-  }
+}
 
-  function escapeXml(str: string): string {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
-  }
+export default function SepaManualScreen(): JSX.Element {
+  const { translate, translateError } = useSettingsContext();
+  const { call } = useApi();
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [error, setError] = useState<string>();
+
+  useAdminGuard();
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isValid, errors },
+  } = useForm<ManualBankTxForm>({
+    mode: 'onChange',
+    defaultValues: {
+      currency: 'EUR',
+      direction: CreditDebitIndicator.CRDT,
+      country: 'DE',
+    },
+  });
 
   async function onSubmit(data: ManualBankTxForm) {
     const xml = buildCamt053Xml(data);
