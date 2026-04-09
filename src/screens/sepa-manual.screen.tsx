@@ -1,4 +1,4 @@
-import { ApiError, useApi, Utils, Validations } from '@dfx.swiss/react';
+import { ApiError, Country, useApi, Utils, Validations } from '@dfx.swiss/react';
 import {
   DfxIcon,
   Form,
@@ -7,12 +7,15 @@ import {
   StyledButton,
   StyledButtonWidth,
   StyledDropdown,
+  StyledHorizontalStack,
   StyledInput,
+  StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
+import { useLayoutContext } from 'src/contexts/layout.context';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAdminGuard } from '../hooks/guard.hook';
@@ -28,21 +31,20 @@ interface ManualBankTxForm {
   amount: string;
   currency: string;
   direction: CreditDebitIndicator;
+  accountIban: string;
+  accountOwner: string;
+  accountBank: string;
   name: string;
   street: string;
-  buildingNumber: string;
-  postalCode: string;
+  houseNumber: string;
+  zip: string;
   city: string;
-  country: string;
+  country: Country;
   iban: string;
   remittanceInfo: string;
 }
 
 const CURRENCIES = ['EUR', 'CHF', 'USD'];
-
-const ACCOUNT_IBAN = 'CH7780808002608614092';
-const ACCOUNT_OWNER = 'DFX AG';
-const ACCOUNT_BANK = 'Raiffeisenbank Waldkirch';
 
 function escapeXml(str?: string): string {
   if (!str) return '';
@@ -54,15 +56,15 @@ function escapeXml(str?: string): string {
     .replace(/'/g, '&apos;');
 }
 
-function buildPartyXml(name: string, address?: { street?: string; buildingNumber?: string; postalCode?: string; city?: string; country?: string }): string {
-  const hasAddress = address?.street || address?.buildingNumber || address?.postalCode || address?.city || address?.country;
+function buildPartyXml(name: string, address?: { street?: string; houseNumber?: string; zip?: string; city?: string; country?: string }): string {
+  const hasAddress = address?.street || address?.houseNumber || address?.zip || address?.city || address?.country;
 
   const addressXml = hasAddress
     ? [
         '<PstlAdr>',
         address?.street ? `<StrtNm>${escapeXml(address.street)}</StrtNm>` : '',
-        address?.buildingNumber ? `<BldgNb>${escapeXml(address.buildingNumber)}</BldgNb>` : '',
-        address?.postalCode ? `<PstCd>${escapeXml(address.postalCode)}</PstCd>` : '',
+        address?.houseNumber ? `<BldgNb>${escapeXml(address.houseNumber)}</BldgNb>` : '',
+        address?.zip ? `<PstCd>${escapeXml(address.zip)}</PstCd>` : '',
         address?.city ? `<TwnNm>${escapeXml(address.city)}</TwnNm>` : '',
         address?.country ? `<Ctry>${escapeXml(address.country)}</Ctry>` : '',
         '</PstlAdr>',
@@ -79,27 +81,31 @@ function buildCamt053Xml(data: ManualBankTxForm): string {
   const timestamp = now.toISOString().replace(/[-:T]/g, '').slice(0, 14);
   const isoTimestamp = now.toISOString().replace('Z', '+00:00');
   const ref = `${Date.now()}`;
-  const amount = parseFloat(data.amount);
+  const amount = parseFloat(data.amount).toFixed(2);
   const isCredit = data.direction === CreditDebitIndicator.CRDT;
+
+  const accountIban = data.accountIban.replace(/\s/g, '');
+  const accountOwner = data.accountOwner;
+  const accountBank = data.accountBank;
 
   const counterpartyAddress = {
     street: data.street,
-    buildingNumber: data.buildingNumber,
-    postalCode: data.postalCode,
+    houseNumber: data.houseNumber,
+    zip: data.zip,
     city: data.city,
-    country: data.country,
+    country: data.country?.symbol,
   };
   const cleanIban = data.iban.replace(/\s/g, '');
 
   const debtorXml = isCredit
     ? `<Dbtr>${buildPartyXml(data.name, counterpartyAddress)}</Dbtr>
                             <DbtrAcct><Id><IBAN>${escapeXml(cleanIban)}</IBAN></Id></DbtrAcct>`
-    : `<Dbtr><Nm>${ACCOUNT_OWNER}</Nm></Dbtr>
-                            <DbtrAcct><Id><IBAN>${ACCOUNT_IBAN}</IBAN></Id></DbtrAcct>`;
+    : `<Dbtr><Nm>${escapeXml(accountOwner)}</Nm></Dbtr>
+                            <DbtrAcct><Id><IBAN>${escapeXml(accountIban)}</IBAN></Id></DbtrAcct>`;
 
   const creditorXml = isCredit
-    ? `<Cdtr><Nm>${ACCOUNT_OWNER}</Nm></Cdtr>
-                            <CdtrAcct><Id><IBAN>${ACCOUNT_IBAN}</IBAN></Id></CdtrAcct>`
+    ? `<Cdtr><Nm>${escapeXml(accountOwner)}</Nm></Cdtr>
+                            <CdtrAcct><Id><IBAN>${escapeXml(accountIban)}</IBAN></Id></CdtrAcct>`
     : `<Cdtr>${buildPartyXml(data.name, counterpartyAddress)}</Cdtr>
                             <CdtrAcct><Id><IBAN>${escapeXml(cleanIban)}</IBAN></Id></CdtrAcct>`;
 
@@ -125,14 +131,14 @@ function buildCamt053Xml(data: ManualBankTxForm): string {
             </FrToDt>
             <Acct>
                 <Id>
-                    <IBAN>${ACCOUNT_IBAN}</IBAN>
+                    <IBAN>${escapeXml(accountIban)}</IBAN>
                 </Id>
                 <Ownr>
-                    <Nm>${ACCOUNT_OWNER}</Nm>
+                    <Nm>${escapeXml(accountOwner)}</Nm>
                 </Ownr>
                 <Svcr>
                     <FinInstnId>
-                        <Nm>${ACCOUNT_BANK}</Nm>
+                        <Nm>${escapeXml(accountBank)}</Nm>
                     </FinInstnId>
                 </Svcr>
             </Acct>
@@ -217,8 +223,9 @@ function buildCamt053Xml(data: ManualBankTxForm): string {
 }
 
 export default function SepaManualScreen(): JSX.Element {
-  const { translate, translateError } = useSettingsContext();
+  const { translate, translateError, allowedCountries } = useSettingsContext();
   const { call } = useApi();
+  const { rootRef } = useLayoutContext();
 
   const [isUploading, setIsUploading] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
@@ -236,11 +243,10 @@ export default function SepaManualScreen(): JSX.Element {
     defaultValues: {
       currency: 'EUR',
       direction: CreditDebitIndicator.CRDT,
-      country: 'DE',
     },
   });
 
-  async function onSubmit(data: ManualBankTxForm) {
+  function onSubmit(data: ManualBankTxForm) {
     const xml = buildCamt053Xml(data);
     const file = new File([xml], 'manual-bank-tx.xml', { type: 'text/xml' });
 
@@ -277,6 +283,9 @@ export default function SepaManualScreen(): JSX.Element {
     amount: [Validations.Required],
     currency: [Validations.Required],
     direction: [Validations.Required],
+    accountIban: [Validations.Required],
+    accountOwner: [Validations.Required],
+    accountBank: [Validations.Required],
     name: [Validations.Required],
     iban: [Validations.Required],
     remittanceInfo: [Validations.Required],
@@ -323,15 +332,69 @@ export default function SepaManualScreen(): JSX.Element {
 
         <StyledVerticalStack gap={2} full>
           <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start px-3">
+            {translate('screens/kyc', 'Account')}
+          </p>
+
+          <StyledInput name="accountOwner" label={translate('screens/kyc', 'Account owner')} placeholder="DFX AG" full smallLabel />
+          <StyledInput name="accountIban" label={translate('screens/kyc', 'Account IBAN')} placeholder="CH78 8080 8002 6086 1409 2" full smallLabel />
+          <StyledInput name="accountBank" label={translate('screens/kyc', 'Bank name')} placeholder="Raiffeisenbank" full smallLabel />
+        </StyledVerticalStack>
+
+        <StyledVerticalStack gap={2} full>
+          <p className="w-full text-dfxGray-700 text-xs font-semibold uppercase text-start px-3">
             {translate('screens/kyc', 'Counterparty')}
           </p>
 
-          <StyledInput name="name" label={translate('screens/kyc', 'Name')} placeholder="Max Mustermann GmbH" full smallLabel />
-          <StyledInput name="street" label={translate('screens/kyc', 'Street')} placeholder="Musterstr." full smallLabel />
-          <StyledInput name="buildingNumber" label={translate('screens/kyc', 'Building number')} placeholder="1" full smallLabel />
-          <StyledInput name="postalCode" label={translate('screens/kyc', 'Postal code')} placeholder="80000" full smallLabel />
-          <StyledInput name="city" label={translate('screens/kyc', 'City')} placeholder="München" full smallLabel />
-          <StyledInput name="country" label={translate('screens/kyc', 'Country')} placeholder="DE" full smallLabel />
+          <StyledInput name="name" autocomplete="name" label={translate('screens/kyc', 'Name')} placeholder={translate('screens/kyc', 'John Doe')} full smallLabel />
+          <StyledHorizontalStack gap={2}>
+            <StyledInput
+              name="street"
+              autocomplete="street"
+              label={translate('screens/kyc', 'Street')}
+              placeholder={translate('screens/kyc', 'Street')}
+              full
+              smallLabel
+            />
+            <StyledInput
+              name="houseNumber"
+              autocomplete="house-number"
+              label={translate('screens/kyc', 'House nr.')}
+              placeholder="xx"
+              small
+              smallLabel
+            />
+          </StyledHorizontalStack>
+          <StyledHorizontalStack gap={2}>
+            <StyledInput
+              name="zip"
+              autocomplete="zip"
+              label={translate('screens/kyc', 'ZIP code')}
+              placeholder="12345"
+              small
+              smallLabel
+            />
+            <StyledInput
+              name="city"
+              autocomplete="city"
+              label={translate('screens/kyc', 'City')}
+              placeholder={translate('screens/kyc', 'City')}
+              full
+              smallLabel
+            />
+          </StyledHorizontalStack>
+          <StyledSearchDropdown<Country>
+            rootRef={rootRef}
+            name="country"
+            autocomplete="country"
+            label={translate('screens/kyc', 'Country')}
+            placeholder={translate('general/actions', 'Select') + '...'}
+            items={allowedCountries}
+            labelFunc={(item) => item.name}
+            filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
+            matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
+            full
+            smallLabel
+          />
           <StyledInput name="iban" label={translate('screens/kyc', 'IBAN')} placeholder="DE89 3704 0044 0532 0130 00" full smallLabel />
         </StyledVerticalStack>
 
