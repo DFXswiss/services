@@ -310,11 +310,11 @@ export default function KycScreen(): JSX.Element {
   };
 
   const handleCancel = () => {
-    if (!stepInProgress || !kycCode) return;
+    if (!stepInProgress?.session || !kycCode) return;
 
     setIsCanceling(true);
     setError(undefined);
-    cancelStep(kycCode, stepInProgress.sequenceNumber)
+    cancelStep(kycCode, stepInProgress.session.url)
       .then(() => onLoad(false))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsCanceling(false));
