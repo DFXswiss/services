@@ -17,6 +17,7 @@ import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+import { buildCamt053Xml } from 'src/util/camt053-builder';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAdminGuard } from '../hooks/guard.hook';
 
@@ -46,182 +47,6 @@ interface ManualBankTxForm {
 
 const CURRENCIES = ['EUR', 'CHF', 'USD'];
 
-function escapeXml(str?: string): string {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
-
-function buildPartyXml(name: string, address?: { street?: string; houseNumber?: string; zip?: string; city?: string; country?: string }): string {
-  const hasAddress = address?.street || address?.houseNumber || address?.zip || address?.city || address?.country;
-
-  const addressXml = hasAddress
-    ? [
-        '<PstlAdr>',
-        address?.street ? `<StrtNm>${escapeXml(address.street)}</StrtNm>` : '',
-        address?.houseNumber ? `<BldgNb>${escapeXml(address.houseNumber)}</BldgNb>` : '',
-        address?.zip ? `<PstCd>${escapeXml(address.zip)}</PstCd>` : '',
-        address?.city ? `<TwnNm>${escapeXml(address.city)}</TwnNm>` : '',
-        address?.country ? `<Ctry>${escapeXml(address.country)}</Ctry>` : '',
-        '</PstlAdr>',
-      ]
-        .filter(Boolean)
-        .join('')
-    : '';
-
-  return `<Nm>${escapeXml(name)}</Nm>${addressXml}`;
-}
-
-function buildCamt053Xml(data: ManualBankTxForm): string {
-  const now = new Date();
-  const timestamp = now.toISOString().replace(/[-:T]/g, '').slice(0, 14);
-  const isoTimestamp = now.toISOString().replace('Z', '+00:00');
-  const ref = `${Date.now()}`;
-  const amount = parseFloat(data.amount).toFixed(2);
-  const isCredit = data.direction === CreditDebitIndicator.CRDT;
-
-  const accountIban = data.accountIban.replace(/\s/g, '');
-  const accountOwner = data.accountOwner;
-  const accountBank = data.accountBank;
-
-  const counterpartyAddress = {
-    street: data.street,
-    houseNumber: data.houseNumber,
-    zip: data.zip,
-    city: data.city,
-    country: data.country?.symbol,
-  };
-  const cleanIban = data.iban.replace(/\s/g, '');
-
-  const debtorXml = isCredit
-    ? `<Dbtr>${buildPartyXml(data.name, counterpartyAddress)}</Dbtr>
-                            <DbtrAcct><Id><IBAN>${escapeXml(cleanIban)}</IBAN></Id></DbtrAcct>`
-    : `<Dbtr><Nm>${escapeXml(accountOwner)}</Nm></Dbtr>
-                            <DbtrAcct><Id><IBAN>${escapeXml(accountIban)}</IBAN></Id></DbtrAcct>`;
-
-  const creditorXml = isCredit
-    ? `<Cdtr><Nm>${escapeXml(accountOwner)}</Nm></Cdtr>
-                            <CdtrAcct><Id><IBAN>${escapeXml(accountIban)}</IBAN></Id></CdtrAcct>`
-    : `<Cdtr>${buildPartyXml(data.name, counterpartyAddress)}</Cdtr>
-                            <CdtrAcct><Id><IBAN>${escapeXml(cleanIban)}</IBAN></Id></CdtrAcct>`;
-
-  const txCode = isCredit
-    ? '<Cd>RCDT</Cd><SubFmlyCd>XBCT</SubFmlyCd>'
-    : '<Cd>ICDT</Cd><SubFmlyCd>DMCT</SubFmlyCd>';
-
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Document xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:camt.053.001.04 camt.053.001.04.xsd" xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.04" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <BkToCstmrStmt>
-        <GrpHdr>
-            <MsgId>MSG-C053-${timestamp}-01</MsgId>
-            <CreDtTm>${isoTimestamp}</CreDtTm>
-            <AddtlInf>PRODUCTIVE</AddtlInf>
-        </GrpHdr>
-        <Stmt>
-            <Id>STM-C053-${timestamp}-01</Id>
-            <ElctrncSeqNb>1</ElctrncSeqNb>
-            <CreDtTm>${isoTimestamp}</CreDtTm>
-            <FrToDt>
-                <FrDtTm>${data.bookingDate}T00:00:00.000+00:00</FrDtTm>
-                <ToDtTm>${data.bookingDate}T23:59:59.999+00:00</ToDtTm>
-            </FrToDt>
-            <Acct>
-                <Id>
-                    <IBAN>${escapeXml(accountIban)}</IBAN>
-                </Id>
-                <Ownr>
-                    <Nm>${escapeXml(accountOwner)}</Nm>
-                </Ownr>
-                <Svcr>
-                    <FinInstnId>
-                        <Nm>${escapeXml(accountBank)}</Nm>
-                    </FinInstnId>
-                </Svcr>
-            </Acct>
-            <Bal>
-                <Tp>
-                    <CdOrPrtry>
-                        <Cd>OPBD</Cd>
-                    </CdOrPrtry>
-                </Tp>
-                <Amt Ccy="${escapeXml(data.currency)}">0</Amt>
-                <CdtDbtInd>CRDT</CdtDbtInd>
-                <Dt>
-                    <Dt>${data.bookingDate}</Dt>
-                </Dt>
-            </Bal>
-            <Bal>
-                <Tp>
-                    <CdOrPrtry>
-                        <Cd>CLBD</Cd>
-                    </CdOrPrtry>
-                </Tp>
-                <Amt Ccy="${escapeXml(data.currency)}">0</Amt>
-                <CdtDbtInd>CRDT</CdtDbtInd>
-                <Dt>
-                    <Dt>${data.bookingDate}</Dt>
-                </Dt>
-            </Bal>
-            <Ntry>
-                <Amt Ccy="${escapeXml(data.currency)}">${amount}</Amt>
-                <CdtDbtInd>${data.direction}</CdtDbtInd>
-                <RvslInd>false</RvslInd>
-                <Sts>BOOK</Sts>
-                <BookgDt>
-                    <Dt>${data.bookingDate}</Dt>
-                </BookgDt>
-                <ValDt>
-                    <Dt>${data.valueDate}</Dt>
-                </ValDt>
-                <AcctSvcrRef>${ref}</AcctSvcrRef>
-                <BkTxCd>
-                    <Domn>
-                        <Cd>PMNT</Cd>
-                        <Fmly>
-                            ${txCode}
-                        </Fmly>
-                    </Domn>
-                    <Prtry>
-                        <Cd>1000</Cd>
-                    </Prtry>
-                </BkTxCd>
-                <AmtDtls>
-                    <TxAmt>
-                        <Amt Ccy="${escapeXml(data.currency)}">${amount}</Amt>
-                    </TxAmt>
-                </AmtDtls>
-                <NtryDtls>
-                    <TxDtls>
-                        <Amt Ccy="${escapeXml(data.currency)}">${amount}</Amt>
-                        <CdtDbtInd>${data.direction}</CdtDbtInd>
-                        <BkTxCd>
-                            <Domn>
-                                <Cd>PMNT</Cd>
-                                <Fmly>
-                                    ${txCode}
-                                </Fmly>
-                            </Domn>
-                        </BkTxCd>
-                        <RltdPties>
-                            ${debtorXml}
-                            ${creditorXml}
-                        </RltdPties>
-                        <RmtInf>
-                            <Ustrd>${escapeXml(data.remittanceInfo)}</Ustrd>
-                        </RmtInf>
-                    </TxDtls>
-                </NtryDtls>
-                <AddtlNtryInf>${isCredit ? 'Gutschrift' : 'Zahlung'} ${escapeXml(data.name)}</AddtlNtryInf>
-            </Ntry>
-        </Stmt>
-    </BkToCstmrStmt>
-</Document>`;
-}
-
 export default function SepaManualScreen(): JSX.Element {
   const { translate, translateError, allowedCountries } = useSettingsContext();
   const { call } = useApi();
@@ -247,7 +72,7 @@ export default function SepaManualScreen(): JSX.Element {
   });
 
   function onSubmit(data: ManualBankTxForm) {
-    const xml = buildCamt053Xml(data);
+    const xml = buildCamt053Xml({ ...data, country: data.country?.symbol });
     const file = new File([xml], 'manual-bank-tx.xml', { type: 'text/xml' });
 
     const fileData = new FormData();
@@ -283,11 +108,11 @@ export default function SepaManualScreen(): JSX.Element {
     amount: [Validations.Required],
     currency: [Validations.Required],
     direction: [Validations.Required],
-    accountIban: [Validations.Required],
+    accountIban: [Validations.Required, Validations.Iban(allowedCountries)],
     accountOwner: [Validations.Required],
     accountBank: [Validations.Required],
     name: [Validations.Required],
-    iban: [Validations.Required],
+    iban: [Validations.Required, Validations.Iban(allowedCountries)],
     remittanceInfo: [Validations.Required],
   });
 
@@ -419,7 +244,7 @@ export default function SepaManualScreen(): JSX.Element {
         )}
 
         <StyledButton
-          label={translate('general/actions', 'Next')}
+          label={translate('general/actions', 'Upload')}
           onClick={handleSubmit(onSubmit)}
           width={StyledButtonWidth.FULL}
           disabled={!isValid}
