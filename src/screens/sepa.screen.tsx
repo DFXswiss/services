@@ -5,12 +5,14 @@ import {
   IconSize,
   IconVariant,
   StyledButton,
+  StyledButtonColor,
   StyledButtonWidth,
   StyledFileUpload,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useSettingsContext } from '../contexts/settings.context';
@@ -23,6 +25,7 @@ interface FormDataFile {
 export default function SepaScreen(): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { call } = useApi();
+  const navigate = useNavigate();
 
   const [isUploading, setIsUploading] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
@@ -113,6 +116,13 @@ export default function SepaScreen(): JSX.Element {
           width={StyledButtonWidth.FULL}
           disabled={!isValid}
           isLoading={isUploading}
+        />
+
+        <StyledButton
+          label={translate('screens/kyc', 'Manual entry')}
+          onClick={() => navigate('/sepa/manuell')}
+          width={StyledButtonWidth.FULL}
+          color={StyledButtonColor.STURDY_WHITE}
         />
       </StyledVerticalStack>
     </Form>
