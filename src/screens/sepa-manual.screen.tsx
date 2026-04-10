@@ -261,7 +261,7 @@ export default function SepaManualScreen(): JSX.Element {
           <StyledInput
             name="iban"
             label={translate('screens/kyc', 'IBAN')}
-            placeholder="DE89 3704 0044 0532 0130 00"
+            placeholder="DE00 0000 0000 0000 0000 00"
             full
             smallLabel
           />
