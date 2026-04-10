@@ -23,6 +23,7 @@ import {
   KycSession,
   KycSignatoryPowerData,
   KycStepBase,
+  KycStepCancelable,
   KycStepName,
   KycStepReason,
   KycStepSession,
@@ -107,7 +108,7 @@ export default function KycScreen(): JSX.Element {
   const { clearParams } = useNavigation();
   const { translate, changeLanguage, processingKycData } = useSettingsContext();
   const { user, reloadUser } = useUserContext();
-  const { getKycInfo, continueKyc, startStep, addTransferClient } = useKyc();
+  const { getKycInfo, continueKyc, startStep, addTransferClient, cancelStep } = useKyc();
   const { nameToString } = useKycHelper();
   const { pathname, search } = useLocation();
   const { navigate, goBack } = useNavigation();
@@ -123,6 +124,7 @@ export default function KycScreen(): JSX.Element {
   const [stepInProgress, setStepInProgress] = useState<KycStepSession>();
   const [error, setError] = useState<string>();
   const [showLinkHint, setShowLinkHint] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
   const { rootRef } = useLayoutContext();
 
   const mode = pathname.includes('/profile') ? Mode.PROFILE : pathname.includes('/contact') ? Mode.CONTACT : Mode.KYC;
@@ -307,6 +309,17 @@ export default function KycScreen(): JSX.Element {
     }
   };
 
+  const handleCancel = () => {
+    if (!stepInProgress?.session || !kycCode) return;
+
+    setIsCanceling(true);
+    setError(undefined);
+    cancelStep(kycCode, stepInProgress.session.url)
+      .then(() => onLoad(false))
+      .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
+      .finally(() => setIsCanceling(false));
+  };
+
   useLayoutOptions({
     title: stepInProgress ? nameToString(stepInProgress.name) : translate('screens/kyc', 'DFX KYC'),
     backButton: !!(stepInProgress || showLinkHint || consentClient),
@@ -364,6 +377,8 @@ export default function KycScreen(): JSX.Element {
             lang={info.language}
             onDone={() => onLoad(true)}
             onBack={() => onLoad(false)}
+            onCancel={KycStepCancelable.includes(stepInProgress.name) ? handleCancel : undefined}
+            isCanceling={isCanceling}
             onError={setError}
             showLinkHint={onLink}
           />
@@ -428,6 +443,8 @@ interface EditProps {
   lang: Language;
   onDone: () => void;
   onBack: () => void;
+  onCancel?: () => void;
+  isCanceling?: boolean;
   onError: (error: string) => void;
   showLinkHint: () => void;
 }
@@ -2258,7 +2275,7 @@ interface PhoneChangeFormData {
   phone: string;
 }
 
-function PhoneChangeData({ code, isLoading, step, onDone }: EditProps): JSX.Element {
+function PhoneChangeData({ code, isLoading, step, onDone, onCancel, isCanceling }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setPhoneChangeData } = useKyc();
 
@@ -2305,14 +2322,25 @@ function PhoneChangeData({ code, isLoading, step, onDone }: EditProps): JSX.Elem
           </div>
         )}
 
-        <StyledButton
-          type="submit"
-          label={translate('general/actions', 'Next')}
-          onClick={handleSubmit(onSubmit)}
-          width={StyledButtonWidth.FULL}
-          disabled={!isValid}
-          isLoading={isUpdating || isLoading}
-        />
+        <StyledHorizontalStack gap={4} spanAcross>
+          {onCancel && (
+            <StyledButton
+              color={StyledButtonColor.STURDY_WHITE}
+              width={StyledButtonWidth.FULL}
+              label={translate('general/actions', 'Cancel')}
+              onClick={onCancel}
+              isLoading={isCanceling}
+            />
+          )}
+          <StyledButton
+            type="submit"
+            label={translate('general/actions', 'Next')}
+            onClick={handleSubmit(onSubmit)}
+            width={StyledButtonWidth.FULL}
+            disabled={!isValid}
+            isLoading={isUpdating || isLoading}
+          />
+        </StyledHorizontalStack>
       </StyledVerticalStack>
     </Form>
   );
@@ -2323,7 +2351,7 @@ interface AddressChangeFormData {
   address: KycAddress;
 }
 
-function AddressChangeData({ rootRef, code, isLoading, step, onDone }: EditProps): JSX.Element {
+function AddressChangeData({ rootRef, code, isLoading, step, onDone, onCancel, isCanceling }: EditProps): JSX.Element {
   const { allowedCountries, translate, translateError } = useSettingsContext();
   const { setAddressChangeData } = useKyc();
   const { countryCode } = useGeoLocation();
@@ -2447,14 +2475,25 @@ function AddressChangeData({ rootRef, code, isLoading, step, onDone }: EditProps
           </div>
         )}
 
-        <StyledButton
-          type="submit"
-          label={translate('general/actions', 'Next')}
-          onClick={handleSubmit(onSubmit)}
-          width={StyledButtonWidth.FULL}
-          disabled={!isValid}
-          isLoading={isUpdating || isLoading}
-        />
+        <StyledHorizontalStack gap={4} spanAcross>
+          {onCancel && (
+            <StyledButton
+              color={StyledButtonColor.STURDY_WHITE}
+              width={StyledButtonWidth.FULL}
+              label={translate('general/actions', 'Cancel')}
+              onClick={onCancel}
+              isLoading={isCanceling}
+            />
+          )}
+          <StyledButton
+            type="submit"
+            label={translate('general/actions', 'Next')}
+            onClick={handleSubmit(onSubmit)}
+            width={StyledButtonWidth.FULL}
+            disabled={!isValid}
+            isLoading={isUpdating || isLoading}
+          />
+        </StyledHorizontalStack>
       </StyledVerticalStack>
     </Form>
   );
@@ -2466,7 +2505,7 @@ interface NameChangeFormData {
   lastName: string;
 }
 
-function NameChangeData({ code, isLoading, step, onDone }: EditProps): JSX.Element {
+function NameChangeData({ code, isLoading, step, onDone, onCancel, isCanceling }: EditProps): JSX.Element {
   const { translate, translateError } = useSettingsContext();
   const { setNameChangeData } = useKyc();
 
@@ -2556,14 +2595,25 @@ function NameChangeData({ code, isLoading, step, onDone }: EditProps): JSX.Eleme
           </div>
         )}
 
-        <StyledButton
-          type="submit"
-          label={translate('general/actions', 'Next')}
-          onClick={handleSubmit(onSubmit)}
-          width={StyledButtonWidth.FULL}
-          disabled={!isValid}
-          isLoading={isUpdating || isLoading}
-        />
+        <StyledHorizontalStack gap={4} spanAcross>
+          {onCancel && (
+            <StyledButton
+              color={StyledButtonColor.STURDY_WHITE}
+              width={StyledButtonWidth.FULL}
+              label={translate('general/actions', 'Cancel')}
+              onClick={onCancel}
+              isLoading={isCanceling}
+            />
+          )}
+          <StyledButton
+            type="submit"
+            label={translate('general/actions', 'Next')}
+            onClick={handleSubmit(onSubmit)}
+            width={StyledButtonWidth.FULL}
+            disabled={!isValid}
+            isLoading={isUpdating || isLoading}
+          />
+        </StyledHorizontalStack>
       </StyledVerticalStack>
     </Form>
   );

@@ -543,7 +543,14 @@
     "Please select an address or add a new one to continue.": "Veuillez sélectionner une adresse ou en ajouter une nouvelle pour continuer.",
 
     "PDF Download Address Report": "Télécharger le rapport d'adresse PDF",
-    "Date": "Date"
+    "Date": "Date",
+
+    "Change phone number": "Modifier le numéro de téléphone",
+    "Change address": "Modifier l'adresse",
+    "Change name": "Modifier le nom",
+    "Do you really want to change your phone number?": "Voulez-vous vraiment modifier votre numéro de téléphone ?",
+    "Do you really want to change your address?": "Voulez-vous vraiment modifier votre adresse ?",
+    "Do you really want to change your name?": "Voulez-vous vraiment modifier votre nom ?"
   },
   "screens/buy": {
     "You spend": "Vous dépensez",

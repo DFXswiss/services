@@ -26,7 +26,7 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
   const { navigate } = useNavigation();
   const { redirectPath } = useAppHandlingContext();
   const { search } = useLocation();
-  const { recommendationCode } = useAppParams();
+  const { wallet, recommendationCode } = useAppParams();
 
   const [isLoading, setIsLoading] = useState(false);
   const [mailSent, setMailSent] = useState(false);
@@ -53,7 +53,7 @@ export default function ConnectMail({ onCancel }: ConnectProps): JSX.Element {
   async function submit({ mail }: FormData): Promise<void> {
     setIsLoading(true);
     setError(undefined);
-    signInWithMail(mail, redirectUri, recommendationCode)
+    signInWithMail(mail, redirectUri, recommendationCode, wallet)
       .then(() => setMailSent(true))
       .catch((error: ApiError) => setError(error.message ?? 'Unknown error'))
       .finally(() => setIsLoading(false));
