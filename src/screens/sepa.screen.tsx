@@ -120,7 +120,7 @@ export default function SepaScreen(): JSX.Element {
 
         <StyledButton
           label={translate('screens/kyc', 'Manual entry')}
-          onClick={() => navigate('/sepa/manuell')}
+          onClick={() => navigate('/sepa/manual')}
           width={StyledButtonWidth.FULL}
           color={StyledButtonColor.STURDY_WHITE}
         />
