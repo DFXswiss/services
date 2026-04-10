@@ -105,7 +105,8 @@
     "request": {
       "form-data": "^2.5.5"
     },
-    "@coinbase/wallet-sdk": "3.9.3"
+    "@coinbase/wallet-sdk": "3.9.3",
+    "axios": "^1.15.0"
   },
   "eslintConfig": {
     "extends": [
