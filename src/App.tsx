@@ -319,7 +319,7 @@ export const Routes = [
         element: withSuspense(<SepaScreen />),
       },
       {
-        path: 'sepa/manuell',
+        path: 'sepa/manual',
         element: withSuspense(<SepaManualScreen />),
       },
       {
