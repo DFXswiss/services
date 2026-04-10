@@ -134,9 +134,22 @@ export default function SepaManualScreen(): JSX.Element {
             </span>
           </p>
 
-          <StyledInput name="bookingDate" type="date" label={translate('screens/kyc', 'Booking date')} full smallLabel />
+          <StyledInput
+            name="bookingDate"
+            type="date"
+            label={translate('screens/kyc', 'Booking date')}
+            full
+            smallLabel
+          />
           <StyledInput name="valueDate" type="date" label={translate('screens/kyc', 'Value date')} full smallLabel />
-          <StyledInput name="amount" type="number" label={translate('screens/kyc', 'Amount')} placeholder="0.00" full smallLabel />
+          <StyledInput
+            name="amount"
+            type="number"
+            label={translate('screens/kyc', 'Amount')}
+            placeholder="0.00"
+            full
+            smallLabel
+          />
           <StyledDropdown
             name="currency"
             label={translate('screens/kyc', 'Currency')}
@@ -160,9 +173,27 @@ export default function SepaManualScreen(): JSX.Element {
             {translate('screens/kyc', 'Account')}
           </p>
 
-          <StyledInput name="accountOwner" label={translate('screens/kyc', 'Account owner')} placeholder="DFX AG" full smallLabel />
-          <StyledInput name="accountIban" label={translate('screens/kyc', 'Account IBAN')} placeholder="CH78 8080 8002 6086 1409 2" full smallLabel />
-          <StyledInput name="accountBank" label={translate('screens/kyc', 'Bank name')} placeholder="Raiffeisenbank" full smallLabel />
+          <StyledInput
+            name="accountOwner"
+            label={translate('screens/kyc', 'Account owner')}
+            placeholder="Acme AG"
+            full
+            smallLabel
+          />
+          <StyledInput
+            name="accountIban"
+            label={translate('screens/kyc', 'Account IBAN')}
+            placeholder="CH00 0000 0000 0000 0000 0"
+            full
+            smallLabel
+          />
+          <StyledInput
+            name="accountBank"
+            label={translate('screens/kyc', 'Bank name')}
+            placeholder="Bank"
+            full
+            smallLabel
+          />
         </StyledVerticalStack>
 
         <StyledVerticalStack gap={2} full>
@@ -170,7 +201,14 @@ export default function SepaManualScreen(): JSX.Element {
             {translate('screens/kyc', 'Counterparty')}
           </p>
 
-          <StyledInput name="name" autocomplete="name" label={translate('screens/kyc', 'Name')} placeholder={translate('screens/kyc', 'John Doe')} full smallLabel />
+          <StyledInput
+            name="name"
+            autocomplete="name"
+            label={translate('screens/kyc', 'Name')}
+            placeholder={translate('screens/kyc', 'John Doe')}
+            full
+            smallLabel
+          />
           <StyledHorizontalStack gap={2}>
             <StyledInput
               name="street"
@@ -220,7 +258,13 @@ export default function SepaManualScreen(): JSX.Element {
             full
             smallLabel
           />
-          <StyledInput name="iban" label={translate('screens/kyc', 'IBAN')} placeholder="DE89 3704 0044 0532 0130 00" full smallLabel />
+          <StyledInput
+            name="iban"
+            label={translate('screens/kyc', 'IBAN')}
+            placeholder="DE89 3704 0044 0532 0130 00"
+            full
+            smallLabel
+          />
         </StyledVerticalStack>
 
         <StyledVerticalStack gap={2} full>
