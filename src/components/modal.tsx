@@ -35,8 +35,8 @@ export function Modal({ isOpen, onClose, children, className = '' }: ModalProps)
   }
 
   return createPortal(
-    <div className={`absolute inset-0 z-50 bg-white p-4 ${className}`}>
-      <div className="flex flex-grow justify-center bg-white min-h-full">
+    <div className={`fixed inset-0 z-50 bg-white overflow-y-auto p-4 ${className}`}>
+      <div className="flex justify-center min-h-full">
         <div className="w-full max-w-screen-md flex flex-col">{children}</div>
       </div>
     </div>,
