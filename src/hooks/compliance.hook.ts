@@ -1,4 +1,13 @@
-import { AccountType, Asset, Fiat, KycStatus, ResponseType, useApi } from '@dfx.swiss/react';
+import {
+  AccountType,
+  Asset,
+  Fiat,
+  FundOrigin,
+  InvestmentDate,
+  KycStatus,
+  ResponseType,
+  useApi,
+} from '@dfx.swiss/react';
 import { CustodyOrderListEntry } from 'src/dto/order.dto';
 import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
 import { useMemo } from 'react';
@@ -530,6 +539,38 @@ export function useCompliance() {
     });
   }
 
+  async function createLimitRequest(
+    userDataId: number,
+    data: {
+      name: string;
+      message: string;
+      limit: number;
+      investmentDate: InvestmentDate;
+      fundOrigin: FundOrigin;
+      file?: string;
+      fileName?: string;
+    },
+  ): Promise<void> {
+    return call<void>({
+      url: `support/issue/support?userDataId=${userDataId}`,
+      method: 'POST',
+      data: {
+        type: 'LimitRequest',
+        reason: 'Other',
+        name: data.name,
+        message: data.message,
+        file: data.file,
+        fileName: data.fileName,
+        limitRequest: {
+          limit: data.limit,
+          investmentDate: data.investmentDate,
+          fundOrigin: data.fundOrigin,
+          fundOriginText: data.message,
+        },
+      },
+    });
+  }
+
   return useMemo(
     () => ({
       search,
@@ -550,6 +591,7 @@ export function useCompliance() {
       approveCustodyOrder,
       updateKycStep,
       updateUserData,
+      createLimitRequest,
     }),
     [call],
   );
