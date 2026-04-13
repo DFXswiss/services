@@ -119,7 +119,7 @@ export default function SupportDashboardCreateScreen(): JSX.Element {
         file: fileData ?? undefined,
         fileName: selectedFile?.name,
       });
-      navigate('/support-dashboard');
+      navigate('/support/dashboard');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to create issue');
     } finally {
@@ -305,7 +305,7 @@ export default function SupportDashboardCreateScreen(): JSX.Element {
           <button
             type="button"
             className="px-4 py-2 text-sm text-dfxGray-700 hover:text-dfxBlue-800 transition-colors"
-            onClick={() => navigate('/support-dashboard')}
+            onClick={() => navigate('/support/dashboard')}
           >
             {translate('general/actions', 'Cancel')}
           </button>

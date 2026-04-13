@@ -211,7 +211,7 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
                 <NavigationLink
                   icon={IconVariant.SUPPORT}
                   label={translate('screens/support', 'Support Dashboard')}
-                  url="/support-dashboard"
+                  url="/support/dashboard"
                   target="_self"
                   onClose={() => setIsNavigationOpen(false)}
                 />

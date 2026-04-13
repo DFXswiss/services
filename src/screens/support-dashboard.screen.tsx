@@ -180,7 +180,7 @@ export default function SupportDashboardScreen(): JSX.Element {
         <div className="flex gap-2 ml-auto">
           <button
             className="px-4 py-2 bg-dfxBlue-400 text-white rounded-lg text-sm hover:bg-dfxBlue-800 transition-colors"
-            onClick={() => navigate('/support-dashboard/create')}
+            onClick={() => navigate('/support/dashboard/create')}
           >
             + {translate('screens/support', 'Create Issue')}
           </button>
@@ -257,14 +257,14 @@ export default function SupportDashboardScreen(): JSX.Element {
         <GroupedIssueTable
           groups={openIssueGroups}
           showDepartment={isAdmin}
-          onRowClick={(issue) => navigate(`/support-dashboard/issue/${issue.id}`)}
+          onRowClick={(issue) => navigate(`/support/dashboard/issue/${issue.id}`)}
         />
       ) : (
         <>
           <IssueTable
             issues={displayedIssues}
             showDepartment={isAdmin}
-            onRowClick={(issue) => navigate(`/support-dashboard/issue/${issue.id}`)}
+            onRowClick={(issue) => navigate(`/support/dashboard/issue/${issue.id}`)}
           />
           {hasMore && (
             <button

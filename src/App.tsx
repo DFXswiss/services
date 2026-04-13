@@ -393,15 +393,15 @@ export const Routes = [
         element: withSuspense(<ComplianceCompanyOnboardingScreen />),
       },
       {
-        path: 'support-dashboard',
+        path: 'support/dashboard',
         element: withSuspense(<SupportDashboardScreen />),
       },
       {
-        path: 'support-dashboard/issue/:id',
+        path: 'support/dashboard/issue/:id',
         element: withSuspense(<SupportDashboardIssueScreen />),
       },
       {
-        path: 'support-dashboard/create',
+        path: 'support/dashboard/create',
         element: withSuspense(<SupportDashboardCreateScreen />),
       },
       {
