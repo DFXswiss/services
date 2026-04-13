@@ -112,7 +112,7 @@ export function useSupportDashboard() {
     const queryString = queryParts.length ? `?${queryParts.join('&')}` : '';
 
     return call<{ data: SupportIssueListItem[]; total: number }>({
-      url: `support/issue/support/list${queryString}`,
+      url: `support/issue/list${queryString}`,
       method: 'GET',
     });
   }
