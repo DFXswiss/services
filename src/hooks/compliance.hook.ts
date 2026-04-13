@@ -259,6 +259,7 @@ export interface TransactionInfo {
   amlCheck?: string;
   chargebackDate?: string;
   amlReason?: string;
+  isCompleted: boolean;
   created: string;
 }
 
