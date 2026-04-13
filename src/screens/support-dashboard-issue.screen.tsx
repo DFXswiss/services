@@ -10,6 +10,7 @@ import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import {
+  ASSIGNABLE_DEPARTMENTS,
   CustomerAuthor,
   SupportIssueInternalData,
   SupportMessageInfo,
@@ -335,13 +336,11 @@ export default function SupportDashboardIssueScreen(): JSX.Element {
                 onChange={(e) => setUpdateDepartment(e.target.value)}
               >
                 <option value="">-</option>
-                {Object.values(Department)
-                  .filter((d) => d !== Department.MARKETING)
-                  .map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
+                {ASSIGNABLE_DEPARTMENTS.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex flex-col gap-1">

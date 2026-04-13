@@ -1,4 +1,4 @@
-import { Department, SupportIssueReason, SupportIssueType, useAuthContext, useUserContext } from '@dfx.swiss/react';
+import { SupportIssueReason, SupportIssueType, useAuthContext, useUserContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toBase64 } from 'src/util/utils';
@@ -7,11 +7,10 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import { useSupportDashboardGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-import { UserSearchResult, useSupportDashboard } from 'src/hooks/support-dashboard.hook';
+import { ASSIGNABLE_DEPARTMENTS, UserSearchResult, useSupportDashboard } from 'src/hooks/support-dashboard.hook';
 
 const ISSUE_TYPES = Object.values(SupportIssueType);
 const ISSUE_REASONS = Object.values(SupportIssueReason);
-const DEPARTMENTS = Object.values(Department).filter((d) => d !== Department.MARKETING);
 
 export default function SupportDashboardCreateScreen(): JSX.Element {
   useSupportDashboardGuard();
@@ -38,7 +37,7 @@ export default function SupportDashboardCreateScreen(): JSX.Element {
   const [type, setType] = useState<string>(ISSUE_TYPES[0]);
   const [reason, setReason] = useState<string>(ISSUE_REASONS[0]);
   const [name, setName] = useState('');
-  const [department, setDepartment] = useState<string>(DEPARTMENTS[0]);
+  const [department, setDepartment] = useState<string>(ASSIGNABLE_DEPARTMENTS[0]);
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<File>();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -247,7 +246,7 @@ export default function SupportDashboardCreateScreen(): JSX.Element {
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
           >
-            {DEPARTMENTS.map((d) => (
+            {ASSIGNABLE_DEPARTMENTS.map((d) => (
               <option key={d} value={d}>
                 {d}
               </option>

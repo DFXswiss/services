@@ -1,7 +1,9 @@
-import { useApi } from '@dfx.swiss/react';
+import { Department, useApi } from '@dfx.swiss/react';
 import { useMemo } from 'react';
 
 export const CustomerAuthor = 'Customer';
+
+export const ASSIGNABLE_DEPARTMENTS: Department[] = [Department.SUPPORT, Department.COMPLIANCE];
 
 export interface SupportIssueListItem {
   id: number;
