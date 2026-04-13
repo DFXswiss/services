@@ -23,6 +23,7 @@ const statusClasses: Record<CustodyOrderStatus, string> = {
   [CustodyOrderStatus.APPROVED]: 'bg-dfxBlue-300/20 text-dfxBlue-400',
   [CustodyOrderStatus.IN_PROGRESS]: 'bg-dfxRedBlue-300/20 text-dfxRedBlue-200',
   [CustodyOrderStatus.COMPLETED]: 'bg-dfxGreen-100/20 text-dfxGreen-300',
+  [CustodyOrderStatus.FAILED]: 'bg-dfxRed-100/20 text-dfxRed-100',
 };
 
 function statusBadge(status: CustodyOrderStatus): JSX.Element {

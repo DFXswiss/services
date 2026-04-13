@@ -338,5 +338,5 @@ export function equalsIgnoreCase(left?: string, right?: string): boolean {
 
 export function findCustodyBalanceString(asset: CustodyAsset, balances: CustodyAssetBalance[]): string {
   const balance = balances.find((b) => b.asset.name === asset.name)?.balance;
-  return balance !== undefined ? Utils.formatAmountCrypto(balance) : '';
+  return balance?.toString() ?? '';
 }
