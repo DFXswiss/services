@@ -11,7 +11,7 @@ import { UserSearchResult, useSupportDashboard } from 'src/hooks/support-dashboa
 
 const ISSUE_TYPES = Object.values(SupportIssueType);
 const ISSUE_REASONS = Object.values(SupportIssueReason);
-const DEPARTMENTS = Object.values(Department);
+const DEPARTMENTS = Object.values(Department).filter((d) => d !== Department.MARKETING);
 
 export default function SupportDashboardCreateScreen(): JSX.Element {
   useSupportDashboardGuard();
