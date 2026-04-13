@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { LimitRequestModal } from 'src/components/compliance/limit-request-modal';
 import { KycFile, KycStepInfo } from 'src/hooks/compliance.hook';
 import { formatDate, formatDateTime, formatValue, statusBadge } from 'src/util/compliance-helpers';
 
@@ -31,6 +32,7 @@ interface OnboardingOnboardingFreigabePanelProps {
   onOpenFile: (file: KycFile) => void;
   onSave: (params: OnboardingFreigabeSaveParams) => Promise<void>;
   isSaving: boolean;
+  onLimitRequestCreated?: () => void;
 }
 
 interface SavedComment {
@@ -275,6 +277,7 @@ export function OnboardingFreigabePanel({
   onOpenFile,
   onSave,
   isSaving,
+  onLimitRequestCreated,
 }: OnboardingOnboardingFreigabePanelProps): JSX.Element {
   // Derived from predecessor step status (read-only, like in GS)
   const ownerDirectoryStep = findStep(kycSteps, 'OwnerDirectory');
@@ -301,6 +304,7 @@ export function OnboardingFreigabePanel({
   const [businessActivities, setBusinessActivities] = useState('');
   const [finalDecision, setFinalDecision] = useState<DecisionValue>('');
   const [processedBy, setProcessedBy] = useState('');
+  const [showLimitRequestModal, setShowLimitRequestModal] = useState(false);
 
   // Load saved state from result.complianceReview and result text fields
   useEffect(() => {
@@ -476,226 +480,256 @@ export function OnboardingFreigabePanel({
   const signatoryPowerResult = parseResult(signatoryPowerStep);
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Title */}
-      <h2 className="text-xl font-bold text-dfxBlue-800 mb-2">GwG Kunden Onboarding</h2>
+    <>
+      <div className="flex flex-col gap-2">
+        {/* Title */}
+        <h2 className="text-xl font-bold text-dfxBlue-800 mb-2">GwG Kunden Onboarding</h2>
 
-      {/* Status */}
-      <div className="flex items-center gap-3 mb-2">
-        <span className="text-sm text-dfxGray-700 font-medium">Status:</span>
-        {statusBadge(step.status)}
-      </div>
+        {/* Status */}
+        <div className="flex items-center gap-3 mb-2">
+          <span className="text-sm text-dfxGray-700 font-medium">Status:</span>
+          {statusBadge(step.status)}
+        </div>
 
-      {/* Section 1: User Data */}
-      <SectionTitle title="User Daten:" />
-      <InfoTable rows={userInfoRows} />
+        {/* Section 1: User Data */}
+        <SectionTitle title="User Daten:" />
+        <InfoTable rows={userInfoRows} />
 
-      {/* Section 3: FinancialData */}
-      {financialDataStep?.result && (
-        <>
-          <SectionTitle title="FinancialData:" />
-          {renderStepResult(financialDataStep.result)}
-        </>
-      )}
+        {/* Section 3: FinancialData */}
+        {financialDataStep?.result && (
+          <>
+            <SectionTitle title="FinancialData:" />
+            {renderStepResult(financialDataStep.result)}
+          </>
+        )}
 
-      {/* Section 4: BeneficialOwners */}
-      {beneficialOwnerStep?.result && (
-        <>
-          <SectionTitle title="BeneficialOwners:" />
-          {renderStepResult(beneficialOwnerStep.result)}
-        </>
-      )}
+        {/* Section 4: BeneficialOwners */}
+        {beneficialOwnerStep?.result && (
+          <>
+            <SectionTitle title="BeneficialOwners:" />
+            {renderStepResult(beneficialOwnerStep.result)}
+          </>
+        )}
 
-      {/* Section 5: Step Results (only Organization) */}
-      {isOrganization && (
-        <>
-          <InfoTable
-            rows={[
-              { label: 'Legal Entity', value: legalEntity || '-' },
-              {
-                label: 'SignatoryPower',
-                value: signatoryPowerResult?.signatoryPower ? String(signatoryPowerResult.signatoryPower) : '-',
-              },
-              {
-                label: 'OperationalActivity',
-                value:
-                  operationalActivityResult?.isOperational != null
-                    ? String(operationalActivityResult.isOperational)
-                    : '-',
-              },
-              {
-                label: 'WebsiteUrl',
-                value: operationalActivityResult?.websiteUrl ? String(operationalActivityResult.websiteUrl) : '-',
-                isLink: !!operationalActivityResult?.websiteUrl,
-                href: operationalActivityResult?.websiteUrl ? String(operationalActivityResult.websiteUrl) : undefined,
-              },
-            ]}
-          />
-        </>
-      )}
-
-      {/* Documents + Decisions + Footer — one table for consistent column alignment */}
-      <table className="w-full mt-4">
-        <colgroup>
-          <col style={{ width: '220px' }} />
-          <col />
-          <col style={{ width: '180px' }} />
-        </colgroup>
-        <tbody>
-          {/* Section 6: Documents */}
-          <DocLink label="Deckblatt" file={deckblatt} onOpenFile={onOpenFile} />
-          <DocLink label="Identifikationsdokument" file={identDoc} onOpenFile={onOpenFile} />
-          <DocLink label="Identifizierungsformular" file={identForm} onOpenFile={onOpenFile} />
-          <DocLink label="Risikoprofil" file={riskProfile} onOpenFile={onOpenFile} />
-          <DocLink label="Formular A oder K" file={formAK} onOpenFile={onOpenFile} />
-          <DocLink label="Name Check DFX" file={nameCheckDfx} onOpenFile={onOpenFile} />
-          <DocLink label="Name Check Dilisense Personal" file={nameCheckPersonal} onOpenFile={onOpenFile} />
-          {isOrganization && (
-            <DocLink label="Name Check Dilisense Business" file={nameCheckBusiness} onOpenFile={onOpenFile} />
-          )}
-          {isOrganization && (
-            <DocLink
-              label="Entscheid zum Handelsregisterauszug:"
-              file={commercialRegisterFile}
-              onOpenFile={onOpenFile}
-              decision={commercialRegisterDecision}
+        {/* Section 5: Step Results (only Organization) */}
+        {isOrganization && (
+          <>
+            <InfoTable
+              rows={[
+                { label: 'Legal Entity', value: legalEntity || '-' },
+                {
+                  label: 'SignatoryPower',
+                  value: signatoryPowerResult?.signatoryPower ? String(signatoryPowerResult.signatoryPower) : '-',
+                },
+                {
+                  label: 'OperationalActivity',
+                  value:
+                    operationalActivityResult?.isOperational != null
+                      ? String(operationalActivityResult.isOperational)
+                      : '-',
+                },
+                {
+                  label: 'WebsiteUrl',
+                  value: operationalActivityResult?.websiteUrl ? String(operationalActivityResult.websiteUrl) : '-',
+                  isLink: !!operationalActivityResult?.websiteUrl,
+                  href: operationalActivityResult?.websiteUrl
+                    ? String(operationalActivityResult.websiteUrl)
+                    : undefined,
+                },
+              ]}
             />
-          )}
-          {isOrganization && (
-            <DocLink
-              label="Entscheid zur Vollmacht:"
-              file={authorityFile}
-              onOpenFile={onOpenFile}
-              decision={authorityDecision}
+          </>
+        )}
+
+        {/* Documents + Decisions + Footer — one table for consistent column alignment */}
+        <table className="w-full mt-4">
+          <colgroup>
+            <col style={{ width: '220px' }} />
+            <col />
+            <col style={{ width: '180px' }} />
+          </colgroup>
+          <tbody>
+            {/* Section 6: Documents */}
+            <DocLink label="Deckblatt" file={deckblatt} onOpenFile={onOpenFile} />
+            <DocLink label="Identifikationsdokument" file={identDoc} onOpenFile={onOpenFile} />
+            <DocLink label="Identifizierungsformular" file={identForm} onOpenFile={onOpenFile} />
+            <DocLink label="Risikoprofil" file={riskProfile} onOpenFile={onOpenFile} />
+            <DocLink label="Formular A oder K" file={formAK} onOpenFile={onOpenFile} />
+            <DocLink label="Name Check DFX" file={nameCheckDfx} onOpenFile={onOpenFile} />
+            <DocLink label="Name Check Dilisense Personal" file={nameCheckPersonal} onOpenFile={onOpenFile} />
+            {isOrganization && (
+              <DocLink label="Name Check Dilisense Business" file={nameCheckBusiness} onOpenFile={onOpenFile} />
+            )}
+            {isOrganization && (
+              <DocLink
+                label="Entscheid zum Handelsregisterauszug:"
+                file={commercialRegisterFile}
+                onOpenFile={onOpenFile}
+                decision={commercialRegisterDecision}
+              />
+            )}
+            {isOrganization && (
+              <DocLink
+                label="Entscheid zur Vollmacht:"
+                file={authorityFile}
+                onOpenFile={onOpenFile}
+                decision={authorityDecision}
+              />
+            )}
+            {isOrganization && !isGmbH && (
+              <DocLink
+                label="Entscheid zum Aktienbuch:"
+                file={stockRegisterFile}
+                onOpenFile={onOpenFile}
+                decision={stockRegisterDecision}
+              />
+            )}
+
+            {/* Onboarding Report PDF */}
+            <DocLink label="Onboarding Report PDF:" file={onboardingReportFile} onOpenFile={onOpenFile} />
+
+            {/* Spacer */}
+            <tr>
+              <td className="py-3" colSpan={3} />
+            </tr>
+
+            {/* Section 7: Decision Fields */}
+            <DropdownField
+              label="Complex organization structure:"
+              value={complexOrgStructure}
+              options={[
+                { value: 'Ja', label: 'Ja' },
+                { value: 'Nein', label: 'Nein' },
+              ]}
+              onChange={setComplexOrgStructure}
             />
-          )}
-          {isOrganization && !isGmbH && (
-            <DocLink
-              label="Entscheid zum Aktienbuch:"
-              file={stockRegisterFile}
-              onOpenFile={onOpenFile}
-              decision={stockRegisterDecision}
+            <DropdownField
+              label='Risiko Einstufung als "Geschäftsbeziehung mit erhöhtem Risiko":'
+              value={highRisk}
+              options={[
+                { value: 'Ja', label: 'Ja' },
+                { value: 'Nein', label: 'Nein' },
+              ]}
+              onChange={setHighRisk}
             />
-          )}
-
-          {/* Onboarding Report PDF */}
-          <DocLink label="Onboarding Report PDF:" file={onboardingReportFile} onOpenFile={onOpenFile} />
-
-          {/* Spacer */}
-          <tr>
-            <td className="py-3" colSpan={3} />
-          </tr>
-
-          {/* Section 7: Decision Fields */}
-          <DropdownField
-            label="Complex organization structure:"
-            value={complexOrgStructure}
-            options={[
-              { value: 'Ja', label: 'Ja' },
-              { value: 'Nein', label: 'Nein' },
-            ]}
-            onChange={setComplexOrgStructure}
-          />
-          <DropdownField
-            label='Risiko Einstufung als "Geschäftsbeziehung mit erhöhtem Risiko":'
-            value={highRisk}
-            options={[
-              { value: 'Ja', label: 'Ja' },
-              { value: 'Nein', label: 'Nein' },
-            ]}
-            onChange={setHighRisk}
-          />
-          <DropdownField
-            label="depositLimit in CHF:"
-            value={depositLimit}
-            options={[
-              { value: '100000', label: "100'000" },
-              { value: '500000', label: '500000' },
-            ]}
-            onChange={setDepositLimit}
-          />
-          <DropdownField
-            label="amlAccountType:"
-            value={amlAccountType}
-            options={[
-              { value: 'operativ tätige Gesellschaft', label: 'operativ tätige Gesellschaft' },
-              { value: 'Sitzgesellschaft', label: 'Sitzgesellschaft' },
-              { value: 'Einzelunternehmen', label: 'Einzelunternehmen' },
-              { value: 'Stiftung', label: 'Stiftung' },
-              { value: 'Verein', label: 'Verein' },
-              { value: 'natural person', label: 'natural person' },
-            ]}
-            onChange={setAmlAccountType}
-          />
-          <TextareaField
-            label="Wenn GmeR:
+            <tr>
+              <td className="py-1 pr-4 text-left text-sm text-dfxBlue-800 w-56 align-top">depositLimit in CHF:</td>
+              <td className="py-1 text-right">
+                {userData.id != null && (
+                  <button
+                    className="px-3 py-1 text-xs text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded transition-colors whitespace-nowrap"
+                    onClick={() => setShowLimitRequestModal(true)}
+                  >
+                    Limit Request
+                  </button>
+                )}
+              </td>
+              <td className="py-1 text-right">
+                <select
+                  className="px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+                  value={depositLimit}
+                  onChange={(e) => setDepositLimit(e.target.value)}
+                >
+                  <option value="">—</option>
+                  <option value="100000">100&apos;000</option>
+                  <option value="500000">500000</option>
+                </select>
+              </td>
+            </tr>
+            <DropdownField
+              label="amlAccountType:"
+              value={amlAccountType}
+              options={[
+                { value: 'operativ tätige Gesellschaft', label: 'operativ tätige Gesellschaft' },
+                { value: 'Sitzgesellschaft', label: 'Sitzgesellschaft' },
+                { value: 'Einzelunternehmen', label: 'Einzelunternehmen' },
+                { value: 'Stiftung', label: 'Stiftung' },
+                { value: 'Verein', label: 'Verein' },
+                { value: 'natural person', label: 'natural person' },
+              ]}
+              onChange={setAmlAccountType}
+            />
+            <TextareaField
+              label="Wenn GmeR:
 Kommentar für die Aufnahme"
-            value={commentGmeR}
-            onChange={setCommentGmeR}
-          />
-          <TextareaField
-            label="Wenn Sitzgesellschaft:
+              value={commentGmeR}
+              onChange={setCommentGmeR}
+            />
+            <TextareaField
+              label="Wenn Sitzgesellschaft:
 Gründe für die Verwendung einer Sitzgesellschaften"
-            value={reasonSeatingCompany}
-            onChange={setReasonSeatingCompany}
-          />
-          <TextareaField
-            label="Bei Einzelunternehmen und Organisationen:
+              value={reasonSeatingCompany}
+              onChange={setReasonSeatingCompany}
+            />
+            <TextareaField
+              label="Bei Einzelunternehmen und Organisationen:
 Beschreibung der Geschäftlichen Aktivitäten"
-            value={businessActivities}
-            onChange={setBusinessActivities}
-          />
+              value={businessActivities}
+              onChange={setBusinessActivities}
+            />
 
-          {/* Spacer */}
-          <tr>
-            <td className="py-3" colSpan={3} />
-          </tr>
+            {/* Spacer */}
+            <tr>
+              <td className="py-3" colSpan={3} />
+            </tr>
 
-          {/* Final Decision */}
-          <DropdownField
-            label="Finaler Entscheid:"
-            value={finalDecision}
-            options={[
-              { value: 'Akzeptiert', label: 'Akzeptiert' },
-              { value: 'Abgelehnt', label: 'Abgelehnt' },
-            ]}
-            onChange={(v) => setFinalDecision(v as DecisionValue)}
-          />
+            {/* Final Decision */}
+            <DropdownField
+              label="Finaler Entscheid:"
+              value={finalDecision}
+              options={[
+                { value: 'Akzeptiert', label: 'Akzeptiert' },
+                { value: 'Abgelehnt', label: 'Abgelehnt' },
+              ]}
+              onChange={(v) => setFinalDecision(v as DecisionValue)}
+            />
 
-          {/* Spacer */}
-          <tr>
-            <td className="py-3" colSpan={3} />
-          </tr>
+            {/* Spacer */}
+            <tr>
+              <td className="py-3" colSpan={3} />
+            </tr>
 
-          {/* UTC Date + Processed by */}
-          <tr>
-            <td className="py-1 pr-4 text-left text-sm text-dfxBlue-800">Datum:</td>
-            <td className="py-1 text-left text-sm text-dfxBlue-800" colSpan={2}>
-              {formatDateTime(new Date().toISOString())}
-            </td>
-          </tr>
-          <DropdownField
-            label="Bearbeitet von:"
-            value={processedBy}
-            options={[
-              { value: 'Vesa Rasaj', label: 'Vesa Rasaj' },
-              { value: 'Cyrill Thommen', label: 'Cyrill Thommen' },
-            ]}
-            onChange={setProcessedBy}
-          />
-        </tbody>
-      </table>
+            {/* UTC Date + Processed by */}
+            <tr>
+              <td className="py-1 pr-4 text-left text-sm text-dfxBlue-800">Datum:</td>
+              <td className="py-1 text-left text-sm text-dfxBlue-800" colSpan={2}>
+                {formatDateTime(new Date().toISOString())}
+              </td>
+            </tr>
+            <DropdownField
+              label="Bearbeitet von:"
+              value={processedBy}
+              options={[
+                { value: 'Vesa Rasaj', label: 'Vesa Rasaj' },
+                { value: 'Cyrill Thommen', label: 'Cyrill Thommen' },
+              ]}
+              onChange={setProcessedBy}
+            />
+          </tbody>
+        </table>
 
-      {/* Save */}
-      <div className="mt-4">
-        <button
-          className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
-          onClick={handleSave}
-          disabled={isSaving || !finalDecision || !processedBy}
-        >
-          {isSaving ? 'Speichern...' : 'Speichern'}
-        </button>
+        {/* Save */}
+        <div className="mt-4">
+          <button
+            className="px-4 py-2 text-sm text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded-lg transition-colors disabled:opacity-50"
+            onClick={handleSave}
+            disabled={isSaving || !finalDecision || !processedBy}
+          >
+            {isSaving ? 'Speichern...' : 'Speichern'}
+          </button>
+        </div>
       </div>
-    </div>
+      {userData.id != null && (
+        <LimitRequestModal
+          isOpen={showLimitRequestModal}
+          userDataId={Number(userData.id)}
+          defaultName={[extractField(userData, 'firstname'), extractField(userData, 'surname')]
+            .filter((v) => v !== '-')
+            .join(' ')}
+          onClose={() => setShowLimitRequestModal(false)}
+          onCreated={onLimitRequestCreated}
+        />
+      )}
+    </>
   );
 }
