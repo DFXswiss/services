@@ -571,6 +571,13 @@ export function useCompliance() {
     });
   }
 
+  async function stopTransaction(transactionId: number): Promise<void> {
+    return call<void>({
+      url: `transaction/admin/${transactionId}/stop`,
+      method: 'POST',
+    });
+  }
+
   return useMemo(
     () => ({
       search,
@@ -592,6 +599,7 @@ export function useCompliance() {
       updateKycStep,
       updateUserData,
       createLimitRequest,
+      stopTransaction,
     }),
     [call],
   );

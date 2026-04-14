@@ -35,8 +35,11 @@ export function Modal({ isOpen, onClose, children, className = '' }: ModalProps)
   }
 
   return createPortal(
-    <div className={`fixed inset-0 z-50 bg-white overflow-y-auto p-4 ${className}`}>
-      <div className="flex justify-center min-h-full">
+    <div
+      className={`fixed inset-0 z-50 bg-black/40 overflow-y-auto ${className}`}
+      onClick={(e) => e.target === e.currentTarget && onClose?.()}
+    >
+      <div className="flex min-h-full items-center justify-center p-4">
         <div className="w-full max-w-screen-md flex flex-col">{children}</div>
       </div>
     </div>,

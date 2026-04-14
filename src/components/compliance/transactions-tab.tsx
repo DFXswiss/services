@@ -1,6 +1,7 @@
 import { Transaction, useTransaction } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Fragment, useState } from 'react';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { BankTxInfo, CryptoInputInfo, TransactionInfo, useCompliance } from 'src/hooks/compliance.hook';
 import { DetailRow, TransactionDetailRows, formatDate, statusBadge } from 'src/util/compliance-helpers';
 
@@ -15,6 +16,7 @@ interface TransactionsTableProps {
   onExpandBankTx: (id: number | undefined) => void;
   onExpandCryptoInput: (id: number | undefined) => void;
   onExpandTxUid: (uid: string | undefined) => void;
+  onStopped?: () => void;
 }
 
 export function TransactionsTable({
@@ -28,14 +30,39 @@ export function TransactionsTable({
   onExpandBankTx,
   onExpandCryptoInput,
   onExpandTxUid,
+  onStopped,
 }: TransactionsTableProps): JSX.Element {
   const { getTransactionByUid } = useTransaction();
-  const { downloadTransactionPdf } = useCompliance();
+  const { downloadTransactionPdf, stopTransaction } = useCompliance();
   const [txDetailCache, setTxDetailCache] = useState<Map<string, Transaction>>(new Map());
   const [txDetailLoading, setTxDetailLoading] = useState<string>();
   const [txDetailError, setTxDetailError] = useState<string>();
   const [isPdfDownloading, setIsPdfDownloading] = useState(false);
   const [pdfError, setPdfError] = useState<string>();
+  const [stoppingTxId, setStoppingTxId] = useState<number>();
+  const [stopConfirmTxId, setStopConfirmTxId] = useState<number>();
+  const [stopError, setStopError] = useState<string>();
+
+  async function confirmStop(): Promise<void> {
+    const txId = stopConfirmTxId;
+    if (!txId) return;
+    const tx = transactions.find((t) => t.id === txId);
+    setStoppingTxId(txId);
+    setStopError(undefined);
+    try {
+      await stopTransaction(txId);
+      if (tx) {
+        const updatedDetail = await getTransactionByUid(tx.uid);
+        setTxDetailCache((prev) => new Map(prev).set(tx.uid, updatedDetail));
+      }
+      onStopped?.();
+      setStopConfirmTxId(undefined);
+    } catch (e) {
+      setStopError(e instanceof Error ? e.message : 'Stop failed');
+    } finally {
+      setStoppingTxId(undefined);
+    }
+  }
 
   async function handleDownloadPdf(): Promise<void> {
     setIsPdfDownloading(true);
@@ -95,6 +122,7 @@ export function TransactionsTable({
         )}
       </div>
       {pdfError && <p className="text-xs text-primary-red mb-1">{pdfError}</p>}
+      {stopError && <p className="text-xs text-primary-red mb-1">{stopError}</p>}
       <table className="w-full border-collapse">
         <thead className="sticky top-0 bg-dfxGray-300">
           <tr>
@@ -252,7 +280,26 @@ export function TransactionsTable({
                         ) : txDetailError && !txDetailCache.has(tx.uid) ? (
                           <p className="text-primary-red text-sm">{txDetailError}</p>
                         ) : txDetailCache.has(tx.uid) ? (
-                          <TransactionDetailRows tx={txDetailCache.get(tx.uid) as Transaction} />
+                          (() => {
+                            const detail = txDetailCache.get(tx.uid) as Transaction;
+                            const isStopped = (detail.state as string) === 'Stopped';
+                            return (
+                              <>
+                                <TransactionDetailRows tx={detail} />
+                                {!tx.isCompleted && tx.type === 'BuyCrypto' && (
+                                  <div className="mt-3 pt-3 border-t border-dfxGray-400/50 flex gap-2">
+                                    <button
+                                      className="px-3 py-1 text-xs text-white bg-dfxRed-100 hover:bg-dfxRed-100/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                      onClick={() => setStopConfirmTxId(tx.id)}
+                                      disabled={stoppingTxId === tx.id || isStopped}
+                                    >
+                                      {stoppingTxId === tx.id ? 'Stopping...' : isStopped ? 'Stopped' : 'Stop'}
+                                    </button>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()
                         ) : null}
                       </td>
                     </tr>
@@ -269,6 +316,16 @@ export function TransactionsTable({
           )}
         </tbody>
       </table>
+      <ConfirmDialog
+        isOpen={stopConfirmTxId != null}
+        title="Transaktion stoppen"
+        message="Möchtest du diese Transaktion wirklich stoppen? Nach dem Stopp muss sie manuell weiterbearbeitet werden."
+        confirmLabel="Stop"
+        destructive
+        isLoading={stoppingTxId != null}
+        onConfirm={confirmStop}
+        onCancel={() => setStopConfirmTxId(undefined)}
+      />
     </div>
   );
 }

@@ -40,7 +40,6 @@ export default function ComplianceUserScreen(): JSX.Element {
   const { getFile } = useKyc();
   const navigate = useNavigate();
 
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [data, setData] = useState<ComplianceUserData>();
   const [preview, setPreview] = useState<{ url: string; contentType: string; name: string }>();
@@ -89,11 +88,9 @@ export default function ComplianceUserScreen(): JSX.Element {
       setError('No ID provided');
       return;
     }
-    setIsLoading(true);
     getUserData(+userDataId)
       .then(setData)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Unknown error'))
-      .finally(() => setIsLoading(false));
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Unknown error'));
   }, [userDataId, getUserData]);
 
   useEffect(() => {
@@ -120,9 +117,9 @@ export default function ComplianceUserScreen(): JSX.Element {
 
   return (
     <>
-      {error ? (
+      {error && !data ? (
         <ErrorHint message={error} />
-      ) : isLoading || !data ? (
+      ) : !data ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <div className="w-full flex flex-col gap-4">
@@ -192,6 +189,7 @@ export default function ComplianceUserScreen(): JSX.Element {
                   onExpandBankTx={handleExpandBankTx}
                   onExpandCryptoInput={handleExpandCryptoInput}
                   onExpandTxUid={handleExpandTxUid}
+                  onStopped={loadData}
                 />
               )}
 
