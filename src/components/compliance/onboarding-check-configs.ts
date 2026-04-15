@@ -19,6 +19,7 @@ export interface CheckItemConfig {
   fileType?: string;
   href?: string;
   condition?: (checks: Record<string, string>) => boolean;
+  visibleCondition?: (userData: Record<string, unknown>) => boolean;
 }
 
 export interface OnboardingTabConfig {
@@ -47,6 +48,15 @@ export const onboardingTabs: OnboardingTabConfig[] = [
     ],
     checkItems: [
       { id: 'nameMatch', label: 'Das Dokument lautet auf den Namen "{organizationName}"' },
+      {
+        id: 'verifiedNameMatch',
+        label:
+          'Der verifizierte Name des Kunden "{verifiedName}" stimmt mit dem Unternehmensnamen "{organizationName}" überein',
+        visibleCondition: (userData) => {
+          const v = userData['verifiedName'];
+          return typeof v === 'string' && v.trim().length > 0;
+        },
+      },
       {
         id: 'legalEntityMatch',
         label: 'Das Unternehmen ist gemäss Onboarding eine "{legalEntity}"',
@@ -191,7 +201,12 @@ export const onboardingTabs: OnboardingTabConfig[] = [
     decisionLabel: 'Entscheid:',
     rejectionReasons: [],
     checkItems: [
-      { id: 'aktennotiz', label: 'Aktennotiz erstellen', type: 'link', href: '/kyc/log?userDataId={id}&eventDate={today}' },
+      {
+        id: 'aktennotiz',
+        label: 'Aktennotiz erstellen',
+        type: 'link',
+        href: '/kyc/log?userDataId={id}&eventDate={today}',
+      },
     ],
   },
   {
