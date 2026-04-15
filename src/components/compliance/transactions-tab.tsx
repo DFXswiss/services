@@ -1,6 +1,7 @@
-import { Transaction, useTransaction } from '@dfx.swiss/react';
+import { Transaction, TransactionState, useTransaction } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Fragment, useState } from 'react';
+import { ChargebackModal } from 'src/components/compliance/chargeback-modal';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { BankTxInfo, CryptoInputInfo, TransactionInfo, useCompliance } from 'src/hooks/compliance.hook';
 import { DetailRow, TransactionDetailRows, formatDate, statusBadge } from 'src/util/compliance-helpers';
@@ -42,6 +43,7 @@ export function TransactionsTable({
   const [stoppingTxId, setStoppingTxId] = useState<number>();
   const [stopConfirmTxId, setStopConfirmTxId] = useState<number>();
   const [stopError, setStopError] = useState<string>();
+  const [chargebackTxId, setChargebackTxId] = useState<number>();
 
   async function confirmStop(): Promise<void> {
     const txId = stopConfirmTxId;
@@ -286,15 +288,40 @@ export function TransactionsTable({
                             return (
                               <>
                                 <TransactionDetailRows tx={detail} />
-                                {!tx.isCompleted && tx.type === 'BuyCrypto' && (
+                                {((tx.type === 'BuyCrypto' && !tx.isCompleted) ||
+                                  ([
+                                    TransactionState.FAILED,
+                                    TransactionState.CHECK_PENDING,
+                                    TransactionState.KYC_REQUIRED,
+                                    TransactionState.LIMIT_EXCEEDED,
+                                    TransactionState.UNASSIGNED,
+                                  ].includes(detail.state) &&
+                                    !detail.chargebackAmount)) && (
                                   <div className="mt-3 pt-3 border-t border-dfxGray-400/50 flex gap-2">
-                                    <button
-                                      className="px-3 py-1 text-xs text-white bg-dfxRed-100 hover:bg-dfxRed-100/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                      onClick={() => setStopConfirmTxId(tx.id)}
-                                      disabled={stoppingTxId === tx.id || isStopped}
-                                    >
-                                      {stoppingTxId === tx.id ? 'Stopping...' : isStopped ? 'Stopped' : 'Stop'}
-                                    </button>
+                                    {tx.type === 'BuyCrypto' && !tx.isCompleted && (
+                                      <button
+                                        className="px-3 py-1 text-xs text-white bg-dfxRed-100 hover:bg-dfxRed-100/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={() => setStopConfirmTxId(tx.id)}
+                                        disabled={stoppingTxId === tx.id || isStopped}
+                                      >
+                                        {stoppingTxId === tx.id ? 'Stopping...' : isStopped ? 'Stopped' : 'Stop'}
+                                      </button>
+                                    )}
+                                    {[
+                                      TransactionState.FAILED,
+                                      TransactionState.CHECK_PENDING,
+                                      TransactionState.KYC_REQUIRED,
+                                      TransactionState.LIMIT_EXCEEDED,
+                                      TransactionState.UNASSIGNED,
+                                    ].includes(detail.state) &&
+                                      !detail.chargebackAmount && (
+                                        <button
+                                          className="px-3 py-1 text-xs text-white bg-dfxRed-100 hover:bg-dfxRed-100/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                          onClick={() => setChargebackTxId(tx.id)}
+                                        >
+                                          Chargeback
+                                        </button>
+                                      )}
                                   </div>
                                 )}
                               </>
@@ -325,6 +352,25 @@ export function TransactionsTable({
         isLoading={stoppingTxId != null}
         onConfirm={confirmStop}
         onCancel={() => setStopConfirmTxId(undefined)}
+      />
+      <ChargebackModal
+        isOpen={chargebackTxId != null}
+        transactionId={chargebackTxId}
+        transactionType={transactions.find((t) => t.id === chargebackTxId)?.type}
+        sourceType={transactions.find((t) => t.id === chargebackTxId)?.sourceType}
+        onClose={() => setChargebackTxId(undefined)}
+        onSuccess={() => {
+          if (chargebackTxId) {
+            const tx = transactions.find((t) => t.id === chargebackTxId);
+            if (tx) {
+              getTransactionByUid(tx.uid).then((detail) => {
+                setTxDetailCache((prev) => new Map(prev).set(tx.uid, detail));
+              });
+            }
+          }
+          setChargebackTxId(undefined);
+          onStopped?.();
+        }}
       />
     </div>
   );

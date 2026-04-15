@@ -51,6 +51,25 @@ export interface BankRefundData {
   country: string;
 }
 
+export interface SupportUserInfo {
+  id: number;
+  firstname: string;
+  surname: string;
+}
+
+export interface ChargebackRefundData {
+  refundTarget?: string;
+  creditorData?: {
+    name: string;
+    address: string;
+    houseNumber?: string;
+    zip: string;
+    city: string;
+    country: string;
+  };
+  chargebackAmount?: number;
+}
+
 export enum ComplianceSearchType {
   REF = 'Ref',
   KYC_HASH = 'KycHash',
@@ -380,6 +399,13 @@ export function useCompliance() {
     });
   }
 
+  async function getSupportUserInfo(): Promise<SupportUserInfo> {
+    return call<SupportUserInfo>({
+      url: 'support/me',
+      method: 'GET',
+    });
+  }
+
   async function getUserData(userDataId: number): Promise<ComplianceUserData> {
     return call<ComplianceUserData>({
       url: `support/${userDataId}`,
@@ -571,6 +597,14 @@ export function useCompliance() {
     });
   }
 
+  async function chargebackTransaction(transactionId: number, data: ChargebackRefundData): Promise<void> {
+    return call<void>({
+      url: `support/transaction/${transactionId}/chargeback`,
+      method: 'PUT',
+      data,
+    });
+  }
+
   async function stopTransaction(transactionId: number): Promise<void> {
     return call<void>({
       url: `transaction/admin/${transactionId}/stop`,
@@ -581,6 +615,7 @@ export function useCompliance() {
   return useMemo(
     () => ({
       search,
+      getSupportUserInfo,
       getUserData,
       getPendingOnboardings,
       downloadUserFiles,
@@ -599,6 +634,7 @@ export function useCompliance() {
       updateKycStep,
       updateUserData,
       createLimitRequest,
+      chargebackTransaction,
       stopTransaction,
     }),
     [call],
