@@ -1,4 +1,3 @@
-import { Country } from '@dfx.swiss/react';
 import { StyledHorizontalStack, StyledInput, StyledSearchDropdown } from '@dfx.swiss/react-components';
 import { MutableRefObject } from 'react';
 import { Control, FieldError } from 'react-hook-form';
@@ -107,7 +106,7 @@ export function RefundCreditorFields({
           smallLabel
         />
       </StyledHorizontalStack>
-      <StyledSearchDropdown<Country>
+      <StyledSearchDropdown
         control={control}
         rules={rules?.creditorCountry}
         error={getError('creditorCountry')}
