@@ -70,7 +70,6 @@ export function OnboardingCompanyHeader({ userData, kycSteps }: OnboardingCompan
     [extractField(userData, 'firstname'), extractField(userData, 'surname')].filter((v) => v !== '-').join(' ') || '-';
 
   const accountType = extractField(userData, 'accountType');
-  const kycHash = extractField(userData, 'kycHash');
 
   const fields: HeaderField[] = [
     { label: 'UserDataId', value: extractField(userData, 'id') },
@@ -83,12 +82,6 @@ export function OnboardingCompanyHeader({ userData, kycSteps }: OnboardingCompan
     { label: 'Mail', value: extractField(userData, 'mail') },
     { label: 'Sprache', value: extractField(userData, 'language') },
     { label: 'Datum Dokument eingereicht', value: extractStepCreatedDate(kycSteps) },
-    {
-      label: 'Login Kundenkonto',
-      value: kycHash !== '-' ? 'Login Kundenkonto' : '-',
-      isLink: kycHash !== '-',
-      href: kycHash !== '-' ? `/kyc?code=${kycHash}` : undefined,
-    },
   ];
 
   return (

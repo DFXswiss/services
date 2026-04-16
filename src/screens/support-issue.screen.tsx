@@ -34,17 +34,11 @@ import { useForm, useWatch } from 'react-hook-form';
 import { Trans } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { AddBankAccount } from 'src/components/payment/add-bank-account';
+import { LimitRequestFields } from 'src/components/support-issue/limit-request-fields';
 import { DefaultFileTypes } from 'src/config/file-types';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { ErrorHint } from '../components/error-hint';
-import {
-  DateLabels,
-  IssueReasonLabels,
-  IssueTypeLabels,
-  LimitLabels,
-  OriginFutureLabels,
-  OriginNowLabels,
-} from '../config/labels';
+import { IssueReasonLabels, IssueTypeLabels } from '../config/labels';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useKycLevelGuard, useUserGuard } from '../hooks/guard.hook';
 import { useLayoutOptions } from '../hooks/layout-config.hook';
@@ -183,7 +177,6 @@ export default function SupportIssueScreen(): JSX.Element {
     navigate({ pathname: `/support/chat/${issueUid}` });
   }
 
-
   useEffect(() => {
     const kycCompleted = user && user.kyc.level >= KycLevel.Completed;
 
@@ -230,7 +223,6 @@ export default function SupportIssueScreen(): JSX.Element {
     setSelectedTxState(undefined);
     setValue('transaction', undefined);
   }, [selectedReason]);
-
 
   useEffect(() => {
     getBanks()
@@ -295,8 +287,7 @@ export default function SupportIssueScreen(): JSX.Element {
     setSelectTransaction(false);
   }
 
-  const isFundsNotReceivedRequest =
-    selectedReason === SupportIssueReason.FUNDS_NOT_RECEIVED && isRequestOnly === true;
+  const isFundsNotReceivedRequest = selectedReason === SupportIssueReason.FUNDS_NOT_RECEIVED && isRequestOnly === true;
 
   const rules = Utils.createRules({
     type: Validations.Required,
@@ -469,71 +460,35 @@ export default function SupportIssueScreen(): JSX.Element {
               </>
             )}
 
-            <StyledInput
-              name="name"
-              autocomplete="name"
-              label={translate('screens/support', 'Name')}
-              placeholder={`${translate('screens/kyc', 'John')} ${translate('screens/kyc', 'Doe')}`}
-              full
-            />
-
-            {selectedType === SupportIssueType.LIMIT_REQUEST && (
+            {selectedType === SupportIssueType.LIMIT_REQUEST ? (
+              <LimitRequestFields
+                rootRef={rootRef}
+                control={control}
+                rules={rules}
+                errors={errors}
+                investmentDate={investmentDate}
+              />
+            ) : (
               <>
-                <StyledDropdown<Limit>
-                  rootRef={rootRef}
-                  label={translate('screens/limit', 'Investment volume')}
-                  items={Object.values(Limit).filter((i) => typeof i !== 'string') as number[]}
-                  labelFunc={(item) => LimitLabels[item]}
-                  name="limit"
-                  placeholder={translate('general/actions', 'Select') + '...'}
+                <StyledInput
+                  name="name"
+                  autocomplete="name"
+                  label={translate('screens/support', 'Name')}
+                  placeholder={`${translate('screens/kyc', 'John')} ${translate('screens/kyc', 'Doe')}`}
                   full
                 />
 
-                <StyledDropdown<InvestmentDate>
-                  rootRef={rootRef}
-                  label={translate('screens/limit', 'Investment date')}
-                  items={Object.values(InvestmentDate)}
-                  labelFunc={(item) => translate('screens/limit', DateLabels[item])}
-                  name="investmentDate"
-                  placeholder={translate('general/actions', 'Select') + '...'}
-                  full
-                />
+                <StyledInput name="message" label={translate('screens/support', 'Description')} multiLine full />
 
-                <StyledDropdown<FundOrigin>
-                  rootRef={rootRef}
-                  label={translate('screens/limit', 'Origin of funds')}
-                  items={Object.values(FundOrigin)}
-                  labelFunc={(item) =>
-                    translate(
-                      'screens/limit',
-                      investmentDate === InvestmentDate.FUTURE ? OriginFutureLabels[item] : OriginNowLabels[item],
-                    )
-                  }
-                  name="fundOrigin"
-                  placeholder={translate('general/actions', 'Select') + '...'}
+                <StyledFileUpload
+                  name="file"
+                  label={translate('screens/support', 'File')}
+                  placeholder={translate('general/actions', 'Drop files here')}
+                  buttonLabel={translate('general/actions', 'Browse')}
                   full
                 />
               </>
             )}
-
-            <StyledInput
-              name="message"
-              label={
-                selectedType === SupportIssueType.LIMIT_REQUEST
-                  ? `${translate('screens/limit', 'Origin of funds')} (${translate('screens/limit', 'free text')})`
-                  : translate('screens/support', 'Description')
-              }
-              multiLine
-              full
-            />
-
-            <StyledFileUpload
-              name="file"
-              label={translate('screens/support', 'File')}
-              placeholder={translate('general/actions', 'Drop files here')}
-              buttonLabel={translate('general/actions', 'Browse')}
-              full
-            />
 
             {error && (
               <div>

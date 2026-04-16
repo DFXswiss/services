@@ -1,23 +1,19 @@
 import { Country, Utils, Validations } from '@dfx.swiss/react';
 import {
-  AlignContent,
   Form,
   SpinnerSize,
   StyledButton,
   StyledButtonColor,
   StyledButtonWidth,
-  StyledDataTable,
-  StyledDataTableRow,
-  StyledHorizontalStack,
-  StyledInput,
   StyledLoadingSpinner,
-  StyledSearchDropdown,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
+import { RefundCreditorFields } from 'src/components/refund/refund-creditor-fields';
+import { RefundDataTable } from 'src/components/refund/refund-data-table';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { TransactionRefundData, useCompliance } from 'src/hooks/compliance.hook';
@@ -40,7 +36,7 @@ export default function ComplianceBankTxReturnScreen(): JSX.Element {
 
   const { id } = useParams<{ id: string }>();
   const { translate, translateError, allowedCountries } = useSettingsContext();
-  const { getTransactionRefundData, processTransactionRefund } = useCompliance();
+  const { getTransactionRefundData, chargebackTransaction } = useCompliance();
   const { goBack } = useNavigation();
   const { rootRef } = useLayoutContext();
 
@@ -71,10 +67,7 @@ export default function ComplianceBankTxReturnScreen(): JSX.Element {
       const data = await getTransactionRefundData(transactionId);
       setRefundData(data);
 
-      // Pre-fill form with bank details if available
-      if (data.refundTarget) {
-        setValue('iban', data.refundTarget);
-      }
+      if (data.refundTarget) setValue('iban', data.refundTarget);
       if (data.bankDetails) {
         if (data.bankDetails.name) setValue('creditorName', data.bankDetails.name);
         if (data.bankDetails.address) setValue('creditorStreet', data.bankDetails.address);
@@ -86,8 +79,8 @@ export default function ComplianceBankTxReturnScreen(): JSX.Element {
           if (country) setValue('creditorCountry', country);
         }
       }
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
@@ -100,18 +93,20 @@ export default function ComplianceBankTxReturnScreen(): JSX.Element {
     setError(undefined);
 
     try {
-      await processTransactionRefund(+id, {
+      await chargebackTransaction(+id, {
         refundTarget: formData.iban,
-        name: formData.creditorName,
-        address: formData.creditorStreet,
-        houseNumber: formData.creditorHouseNumber || undefined,
-        zip: formData.creditorZip,
-        city: formData.creditorCity,
-        country: formData.creditorCountry.symbol,
+        creditorData: {
+          name: formData.creditorName,
+          address: formData.creditorStreet,
+          houseNumber: formData.creditorHouseNumber || undefined,
+          zip: formData.creditorZip,
+          city: formData.creditorCity,
+          country: formData.creditorCountry.symbol,
+        },
       });
       setSuccess(true);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Unknown error');
     } finally {
       setIsSubmitting(false);
     }
@@ -159,66 +154,7 @@ export default function ComplianceBankTxReturnScreen(): JSX.Element {
 
   return (
     <StyledVerticalStack gap={6} full>
-      <StyledDataTable alignContent={AlignContent.RIGHT} showBorder minWidth={false}>
-        <StyledDataTableRow label={translate('screens/payment', 'Transaction amount')}>
-          <p>
-            {refundData.inputAmount} {refundData.inputAsset?.name}
-          </p>
-        </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/payment', 'DFX fee')}>
-          <p>
-            {refundData.fee.dfx} {refundData.refundAsset?.name}
-          </p>
-        </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/payment', 'Bank fee')}>
-          <p>
-            {refundData.fee.bank} {refundData.refundAsset?.name}
-          </p>
-        </StyledDataTableRow>
-        <StyledDataTableRow label={translate('screens/payment', 'Network fee')}>
-          <p>
-            {refundData.fee.network} {refundData.refundAsset?.name}
-          </p>
-        </StyledDataTableRow>
-        <StyledDataTableRow
-          label={translate('screens/payment', 'Refund amount')}
-          infoText={translate('screens/payment', 'Refund amount is the transaction amount minus the fee.')}
-        >
-          <p>
-            {refundData.refundAmount} {refundData.refundAsset?.name}
-          </p>
-        </StyledDataTableRow>
-        {refundData.bankDetails?.name && (
-          <StyledDataTableRow label={translate('screens/payment', 'Name')}>
-            <p>{refundData.bankDetails.name}</p>
-          </StyledDataTableRow>
-        )}
-        {(refundData.bankDetails?.address || refundData.bankDetails?.houseNumber) && (
-          <StyledDataTableRow label={translate('screens/payment', 'Address')}>
-            <p>{[refundData.bankDetails.address, refundData.bankDetails.houseNumber].filter(Boolean).join(' ')}</p>
-          </StyledDataTableRow>
-        )}
-        {(refundData.bankDetails?.zip || refundData.bankDetails?.city) && (
-          <StyledDataTableRow label={translate('screens/payment', 'City')}>
-            <p>{[refundData.bankDetails.zip, refundData.bankDetails.city].filter(Boolean).join(' ')}</p>
-          </StyledDataTableRow>
-        )}
-        {refundData.bankDetails?.country && (
-          <StyledDataTableRow label={translate('screens/payment', 'Country')}>
-            <p>{refundData.bankDetails.country}</p>
-          </StyledDataTableRow>
-        )}
-        {refundData.bankDetails?.iban && (
-          <StyledDataTableRow label={translate('screens/payment', 'IBAN')}>
-            <p>{Utils.formatIban(refundData.bankDetails.iban) ?? refundData.bankDetails.iban}</p>
-          </StyledDataTableRow>
-        )}
-        {refundData.bankDetails?.bic && (
-          <StyledDataTableRow label={translate('screens/payment', 'BIC')}>
-            <p>{refundData.bankDetails.bic}</p>
-          </StyledDataTableRow>
-        )}
-      </StyledDataTable>
+      <RefundDataTable refundData={refundData} />
 
       <Form
         control={control}
@@ -228,70 +164,7 @@ export default function ComplianceBankTxReturnScreen(): JSX.Element {
         translate={translateError}
       >
         <StyledVerticalStack gap={6} full>
-          <StyledInput
-            name="iban"
-            label={translate('screens/payment', 'Chargeback IBAN')}
-            placeholder="CH..."
-            full
-            smallLabel
-          />
-          <StyledInput
-            name="creditorName"
-            autocomplete="name"
-            label={translate('screens/kyc', 'Name')}
-            placeholder={translate('screens/kyc', 'John Doe')}
-            full
-            smallLabel
-          />
-          <StyledHorizontalStack gap={2}>
-            <StyledInput
-              name="creditorStreet"
-              autocomplete="street"
-              label={translate('screens/kyc', 'Street')}
-              placeholder={translate('screens/kyc', 'Street')}
-              full
-              smallLabel
-            />
-            <StyledInput
-              name="creditorHouseNumber"
-              autocomplete="house-number"
-              label={translate('screens/kyc', 'House nr.')}
-              placeholder="xx"
-              small
-              smallLabel
-            />
-          </StyledHorizontalStack>
-          <StyledHorizontalStack gap={2}>
-            <StyledInput
-              name="creditorZip"
-              autocomplete="zip"
-              label={translate('screens/kyc', 'ZIP code')}
-              placeholder="12345"
-              small
-              smallLabel
-            />
-            <StyledInput
-              name="creditorCity"
-              autocomplete="city"
-              label={translate('screens/kyc', 'City')}
-              placeholder={translate('screens/kyc', 'City')}
-              full
-              smallLabel
-            />
-          </StyledHorizontalStack>
-          <StyledSearchDropdown<Country>
-            rootRef={rootRef}
-            name="creditorCountry"
-            autocomplete="country"
-            label={translate('screens/kyc', 'Country')}
-            placeholder={translate('general/actions', 'Select') + '...'}
-            items={allowedCountries}
-            labelFunc={(item) => item.name}
-            filterFunc={(i, s) => !s || [i.name, i.symbol].some((w) => w.toLowerCase().includes(s.toLowerCase()))}
-            matchFunc={(i, s) => i.name.toLowerCase() === s?.toLowerCase()}
-            full
-            smallLabel
-          />
+          <RefundCreditorFields rootRef={rootRef} control={control} rules={rules} errors={errors} />
 
           {error && (
             <div>

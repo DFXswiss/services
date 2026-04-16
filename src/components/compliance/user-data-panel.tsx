@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LimitRequestModal } from 'src/components/compliance/limit-request-modal';
 import { formatDate, formatDateTime } from 'src/util/compliance-helpers';
 
 interface UserDataPanelProps {
@@ -6,6 +7,8 @@ interface UserDataPanelProps {
   keyLabel: string;
   valueLabel: string;
   titleLabel: string;
+  userDataId?: number;
+  onLimitRequestCreated?: () => void;
 }
 
 const fieldOrder = [
@@ -87,8 +90,16 @@ function formatValue(key: string, value: unknown): string {
   return value?.toString() || '-';
 }
 
-export function UserDataPanel({ userData, keyLabel, valueLabel, titleLabel }: UserDataPanelProps): JSX.Element {
+export function UserDataPanel({
+  userData,
+  keyLabel,
+  valueLabel,
+  titleLabel,
+  userDataId,
+  onLimitRequestCreated,
+}: UserDataPanelProps): JSX.Element {
   const [showAll, setShowAll] = useState(false);
+  const [showLimitRequestModal, setShowLimitRequestModal] = useState(false);
 
   const allEntries = Object.entries(userData)
     .filter(([key]) => !hiddenFields.includes(key))
@@ -109,71 +120,92 @@ export function UserDataPanel({ userData, keyLabel, valueLabel, titleLabel }: Us
     allEntries.length - allEntries.filter(([key]) => fieldOrder.includes(key) || combinedFields[key]).length;
 
   return (
-    <div>
-      <h2 className="text-dfxGray-700 mb-2">
-        {titleLabel} ({Object.keys(userData).length})
-      </h2>
-      <div className="bg-white rounded-lg shadow-sm">
-        <table className="w-full border-collapse">
-          <thead className="sticky top-0 bg-dfxGray-300">
-            <tr>
-              <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">{keyLabel}</th>
-              <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">{valueLabel}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleEntries.map(([key, value]) => {
-              const valueString = formatValue(key, value);
-              const secondaryField = combinedFields[key];
+    <>
+      <div>
+        <h2 className="text-dfxGray-700 mb-2">
+          {titleLabel} ({Object.keys(userData).length})
+        </h2>
+        <div className="bg-white rounded-lg shadow-sm">
+          <table className="w-full border-collapse">
+            <thead className="sticky top-0 bg-dfxGray-300">
+              <tr>
+                <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">{keyLabel}</th>
+                <th className="px-3 py-2 text-left text-sm font-semibold text-dfxBlue-800">{valueLabel}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleEntries.map(([key, value]) => {
+                const valueString = formatValue(key, value);
+                const secondaryField = combinedFields[key];
 
-              if (secondaryField) {
-                const secondaryValue = userData[secondaryField] || '';
-                const combinedValue = [valueString, secondaryValue].filter(Boolean).join(' ') || '-';
+                if (secondaryField) {
+                  const secondaryValue = userData[secondaryField] || '';
+                  const combinedValue = [valueString, secondaryValue].filter(Boolean).join(' ') || '-';
+                  return (
+                    <tr key={key} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
+                      <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 font-medium">
+                        {key} / {secondaryField}
+                      </td>
+                      <td className="px-3 py-2 text-left text-sm text-dfxBlue-800">{combinedValue}</td>
+                    </tr>
+                  );
+                }
+
                 return (
                   <tr key={key} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-                    <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 font-medium">
-                      {key} / {secondaryField}
+                    <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 font-medium">{key}</td>
+                    <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 break-all">
+                      {key === 'kycHash' && valueString !== '-' ? (
+                        <a
+                          href={`/kyc?code=${valueString}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-dfxBlue-300 underline hover:text-dfxBlue-800"
+                        >
+                          {valueString}
+                        </a>
+                      ) : key === 'depositLimit' && userDataId ? (
+                        <div className="flex items-center justify-between gap-2">
+                          <span>{valueString}</span>
+                          <button
+                            className="px-3 py-1 text-xs text-white bg-dfxBlue-800 hover:bg-dfxBlue-800/80 rounded transition-colors whitespace-nowrap"
+                            onClick={() => setShowLimitRequestModal(true)}
+                          >
+                            Limit Request
+                          </button>
+                        </div>
+                      ) : (
+                        valueString
+                      )}
                     </td>
-                    <td className="px-3 py-2 text-left text-sm text-dfxBlue-800">{combinedValue}</td>
                   </tr>
                 );
-              }
-
-              return (
-                <tr key={key} className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300">
-                  <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 font-medium">{key}</td>
-                  <td className="px-3 py-2 text-left text-sm text-dfxBlue-800 break-all">
-                    {key === 'kycHash' && valueString !== '-' ? (
-                      <a
-                        href={`/kyc?code=${valueString}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-dfxBlue-300 underline hover:text-dfxBlue-800"
-                      >
-                        {valueString}
-                      </a>
-                    ) : (
-                      valueString
-                    )}
+              })}
+              {hiddenCount > 0 && (
+                <tr>
+                  <td colSpan={2} className="px-3 py-2 text-center">
+                    <button
+                      className="text-sm text-dfxBlue-300 hover:text-dfxBlue-800"
+                      onClick={() => setShowAll(!showAll)}
+                    >
+                      {showAll ? `Hide ${hiddenCount} fields` : `Show ${hiddenCount} more fields...`}
+                    </button>
                   </td>
                 </tr>
-              );
-            })}
-            {hiddenCount > 0 && (
-              <tr>
-                <td colSpan={2} className="px-3 py-2 text-center">
-                  <button
-                    className="text-sm text-dfxBlue-300 hover:text-dfxBlue-800"
-                    onClick={() => setShowAll(!showAll)}
-                  >
-                    {showAll ? `Hide ${hiddenCount} fields` : `Show ${hiddenCount} more fields...`}
-                  </button>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+      {userDataId && (
+        <LimitRequestModal
+          isOpen={showLimitRequestModal}
+          userDataId={userDataId}
+          defaultName={[userData.firstname, userData.surname].filter(Boolean).join(' ') || undefined}
+          onClose={() => setShowLimitRequestModal(false)}
+          onCreated={onLimitRequestCreated}
+        />
+      )}
+    </>
   );
 }
