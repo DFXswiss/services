@@ -41,22 +41,6 @@ export interface TransactionRefundData {
   bankDetails?: RefundBankDetails;
 }
 
-export interface BankRefundData {
-  refundTarget: string;
-  name: string;
-  address: string;
-  houseNumber?: string;
-  zip: string;
-  city: string;
-  country: string;
-}
-
-export interface SupportUserInfo {
-  id: number;
-  firstname: string;
-  surname: string;
-}
-
 export interface ChargebackRefundData {
   refundTarget?: string;
   creditorData?: {
@@ -399,13 +383,6 @@ export function useCompliance() {
     });
   }
 
-  async function getSupportUserInfo(): Promise<SupportUserInfo> {
-    return call<SupportUserInfo>({
-      url: 'support/me',
-      method: 'GET',
-    });
-  }
-
   async function getUserData(userDataId: number): Promise<ComplianceUserData> {
     return call<ComplianceUserData>({
       url: `support/${userDataId}`,
@@ -439,14 +416,6 @@ export function useCompliance() {
     return call<TransactionRefundData>({
       url: `support/transaction/${transactionId}/refund`,
       method: 'GET',
-    });
-  }
-
-  async function processTransactionRefund(transactionId: number, data: BankRefundData): Promise<void> {
-    return call<void>({
-      url: `support/transaction/${transactionId}/refund`,
-      method: 'PUT',
-      data,
     });
   }
 
@@ -599,7 +568,7 @@ export function useCompliance() {
 
   async function chargebackTransaction(transactionId: number, data: ChargebackRefundData): Promise<void> {
     return call<void>({
-      url: `support/transaction/${transactionId}/chargeback`,
+      url: `support/transaction/${transactionId}/refund`,
       method: 'PUT',
       data,
     });
@@ -615,13 +584,11 @@ export function useCompliance() {
   return useMemo(
     () => ({
       search,
-      getSupportUserInfo,
       getUserData,
       getPendingOnboardings,
       downloadUserFiles,
       checkUserFiles,
       getTransactionRefundData,
-      processTransactionRefund,
       getKycFileList,
       getKycFileStats,
       getTransactionList,

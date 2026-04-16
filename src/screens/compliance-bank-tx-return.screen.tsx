@@ -36,7 +36,7 @@ export default function ComplianceBankTxReturnScreen(): JSX.Element {
 
   const { id } = useParams<{ id: string }>();
   const { translate, translateError, allowedCountries } = useSettingsContext();
-  const { getTransactionRefundData, processTransactionRefund } = useCompliance();
+  const { getTransactionRefundData, chargebackTransaction } = useCompliance();
   const { goBack } = useNavigation();
   const { rootRef } = useLayoutContext();
 
@@ -93,14 +93,16 @@ export default function ComplianceBankTxReturnScreen(): JSX.Element {
     setError(undefined);
 
     try {
-      await processTransactionRefund(+id, {
+      await chargebackTransaction(+id, {
         refundTarget: formData.iban,
-        name: formData.creditorName,
-        address: formData.creditorStreet,
-        houseNumber: formData.creditorHouseNumber || undefined,
-        zip: formData.creditorZip,
-        city: formData.creditorCity,
-        country: formData.creditorCountry.symbol,
+        creditorData: {
+          name: formData.creditorName,
+          address: formData.creditorStreet,
+          houseNumber: formData.creditorHouseNumber || undefined,
+          zip: formData.creditorZip,
+          city: formData.creditorCity,
+          country: formData.creditorCountry.symbol,
+        },
       });
       setSuccess(true);
     } catch (e: unknown) {
