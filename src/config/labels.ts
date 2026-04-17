@@ -44,6 +44,7 @@ export const PaymentStateLabels = {
   [TransactionState.LIQUIDITY_PENDING]: 'Liquidity pending',
   [TransactionState.PAYOUT_IN_PROGRESS]: 'Payout in progress',
   [TransactionState.PRICE_UNDETERMINABLE]: 'Price undeterminable',
+  [TransactionState.STOPPED]: 'Stopped',
 };
 
 export function toPaymentStateLabel(state: TransactionState): string {
@@ -171,7 +172,7 @@ export function addressLabel(wallet: UserAddress | Session): string {
   const custodyLabel = 'DFX Safe';
   return ('role' in wallet && wallet.role === UserRole.CUSTODY) || ('isCustody' in wallet && wallet.isCustody)
     ? custodyLabel
-    : wallet.address ?? '';
+    : (wallet.address ?? '');
 }
 
 // --- VERIFICATION CALL --- //
@@ -185,4 +186,3 @@ export const PhoneCallTimeLabels = {
   [PhoneCallTime.H_15_TO_16]: '15:00 - 16:00',
   [PhoneCallTime.H_9_TO_16]: '09:00 - 16:00',
 };
-

@@ -1,6 +1,6 @@
 import { useKyc } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   BankDatasTable,
@@ -40,7 +40,6 @@ export default function ComplianceUserScreen(): JSX.Element {
   const { getFile } = useKyc();
   const navigate = useNavigate();
 
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [data, setData] = useState<ComplianceUserData>();
   const [preview, setPreview] = useState<{ url: string; contentType: string; name: string }>();
@@ -84,21 +83,19 @@ export default function ComplianceUserScreen(): JSX.Element {
     }
   }
 
-  useEffect(() => {
-    let cancelled = false;
-    if (userDataId) {
-      setIsLoading(true);
-      getUserData(+userDataId)
-        .then((d) => !cancelled && setData(d))
-        .catch((e: unknown) => !cancelled && setError(e instanceof Error ? e.message : 'Unknown error'))
-        .finally(() => !cancelled && setIsLoading(false));
-    } else {
+  const loadData = useCallback(() => {
+    if (!userDataId) {
       setError('No ID provided');
+      return;
     }
-    return () => {
-      cancelled = true;
-    };
-  }, [userDataId]);
+    getUserData(+userDataId)
+      .then(setData)
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Unknown error'));
+  }, [userDataId, getUserData]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   useEffect(() => {
     return () => preview && URL.revokeObjectURL(preview.url);
@@ -120,9 +117,9 @@ export default function ComplianceUserScreen(): JSX.Element {
 
   return (
     <>
-      {error ? (
+      {error && !data ? (
         <ErrorHint message={error} />
-      ) : isLoading || !data ? (
+      ) : !data ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : (
         <div className="w-full flex flex-col gap-4">
@@ -133,6 +130,8 @@ export default function ComplianceUserScreen(): JSX.Element {
               keyLabel={translate('screens/compliance', 'Key')}
               valueLabel={translate('screens/compliance', 'Value')}
               titleLabel={translate('screens/compliance', 'User Data')}
+              userDataId={userDataId ? +userDataId : undefined}
+              onLimitRequestCreated={loadData}
             />
 
             <div className="w-1/3 min-w-[300px] flex flex-col gap-4">
@@ -190,6 +189,7 @@ export default function ComplianceUserScreen(): JSX.Element {
                   onExpandBankTx={handleExpandBankTx}
                   onExpandCryptoInput={handleExpandCryptoInput}
                   onExpandTxUid={handleExpandTxUid}
+                  onStopped={loadData}
                 />
               )}
 

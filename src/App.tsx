@@ -65,6 +65,9 @@ const ComplianceSupportIssueScreen = lazy(() => import('./screens/compliance-sup
 const ComplianceRecommendationGraphScreen = lazy(() => import('./screens/compliance-recommendation-graph.screen'));
 const ComplianceCustodyOrdersScreen = lazy(() => import('./screens/compliance-custody-orders.screen'));
 const ComplianceCompanyOnboardingScreen = lazy(() => import('./screens/compliance-company-onboarding.screen'));
+const SupportDashboardScreen = lazy(() => import('./screens/support-dashboard.screen'));
+const SupportDashboardIssueScreen = lazy(() => import('./screens/support-dashboard-issue.screen'));
+const SupportDashboardCreateScreen = lazy(() => import('./screens/support-dashboard-create.screen'));
 const RealunitScreen = lazy(() => import('./screens/realunit.screen'));
 const RealunitHoldersScreen = lazy(() => import('./screens/realunit-holders.screen'));
 const RealunitQuotesScreen = lazy(() => import('./screens/realunit-quotes.screen'));
@@ -388,6 +391,18 @@ export const Routes = [
       {
         path: 'compliance/user/:id/company-onboarding',
         element: withSuspense(<ComplianceCompanyOnboardingScreen />),
+      },
+      {
+        path: 'support/dashboard',
+        element: withSuspense(<SupportDashboardScreen />),
+      },
+      {
+        path: 'support/dashboard/issue/:id',
+        element: withSuspense(<SupportDashboardIssueScreen />),
+      },
+      {
+        path: 'support/dashboard/create',
+        element: withSuspense(<SupportDashboardCreateScreen />),
       },
       {
         path: 'realunit',

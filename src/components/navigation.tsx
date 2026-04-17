@@ -1,4 +1,5 @@
 import { useAuthContext, UserRole, useSessionContext, useUserContext } from '@dfx.swiss/react';
+import { SUPPORT_DASHBOARD_ROLES } from 'src/hooks/guard.hook';
 import {
   DfxIcon,
   IconColor,
@@ -202,6 +203,15 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
                   icon={IconVariant.COMPLIANCE}
                   label={translate('screens/compliance', 'Compliance')}
                   url="/compliance"
+                  target="_self"
+                  onClose={() => setIsNavigationOpen(false)}
+                />
+              )}
+              {session?.role && SUPPORT_DASHBOARD_ROLES.includes(session.role) && (
+                <NavigationLink
+                  icon={IconVariant.SUPPORT}
+                  label={translate('screens/support', 'Support Dashboard')}
+                  url="/support/dashboard"
                   target="_self"
                   onClose={() => setIsNavigationOpen(false)}
                 />

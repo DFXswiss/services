@@ -1,4 +1,13 @@
-import { AccountType, Asset, Fiat, KycStatus, ResponseType, useApi } from '@dfx.swiss/react';
+import {
+  AccountType,
+  Asset,
+  Fiat,
+  FundOrigin,
+  InvestmentDate,
+  KycStatus,
+  ResponseType,
+  useApi,
+} from '@dfx.swiss/react';
 import { CustodyOrderListEntry } from 'src/dto/order.dto';
 import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
 import { useMemo } from 'react';
@@ -32,14 +41,17 @@ export interface TransactionRefundData {
   bankDetails?: RefundBankDetails;
 }
 
-export interface BankRefundData {
-  refundTarget: string;
-  name: string;
-  address: string;
-  houseNumber?: string;
-  zip: string;
-  city: string;
-  country: string;
+export interface ChargebackRefundData {
+  refundTarget?: string;
+  creditorData?: {
+    name: string;
+    address: string;
+    houseNumber?: string;
+    zip: string;
+    city: string;
+    country: string;
+  };
+  chargebackAmount?: number;
 }
 
 export enum ComplianceSearchType {
@@ -259,6 +271,7 @@ export interface TransactionInfo {
   amlCheck?: string;
   chargebackDate?: string;
   amlReason?: string;
+  isCompleted: boolean;
   created: string;
 }
 
@@ -406,14 +419,6 @@ export function useCompliance() {
     });
   }
 
-  async function processTransactionRefund(transactionId: number, data: BankRefundData): Promise<void> {
-    return call<void>({
-      url: `support/transaction/${transactionId}/refund`,
-      method: 'PUT',
-      data,
-    });
-  }
-
   async function getKycFileList(): Promise<KycFileListEntry[]> {
     return call<KycFileListEntry[]>({
       url: 'support/kycFileList',
@@ -529,6 +534,53 @@ export function useCompliance() {
     });
   }
 
+  async function createLimitRequest(
+    userDataId: number,
+    data: {
+      name: string;
+      message: string;
+      limit: number;
+      investmentDate: InvestmentDate;
+      fundOrigin: FundOrigin;
+      file?: string;
+      fileName?: string;
+    },
+  ): Promise<void> {
+    return call<void>({
+      url: `support/issue/support?userDataId=${userDataId}`,
+      method: 'POST',
+      data: {
+        type: 'LimitRequest',
+        reason: 'Other',
+        name: data.name,
+        message: data.message,
+        file: data.file,
+        fileName: data.fileName,
+        limitRequest: {
+          limit: data.limit,
+          investmentDate: data.investmentDate,
+          fundOrigin: data.fundOrigin,
+          fundOriginText: data.message,
+        },
+      },
+    });
+  }
+
+  async function chargebackTransaction(transactionId: number, data: ChargebackRefundData): Promise<void> {
+    return call<void>({
+      url: `support/transaction/${transactionId}/refund`,
+      method: 'PUT',
+      data,
+    });
+  }
+
+  async function stopTransaction(transactionId: number): Promise<void> {
+    return call<void>({
+      url: `transaction/admin/${transactionId}/stop`,
+      method: 'POST',
+    });
+  }
+
   return useMemo(
     () => ({
       search,
@@ -537,7 +589,6 @@ export function useCompliance() {
       downloadUserFiles,
       checkUserFiles,
       getTransactionRefundData,
-      processTransactionRefund,
       getKycFileList,
       getKycFileStats,
       getTransactionList,
@@ -549,6 +600,9 @@ export function useCompliance() {
       approveCustodyOrder,
       updateKycStep,
       updateUserData,
+      createLimitRequest,
+      chargebackTransaction,
+      stopTransaction,
     }),
     [call],
   );

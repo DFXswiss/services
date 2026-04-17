@@ -59,9 +59,7 @@ function extractLegalEntityFromStep(kycSteps: KycStepInfo[], accountType: string
 }
 
 function extractStepCreatedDate(kycSteps: KycStepInfo[]): string {
-  const step = kycSteps
-    .filter((s) => s.name === 'LegalEntity')
-    .sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
+  const step = kycSteps.filter((s) => s.name === 'LegalEntity').sort((a, b) => b.sequenceNumber - a.sequenceNumber)[0];
 
   if (!step) return '-';
   return new Date(step.created).toLocaleDateString('de-CH');
@@ -72,24 +70,18 @@ export function OnboardingCompanyHeader({ userData, kycSteps }: OnboardingCompan
     [extractField(userData, 'firstname'), extractField(userData, 'surname')].filter((v) => v !== '-').join(' ') || '-';
 
   const accountType = extractField(userData, 'accountType');
-  const kycHash = extractField(userData, 'kycHash');
 
   const fields: HeaderField[] = [
     { label: 'UserDataId', value: extractField(userData, 'id') },
     { label: 'Organization', value: extractField(userData, 'organizationName') },
     { label: 'Account Type', value: accountType },
+    { label: 'Verified Name', value: extractField(userData, 'verifiedName') },
     { label: 'Legal Entity', value: extractLegalEntityFromStep(kycSteps, accountType) },
     { label: 'Adresse', value: buildAddress(userData) },
     { label: 'Ansprechsperson', value: contactName },
     { label: 'Mail', value: extractField(userData, 'mail') },
     { label: 'Sprache', value: extractField(userData, 'language') },
     { label: 'Datum Dokument eingereicht', value: extractStepCreatedDate(kycSteps) },
-    {
-      label: 'Login Kundenkonto',
-      value: kycHash !== '-' ? 'Login Kundenkonto' : '-',
-      isLink: kycHash !== '-',
-      href: kycHash !== '-' ? `/kyc?code=${kycHash}` : undefined,
-    },
   ];
 
   return (

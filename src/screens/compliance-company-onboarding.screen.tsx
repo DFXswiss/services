@@ -219,6 +219,7 @@ export default function ComplianceCompanyOnboardingScreen(): JSX.Element {
               onOpenFile={openFile}
               onSave={handleFreigabeSave}
               isSaving={isSaving}
+              onLimitRequestCreated={loadData}
             />
           ) : (
             <OnboardingCheckPanel

@@ -228,100 +228,101 @@ export function OnboardingCheckPanel({
       )}
 
       {/* Checklist */}
-      {checkItems.length > 0 && <div>
-        <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">Checks</h3>
-        <div className="bg-white rounded-lg shadow-sm">
-          {checkItems.map((item) => {
-            if (item.type === 'conditional' && item.condition && !item.condition(checks)) return null;
+      {checkItems.length > 0 && (
+        <div>
+          <h3 className="text-dfxGray-700 mb-2 font-semibold text-sm">Checks</h3>
+          <div className="bg-white rounded-lg shadow-sm">
+            {checkItems.map((item) => {
+              if (item.visibleCondition && !item.visibleCondition(userData)) return null;
+              if (item.type === 'conditional' && item.condition && !item.condition(checks)) return null;
 
-            if (item.type === 'link' && item.href) {
-              const resolvedHref = resolveLabel(item.href, { ...userData, today: todayAsString() });
-              return (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300 last:border-0"
-                >
-                  <a
-                    href={resolvedHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-dfxBlue-300 underline hover:text-dfxBlue-800 transition-colors"
+              if (item.type === 'link' && item.href) {
+                const resolvedHref = resolveLabel(item.href, { ...userData, today: todayAsString() });
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300 last:border-0"
                   >
-                    {item.label}
-                  </a>
-                </div>
-              );
-            }
-
-            if (item.type === 'fileLink') {
-              const linkedFile = allFiles.find((f) => f.type === item.fileType);
-              return (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300 last:border-0"
-                >
-                  {linkedFile ? (
-                    <button
+                    <a
+                      href={resolvedHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-sm text-dfxBlue-300 underline hover:text-dfxBlue-800 transition-colors"
-                      onClick={() => onOpenFile(linkedFile)}
                     >
                       {item.label}
-                    </button>
-                  ) : (
-                    <span className="text-sm text-dfxGray-700">{item.label} (nicht vorhanden)</span>
-                  )}
-                </div>
-              );
-            }
+                    </a>
+                  </div>
+                );
+              }
 
-            if (item.type === 'select' && item.options) {
+              if (item.type === 'fileLink') {
+                const linkedFile = allFiles.find((f) => f.type === item.fileType);
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300 last:border-0"
+                  >
+                    {linkedFile ? (
+                      <button
+                        className="text-sm text-dfxBlue-300 underline hover:text-dfxBlue-800 transition-colors"
+                        onClick={() => onOpenFile(linkedFile)}
+                      >
+                        {item.label}
+                      </button>
+                    ) : (
+                      <span className="text-sm text-dfxGray-700">{item.label} (nicht vorhanden)</span>
+                    )}
+                  </div>
+                );
+              }
+
+              if (item.type === 'select' && item.options) {
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300 last:border-0"
+                  >
+                    <span className="text-sm text-dfxBlue-800">{resolveLabel(item.label, userData)}</span>
+                    <select
+                      className="ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+                      value={checks[item.id] ?? ''}
+                      onChange={(e) => setChecks((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                    >
+                      <option value="">—</option>
+                      {item.options.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              }
+
+              const displayLabel =
+                item.altLabel && item.altCondition?.(userData) ? item.altLabel : resolveLabel(item.label, userData);
+
               return (
                 <div
                   key={item.id}
                   className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300 last:border-0"
                 >
-                  <span className="text-sm text-dfxBlue-800">{resolveLabel(item.label, userData)}</span>
+                  <span className="text-sm text-dfxBlue-800">{displayLabel}</span>
                   <select
                     className="ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
                     value={checks[item.id] ?? ''}
                     onChange={(e) => setChecks((prev) => ({ ...prev, [item.id]: e.target.value }))}
                   >
                     <option value="">—</option>
-                    {item.options.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
+                    <option value="Yes">Ja</option>
+                    <option value="No">Nein</option>
                   </select>
                 </div>
               );
-            }
-
-            const displayLabel =
-              item.altLabel && item.altCondition?.(userData)
-                ? item.altLabel
-                : resolveLabel(item.label, userData);
-
-            return (
-              <div
-                key={item.id}
-                className="flex items-center justify-between px-3 py-2 border-b border-dfxGray-300 last:border-0"
-              >
-                <span className="text-sm text-dfxBlue-800">{displayLabel}</span>
-                <select
-                  className="ml-4 shrink-0 px-2 py-1 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
-                  value={checks[item.id] ?? ''}
-                  onChange={(e) => setChecks((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                >
-                  <option value="">—</option>
-                  <option value="Yes">Ja</option>
-                  <option value="No">Nein</option>
-                </select>
-              </div>
-            );
-          })}
+            })}
+          </div>
         </div>
-      </div>}
+      )}
 
       {/* Decision */}
       <div className="bg-white rounded-lg shadow-sm px-3 py-3">
