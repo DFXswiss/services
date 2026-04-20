@@ -12,8 +12,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@dfx.swiss/react": "^1.3.0-beta.268",
-    "@dfx.swiss/react-components": "^1.3.0-beta.268",
     "@ledgerhq/hw-app-btc": "^6.24.1",
     "@ledgerhq/hw-app-eth": "^6.33.7",
     "@ledgerhq/hw-transport-webhid": "^6.27.19",
@@ -45,6 +43,7 @@
     "https-browserify": "^1.0.0",
     "i18next": "^22.4.13",
     "i18next-browser-languagedetector": "^7.1.0",
+    "ibantools": "^4.5.4",
     "jwt-decode": "^4.0.0",
     "ledger-bitcoin": "^0.2.3",
     "libphonenumber-js": "^1.12.33",
