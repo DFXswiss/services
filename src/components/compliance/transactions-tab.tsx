@@ -135,6 +135,7 @@ export function TransactionsTable({
             <th className="px-3 py-2 text-right text-sm font-semibold text-dfxBlue-800">Input</th>
             <th className="px-3 py-2 text-right text-sm font-semibold text-dfxBlue-800">Amount (CHF)</th>
             <th className="px-3 py-2 text-right text-sm font-semibold text-dfxBlue-800">Amount (EUR)</th>
+            <th className="px-3 py-2 text-right text-sm font-semibold text-dfxBlue-800">Output</th>
             <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">AML Check</th>
             <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Chargeback</th>
             <th className="px-3 py-2 text-center text-sm font-semibold text-dfxBlue-800">Bank TX</th>
@@ -171,6 +172,11 @@ export function TransactionsTable({
                     </td>
                     <td className="px-3 py-2 text-sm text-dfxBlue-800 text-right">
                       {tx.amountInEur?.toFixed(2) || '-'}
+                    </td>
+                    <td className="px-3 py-2 text-sm text-dfxBlue-800 text-right">
+                      {tx.outputAmount != null && tx.outputAsset
+                        ? `${tx.outputAmount} ${tx.outputAsset}`
+                        : (tx.outputAsset ?? '-')}
                     </td>
                     <td className="px-3 py-2 text-sm text-dfxBlue-800">
                       {tx.amlCheck ? statusBadge(tx.amlCheck) : '-'}
@@ -226,7 +232,7 @@ export function TransactionsTable({
 
                   {isBankTxExpanded && bankTx && (
                     <tr key={`bankTx-${bankTx.id}`} className="bg-dfxGray-300/50">
-                      <td colSpan={13} className="px-6 py-3">
+                      <td colSpan={14} className="px-6 py-3">
                         <table className="text-sm text-dfxBlue-800 text-left">
                           <tbody>
                             <DetailRow label="Account Service Ref" value={bankTx.accountServiceRef} />
@@ -241,7 +247,7 @@ export function TransactionsTable({
 
                   {isCryptoExpanded && cryptoInput && (
                     <tr key={`ci-${cryptoInput.id}`} className="bg-dfxGray-300/50">
-                      <td colSpan={13} className="px-6 py-3">
+                      <td colSpan={14} className="px-6 py-3">
                         <table className="text-sm text-dfxBlue-800 text-left">
                           <tbody>
                             <DetailRow
@@ -276,7 +282,7 @@ export function TransactionsTable({
 
                   {expandedTxUid === tx.uid && (
                     <tr key={`txDetail-${tx.uid}`} className="bg-dfxGray-300/50">
-                      <td colSpan={13} className="px-6 py-3">
+                      <td colSpan={14} className="px-6 py-3">
                         {txDetailLoading === tx.uid ? (
                           <StyledLoadingSpinner size={SpinnerSize.SM} />
                         ) : txDetailError && !txDetailCache.has(tx.uid) ? (
@@ -336,7 +342,7 @@ export function TransactionsTable({
             })
           ) : (
             <tr>
-              <td colSpan={13} className="px-3 py-4 text-center text-dfxGray-700">
+              <td colSpan={14} className="px-3 py-4 text-center text-dfxGray-700">
                 No transactions
               </td>
             </tr>

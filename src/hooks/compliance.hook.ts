@@ -75,24 +75,18 @@ export interface ComplianceSearchResult {
   bankTx: BankTxSearchResult[];
 }
 
-export enum OnboardingStatus {
-  OPEN = 'Open',
-  COMPLETED = 'Completed',
-  REJECTED = 'Rejected',
-}
-
 export interface UserSearchResult {
   id: number;
   kycStatus: KycStatus;
   accountType?: AccountType;
   mail?: string;
   name?: string;
-  onboardingStatus?: OnboardingStatus;
 }
 
 export interface PendingOnboardingInfo {
   id: number;
   name?: string;
+  accountType?: string;
   date: string;
 }
 
@@ -256,16 +250,23 @@ export interface UserInfo {
   ref?: string;
   role: string;
   status: string;
+  walletName?: string;
   created: string;
 }
 
 export interface TransactionInfo {
   id: number;
   uid: string;
+  buyCryptoId?: number;
+  buyFiatId?: number;
   type?: string;
   sourceType: string;
   inputAmount?: number;
   inputAsset?: string;
+  inputTxId?: string;
+  outputAmount?: number;
+  outputAsset?: string;
+  comment?: string;
   amountInChf?: number;
   amountInEur?: number;
   amlCheck?: string;
@@ -574,10 +575,57 @@ export function useCompliance() {
     });
   }
 
+  async function updateBankData(
+    bankDataId: number,
+    data: { manualApproved?: boolean; status?: string; approved?: boolean },
+  ): Promise<void> {
+    return call<void>({
+      url: `bankData/${bankDataId}`,
+      method: 'PUT',
+      data,
+    });
+  }
+
   async function stopTransaction(transactionId: number): Promise<void> {
     return call<void>({
       url: `transaction/admin/${transactionId}/stop`,
       method: 'POST',
+    });
+  }
+
+  async function updateBuyCrypto(
+    id: number,
+    data: { amlCheck?: string; amlReason?: string; comment?: string; priceDefinitionAllowedDate?: string },
+  ): Promise<void> {
+    return call<void>({
+      url: `buyCrypto/${id}`,
+      method: 'PUT',
+      data,
+    });
+  }
+
+  async function updateBuyFiat(
+    id: number,
+    data: { amlCheck?: string; amlReason?: string; comment?: string; priceDefinitionAllowedDate?: string },
+  ): Promise<void> {
+    return call<void>({
+      url: `buyFiat/${id}`,
+      method: 'PUT',
+      data,
+    });
+  }
+
+  async function resetBuyCryptoAml(id: number): Promise<void> {
+    return call<void>({
+      url: `buyCrypto/${id}/amlCheck`,
+      method: 'DELETE',
+    });
+  }
+
+  async function resetBuyFiatAml(id: number): Promise<void> {
+    return call<void>({
+      url: `buyFiat/${id}/amlCheck`,
+      method: 'DELETE',
     });
   }
 
@@ -603,6 +651,11 @@ export function useCompliance() {
       createLimitRequest,
       chargebackTransaction,
       stopTransaction,
+      updateBankData,
+      updateBuyCrypto,
+      updateBuyFiat,
+      resetBuyCryptoAml,
+      resetBuyFiatAml,
     }),
     [call],
   );

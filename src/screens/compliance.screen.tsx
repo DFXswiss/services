@@ -19,7 +19,6 @@ import { useSettingsContext } from 'src/contexts/settings.context';
 import {
   BankTxSearchResult,
   ComplianceSearchResult,
-  OnboardingStatus,
   PendingOnboardingInfo,
   UserSearchResult,
   useCompliance,
@@ -123,11 +122,13 @@ export default function ComplianceScreen(): JSX.Element {
     {
       key: 'email',
       label: translate('screens/compliance', 'Email'),
+      cellClassName: 'break-all',
       render: (u: UserSearchResult) => u.mail ?? '-',
     },
     {
       key: 'actions',
       label: '',
+      cellClassName: 'whitespace-nowrap',
       render: (u: UserSearchResult) => (
         <div className="flex gap-2 justify-end items-center">
           <StyledIconButton
@@ -137,20 +138,12 @@ export default function ComplianceScreen(): JSX.Element {
             onClick={() => handleDownloadUserData(u.id)}
             isLoading={downloadingUserId === u.id}
           />
-          {u.accountType === 'Organization' && u.onboardingStatus && (
-            <button
-              className={`px-2 py-1 text-xs font-medium text-white rounded transition-colors ${
-                u.onboardingStatus === OnboardingStatus.COMPLETED
-                  ? 'bg-dfxGreen-100 hover:bg-dfxGreen-150'
-                  : u.onboardingStatus === OnboardingStatus.REJECTED
-                    ? 'bg-dfxRed-100 hover:bg-dfxRed-150'
-                    : 'bg-dfxBlue-800 hover:bg-dfxBlue-800/80'
-              }`}
-              onClick={() => navigate(`compliance/user/${u.id}/company-onboarding`)}
-            >
-              Onboarding
-            </button>
-          )}
+          <button
+            className="px-2 py-1 text-xs font-medium text-white rounded transition-colors bg-dfxBlue-800 hover:bg-dfxBlue-800/80"
+            onClick={() => navigate(`compliance/user/${u.id}/kyc`)}
+          >
+            KYC
+          </button>
           <button
             className="px-2 py-1 text-xs font-medium bg-dfxBlue-800 text-white rounded hover:bg-dfxBlue-800/80 transition-colors"
             onClick={() => navigate(`compliance/user/${u.id}`)}
@@ -297,7 +290,12 @@ export default function ComplianceScreen(): JSX.Element {
                               }`}
                             >
                               {userTableData.map((column) => (
-                                <td key={column.key} className="px-4 py-3 text-left text-sm text-dfxBlue-800">
+                                <td
+                                  key={column.key}
+                                  className={`px-4 py-3 text-left text-sm text-dfxBlue-800 ${
+                                    'cellClassName' in column ? column.cellClassName : ''
+                                  }`}
+                                >
                                   {column.render(u)}
                                 </td>
                               ))}
@@ -364,6 +362,9 @@ export default function ComplianceScreen(): JSX.Element {
                       {translate('screens/compliance', 'ID')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
+                      {translate('screens/kyc', 'Account Type')}
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
                       {translate('screens/kyc', 'Name')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-dfxBlue-800">
@@ -377,9 +378,10 @@ export default function ComplianceScreen(): JSX.Element {
                     <tr
                       key={o.id}
                       className="border-b border-dfxGray-300 transition-colors hover:bg-dfxGray-300 cursor-pointer"
-                      onClick={() => navigate(`compliance/user/${o.id}/company-onboarding`)}
+                      onClick={() => navigate(`compliance/user/${o.id}/kyc`)}
                     >
                       <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{o.id}</td>
+                      <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{o.accountType ?? '-'}</td>
                       <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{o.name ?? '-'}</td>
                       <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">
                         {new Date(o.date).toLocaleDateString('de-CH')}
@@ -387,7 +389,7 @@ export default function ComplianceScreen(): JSX.Element {
                       <td className="px-4 py-3 text-right">
                         <button
                           className="px-2 py-1 text-xs font-medium bg-dfxBlue-800 text-white rounded hover:bg-dfxBlue-800/80 transition-colors"
-                          onClick={() => navigate(`compliance/user/${o.id}/company-onboarding`)}
+                          onClick={() => navigate(`compliance/user/${o.id}/kyc`)}
                         >
                           Onboarding
                         </button>

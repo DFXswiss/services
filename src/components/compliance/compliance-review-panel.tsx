@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { KycFile, KycStepInfo } from 'src/hooks/compliance.hook';
 import { statusBadge, todayAsString } from 'src/util/compliance-helpers';
-import { CheckItemConfig } from './onboarding-check-configs';
+import { CheckItemConfig } from './compliance-review-configs';
 
 type DecisionValue = '' | 'Akzeptiert' | 'Abgelehnt';
 
-interface OnboardingCheckPanelProps {
+interface ComplianceReviewPanelProps {
   step: KycStepInfo | undefined;
   files: KycFile[];
   allFiles: KycFile[];
@@ -88,7 +88,7 @@ export function renderResultTable(result: string | undefined): JSX.Element | nul
   return <pre className="text-sm text-dfxBlue-800 whitespace-pre-wrap p-3">{String(parsed)}</pre>;
 }
 
-export function OnboardingCheckPanel({
+export function ComplianceReviewPanel({
   step,
   files,
   allFiles,
@@ -100,7 +100,7 @@ export function OnboardingCheckPanel({
   onOpenFile,
   onSave,
   isSaving,
-}: OnboardingCheckPanelProps): JSX.Element {
+}: ComplianceReviewPanelProps): JSX.Element {
   const [checks, setChecks] = useState<Record<string, string>>({});
   const [decision, setDecision] = useState<DecisionValue>('');
   const [rejectionComment, setRejectionComment] = useState('');
@@ -235,6 +235,14 @@ export function OnboardingCheckPanel({
             {checkItems.map((item) => {
               if (item.visibleCondition && !item.visibleCondition(userData)) return null;
               if (item.type === 'conditional' && item.condition && !item.condition(checks)) return null;
+
+              if (item.type === 'info') {
+                return (
+                  <div key={item.id} className="px-3 py-2 border-b border-dfxGray-300 last:border-0">
+                    <span className="text-sm text-dfxGray-700">{resolveLabel(item.label, userData)}</span>
+                  </div>
+                );
+              }
 
               if (item.type === 'link' && item.href) {
                 const resolvedHref = resolveLabel(item.href, { ...userData, today: todayAsString() });
