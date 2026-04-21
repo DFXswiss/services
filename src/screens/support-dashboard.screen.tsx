@@ -8,129 +8,132 @@ import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { CustomerAuthor, SupportIssueListItem, useSupportDashboard } from 'src/hooks/support-dashboard.hook';
 import { formatDateTime, statusBadge } from 'src/util/compliance-helpers';
+import { reasonLabel, typeLabel } from 'src/util/support-helpers';
 
-type Tab = 'open' | 'canceled' | 'completed';
+type PagedTab = 'OnHold' | 'Canceled' | 'Completed';
+type Tab = 'open' | PagedTab;
 
-const OPEN_STATES = [
-  SupportIssueInternalState.CREATED,
-  SupportIssueInternalState.PENDING,
-  SupportIssueInternalState.ON_HOLD,
-];
+const OPEN_STATES = [SupportIssueInternalState.CREATED, SupportIssueInternalState.PENDING];
+const PAGED_TABS: PagedTab[] = ['OnHold', 'Canceled', 'Completed'];
 const PAGE_SIZE = 20;
+
+interface TabData {
+  issues: SupportIssueListItem[];
+  total: number;
+  loaded: boolean;
+  loading: boolean;
+}
+
+const emptyTabData: TabData = { issues: [], total: 0, loaded: false, loading: false };
 
 export default function SupportDashboardScreen(): JSX.Element {
   useSupportDashboardGuard();
 
   const { translate } = useSettingsContext();
   const { session } = useAuthContext();
-  const { getIssueList } = useSupportDashboard();
+  const { getIssueList, getIssueCounts } = useSupportDashboard();
   const { navigate } = useNavigation();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
-  const [openIssuesRaw, setOpenIssuesRaw] = useState<SupportIssueListItem[]>([]);
+  const [openIssues, setOpenIssues] = useState<SupportIssueListItem[]>([]);
   const [activeTab, setActiveTab] = useState<Tab>('open');
 
-  // Filters (only apply to Open tab)
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [stateFilter, setStateFilter] = useState<string>('');
   const [departmentFilter, setDepartmentFilter] = useState<string>('');
 
-  // Canceled/Completed paging state
-  const [canceledIssues, setCanceledIssues] = useState<SupportIssueListItem[]>([]);
-  const [canceledTotal, setCanceledTotal] = useState(0);
-  const [canceledLoaded, setCanceledLoaded] = useState(false);
-  const [canceledLoading, setCanceledLoading] = useState(false);
+  const [tabs, setTabs] = useState<Record<PagedTab, TabData>>({
+    OnHold: { ...emptyTabData },
+    Canceled: { ...emptyTabData },
+    Completed: { ...emptyTabData },
+  });
 
-  const [completedIssues, setCompletedIssues] = useState<SupportIssueListItem[]>([]);
-  const [completedTotal, setCompletedTotal] = useState(0);
-  const [completedLoaded, setCompletedLoaded] = useState(false);
-  const [completedLoading, setCompletedLoading] = useState(false);
-
-  // Search (server-side for canceled/completed)
   const [searchQuery, setSearchQuery] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const isAdmin = session?.role === UserRole.ADMIN;
 
-  // Load open issues (all, no paging)
-  const loadOpenIssues = useCallback((): void => {
-    setIsLoading(true);
-    setError(undefined);
-
-    const params: Record<string, string> = {};
-    if (typeFilter) params.type = typeFilter;
-    if (departmentFilter) params.department = departmentFilter;
-
-    getIssueList(params)
-      .then((res) => setOpenIssuesRaw(res.data))
-      .catch((e: Error) => setError(e.message ?? 'Unknown error'))
-      .finally(() => setIsLoading(false));
-  }, [typeFilter, departmentFilter, getIssueList]);
-
-  useEffect(() => {
-    loadOpenIssues();
-  }, [loadOpenIssues]);
-
-  // Load counts for canceled/completed tabs on mount
-  useEffect(() => {
-    getIssueList({ state: 'Canceled', take: 1, skip: 0 }).then((res) => setCanceledTotal(res.total));
-    getIssueList({ state: 'Completed', take: 1, skip: 0 }).then((res) => setCompletedTotal(res.total));
-  }, [getIssueList]);
-
-  // Load canceled/completed (paged, server-side search)
-  const loadPaged = useCallback(
-    (state: 'Canceled' | 'Completed', skip: number, query: string, append: boolean): void => {
-      const setLoading = state === 'Canceled' ? setCanceledLoading : setCompletedLoading;
-      const setIssues = state === 'Canceled' ? setCanceledIssues : setCompletedIssues;
-      const setTotal = state === 'Canceled' ? setCanceledTotal : setCompletedTotal;
-      const setLoaded = state === 'Canceled' ? setCanceledLoaded : setCompletedLoaded;
-
-      setLoading(true);
+  const loadOpenIssues = useCallback(
+    (query: string): void => {
+      setIsLoading(true);
       setError(undefined);
 
-      getIssueList({ state, take: PAGE_SIZE, skip, query: query || undefined })
-        .then((res) => {
-          setIssues((prev) => (append ? [...prev, ...res.data] : res.data));
-          setTotal(res.total);
-          setLoaded(true);
-        })
+      const params: Record<string, string> = { states: OPEN_STATES.join(',') };
+      if (typeFilter) params.type = typeFilter;
+      if (departmentFilter) params.department = departmentFilter;
+      if (query) params.query = query;
+
+      getIssueList(params)
+        .then((res) => setOpenIssues(res.data))
         .catch((e: Error) => setError(e.message ?? 'Unknown error'))
-        .finally(() => setLoading(false));
+        .finally(() => setIsLoading(false));
+    },
+    [typeFilter, departmentFilter, getIssueList],
+  );
+
+  useEffect(() => {
+    getIssueCounts()
+      .then((counts) =>
+        setTabs((prev) => ({
+          OnHold: { ...prev.OnHold, total: counts[SupportIssueInternalState.ON_HOLD] ?? 0 },
+          Canceled: { ...prev.Canceled, total: counts[SupportIssueInternalState.CANCELED] ?? 0 },
+          Completed: { ...prev.Completed, total: counts[SupportIssueInternalState.COMPLETED] ?? 0 },
+        })),
+      )
+      .catch(() => undefined);
+  }, [getIssueCounts]);
+
+  const loadPaged = useCallback(
+    (state: PagedTab, skip: number, query: string, append: boolean): void => {
+      setTabs((prev) => ({ ...prev, [state]: { ...prev[state], loading: true } }));
+      setError(undefined);
+
+      getIssueList({ states: state, take: PAGE_SIZE, skip, query: query || undefined })
+        .then((res) => {
+          setTabs((prev) => ({
+            ...prev,
+            [state]: {
+              issues: append ? [...prev[state].issues, ...res.data] : res.data,
+              total: res.total,
+              loaded: true,
+              loading: false,
+            },
+          }));
+        })
+        .catch((e: Error) => {
+          setError(e.message ?? 'Unknown error');
+          setTabs((prev) => ({ ...prev, [state]: { ...prev[state], loading: false } }));
+        });
     },
     [getIssueList],
   );
 
-  // Lazy load on tab switch
   useEffect(() => {
-    if (activeTab === 'canceled' && !canceledLoaded) {
-      loadPaged('Canceled', 0, '', false);
-    }
-    if (activeTab === 'completed' && !completedLoaded) {
-      loadPaged('Completed', 0, '', false);
-    }
-  }, [activeTab, loadPaged, canceledLoaded, completedLoaded]);
+    if (activeTab !== 'open' && !tabs[activeTab].loaded) loadPaged(activeTab, 0, '', false);
+  }, [activeTab, loadPaged, tabs]);
 
-  // Debounced search for canceled/completed
   useEffect(() => {
-    if (activeTab === 'open') return;
-
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      const state = activeTab === 'canceled' ? 'Canceled' : 'Completed';
-      loadPaged(state, 0, searchQuery, false);
+      if (activeTab === 'open') loadOpenIssues(searchQuery);
+      else loadPaged(activeTab, 0, searchQuery, false);
     }, 300);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [searchQuery, activeTab, loadPaged]);
+  }, [searchQuery, activeTab, loadPaged, loadOpenIssues]);
 
-  useLayoutOptions({ title: translate('screens/support', 'Support Dashboard'), backButton: true, noMaxWidth: true });
+  useLayoutOptions({
+    title: translate('screens/support', 'Support Dashboard'),
+    backButton: true,
+    noMaxWidth: true,
+    noPadding: true,
+  });
 
   const openIssueGroups = useMemo(() => {
-    let filtered = openIssuesRaw.filter((i) => (OPEN_STATES as string[]).includes(i.state));
-    if (stateFilter) filtered = filtered.filter((i) => i.state === stateFilter);
+    const filtered = stateFilter ? openIssues.filter((i) => i.state === stateFilter) : openIssues;
 
     const customerWaiting = filtered
       .filter((i) => i.lastMessageAuthor === CustomerAuthor)
@@ -144,33 +147,25 @@ export default function SupportDashboardScreen(): JSX.Element {
       customerWaiting,
       created: rest.filter((i) => i.state === SupportIssueInternalState.CREATED).sort(byCreated),
       pending: rest.filter((i) => i.state === SupportIssueInternalState.PENDING).sort(byCreated),
-      onHold: rest.filter((i) => i.state === SupportIssueInternalState.ON_HOLD).sort(byCreated),
     };
-  }, [openIssuesRaw, stateFilter]);
+  }, [openIssues, stateFilter]);
 
   const openIssueCount =
-    openIssueGroups.customerWaiting.length +
-    openIssueGroups.created.length +
-    openIssueGroups.pending.length +
-    openIssueGroups.onHold.length;
+    openIssueGroups.customerWaiting.length + openIssueGroups.created.length + openIssueGroups.pending.length;
 
-  const displayedIssues = activeTab === 'canceled' ? canceledIssues : completedIssues;
-  const displayedTotal = activeTab === 'canceled' ? canceledTotal : completedTotal;
-  const isTabLoading = activeTab === 'open' ? isLoading : activeTab === 'canceled' ? canceledLoading : completedLoading;
-  const hasMore = activeTab !== 'open' && displayedIssues.length < displayedTotal;
+  const currentTab = activeTab === 'open' ? null : tabs[activeTab];
+  const displayedIssues = currentTab?.issues ?? [];
+  const displayedTotal = currentTab?.total ?? 0;
+  const isTabLoading = activeTab === 'open' ? isLoading : (currentTab?.loading ?? false);
+  const hasMore = currentTab != null && displayedIssues.length < displayedTotal;
 
   function handleLoadMore(): void {
-    const state = activeTab === 'canceled' ? 'Canceled' : 'Completed';
-    loadPaged(state, displayedIssues.length, searchQuery, true);
-  }
-
-  function handleTabChange(tab: Tab): void {
-    setActiveTab(tab);
-    if (tab === 'open') setSearchQuery('');
+    if (activeTab === 'open') return;
+    loadPaged(activeTab, displayedIssues.length, searchQuery, true);
   }
 
   return (
-    <div className="w-full flex flex-col gap-4 max-w-6xl text-left">
+    <div className="w-full flex flex-col gap-3 flex-1 min-h-0 p-3 text-left">
       {/* Stats & Actions */}
       <div className="flex items-center gap-4 flex-wrap">
         <div className="bg-white rounded-lg shadow-sm p-3 flex-1 min-w-[150px]">
@@ -192,18 +187,16 @@ export default function SupportDashboardScreen(): JSX.Element {
         <TabButton
           label={`Open (${openIssueCount})`}
           active={activeTab === 'open'}
-          onClick={() => handleTabChange('open')}
+          onClick={() => setActiveTab('open')}
         />
-        <TabButton
-          label={`Canceled (${canceledTotal})`}
-          active={activeTab === 'canceled'}
-          onClick={() => handleTabChange('canceled')}
-        />
-        <TabButton
-          label={`Completed (${completedTotal})`}
-          active={activeTab === 'completed'}
-          onClick={() => handleTabChange('completed')}
-        />
+        {PAGED_TABS.map((tab) => (
+          <TabButton
+            key={tab}
+            label={`${tab} (${tabs[tab].total})`}
+            active={activeTab === tab}
+            onClick={() => setActiveTab(tab)}
+          />
+        ))}
       </div>
 
       {/* Filters - only for Open tab */}
@@ -213,15 +206,23 @@ export default function SupportDashboardScreen(): JSX.Element {
             label="Type"
             value={typeFilter}
             onChange={setTypeFilter}
-            options={Object.values(SupportIssueType)}
+            options={Object.values(SupportIssueType).map((t) => ({
+              value: t,
+              label: translate('screens/support', typeLabel(t)),
+            }))}
           />
-          <FilterSelect label="State" value={stateFilter} onChange={setStateFilter} options={OPEN_STATES} />
+          <FilterSelect
+            label="State"
+            value={stateFilter}
+            onChange={setStateFilter}
+            options={OPEN_STATES.map((s) => ({ value: s, label: s }))}
+          />
           {isAdmin && (
             <FilterSelect
               label="Department"
               value={departmentFilter}
               onChange={setDepartmentFilter}
-              options={Object.values(Department)}
+              options={Object.values(Department).map((d) => ({ value: d, label: d }))}
             />
           )}
           <button
@@ -237,21 +238,19 @@ export default function SupportDashboardScreen(): JSX.Element {
         </div>
       )}
 
-      {/* Search - for Canceled and Completed tabs */}
-      {(activeTab === 'canceled' || activeTab === 'completed') && (
-        <div className="flex flex-col gap-1">
-          <input
-            className="px-3 py-1.5 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by UID, name, clerk, message..."
-          />
-        </div>
-      )}
+      {/* Search - all tabs (server-side) */}
+      <div className="flex flex-col gap-1">
+        <input
+          className="px-3 py-1.5 text-sm border border-dfxGray-400 rounded bg-white text-dfxBlue-800"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by UID, name, clerk, message..."
+        />
+      </div>
 
       {/* Content */}
       {error && <ErrorHint message={error} />}
-      {isTabLoading && (activeTab !== 'open' ? displayedIssues.length === 0 : openIssueCount === 0) ? (
+      {isTabLoading && (activeTab === 'open' ? openIssueCount === 0 : displayedIssues.length === 0) ? (
         <StyledLoadingSpinner size={SpinnerSize.LG} />
       ) : activeTab === 'open' ? (
         <GroupedIssueTable
@@ -305,7 +304,7 @@ function FilterSelect({
   label: string;
   value: string;
   onChange: (v: string) => void;
-  options: string[];
+  options: { value: string; label: string }[];
 }): JSX.Element {
   return (
     <div className="flex flex-col gap-1">
@@ -317,8 +316,8 @@ function FilterSelect({
       >
         <option value="">All</option>
         {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
           </option>
         ))}
       </select>
@@ -330,7 +329,6 @@ interface IssueGroups {
   customerWaiting: SupportIssueListItem[];
   created: SupportIssueListItem[];
   pending: SupportIssueListItem[];
-  onHold: SupportIssueListItem[];
 }
 
 const COLUMN_COUNT = 9;
@@ -362,13 +360,18 @@ function IssueRow({
   showDepartment: boolean;
   onRowClick: (issue: SupportIssueListItem) => void;
 }): JSX.Element {
+  const { translate } = useSettingsContext();
   return (
     <tr
       className="border-b border-dfxGray-300 transition-colors hover:bg-dfxBlue-400 cursor-pointer group"
       onClick={() => onRowClick(issue)}
     >
-      <td className="px-2 py-1.5 text-xs text-dfxBlue-800 text-left group-hover:text-white">{issue.type}</td>
-      <td className="px-2 py-1.5 text-xs text-dfxBlue-800 text-left group-hover:text-white">{issue.reason}</td>
+      <td className="px-2 py-1.5 text-xs text-dfxBlue-800 text-left group-hover:text-white">
+        {translate('screens/support', typeLabel(issue.type))}
+      </td>
+      <td className="px-2 py-1.5 text-xs text-dfxBlue-800 text-left group-hover:text-white">
+        {translate('screens/support', reasonLabel(issue.reason))}
+      </td>
       <td className="px-2 py-1.5 text-xs text-dfxBlue-800 text-left group-hover:text-white max-w-[200px] truncate">
         {issue.name}
       </td>
@@ -416,18 +419,17 @@ function GroupedIssueTable({
   showDepartment: boolean;
   onRowClick: (issue: SupportIssueListItem) => void;
 }): JSX.Element {
-  const total = groups.customerWaiting.length + groups.created.length + groups.pending.length + groups.onHold.length;
+  const total = groups.customerWaiting.length + groups.created.length + groups.pending.length;
   if (total === 0) return <div className="p-4 text-dfxGray-700 text-sm">No issues found</div>;
 
   const colSpan = showDepartment ? COLUMN_COUNT + 1 : COLUMN_COUNT;
   const sections: { label: string; issues: SupportIssueListItem[] }[] = [
     { label: 'Created', issues: groups.created },
     { label: 'Pending', issues: groups.pending },
-    { label: 'OnHold', issues: groups.onHold },
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm max-h-[60vh] overflow-auto scroll-shadow">
+    <div className="bg-white shadow-sm flex-1 min-h-0 overflow-auto scroll-shadow">
       <table className="w-full border-collapse">
         <IssueTableHeader showDepartment={showDepartment} />
         <tbody>
@@ -469,7 +471,7 @@ function IssueTable({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm max-h-[60vh] overflow-auto scroll-shadow">
+    <div className="bg-white shadow-sm flex-1 min-h-0 overflow-auto scroll-shadow">
       <table className="w-full border-collapse">
         <IssueTableHeader showDepartment={showDepartment} />
         <tbody>
