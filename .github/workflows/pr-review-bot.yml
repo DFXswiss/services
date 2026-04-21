@@ -2,6 +2,9 @@ name: PR Review Bot
 
 on:
   pull_request:
+    branches:
+      - main
+      - develop
     types: [opened, synchronize]
 
 permissions:
