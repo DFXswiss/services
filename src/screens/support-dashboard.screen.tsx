@@ -31,7 +31,7 @@ export default function SupportDashboardScreen(): JSX.Element {
 
   const { translate } = useSettingsContext();
   const { session } = useAuthContext();
-  const { getIssueList, getIssueCounts } = useSupportDashboard();
+  const { getIssueList, getIssueCounts, getIssueActivity } = useSupportDashboard();
   const { navigate } = useNavigation();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -51,6 +51,9 @@ export default function SupportDashboardScreen(): JSX.Element {
 
   const [searchQuery, setSearchQuery] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const [newMessageCount, setNewMessageCount] = useState(0);
+  const baselineRef = useRef<Date>(new Date());
 
   const isAdmin = session?.role === UserRole.ADMIN;
 
@@ -111,7 +114,7 @@ export default function SupportDashboardScreen(): JSX.Element {
 
   useEffect(() => {
     if (activeTab !== 'open' && !tabs[activeTab].loaded) loadPaged(activeTab, 0, '', false);
-  }, [activeTab, loadPaged, tabs]);
+  }, [activeTab, loadPaged]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -124,6 +127,27 @@ export default function SupportDashboardScreen(): JSX.Element {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [searchQuery, activeTab, loadPaged, loadOpenIssues]);
+
+  useEffect(() => {
+    const tick = (): void => {
+      getIssueActivity(baselineRef.current)
+        .then((res) => setNewMessageCount(res.count))
+        .catch(() => undefined);
+    };
+    const id = setInterval(tick, 30_000);
+    return () => clearInterval(id);
+  }, [getIssueActivity]);
+
+  const reloadAfterActivity = useCallback((): void => {
+    baselineRef.current = new Date();
+    setNewMessageCount(0);
+    if (activeTab === 'open') {
+      loadOpenIssues(searchQuery);
+    } else {
+      setTabs((prev) => ({ ...prev, [activeTab]: { ...prev[activeTab], loaded: false } }));
+      loadPaged(activeTab, 0, searchQuery, false);
+    }
+  }, [activeTab, searchQuery, loadOpenIssues, loadPaged]);
 
   useLayoutOptions({
     title: translate('screens/support', 'Support Dashboard'),
@@ -235,6 +259,14 @@ export default function SupportDashboardScreen(): JSX.Element {
           >
             Reset
           </button>
+          {newMessageCount > 0 && (
+            <button
+              className="ml-auto px-3 py-1 text-xs text-white bg-dfxRed-100 rounded-full hover:bg-dfxRed-150 transition-colors"
+              onClick={reloadAfterActivity}
+            >
+              {newMessageCount} new {newMessageCount === 1 ? 'message' : 'messages'} — load
+            </button>
+          )}
         </div>
       )}
 

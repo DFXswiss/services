@@ -126,6 +126,14 @@ export function useSupportDashboard() {
     });
   }
 
+  async function getIssueActivity(since?: Date): Promise<{ count: number; latestAt?: string }> {
+    const query = since ? `?since=${encodeURIComponent(since.toISOString())}` : '';
+    return call<{ count: number; latestAt?: string }>({
+      url: `support/issue/activity${query}`,
+      method: 'GET',
+    });
+  }
+
   async function getClerks(): Promise<string[]> {
     return call<string[]>({
       url: 'support/issue/clerks',
@@ -213,6 +221,7 @@ export function useSupportDashboard() {
     () => ({
       getIssueList,
       getIssueCounts,
+      getIssueActivity,
       getClerks,
       getIssueData,
       updateIssue,
