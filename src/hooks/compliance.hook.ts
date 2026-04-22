@@ -90,6 +90,33 @@ export interface PendingOnboardingInfo {
   date: string;
 }
 
+export enum PendingReviewType {
+  KYC_STEP = 'KycStep',
+  BANK_DATA = 'BankData',
+}
+
+export enum PendingReviewStatus {
+  MANUAL_REVIEW = 'ManualReview',
+  INTERNAL_REVIEW = 'InternalReview',
+}
+
+export interface PendingReviewSummaryEntry {
+  type: PendingReviewType;
+  name: string;
+  manualReview: number;
+  internalReview: number;
+}
+
+export interface PendingReviewItem {
+  id: number;
+  userDataId: number;
+  userName?: string;
+  accountType?: string;
+  kycLevel?: number;
+  status: PendingReviewStatus;
+  date: string;
+}
+
 export interface BankTxSearchResult {
   id: number;
   transactionId?: number;
@@ -509,6 +536,26 @@ export function useCompliance() {
     });
   }
 
+  async function getPendingReviews(): Promise<PendingReviewSummaryEntry[]> {
+    return call<PendingReviewSummaryEntry[]>({
+      url: 'support/pending-reviews',
+      method: 'GET',
+    });
+  }
+
+  async function getPendingReviewItems(
+    type: PendingReviewType,
+    status: PendingReviewStatus,
+    name?: string,
+  ): Promise<PendingReviewItem[]> {
+    const query = new URLSearchParams({ type, status });
+    if (name) query.set('name', name);
+    return call<PendingReviewItem[]>({
+      url: `support/pending-reviews/items?${query.toString()}`,
+      method: 'GET',
+    });
+  }
+
   async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
     return call<RecommendationGraph>({
       url: `support/recommendation-graph/${userDataId}`,
@@ -634,6 +681,8 @@ export function useCompliance() {
       search,
       getUserData,
       getPendingOnboardings,
+      getPendingReviews,
+      getPendingReviewItems,
       downloadUserFiles,
       checkUserFiles,
       getTransactionRefundData,
