@@ -5,7 +5,7 @@ import { formatDate, formatDateTime, formatValue, statusBadge } from 'src/util/c
 
 type DecisionValue = '' | 'Akzeptiert' | 'Abgelehnt';
 
-export interface OnboardingFreigabeSaveParams {
+export interface ComplianceReviewFreigabeSaveParams {
   stepId: number;
   status: string;
   result?: string;
@@ -24,13 +24,13 @@ export interface OnboardingFreigabeSaveParams {
   };
 }
 
-interface OnboardingOnboardingFreigabePanelProps {
+interface OnboardingComplianceReviewFreigabePanelProps {
   step: KycStepInfo | undefined;
   userData: Record<string, unknown>;
   kycSteps: KycStepInfo[];
   kycFiles: KycFile[];
   onOpenFile: (file: KycFile) => void;
-  onSave: (params: OnboardingFreigabeSaveParams) => Promise<void>;
+  onSave: (params: ComplianceReviewFreigabeSaveParams) => Promise<void>;
   isSaving: boolean;
   onLimitRequestCreated?: () => void;
 }
@@ -269,7 +269,7 @@ function TextareaField({
 
 // --- Main component ---
 
-export function OnboardingFreigabePanel({
+export function ComplianceReviewFreigabePanel({
   step,
   userData,
   kycSteps,
@@ -278,7 +278,7 @@ export function OnboardingFreigabePanel({
   onSave,
   isSaving,
   onLimitRequestCreated,
-}: OnboardingOnboardingFreigabePanelProps): JSX.Element {
+}: OnboardingComplianceReviewFreigabePanelProps): JSX.Element {
   // Derived from predecessor step status (read-only, like in GS)
   const ownerDirectoryStep = findStep(kycSteps, 'OwnerDirectory');
   const legalEntityStepForDecision = findStep(kycSteps, 'LegalEntity');
