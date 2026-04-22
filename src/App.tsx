@@ -65,6 +65,7 @@ const ComplianceSupportIssueScreen = lazy(() => import('./screens/compliance-sup
 const ComplianceRecommendationGraphScreen = lazy(() => import('./screens/compliance-recommendation-graph.screen'));
 const ComplianceCustodyOrdersScreen = lazy(() => import('./screens/compliance-custody-orders.screen'));
 const ComplianceReviewScreen = lazy(() => import('./screens/compliance-review.screen'));
+const CompliancePendingReviewsScreen = lazy(() => import('./screens/compliance-pending-reviews.screen'));
 const SupportDashboardScreen = lazy(() => import('./screens/support-dashboard.screen'));
 const SupportDashboardIssueScreen = lazy(() => import('./screens/support-dashboard-issue.screen'));
 const SupportDashboardCreateScreen = lazy(() => import('./screens/support-dashboard-create.screen'));
@@ -391,6 +392,10 @@ export const Routes = [
       {
         path: 'compliance/user/:id/kyc',
         element: withSuspense(<ComplianceReviewScreen />),
+      },
+      {
+        path: 'compliance/pending-reviews/:type/:name',
+        element: withSuspense(<CompliancePendingReviewsScreen />),
       },
       {
         path: 'support/dashboard',
