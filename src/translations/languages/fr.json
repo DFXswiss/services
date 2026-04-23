@@ -396,7 +396,7 @@
     "No entries found": "Aucune entrée trouvée",
     "found by {{type}}": "trouvés par {{type}}",
     "Customers": "Clients",
-    "Matching Bank Transactions": "Transactions bancaires correspondantes"
+    "Bank Transactions": "Transactions bancaires"
   },
   "screens/2fa": {
     "2FA": "2FA",
