@@ -134,6 +134,10 @@ const sections: PageSection[] = [
       { path: '/recommendation', label: 'Recommendation' },
     ],
   },
+  {
+    title: 'Admin',
+    pages: [{ path: '/sitemap', label: 'Sitemap' }],
+  },
 ];
 
 export default function SitemapScreen(): JSX.Element {
