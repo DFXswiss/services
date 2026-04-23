@@ -15,3 +15,11 @@ export interface MrosListEntry {
   caseManager: string;
   userData: { id: number };
 }
+
+export interface CreateMrosDto {
+  userDataId: number;
+  status: MrosStatus;
+  submissionDate?: string;
+  authorityReference?: string;
+  caseManager: string;
+}
