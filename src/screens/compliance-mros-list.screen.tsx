@@ -2,10 +2,23 @@ import { useSessionContext } from '@dfx.swiss/react';
 import { SpinnerSize, StyledLoadingSpinner, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useCallback, useEffect, useState } from 'react';
 import { ErrorHint } from 'src/components/error-hint';
-import { MrosListEntry } from 'src/dto/mros.dto';
+import { MrosListEntry, MrosStatus } from 'src/dto/mros.dto';
 import { useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
+
+const statusClasses: Record<MrosStatus, string> = {
+  [MrosStatus.DRAFT]: 'bg-dfxGray-400 text-dfxBlue-800',
+  [MrosStatus.SUBMITTED]: 'bg-dfxBlue-300/20 text-dfxBlue-400',
+  [MrosStatus.CONFIRMED]: 'bg-dfxGreen-100/20 text-dfxGreen-300',
+  [MrosStatus.CLOSED]: 'bg-dfxGray-700/20 text-dfxGray-800',
+};
+
+function statusBadge(status: MrosStatus): JSX.Element {
+  const classes = statusClasses[status] ?? 'bg-dfxGray-400 text-dfxBlue-800';
+
+  return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${classes}`}>{status}</span>;
+}
 
 export default function ComplianceMrosListScreen(): JSX.Element {
   useComplianceGuard();
@@ -74,7 +87,7 @@ export default function ComplianceMrosListScreen(): JSX.Element {
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatDate(entry.created)}</td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatDate(entry.updated)}</td>
                     <td className="px-4 py-3 text-right text-sm text-dfxBlue-800">{entry.userData.id}</td>
-                    <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.status}</td>
+                    <td className="px-4 py-3 text-left text-sm">{statusBadge(entry.status)}</td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{formatDate(entry.submissionDate)}</td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.authorityReference ?? '-'}</td>
                     <td className="px-4 py-3 text-left text-sm text-dfxBlue-800">{entry.caseManager}</td>
