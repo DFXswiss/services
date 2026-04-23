@@ -186,14 +186,15 @@ export default function ComplianceScreen(): JSX.Element {
       label: '',
       render: (b: BankTxSearchResult) => (
         <div className="flex gap-2 justify-end items-center">
-          {b.transactionId && (
-            <StyledIconButton
-              icon={IconVariant.BACK}
-              color={IconColor.BLUE}
-              size={IconSize.SM}
-              onClick={() => navigate(`compliance/bank-tx/${b.transactionId}/return`)}
-            />
-          )}
+          <StyledIconButton
+            icon={IconVariant.FORWARD}
+            color={IconColor.BLUE}
+            size={IconSize.SM}
+            onClick={() => {
+              sessionStorage.setItem(`bankTx:${b.id}`, JSON.stringify(b));
+              navigate(`compliance/bank-tx/${b.id}`);
+            }}
+          />
         </div>
       ),
     },
