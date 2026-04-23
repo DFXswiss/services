@@ -122,6 +122,10 @@ export function todayAsString(): string {
   return new Date().toISOString().split('T')[0];
 }
 
+// Mirrors `BankTxUnassignedTypes` in DFXswiss/api (bank-tx.entity.ts).
+// Only these types still allow a manual Return via compliance.
+export const BankTxUnassignedTypes = ['GSheet', 'Unknown', 'Pending'];
+
 export function formatDate(value: string): string {
   return new Date(value).toLocaleDateString();
 }
