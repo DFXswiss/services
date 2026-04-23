@@ -82,7 +82,9 @@ export default function ComplianceBankTxRecallScreen(): JSX.Element {
     return (
       <StyledVerticalStack gap={6} full center>
         <div className="text-center">
-          <h2 className="text-dfxBlue-800 text-xl font-semibold mb-4">Recall created successfully</h2>
+          <h2 className="text-dfxBlue-800 text-xl font-semibold mb-4">
+            {translate('screens/compliance', 'Recall created successfully')}
+          </h2>
           <StyledButton label={translate('general/actions', 'Back')} onClick={() => navigate(-1)} width={StyledButtonWidth.MD} />
         </div>
       </StyledVerticalStack>
@@ -122,7 +124,7 @@ export default function ComplianceBankTxRecallScreen(): JSX.Element {
 
         <StyledButton
           type="submit"
-          label="Submit"
+          label={translate('general/actions', 'Create recall')}
           onClick={handleSubmit(onSubmit)}
           width={StyledButtonWidth.FULL}
           disabled={!isValid}
