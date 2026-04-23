@@ -4,7 +4,7 @@ import { BankTxSearchResult } from 'src/hooks/compliance.hook';
 // details screen. sessionStorage is needed because app-handling.context
 // calls history.replaceState(undefined, ...) on mount, which wipes router
 // state, and there is no backend endpoint to refetch a single bank-tx.
-const BANK_TX_CACHE_PREFIX = 'bankTx:';
+const BANK_TX_CACHE_PREFIX = 'dfx.bankTx.';
 
 export function cacheBankTx(bankTx: BankTxSearchResult): void {
   sessionStorage.setItem(`${BANK_TX_CACHE_PREFIX}${bankTx.id}`, JSON.stringify(bankTx));
