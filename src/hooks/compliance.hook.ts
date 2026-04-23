@@ -10,7 +10,7 @@ import {
 } from '@dfx.swiss/react';
 import { MrosListEntry } from 'src/dto/mros.dto';
 import { CustodyOrderListEntry } from 'src/dto/order.dto';
-import { RecallListEntry } from 'src/dto/recall.dto';
+import { CreateRecallDto, RecallListEntry } from 'src/dto/recall.dto';
 import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
 import { useMemo } from 'react';
 import { downloadFile, downloadPdfFromString, filenameDateFormat } from 'src/util/utils';
@@ -525,6 +525,14 @@ export function useCompliance() {
     });
   }
 
+  async function createRecall(dto: CreateRecallDto): Promise<void> {
+    return call<void>({
+      url: 'recall',
+      method: 'POST',
+      data: dto,
+    });
+  }
+
   async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
     return call<RecommendationGraph>({
       url: `support/recommendation-graph/${userDataId}`,
@@ -664,6 +672,7 @@ export function useCompliance() {
       approveCustodyOrder,
       getMrosList,
       getRecalls,
+      createRecall,
       updateKycStep,
       updateUserData,
       createLimitRequest,

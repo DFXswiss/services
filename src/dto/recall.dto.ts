@@ -20,3 +20,13 @@ export interface RecallListEntry {
   checkoutTx?: { id: number };
   user?: { id: number };
 }
+
+export interface CreateRecallDto {
+  bankTxId?: number;
+  checkoutTxId?: number;
+  sequence: number;
+  comment: string;
+  fee: number;
+  reason: RecallReason;
+  userId?: number;
+}

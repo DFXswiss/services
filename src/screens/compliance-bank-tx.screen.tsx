@@ -55,6 +55,13 @@ export default function ComplianceBankTxScreen(): JSX.Element {
         </table>
       </div>
 
+      <StyledButton
+        label="Recall erfassen"
+        onClick={() => navigate(`compliance/bank-tx/${bankTx.id}/recall`)}
+        width={StyledButtonWidth.FULL}
+        color={StyledButtonColor.BLUE}
+      />
+
       {bankTx.transactionId && (
         <StyledButton
           label="Return"
