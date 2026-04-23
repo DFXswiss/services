@@ -56,6 +56,7 @@ const SafeScreen = lazy(() => import('./screens/safe.screen'));
 const TelegramSupportScreen = lazy(() => import('./screens/telegram-support.screen'));
 const ComplianceScreen = lazy(() => import('./screens/compliance.screen'));
 const ComplianceBankTxScreen = lazy(() => import('./screens/compliance-bank-tx.screen'));
+const ComplianceBankTxRecallScreen = lazy(() => import('./screens/compliance-bank-tx-recall.screen'));
 const ComplianceBankTxReturnScreen = lazy(() => import('./screens/compliance-bank-tx-return.screen'));
 const ComplianceKycFilesScreen = lazy(() => import('./screens/compliance-kyc-files.screen'));
 const ComplianceKycFilesDetailsScreen = lazy(() => import('./screens/compliance-kyc-files-details.screen'));
@@ -371,6 +372,10 @@ export const Routes = [
       {
         path: 'compliance/bank-tx/:id',
         element: withSuspense(<ComplianceBankTxScreen />),
+      },
+      {
+        path: 'compliance/bank-tx/:id/recall',
+        element: withSuspense(<ComplianceBankTxRecallScreen />),
       },
       {
         path: 'compliance/bank-tx/:id/return',
