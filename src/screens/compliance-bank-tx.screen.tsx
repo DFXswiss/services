@@ -1,4 +1,4 @@
-import { StyledButton, StyledButtonWidth, StyledVerticalStack } from '@dfx.swiss/react-components';
+import { StyledButton, StyledButtonColor, StyledButtonWidth, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useLocation, useParams } from 'react-router-dom';
 import { ErrorHint } from 'src/components/error-hint';
 import { useSettingsContext } from 'src/contexts/settings.context';
@@ -71,6 +71,7 @@ export default function ComplianceBankTxScreen(): JSX.Element {
           label={translate('screens/compliance', 'Return')}
           onClick={() => navigate(`/compliance/bank-tx/${bankTx.transactionId}/return`)}
           width={StyledButtonWidth.FULL}
+          color={StyledButtonColor.BLUE}
         />
       )}
     </StyledVerticalStack>
