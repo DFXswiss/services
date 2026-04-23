@@ -67,6 +67,7 @@ const ComplianceSupportIssueScreen = lazy(() => import('./screens/compliance-sup
 const ComplianceRecommendationGraphScreen = lazy(() => import('./screens/compliance-recommendation-graph.screen'));
 const ComplianceCustodyOrdersScreen = lazy(() => import('./screens/compliance-custody-orders.screen'));
 const ComplianceMrosListScreen = lazy(() => import('./screens/compliance-mros-list.screen'));
+const ComplianceMrosCreateScreen = lazy(() => import('./screens/compliance-mros-create.screen'));
 const ComplianceRecallListScreen = lazy(() => import('./screens/compliance-recall-list.screen'));
 const ComplianceReviewScreen = lazy(() => import('./screens/compliance-review.screen'));
 const SupportDashboardScreen = lazy(() => import('./screens/support-dashboard.screen'));
@@ -404,6 +405,10 @@ export const Routes = [
       {
         path: 'compliance/mros',
         element: withSuspense(<ComplianceMrosListScreen />),
+      },
+      {
+        path: 'compliance/mros/create',
+        element: withSuspense(<ComplianceMrosCreateScreen />),
       },
       {
         path: 'compliance/recalls',

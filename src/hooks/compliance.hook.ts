@@ -8,7 +8,7 @@ import {
   ResponseType,
   useApi,
 } from '@dfx.swiss/react';
-import { MrosListEntry } from 'src/dto/mros.dto';
+import { CreateMrosDto, MrosListEntry } from 'src/dto/mros.dto';
 import { CustodyOrderListEntry } from 'src/dto/order.dto';
 import { CreateRecallDto, RecallListEntry } from 'src/dto/recall.dto';
 import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
@@ -529,6 +529,14 @@ export function useCompliance() {
     });
   }
 
+  async function createMros(dto: CreateMrosDto): Promise<void> {
+    return call<void>({
+      url: 'mros',
+      method: 'POST',
+      data: dto,
+    });
+  }
+
   async function getRecalls(): Promise<RecallListEntry[]> {
     return call<RecallListEntry[]>({
       url: 'recall',
@@ -682,6 +690,7 @@ export function useCompliance() {
       getCustodyOrders,
       approveCustodyOrder,
       getMrosList,
+      createMros,
       getRecalls,
       createRecall,
       updateKycStep,
