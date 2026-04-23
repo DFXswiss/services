@@ -48,7 +48,7 @@ export default function ComplianceBankTxRecallScreen(): JSX.Element {
     defaultValues: { fee: '500', comment: 'n.a.' },
   });
 
-  useLayoutOptions({ title: 'Recall erfassen', backButton: true });
+  useLayoutOptions({ title: translate('screens/compliance', 'Recall erfassen'), backButton: true });
 
   async function onSubmit(formData: FormData) {
     if (!id) return;
@@ -97,7 +97,7 @@ export default function ComplianceBankTxRecallScreen(): JSX.Element {
         <StyledDropdown<RecallReason>
           rootRef={rootRef}
           name="reason"
-          label="Reason"
+          label={translate('screens/compliance', 'Reason')}
           placeholder={translate('general/actions', 'Select') + '...'}
           items={Object.values(RecallReason).filter((r) => r !== RecallReason.UNKNOWN)}
           labelFunc={(item) => item}
@@ -108,13 +108,13 @@ export default function ComplianceBankTxRecallScreen(): JSX.Element {
         <StyledInput
           name="fee"
           type="number"
-          label="Fee"
+          label={translate('screens/compliance', 'Fee')}
           placeholder="0"
           full
           smallLabel
         />
 
-        <StyledInput name="comment" label="Comment" full smallLabel />
+        <StyledInput name="comment" label={translate('screens/compliance', 'Comment')} full smallLabel />
 
         {error && (
           <div>
