@@ -1,4 +1,4 @@
-import { Utils, Validations } from '@dfx.swiss/react';
+import { Utils, Validations, useUser } from '@dfx.swiss/react';
 import {
   Form,
   StyledButton,
@@ -8,7 +8,7 @@ import {
   StyledInput,
   StyledVerticalStack,
 } from '@dfx.swiss/react-components';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ErrorHint } from 'src/components/error-hint';
 import { useLayoutContext } from 'src/contexts/layout.context';
@@ -18,13 +18,13 @@ import { useCompliance } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { todayAsString } from 'src/util/compliance-helpers';
 
 interface FormData {
   userDataId: string;
   status: MrosStatus;
   submissionDate: string;
   authorityReference: string;
-  caseManager: string;
 }
 
 export default function ComplianceMrosCreateScreen(): JSX.Element {
@@ -32,12 +32,20 @@ export default function ComplianceMrosCreateScreen(): JSX.Element {
 
   const { translate, translateError } = useSettingsContext();
   const { createMros } = useCompliance();
+  const { getProfile } = useUser();
   const { navigate } = useNavigation();
   const { rootRef } = useLayoutContext();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>();
   const [success, setSuccess] = useState(false);
+  const [caseManager, setCaseManager] = useState<string>();
+
+  useEffect(() => {
+    getProfile()
+      .then((p) => setCaseManager([p?.firstName, p?.lastName].filter(Boolean).join(' ')))
+      .catch(() => setCaseManager(''));
+  }, []);
 
   const {
     control,
@@ -45,12 +53,13 @@ export default function ComplianceMrosCreateScreen(): JSX.Element {
     formState: { isValid, errors },
   } = useForm<FormData>({
     mode: 'onTouched',
-    defaultValues: { status: MrosStatus.DRAFT },
+    defaultValues: { status: MrosStatus.DRAFT, submissionDate: todayAsString() },
   });
 
   useLayoutOptions({ title: translate('screens/compliance', 'MROS erfassen'), backButton: true });
 
   async function onSubmit(formData: FormData): Promise<void> {
+    if (!caseManager) return;
     setIsSubmitting(true);
     setError(undefined);
 
@@ -60,7 +69,7 @@ export default function ComplianceMrosCreateScreen(): JSX.Element {
         status: formData.status,
         submissionDate: formData.submissionDate || undefined,
         authorityReference: formData.authorityReference || undefined,
-        caseManager: formData.caseManager,
+        caseManager,
       });
       setSuccess(true);
     } catch (e) {
@@ -73,7 +82,6 @@ export default function ComplianceMrosCreateScreen(): JSX.Element {
   const rules = Utils.createRules({
     userDataId: [Validations.Required, Validations.Custom((v) => (isNaN(Number(v)) ? 'pattern' : true))],
     status: Validations.Required,
-    caseManager: Validations.Required,
   });
 
   if (success) {
@@ -126,14 +134,7 @@ export default function ComplianceMrosCreateScreen(): JSX.Element {
 
         <StyledInput
           name="authorityReference"
-          label={translate('screens/compliance', 'Authority Reference')}
-          full
-          smallLabel
-        />
-
-        <StyledInput
-          name="caseManager"
-          label={translate('screens/compliance', 'Case Manager')}
+          label={translate('screens/compliance', 'MROS ID')}
           full
           smallLabel
         />
@@ -149,7 +150,7 @@ export default function ComplianceMrosCreateScreen(): JSX.Element {
           label={translate('general/actions', 'Create MROS')}
           onClick={handleSubmit(onSubmit)}
           width={StyledButtonWidth.FULL}
-          disabled={!isValid}
+          disabled={!isValid || !caseManager}
           isLoading={isSubmitting}
         />
 
