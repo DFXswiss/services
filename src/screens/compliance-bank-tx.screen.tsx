@@ -43,6 +43,7 @@ export default function ComplianceBankTxScreen(): JSX.Element {
   return (
     <div className="w-full flex flex-col gap-6 max-w-4xl text-left">
       <div className="bg-white rounded-lg shadow-sm p-4">
+        <h2 className="text-dfxGray-700 mb-3">{translate('screens/compliance', 'Bank Transaction')}</h2>
         <table className="text-sm text-dfxBlue-800 text-left">
           <tbody>
             <DetailRow label="ID" value={bankTx.id} />
