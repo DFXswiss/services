@@ -529,6 +529,13 @@ export function useCompliance() {
     });
   }
 
+  async function getMrosById(id: number): Promise<MrosListEntry> {
+    return call<MrosListEntry>({
+      url: `mros/${id}`,
+      method: 'GET',
+    });
+  }
+
   async function createMros(dto: CreateMrosDto): Promise<void> {
     return call<void>({
       url: 'mros',
@@ -690,6 +697,7 @@ export function useCompliance() {
       getCustodyOrders,
       approveCustodyOrder,
       getMrosList,
+      getMrosById,
       createMros,
       getRecalls,
       createRecall,
