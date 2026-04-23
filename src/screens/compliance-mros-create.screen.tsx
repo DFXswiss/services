@@ -41,12 +41,6 @@ export default function ComplianceMrosCreateScreen(): JSX.Element {
   const [success, setSuccess] = useState(false);
   const [caseManager, setCaseManager] = useState<string>();
 
-  useEffect(() => {
-    getProfile()
-      .then((p) => setCaseManager([p?.firstName, p?.lastName].filter(Boolean).join(' ')))
-      .catch(() => setCaseManager(''));
-  }, []);
-
   const {
     control,
     handleSubmit,
@@ -55,6 +49,12 @@ export default function ComplianceMrosCreateScreen(): JSX.Element {
     mode: 'onTouched',
     defaultValues: { status: MrosStatus.DRAFT, submissionDate: todayAsString() },
   });
+
+  useEffect(() => {
+    getProfile()
+      .then((p) => setCaseManager([p?.firstName, p?.lastName].filter(Boolean).join(' ')))
+      .catch(() => setCaseManager(''));
+  }, []);
 
   useLayoutOptions({ title: translate('screens/compliance', 'MROS erfassen'), backButton: true });
 
