@@ -1,5 +1,6 @@
 import { StyledButton, StyledButtonColor, StyledButtonWidth, StyledVerticalStack } from '@dfx.swiss/react-components';
 import { useLocation, useParams } from 'react-router-dom';
+import { RecallDetails } from 'src/components/compliance/recall-details';
 import { useSettingsContext } from 'src/contexts/settings.context';
 import { BankTxSearchResult } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
@@ -55,12 +56,19 @@ export default function ComplianceBankTxScreen(): JSX.Element {
         </table>
       </div>
 
-      <StyledButton
-        label={translate('screens/compliance', 'Recall erfassen')}
-        onClick={() => navigate(`compliance/bank-tx/${bankTx.id}/recall`)}
-        width={StyledButtonWidth.FULL}
-        color={StyledButtonColor.BLUE}
-      />
+      {bankTx.recall ? (
+        <div className="bg-white rounded-lg shadow-sm p-4">
+          <h2 className="text-dfxGray-700 mb-3">{translate('screens/compliance', 'Recall')}</h2>
+          <RecallDetails recall={bankTx.recall} />
+        </div>
+      ) : (
+        <StyledButton
+          label={translate('screens/compliance', 'Recall erfassen')}
+          onClick={() => navigate(`compliance/bank-tx/${bankTx.id}/recall`)}
+          width={StyledButtonWidth.FULL}
+          color={StyledButtonColor.BLUE}
+        />
+      )}
 
       {bankTx.transactionId && BankTxUnassignedTypes.includes(bankTx.type) && (
         <StyledButton

@@ -2,9 +2,10 @@ import { Transaction, TransactionState, useTransaction } from '@dfx.swiss/react'
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Fragment, useState } from 'react';
 import { ChargebackModal } from 'src/components/compliance/chargeback-modal';
+import { RecallDetailsModal } from 'src/components/compliance/recall-details-modal';
 import { RecallModal } from 'src/components/compliance/recall-modal';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { BankTxInfo, CryptoInputInfo, TransactionInfo, useCompliance } from 'src/hooks/compliance.hook';
+import { BankTxInfo, CryptoInputInfo, RecallInfo, TransactionInfo, useCompliance } from 'src/hooks/compliance.hook';
 import { DetailRow, TransactionDetailRows, formatDate, statusBadge } from 'src/util/compliance-helpers';
 
 interface TransactionsTableProps {
@@ -46,6 +47,7 @@ export function TransactionsTable({
   const [stopError, setStopError] = useState<string>();
   const [chargebackTxId, setChargebackTxId] = useState<number>();
   const [recallBankTxId, setRecallBankTxId] = useState<number>();
+  const [viewingRecall, setViewingRecall] = useState<RecallInfo>();
 
   async function confirmStop(): Promise<void> {
     const txId = stopConfirmTxId;
@@ -306,8 +308,9 @@ export function TransactionsTable({
                                       TransactionState.LIMIT_EXCEEDED,
                                       TransactionState.UNASSIGNED,
                                     ].includes(detail.state) && !detail.chargebackAmount;
-                                  const canRecall = bankTx != null;
-                                  if (!canStop && !canChargeback && !canRecall) return null;
+                                  const existingRecall = bankTx?.recall;
+                                  const canRecall = bankTx != null && !existingRecall;
+                                  if (!canStop && !canChargeback && !canRecall && !existingRecall) return null;
                                   return (
                                     <div className="mt-3 pt-3 border-t border-dfxGray-400/50 flex gap-2">
                                       {canStop && (
@@ -333,6 +336,14 @@ export function TransactionsTable({
                                           onClick={() => setRecallBankTxId(bankTx.id)}
                                         >
                                           Recall
+                                        </button>
+                                      )}
+                                      {existingRecall && (
+                                        <button
+                                          className="px-3 py-1 text-xs text-dfxBlue-800 bg-dfxGray-300 hover:bg-dfxGray-400/80 rounded transition-colors"
+                                          onClick={() => setViewingRecall(existingRecall)}
+                                        >
+                                          Recall #{existingRecall.id}
                                         </button>
                                       )}
                                     </div>
@@ -391,6 +402,11 @@ export function TransactionsTable({
         bankTxId={recallBankTxId}
         onClose={() => setRecallBankTxId(undefined)}
         onSuccess={() => setRecallBankTxId(undefined)}
+      />
+      <RecallDetailsModal
+        isOpen={viewingRecall != null}
+        recall={viewingRecall}
+        onClose={() => setViewingRecall(undefined)}
       />
     </div>
   );
