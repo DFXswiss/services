@@ -10,8 +10,8 @@ export enum RecallReason {
 
 export interface RecallListEntry {
   id: number;
-  created: string;
-  updated: string;
+  created: Date;
+  updated: Date;
   sequence: number;
   comment: string;
   fee: number;

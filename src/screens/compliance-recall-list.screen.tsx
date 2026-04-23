@@ -34,7 +34,7 @@ export default function ComplianceRecallListScreen(): JSX.Element {
     loadData();
   }, [isLoggedIn]);
 
-  function formatDate(date: string): string {
+  function formatDate(date: Date): string {
     return new Date(date).toLocaleDateString('de-CH', {
       day: '2-digit',
       month: '2-digit',
