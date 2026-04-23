@@ -5,22 +5,12 @@ import { BankTxSearchResult } from 'src/hooks/compliance.hook';
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
-
-// Row data is cached under this key on click in the compliance search list
-// and read back here. sessionStorage is used because app-handling.context
-// calls history.replaceState(undefined, ...) on mount, which wipes router state.
-const BANK_TX_CACHE_PREFIX = 'bankTx:';
+import { readCachedBankTx } from 'src/util/bank-tx-cache';
 
 function loadBankTx(id?: string, state?: unknown): BankTxSearchResult | undefined {
   const fromState = (state as { bankTx?: BankTxSearchResult } | null)?.bankTx;
   if (fromState) return fromState;
-  if (!id) return undefined;
-  try {
-    const cached = sessionStorage.getItem(`${BANK_TX_CACHE_PREFIX}${id}`);
-    return cached ? (JSON.parse(cached) as BankTxSearchResult) : undefined;
-  } catch {
-    return undefined;
-  }
+  return id ? readCachedBankTx(id) : undefined;
 }
 
 export default function ComplianceBankTxScreen(): JSX.Element {
@@ -61,7 +51,6 @@ export default function ComplianceBankTxScreen(): JSX.Element {
   return (
     <div className="w-full flex flex-col gap-6 max-w-4xl text-left">
       <div className="bg-white rounded-lg shadow-sm p-4">
-        <h2 className="text-dfxGray-700 mb-3">Bank Transaction</h2>
         <table className="text-sm text-dfxBlue-800 text-left">
           <tbody>
             {rows.map(([label, value]) => (

@@ -26,6 +26,7 @@ import {
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { cacheBankTx } from 'src/util/bank-tx-cache';
 
 interface FormData {
   key: string;
@@ -191,7 +192,7 @@ export default function ComplianceScreen(): JSX.Element {
             color={IconColor.BLUE}
             size={IconSize.SM}
             onClick={() => {
-              sessionStorage.setItem(`bankTx:${b.id}`, JSON.stringify(b));
+              cacheBankTx(b);
               navigate(`compliance/bank-tx/${b.id}`);
             }}
           />
