@@ -6,6 +6,7 @@ import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
 import { readCachedBankTx } from 'src/util/bank-tx-cache';
+import { DetailRow } from 'src/util/compliance-helpers';
 
 function loadBankTx(id?: string, state?: unknown): BankTxSearchResult | undefined {
   const fromState = (state as { bankTx?: BankTxSearchResult } | null)?.bankTx;
@@ -38,27 +39,18 @@ export default function ComplianceBankTxScreen(): JSX.Element {
     );
   }
 
-  const rows: [string, string | number | undefined][] = [
-    ['ID', bankTx.id],
-    ['Transaction ID', bankTx.transactionId],
-    ['Type', bankTx.type],
-    ['Account Service Ref', bankTx.accountServiceRef],
-    ['Amount', `${bankTx.amount} ${bankTx.currency}`],
-    ['User name', bankTx.name],
-    ['IBAN', bankTx.iban],
-  ];
-
   return (
     <div className="w-full flex flex-col gap-6 max-w-4xl text-left">
       <div className="bg-white rounded-lg shadow-sm p-4">
         <table className="text-sm text-dfxBlue-800 text-left">
           <tbody>
-            {rows.map(([label, value]) => (
-              <tr key={label}>
-                <td className="pr-4 py-1 font-medium whitespace-nowrap align-top">{label}:</td>
-                <td className="py-1 break-all">{value ?? '-'}</td>
-              </tr>
-            ))}
+            <DetailRow label="ID" value={bankTx.id} />
+            <DetailRow label="Transaction ID" value={bankTx.transactionId} />
+            <DetailRow label="Type" value={bankTx.type} />
+            <DetailRow label="Account Service Ref" value={bankTx.accountServiceRef} />
+            <DetailRow label="Amount" value={`${bankTx.amount} ${bankTx.currency}`} />
+            <DetailRow label="Name" value={bankTx.name} />
+            <DetailRow label="IBAN" value={bankTx.iban} mono />
           </tbody>
         </table>
       </div>
