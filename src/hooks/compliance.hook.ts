@@ -101,6 +101,7 @@ export interface BankTxSearchResult {
   type: string;
   name?: string;
   iban?: string;
+  recall?: RecallInfo;
 }
 
 export interface BankTxInfo {
@@ -113,6 +114,16 @@ export interface BankTxInfo {
   name?: string;
   iban?: string;
   remittanceInfo?: string;
+  recall?: RecallInfo;
+}
+
+export interface RecallInfo {
+  id: number;
+  created: string;
+  sequence: number;
+  reason?: string;
+  comment: string;
+  fee: number;
 }
 
 export interface IpLogInfo {
