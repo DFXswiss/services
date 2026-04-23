@@ -64,6 +64,8 @@ const ComplianceKycStepScreen = lazy(() => import('./screens/compliance-kyc-step
 const ComplianceSupportIssueScreen = lazy(() => import('./screens/compliance-support-issue.screen'));
 const ComplianceRecommendationGraphScreen = lazy(() => import('./screens/compliance-recommendation-graph.screen'));
 const ComplianceCustodyOrdersScreen = lazy(() => import('./screens/compliance-custody-orders.screen'));
+const ComplianceMrosListScreen = lazy(() => import('./screens/compliance-mros-list.screen'));
+const ComplianceRecallListScreen = lazy(() => import('./screens/compliance-recall-list.screen'));
 const ComplianceReviewScreen = lazy(() => import('./screens/compliance-review.screen'));
 const SupportDashboardScreen = lazy(() => import('./screens/support-dashboard.screen'));
 const SupportDashboardIssueScreen = lazy(() => import('./screens/support-dashboard-issue.screen'));
@@ -83,6 +85,7 @@ const DashboardFinancialHistoryScreen = lazy(() => import('./screens/dashboard-f
 const DashboardFinancialLiveScreen = lazy(() => import('./screens/dashboard-financial-live.screen'));
 const DashboardFinancialExpensesScreen = lazy(() => import('./screens/dashboard-financial-expenses.screen'));
 const DashboardFinancialLiquidityScreen = lazy(() => import('./screens/dashboard-financial-liquidity.screen'));
+const SitemapScreen = lazy(() => import('./screens/sitemap.screen'));
 
 setupLanguages();
 
@@ -389,8 +392,20 @@ export const Routes = [
         element: withSuspense(<ComplianceCustodyOrdersScreen />),
       },
       {
+        path: 'compliance/mros',
+        element: withSuspense(<ComplianceMrosListScreen />),
+      },
+      {
+        path: 'compliance/recalls',
+        element: withSuspense(<ComplianceRecallListScreen />),
+      },
+      {
         path: 'compliance/user/:id/kyc',
         element: withSuspense(<ComplianceReviewScreen />),
+      },
+      {
+        path: 'sitemap',
+        element: withSuspense(<SitemapScreen />),
       },
       {
         path: 'support/dashboard',
