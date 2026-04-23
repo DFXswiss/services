@@ -26,6 +26,7 @@ import {
 import { useComplianceGuard } from 'src/hooks/guard.hook';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { useNavigation } from 'src/hooks/navigation.hook';
+import { cacheBankTx } from 'src/util/bank-tx-cache';
 
 interface FormData {
   key: string;
@@ -186,14 +187,15 @@ export default function ComplianceScreen(): JSX.Element {
       label: '',
       render: (b: BankTxSearchResult) => (
         <div className="flex gap-2 justify-end items-center">
-          {b.transactionId && (
-            <StyledIconButton
-              icon={IconVariant.BACK}
-              color={IconColor.BLUE}
-              size={IconSize.SM}
-              onClick={() => navigate(`compliance/bank-tx/${b.transactionId}/return`)}
-            />
-          )}
+          <StyledIconButton
+            icon={IconVariant.FORWARD}
+            color={IconColor.BLUE}
+            size={IconSize.SM}
+            onClick={() => {
+              cacheBankTx(b);
+              navigate(`compliance/bank-tx/${b.id}`);
+            }}
+          />
         </div>
       ),
     },
@@ -310,9 +312,7 @@ export default function ComplianceScreen(): JSX.Element {
 
               {searchResult.bankTx.length > 0 && (
                 <div className="w-full">
-                  <h2 className="text-dfxGray-700">
-                    {translate('screens/compliance', 'Unassigned Bank Transactions')}
-                  </h2>
+                  <h2 className="text-dfxGray-700">{translate('screens/compliance', 'Bank Transactions')}</h2>
                   <div className="w-full overflow-x-auto">
                     <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
                       <thead>

@@ -18,6 +18,7 @@ import { ErrorHint } from 'src/components/error-hint';
 import { useLayoutContext } from 'src/contexts/layout.context';
 import { useLayoutOptions } from 'src/hooks/layout-config.hook';
 import { buildCamt053Xml } from 'src/util/camt053-builder';
+import { todayAsString } from 'src/util/compliance-helpers';
 import { useSettingsContext } from '../contexts/settings.context';
 import { useAdminGuard } from '../hooks/guard.hook';
 
@@ -68,6 +69,8 @@ export default function SepaManualScreen(): JSX.Element {
     defaultValues: {
       currency: 'EUR',
       direction: CreditDebitIndicator.CRDT,
+      bookingDate: todayAsString(),
+      valueDate: todayAsString(),
     },
   });
 

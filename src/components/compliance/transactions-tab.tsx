@@ -2,8 +2,10 @@ import { Transaction, TransactionState, useTransaction } from '@dfx.swiss/react'
 import { SpinnerSize, StyledLoadingSpinner } from '@dfx.swiss/react-components';
 import { Fragment, useState } from 'react';
 import { ChargebackModal } from 'src/components/compliance/chargeback-modal';
+import { RecallDetailsModal } from 'src/components/compliance/recall-details-modal';
+import { RecallModal } from 'src/components/compliance/recall-modal';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { BankTxInfo, CryptoInputInfo, TransactionInfo, useCompliance } from 'src/hooks/compliance.hook';
+import { BankTxInfo, CryptoInputInfo, RecallInfo, TransactionInfo, useCompliance } from 'src/hooks/compliance.hook';
 import { DetailRow, TransactionDetailRows, formatDate, statusBadge } from 'src/util/compliance-helpers';
 
 interface TransactionsTableProps {
@@ -44,6 +46,8 @@ export function TransactionsTable({
   const [stopConfirmTxId, setStopConfirmTxId] = useState<number>();
   const [stopError, setStopError] = useState<string>();
   const [chargebackTxId, setChargebackTxId] = useState<number>();
+  const [recallBankTxId, setRecallBankTxId] = useState<number>();
+  const [viewingRecall, setViewingRecall] = useState<RecallInfo>();
 
   async function confirmStop(): Promise<void> {
     const txId = stopConfirmTxId;
@@ -294,33 +298,31 @@ export function TransactionsTable({
                             return (
                               <>
                                 <TransactionDetailRows tx={detail} />
-                                {((tx.type === 'BuyCrypto' && !tx.isCompleted) ||
-                                  ([
-                                    TransactionState.FAILED,
-                                    TransactionState.CHECK_PENDING,
-                                    TransactionState.KYC_REQUIRED,
-                                    TransactionState.LIMIT_EXCEEDED,
-                                    TransactionState.UNASSIGNED,
-                                  ].includes(detail.state) &&
-                                    !detail.chargebackAmount)) && (
-                                  <div className="mt-3 pt-3 border-t border-dfxGray-400/50 flex gap-2">
-                                    {tx.type === 'BuyCrypto' && !tx.isCompleted && (
-                                      <button
-                                        className="px-3 py-1 text-xs text-white bg-dfxRed-100 hover:bg-dfxRed-100/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        onClick={() => setStopConfirmTxId(tx.id)}
-                                        disabled={stoppingTxId === tx.id || isStopped}
-                                      >
-                                        {stoppingTxId === tx.id ? 'Stopping...' : isStopped ? 'Stopped' : 'Stop'}
-                                      </button>
-                                    )}
-                                    {[
+                                {(() => {
+                                  const canStop = tx.type === 'BuyCrypto' && !tx.isCompleted;
+                                  const canChargeback =
+                                    [
                                       TransactionState.FAILED,
                                       TransactionState.CHECK_PENDING,
                                       TransactionState.KYC_REQUIRED,
                                       TransactionState.LIMIT_EXCEEDED,
                                       TransactionState.UNASSIGNED,
-                                    ].includes(detail.state) &&
-                                      !detail.chargebackAmount && (
+                                    ].includes(detail.state) && !detail.chargebackAmount;
+                                  const existingRecall = bankTx?.recall;
+                                  const canRecall = bankTx != null && !existingRecall;
+                                  if (!canStop && !canChargeback && !canRecall && !existingRecall) return null;
+                                  return (
+                                    <div className="mt-3 pt-3 border-t border-dfxGray-400/50 flex gap-2">
+                                      {canStop && (
+                                        <button
+                                          className="px-3 py-1 text-xs text-white bg-dfxRed-100 hover:bg-dfxRed-100/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                          onClick={() => setStopConfirmTxId(tx.id)}
+                                          disabled={stoppingTxId === tx.id || isStopped}
+                                        >
+                                          {stoppingTxId === tx.id ? 'Stopping...' : isStopped ? 'Stopped' : 'Stop'}
+                                        </button>
+                                      )}
+                                      {canChargeback && (
                                         <button
                                           className="px-3 py-1 text-xs text-white bg-dfxRed-100 hover:bg-dfxRed-100/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                           onClick={() => setChargebackTxId(tx.id)}
@@ -328,8 +330,25 @@ export function TransactionsTable({
                                           Chargeback
                                         </button>
                                       )}
-                                  </div>
-                                )}
+                                      {canRecall && (
+                                        <button
+                                          className="px-3 py-1 text-xs text-white bg-dfxRed-100 hover:bg-dfxRed-100/80 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                          onClick={() => setRecallBankTxId(bankTx.id)}
+                                        >
+                                          Recall
+                                        </button>
+                                      )}
+                                      {existingRecall && (
+                                        <button
+                                          className="px-3 py-1 text-xs text-dfxBlue-800 bg-dfxGray-300 hover:bg-dfxGray-400/80 rounded transition-colors"
+                                          onClick={() => setViewingRecall(existingRecall)}
+                                        >
+                                          Recall #{existingRecall.id}
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </>
                             );
                           })()
@@ -377,6 +396,17 @@ export function TransactionsTable({
           setChargebackTxId(undefined);
           onStopped?.();
         }}
+      />
+      <RecallModal
+        isOpen={recallBankTxId != null}
+        bankTxId={recallBankTxId}
+        onClose={() => setRecallBankTxId(undefined)}
+        onSuccess={() => setRecallBankTxId(undefined)}
+      />
+      <RecallDetailsModal
+        isOpen={viewingRecall != null}
+        recall={viewingRecall}
+        onClose={() => setViewingRecall(undefined)}
       />
     </div>
   );

@@ -396,7 +396,7 @@
     "No entries found": "Nessuna voce trovata",
     "found by {{type}}": "trovati tramite {{type}}",
     "Customers": "Clienti",
-    "Unassigned Bank Transactions": "Transazioni bancarie non assegnate"
+    "Bank Transactions": "Transazioni bancarie"
   },
   "screens/2fa": {
     "2FA": "2FA",

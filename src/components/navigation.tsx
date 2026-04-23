@@ -225,6 +225,15 @@ function NavigationMenu({ setIsNavigationOpen, small = false }: NavigationMenuCo
                   onClose={() => setIsNavigationOpen(false)}
                 />
               )}
+              {session?.role === UserRole.ADMIN && (
+                <NavigationLink
+                  icon={IconVariant.MENU}
+                  label={translate('screens/sitemap', 'Sitemap')}
+                  url="/sitemap"
+                  target="_self"
+                  onClose={() => setIsNavigationOpen(false)}
+                />
+              )}
             </>
           )}
 
