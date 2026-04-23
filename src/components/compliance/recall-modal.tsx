@@ -51,7 +51,7 @@ export function RecallModal({ isOpen, bankTxId, onClose, onSuccess }: RecallModa
   useEffect(() => {
     if (!isOpen) {
       setError(undefined);
-      reset({ fee: '500', comment: 'n.a.' });
+      reset();
     }
   }, [isOpen]);
 
@@ -78,7 +78,7 @@ export function RecallModal({ isOpen, bankTxId, onClose, onSuccess }: RecallModa
   }
 
   function handleClose(): void {
-    reset({ fee: '500', comment: 'n.a.' });
+    reset();
     setError(undefined);
     onClose();
   }
