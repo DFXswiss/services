@@ -8,6 +8,8 @@ import { useNavigation } from 'src/hooks/navigation.hook';
 import { readCachedBankTx } from 'src/util/bank-tx-cache';
 import { DetailRow } from 'src/util/compliance-helpers';
 
+const UNASSIGNED_BANK_TX_TYPES = ['GSheet', 'Unknown', 'Pending'];
+
 function loadBankTx(id?: string, state?: unknown): BankTxSearchResult | undefined {
   const fromState = (state as { bankTx?: BankTxSearchResult } | null)?.bankTx;
   if (fromState) return fromState;
@@ -62,7 +64,7 @@ export default function ComplianceBankTxScreen(): JSX.Element {
         color={StyledButtonColor.BLUE}
       />
 
-      {bankTx.transactionId && (
+      {bankTx.transactionId && UNASSIGNED_BANK_TX_TYPES.includes(bankTx.type) && (
         <StyledButton
           label={translate('screens/compliance', 'Return')}
           onClick={() => navigate(`compliance/bank-tx/${bankTx.transactionId}/return`)}

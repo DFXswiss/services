@@ -312,9 +312,7 @@ export default function ComplianceScreen(): JSX.Element {
 
               {searchResult.bankTx.length > 0 && (
                 <div className="w-full">
-                  <h2 className="text-dfxGray-700">
-                    {translate('screens/compliance', 'Unassigned Bank Transactions')}
-                  </h2>
+                  <h2 className="text-dfxGray-700">{translate('screens/compliance', 'Matching Bank Transactions')}</h2>
                   <div className="w-full overflow-x-auto">
                     <table className="w-full border-collapse bg-white rounded-lg shadow-sm">
                       <thead>
