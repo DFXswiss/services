@@ -32,7 +32,7 @@ export default function ComplianceBankTxRecallScreen(): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const { translate, translateError } = useSettingsContext();
   const { createRecall } = useCompliance();
-  const { goBack } = useNavigation();
+  const { navigate } = useNavigation();
   const { rootRef } = useLayoutContext();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +43,10 @@ export default function ComplianceBankTxRecallScreen(): JSX.Element {
     control,
     handleSubmit,
     formState: { isValid, errors },
-  } = useForm<FormData>({ mode: 'onTouched' });
+  } = useForm<FormData>({
+    mode: 'onTouched',
+    defaultValues: { fee: '500', comment: 'n.a.' },
+  });
 
   useLayoutOptions({ title: 'Recall erfassen', backButton: true });
 
@@ -80,7 +83,7 @@ export default function ComplianceBankTxRecallScreen(): JSX.Element {
       <StyledVerticalStack gap={6} full center>
         <div className="text-center">
           <h2 className="text-dfxBlue-800 text-xl font-semibold mb-4">Recall created successfully</h2>
-          <StyledButton label={translate('general/actions', 'Back')} onClick={goBack} width={StyledButtonWidth.MD} />
+          <StyledButton label={translate('general/actions', 'Back')} onClick={() => navigate(-1)} width={StyledButtonWidth.MD} />
         </div>
       </StyledVerticalStack>
     );
@@ -128,7 +131,7 @@ export default function ComplianceBankTxRecallScreen(): JSX.Element {
 
         <StyledButton
           label={translate('general/actions', 'Cancel')}
-          onClick={goBack}
+          onClick={() => navigate(-1)}
           width={StyledButtonWidth.FULL}
           color={StyledButtonColor.WHITE}
         />
