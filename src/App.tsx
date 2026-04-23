@@ -64,6 +64,7 @@ const ComplianceKycStepScreen = lazy(() => import('./screens/compliance-kyc-step
 const ComplianceSupportIssueScreen = lazy(() => import('./screens/compliance-support-issue.screen'));
 const ComplianceRecommendationGraphScreen = lazy(() => import('./screens/compliance-recommendation-graph.screen'));
 const ComplianceCustodyOrdersScreen = lazy(() => import('./screens/compliance-custody-orders.screen'));
+const ComplianceMrosListScreen = lazy(() => import('./screens/compliance-mros-list.screen'));
 const ComplianceReviewScreen = lazy(() => import('./screens/compliance-review.screen'));
 const SupportDashboardScreen = lazy(() => import('./screens/support-dashboard.screen'));
 const SupportDashboardIssueScreen = lazy(() => import('./screens/support-dashboard-issue.screen'));
@@ -387,6 +388,10 @@ export const Routes = [
       {
         path: 'compliance/custody-orders',
         element: withSuspense(<ComplianceCustodyOrdersScreen />),
+      },
+      {
+        path: 'compliance/mros',
+        element: withSuspense(<ComplianceMrosListScreen />),
       },
       {
         path: 'compliance/user/:id/kyc',

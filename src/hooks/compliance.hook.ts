@@ -8,6 +8,7 @@ import {
   ResponseType,
   useApi,
 } from '@dfx.swiss/react';
+import { MrosListEntry } from 'src/dto/mros.dto';
 import { CustodyOrderListEntry } from 'src/dto/order.dto';
 import { electronicFormatIBAN, isValidIBAN } from 'ibantools';
 import { useMemo } from 'react';
@@ -509,6 +510,13 @@ export function useCompliance() {
     });
   }
 
+  async function getMrosList(): Promise<MrosListEntry[]> {
+    return call<MrosListEntry[]>({
+      url: 'mros',
+      method: 'GET',
+    });
+  }
+
   async function getRecommendationGraph(userDataId: number): Promise<RecommendationGraph> {
     return call<RecommendationGraph>({
       url: `support/recommendation-graph/${userDataId}`,
@@ -646,6 +654,7 @@ export function useCompliance() {
       generateOnboardingPdf,
       getCustodyOrders,
       approveCustodyOrder,
+      getMrosList,
       updateKycStep,
       updateUserData,
       createLimitRequest,
